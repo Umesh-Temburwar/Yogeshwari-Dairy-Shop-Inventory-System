@@ -89,7 +89,7 @@ export const SalesProfitChart: React.FC = () => {
 
       <div className="h-64 w-full">
         {totalDataPoints > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" key={`bar-${resolvedTheme}`}>
             <BarChart 
               data={chartData} 
               barGap={4}
@@ -115,15 +115,21 @@ export const SalesProfitChart: React.FC = () => {
                   borderColor: colors.tooltipBorder, 
                   color: colors.tooltipText,
                   borderRadius: '12px',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
                   fontSize: '12px'
                 }}
+                itemStyle={{ color: colors.tooltipText }}
+                labelStyle={{ color: colors.tooltipText, fontWeight: 'bold' }}
               />
               <Legend 
+                formatter={(value) => (
+                  <span style={{ color: isDark ? '#E7F0EC' : '#1e293b', fontWeight: 600 }}>
+                    {value}
+                  </span>
+                )}
                 wrapperStyle={{ 
                   fontSize: '12px', 
                   paddingTop: '12px',
-                  color: colors.axis
                 }} 
               />
               <Bar dataKey={salesLabel} fill={colors.sales} radius={[4, 4, 0, 0]} minPointSize={3} maxBarSize={28} />

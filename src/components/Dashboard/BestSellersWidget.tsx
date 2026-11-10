@@ -38,7 +38,7 @@ export const BestSellersWidget: React.FC = () => {
       <div>
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 shrink-0">
+            <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-500/30 shrink-0">
               <Trophy className="w-4 h-4" />
             </div>
             <h3 className="text-base font-bold text-slate-900 dark:text-[#E7F0EC] truncate">
@@ -47,7 +47,7 @@ export const BestSellersWidget: React.FC = () => {
           </div>
           <button
             onClick={() => setActiveView('analytics')}
-            className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 flex items-center gap-1 shrink-0"
+            className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 shrink-0"
           >
             <span>{t('viewAll')}</span> 
             <ArrowRight className="w-3.5 h-3.5" />
@@ -59,31 +59,34 @@ export const BestSellersWidget: React.FC = () => {
       </div>
 
       {/* Scrollable Body (max-h-80) */}
-      <div className="my-4 space-y-3.5 max-h-80 overflow-y-auto pr-1">
+      <div className="my-4 space-y-2.5 max-h-80 overflow-y-auto pr-1">
         {topProducts.length > 0 ? (
           topProducts.map((item, index) => {
             const percentage = Math.round((item.totalRevenue / maxRevenue) * 100);
             return (
-              <div key={index} className="space-y-1">
+              <div 
+                key={index} 
+                className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-[#1A2A25] hover:bg-slate-100 dark:hover:bg-[#1F332D] border border-slate-200/60 dark:border-[#24352F] hover:border-emerald-300 dark:hover:border-emerald-600/40 transition-colors space-y-2"
+              >
                 <div className="flex items-center justify-between text-xs gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] shrink-0 ${
                       index === 0 
-                        ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-200 dark:ring-amber-500/30' : 
+                        ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-300 dark:ring-amber-400/50 shadow-xs' : 
                       index === 1 
-                        ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200' :
+                        ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 ring-1 ring-slate-300 dark:ring-slate-500' :
                       index === 2 
-                        ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300' 
-                        : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
+                        ? 'bg-amber-100 dark:bg-amber-900/70 text-amber-900 dark:text-amber-200 ring-1 ring-amber-300 dark:ring-amber-700' 
+                        : 'bg-slate-100 dark:bg-[#283C35] text-slate-600 dark:text-[#E7F0EC] ring-1 ring-slate-200 dark:ring-[#364e45]'
                     }`}>
                       #{index + 1}
                     </span>
-                    <span className="font-semibold text-slate-800 dark:text-[#E7F0EC] truncate">
+                    <span className="font-bold text-slate-800 dark:text-[#E7F0EC] truncate">
                       {item.name}
                     </span>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="font-bold text-slate-900 dark:text-[#E7F0EC] tabular-nums">
+                    <span className="font-extrabold text-slate-900 dark:text-white tabular-nums">
                       ₹{item.totalRevenue.toLocaleString('en-IN')}
                     </span>
                     <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] ml-1.5 tabular-nums">
@@ -92,11 +95,11 @@ export const BestSellersWidget: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Progress bar */}
-                <div className="h-1.5 w-full bg-slate-100 dark:bg-[#1A2A25] rounded-full overflow-hidden">
+                {/* Progress bar with visible dark track */}
+                <div className="h-2 w-full bg-slate-200 dark:bg-[#283C35] rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 dark:from-emerald-400 dark:to-teal-400 rounded-full transition-all duration-500"
-                    style={{ width: `${percentage}%` }}
+                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 dark:from-emerald-400 dark:to-teal-300 rounded-full transition-all duration-500 shadow-xs"
+                    style={{ width: `${Math.max(percentage, 4)}%` }}
                   />
                 </div>
               </div>

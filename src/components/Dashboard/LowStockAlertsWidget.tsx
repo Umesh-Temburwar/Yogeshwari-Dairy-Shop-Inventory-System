@@ -16,10 +16,10 @@ export const LowStockAlertsWidget: React.FC = () => {
       <div>
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <div className={`p-1.5 rounded-lg shrink-0 ${
+            <div className={`p-1.5 rounded-lg shrink-0 border ${
               lowStockItems.length > 0 
-                ? 'bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400' 
-                : 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'
+                ? 'bg-rose-100 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-200/60 dark:border-rose-500/30' 
+                : 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-500/30'
             }`}>
               {lowStockItems.length > 0 ? <AlertTriangle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
             </div>
@@ -29,7 +29,7 @@ export const LowStockAlertsWidget: React.FC = () => {
           </div>
           <button
             onClick={() => setActiveView('reorder')}
-            className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 flex items-center gap-1 shrink-0"
+            className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 shrink-0"
           >
             <span>{t('createOrderSheet')}</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -54,17 +54,17 @@ export const LowStockAlertsWidget: React.FC = () => {
             return (
               <div 
                 key={item.id} 
-                className="flex items-center justify-between p-3 rounded-xl border border-rose-100 dark:border-rose-950/40 bg-rose-50/40 dark:bg-rose-950/20 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors gap-3"
+                className="flex items-center justify-between p-3 rounded-xl border border-rose-200/70 dark:border-rose-900/60 bg-rose-50/50 dark:bg-[#1A2A25] hover:bg-rose-50/80 dark:hover:bg-[#1F332D] hover:border-rose-300 dark:hover:border-rose-700/60 transition-all gap-3"
               >
                 <div className="min-w-0 flex-1">
-                  <div className="font-bold text-xs sm:text-sm text-slate-800 dark:text-[#E7F0EC] truncate">
+                  <div className="font-bold text-xs sm:text-sm text-slate-900 dark:text-[#E7F0EC] truncate">
                     {displayName}
                   </div>
                   <div className="flex items-center gap-2 text-[11px] mt-0.5">
                     <span className={`font-semibold tabular-nums ${
                       isOutOfStock 
-                        ? 'text-rose-700 dark:text-rose-400 font-bold' 
-                        : 'text-amber-700 dark:text-amber-400'
+                        ? 'text-rose-600 dark:text-rose-400 font-extrabold' 
+                        : 'text-amber-600 dark:text-amber-400'
                     }`}>
                       {language === 'mr' ? 'साठा:' : language === 'hi' ? 'स्टॉक:' : 'Stock:'} {item.stock_quantity} {item.unit}
                     </span>
@@ -77,12 +77,12 @@ export const LowStockAlertsWidget: React.FC = () => {
 
                 {/* Right: Reorder chip and Buy button */}
                 <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-200 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200 tabular-nums">
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-100 dark:bg-rose-950/90 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/70 tabular-nums shadow-xs">
                     {deficit.toFixed(0)} {item.unit} {t('reorderUnits')}
                   </span>
                   <button
                     onClick={() => setActiveView('purchases')}
-                    className="text-xs text-emerald-700 dark:text-emerald-400 font-bold hover:underline"
+                    className="text-xs text-emerald-700 dark:text-emerald-400 font-bold hover:text-emerald-800 dark:hover:text-emerald-300 hover:underline"
                   >
                     + {t('addBuy')}
                   </button>
@@ -91,17 +91,20 @@ export const LowStockAlertsWidget: React.FC = () => {
             );
           })
         ) : (
-          <div className="py-10 text-center text-emerald-700 dark:text-emerald-400 text-xs font-medium bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
+          <div className="py-10 text-center text-emerald-700 dark:text-emerald-400 text-xs font-medium bg-emerald-50/50 dark:bg-[#1A2A25] rounded-xl border border-emerald-100 dark:border-emerald-800/40">
             <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto mb-1 opacity-80" />
             {language === 'mr' ? 'दुकानातील सर्व माल पुरेशा प्रमाणात उपलब्ध आहे!' : language === 'hi' ? 'दुकान में सभी माल पर्याप्त मात्रा में उपलब्ध है!' : 'All inventory stock is healthy and sufficient!'}
           </div>
         )}
       </div>
 
-      {/* Fixed Footer (With Lucide ArrowRight instead of literal &rarr;) */}
+      {/* Fixed Footer */}
       <div className="pt-3 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between text-xs">
-        <span className="text-slate-500 dark:text-[#8FA69C]">
-          {language === 'mr' ? 'कमी साठा उत्पादने:' : language === 'hi' ? 'कुल कम स्टॉक:' : 'Low Stock Items:'} <b className="text-slate-800 dark:text-[#E7F0EC] ml-1">{lowStockItems.length}</b>
+        <span className="text-slate-500 dark:text-[#8FA69C] flex items-center">
+          {language === 'mr' ? 'कमी साठा उत्पादने:' : language === 'hi' ? 'कुल कम स्टॉक:' : 'Low Stock Items:'} 
+          <b className="text-slate-900 dark:text-white font-extrabold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-[#1A2A25] border border-slate-200/60 dark:border-[#24352F] ml-1.5">
+            {lowStockItems.length}
+          </b>
         </span>
         <button
           onClick={() => setActiveView('reorder')}

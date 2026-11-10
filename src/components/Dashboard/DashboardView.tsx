@@ -87,7 +87,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddProduct }
       </div>
 
       {/* Operational Widgets: Best Sellers & Stock Alert List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-12 sm:pb-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-28 sm:pb-10">
         <BestSellersWidget />
         <LowStockAlertsWidget />
       </div>

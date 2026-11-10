@@ -43,7 +43,7 @@ export const PaymentBreakdownChart: React.FC = () => {
       {/* Donut Chart with Centered Total */}
       <div className="h-44 w-full relative flex items-center justify-center my-2">
         {data.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" key={`pie-${resolvedTheme}`}>
             <PieChart>
               <Pie
                 data={data}
@@ -55,7 +55,7 @@ export const PaymentBreakdownChart: React.FC = () => {
                 dataKey="value"
               >
                 {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                  <Cell key={`cell-${index}`} fill={entry.color} stroke={isDark ? '#131F1B' : '#ffffff'} strokeWidth={2} />
                 ))}
               </Pie>
               <Tooltip 
@@ -65,9 +65,11 @@ export const PaymentBreakdownChart: React.FC = () => {
                   borderColor: isDark ? '#24352F' : '#e2e8f0',
                   color: isDark ? '#E7F0EC' : '#0f172a',
                   borderRadius: '12px',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
                   fontSize: '12px'
                 }}
+                itemStyle={{ color: isDark ? '#E7F0EC' : '#0f172a' }}
+                labelStyle={{ color: isDark ? '#E7F0EC' : '#0f172a', fontWeight: 'bold' }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -79,51 +81,63 @@ export const PaymentBreakdownChart: React.FC = () => {
 
         {/* Centered Total */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-[10px] font-semibold text-slate-400 dark:text-[#8FA69C] uppercase tracking-wider">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] uppercase tracking-wider">
             {t('totalIn')}
           </span>
-          <span className="text-sm font-extrabold text-slate-900 dark:text-[#E7F0EC] tabular-nums">
+          <span className="text-sm font-black text-slate-900 dark:text-white tabular-nums">
             ₹{(metrics.cashCollected + metrics.onlineCollected).toLocaleString('en-IN')}
           </span>
         </div>
       </div>
 
       {/* Equal-Width Legend Cards Below (Cash / UPI / Udhar) */}
-      <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100 dark:border-[#24352F]">
+      <div className="grid grid-cols-3 gap-2.5 pt-3 border-t border-slate-100 dark:border-[#24352F]">
         {/* Cash */}
-        <div className="p-2.5 bg-blue-50/70 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-900/40 flex flex-col justify-between">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-blue-700 dark:text-blue-300">
+        <div className="p-2.5 bg-blue-50/80 dark:bg-[#1A2A25] rounded-xl border border-blue-200 dark:border-blue-500/40 flex flex-col justify-between transition-colors">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-blue-700 dark:text-blue-400">
             <Banknote className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">{cashLabel}</span>
           </div>
-          <div className="text-xs sm:text-sm font-extrabold text-blue-950 dark:text-blue-200 mt-1 tabular-nums">
+          <div className="text-xs sm:text-sm font-black text-blue-950 dark:text-white mt-1 tabular-nums">
             ₹{metrics.cashCollected.toLocaleString('en-IN')}
           </div>
-          <div className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">{cashPct}%</div>
+          <div className="mt-1">
+            <span className="text-[10px] text-blue-800 dark:text-blue-300 font-extrabold bg-blue-100 dark:bg-blue-950/90 border border-blue-200 dark:border-blue-800/60 px-1.5 py-0.5 rounded-md inline-block">
+              {cashPct}%
+            </span>
+          </div>
         </div>
 
         {/* UPI QR */}
-        <div className="p-2.5 bg-purple-50/70 dark:bg-purple-950/30 rounded-xl border border-purple-100 dark:border-purple-900/40 flex flex-col justify-between">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-purple-700 dark:text-purple-300">
+        <div className="p-2.5 bg-purple-50/80 dark:bg-[#1A2A25] rounded-xl border border-purple-200 dark:border-purple-500/40 flex flex-col justify-between transition-colors">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-purple-700 dark:text-purple-400">
             <Smartphone className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">UPI</span>
           </div>
-          <div className="text-xs sm:text-sm font-extrabold text-purple-950 dark:text-purple-200 mt-1 tabular-nums">
+          <div className="text-xs sm:text-sm font-black text-purple-950 dark:text-white mt-1 tabular-nums">
             ₹{metrics.onlineCollected.toLocaleString('en-IN')}
           </div>
-          <div className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">{onlinePct}%</div>
+          <div className="mt-1">
+            <span className="text-[10px] text-purple-800 dark:text-purple-300 font-extrabold bg-purple-100 dark:bg-purple-950/90 border border-purple-200 dark:border-purple-800/60 px-1.5 py-0.5 rounded-md inline-block">
+              {onlinePct}%
+            </span>
+          </div>
         </div>
 
         {/* Udhar Credit */}
-        <div className="p-2.5 bg-orange-50/70 dark:bg-orange-950/30 rounded-xl border border-orange-100 dark:border-orange-900/40 flex flex-col justify-between">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-orange-700 dark:text-orange-300">
+        <div className="p-2.5 bg-orange-50/80 dark:bg-[#1A2A25] rounded-xl border border-orange-200 dark:border-amber-500/40 flex flex-col justify-between transition-colors">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-orange-700 dark:text-amber-400">
             <BookOpen className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">{udharLabel}</span>
           </div>
-          <div className="text-xs sm:text-sm font-extrabold text-orange-950 dark:text-orange-200 mt-1 tabular-nums">
+          <div className="text-xs sm:text-sm font-black text-orange-950 dark:text-white mt-1 tabular-nums">
             ₹{metrics.udharGiven.toLocaleString('en-IN')}
           </div>
-          <div className="text-[10px] text-orange-600 dark:text-orange-400 font-semibold">{udharPct}%</div>
+          <div className="mt-1">
+            <span className="text-[10px] text-orange-800 dark:text-amber-300 font-extrabold bg-orange-100 dark:bg-amber-950/90 border border-orange-200 dark:border-amber-800/60 px-1.5 py-0.5 rounded-md inline-block">
+              {udharPct}%
+            </span>
+          </div>
         </div>
       </div>
     </div>

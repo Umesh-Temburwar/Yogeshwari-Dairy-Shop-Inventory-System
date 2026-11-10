@@ -31,7 +31,7 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({ onOpenAddProdu
 
       <button
         onClick={() => setActiveView('udhar')}
-        className="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 px-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 font-semibold text-xs active:scale-95 transition border border-amber-200/60 dark:border-amber-900/40"
+        className="flex-1 flex flex-col items-center justify-center gap-1 py-1.5 px-2 rounded-xl bg-amber-50 dark:bg-[#1A2A25] hover:bg-amber-100 dark:hover:bg-[#223630] text-amber-900 dark:text-amber-300 font-semibold text-xs active:scale-95 transition border border-amber-200/60 dark:border-amber-500/30"
       >
         <BookOpen className="w-4 h-4 text-amber-600 dark:text-amber-400" />
         <span className="text-[10px] truncate">{t('openKhata')}</span>

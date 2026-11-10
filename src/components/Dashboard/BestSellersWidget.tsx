@@ -1,7 +1,7 @@
 import React from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { Trophy, Flame, ArrowRight } from 'lucide-react';
+import { Trophy, ArrowRight } from 'lucide-react';
 
 export const BestSellersWidget: React.FC = () => {
   const { filteredSales, setActiveView } = useStore();
@@ -32,61 +32,70 @@ export const BestSellersWidget: React.FC = () => {
   const maxRevenue = topProducts[0]?.totalRevenue || 1;
 
   return (
-    <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-xs flex flex-col justify-between">
+    <div className="bg-white dark:bg-[#131F1B] rounded-2xl p-5 border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between h-full transition-colors duration-150">
+      
+      {/* Fixed Header */}
       <div>
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-amber-100 text-amber-700">
+            <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 shrink-0">
               <Trophy className="w-4 h-4" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">
+            <h3 className="text-base font-bold text-slate-900 dark:text-[#E7F0EC] truncate">
               {t('bestSellersTitle')}
             </h3>
           </div>
           <button
             onClick={() => setActiveView('analytics')}
-            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+            className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 flex items-center gap-1 shrink-0"
           >
-            {language === 'mr' ? 'सर्व पहा' : language === 'hi' ? 'सब देखें' : 'View All'} <ArrowRight className="w-3.5 h-3.5" />
+            <span>{t('viewAll')}</span> 
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
-        <p className="text-xs text-slate-500 font-medium">
-          Highest revenue generating dairy items for selected period
+        <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium truncate">
+          {t('bestSellersSubtitle')}
         </p>
       </div>
 
-      <div className="space-y-3.5 my-4">
+      {/* Scrollable Body (max-h-80) */}
+      <div className="my-4 space-y-3.5 max-h-80 overflow-y-auto pr-1">
         {topProducts.length > 0 ? (
           topProducts.map((item, index) => {
             const percentage = Math.round((item.totalRevenue / maxRevenue) * 100);
             return (
               <div key={index} className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${
-                      index === 0 ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-200' : 
-                      index === 1 ? 'bg-slate-200 text-slate-800' :
-                      index === 2 ? 'bg-amber-200 text-amber-900' : 'bg-slate-100 text-slate-600'
+                <div className="flex items-center justify-between text-xs gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
+                      index === 0 
+                        ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-200 dark:ring-amber-500/30' : 
+                      index === 1 
+                        ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200' :
+                      index === 2 
+                        ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300' 
+                        : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
                     }`}>
                       #{index + 1}
                     </span>
-                    <span className="font-semibold text-slate-800 truncate max-w-[180px]">
+                    <span className="font-semibold text-slate-800 dark:text-[#E7F0EC] truncate">
                       {item.name}
                     </span>
                   </div>
-                  <div className="text-right">
-                    <span className="font-bold text-slate-900">
+                  <div className="text-right shrink-0">
+                    <span className="font-bold text-slate-900 dark:text-[#E7F0EC] tabular-nums">
                       ₹{item.totalRevenue.toLocaleString('en-IN')}
                     </span>
-                    <span className="text-[11px] text-slate-500 ml-1.5">
+                    <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] ml-1.5 tabular-nums">
                       ({item.quantity.toFixed(1)} {item.unit})
                     </span>
                   </div>
                 </div>
 
-                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                {/* Progress bar */}
+                <div className="h-1.5 w-full bg-slate-100 dark:bg-[#1A2A25] rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 dark:from-emerald-400 dark:to-teal-400 rounded-full transition-all duration-500"
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
@@ -94,18 +103,19 @@ export const BestSellersWidget: React.FC = () => {
             );
           })
         ) : (
-          <div className="text-center py-8 text-slate-400 text-xs">
-            {language === 'mr' ? 'या कालावधीत विक्री सापडली नाही' : language === 'hi' ? 'चुनी गई अवधि में कोई बिक्री नहीं मिली' : 'No sales in this period'}
+          <div className="text-center py-10 text-slate-400 dark:text-[#8FA69C] text-xs">
+            {language === 'mr' ? 'या कालावधीत विक्री सापडली नाही' : language === 'hi' ? 'चुनी गई अवधि में कोई बिक्री नहीं मिली' : 'No sales recorded in this period'}
           </div>
         )}
       </div>
 
-      <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-        <span className="flex items-center gap-1 text-emerald-700 font-medium">
-          <Flame className="w-3.5 h-3.5 text-amber-500" />
-          {language === 'mr' ? 'दूध आणि पनीर सर्वाधिक वेगाने खपणारी उत्पादने आहेत' : language === 'hi' ? 'दूध & पनीर सबसे तेज़ बिकने वाले उत्पाद हैं' : 'Milk & Paneer are highest selling products'}
+      {/* Fixed Footer */}
+      <div className="pt-3 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between text-xs text-slate-500 dark:text-[#8FA69C]">
+        <span className="truncate">
+          {language === 'mr' ? 'दूध आणि पनीर सर्वाधिक वेगाने खपणारी उत्पादने आहेत' : language === 'hi' ? 'दूध व पनीर सर्वाधिक बिकने वाले उत्पाद हैं' : 'Milk and paneer are highest velocity items'}
         </span>
       </div>
+
     </div>
   );
 };

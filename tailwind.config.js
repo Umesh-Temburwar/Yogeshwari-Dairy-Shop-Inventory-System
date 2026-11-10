@@ -8,13 +8,33 @@ export default {
   theme: {
     extend: {
       colors: {
+        theme: {
+          bg: 'var(--bg)',
+          surface: 'var(--surface)',
+          'surface-2': 'var(--surface-2)',
+          border: 'var(--border)',
+          text: 'var(--text)',
+          muted: 'var(--text-muted)',
+          primary: 'var(--primary)',
+          accent: 'var(--accent)',
+          sidebar: 'var(--sidebar)',
+        },
+        dark: {
+          bg: '#0B1210',
+          sidebar: '#0F1A17',
+          surface: '#131F1B',
+          elevated: '#1A2A25',
+          border: '#24352F',
+          text: '#E7F0EC',
+          muted: '#8FA69C',
+        },
         dairy: {
           50: '#f0fdf9',
           100: '#ccfbef',
           200: '#9af5df',
           300: '#5ee7cb',
           400: '#2cd0b2',
-          500: '#10b497',
+          500: '#10b981',
           600: '#0a907b',
           700: '#0c7364',
           800: '#0e5b51',
@@ -29,11 +49,13 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'Plus Jakarta Sans', 'Noto Sans Devanagari', 'system-ui', 'sans-serif'],
+        devanagari: ['Noto Sans Devanagari', 'Inter', 'sans-serif'],
       },
       boxShadow: {
         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
         'card': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
+        'dark-card': '0 4px 20px -2px rgba(0, 0, 0, 0.4)',
       }
     },
   },

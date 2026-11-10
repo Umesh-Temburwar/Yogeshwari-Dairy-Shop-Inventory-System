@@ -1,6 +1,7 @@
 import React from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useTheme } from '../../context/ThemeContext';
 import { 
   ResponsiveContainer, 
   BarChart, 
@@ -15,13 +16,29 @@ import { format, subDays } from 'date-fns';
 
 export const SalesProfitChart: React.FC = () => {
   const { sales, purchases, expenses } = useStore();
-  const { language } = useLanguage();
+  const { t, language } = useLanguage();
+  const { resolvedTheme } = useTheme();
 
-  const salesLabel = language === 'mr' ? 'विक्री (Sales)' : language === 'hi' ? 'बिक्री (Sales)' : 'Sales';
-  const purchaseLabel = language === 'mr' ? 'खरेदी (Purchases)' : language === 'hi' ? 'खरीद (Purchases)' : 'Purchases';
-  const profitLabel = language === 'mr' ? 'नफा (Profit)' : language === 'hi' ? 'लाभ (Profit)' : 'Profit';
+  const isDark = resolvedTheme === 'dark';
+
+  const salesLabel = t('salesLegend');
+  const purchaseLabel = t('purchaseLegend');
+  const profitLabel = t('profitLegend');
+
+  // Colors adapted for dark/light themes
+  const colors = {
+    sales: isDark ? '#34D399' : '#10b981',
+    purchase: isDark ? '#60A5FA' : '#3b82f6',
+    profit: isDark ? '#FBBF24' : '#f59e0b',
+    grid: isDark ? '#24352F' : '#f1f5f9',
+    axis: isDark ? '#8FA69C' : '#64748b',
+    tooltipBg: isDark ? '#131F1B' : '#ffffff',
+    tooltipBorder: isDark ? '#24352F' : '#e2e8f0',
+    tooltipText: isDark ? '#E7F0EC' : '#0f172a',
+  };
 
   // Generate last 7 days chart data
+  let totalDataPoints = 0;
   const chartData = Array.from({ length: 7 }).map((_, index) => {
     const targetDate = subDays(new Date(), 6 - index);
     const dateStr = format(targetDate, 'yyyy-MM-dd');
@@ -45,6 +62,10 @@ export const SalesProfitChart: React.FC = () => {
     // Approximate profit
     const dayProfit = Math.max(0, daySales - (daySales * 0.72) - dayExpenses);
 
+    if (daySales > 0 || dayPurchases > 0 || dayProfit > 0) {
+      totalDataPoints++;
+    }
+
     return {
       date: displayLabel,
       [salesLabel]: daySales,
@@ -54,34 +75,67 @@ export const SalesProfitChart: React.FC = () => {
   });
 
   return (
-    <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-xs">
+    <div className="bg-white dark:bg-[#131F1B] rounded-2xl p-5 border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between h-full transition-colors duration-150">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-base font-bold text-slate-900">
-            {language === 'mr' ? 'दैनिक विक्री, खरेदी आणि नफा कल (गेले ७ दिवस)' : language === 'hi' ? 'दैनिक बिक्री, खरीद और लाभ ट्रेंड (Last 7 Days)' : 'Daily Sales, Purchases & Profit Trend (Last 7 Days)'}
+          <h3 className="text-base font-bold text-slate-900 dark:text-[#E7F0EC]">
+            {t('trendTitle')}
           </h3>
-          <p className="text-xs text-slate-500 font-medium">
-            Daily Sales vs Purchases vs Estimated Profit
+          <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
+            {language === 'mr' ? 'दैनिक विक्री वि. खरेदी वि. अंदाजित नफा' : language === 'hi' ? 'दैनिक बिक्री बनाम खरीद व शुद्ध लाभ' : 'Daily Sales vs Purchases vs Estimated Profit'}
           </p>
         </div>
       </div>
 
       <div className="h-64 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-            <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} tickFormatter={(val) => `₹${val}`} />
-            <Tooltip 
-              formatter={(value: any) => [`₹${Number(value).toLocaleString('en-IN')}`, '']}
-              contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-            />
-            <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-            <Bar dataKey={salesLabel} fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={28} />
-            <Bar dataKey={purchaseLabel} fill="#3b82f6" radius={[6, 6, 0, 0]} maxBarSize={28} />
-            <Bar dataKey={profitLabel} fill="#f59e0b" radius={[6, 6, 0, 0]} maxBarSize={28} />
-          </BarChart>
-        </ResponsiveContainer>
+        {totalDataPoints > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart 
+              data={chartData} 
+              barGap={4}
+              margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={colors.grid} />
+              <XAxis 
+                dataKey="date" 
+                tick={{ fontSize: 11, fill: colors.axis }} 
+                axisLine={false} 
+                tickLine={false} 
+              />
+              <YAxis 
+                tick={{ fontSize: 11, fill: colors.axis }} 
+                axisLine={false} 
+                tickLine={false} 
+                tickFormatter={(val) => (val >= 1000 ? `₹${(val / 1000).toFixed(0)}k` : `₹${val}`)}
+              />
+              <Tooltip 
+                formatter={(value: any) => [`₹${Number(value).toLocaleString('en-IN')}`, '']}
+                contentStyle={{ 
+                  backgroundColor: colors.tooltipBg, 
+                  borderColor: colors.tooltipBorder, 
+                  color: colors.tooltipText,
+                  borderRadius: '12px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                  fontSize: '12px'
+                }}
+              />
+              <Legend 
+                wrapperStyle={{ 
+                  fontSize: '12px', 
+                  paddingTop: '12px',
+                  color: colors.axis
+                }} 
+              />
+              <Bar dataKey={salesLabel} fill={colors.sales} radius={[4, 4, 0, 0]} minPointSize={3} maxBarSize={28} />
+              <Bar dataKey={purchaseLabel} fill={colors.purchase} radius={[4, 4, 0, 0]} minPointSize={3} maxBarSize={28} />
+              <Bar dataKey={profitLabel} fill={colors.profit} radius={[4, 4, 0, 0]} minPointSize={3} maxBarSize={28} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-[#8FA69C] text-xs">
+            <p>{language === 'mr' ? 'या कालावधीत कोणताही व्यवहार नोंदवला नाही' : language === 'hi' ? 'इस अवधि में कोई लेनदेन नहीं मिला' : 'No transactions recorded for this period'}</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -100,28 +100,28 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border border-transparent dark:border-[#24352F] rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b pb-3">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
+            <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
               <PackagePlus className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-base">
+              <h3 className="font-bold text-slate-900 dark:text-[#E7F0EC] text-base">
                 {productToEdit 
-                  ? (language === 'mr' ? 'मालाची माहिती बदला (Edit Product)' : language === 'hi' ? 'माल की जानकारी अपडेट करें' : 'Edit Product Details')
-                  : (language === 'mr' ? 'दुकानात नवीन माल जोडा (Add Product)' : language === 'hi' ? 'दुकान में नया माल जोड़ें' : 'Add New Dairy Product')}
+                  ? (language === 'mr' ? 'मालाची माहिती बदला' : language === 'hi' ? 'माल की जानकारी अपडेट करें' : 'Edit Product Details')
+                  : (language === 'mr' ? 'दुकानात नवीन माल जोडा' : language === 'hi' ? 'दुकान में नया माल जोड़ें' : 'Add New Dairy Product')}
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
                 {language === 'mr' ? 'दूध, पनीर, तूप, खवा, मिठाई किंवा इतर उत्पादने' : 'Milk, Paneer, Ghee, Sweets or Dairy items'}
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -211,9 +211,9 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           </div>
 
           {/* Purchase Price vs Selling Price */}
-          <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+          <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-2xl border border-slate-200 dark:border-[#24352F]">
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                 {language === 'mr' ? `खरेदी दर प्रति ${unit} (₹)` : `खरीद भाव प्रति ${unit} (₹)`} *
               </label>
               <input
@@ -223,12 +223,12 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 placeholder="58"
                 value={purchasePrice}
                 onChange={(e) => setPurchasePrice(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                 {language === 'mr' ? `विक्री दर प्रति ${unit} (₹)` : `बिक्री भाव प्रति ${unit} (₹)`} *
               </label>
               <input
@@ -238,14 +238,14 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 placeholder="70"
                 value={sellingPrice}
                 onChange={(e) => setSellingPrice(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-emerald-800"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-emerald-800 dark:text-emerald-400 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
             {/* Live Profit Margin Calculator Indicator */}
-            <div className="col-span-2 flex items-center justify-between text-xs font-semibold pt-1 text-slate-600">
+            <div className="col-span-2 flex items-center justify-between text-xs font-semibold pt-1 text-slate-600 dark:text-[#8FA69C] border-t border-slate-200 dark:border-[#24352F]">
               <span>{language === 'mr' ? `प्रति ${unit} नफा:` : `प्रति ${unit} अनुमानित लाभ:`}</span>
-              <span className={`font-bold ${marginPerUnit >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+              <span className={`font-bold ${marginPerUnit >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600'}`}>
                 ₹{marginPerUnit.toFixed(2)} ({marginPct}% {language === 'mr' ? 'मार्जिन' : 'Margin'})
               </span>
             </div>
@@ -254,7 +254,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           {/* Current Stock & Low Stock Alert Level */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                 {language === 'mr' ? `सध्याचा साठा (${unit} मध्ये)` : `मौजूदा स्टॉक (${unit} में)`}
               </label>
               <input
@@ -262,12 +262,12 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 step="0.1"
                 value={stockQuantity}
                 onChange={(e) => setStockQuantity(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                 {language === 'mr' ? `कमी साठा मर्यादा (${unit})` : `कम स्टॉक अलर्ट सीमा (${unit})`}
               </label>
               <input
@@ -275,17 +275,17 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 step="0.1"
                 value={minStockAlert}
                 onChange={(e) => setMinStockAlert(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-amber-700"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-amber-700 dark:text-amber-400 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
           </div>
 
           {/* Form Actions */}
-          <div className="flex gap-2 pt-3 border-t">
+          <div className="flex gap-2 pt-3 border-t border-slate-100 dark:border-[#24352F]">
             <button
               type="button"
               onClick={onClose}
-              className="w-1/2 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-semibold text-xs text-slate-700"
+              className="w-1/2 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] font-semibold text-xs text-slate-700 dark:text-[#8FA69C]"
             >
               {t('cancel')}
             </button>

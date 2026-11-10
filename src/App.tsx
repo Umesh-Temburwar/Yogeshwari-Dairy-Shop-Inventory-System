@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { StoreProvider, useStore } from './context/StoreContext';
-import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { LanguageProvider } from './context/LanguageContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
+import { MobileActionBar } from './components/MobileActionBar';
 import { DashboardView } from './components/Dashboard/DashboardView';
 import { BillingCounter } from './components/POS/BillingCounter';
 import { ProductList } from './components/Inventory/ProductList';
@@ -23,6 +25,10 @@ const MainContent: React.FC = () => {
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Sidebar states: Collapsible on desktop (264px <-> 72px) and Drawer on mobile
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Global Keyboard Shortcuts (F2, F3, F4)
   useEffect(() => {
@@ -50,21 +56,26 @@ const MainContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Top Navigation */}
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0B1210] text-[#0f172a] dark:text-[#E7F0EC] flex flex-col transition-colors duration-150 selection:bg-emerald-500 selection:text-white">
+      {/* Top Header (Fixed 64px, nothing clipped or overflowing) */}
       <Navbar 
-        onOpenAddProduct={() => {
-          setProductToEdit(null);
-          setIsAddProductOpen(true);
-        }}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebarCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+        onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
       />
 
       {/* Main Workspace with Sidebar & Content */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto">
-        <Sidebar />
+      <div className="flex-1 flex max-w-[1440px] w-full mx-auto min-h-[calc(100vh-4rem)]">
+        {/* Sidebar: 264px / 72px rail on desktop, drawer on mobile */}
+        <Sidebar 
+          isCollapsed={isSidebarCollapsed}
+          isMobileOpen={isMobileSidebarOpen}
+          onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-y-auto">
+        {/* Main Content Area */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-6 min-w-0 overflow-y-auto">
           {activeView === 'dashboard' && (
             <DashboardView 
               onOpenAddProduct={() => {
@@ -102,6 +113,14 @@ const MainContent: React.FC = () => {
         </main>
       </div>
 
+      {/* Mobile Floating Action Bar for Quick F2 / F3 / F4 Actions */}
+      <MobileActionBar 
+        onOpenAddProduct={() => {
+          setProductToEdit(null);
+          setIsAddProductOpen(true);
+        }}
+      />
+
       {/* Modals */}
       <AddProductModal 
         isOpen={isAddProductOpen}
@@ -122,11 +141,13 @@ const MainContent: React.FC = () => {
 
 export function App() {
   return (
-    <LanguageProvider>
-      <StoreProvider>
-        <MainContent />
-      </StoreProvider>
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <StoreProvider>
+          <MainContent />
+        </StoreProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }
 

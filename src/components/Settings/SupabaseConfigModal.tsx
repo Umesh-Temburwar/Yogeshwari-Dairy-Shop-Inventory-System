@@ -159,26 +159,26 @@ CREATE TABLE IF NOT EXISTS expenses (
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border border-transparent dark:border-[#24352F] rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b pb-3">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
+            <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
               <Database className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-extrabold text-slate-900 text-base">
+              <h3 className="font-extrabold text-slate-900 dark:text-[#E7F0EC] text-base">
                 Supabase डेटाबेस सेटिंग्स (Cloud Database)
               </h3>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
                 क्लाउड सिंक अथवा ऑफलाइन लोकल स्टोरेज मोड
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -187,20 +187,20 @@ CREATE TABLE IF NOT EXISTS expenses (
         {/* Current Connection Status */}
         <div className={`p-3.5 rounded-2xl border flex items-center justify-between ${
           isSupabaseConnected 
-            ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900' 
-            : 'bg-slate-50 border-slate-200 text-slate-700'
+            ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40 text-emerald-900 dark:text-emerald-300' 
+            : 'bg-slate-50 dark:bg-[#1A2A25] border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#8FA69C]'
         }`}>
           <div className="flex items-center gap-2 text-xs font-semibold">
             {isSupabaseConnected ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             ) : (
-              <ShieldCheck className="w-5 h-5 text-slate-500" />
+              <ShieldCheck className="w-5 h-5 text-slate-500 shrink-0" />
             )}
             <div>
               <div className="font-bold">
                 {isSupabaseConnected ? 'क्लाउड डेटाबेस सक्रिय (Supabase Connected)' : 'ऑफलाइन लोकल स्टोरेज सक्रिय (Offline Mode)'}
               </div>
-              <div className="text-[11px] font-normal text-slate-500">
+              <div className="text-[11px] font-normal text-slate-500 dark:text-[#8FA69C]">
                 {isSupabaseConnected 
                   ? 'आपका सारा डेटा सीधे Supabase PostgreSQL में सुरक्षित हो रहा है'
                   : 'डेटा आपके ब्राउज़र में सुरक्षित है। Supabase जोड़ते ही ऑटो-सिंक हो जाएगा।'}
@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS expenses (
         {/* Supabase URL & Key Form */}
         <form onSubmit={handleTestAndSave} className="space-y-3.5">
           <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1">
+            <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
               Supabase Project URL
             </label>
             <input
@@ -220,12 +220,12 @@ CREATE TABLE IF NOT EXISTS expenses (
               placeholder="https://xyzcompany.supabase.co"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1">
+            <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
               Supabase Anon / Public API Key
             </label>
             <input
@@ -233,7 +233,7 @@ CREATE TABLE IF NOT EXISTS expenses (
               placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
               value={key}
               onChange={(e) => setKey(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             />
           </div>
 
@@ -253,14 +253,14 @@ CREATE TABLE IF NOT EXISTS expenses (
               className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20"
             >
               {testingStatus.testing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
-              <span>कनेक्शन जांचें व सुरक्षित करें (Save &amp; Connect)</span>
+              <span>कनेक्शन जांचें व सुरक्षित करें</span>
             </button>
 
             {isSupabaseConnected && (
               <button
                 type="button"
                 onClick={handleDisconnect}
-                className="px-3 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200"
+                className="px-3 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-900/40"
               >
                 डिस्कनेक्ट
               </button>
@@ -269,30 +269,30 @@ CREATE TABLE IF NOT EXISTS expenses (
         </form>
 
         {/* 1-Click SQL Copy Section */}
-        <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
+        <div className="bg-slate-50 dark:bg-[#1A2A25] p-3.5 rounded-2xl border border-slate-200 dark:border-[#24352F] space-y-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-              <FileCode className="w-4 h-4 text-emerald-600" />
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-[#E7F0EC]">
+              <FileCode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Supabase SQL सेटअप स्क्रिप्ट</span>
             </div>
             <button
               onClick={handleCopySqlSchema}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-100"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] text-xs font-bold text-slate-700 dark:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#24352F]"
             >
-              {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+              {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copiedSql ? 'कॉपी हो गया!' : '1-क्लिक SQL कॉपी करें'}</span>
             </button>
           </div>
-          <p className="text-[11px] text-slate-500">
-            इसे Supabase Dashboard में <b className="text-slate-700">SQL Editor</b> में पेस्ट करके "Run" दबाएं।
+          <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
+            इसे Supabase Dashboard में <b className="text-slate-700 dark:text-[#E7F0EC]">SQL Editor</b> में पेस्ट करके "Run" दबाएं।
           </p>
         </div>
 
         {/* Demo Data Reset */}
-        <div className="border-t pt-3 flex items-center justify-between">
+        <div className="border-t border-slate-100 dark:border-[#24352F] pt-3 flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold text-slate-800 block">डेरी सैंपल डेटा रिसेट</span>
-            <span className="text-[11px] text-slate-500 block">
+            <span className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC] block">डेरी सैंपल डेटा रिसेट</span>
+            <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] block">
               ताज़ा दूध, पनीर, खर्च और बिक्री डेटा दोबारा लोड करें
             </span>
           </div>
@@ -304,7 +304,7 @@ CREATE TABLE IF NOT EXISTS expenses (
                 onClose();
               }
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-[#8FA69C] text-xs font-bold"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>डेटा रिसेट करें</span>

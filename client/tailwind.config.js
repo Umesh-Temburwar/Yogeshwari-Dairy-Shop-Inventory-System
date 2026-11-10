@@ -1,6 +1,5 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
@@ -23,8 +22,21 @@ export default {
           600: '#ca8a04',
         },
       },
+      keyframes: {
+        slideIn: {
+          '0%': { transform: 'translateY(100%)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        fadeIn: {
+          '0%': { transform: 'scale(0.96)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+      },
+      animation: {
+        slideIn: 'slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        fadeIn: 'fadeIn 0.15s ease-out forwards',
+      },
     },
   },
   plugins: [],
 };
-

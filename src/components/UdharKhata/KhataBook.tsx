@@ -2,14 +2,14 @@ import React, { useState, useMemo } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { UdharCustomer } from '../../types';
-import { 
-  BookOpen, 
-  Search, 
-  Phone, 
-  MessageCircle, 
-  Banknote, 
-  Smartphone, 
-  X, 
+import {
+  BookOpen,
+  Search,
+  Phone,
+  MessageCircle,
+  Banknote,
+  Smartphone,
+  X,
   UserPlus
 } from 'lucide-react';
 
@@ -39,7 +39,7 @@ export const KhataBook: React.FC = () => {
   // Filtered customer list
   const filteredCustomers = useMemo(() => {
     return customers.filter(c => {
-      const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.phone.includes(searchQuery);
 
       let matchesStatus = true;
@@ -76,7 +76,7 @@ export const KhataBook: React.FC = () => {
         `📌 *Outstanding Balance: ₹${customer.current_balance.toLocaleString('en-IN')}*\n\n` +
         `Kindly settle the due amount at your earliest convenience.\n` +
         `💳 *UPI ID:* yogeshwaridairy@okaxis\n` +
-        `Thank you!\nYogeshwari Dairy Farm & Sweets`;
+        `Thank you!\nYogeshwari Dairy & Sweets`;
     }
 
     const message = encodeURIComponent(messageText);
@@ -120,17 +120,17 @@ export const KhataBook: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#131F1B] p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
         <div>
-          <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <BookOpen className="w-6 h-6 text-amber-600" />
+          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <BookOpen className="w-6 h-6 text-amber-600 dark:text-amber-400" />
             <span>{t('khataTitle')}</span>
           </h2>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
-            {language === 'mr' 
-              ? 'नियमित ग्राहक, मिठाईवाले आणि हॉटेलांचे उधारी व जमा खातेवही' 
+          <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
+            {language === 'mr'
+              ? 'नियमित ग्राहक, मिठाईवाले आणि हॉटेलांचे उधारी व जमा खातेवही'
               : 'नियमित ग्राहकों, हलवाइयों व होटलों का उधारी व जमा हिसाब-किताब'}
           </p>
         </div>
@@ -146,45 +146,45 @@ export const KhataBook: React.FC = () => {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
-          <span className="text-xs font-semibold text-slate-500 block">
+        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
+          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
             {t('totalUdharDue')}
           </span>
-          <span className="text-2xl font-black text-amber-700 mt-1 block">
+          <span className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1 block">
             ₹{metrics.totalOutstandingUdhar.toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-slate-500 font-medium">
+          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
             {customers.filter(c => c.current_balance > 0).length} {language === 'mr' ? 'ग्राहकांकडून येणे बाकी आहे' : 'ग्राहकों से वसूली बाकी है'}
           </span>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
-          <span className="text-xs font-semibold text-slate-500 block">
+        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
+          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
             {language === 'mr' ? 'एकूण दिलेली उधारी' : 'कुल उधारी दी गई'}
           </span>
-          <span className="text-2xl font-black text-slate-800 mt-1 block">
+          <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">
             ₹{customers.reduce((acc, c) => acc + c.total_credit, 0).toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-slate-500 font-medium">
+          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
             {language === 'mr' ? 'सर्व खात्यांमधील एकूण उधारी' : 'सभी खातों में कुल दी गई उधारी'}
           </span>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
-          <span className="text-xs font-semibold text-slate-500 block">
+        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
+          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
             {language === 'mr' ? 'एकूण वसूल झालेली रक्कम' : 'कुल जमा रकम (Recovered)'}
           </span>
-          <span className="text-2xl font-black text-emerald-700 mt-1 block">
+          <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1 block">
             ₹{customers.reduce((acc, c) => acc + c.total_paid, 0).toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-slate-500 font-medium">
+          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
             {language === 'mr' ? 'यशस्वीपणे जमा झालेली रक्कम' : 'सफलतापूर्वक वसूल की गई राशि'}
           </span>
         </div>
       </div>
 
       {/* Search & Filter Controls */}
-      <div className="flex flex-col sm:flex-row gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs">
+      <div className="flex flex-col sm:flex-row gap-3 bg-white dark:bg-[#131F1B] p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -192,32 +192,29 @@ export const KhataBook: React.FC = () => {
             placeholder={language === 'mr' ? 'ग्राहकाचे नाव किंवा मोबाईल क्रमांक शोधा...' : 'ग्राहक का नाम या मोबाइल नंबर खोजें...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
 
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl shrink-0">
+        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl shrink-0">
           <button
             onClick={() => setFilterStatus('pending')}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-              filterStatus === 'pending' ? 'bg-amber-600 text-white font-bold' : 'text-slate-600'
-            }`}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold ${filterStatus === 'pending' ? 'bg-amber-600 text-white font-bold' : 'text-slate-600 dark:text-[#8FA69C]'
+              }`}
           >
             {t('debtorsOnly')} ({customers.filter(c => c.current_balance > 0).length})
           </button>
           <button
             onClick={() => setFilterStatus('cleared')}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-              filterStatus === 'cleared' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-600'
-            }`}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold ${filterStatus === 'cleared' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-600 dark:text-[#8FA69C]'
+              }`}
           >
             {t('clearedAccounts')} ({customers.filter(c => c.current_balance <= 0).length})
           </button>
           <button
             onClick={() => setFilterStatus('all')}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-              filterStatus === 'all' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600'
-            }`}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold ${filterStatus === 'all' ? 'bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white shadow-xs font-bold' : 'text-slate-600 dark:text-[#8FA69C]'
+              }`}
           >
             {t('allAccounts')} ({customers.length})
           </button>
@@ -232,48 +229,46 @@ export const KhataBook: React.FC = () => {
           return (
             <div
               key={cust.id}
-              className={`bg-white rounded-2xl p-4 border transition-all duration-150 flex flex-col justify-between ${
-                hasBalance ? 'border-amber-200/90 shadow-xs hover:border-amber-400' : 'border-slate-200 opacity-90'
-              }`}
+              className={`bg-white dark:bg-[#131F1B] rounded-2xl p-4 border transition-all duration-150 flex flex-col justify-between ${hasBalance ? 'border-amber-200/90 dark:border-amber-900/40 shadow-xs hover:border-amber-400 dark:hover:border-amber-600' : 'border-slate-200 dark:border-[#24352F] opacity-90'
+                }`}
             >
               <div>
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div>
-                    <h4 className="font-extrabold text-slate-900 text-base">
+                    <h4 className="font-extrabold text-slate-900 dark:text-white text-base">
                       {cust.name}
                     </h4>
-                    <div className="flex items-center gap-1 text-xs text-slate-500 font-medium mt-0.5">
+                    <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
                       <Phone className="w-3.5 h-3.5 text-slate-400" />
                       <span>{cust.phone}</span>
                     </div>
                   </div>
 
-                  <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                    hasBalance ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-800'
-                  }`}>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${hasBalance ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-transparent dark:border-amber-800/40' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
+                    }`}>
                     {hasBalance ? (language === 'mr' ? 'बाकी आहे' : 'बाकी है') : (language === 'mr' ? 'चुकता' : 'चुकता')}
                   </span>
                 </div>
 
                 {cust.address && (
-                  <p className="text-[11px] text-slate-500 mb-2 truncate">
+                  <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] mb-2 truncate">
                     📍 {cust.address}
                   </p>
                 )}
 
                 {/* Balance & Ledger stats */}
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 my-2 space-y-1 text-xs">
-                  <div className="flex justify-between text-slate-500">
+                <div className="bg-slate-50 dark:bg-[#1A2A25] p-2.5 rounded-xl border border-slate-100 dark:border-[#24352F] my-2 space-y-1 text-xs">
+                  <div className="flex justify-between text-slate-500 dark:text-[#8FA69C]">
                     <span>{language === 'mr' ? 'एकूण उधारी घेतली:' : 'कुल उधारी ली:'}</span>
-                    <span className="font-semibold text-slate-800">₹{cust.total_credit.toLocaleString('en-IN')}</span>
+                    <span className="font-semibold text-slate-800 dark:text-white">₹{cust.total_credit.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between text-slate-500">
+                  <div className="flex justify-between text-slate-500 dark:text-[#8FA69C]">
                     <span>{language === 'mr' ? 'एकूण जमा केली:' : 'कुल जमा किया:'}</span>
-                    <span className="font-semibold text-emerald-700">₹{cust.total_paid.toLocaleString('en-IN')}</span>
+                    <span className="font-semibold text-emerald-700 dark:text-emerald-400">₹{cust.total_paid.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between items-baseline pt-1.5 border-t border-slate-200">
-                    <span className="font-bold text-slate-700">{t('balanceDue')}</span>
-                    <span className={`text-lg font-black ${hasBalance ? 'text-rose-600' : 'text-emerald-700'}`}>
+                  <div className="flex justify-between items-baseline pt-1.5 border-t border-slate-200 dark:border-[#24352F]">
+                    <span className="font-bold text-slate-700 dark:text-[#8FA69C]">{t('balanceDue')}</span>
+                    <span className={`text-lg font-black ${hasBalance ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
                       ₹{cust.current_balance.toLocaleString('en-IN')}
                     </span>
                   </div>
@@ -281,7 +276,7 @@ export const KhataBook: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+              <div className="pt-2 border-t border-slate-100 dark:border-[#24352F] flex items-center gap-2">
                 {hasBalance && (
                   <button
                     onClick={() => {
@@ -298,17 +293,17 @@ export const KhataBook: React.FC = () => {
                 {hasBalance && cust.phone && (
                   <button
                     onClick={() => handleSendWhatsAppReminder(cust)}
-                    className="py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs flex items-center gap-1"
+                    className="py-2 px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/60 font-bold text-xs flex items-center gap-1"
                     title={t('sendWhatsAppReminder')}
                   >
-                    <MessageCircle className="w-4 h-4 text-emerald-600" />
+                    <MessageCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <span>{language === 'mr' ? 'तगादा' : 'तकादा'}</span>
                   </button>
                 )}
 
                 <button
                   onClick={() => setSelectedLedgerCustomer(cust)}
-                  className="py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs"
+                  className="py-2 px-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-[#8FA69C] font-semibold text-xs"
                 >
                   {language === 'mr' ? 'हिशोब वही' : 'हिसाब लेजर'}
                 </button>
@@ -322,79 +317,77 @@ export const KhataBook: React.FC = () => {
       {/* RECORD PAYMENT (JAMA) MODAL */}
       {paymentCustomer && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
-            
-            <div className="flex items-center justify-between border-b pb-2">
+          <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-transparent dark:border-[#24352F]">
+
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-2">
               <div>
-                <h3 className="font-bold text-slate-900 text-base">
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">
                   {language === 'mr' ? 'उधारी जमा नोंदवा (Jama Payment)' : 'उधारी जमा दर्ज करें (Jama Payment)'}
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
                   {paymentCustomer.name} ({language === 'mr' ? 'बाकी:' : 'बाकी:'} ₹{paymentCustomer.current_balance})
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => setPaymentCustomer(null)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handlePaymentSubmit} className="space-y-3.5">
-              
+
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                   {language === 'mr' ? 'जमा करावयाची रक्कम (₹ Amount) *' : 'जमा की जाने वाली रकम (₹ Amount) *'}
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500 dark:text-[#8FA69C]">₹</span>
                   <input
                     type="number"
                     step="1"
                     required
                     value={paymentAmount}
                     onChange={(e) => setPaymentAmount(e.target.value)}
-                    className="w-full pl-8 pr-4 py-2 border rounded-xl font-bold text-base focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full pl-8 pr-4 py-2 border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white rounded-xl font-bold text-base focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                   {t('paymentMethod')}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setPaymentMode('Cash')}
-                    className={`p-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 ${
-                      paymentMode === 'Cash' 
-                        ? 'border-emerald-600 bg-emerald-50 text-emerald-900' 
-                        : 'border-slate-200 text-slate-600'
-                    }`}
+                    className={`p-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 ${paymentMode === 'Cash'
+                        ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-300'
+                        : 'border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C]'
+                      }`}
                   >
-                    <Banknote className="w-4 h-4 text-emerald-600" />
+                    <Banknote className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <span>{t('cash')}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setPaymentMode('Online_UPI')}
-                    className={`p-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 ${
-                      paymentMode === 'Online_UPI' 
-                        ? 'border-purple-600 bg-purple-50 text-purple-900' 
-                        : 'border-slate-200 text-slate-600'
-                    }`}
+                    className={`p-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 ${paymentMode === 'Online_UPI'
+                        ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/50 text-purple-900 dark:text-purple-300'
+                        : 'border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C]'
+                      }`}
                   >
-                    <Smartphone className="w-4 h-4 text-purple-600" />
+                    <Smartphone className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                     <span>{t('onlineUpi')}</span>
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                   {language === 'mr' ? 'तपशील / शेरा' : 'विवरण / नोट्स'}
                 </label>
                 <input
@@ -402,15 +395,15 @@ export const KhataBook: React.FC = () => {
                   placeholder={language === 'mr' ? 'उदा. PhonePe द्वारे जमा / रोख पावती' : 'उदा. PhonePe से प्राप्त / नकद जमा'}
                   value={paymentNotes}
                   onChange={(e) => setPaymentNotes(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white rounded-xl text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
-              <div className="flex gap-2 pt-2 border-t">
+              <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F]">
                 <button
                   type="button"
                   onClick={() => setPaymentCustomer(null)}
-                  className="w-1/2 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 font-semibold text-xs text-slate-700"
+                  className="w-1/2 py-2 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] font-semibold text-xs text-slate-700 dark:text-[#8FA69C]"
                 >
                   {t('cancel')}
                 </button>
@@ -431,15 +424,15 @@ export const KhataBook: React.FC = () => {
       {/* ADD NEW CUSTOMER MODAL */}
       {isAddCustModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
-            
-            <div className="flex items-center justify-between border-b pb-2">
-              <h3 className="font-bold text-slate-900 text-base">
+          <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-transparent dark:border-[#24352F]">
+
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-2">
+              <h3 className="font-bold text-slate-900 dark:text-white text-base">
                 {language === 'mr' ? 'नवीन ग्राहक उधारी खाते उघडा' : 'नया ग्राहक खाता जोड़ें'}
               </h3>
-              <button 
+              <button
                 onClick={() => setIsAddCustModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -447,7 +440,7 @@ export const KhataBook: React.FC = () => {
 
             <form onSubmit={handleAddCustomerSubmit} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                   {language === 'mr' ? 'ग्राहकाचे नाव *' : 'ग्राहक का नाम *'}
                 </label>
                 <input
@@ -456,12 +449,12 @@ export const KhataBook: React.FC = () => {
                   placeholder={language === 'mr' ? 'उदा. गणेश हलवाई / तानाजी हॉटेल' : 'उदा. रमेश हलवाई / गुप्ता जी'}
                   value={newCustName}
                   onChange={(e) => setNewCustName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                   {language === 'mr' ? 'मोबाईल नंबर (WhatsApp तगाद्यासाठी) *' : 'मोबाइल नंबर (WhatsApp Reminder के लिए) *'}
                 </label>
                 <input
@@ -470,12 +463,12 @@ export const KhataBook: React.FC = () => {
                   placeholder="98XXXXXXXX"
                   value={newCustPhone}
                   onChange={(e) => setNewCustPhone(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                   {language === 'mr' ? 'पत्ता किंवा दुकानाचे नाव' : 'पता या दुकान का नाम'}
                 </label>
                 <input
@@ -483,12 +476,12 @@ export const KhataBook: React.FC = () => {
                   placeholder={language === 'mr' ? 'उदा. बस स्टँड चौक, मेन रोड' : 'उदा. बस स्टैंड चौक, दुकान नं 4'}
                   value={newCustAddress}
                   onChange={(e) => setNewCustAddress(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                   {language === 'mr' ? 'शेरा / नोट्स' : 'नोट्स'}
                 </label>
                 <input
@@ -496,15 +489,15 @@ export const KhataBook: React.FC = () => {
                   placeholder={language === 'mr' ? 'उदा. दर सोमवारी हिशोब करतात' : 'उदा. हर सोमवार को भुगतान करता है'}
                   value={newCustNotes}
                   onChange={(e) => setNewCustNotes(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
-              <div className="flex gap-2 pt-2 border-t">
+              <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F]">
                 <button
                   type="button"
                   onClick={() => setIsAddCustModalOpen(false)}
-                  className="w-1/2 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 font-semibold text-xs text-slate-700"
+                  className="w-1/2 py-2 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] font-semibold text-xs text-slate-700 dark:text-[#8FA69C]"
                 >
                   {t('cancel')}
                 </button>
@@ -524,31 +517,31 @@ export const KhataBook: React.FC = () => {
       {/* CUSTOMER LEDGER STATEMENT MODAL */}
       {selectedLedgerCustomer && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            
-            <div className="flex items-center justify-between border-b pb-3">
+          <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 border border-transparent dark:border-[#24352F]">
+
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
               <div>
-                <h3 className="font-extrabold text-slate-900 text-base">
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-base">
                   {selectedLedgerCustomer.name} - {language === 'mr' ? 'हिशोब लेजर' : 'हिसाब लेजर'}
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
                   📱 {selectedLedgerCustomer.phone} &bull; 📍 {selectedLedgerCustomer.address || 'Local'}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => setSelectedLedgerCustomer(null)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="bg-amber-50 p-3 rounded-2xl border border-amber-200 flex justify-between items-center text-xs">
+            <div className="bg-amber-50 dark:bg-[#1A2A25] p-3 rounded-2xl border border-amber-200 dark:border-[#24352F] flex justify-between items-center text-xs">
               <div>
-                <span className="text-amber-800 font-semibold block">
+                <span className="text-amber-800 dark:text-amber-300 font-semibold block">
                   {language === 'mr' ? 'एकूण बाकी रक्कम:' : 'कुल बाकी रकम:'}
                 </span>
-                <span className="text-xl font-black text-amber-950">
+                <span className="text-xl font-black text-amber-950 dark:text-amber-400">
                   ₹{selectedLedgerCustomer.current_balance.toLocaleString('en-IN')}
                 </span>
               </div>
@@ -563,41 +556,40 @@ export const KhataBook: React.FC = () => {
             </div>
 
             <div className="space-y-2 max-h-60 overflow-y-auto">
-              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <h4 className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] uppercase tracking-wider">
                 {language === 'mr' ? 'अलिकडील व्यवहार (Transactions):' : 'हाल के लेन-देन (Transactions):'}
               </h4>
-              
+
               {udharTransactions
                 .filter(t => t.customer_id === selectedLedgerCustomer.id || t.customer_id === selectedLedgerCustomer.name)
                 .map((tx) => (
-                  <div 
+                  <div
                     key={tx.id}
-                    className="flex items-center justify-between p-2 rounded-xl border border-slate-100 bg-slate-50 text-xs"
+                    className="flex items-center justify-between p-2 rounded-xl border border-slate-100 dark:border-[#24352F] bg-slate-50 dark:bg-[#1A2A25] text-xs"
                   >
                     <div>
-                      <div className="font-bold text-slate-900">
-                        {tx.type === 'Credit_Given' 
-                          ? (language === 'mr' ? 'उधारी दिली (Goods Credit)' : 'उधारी दी (Goods Credit)') 
+                      <div className="font-bold text-slate-900 dark:text-white">
+                        {tx.type === 'Credit_Given'
+                          ? (language === 'mr' ? 'उधारी दिली (Goods Credit)' : 'उधारी दी (Goods Credit)')
                           : (language === 'mr' ? 'रक्कम जमा झाली (Payment Recv)' : 'जमा प्राप्त हुई (Payment Recv)')}
                       </div>
-                      <div className="text-[10px] text-slate-500">
+                      <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">
                         {tx.transaction_date} &bull; {tx.notes || tx.payment_mode}
                       </div>
                     </div>
 
-                    <span className={`font-black text-sm ${
-                      tx.type === 'Credit_Given' ? 'text-amber-600' : 'text-emerald-700'
-                    }`}>
+                    <span className={`font-black text-sm ${tx.type === 'Credit_Given' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-400'
+                      }`}>
                       {tx.type === 'Credit_Given' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
                     </span>
                   </div>
                 ))}
             </div>
 
-            <div className="pt-2 border-t text-right">
+            <div className="pt-2 border-t border-slate-100 dark:border-[#24352F] text-right">
               <button
                 onClick={() => setSelectedLedgerCustomer(null)}
-                className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs"
+                className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-[#1A2A25] hover:bg-slate-800 dark:hover:bg-[#24352F] text-white font-bold text-xs"
               >
                 {language === 'mr' ? 'बंद करा' : 'बंद करें'}
               </button>

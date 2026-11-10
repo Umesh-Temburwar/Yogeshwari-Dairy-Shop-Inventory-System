@@ -79,16 +79,16 @@ export const ReorderNeedsView: React.FC = () => {
     <div className="space-y-6">
       
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-amber-900 via-orange-900 to-amber-950 p-6 rounded-3xl text-white shadow-md">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-amber-900 via-orange-900 to-amber-950 dark:from-[#3D1E0B] dark:to-[#131F1B] p-6 rounded-3xl text-white shadow-md border border-amber-800/40 dark:border-[#24352F] transition-colors">
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-800/60 text-xs font-semibold text-amber-200 border border-amber-700/50">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-800/60 dark:bg-amber-950/60 text-xs font-semibold text-amber-200 border border-amber-700/50 dark:border-amber-800/50">
             <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
             <span>{t('stockNeedNav')}</span>
           </div>
-          <h2 className="text-2xl font-black tracking-tight">
+          <h2 className="text-2xl font-black tracking-tight text-white">
             {t('reorderTitle')}
           </h2>
-          <p className="text-amber-100/90 text-xs max-w-xl">
+          <p className="text-amber-100/90 dark:text-[#8FA69C] text-xs max-w-xl">
             {t('reorderDesc')}
           </p>
         </div>
@@ -116,36 +116,36 @@ export const ReorderNeedsView: React.FC = () => {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
-          <span className="text-xs font-semibold text-slate-500 block">
+        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
+          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
             {language === 'mr' ? 'एकूण संपलेली उत्पादने' : 'कुल खत्म / कम स्टॉक'}
           </span>
-          <span className="text-2xl font-black text-rose-600 mt-1 block">
+          <span className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1 block">
             {itemsNeedingRestock.length} {language === 'mr' ? 'उत्पादने' : 'आइटम्स'}
           </span>
-          <span className="text-[11px] text-slate-500">
+          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
             {itemsNeedingRestock.filter(i => i.isCritical).length} {language === 'mr' ? 'उत्पादने पूर्णपणे संपली आहेत' : 'पूरी तरह शून्य हैं'}
           </span>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
-          <span className="text-xs font-semibold text-slate-500 block">
+        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
+          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
             {language === 'mr' ? 'अंदाजे खरेदी बजेट' : 'अनुमानित खरीद बजट (Total Cost)'}
           </span>
-          <span className="text-2xl font-black text-slate-900 mt-1 block">
+          <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
             ₹{totalEstimatedCost.toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-slate-500">
+          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
             {language === 'mr' ? 'घाऊक खरेदी दराप्रमाणे अंदाजे रक्कम' : 'थोक खरीद भाव के हिसाब से'}
           </span>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex items-center justify-between transition-colors">
           <div>
-            <span className="text-xs font-semibold text-slate-500 block">
+            <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
               {language === 'mr' ? 'खरेदी नोंद' : 'खरीद एंट्री'}
             </span>
-            <span className="text-xs text-slate-600 block mt-1">
+            <span className="text-xs text-slate-600 dark:text-[#8FA69C] block mt-1">
               {language === 'mr' ? 'माल येताच थेट साठ्यात नोंदवा' : 'माल आते ही सीधे स्टॉक में जोड़ें'}
             </span>
           </div>
@@ -159,15 +159,15 @@ export const ReorderNeedsView: React.FC = () => {
       </div>
 
       {/* Procurement Items Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-            <Truck className="w-4 h-4 text-amber-600" />
+      <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs overflow-hidden transition-colors">
+        <div className="p-4 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between">
+          <h3 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+            <Truck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             <span>
               {language === 'mr' ? 'आजचे खरेदी मागणी पत्रक' : 'आज का आर्डर मांग पत्र'}
             </span>
           </h3>
-          <span className="text-xs text-slate-500 font-medium">
+          <span className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
             {language === 'mr' ? 'किमान मर्यादेपेक्षा कमी माल' : 'न्यूनतम अलर्ट से कम उत्पाद'}
           </span>
         </div>
@@ -175,7 +175,7 @@ export const ReorderNeedsView: React.FC = () => {
         {itemsNeedingRestock.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase">
+              <thead className="bg-slate-50 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] font-bold uppercase">
                 <tr>
                   <th className="px-4 py-3">{t('productNameCol')}</th>
                   <th className="px-3 py-3">{t('categoryCol')}</th>
@@ -187,43 +187,43 @@ export const ReorderNeedsView: React.FC = () => {
                   <th className="px-4 py-3 text-right">{t('actionsCol')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
                 {itemsNeedingRestock.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                  <tr key={item.id} className="hover:bg-slate-50/80 dark:hover:bg-[#1A2A25]/60 transition-colors">
                     <td className="px-4 py-3">
-                      <div className="font-bold text-slate-900">{getDisplayName(item)}</div>
+                      <div className="font-bold text-slate-900 dark:text-white">{getDisplayName(item)}</div>
                       {getDisplayName(item) !== item.name && (
-                        <div className="text-[11px] text-slate-500 font-medium">{item.name}</div>
+                        <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">{item.name}</div>
                       )}
                     </td>
 
-                    <td className="px-3 py-3 font-semibold text-slate-600">
+                    <td className="px-3 py-3 font-semibold text-slate-600 dark:text-[#8FA69C]">
                       {item.category}
                     </td>
 
                     <td className="px-3 py-3 text-center">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-black ${
-                        item.isCritical ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-900'
+                        item.isCritical ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60' : 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60'
                       }`}>
                         {item.stock_quantity} {item.unit}
                       </span>
                     </td>
 
-                    <td className="px-3 py-3 text-center font-bold text-slate-500">
+                    <td className="px-3 py-3 text-center font-bold text-slate-500 dark:text-[#8FA69C]">
                       {item.min_stock_alert} {item.unit}
                     </td>
 
                     <td className="px-3 py-3 text-center">
-                      <span className="px-3 py-1 rounded-lg bg-emerald-100 text-emerald-900 font-extrabold text-xs">
+                      <span className="px-3 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-300 font-extrabold text-xs border border-emerald-200 dark:border-emerald-800/60">
                         +{item.recommendedOrderQty} {item.unit}
                       </span>
                     </td>
 
-                    <td className="px-3 py-3 text-right font-medium text-slate-600">
+                    <td className="px-3 py-3 text-right font-medium text-slate-600 dark:text-[#8FA69C]">
                       ₹{item.purchase_price}
                     </td>
 
-                    <td className="px-3 py-3 text-right font-black text-slate-900">
+                    <td className="px-3 py-3 text-right font-black text-slate-900 dark:text-white">
                       ₹{item.estimatedCost.toLocaleString('en-IN')}
                     </td>
 
@@ -242,11 +242,11 @@ export const ReorderNeedsView: React.FC = () => {
           </div>
         ) : (
           <div className="p-12 text-center space-y-2">
-            <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
-            <h4 className="font-bold text-slate-900 text-base">
+            <CheckCircle2 className="w-12 h-12 text-emerald-600 dark:text-emerald-400 mx-auto" />
+            <h4 className="font-bold text-slate-900 dark:text-white text-base">
               {language === 'mr' ? 'दुकानातील कोणताही माल संपलेला नाही!' : 'दुकान का कोई भी माल खत्म नहीं है!'}
             </h4>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <p className="text-xs text-slate-500 dark:text-[#8FA69C] max-w-sm mx-auto">
               {language === 'mr' ? 'दूध, पनीर, दही, तूप आणि मिठाई पुरेशा साठ्यात उपलब्ध आहे.' : 'सभी डेरी उत्पाद, दूध, पनीर, दही व घी पर्याप्त स्टॉक में उपलब्ध हैं।'}
             </p>
           </div>

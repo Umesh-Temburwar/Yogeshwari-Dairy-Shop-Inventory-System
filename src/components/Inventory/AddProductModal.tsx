@@ -131,7 +131,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           
           {/* Trilingual Names: English, Marathi, Hindi */}
           <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1">
+            <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
               इंग्रजी नाव (English Name) *
             </label>
             <input
@@ -140,13 +140,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               placeholder="e.g. Fresh Buffalo Milk Full Cream"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                 मराठी नाव (Marathi Name)
               </label>
               <input
@@ -154,11 +154,11 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 placeholder="उदा. ताजे म्हशीचे दूध"
                 value={marathiName}
                 onChange={(e) => setMarathiName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                 हिंदी नाम (Hindi Name)
               </label>
               <input
@@ -166,7 +166,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 placeholder="उदा. ताज़ा भैंस का दूध"
                 value={hindiName}
                 onChange={(e) => setHindiName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
           </div>
@@ -174,13 +174,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           {/* Category & Unit */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                 {t('categoryCol')} *
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as ProductCategory)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 <option value="Milk">{t('catMilk')} (Milk)</option>
                 <option value="Curd & Chaas">{t('catCurd')} (Curd & Chaas)</option>
@@ -192,13 +192,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                 {t('unitCol')} *
               </label>
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value as ProductUnit)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 <option value="Litre">{language === 'mr' ? 'लिटर (Litre)' : language === 'hi' ? 'लीटर (Litre)' : 'Litre'}</option>
                 <option value="Kg">{language === 'mr' ? 'किलो (Kg)' : language === 'hi' ? 'किलोग्राम (Kg)' : 'Kg'}</option>

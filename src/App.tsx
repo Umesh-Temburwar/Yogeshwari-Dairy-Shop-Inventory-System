@@ -56,7 +56,7 @@ const MainContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0B1210] text-[#0f172a] dark:text-[#E7F0EC] flex flex-col transition-colors duration-150 selection:bg-emerald-500 selection:text-white">
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#f8fafc] dark:bg-[#0B1210] text-[#0f172a] dark:text-[#E7F0EC] transition-colors duration-150 selection:bg-emerald-500 selection:text-white">
       {/* Top Header (Fixed 64px, nothing clipped or overflowing) */}
       <Navbar 
         onOpenSettings={() => setIsSettingsOpen(true)}
@@ -66,7 +66,7 @@ const MainContent: React.FC = () => {
       />
 
       {/* Main Workspace with Sidebar & Content */}
-      <div className="flex-1 flex max-w-[1440px] w-full mx-auto min-h-[calc(100vh-4rem)]">
+      <div className="flex-1 flex overflow-hidden max-w-[1440px] w-full mx-auto min-h-0">
         {/* Sidebar: 264px / 72px rail on desktop, drawer on mobile */}
         <Sidebar 
           isCollapsed={isSidebarCollapsed}
@@ -75,7 +75,7 @@ const MainContent: React.FC = () => {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-6 min-w-0 overflow-y-auto">
+        <main className="flex-1 h-full p-4 sm:p-6 lg:p-6 min-w-0 overflow-y-auto">
           {activeView === 'dashboard' && (
             <DashboardView 
               onOpenAddProduct={() => {

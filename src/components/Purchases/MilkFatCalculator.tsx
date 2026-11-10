@@ -50,33 +50,33 @@ export const MilkFatCalculator: React.FC<MilkFatCalculatorProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-transparent dark:border-[#24352F]">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b pb-3">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-sky-100 text-sky-800">
+            <div className="p-2 rounded-xl bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300">
               <Calculator className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-extrabold text-slate-900 text-base">
+              <h3 className="font-extrabold text-slate-900 dark:text-white text-base">
                 {language === 'mr' ? 'दूध फॅट & SNF दर कॅल्क्युलेटर' : language === 'hi' ? 'दूध फैट & SNF रेट कैलकुलेटर' : 'Milk Fat & SNF Rate Calculator'}
               </h3>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
                 {language === 'mr' ? 'शेतकऱ्यांना देण्यासाठी दुधाचा अचूक भाव' : 'डेरी टेस्टिंग व दूध भाव निर्धारण'}
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Buffalo / Cow selector */}
-        <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-2xl">
+        <div className="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-2xl">
           <button
             type="button"
             onClick={() => {
@@ -87,8 +87,8 @@ export const MilkFatCalculator: React.FC<MilkFatCalculatorProps> = ({
             }}
             className={`py-2 text-xs font-bold rounded-xl transition-all ${
               milkType === 'buffalo'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white shadow-xs'
+                : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             {language === 'mr' ? 'म्हैशीचे दूध (Buffalo)' : 'भैंस का दूध (Buffalo)'}
@@ -104,8 +104,8 @@ export const MilkFatCalculator: React.FC<MilkFatCalculatorProps> = ({
             }}
             className={`py-2 text-xs font-bold rounded-xl transition-all ${
               milkType === 'cow'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white shadow-xs'
+                : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             {language === 'mr' ? 'गाईचे दूध (Cow)' : 'गाय का दूध (Cow)'}
@@ -117,7 +117,7 @@ export const MilkFatCalculator: React.FC<MilkFatCalculatorProps> = ({
           
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                 {language === 'mr' ? 'दूध प्रमाण (लिटर)' : 'दूध मात्रा (लीटर)'}
               </label>
               <input
@@ -125,12 +125,12 @@ export const MilkFatCalculator: React.FC<MilkFatCalculatorProps> = ({
                 step="0.5"
                 value={liters}
                 onChange={(e) => setLiters(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-sky-500"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-sky-500"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                 {language === 'mr' ? 'फॅट % (Fat Testing)' : 'फैट % (Fat Testing)'}
               </label>
               <input
@@ -138,14 +138,14 @@ export const MilkFatCalculator: React.FC<MilkFatCalculatorProps> = ({
                 step="0.1"
                 value={fat}
                 onChange={(e) => setFat(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-black text-sky-900 focus:ring-2 focus:ring-sky-500"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-xs font-black text-sky-900 dark:text-sky-400 focus:ring-2 focus:ring-sky-500"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                 लॅक्टोमीटर (CLR रीडिंग)
               </label>
               <input
@@ -153,12 +153,12 @@ export const MilkFatCalculator: React.FC<MilkFatCalculatorProps> = ({
                 step="0.5"
                 value={clr}
                 onChange={(e) => setClr(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-sky-500"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-sky-500"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                 {language === 'mr' ? 'प्रति फॅट पॉईंट दर (₹)' : 'प्रति फैट पॉइंट दर (₹)'}
               </label>
               <input
@@ -166,7 +166,7 @@ export const MilkFatCalculator: React.FC<MilkFatCalculatorProps> = ({
                 step="0.05"
                 value={ratePerFatPoint}
                 onChange={(e) => setRatePerFatPoint(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-sky-500 text-emerald-800"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-xs font-bold focus:ring-2 focus:ring-sky-500 text-emerald-800 dark:text-emerald-400"
               />
             </div>
           </div>
@@ -174,21 +174,21 @@ export const MilkFatCalculator: React.FC<MilkFatCalculatorProps> = ({
         </div>
 
         {/* Calculation Result Card */}
-        <div className="bg-gradient-to-br from-sky-50 to-indigo-50 p-4 rounded-2xl border border-sky-200 space-y-2">
+        <div className="bg-gradient-to-br from-sky-50 to-indigo-50 dark:from-[#1A2A25] dark:to-[#162520] p-4 rounded-2xl border border-sky-200 dark:border-[#24352F] space-y-2">
           
-          <div className="flex justify-between items-center text-xs text-slate-600">
+          <div className="flex justify-between items-center text-xs text-slate-600 dark:text-[#8FA69C]">
             <span>एस.एन.एफ. (Calculated SNF):</span>
-            <span className="font-extrabold text-slate-800">{calculatedSNF}% {calculatedSNF >= 8.5 ? '✅ (उत्तम)' : '⚠️ (कमी)'}</span>
+            <span className="font-extrabold text-slate-800 dark:text-white">{calculatedSNF}% {calculatedSNF >= 8.5 ? '✅ (उत्तम)' : '⚠️ (कमी)'}</span>
           </div>
 
-          <div className="flex justify-between items-center text-xs text-slate-600">
+          <div className="flex justify-between items-center text-xs text-slate-600 dark:text-[#8FA69C]">
             <span>{language === 'mr' ? 'प्रति लिटर खरेदी भाव:' : 'प्रति लीटर खरीद दर:'}</span>
-            <span className="text-lg font-black text-sky-900">₹{ratePerLiter} / लिटर</span>
+            <span className="text-lg font-black text-sky-900 dark:text-sky-400">₹{ratePerLiter} / लिटर</span>
           </div>
 
-          <div className="flex justify-between items-baseline pt-2 border-t border-sky-200 text-slate-900 font-bold">
+          <div className="flex justify-between items-baseline pt-2 border-t border-sky-200 dark:border-[#24352F] text-slate-900 dark:text-white font-bold">
             <span className="text-xs">{language === 'mr' ? 'शेतकऱ्याला द्यावयाची एकूण रक्कम:' : 'किसान को कुल देय भुगतान:'}</span>
-            <span className="text-2xl font-black text-emerald-700">₹{totalAmount.toLocaleString('en-IN')}</span>
+            <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400">₹{totalAmount.toLocaleString('en-IN')}</span>
           </div>
 
         </div>
@@ -198,7 +198,7 @@ export const MilkFatCalculator: React.FC<MilkFatCalculatorProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-1/3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700"
+            className="w-1/3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-xs font-semibold text-slate-700 dark:text-[#8FA69C]"
           >
             {language === 'mr' ? 'रद्द' : 'बंद'}
           </button>

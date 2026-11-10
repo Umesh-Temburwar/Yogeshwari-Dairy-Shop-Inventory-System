@@ -13,7 +13,7 @@ export interface Translations {
 export const TRANSLATIONS: Translations = {
   // Brand & General
   shopName: {
-    en: 'Yogeshwari Dairy Farm & Sweets',
+    en: 'Yogeshwari Dairy & Sweets',
     hi: 'योगेश्वरी डेरी फार्म & स्वीट्स',
     mr: 'योगेश्वरी डेअरी फार्म & स्वीट्स'
   },
@@ -397,6 +397,335 @@ export const TRANSLATIONS: Translations = {
     en: 'System',
     hi: 'सिस्टम',
     mr: 'सिस्टम'
+  },
+
+  // POS & Billing
+  currentBill: {
+    en: 'Current Bill',
+    hi: 'चालू बिल (Cart)',
+    mr: 'चालू बिल (Cart)'
+  },
+  emptyCart: {
+    en: 'Clear Bill',
+    hi: 'बिल खाली करें',
+    mr: 'बिल रिकामे करा'
+  },
+  customerName: {
+    en: 'Customer Name',
+    hi: 'ग्राहक का नाम',
+    mr: 'ग्राहकाचे नाव'
+  },
+  customerPhone: {
+    en: 'Phone Number',
+    hi: 'मोबाइल नंबर',
+    mr: 'मोबाईल नंबर'
+  },
+  cartEmptyMsg: {
+    en: 'No items in cart. Click on products to add to bill.',
+    hi: 'बिल में कोई सामान नहीं है। जोड़ने के लिए उत्पादों पर क्लिक करें।',
+    mr: 'बिलामध्ये कोणतेही उत्पादन जोडलेले नाही. जोडण्यासाठी उत्पादनावर क्लिक करा.'
+  },
+  subtotal: {
+    en: 'Subtotal',
+    hi: 'उप-कुल (Subtotal)',
+    mr: 'उप-एकूण (Subtotal)'
+  },
+  discount: {
+    en: 'Discount (₹)',
+    hi: 'छूट (Discount ₹)',
+    mr: 'सूट (Discount ₹)'
+  },
+  netAmount: {
+    en: 'Net Payable',
+    hi: 'कुल देय राशि',
+    mr: 'एकूण देय रक्कम'
+  },
+  paymentMethod: {
+    en: 'Payment Method',
+    hi: 'भुगतान का तरीका',
+    mr: 'पेमेंट पद्धत'
+  },
+  cash: {
+    en: 'Cash',
+    hi: 'रोकड़ (Cash)',
+    mr: 'रोख (Cash)'
+  },
+  onlineUpi: {
+    en: 'Online UPI / QR',
+    hi: 'ऑनलाइन UPI / QR',
+    mr: 'ऑनलाईन UPI / QR'
+  },
+  splitPay: {
+    en: 'Split Payment',
+    hi: 'आधा कैश आधा UPI (Split)',
+    mr: 'विभागून पेमेंट (Split)'
+  },
+  udharPay: {
+    en: 'Credit (Udhar)',
+    hi: 'उधार खाता (Udhar)',
+    mr: 'उधारी खाते (Udhar)'
+  },
+  cashReceived: {
+    en: 'Cash Received',
+    hi: 'ग्राहक से प्राप्त रोकड़',
+    mr: 'ग्राहकाकडून आलेली रोख'
+  },
+  changeToReturn: {
+    en: 'Change to Return',
+    hi: 'ग्राहक को वापस देने हैं',
+    mr: 'ग्राहकाला परत द्यायचे'
+  },
+  completeAndPrint: {
+    en: 'Save & Print Invoice',
+    hi: 'बिल पूरा करें और प्रिंट निकालें',
+    mr: 'बिल पूर्ण करा आणि प्रिंट काढा'
+  },
+  nextBill: {
+    en: 'New Bill (F2)',
+    hi: 'नया बिल काटें (F2)',
+    mr: 'नवीन बिल फाडा (F2)'
+  },
+  measureInRupees: {
+    en: 'Quick Rupees to Quantity',
+    hi: 'रुपयों में मात्रा निकालें',
+    mr: 'रुपयांचे प्रमाण काढा'
+  },
+  enterRupees: {
+    en: 'Enter Amount (₹)',
+    hi: 'रुपये दर्ज करें (₹)',
+    mr: 'रुपये टाका (₹)'
+  },
+  calculatedQuantityIs: {
+    en: 'Calculated Quantity',
+    hi: 'निकाली गई मात्रा',
+    mr: 'काढलेले प्रमाण'
+  },
+  addToBasket: {
+    en: 'Add to Bill',
+    hi: 'बिल में जोड़ें',
+    mr: 'बिलात जोडा'
+  },
+
+  // Stock & Reorder
+  reorderTitle: {
+    en: 'Stock Need & Reorder Sheet',
+    hi: 'माल ज़रूरत एवं पुनः खरीद मांग पत्र',
+    mr: 'माल तुटवडा आणि पुन्हा मागणी यादी'
+  },
+  reorderDesc: {
+    en: 'Automated order sheet for products reaching low or zero stock',
+    hi: 'खत्म या कम होने वाले माल की सप्लायर/किसान हेतु स्वचालित आर्डर लिस्ट',
+    mr: 'कमी किंवा संपलेल्या मालासाठी शेतकरी/सप्लायरकडे द्यायची स्वयंचलित ऑर्डर यादी'
+  },
+  orderCopied: {
+    en: 'Order list copied to clipboard!',
+    hi: 'ऑर्डर लिस्ट क्लिपबोर्ड पर कॉपी हो गई!',
+    mr: 'ऑर्डर यादी क्लिपबोर्डवर कॉपी झाली!'
+  },
+  copyWhatsAppOrder: {
+    en: 'Copy WhatsApp Order',
+    hi: 'व्हाट्सएप आर्डर कॉपी करें',
+    mr: 'व्हॉट्सॲप ऑर्डर कॉपी करा'
+  },
+  recommendedOrderQty: {
+    en: 'Suggested Order',
+    hi: 'सुझाई गई मांग',
+    mr: 'मागवायची शिफारस'
+  },
+  productNameCol: {
+    en: 'Product Name',
+    hi: 'उत्पाद का नाम',
+    mr: 'उत्पादनाचे नाव'
+  },
+  categoryCol: {
+    en: 'Category',
+    hi: 'वर्ग (Category)',
+    mr: 'प्रवर्ग (Category)'
+  },
+  currentStockCol: {
+    en: 'Current Stock',
+    hi: 'मौजूदा स्टॉक',
+    mr: 'सध्याचा साठा'
+  },
+  costPriceCol: {
+    en: 'Purchase Rate',
+    hi: 'खरीद भाव',
+    mr: 'खरेदी दर'
+  },
+  sellingPriceCol: {
+    en: 'Selling Rate',
+    hi: 'बिक्री भाव',
+    mr: 'विक्री दर'
+  },
+  unitCol: {
+    en: 'Unit',
+    hi: 'इकाई (Unit)',
+    mr: 'एकक (Unit)'
+  },
+  actionsCol: {
+    en: 'Action',
+    hi: 'कार्रवाई',
+    mr: 'कृती'
+  },
+
+  // Khata / Udhar
+  khataTitle: {
+    en: 'Customer Udhar Khata Book',
+    hi: 'ग्राहक उधारी खाता बही (लेजर)',
+    mr: 'ग्राहक उधारी खातेवही (लेजर)'
+  },
+  debtorsOnly: {
+    en: 'Pending Udhar',
+    hi: 'बाकीदार ग्राहक',
+    mr: 'बाकीदार ग्राहक'
+  },
+  clearedAccounts: {
+    en: 'Cleared Accounts',
+    hi: 'बेबाक खाते',
+    mr: 'पूर्ण चुकते खाते'
+  },
+  allAccounts: {
+    en: 'All Accounts',
+    hi: 'सभी खाते',
+    mr: 'सर्व खाती'
+  },
+  balanceDue: {
+    en: 'Pending Balance',
+    hi: 'कुल बाकी रकम',
+    mr: 'बाकी शिल्लक'
+  },
+  recordPaymentJama: {
+    en: 'Receive Payment',
+    hi: 'जमा प्राप्त करें',
+    mr: 'रक्कम जमा घ्या'
+  },
+  sendWhatsAppReminder: {
+    en: 'WhatsApp Reminder',
+    hi: 'व्हाट्सएप तगादा',
+    mr: 'व्हॉट्सॲप स्मरणपत्र'
+  },
+
+  // Damages & Spoilage
+  damageTitle: {
+    en: 'Damages & Spoilage Tracker',
+    hi: 'खराब व नासलेला माल हिशोब',
+    mr: 'खराब व नासलेला माल नोंदवही'
+  },
+  logDamage: {
+    en: 'Record Damage',
+    hi: 'खराबी दर्ज करें',
+    mr: 'खराब माल नोंदवा'
+  },
+  curdledMilk: {
+    en: 'Curdled Milk',
+    hi: 'दूध फट गया (नासले)',
+    mr: 'दूध नासले/फाटले'
+  },
+  leakedPouch: {
+    en: 'Leaked Pouch',
+    hi: 'थैली लीकेज/फटी',
+    mr: 'पिशवी लिकेज झाली'
+  },
+  expiredProduct: {
+    en: 'Expired Product',
+    hi: 'एक्सपायरी डेट खत्म',
+    mr: 'मुदत संपली (Expired)'
+  },
+  handlingSpoilage: {
+    en: 'Handling Loss',
+    hi: 'दुकान में गिरा/टूटा',
+    mr: 'हातातून पडले/नुकसान'
+  },
+
+  // Expenses & Investments
+  expensesTitle: {
+    en: 'Shop Expenses & Investment',
+    hi: 'दुकान खर्च एवं निवेश लेजर',
+    mr: 'दुकान खर्च आणि गुंतवणूक नोंद'
+  },
+  addExpense: {
+    en: 'Add Expense / Investment',
+    hi: 'खर्च या निवेश जोड़ें',
+    mr: 'खर्च किंवा गुंतवणूक जोडा'
+  },
+  operatingExpenses: {
+    en: 'Operating Expenses',
+    hi: 'दैनिक दुकान खर्च (Opex)',
+    mr: 'दैनिक दुकान खर्च (Opex)'
+  },
+  capitalInvestments: {
+    en: 'Shop Investment (Assets)',
+    hi: 'दुकान में निवेश (मशीनरी/फ्रीजर)',
+    mr: 'दुकान गुंतवणूक (मशिनरी/फ्रीज)'
+  },
+  shopRent: {
+    en: 'Shop Rent',
+    hi: 'दुकान किराया',
+    mr: 'दुकान भाडे'
+  },
+  lightBill: {
+    en: 'Electricity Bill',
+    hi: 'बिजली/लाइट बिल',
+    mr: 'लाईट बिल'
+  },
+  fuelPetrol: {
+    en: 'Vehicle Petrol/Diesel',
+    hi: 'गाड़ी पेट्रोल/डीजल',
+    mr: 'गाडी पेट्रोल/डिझेल'
+  },
+  chillerMaint: {
+    en: 'Chiller / Deep Freezer Maint',
+    hi: 'डीप फ्रीजर/चिलर रिपेयर',
+    mr: 'चिलर/फ्रीजर दुरुस्ती'
+  },
+  staffSalary: {
+    en: 'Staff Salary',
+    hi: 'कर्मचारी पगार',
+    mr: 'कर्मचारी पगार'
+  },
+
+  // Analytics & P&L
+  plStatement: {
+    en: 'Profit & Loss Statement',
+    hi: 'लाभ एवं हानि विवरण (P&L)',
+    mr: 'नफा व तोटा पत्रक (P&L)'
+  },
+  netPocketProfit: {
+    en: 'Net Pocket Profit',
+    hi: 'शुद्ध जेब में आया मुनाफा',
+    mr: 'खिशात राहिलेला निव्वळ नफा'
+  },
+
+  // Categories
+  catMilk: {
+    en: 'Milk',
+    hi: 'दूध',
+    mr: 'दूध'
+  },
+  catCurd: {
+    en: 'Curd & Chaas',
+    hi: 'दही व छाछ',
+    mr: 'दही व ताक'
+  },
+  catPaneer: {
+    en: 'Paneer & Butter',
+    hi: 'पनीर व मक्खन',
+    mr: 'पनीर व लोणी'
+  },
+  catGhee: {
+    en: 'Ghee',
+    hi: 'शुद्ध घी',
+    mr: 'शुद्ध तूप'
+  },
+  catSweets: {
+    en: 'Sweets & Khoya',
+    hi: 'मिठाई व खोया',
+    mr: 'मिठाई व खवा'
+  },
+  catBakery: {
+    en: 'Bakery & Extras',
+    hi: 'बेकरी व अन्य',
+    mr: 'बेकरी व इतर'
   }
 };
 
@@ -415,7 +744,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (stored === 'en' || stored === 'hi' || stored === 'mr') {
         return stored;
       }
-    } catch {}
+    } catch { }
     return 'mr'; // Default to Marathi as requested
   });
 
@@ -424,7 +753,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       localStorage.setItem('dairy_language', lang);
       document.documentElement.setAttribute('lang', lang);
-    } catch {}
+    } catch { }
   };
 
   useEffect(() => {

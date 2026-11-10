@@ -123,17 +123,17 @@ export const ProductList: React.FC<ProductListProps> = ({
     <div className="space-y-5">
       
       {/* SIMPLE HEADER BAR */}
-      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#131F1B] p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
         <div>
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-emerald-100 text-emerald-800 rounded-xl">
+            <div className="p-2 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 rounded-xl border border-emerald-200 dark:border-emerald-800/40">
               <Package className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 {language === 'mr' ? 'दुकान माल व साठा (Inventory)' : language === 'hi' ? 'दुकान का माल और स्टॉक (Inventory)' : 'Dairy Stock & Inventory'}
               </h2>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
                 {language === 'mr' ? 'एकदम सोपे: माल आला की (+) दाबा, माल संपला की (-) दाबा' : 'एकदम सरल: माल आया तो (+) दबाएं, बिका तो (-) दबाएं'}
               </p>
             </div>
@@ -144,11 +144,11 @@ export const ProductList: React.FC<ProductListProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           
           {/* Card / Table Switcher */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+          <div className="flex items-center bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl border border-slate-200 dark:border-[#24352F]">
             <button
               onClick={() => setViewMode('cards')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                viewMode === 'cards' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                viewMode === 'cards' ? 'bg-white dark:bg-[#131F1B] text-emerald-800 dark:text-emerald-400 shadow-xs border dark:border-[#24352F]' : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
@@ -158,7 +158,7 @@ export const ProductList: React.FC<ProductListProps> = ({
             <button
               onClick={() => setViewMode('table')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                viewMode === 'table' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                viewMode === 'table' ? 'bg-white dark:bg-[#131F1B] text-emerald-800 dark:text-emerald-400 shadow-xs border dark:border-[#24352F]' : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <List className="w-3.5 h-3.5" />
@@ -170,9 +170,9 @@ export const ProductList: React.FC<ProductListProps> = ({
           {(lowStockCount + outOfStockCount) > 0 && (
             <button
               onClick={() => setActiveView('reorder')}
-              className="flex items-center gap-1 px-3 py-2 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 text-xs font-black animate-pulse"
+              className="flex items-center gap-1 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 text-xs font-black animate-pulse"
             >
-              <AlertTriangle className="w-4 h-4 text-rose-600" />
+              <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
               <span>{lowStockCount + outOfStockCount} {language === 'mr' ? 'माल संपत आला' : 'माल खत्म हो रहा है'}</span>
             </button>
           )}
@@ -190,20 +190,20 @@ export const ProductList: React.FC<ProductListProps> = ({
 
       {/* QUICK INLINE ADD PRODUCT FORM (Expandable in 1 tap) */}
       {showQuickAdd && (
-        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 p-4 sm:p-5 rounded-3xl border border-emerald-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="flex items-center justify-between mb-3 border-b border-emerald-200 pb-2">
-            <h3 className="font-extrabold text-emerald-950 text-sm flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-emerald-600" />
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 dark:from-[#131F1B] dark:to-[#1A2A25] p-4 sm:p-5 rounded-3xl border border-emerald-200 dark:border-[#24352F] shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between mb-3 border-b border-emerald-200 dark:border-[#24352F] pb-2">
+            <h3 className="font-extrabold text-emerald-950 dark:text-emerald-300 text-sm flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>{language === 'mr' ? 'फक्त १ मिनिटात नवीन माल जोडा' : 'सिर्फ 1 मिनट में नया माल जोड़ें'}</span>
             </h3>
-            <button onClick={() => setShowQuickAdd(false)} className="text-slate-400 hover:text-slate-600">
+            <button onClick={() => setShowQuickAdd(false)} className="text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white">
               <X className="w-4 h-4" />
             </button>
           </div>
 
           <form onSubmit={handleQuickAddSubmit} className="grid grid-cols-2 sm:grid-cols-6 gap-3 items-end">
             <div className="col-span-2">
-              <label className="text-[11px] font-bold text-slate-700 block mb-1">
+              <label className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
                 {language === 'mr' ? 'मालाचे नाव (उदा. मलाई पनीर) *' : 'माल का नाम (उदा. मलाई पनीर) *'}
               </label>
               <input
@@ -212,18 +212,18 @@ export const ProductList: React.FC<ProductListProps> = ({
                 placeholder="उदा. म्हशीचे दूध / पनीर / तूप"
                 value={quickName}
                 onChange={(e) => setQuickName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-white border border-emerald-300 text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-[#24352F] text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="text-[11px] font-bold text-slate-700 block mb-1">
+              <label className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
                 {language === 'mr' ? 'प्रवर्ग (Category)' : 'केटेगरी'}
               </label>
               <select
                 value={quickCategory}
                 onChange={(e) => setQuickCategory(e.target.value as ProductCategory)}
-                className="w-full px-2.5 py-2 rounded-xl bg-white border border-emerald-300 text-xs font-semibold focus:outline-none"
+                className="w-full px-2.5 py-2 rounded-xl bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-[#24352F] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none"
               >
                 <option value="Milk">{t('catMilk')}</option>
                 <option value="Paneer & Butter">{t('catPaneer')}</option>
@@ -235,13 +235,13 @@ export const ProductList: React.FC<ProductListProps> = ({
             </div>
 
             <div>
-              <label className="text-[11px] font-bold text-slate-700 block mb-1">
+              <label className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
                 {language === 'mr' ? 'एकक (Unit)' : 'नाप (Unit)'}
               </label>
               <select
                 value={quickUnit}
                 onChange={(e) => setQuickUnit(e.target.value as ProductUnit)}
-                className="w-full px-2.5 py-2 rounded-xl bg-white border border-emerald-300 text-xs font-semibold focus:outline-none"
+                className="w-full px-2.5 py-2 rounded-xl bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-[#24352F] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none"
               >
                 <option value="Litre">{language === 'mr' ? 'लिटर (Ltr)' : 'लीटर'}</option>
                 <option value="Kg">{language === 'mr' ? 'किलो (Kg)' : 'किलो'}</option>
@@ -251,7 +251,7 @@ export const ProductList: React.FC<ProductListProps> = ({
             </div>
 
             <div>
-              <label className="text-[11px] font-bold text-slate-700 block mb-1">
+              <label className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
                 {language === 'mr' ? 'विक्री भाव (₹ Rate) *' : 'बिक्री भाव (₹ Rate) *'}
               </label>
               <input
@@ -261,7 +261,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                 placeholder="उदा. 70"
                 value={quickSellPrice}
                 onChange={(e) => setQuickSellPrice(e.target.value)}
-                className="w-full px-2.5 py-2 rounded-xl bg-white border border-emerald-300 text-xs font-black text-emerald-900 focus:outline-none"
+                className="w-full px-2.5 py-2 rounded-xl bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-[#24352F] text-xs font-black text-emerald-900 dark:text-emerald-400 focus:outline-none"
               />
             </div>
 
@@ -278,18 +278,18 @@ export const ProductList: React.FC<ProductListProps> = ({
       )}
 
       {/* SEARCH & FAST CATEGORY FILTER PILLS */}
-      <div className="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-xs space-y-2.5">
+      <div className="bg-white dark:bg-[#131F1B] p-3 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-2.5 transition-colors">
         <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
           <input
             type="text"
             placeholder={language === 'mr' ? 'दूध, पनीर, दही, तूप शोधा (Search)...' : 'दूध, पनीर, दही, घी खोजें (Search)...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] dark:hover:text-white">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -304,7 +304,7 @@ export const ProductList: React.FC<ProductListProps> = ({
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                 selectedCategory === cat.id
                   ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#223630]'
               }`}
             >
               {cat.label}
@@ -324,41 +324,41 @@ export const ProductList: React.FC<ProductListProps> = ({
             return (
               <div 
                 key={prod.id}
-                className={`bg-white rounded-3xl p-5 border-2 transition-all duration-150 flex flex-col justify-between shadow-xs hover:shadow-md ${
+                className={`bg-white dark:bg-[#131F1B] rounded-3xl p-5 border-2 transition-all duration-150 flex flex-col justify-between shadow-xs hover:shadow-md ${
                   isOutOfStock 
-                    ? 'border-rose-300 bg-rose-50/20' 
+                    ? 'border-rose-300 dark:border-rose-900/60 bg-rose-50/20 dark:bg-[#1A2A25]' 
                     : isLowStock 
-                    ? 'border-amber-300 bg-amber-50/20' 
-                    : 'border-slate-200/90 hover:border-emerald-500'
+                    ? 'border-amber-300 dark:border-amber-900/60 bg-amber-50/20 dark:bg-[#1A2A25]' 
+                    : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500 dark:hover:border-emerald-500/60'
                 }`}
               >
                 <div>
                   {/* Top Badges */}
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold text-[11px] uppercase tracking-wide">
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] font-bold text-[11px] uppercase tracking-wide border border-slate-200/60 dark:border-[#24352F]">
                       {prod.category} &bull; {prod.unit}
                     </span>
 
                     <span className={`px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1 ${
                       isOutOfStock 
-                        ? 'bg-rose-100 text-rose-800' 
+                        ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60' 
                         : isLowStock 
-                        ? 'bg-amber-100 text-amber-900' 
-                        : 'bg-emerald-100 text-emerald-900'
+                        ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60' 
+                        : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60'
                     }`}>
                       {isOutOfStock ? (
                         <>
-                          <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                          <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                           <span>{language === 'mr' ? 'माल संपला' : 'खत्म'}</span>
                         </>
                       ) : isLowStock ? (
                         <>
-                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                           <span>{language === 'mr' ? 'कमी साठा' : 'कम स्टॉक'}</span>
                         </>
                       ) : (
                         <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                           <span>{language === 'mr' ? 'उपलब्ध आहे' : 'उपलब्ध'}</span>
                         </>
                       )}
@@ -366,31 +366,31 @@ export const ProductList: React.FC<ProductListProps> = ({
                   </div>
 
                   {/* Title & Price */}
-                  <h3 className="text-lg font-black text-slate-900 leading-snug">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white leading-snug">
                     {displayName}
                   </h3>
                   {displayName !== prod.name && (
-                    <p className="text-xs text-slate-400 font-medium truncate mt-0.5">
+                    <p className="text-xs text-slate-400 dark:text-[#8FA69C] font-medium truncate mt-0.5">
                       {prod.name}
                     </p>
                   )}
 
                   {/* Big Number: Current Stock In Hand */}
-                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 my-3 flex items-center justify-between">
+                  <div className="bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-2xl border border-slate-100 dark:border-[#24352F] my-3 flex items-center justify-between">
                     <div>
-                      <span className="text-[11px] font-bold text-slate-500 block">
+                      <span className="text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] block">
                         {language === 'mr' ? 'सध्या दुकानात शिल्लक:' : 'दुकान में कितना बचा है:'}
                       </span>
-                      <span className={`text-2xl font-black ${isOutOfStock ? 'text-rose-600' : 'text-slate-900'}`}>
-                        {prod.stock_quantity} <span className="text-sm font-bold text-slate-500">{prod.unit}</span>
+                      <span className={`text-2xl font-black ${isOutOfStock ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
+                        {prod.stock_quantity} <span className="text-sm font-bold text-slate-500 dark:text-[#8FA69C]">{prod.unit}</span>
                       </span>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[11px] font-bold text-slate-500 block">
+                      <span className="text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] block">
                         {language === 'mr' ? 'विक्री भाव:' : 'बिक्री भाव:'}
                       </span>
-                      <span className="text-xl font-black text-emerald-700">
+                      <span className="text-xl font-black text-emerald-700 dark:text-emerald-400">
                         ₹{prod.selling_price}
                       </span>
                     </div>
@@ -398,7 +398,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                 </div>
 
                 {/* SIMPLE 1-CLICK ACTION BUTTONS */}
-                <div className="space-y-2 pt-2 border-t border-slate-100">
+                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#24352F]">
                   <div className="grid grid-cols-2 gap-2">
                     
                     {/* BUTTON 1: माल आया (+ STOCK IN) */}
@@ -422,23 +422,23 @@ export const ProductList: React.FC<ProductListProps> = ({
                         setAdjustAmount('5');
                       }}
                       disabled={prod.stock_quantity <= 0}
-                      className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-800 hover:text-rose-700 border border-slate-200 font-extrabold text-xs flex items-center justify-center gap-1.5 disabled:opacity-40 active:scale-95 transition-all"
+                      className="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-800 dark:text-[#E7F0EC] hover:text-rose-700 dark:hover:text-rose-300 border border-slate-200 dark:border-[#24352F] font-extrabold text-xs flex items-center justify-center gap-1.5 disabled:opacity-40 active:scale-95 transition-all"
                     >
-                      <ArrowDownCircle className="w-4 h-4 text-slate-500 hover:text-rose-600" />
+                      <ArrowDownCircle className="w-4 h-4 text-slate-500 dark:text-[#8FA69C] hover:text-rose-600" />
                       <span>{language === 'mr' ? '- माल गेला' : '- माल गया'}</span>
                     </button>
 
                   </div>
 
                   {/* Edit / Delete footer */}
-                  <div className="flex items-center justify-between text-xs pt-1 px-1 text-slate-400">
+                  <div className="flex items-center justify-between text-xs pt-1 px-1 text-slate-400 dark:text-[#8FA69C]">
                     <span>
                       {language === 'mr' ? 'खरेदी दर:' : 'खरीद भाव:'} ₹{prod.purchase_price}
                     </span>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => onEditProduct(prod)}
-                        className="text-slate-600 hover:text-emerald-700 font-bold hover:underline flex items-center gap-0.5"
+                        className="text-slate-600 dark:text-[#8FA69C] hover:text-emerald-700 dark:hover:text-emerald-400 font-bold hover:underline flex items-center gap-0.5"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                         <span>{t('edit')}</span>
@@ -453,7 +453,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                             deleteProduct(prod.id);
                           }
                         }}
-                        className="text-slate-400 hover:text-rose-600 font-bold hover:underline"
+                        className="text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 font-bold hover:underline"
                       >
                         {t('delete')}
                       </button>
@@ -469,10 +469,10 @@ export const ProductList: React.FC<ProductListProps> = ({
 
       {/* VIEW 2: TRADITIONAL DETAILED TABLE VIEW */}
       {viewMode === 'table' && (
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+        <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs overflow-hidden transition-colors">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+              <thead className="bg-slate-50 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] font-bold uppercase tracking-wider">
                 <tr>
                   <th className="px-4 py-3">{t('productNameCol')}</th>
                   <th className="px-3 py-3">{t('categoryCol')}</th>
@@ -484,44 +484,44 @@ export const ProductList: React.FC<ProductListProps> = ({
                   <th className="px-4 py-3 text-right">{t('actionsCol')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
                 {filteredProducts.map((prod) => {
                   const isOutOfStock = prod.stock_quantity <= 0;
                   const isLowStock = prod.stock_quantity <= prod.min_stock_alert && !isOutOfStock;
                   const displayName = getProductDisplayName(prod);
 
                   return (
-                    <tr key={prod.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-4 py-3 font-bold text-slate-900">
+                    <tr key={prod.id} className="hover:bg-slate-50/80 dark:hover:bg-[#1A2A25]/60 transition-colors">
+                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">
                         {displayName}
                       </td>
-                      <td className="px-3 py-3 font-semibold text-slate-600">{prod.category}</td>
-                      <td className="px-3 py-3 font-semibold text-slate-600">{prod.unit}</td>
-                      <td className="px-3 py-3 text-right font-medium text-slate-600">₹{prod.purchase_price}</td>
-                      <td className="px-3 py-3 text-right font-black text-slate-900">₹{prod.selling_price}</td>
+                      <td className="px-3 py-3 font-semibold text-slate-600 dark:text-[#8FA69C]">{prod.category}</td>
+                      <td className="px-3 py-3 font-semibold text-slate-600 dark:text-[#8FA69C]">{prod.unit}</td>
+                      <td className="px-3 py-3 text-right font-medium text-slate-600 dark:text-[#8FA69C]">₹{prod.purchase_price}</td>
+                      <td className="px-3 py-3 text-right font-black text-slate-900 dark:text-white">₹{prod.selling_price}</td>
                       <td className="px-4 py-3 text-center">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black ${
-                          isOutOfStock ? 'bg-rose-100 text-rose-700' :
-                          isLowStock ? 'bg-amber-100 text-amber-900' :
-                          'bg-emerald-100 text-emerald-800'
+                          isOutOfStock ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300' :
+                          isLowStock ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300' :
+                          'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
                         }`}>
                           {prod.stock_quantity} {prod.unit}
                         </span>
                       </td>
                       <td className="px-3 py-3 text-center">
-                        <div className="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+                        <div className="inline-flex items-center gap-1 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-lg border border-slate-200/60 dark:border-[#24352F]">
                           <button
                             onClick={() => adjustStock(prod.id, -1)}
                             disabled={prod.stock_quantity <= 0}
-                            className="p-1 hover:bg-slate-200 rounded text-slate-600 disabled:opacity-30"
+                            className="p-1 hover:bg-slate-200 dark:hover:bg-[#283C35] rounded text-slate-600 dark:text-[#8FA69C] disabled:opacity-30"
                             title="-1"
                           >
                             <MinusCircle className="w-3.5 h-3.5" />
                           </button>
-                          <span className="text-[11px] font-bold text-slate-700 px-1">1</span>
+                          <span className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] px-1">1</span>
                           <button
                             onClick={() => adjustStock(prod.id, 1)}
-                            className="p-1 hover:bg-slate-200 rounded text-emerald-700"
+                            className="p-1 hover:bg-slate-200 dark:hover:bg-[#283C35] rounded text-emerald-700 dark:text-emerald-400"
                             title="+1"
                           >
                             <PlusCircle className="w-3.5 h-3.5" />
@@ -531,7 +531,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                       <td className="px-4 py-3 text-right space-x-1 whitespace-nowrap">
                         <button
                           onClick={() => onEditProduct(prod)}
-                          className="p-1.5 rounded-lg text-slate-600 hover:text-emerald-700 hover:bg-emerald-50"
+                          className="p-1.5 rounded-lg text-slate-600 dark:text-[#8FA69C] hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-[#1A2A25]"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
@@ -539,7 +539,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                           onClick={() => {
                             if (window.confirm(`हटाएं ${displayName}?`)) deleteProduct(prod.id);
                           }}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -556,32 +556,32 @@ export const ProductList: React.FC<ProductListProps> = ({
       {/* QUICK STOCK IN / OUT MODAL (TAP ANY CARD BUTTON) */}
       {adjustModalProduct && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+          <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-200/80 dark:border-[#24352F]">
             
-            <div className="flex items-center justify-between border-b pb-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
               <div>
                 <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                  adjustType === 'in' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                  adjustType === 'in' ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300' : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
                 }`}>
                   {adjustType === 'in' 
                     ? (language === 'mr' ? '+ नवीन माल आला (Stock In)' : '+ नया माल आया (Stock In)')
                     : (language === 'mr' ? '- माल गेला / विक्री (Stock Out)' : '- माल गया / बिक्री (Stock Out)')}
                 </span>
-                <h4 className="font-black text-slate-900 text-base mt-1">
+                <h4 className="font-black text-slate-900 dark:text-white text-base mt-1">
                   {getProductDisplayName(adjustModalProduct)}
                 </h4>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
                   {language === 'mr' ? 'सध्याचा साठा:' : 'वर्तमान स्टॉक:'} <b>{adjustModalProduct.stock_quantity} {adjustModalProduct.unit}</b>
                 </p>
               </div>
 
-              <button onClick={() => setAdjustModalProduct(null)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setAdjustModalProduct(null)} className="text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
                 {adjustType === 'in'
                   ? (language === 'mr' ? `किती ${adjustModalProduct.unit} माल आला?` : `कितनी ${adjustModalProduct.unit} माल आया?`)
                   : (language === 'mr' ? `किती ${adjustModalProduct.unit} माल गेला?` : `कितना ${adjustModalProduct.unit} माल गया?`)}
@@ -594,9 +594,9 @@ export const ProductList: React.FC<ProductListProps> = ({
                   autoFocus
                   value={adjustAmount}
                   onChange={(e) => setAdjustAmount(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border-2 border-emerald-500 font-black text-lg focus:outline-none"
+                  className="w-full px-4 py-2.5 rounded-xl border-2 border-emerald-500 bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white font-black text-lg focus:outline-none"
                 />
-                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-sm">
+                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 font-bold text-slate-400 dark:text-[#8FA69C] text-sm">
                   {adjustModalProduct.unit}
                 </span>
               </div>
@@ -608,7 +608,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                     key={num}
                     type="button"
                     onClick={() => setAdjustAmount(num.toString())}
-                    className="flex-1 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700"
+                    className="flex-1 py-1 rounded-lg bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#283C35] text-xs font-bold text-slate-700 dark:text-[#E7F0EC] border border-slate-200/60 dark:border-[#24352F]"
                   >
                     +{num}
                   </button>
@@ -616,11 +616,11 @@ export const ProductList: React.FC<ProductListProps> = ({
               </div>
 
               {/* Preview resulting stock */}
-              <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs">
-                <span className="font-semibold text-slate-600">
+              <div className="mt-3 p-3 bg-slate-50 dark:bg-[#1A2A25] rounded-xl border border-slate-200 dark:border-[#24352F] flex justify-between items-center text-xs">
+                <span className="font-semibold text-slate-600 dark:text-[#8FA69C]">
                   {language === 'mr' ? 'नवीन शिल्लक साठा होईल:' : 'नया कुल स्टॉक बनेगा:'}
                 </span>
-                <span className="text-base font-black text-emerald-700">
+                <span className="text-base font-black text-emerald-700 dark:text-emerald-400">
                   {Math.max(0, adjustType === 'in' 
                     ? adjustModalProduct.stock_quantity + (parseFloat(adjustAmount) || 0)
                     : adjustModalProduct.stock_quantity - (parseFloat(adjustAmount) || 0)
@@ -633,7 +633,7 @@ export const ProductList: React.FC<ProductListProps> = ({
               <button
                 type="button"
                 onClick={() => setAdjustModalProduct(null)}
-                className="w-1/2 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs"
+                className="w-1/2 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#283C35] text-slate-700 dark:text-[#E7F0EC] border border-slate-200/60 dark:border-[#24352F] font-bold text-xs"
               >
                 {t('cancel')}
               </button>

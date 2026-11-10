@@ -17,7 +17,7 @@ export const PeriodFilter: React.FC = () => {
   ];
 
   return (
-    <div className="sticky top-16 z-20 flex items-center justify-between gap-3 bg-white/95 dark:bg-[#131F1B]/95 backdrop-blur-md p-2 rounded-2xl border border-slate-200/80 dark:border-[#24352F] shadow-xs transition-colors duration-150">
+    <div className="sticky top-0 z-20 flex items-center justify-between gap-3 bg-white/95 dark:bg-[#131F1B]/95 backdrop-blur-md p-2 rounded-2xl border border-slate-200/80 dark:border-[#24352F] shadow-xs transition-colors duration-150">
       <div className="hidden sm:flex items-center gap-2 px-2 text-slate-500 dark:text-[#8FA69C] text-xs font-semibold uppercase tracking-wider shrink-0">
         <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
         <span>{t('timePeriodSelect')}</span>

@@ -185,7 +185,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar Container: w-[264px] or w-[72px] on desktop, fixed drawer on mobile */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 lg:static flex flex-col justify-between bg-white dark:bg-[#0F1A17] border-r border-slate-200 dark:border-[#24352F] shrink-0 min-h-[calc(100vh-4rem)] transition-all duration-200 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-50 lg:static flex flex-col justify-between bg-white dark:bg-[#0F1A17] border-r border-slate-200 dark:border-[#24352F] shrink-0 h-full overflow-hidden transition-all duration-200 ease-in-out ${
           isMobileOpen ? 'translate-x-0 w-[264px] shadow-2xl' : '-translate-x-full lg:translate-x-0'
         } ${isCollapsed ? 'lg:w-[72px]' : 'lg:w-[264px]'}`}
       >

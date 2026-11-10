@@ -198,20 +198,20 @@ export const BillingCounter: React.FC = () => {
       <div className="lg:col-span-7 flex flex-col space-y-4">
         
         {/* Search & Category Filter Pills */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs space-y-3">
+        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-3 transition-colors">
           <div className="relative">
-            <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
             <input
               type="text"
               placeholder={t('searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-medium"
+              className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-medium"
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -226,7 +226,7 @@ export const BillingCounter: React.FC = () => {
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                   selectedCategory === cat.id
                     ? 'bg-emerald-600 text-white shadow-xs font-bold'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#223630]'
                 }`}
               >
                 {cat.label}
@@ -245,39 +245,39 @@ export const BillingCounter: React.FC = () => {
             return (
               <div
                 key={prod.id}
-                className={`relative bg-white rounded-xl p-3.5 border transition-all duration-150 flex flex-col justify-between group ${
+                className={`relative bg-white dark:bg-[#131F1B] rounded-xl p-3.5 border transition-all duration-150 flex flex-col justify-between group ${
                   isOutOfStock 
-                    ? 'border-slate-200 opacity-60' 
-                    : 'border-slate-200/90 hover:border-emerald-500 hover:shadow-md cursor-pointer'
+                    ? 'border-slate-200 dark:border-[#24352F] opacity-60 bg-slate-50/50 dark:bg-[#16221E]' 
+                    : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500 dark:hover:border-emerald-500/60 hover:shadow-md cursor-pointer'
                 }`}
               >
                 <div>
                   <div className="flex items-start justify-between gap-1 mb-1">
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 uppercase">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] uppercase">
                       {prod.unit}
                     </span>
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                      isOutOfStock ? 'bg-red-100 text-red-700' :
-                      isLowStock ? 'bg-amber-100 text-amber-800' : 'bg-emerald-50 text-emerald-700'
+                      isOutOfStock ? 'bg-red-100 dark:bg-rose-950/60 text-red-700 dark:text-rose-400' :
+                      isLowStock ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
                     }`}>
                       {prod.stock_quantity} {language === 'mr' ? 'शिल्लक' : language === 'hi' ? 'बचे' : 'left'}
                     </span>
                   </div>
 
-                  <h4 className="font-bold text-slate-900 text-sm leading-tight group-hover:text-emerald-700">
+                  <h4 className="font-bold text-slate-900 dark:text-[#E7F0EC] text-sm leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
                     {displayName}
                   </h4>
                   {prod.name !== displayName && (
-                    <p className="text-xs text-slate-500 font-medium truncate mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium truncate mt-0.5">
                       {prod.name}
                     </p>
                   )}
                 </div>
 
-                <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between">
                   <div>
-                    <span className="text-xs text-slate-500">{language === 'mr' ? 'दर:' : language === 'hi' ? 'भाव:' : 'Rate:'}</span>{' '}
-                    <span className="text-base font-extrabold text-slate-900">
+                    <span className="text-xs text-slate-500 dark:text-[#8FA69C]">{language === 'mr' ? 'दर:' : language === 'hi' ? 'भाव:' : 'Rate:'}</span>{' '}
+                    <span className="text-base font-extrabold text-slate-900 dark:text-white">
                       ₹{prod.selling_price}
                     </span>
                   </div>
@@ -291,7 +291,7 @@ export const BillingCounter: React.FC = () => {
                         setCalcRupees('');
                       }}
                       title={t('measureInRupees')}
-                      className="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs"
+                      className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40 text-xs"
                     >
                       <Calculator className="w-3.5 h-3.5" />
                     </button>
@@ -300,7 +300,7 @@ export const BillingCounter: React.FC = () => {
                     <button
                       disabled={isOutOfStock}
                       onClick={() => addToCart(prod, 1)}
-                      className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-slate-300 transition-colors"
+                      className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-slate-300 dark:disabled:bg-slate-800 transition-colors"
                       title="Add 1 Unit"
                     >
                       <Plus className="w-4 h-4" />
@@ -314,20 +314,20 @@ export const BillingCounter: React.FC = () => {
       </div>
 
       {/* RIGHT COLUMN: Active Cart, Customer Info & Payment Checkout */}
-      <div className="lg:col-span-5 flex flex-col bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 justify-between">
+      <div className="lg:col-span-5 flex flex-col bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-sm p-5 justify-between transition-colors">
         <div className="space-y-4">
           
           {/* Header & Clear */}
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#24352F]">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
+              <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400">
                 <ShoppingCart className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 text-base">
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">
                   {t('currentBill')}
                 </h3>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-slate-500 dark:text-[#8FA69C]">
                   {cart.length} {language === 'mr' ? 'वस्तू जोडल्या आहेत' : language === 'hi' ? 'प्रकार के सामान जुड़े हैं' : 'items added'}
                 </span>
               </div>
@@ -336,7 +336,7 @@ export const BillingCounter: React.FC = () => {
             {cart.length > 0 && (
               <button
                 onClick={clearCart}
-                className="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1"
+                className="text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400 flex items-center gap-1"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>{t('emptyCart')}</span>
@@ -345,9 +345,9 @@ export const BillingCounter: React.FC = () => {
           </div>
 
           {/* Customer Selection / Udhar Lookup */}
-          <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+          <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-[#1A2A25] p-2.5 rounded-xl border border-slate-200/80 dark:border-[#24352F]">
             <div>
-              <label className="text-[11px] font-semibold text-slate-500 block mb-1">
+              <label className="text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C] block mb-1">
                 {t('customerName')}
               </label>
               <input
@@ -355,11 +355,11 @@ export const BillingCounter: React.FC = () => {
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="Counter Customer"
-                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
             <div>
-              <label className="text-[11px] font-semibold text-slate-500 block mb-1">
+              <label className="text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C] block mb-1">
                 {t('customerPhone')}
               </label>
               <input
@@ -367,7 +367,7 @@ export const BillingCounter: React.FC = () => {
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 placeholder="98XXXXXXXX"
-                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
           </div>
@@ -378,23 +378,23 @@ export const BillingCounter: React.FC = () => {
               cart.map((item) => (
                 <div 
                   key={item.product_id}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/60"
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/80 dark:bg-[#1A2A25] border border-slate-200/60 dark:border-[#24352F]"
                 >
                   <div className="min-w-0 pr-2">
-                    <h5 className="text-xs font-bold text-slate-900 truncate">
+                    <h5 className="text-xs font-bold text-slate-900 dark:text-[#E7F0EC] truncate">
                       {item.product_name}
                     </h5>
-                    <div className="text-[11px] text-slate-500 font-medium">
+                    <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
                       ₹{item.unit_price} &times; {item.quantity} {item.unit}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0">
                     {/* Qty +/- Controls */}
-                    <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5">
+                    <div className="flex items-center gap-1 bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] rounded-lg p-0.5">
                       <button
                         onClick={() => updateQuantity(item.product_id, item.quantity - 0.5)}
-                        className="p-1 hover:bg-slate-100 rounded text-slate-600"
+                        className="p-1 hover:bg-slate-100 dark:hover:bg-[#1A2A25] rounded text-slate-600 dark:text-[#8FA69C]"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
@@ -403,23 +403,23 @@ export const BillingCounter: React.FC = () => {
                         step="0.1"
                         value={item.quantity}
                         onChange={(e) => updateQuantity(item.product_id, parseFloat(e.target.value) || 0)}
-                        className="w-12 text-center text-xs font-bold text-slate-900 focus:outline-none"
+                        className="w-12 text-center text-xs font-bold text-slate-900 dark:text-white bg-transparent focus:outline-none"
                       />
                       <button
                         onClick={() => updateQuantity(item.product_id, item.quantity + 0.5)}
-                        className="p-1 hover:bg-slate-100 rounded text-slate-600"
+                        className="p-1 hover:bg-slate-100 dark:hover:bg-[#1A2A25] rounded text-slate-600 dark:text-[#8FA69C]"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
                     </div>
 
-                    <span className="text-xs font-black text-slate-900 w-14 text-right">
+                    <span className="text-xs font-black text-slate-900 dark:text-white w-14 text-right">
                       ₹{item.total_price}
                     </span>
 
                     <button
                       onClick={() => removeFromCart(item.product_id)}
-                      className="text-slate-400 hover:text-rose-600 p-1"
+                      className="text-slate-400 hover:text-rose-600 dark:text-[#8FA69C] dark:hover:text-rose-400 p-1"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -427,20 +427,20 @@ export const BillingCounter: React.FC = () => {
                 </div>
               ))
             ) : (
-              <div className="py-12 text-center text-slate-400 text-xs">
+              <div className="py-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs">
                 {t('cartEmptyMsg')}
               </div>
             )}
           </div>
 
           {/* Pricing Totals & Discount */}
-          <div className="pt-3 border-t border-slate-200 space-y-1.5 text-xs">
-            <div className="flex justify-between text-slate-600">
+          <div className="pt-3 border-t border-slate-200 dark:border-[#24352F] space-y-1.5 text-xs">
+            <div className="flex justify-between text-slate-600 dark:text-[#8FA69C]">
               <span>{t('subtotal')}</span>
-              <span className="font-semibold text-slate-900">₹{subtotal.toFixed(2)}</span>
+              <span className="font-semibold text-slate-900 dark:text-white">₹{subtotal.toFixed(2)}</span>
             </div>
 
-            <div className="flex items-center justify-between text-slate-600">
+            <div className="flex items-center justify-between text-slate-600 dark:text-[#8FA69C]">
               <span className="flex items-center gap-1">
                 <span>{t('discount')}</span>
               </span>
@@ -451,28 +451,28 @@ export const BillingCounter: React.FC = () => {
                   value={discount || ''}
                   placeholder="0"
                   onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                  className="w-16 px-1.5 py-0.5 border border-slate-300 rounded text-right font-bold text-slate-900 focus:outline-none"
+                  className="w-16 px-1.5 py-0.5 border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] rounded text-right font-bold text-slate-900 dark:text-white focus:outline-none"
                 />
               </div>
             </div>
 
-            <div className="flex justify-between items-baseline pt-2 border-t border-dashed border-slate-200 text-slate-900">
+            <div className="flex justify-between items-baseline pt-2 border-t border-dashed border-slate-200 dark:border-[#24352F] text-slate-900 dark:text-white">
               <span className="font-bold text-sm">{t('netAmount')}</span>
-              <span className="text-2xl font-black text-emerald-700">₹{netTotal.toFixed(2)}</span>
+              <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400">₹{netTotal.toFixed(2)}</span>
             </div>
           </div>
 
           {/* Payment Method Selector */}
           <div>
-            <label className="text-xs font-bold text-slate-700 block mb-2">
+            <label className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC] block mb-2">
               {t('paymentMethod')}
             </label>
             <div className="grid grid-cols-4 gap-1.5">
               {[
-                { id: 'Cash', label: t('cash'), icon: Banknote, color: 'text-blue-600' },
-                { id: 'Online_UPI', label: t('onlineUpi'), icon: Smartphone, color: 'text-purple-600' },
-                { id: 'Split', label: t('splitPay'), icon: CreditCard, color: 'text-teal-600' },
-                { id: 'Udhar', label: t('udharPay'), icon: BookOpen, color: 'text-amber-600' },
+                { id: 'Cash', label: t('cash'), icon: Banknote, color: 'text-blue-600 dark:text-blue-400' },
+                { id: 'Online_UPI', label: t('onlineUpi'), icon: Smartphone, color: 'text-purple-600 dark:text-purple-400' },
+                { id: 'Split', label: t('splitPay'), icon: CreditCard, color: 'text-teal-600 dark:text-teal-400' },
+                { id: 'Udhar', label: t('udharPay'), icon: BookOpen, color: 'text-amber-600 dark:text-amber-400' },
               ].map((m) => {
                 const Icon = m.icon;
                 const isSelected = paymentMode === m.id;
@@ -485,8 +485,8 @@ export const BillingCounter: React.FC = () => {
                     }}
                     className={`p-2 rounded-xl border text-center transition-all ${
                       isSelected
-                        ? 'border-emerald-600 bg-emerald-50 text-emerald-900 font-bold shadow-xs'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                        ? 'border-emerald-600 dark:border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 font-bold shadow-xs'
+                        : 'border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-50 dark:hover:bg-[#223630]'
                     }`}
                   >
                     <Icon className={`w-4 h-4 mx-auto mb-1 ${m.color}`} />
@@ -499,8 +499,8 @@ export const BillingCounter: React.FC = () => {
 
           {/* Cash Tender & Change Calculator */}
           {paymentMode === 'Cash' && (
-            <div className="bg-blue-50/70 p-3 rounded-xl border border-blue-200/80 space-y-2">
-              <div className="flex items-center justify-between text-xs font-semibold text-blue-900">
+            <div className="bg-blue-50/70 dark:bg-[#1A2A25] p-3 rounded-xl border border-blue-200/80 dark:border-blue-500/30 space-y-2">
+              <div className="flex items-center justify-between text-xs font-semibold text-blue-900 dark:text-blue-300">
                 <span>{t('cashReceived')}</span>
                 <div className="flex items-center gap-1">
                   <span>₹</span>
@@ -509,7 +509,7 @@ export const BillingCounter: React.FC = () => {
                     value={tenderedCash || ''}
                     placeholder={netTotal.toString()}
                     onChange={(e) => setTenderedCash(parseFloat(e.target.value) || 0)}
-                    className="w-20 px-2 py-1 rounded bg-white border border-blue-300 font-bold text-blue-950 focus:outline-none"
+                    className="w-20 px-2 py-1 rounded bg-white dark:bg-[#131F1B] border border-blue-300 dark:border-blue-500/40 font-bold text-blue-950 dark:text-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -520,7 +520,7 @@ export const BillingCounter: React.FC = () => {
                   <button
                     key={val}
                     onClick={() => setTenderedCash(val)}
-                    className="px-2 py-0.5 bg-white border border-blue-200 rounded text-[11px] font-bold text-blue-700 hover:bg-blue-100"
+                    className="px-2 py-0.5 bg-white dark:bg-[#131F1B] border border-blue-200 dark:border-blue-500/30 rounded text-[11px] font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-[#223630]"
                   >
                     ₹{val}
                   </button>
@@ -528,7 +528,7 @@ export const BillingCounter: React.FC = () => {
               </div>
 
               {tenderedCash > netTotal && (
-                <div className="flex justify-between items-center text-xs font-bold text-emerald-700 pt-1 border-t border-blue-200">
+                <div className="flex justify-between items-center text-xs font-bold text-emerald-700 dark:text-emerald-400 pt-1 border-t border-blue-200 dark:border-blue-500/30">
                   <span>{t('changeToReturn')}</span>
                   <span className="text-sm">₹{cashChange.toFixed(2)}</span>
                 </div>
@@ -538,9 +538,9 @@ export const BillingCounter: React.FC = () => {
 
           {/* Split Payment inputs */}
           {paymentMode === 'Split' && (
-            <div className="grid grid-cols-2 gap-2 bg-teal-50/70 p-3 rounded-xl border border-teal-200/80">
+            <div className="grid grid-cols-2 gap-2 bg-teal-50/70 dark:bg-[#1A2A25] p-3 rounded-xl border border-teal-200/80 dark:border-teal-500/30">
               <div>
-                <label className="text-[11px] font-bold text-teal-900 block mb-1">
+                <label className="text-[11px] font-bold text-teal-900 dark:text-teal-300 block mb-1">
                   {language === 'mr' ? 'रोख रक्कम (Cash):' : language === 'hi' ? 'कैश में कितना (Cash):' : 'Cash Amount:'}
                 </label>
                 <input
@@ -551,18 +551,18 @@ export const BillingCounter: React.FC = () => {
                     setSplitCashAmount(cashVal);
                     setSplitOnlineAmount(Math.max(0, netTotal - cashVal));
                   }}
-                  className="w-full px-2 py-1 rounded bg-white border border-teal-300 text-xs font-bold"
+                  className="w-full px-2 py-1 rounded bg-white dark:bg-[#131F1B] border border-teal-300 dark:border-teal-500/40 text-xs font-bold text-slate-900 dark:text-white"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-teal-900 block mb-1">
+                <label className="text-[11px] font-bold text-teal-900 dark:text-teal-300 block mb-1">
                   {language === 'mr' ? 'ऑनलाईन रक्कम (UPI):' : language === 'hi' ? 'UPI में कितना (Online):' : 'UPI Online Amount:'}
                 </label>
                 <input
                   type="number"
                   value={splitOnlineAmount || ''}
                   onChange={(e) => setSplitOnlineAmount(parseFloat(e.target.value) || 0)}
-                  className="w-full px-2 py-1 rounded bg-white border border-teal-300 text-xs font-bold"
+                  className="w-full px-2 py-1 rounded bg-white dark:bg-[#131F1B] border border-teal-300 dark:border-teal-500/40 text-xs font-bold text-slate-900 dark:text-white"
                 />
               </div>
             </div>
@@ -571,7 +571,7 @@ export const BillingCounter: React.FC = () => {
         </div>
 
         {/* Big Complete Sale / Checkout Button */}
-        <div className="pt-4 border-t border-slate-100">
+        <div className="pt-4 border-t border-slate-100 dark:border-[#24352F]">
           <button
             disabled={cart.length === 0}
             onClick={handleCheckout}
@@ -587,37 +587,37 @@ export const BillingCounter: React.FC = () => {
       {/* QUICK RUPEE TO QTY CALCULATOR MODAL */}
       {quickCalcProduct && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b pb-2">
+          <div className="bg-white dark:bg-[#131F1B] rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4 border border-slate-200/80 dark:border-[#24352F]">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-2">
               <div>
-                <h4 className="font-bold text-slate-900 text-sm">
+                <h4 className="font-bold text-slate-900 dark:text-white text-sm">
                   {t('measureInRupees')}
                 </h4>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
                   {getProductDisplayName(quickCalcProduct)} (₹{quickCalcProduct.selling_price}/{quickCalcProduct.unit})
                 </p>
               </div>
               <button 
                 onClick={() => setQuickCalcProduct(null)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-[#E7F0EC] block mb-1">
                 {t('enterRupees')}
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500 dark:text-[#8FA69C]">₹</span>
                 <input
                   type="number"
                   autoFocus
                   value={calcRupees}
                   placeholder="20, 50, 100"
                   onChange={(e) => setCalcRupees(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border rounded-xl font-bold text-base focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full pl-8 pr-4 py-2 border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white rounded-xl font-bold text-base focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
 
@@ -627,7 +627,7 @@ export const BillingCounter: React.FC = () => {
                   <button
                     key={amt}
                     onClick={() => setCalcRupees(amt.toString())}
-                    className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-700"
+                    className="px-2.5 py-1 bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#223630] border border-slate-200 dark:border-[#24352F] rounded-lg text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
                   >
                     ₹{amt}
                   </button>
@@ -635,9 +635,9 @@ export const BillingCounter: React.FC = () => {
               </div>
 
               {calcRupees && parseFloat(calcRupees) > 0 && (
-                <div className="mt-3 p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900">
+                <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800/40 text-xs text-emerald-900 dark:text-emerald-300">
                   <span>{t('calculatedQuantityIs')} </span>
-                  <span className="text-base font-extrabold text-emerald-700">
+                  <span className="text-base font-extrabold text-emerald-700 dark:text-emerald-400">
                     {(parseFloat(calcRupees) / quickCalcProduct.selling_price).toFixed(3)} {quickCalcProduct.unit}
                   </span>
                 </div>
@@ -647,14 +647,14 @@ export const BillingCounter: React.FC = () => {
             <div className="flex gap-2 pt-2">
               <button
                 onClick={() => setQuickCalcProduct(null)}
-                className="w-1/2 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 font-semibold text-xs text-slate-700"
+                className="w-1/2 py-2 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#223630] border border-slate-200 dark:border-[#24352F] font-semibold text-xs text-slate-700 dark:text-[#E7F0EC]"
               >
                 {t('cancel')}
               </button>
               <button
                 onClick={handleRupeeCalcApply}
                 disabled={!calcRupees || parseFloat(calcRupees) <= 0}
-                className="w-1/2 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs disabled:bg-slate-300"
+                className="w-1/2 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs disabled:bg-slate-300 dark:disabled:bg-slate-800"
               >
                 {t('addToBasket')}
               </button>
@@ -666,27 +666,27 @@ export const BillingCounter: React.FC = () => {
       {/* UPI QR CODE POPUP MODAL */}
       {showQrModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4">
+          <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-200/80 dark:border-[#24352F]">
             <div className="flex justify-between items-center">
-              <span className="text-xs font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/40 px-2 py-0.5 rounded-full">
                 PhonePe / GooglePay / Paytm QR
               </span>
-              <button onClick={() => setShowQrModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setShowQrModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div>
-              <h3 className="text-xl font-black text-slate-900">
+              <h3 className="text-xl font-black text-slate-900 dark:text-white">
                 ₹{netTotal.toFixed(2)}
               </h3>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
                 {t('shopName')} Merchant QR Code
               </p>
             </div>
 
             {/* Generated QR Code Graphic */}
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 inline-block shadow-inner">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] inline-block shadow-sm">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=yogeshwaridairy@okaxis%26pn=Yogeshwari%20Dairy%26am=${netTotal}%26cu=INR`}
                 alt="UPI Payment QR Code"
@@ -694,13 +694,13 @@ export const BillingCounter: React.FC = () => {
               />
             </div>
 
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
               {language === 'mr' ? 'ग्राहक कोणत्याही UPI ॲपवरून स्कॅन करून पैसे देऊ शकतात.' : language === 'hi' ? 'ग्राहक अपने किसी भी UPI ऐप से स्कैन करके भुगतान कर सकता है।' : 'Customer can scan using any UPI App to pay.'}
             </p>
 
             <button
               onClick={() => setShowQrModal(false)}
-              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm"
+              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md"
             >
               {language === 'mr' ? 'पैसे मिळाले (Payment Done)' : language === 'hi' ? 'भुगतान प्राप्त हुआ (Payment Done)' : 'Payment Received'}
             </button>
@@ -711,55 +711,55 @@ export const BillingCounter: React.FC = () => {
       {/* SALE SUCCESS & PRINT RECEIPT MODAL */}
       {isSuccessModalOpen && lastCompletedSale && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+          <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200/80 dark:border-[#24352F]">
             <div className="text-center space-y-2">
-              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800/40">
                 <CheckCircle2 className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-black text-slate-900">
+              <h3 className="text-xl font-black text-slate-900 dark:text-white">
                 {language === 'mr' ? 'विक्री यशस्वीपणे नोंदवली गेली!' : language === 'hi' ? 'बिक्री सफलतापूर्वक दर्ज हुई!' : 'Sale Recorded Successfully!'}
               </h3>
-              <p className="text-xs text-slate-500">
-                {language === 'mr' ? 'बिल क्रमांक:' : language === 'hi' ? 'बिल क्रमांक:' : 'Invoice:'} <b className="text-slate-800">{lastCompletedSale.invoice_no}</b>
+              <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
+                {language === 'mr' ? 'बिल क्रमांक:' : language === 'hi' ? 'बिल क्रमांक:' : 'Invoice:'} <b className="text-slate-800 dark:text-white">{lastCompletedSale.invoice_no}</b>
               </p>
             </div>
 
             {/* Printable Thermal Receipt Container */}
-            <div id="printable-receipt" className="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300 font-mono text-xs space-y-2">
-              <div className="text-center border-b pb-2">
-                <div className="font-bold text-sm">{t('shopName')}</div>
-                <div className="text-[10px] text-slate-500">
+            <div id="printable-receipt" className="bg-slate-50 dark:bg-[#1A2A25] p-4 rounded-xl border border-dashed border-slate-300 dark:border-[#24352F] font-mono text-xs space-y-2">
+              <div className="text-center border-b border-slate-200 dark:border-[#24352F] pb-2">
+                <div className="font-bold text-sm text-slate-900 dark:text-white">{t('shopName')}</div>
+                <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">
                   {language === 'mr' ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : language === 'hi' ? 'ताज़ा दूध, पनीर, दही, शुद्ध देसी घी' : 'Fresh Milk, Paneer, Curd, Pure Ghee'}
                 </div>
-                <div className="text-[10px] text-slate-500">FSSAI Lic: 21524012000341 &bull; Mo: 9823XXXXXX</div>
+                <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">FSSAI Lic: 21524012000341 &bull; Mo: 9823XXXXXX</div>
               </div>
 
-              <div className="flex justify-between text-[11px] pt-1">
+              <div className="flex justify-between text-[11px] text-slate-700 dark:text-[#E7F0EC] pt-1">
                 <span>{language === 'mr' ? 'बिल:' : language === 'hi' ? 'बिल:' : 'Bill:'} {lastCompletedSale.invoice_no}</span>
                 <span>{lastCompletedSale.sale_date}</span>
               </div>
-              <div className="text-[11px]">{t('customerName')} {lastCompletedSale.customer_name}</div>
+              <div className="text-[11px] text-slate-700 dark:text-[#E7F0EC]">{t('customerName')}: {lastCompletedSale.customer_name}</div>
 
-              <div className="border-t border-b py-1.5 space-y-1">
+              <div className="border-t border-b border-slate-200 dark:border-[#24352F] py-1.5 space-y-1">
                 {lastCompletedSale.items?.map((it: any, i: number) => (
-                  <div key={i} className="flex justify-between text-[11px]">
+                  <div key={i} className="flex justify-between text-[11px] text-slate-800 dark:text-[#E7F0EC]">
                     <span className="truncate max-w-[170px]">{it.product_name}</span>
                     <span>{it.quantity} {it.unit} &times; ₹{it.unit_price} = ₹{it.total_price}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="space-y-0.5 text-right font-bold text-xs pt-1">
+              <div className="space-y-0.5 text-right font-bold text-xs pt-1 text-slate-900 dark:text-white">
                 {lastCompletedSale.discount > 0 && (
-                  <div className="text-slate-500">{t('discount')} -₹{lastCompletedSale.discount}</div>
+                  <div className="text-slate-500 dark:text-[#8FA69C]">{t('discount')} -₹{lastCompletedSale.discount}</div>
                 )}
-                <div className="text-sm">{t('netAmount')} ₹{lastCompletedSale.net_amount}</div>
-                <div className="text-[10px] font-normal text-slate-500">
-                  {t('paymentMethod')} {lastCompletedSale.payment_mode}
+                <div className="text-sm text-emerald-700 dark:text-emerald-400">{t('netAmount')} ₹{lastCompletedSale.net_amount}</div>
+                <div className="text-[10px] font-normal text-slate-500 dark:text-[#8FA69C]">
+                  {t('paymentMethod')}: {lastCompletedSale.payment_mode}
                 </div>
               </div>
 
-              <div className="text-center text-[10px] text-slate-500 pt-2 border-t">
+              <div className="text-center text-[10px] text-slate-500 dark:text-[#8FA69C] pt-2 border-t border-slate-200 dark:border-[#24352F]">
                 {language === 'mr' ? 'धन्यवाद! पुन्हा भेट द्या &bull; शुद्धता हीच आमची ओळख' : language === 'hi' ? 'धन्यवाद! फिर पधारें &bull; शुद्धता ही हमारी पहचान है' : 'Thank you! Visit again &bull; Purity is our identity'}
               </div>
             </div>

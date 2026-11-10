@@ -1,0 +1,172 @@
+-- ====================================================================
+-- YOGESHWARI DAIRY SHOP - ENTERPRISE INVENTORY & ERP SCHEMA
+-- Database: PostgreSQL (Supabase Compatible)
+-- ====================================================================
+
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 1. PRODUCTS / MAAL INVENTORY TABLE
+CREATE TABLE IF NOT EXISTS products (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    hindi_name VARCHAR(255),
+    category VARCHAR(100) NOT NULL, -- 'Milk', 'Curd & Chaas', 'Paneer & Butter', 'Ghee', 'Sweets/Mithai', 'Bakery & Extras'
+    unit VARCHAR(50) NOT NULL,       -- 'Litre', 'Kg', 'Packet (500ml)', 'Packet (1L)', 'Piece', 'Gram'
+    purchase_price NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    selling_price NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    stock_quantity NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    min_stock_alert NUMERIC(10, 2) NOT NULL DEFAULT 10.00,
+    barcode VARCHAR(100),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 2. PURCHASES / MAAL KHARIDA TABLE
+CREATE TABLE IF NOT EXISTS purchases (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+    product_name VARCHAR(255) NOT NULL,
+    supplier_name VARCHAR(255) NOT NULL, -- Dairy Farmer / Dairy Cooperative / Distributor
+    quantity NUMERIC(10, 2) NOT NULL,
+    unit VARCHAR(50) NOT NULL,
+    purchase_price NUMERIC(10, 2) NOT NULL,
+    total_amount NUMERIC(10, 2) NOT NULL,
+    payment_mode VARCHAR(50) NOT NULL DEFAULT 'Cash', -- 'Cash', 'Online_UPI', 'Bank_Transfer', 'Udhar'
+    purchase_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    invoice_number VARCHAR(100),
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 3. SALES / DAILY MAAL KITTA GYA TABLE
+CREATE TABLE IF NOT EXISTS sales (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    invoice_no VARCHAR(100) UNIQUE NOT NULL,
+    customer_name VARCHAR(255) DEFAULT 'Counter Customer',
+    customer_phone VARCHAR(20),
+    total_amount NUMERIC(10, 2) NOT NULL,
+    discount NUMERIC(10, 2) DEFAULT 0.00,
+    net_amount NUMERIC(10, 2) NOT NULL,
+    payment_mode VARCHAR(50) NOT NULL DEFAULT 'Cash', -- 'Cash', 'Online_UPI', 'Split', 'Udhar'
+    cash_amount NUMERIC(10, 2) DEFAULT 0.00,
+    online_amount NUMERIC(10, 2) DEFAULT 0.00,
+    udhar_amount NUMERIC(10, 2) DEFAULT 0.00,
+    sale_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 4. SALE ITEMS TABLE
+CREATE TABLE IF NOT EXISTS sale_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    sale_id UUID REFERENCES sales(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+    product_name VARCHAR(255) NOT NULL,
+    quantity NUMERIC(10, 2) NOT NULL,
+    unit VARCHAR(50) NOT NULL,
+    unit_price NUMERIC(10, 2) NOT NULL,
+    purchase_cost NUMERIC(10, 2) NOT NULL DEFAULT 0.00, -- captured for historical profit accuracy
+    total_price NUMERIC(10, 2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 5. DAMAGE & WASTAGE / DAMAGE MAAL TABLE
+CREATE TABLE IF NOT EXISTS damage_records (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+    product_name VARCHAR(255) NOT NULL,
+    quantity NUMERIC(10, 2) NOT NULL,
+    unit VARCHAR(50) NOT NULL,
+    estimated_loss_amount NUMERIC(10, 2) NOT NULL,
+    reason VARCHAR(100) NOT NULL, -- 'Doodh Fat Gya (Curdled)', 'Theli Phat Gayi (Leaked)', 'Expiry Date Over', 'Handling Spoilage', 'Other'
+    damage_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 6. UDHARI KHATA / CUSTOMER CREDIT LEDGER
+CREATE TABLE IF NOT EXISTS udhar_customers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    address TEXT,
+    total_credit NUMERIC(10, 2) DEFAULT 0.00,
+    total_paid NUMERIC(10, 2) DEFAULT 0.00,
+    current_balance NUMERIC(10, 2) DEFAULT 0.00,
+    status VARCHAR(50) DEFAULT 'Active', -- 'Active', 'Cleared', 'Overdue'
+    last_transaction_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 7. UDHARI TRANSACTIONS
+CREATE TABLE IF NOT EXISTS udhar_transactions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    customer_id UUID REFERENCES udhar_customers(id) ON DELETE CASCADE,
+    type VARCHAR(50) NOT NULL, -- 'Credit_Given' (Udhari di), 'Payment_Received' (Jama kiye)
+    amount NUMERIC(10, 2) NOT NULL,
+    payment_mode VARCHAR(50) DEFAULT 'Cash', -- 'Cash', 'Online_UPI'
+    notes TEXT,
+    transaction_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 8. EXPENSES & CAPITAL INVESTMENTS TABLE
+CREATE TABLE IF NOT EXISTS expenses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL, 
+    -- 'Dukan Rent', 'Light / Electricity Bill', 'Gadi Petrol / Diesel', 
+    -- 'Deep Chiller Maintenance', 'Staff Salary', 'Packaging / Theli', 
+    -- 'Shop Capital Investment', 'General Repair', 'Other'
+    amount NUMERIC(10, 2) NOT NULL,
+    payment_mode VARCHAR(50) NOT NULL DEFAULT 'Cash', -- 'Cash', 'Online_UPI', 'Bank_Transfer'
+    expense_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    is_capital_investment BOOLEAN DEFAULT FALSE, -- Dukan ke liye new equipment/asset purchase
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- INDEXES FOR HIGH-SPEED AGGREGATIONS
+CREATE INDEX IF NOT EXISTS idx_sales_date ON sales(sale_date);
+CREATE INDEX IF NOT EXISTS idx_purchases_date ON purchases(purchase_date);
+CREATE INDEX IF NOT EXISTS idx_damage_date ON damage_records(damage_date);
+CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(expense_date);
+CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
+CREATE INDEX IF NOT EXISTS idx_udhar_balance ON udhar_customers(current_balance);
+
+-- SEED INITIAL AUTHENTIC DAIRY PRODUCTS
+INSERT INTO products (name, hindi_name, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert) VALUES
+('Fresh Buffalo Milk (Bhains Ka Doodh)', 'ताज़ा भैंस का दूध (फुल क्रीम)', 'Milk', 'Litre', 58.00, 70.00, 120.00, 25.00),
+('Cow Milk (Desi Gai Ka Doodh)', 'देसी गाय का शुद्ध दूध', 'Milk', 'Litre', 44.00, 56.00, 85.00, 20.00),
+('Toned Milk Pouch (500ml)', 'टोन्ड दूध थैली', 'Milk', 'Packet (500ml)', 24.00, 28.00, 60.00, 15.00),
+('Fresh Malai Paneer', 'ताज़ा मलाई पनीर', 'Paneer & Butter', 'Kg', 310.00, 380.00, 22.50, 8.00),
+('Desi Dahi (Fresh Curd)', 'ताज़ा मीठा दही', 'Curd & Chaas', 'Kg', 55.00, 75.00, 35.00, 10.00),
+('Dahi Pouch (400g)', 'दही पाउच 400 ग्राम', 'Curd & Chaas', 'Piece', 26.00, 32.00, 45.00, 12.00),
+('Masala Buttermilk (Chaas)', 'मसाला छाछ', 'Curd & Chaas', 'Packet (500ml)', 11.00, 15.00, 50.00, 15.00),
+('Pure Desi Cow Ghee', 'शुद्ध देसी गाय का घी', 'Ghee', 'Kg', 580.00, 720.00, 18.00, 5.00),
+('Pure Buffalo Ghee', 'शुद्ध भैंस का दानेदार घी', 'Ghee', 'Kg', 540.00, 660.00, 20.00, 5.00),
+('Safed Makkhan (White Butter)', 'सफेद ताजा मक्खन', 'Paneer & Butter', 'Kg', 420.00, 520.00, 8.00, 3.00),
+('Fresh Khoya / Mawa (Dhabba)', 'ताज़ा शुद्ध मावा/खोया', 'Sweets/Mithai', 'Kg', 280.00, 360.00, 12.00, 5.00),
+('Kaju Katli', 'काजू कतली', 'Sweets/Mithai', 'Kg', 720.00, 940.00, 7.00, 2.00),
+('Gulab Jamun (Fresh Desi Ghee)', 'गुलाब जामुन', 'Sweets/Mithai', 'Kg', 240.00, 320.00, 14.00, 4.00),
+('Rasgulla (Spongy)', 'स्पंज रसगुल्ला', 'Sweets/Mithai', 'Kg', 210.00, 280.00, 15.00, 4.00),
+('Fresh Sweet Lassi (Glass/Cup)', 'ताज़ी मीठी लस्सी', 'Curd & Chaas', 'Piece', 22.00, 35.00, 40.00, 10.00),
+('Milk Bread (Large)', 'मिल्क ब्रेड (बड़ा)', 'Bakery & Extras', 'Piece', 38.00, 48.00, 25.00, 8.00),
+('Farm Fresh White Eggs (Tray)', 'अंडे की क्रेट (30 पीस)', 'Bakery & Extras', 'Piece', 165.00, 210.00, 10.00, 3.00);
+
+-- SEED INITIAL EXPENSES SAMPLE
+INSERT INTO expenses (title, category, amount, payment_mode, expense_date, is_capital_investment, notes) VALUES
+('Monthly Shop Rent (Dukan Kiraya)', 'Dukan Rent', 14000.00, 'Online_UPI', CURRENT_DATE - INTERVAL '5 days', FALSE, 'Shop owner Mr. Sharma'),
+('Commercial Chiller Electricity Bill', 'Light / Electricity Bill', 5850.00, 'Online_UPI', CURRENT_DATE - INTERVAL '10 days', FALSE, 'MSEDCL electricity power for 3 deep chillers'),
+('Delivery Van & Bike Petrol', 'Gadi Petrol / Diesel', 1200.00, 'Cash', CURRENT_DATE - INTERVAL '1 days', FALSE, 'Morning and evening local customer door delivery fuel'),
+('New 500L Deep Freezer Chiller', 'Shop Capital Investment', 34500.00, 'Online_UPI', CURRENT_DATE - INTERVAL '20 days', TRUE, 'Blue Star Commercial Deep Freezer 500 Liters with warranty'),
+('Polythene & Dairy Carry Bags', 'Packaging / Theli', 1450.00, 'Cash', CURRENT_DATE - INTERVAL '3 days', FALSE, 'Biodegradable packaging pouches & shopping bags');
+
+-- SEED INITIAL UDHAR CUSTOMERS
+INSERT INTO udhar_customers (name, phone, address, total_credit, total_paid, current_balance, status, notes) VALUES
+('Ramesh Verma (Sharma Halwai)', '9823145678', 'Plot 42, Main Bazar', 5400.00, 3000.00, 2400.00, 'Active', 'Takes 10L Buffalo milk and 2kg Paneer regularly'),
+('Gupta General Store & Tea Stall', '9890123456', 'Bus Stand Corner', 3800.00, 2000.00, 1800.00, 'Active', 'Takes cow milk every morning at 6 AM'),
+('Sunita Tai (Flat 204)', '9765432109', 'Sai Krupa Apartment', 1250.00, 1250.00, 0.00, 'Cleared', 'Monthly home delivery milk customer - cleared yesterday');
+

@@ -1,0 +1,306 @@
+import React, { useState, useEffect } from 'react';
+import { useStore } from '../../context/StoreContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { Product, ProductCategory, ProductUnit } from '../../types';
+import { X, Save, PackagePlus } from 'lucide-react';
+
+interface AddProductModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  productToEdit?: Product | null;
+}
+
+export const AddProductModal: React.FC<AddProductModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  productToEdit 
+}) => {
+  const { addProduct, updateProduct } = useStore();
+  const { t, language } = useLanguage();
+
+  const [name, setName] = useState('');
+  const [hindiName, setHindiName] = useState('');
+  const [marathiName, setMarathiName] = useState('');
+  const [category, setCategory] = useState<ProductCategory>('Milk');
+  const [unit, setUnit] = useState<ProductUnit>('Litre');
+  const [purchasePrice, setPurchasePrice] = useState<string>('');
+  const [sellingPrice, setSellingPrice] = useState<string>('');
+  const [stockQuantity, setStockQuantity] = useState<string>('');
+  const [minStockAlert, setMinStockAlert] = useState<string>('15');
+
+  useEffect(() => {
+    if (productToEdit) {
+      setName(productToEdit.name);
+      setHindiName(productToEdit.hindi_name || '');
+      setMarathiName(productToEdit.marathi_name || '');
+      setCategory(productToEdit.category);
+      setUnit(productToEdit.unit);
+      setPurchasePrice(productToEdit.purchase_price.toString());
+      setSellingPrice(productToEdit.selling_price.toString());
+      setStockQuantity(productToEdit.stock_quantity.toString());
+      setMinStockAlert(productToEdit.min_stock_alert.toString());
+    } else {
+      setName('');
+      setHindiName('');
+      setMarathiName('');
+      setCategory('Milk');
+      setUnit('Litre');
+      setPurchasePrice('');
+      setSellingPrice('');
+      setStockQuantity('20');
+      setMinStockAlert('15');
+    }
+  }, [productToEdit, isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    const pPrice = parseFloat(purchasePrice) || 0;
+    const sPrice = parseFloat(sellingPrice) || 0;
+    const sQty = parseFloat(stockQuantity) || 0;
+    const minAlert = parseFloat(minStockAlert) || 10;
+
+    if (productToEdit) {
+      await updateProduct(productToEdit.id, {
+        name: name.trim(),
+        hindi_name: hindiName.trim() || undefined,
+        marathi_name: marathiName.trim() || undefined,
+        category,
+        unit,
+        purchase_price: pPrice,
+        selling_price: sPrice,
+        stock_quantity: sQty,
+        min_stock_alert: minAlert
+      });
+    } else {
+      await addProduct({
+        name: name.trim(),
+        hindi_name: hindiName.trim() || undefined,
+        marathi_name: marathiName.trim() || undefined,
+        category,
+        unit,
+        purchase_price: pPrice,
+        selling_price: sPrice,
+        stock_quantity: sQty,
+        min_stock_alert: minAlert,
+        is_active: true
+      });
+    }
+
+    onClose();
+  };
+
+  const marginPerUnit = (parseFloat(sellingPrice) || 0) - (parseFloat(purchasePrice) || 0);
+  const marginPct = (parseFloat(purchasePrice) > 0)
+    ? ((marginPerUnit / parseFloat(purchasePrice)) * 100).toFixed(1)
+    : '0';
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+        
+        {/* Modal Header */}
+        <div className="flex items-center justify-between border-b pb-3">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
+              <PackagePlus className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-base">
+                {productToEdit 
+                  ? (language === 'mr' ? 'मालाची माहिती बदला (Edit Product)' : language === 'hi' ? 'माल की जानकारी अपडेट करें' : 'Edit Product Details')
+                  : (language === 'mr' ? 'दुकानात नवीन माल जोडा (Add Product)' : language === 'hi' ? 'दुकान में नया माल जोड़ें' : 'Add New Dairy Product')}
+              </h3>
+              <p className="text-xs text-slate-500">
+                {language === 'mr' ? 'दूध, पनीर, तूप, खवा, मिठाई किंवा इतर उत्पादने' : 'Milk, Paneer, Ghee, Sweets or Dairy items'}
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          
+          {/* Trilingual Names: English, Marathi, Hindi */}
+          <div>
+            <label className="text-xs font-bold text-slate-700 block mb-1">
+              इंग्रजी नाव (English Name) *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Fresh Buffalo Milk Full Cream"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">
+                मराठी नाव (Marathi Name)
+              </label>
+              <input
+                type="text"
+                placeholder="उदा. ताजे म्हशीचे दूध"
+                value={marathiName}
+                onChange={(e) => setMarathiName(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">
+                हिंदी नाम (Hindi Name)
+              </label>
+              <input
+                type="text"
+                placeholder="उदा. ताज़ा भैंस का दूध"
+                value={hindiName}
+                onChange={(e) => setHindiName(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          </div>
+
+          {/* Category & Unit */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">
+                {t('categoryCol')} *
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as ProductCategory)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="Milk">{t('catMilk')} (Milk)</option>
+                <option value="Curd & Chaas">{t('catCurd')} (Curd & Chaas)</option>
+                <option value="Paneer & Butter">{t('catPaneer')} (Paneer & Butter)</option>
+                <option value="Ghee">{t('catGhee')} (Ghee)</option>
+                <option value="Sweets/Mithai">{t('catSweets')} (Sweets & Khoya)</option>
+                <option value="Bakery & Extras">{t('catBakery')} (Bakery & Extras)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">
+                {t('unitCol')} *
+              </label>
+              <select
+                value={unit}
+                onChange={(e) => setUnit(e.target.value as ProductUnit)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="Litre">{language === 'mr' ? 'लिटर (Litre)' : language === 'hi' ? 'लीटर (Litre)' : 'Litre'}</option>
+                <option value="Kg">{language === 'mr' ? 'किलो (Kg)' : language === 'hi' ? 'किलोग्राम (Kg)' : 'Kg'}</option>
+                <option value="Packet (500ml)">{language === 'mr' ? 'पिशवी ५०० मिली' : 'Packet 500ml'}</option>
+                <option value="Packet (1L)">{language === 'mr' ? 'पिशवी १ लिटर' : 'Packet 1L'}</option>
+                <option value="Piece">{language === 'mr' ? 'नग / पीस' : 'Piece'}</option>
+                <option value="Gram">{language === 'mr' ? 'ग्रॅम' : 'Gram'}</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Purchase Price vs Selling Price */}
+          <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">
+                {language === 'mr' ? `खरेदी दर प्रति ${unit} (₹)` : `खरीद भाव प्रति ${unit} (₹)`} *
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                placeholder="58"
+                value={purchasePrice}
+                onChange={(e) => setPurchasePrice(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">
+                {language === 'mr' ? `विक्री दर प्रति ${unit} (₹)` : `बिक्री भाव प्रति ${unit} (₹)`} *
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                placeholder="70"
+                value={sellingPrice}
+                onChange={(e) => setSellingPrice(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-emerald-800"
+              />
+            </div>
+
+            {/* Live Profit Margin Calculator Indicator */}
+            <div className="col-span-2 flex items-center justify-between text-xs font-semibold pt-1 text-slate-600">
+              <span>{language === 'mr' ? `प्रति ${unit} नफा:` : `प्रति ${unit} अनुमानित लाभ:`}</span>
+              <span className={`font-bold ${marginPerUnit >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                ₹{marginPerUnit.toFixed(2)} ({marginPct}% {language === 'mr' ? 'मार्जिन' : 'Margin'})
+              </span>
+            </div>
+          </div>
+
+          {/* Current Stock & Low Stock Alert Level */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">
+                {language === 'mr' ? `सध्याचा साठा (${unit} मध्ये)` : `मौजूदा स्टॉक (${unit} में)`}
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={stockQuantity}
+                onChange={(e) => setStockQuantity(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">
+                {language === 'mr' ? `कमी साठा मर्यादा (${unit})` : `कम स्टॉक अलर्ट सीमा (${unit})`}
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={minStockAlert}
+                onChange={(e) => setMinStockAlert(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-amber-700"
+              />
+            </div>
+          </div>
+
+          {/* Form Actions */}
+          <div className="flex gap-2 pt-3 border-t">
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-1/2 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-semibold text-xs text-slate-700"
+            >
+              {t('cancel')}
+            </button>
+            <button
+              type="submit"
+              className="w-1/2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5"
+            >
+              <Save className="w-4 h-4" />
+              <span>{productToEdit ? (language === 'mr' ? 'माहिती जतन करा' : 'अपडेट सुरक्षित करें') : t('save')}</span>
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+  );
+};

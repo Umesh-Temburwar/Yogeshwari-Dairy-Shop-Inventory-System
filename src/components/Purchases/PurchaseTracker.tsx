@@ -2,10 +2,14 @@ import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
+import { MilkFatCalculator } from './MilkFatCalculator';
+import { exportToCSV } from '../../lib/exportUtils';
 import { 
   Truck, 
   Plus, 
-  X
+  X,
+  Calculator,
+  Download
 } from 'lucide-react';
 
 export const PurchaseTracker: React.FC = () => {
@@ -13,6 +17,8 @@ export const PurchaseTracker: React.FC = () => {
   const { t, language } = useLanguage();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFatCalcOpen, setIsFatCalcOpen] = useState(false);
+
   const [selectedProductId, setSelectedProductId] = useState(products[0]?.id || '');
   const [supplierName, setSupplierName] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -69,6 +75,32 @@ export const PurchaseTracker: React.FC = () => {
     setNotes('');
   };
 
+  const handleApplyFatRate = (rate: number, liters: number, note: string) => {
+    setPurchasePrice(rate.toString());
+    setQuantity(liters.toString());
+    setNotes(note);
+    // Find buffalo milk or cow milk
+    const milkProd = products.find(p => p.category === 'Milk');
+    if (milkProd) setSelectedProductId(milkProd.id);
+    setIsModalOpen(true);
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['Date', 'Supplier', 'Product', 'Quantity', 'Unit', 'Rate (Rs)', 'Total Amount (Rs)', 'Payment Mode', 'Notes'];
+    const rows = filteredPurchases.map(p => [
+      p.purchase_date,
+      p.supplier_name,
+      p.product_name,
+      p.quantity,
+      p.unit,
+      p.purchase_price,
+      p.total_amount,
+      p.payment_mode,
+      p.notes || ''
+    ]);
+    exportToCSV('Dairy_Purchases_Report', headers, rows);
+  };
+
   return (
     <div className="space-y-6">
       
@@ -86,16 +118,37 @@ export const PurchaseTracker: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            if (selectedProduct) setPurchasePrice(selectedProduct.purchase_price.toString());
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-md shadow-sky-600/20 transition-all active:scale-95"
-        >
-          <Plus className="w-4 h-4" />
-          <span>+ {language === 'mr' ? 'नवीन खरेदी नोंदवा (Add Purchase)' : 'नई खरीद दर्ज करें (Add Purchase)'}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Milk Fat/SNF Calculator Trigger Button */}
+          <button
+            onClick={() => setIsFatCalcOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition-all"
+            title="Milk Fat & SNF Testing Rate Calculator"
+          >
+            <Calculator className="w-4 h-4 text-amber-600" />
+            <span>{language === 'mr' ? 'दूध फॅट कॅल्क्युलेटर' : 'दूध फैट कैलकुलेटर'}</span>
+          </button>
+
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all"
+            title="Export to Excel CSV"
+          >
+            <Download className="w-4 h-4 text-slate-600" />
+            <span>Excel CSV</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (selectedProduct) setPurchasePrice(selectedProduct.purchase_price.toString());
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-md shadow-sky-600/20 transition-all active:scale-95"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ {language === 'mr' ? 'नवीन खरेदी नोंदवा' : 'नई खरीद दर्ज करें'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Time Filter */}
@@ -218,6 +271,13 @@ export const PurchaseTracker: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* FAT & SNF TESTING CALCULATOR MODAL */}
+      <MilkFatCalculator 
+        isOpen={isFatCalcOpen}
+        onClose={() => setIsFatCalcOpen(false)}
+        onApplyRate={handleApplyFatRate}
+      />
 
       {/* ADD PURCHASE MODAL */}
       {isModalOpen && (

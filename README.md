@@ -1,90 +1,141 @@
-# 🥛 योगेश्वरी डेअरी फार्म & स्वीट्स (Yogeshwari Dairy)
-### त्रिभाषिक इन्व्हेंटरी & शॉप ईआरपी सिस्टीम (Trilingual Dairy ERP System)
-> **English** | **हिंदी** | **मराठी**
+# 🥛 Yogeshwari Dairy Shop & Inventory Management System
 
-Built with **React 19**, **Node.js (Express)**, **Supabase PostgreSQL**, **Tailwind CSS**, and **Recharts**.
+A production-grade, enterprise Dairy Shop Management & Inventory System built for single-shop operations with home delivery, batch-wise FEFO expiry tracking, customer udhar khata, and multi-role access control (RBAC).
 
 ---
 
-## 🌐 त्रिभाषिक सुविधा (Trilingual Language Switcher)
-ॲप्लिकेशनच्या वरील नेव्हिगेशन बारमध्ये थेट भाषा बदलण्याचा पर्याय दिला आहे:
-- 🚩 **मराठी (Marathi)**: महाराष्ट्रातील डेअरी व्यवसायासाठी अस्सल मराठी संज्ञा (ताजे म्हशीचे दूध, साजूक तूप, मलाई पनीर, खवा, उधारी खाते, नासलेले दूध, व्हॉट्सअॅप तगादा संदेश).
-- 🇮🇳 **हिंदी (Hindi)**: उत्तर भारतीय डेरी शब्दावली (ताज़ा भैंस का दूध, देसी घी, खोया/मावा, उधार खाता, फटा दूध नुकसान, बिक्री).
-- 🇬🇧 **English**: Complete international ERP labels and reports.
+## 🏛️ Architecture & Tech Stack
 
----
-
-## 🌟 मुख्य वैशिष्ट्ये (All Core Features)
-
-1. **माल व्यवस्थापन (Add / Edit / Update / Delete Maal)**:
-   - ताजे म्हशीचे दूध, गाईचे दूध, मलाई पनीर, ताजे दही, मसाला ताक, साजूक तूप, खवा, मिठाई.
-   - तिन्ही भाषांमध्ये नावे (English, हिंदी, मराठी).
-   - खरेदी दर (Cost Price) vs विक्री दर (Selling Price) व थेट नफा मार्जिन (% Margin).
-   - किमान साठा अलर्ट (Minimum Reorder Threshold).
-   - टेबलवरूनच थेट `+` आणि `-` ने त्वरित साठा बदल.
-
-2. **दैनिक काउंटर बिलिंग (Daily Counter Billing / POS)**:
-   - अतिशय जलद काउंटर बिलिंग.
-   - **रुपयांत मोजा (Amount to Qty Calculator)**: ग्राहक जेव्हा म्हणतो *"५० रुपयांचे पनीर द्या"* किंवा *"४० रुपयांचे दूध द्या"*, तेव्हा एका क्लिकमध्ये अचूक ग्रॅम किंवा लिटर प्रमाण बास्केटमध्ये जमा होते.
-   - थर्मल प्रिंटर पावती (80mm Thermal Receipt Generator).
-
-3. **रोख (Cash) आणि ऑनलाईन (UPI / QR) हिशोब**:
-   - रोख (Cash) किती आली आणि ऑनलाईन (PhonePe / GooglePay / Paytm) किती आले.
-   - स्प्लिट पेमेंट (काही रोख + काही ऑनलाईन).
-   - आज (Today), या आठवड्यात (This Week), या महिन्यात (This Month), या वर्षी (This Year) आणि एकूण (All Time) चे पाय चार्ट व बार ग्राफ.
-
-4. **खराब व नासलेला माल ट्रॅकर (Damage & Spoilage Loss)**:
-   - दूध नासले/फाटले (Curdled milk), पिशवी फुटली/गळती, मुदत संपली, हाताळणी नासाडी.
-   - झालेल्या आर्थिक नुकसानीची (₹ Loss) आपोआप अचूक गणना.
-   - साठ्यामधून नासलेला माल आपोआप वजा होतो आणि थेट निव्वळ नफ्यातून (Net Profit) खर्च धरला जातो.
-
-5. **माल किती संपला & काय गरज आहे (Reorder & Need Alert)**:
-   - संपत आलेल्या मालाची त्वरित माहिती.
-   - **आजचे खरेदी मागणी पत्रक**: शेतकरी व डेअरीकडून आज किती दूध व पनीर मागवायचे आहे.
-   - **१-क्लिक WhatsApp ऑर्डर कॉपी**: निवडलेल्या भाषेत (मराठी/हिंदी/इंग्रजी) थेट पुरवठादाराला पाठवण्यासाठी तयार संदेश.
-
-6. **सर्वाधिक खपणारा माल (Best Sellers Leaderboard)**:
-   - विक्री प्रमाण (Liters/Kg) आणि कमाईनुसार (₹ Revenue) उत्पादनांची क्रमवारी (Ranking #1 to #10).
-
-7. **शेतकरी व पुरवठादार खरेदी (Daily Purchases)**:
-   - शेतकऱ्यांकडून (उदा. विलास पाटील, रामपाल गुर्जर) खरेदी केलेल्या कच्च्या दुधाची नोंद.
-   - प्रति लिटर खरेदी दर, फॅट टक्केवारी, व एकूण खरेदी पावती.
-   - खरेदी विरुद्ध विक्रीचे थेट प्रमाण.
-
-8. **निव्वळ नफा अहवाल (Profit & Loss Statement)**:
-   - **हिशोब फॉर्म्युला**:
-     $$\text{एकूण विक्री} - \text{माल खरेदी खर्च (COGS)} = \text{एकूण नफा (Gross Profit)}$$
-     $$\text{एकूण नफा} - (\text{दुकान भाडे} + \text{वीज बिल} + \text{पेट्रोल} + \text{नासाडी नुकसान}) = \mathbf{\text{खिशात पडणारा निव्वळ नफा (Net Profit)}}$$
-
-9. **उधारी खातेवही (Customer Khata Book)**:
-   - ग्राहक, मिठाईवाले आणि हॉटेलांचे उधारी खाते.
-   - उधारी दिली (Credit) vs जमा रक्कम (Jama Payment).
-   - **१-क्लिक WhatsApp आठवण/तगादा (Payment Reminder)**: ग्राहकाला थेट मराठी/हिंदीत बाकी रक्कम व UPI आयडी असलेला मेसेज पाठवा.
-
-10. **दुकान खर्च आणि भांडवली गुंतवणूक (Rent, Light, Petrol & Investments)**:
-    - दुकानाचे भाडे, शीतकरण चिलरचे वीज बिल, दुधाची डिलिव्हरी गाडी पेट्रोल/डिझेल, पगार.
-    - **भांडवली गुंतवणूक (Capital Investment)**: नवीन ५०० लिटर डीप फ्रीझर, वजन काटा, काउंटर, फर्निचर इ.
-
----
-
-## ⌨️ कीबोर्ड शॉर्टकट (Shortcuts)
-- <kbd>F2</kbd> : जलद काउंटर बिलिंग (POS)
-- <kbd>F3</kbd> : नवीन माल नोंदणी फॉर्म
-- <kbd>F4</kbd> : उधारी खातेवही
-
----
-
-## 🚀 सुरू करण्याची पद्धत (Run Application)
-
-### १. विकास मोड (Development Mode)
-```powershell
-npm run dev
 ```
-ब्राउझरमध्ये उघडा: `http://localhost:5173`
-
-### २. नोड बॅकएंड सर्व्हर (Production Node.js Server)
-```powershell
-npm run build
-npm run server
+yogeshwari-dairy-shop/
+├── client/                     # React 18 + TypeScript + Vite + Tailwind CSS
+│   ├── src/
+│   │   ├── components/         # Modals, Navbar, Sidebar, StatCards, Badges
+│   │   ├── context/            # AuthContext (RBAC) & ToastContext
+│   │   ├── lib/                # apiClient & Indian currency/date formatters
+│   │   ├── pages/              # Dashboard, Products, Stock, Suppliers, Masters
+│   │   └── types/              # Strict TypeScript domain interfaces
+├── server/                     # Node.js + Express (TypeScript)
+│   ├── src/
+│   │   ├── config/             # Environment & Supabase client initialization
+│   │   ├── controllers/        # Express handlers (Products, Stock, Suppliers, Auth)
+│   │   ├── middleware/         # Auth JWT, RBAC guards, Zod validators, error handling
+│   │   ├── routes/             # RESTful endpoints mounted under /api/v1
+│   │   ├── schemas/            # Zod validation schemas
+│   │   ├── services/           # Business logic & Database layer with fallback
+│   │   ├── utils/              # FEFO allocation engine & Expiry status calculator
+│   │   └── __tests__/          # Vitest unit test suite (FEFO & Expiry logic)
+└── supabase/
+    ├── migrations/             # Numbered SQL DDL migrations
+    │   ├── 001_initial_schema.sql         # user_role ENUM & profiles
+    │   ├── 002_catalog_and_suppliers.sql  # categories, brands, units, suppliers, products
+    │   ├── 003_batches_and_stock.sql      # batches, stock_transactions, FEFO views
+    │   └── 004_rls_policies.sql           # Row Level Security (RLS) policies
+    └── seed.sql                # Authentic dairy seed data (Amul, Paneer, Ghee, Dahi, etc.)
 ```
-अॅप लाईव्ह होईल: `http://localhost:5000`
+
+- **Frontend**: React 18, TypeScript (Strict Mode), Vite, Tailwind CSS, React Router v6, React Hook Form + Zod, TanStack Query v5, Lucide Icons.
+- **Backend**: Node.js, Express, TypeScript, Zod request validation, Centralized Error Handling, Helmet, CORS, Rate Limiting (`express-rate-limit`).
+- **Database / Auth**: Supabase PostgreSQL with Row Level Security (RLS), Supabase Auth JWT verification.
+- **Financial & Regional Compliance**:
+  - Currency strictly formatted as **INR (₹)** via `Intl.NumberFormat('en-IN')`.
+  - Expiry & Timezone strictly evaluated in **Asia/Kolkata** timezone.
+  - Money stored as `NUMERIC(12,2)` (never floating point).
+
+---
+
+## 🛡️ Role-Based Access Control (RBAC)
+
+The system enforces role permissions at both the **Backend API Middleware** level and the **Frontend UI**:
+
+| Role | Permissions & Access Scope |
+| :--- | :--- |
+| **`admin`** | Full access to catalog, stock, suppliers, masters, users, and audit logs. |
+| **`owner`** | High-level sales, inventory valuations, suppliers, and profit & loss reports. |
+| **`manager`** | Full product catalog management, supplier directory, inventory batches, and purchases. |
+| **`cashier`** | View catalog, search barcodes, check stock levels, POS billing (Phase 2). |
+| **`delivery_boy`** | Delivery run sheets and assigned order drops (Phase 3). Restricted from catalog mutations. |
+
+---
+
+## ⚡ Core Business Rules Implemented (Phase 1)
+
+1. **Dynamic Expiry Status (Business Rule 3)**: Expiry status is **never stored statically**. It is computed dynamically relative to `CURRENT_DATE` in `Asia/Kolkata`:
+   - `EXPIRED` ($\text{days} < 0$)
+   - `EXPIRING_TODAY` ($\text{days} = 0$)
+   - `EXPIRING_TOMORROW` ($\text{days} = 1$)
+   - `EXPIRING_IN_3_DAYS` ($1 < \text{days} \le 3$)
+   - `FRESH` ($\text{days} > 3$)
+2. **FEFO Allocation Engine (Business Rule 2 & 4)**:
+   - When deducting stock, batches with the earliest expiry are selected first.
+   - Automatically splits sales across multiple batches if necessary.
+   - **Billing Block**: Expired batches and zero-stock items are strictly blocked from sale allocation.
+3. **Safety Stock Level**:
+   - Compares batch-summed `current_stock` against `min_stock` threshold to trigger automatic low-stock warnings.
+
+---
+
+## 🚀 Quick Start Guide
+
+### 1. Prerequisites
+- **Node.js** v18+ and **npm** installed.
+
+### 2. Install & Build
+Run from the root repository:
+```bash
+npm run client:build
+npm run server:build
+```
+
+### 3. Run Backend Unit Tests (FEFO & Expiry Logic)
+```bash
+npm test
+```
+*Executes all 8 Vitest unit tests verifying expiry status calculations, FEFO batch splitting, and expired batch billing block.*
+
+### 4. Start the Application
+You can start the server and client in separate terminals:
+
+**Terminal 1 (Backend API):**
+```bash
+npm run server:dev
+```
+*API starts on `http://localhost:5000` (`/health` and `/api/v1`).*
+
+**Terminal 2 (Frontend Client):**
+```bash
+npm run client:dev
+```
+*Vite dev server starts on `http://localhost:5173` with proxy to the backend API.*
+
+---
+
+## 🗄️ Supabase Setup (Optional for Live Cloud DB)
+
+The system includes a complete zero-configuration fallback so you can test all UI & API features immediately without external credentials. When ready to connect live Supabase:
+
+1. Create a project in [Supabase](https://supabase.com).
+2. Go to the **SQL Editor** in Supabase and run the migrations in order:
+   - `supabase/migrations/001_initial_schema.sql`
+   - `supabase/migrations/002_catalog_and_suppliers.sql`
+   - `supabase/migrations/003_batches_and_stock.sql`
+   - `supabase/migrations/004_rls_policies.sql`
+3. Run the seed data script:
+   - `supabase/seed.sql`
+4. Copy your Project URL, Anon Key, and Service Role Key to `server/.env` and `client/.env`.
+
+---
+
+## 🧪 Phase 1 Verification Checklist
+
+- [x] **Database Migrations**: Numbered SQL files (`001` to `004`) with ENUMs, profiles, catalog, batches, views, and RLS.
+- [x] **Seed Data**: Realistic dairy items (Amul Taaza, Amul Gold, Fresh Malai Paneer, Amul Butter, Desi Cow Ghee, etc.) with varied batch expiry statuses.
+- [x] **Backend Layering**: Routes -> Controllers -> Services -> Zod Schemas -> Error Handler.
+- [x] **Security**: Helmet, CORS, Express Rate Limiter, Bearer JWT middleware, Role-based guard (`requireRole`).
+- [x] **Unit Tests**: 8 Vitest tests covering FEFO batch allocation, multi-batch splitting, and expiry computations.
+- [x] **Auth & RBAC**: Login, Logout, Forgot Password, and one-click role switcher pill for testing admin vs cashier vs manager.
+- [x] **Dashboard Shell**: Live KPI summary cards (Total Products, Total Stock Units, Low Stock items, Total Inventory Value in INR), Low Stock Watchlist, Near-Expiry Alert.
+- [x] **Product Catalog**: Add / Edit / Delete modals with React Hook Form + Zod validation, search, category filter, brand filter, and low-stock filter.
+- [x] **Master Management**: Tabbed CRUD management for Categories, Brands, and Units of Measure.
+- [x] **Supplier Directory**: Contact persons, phone, email, address, and GSTIN tracking.
+- [x] **Stock & FEFO Overview**: Real-time batch-wise expiry table with visual indicators and days-to-expiry calculations.

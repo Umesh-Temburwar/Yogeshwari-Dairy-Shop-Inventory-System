@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { UdharCustomer } from '../../types';
-import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import {
   BookOpen,
   Search,
@@ -14,7 +14,8 @@ import {
   UserPlus,
   FileText,
   Printer,
-  Download
+  Download,
+  Eye
 } from 'lucide-react';
 
 export const KhataBook: React.FC = () => {
@@ -163,6 +164,10 @@ export const KhataBook: React.FC = () => {
     };
   };
 
+  const handleViewKhataBookPDF = () => {
+    viewReportPDF(getMasterKhataPayload());
+  };
+
   const handlePrintKhataBookPDF = () => {
     printReport(getMasterKhataPayload());
   };
@@ -210,6 +215,10 @@ export const KhataBook: React.FC = () => {
     };
   };
 
+  const handleViewCustomerStatementPDF = (customer: UdharCustomer) => {
+    viewReportPDF(getCustomerStatementPayload(customer));
+  };
+
   const handlePrintCustomerStatementPDF = (customer: UdharCustomer) => {
     printReport(getCustomerStatementPayload(customer));
   };
@@ -238,10 +247,20 @@ export const KhataBook: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* View PDF Button */}
+          <button
+            onClick={handleViewKhataBookPDF}
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            title="View Udhar Khata Book PDF Report"
+          >
+            <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+          </button>
+
           {/* Print PDF Button */}
           <button
             onClick={handlePrintKhataBookPDF}
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
             title="Print Udhar Khata Book Report"
           >
             <Printer className="w-4 h-4 text-amber-600 dark:text-amber-400" />
@@ -671,6 +690,16 @@ export const KhataBook: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleViewCustomerStatementPDF(selectedLedgerCustomer)}
+                  className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-slate-100 text-slate-800 dark:text-white font-bold text-xs flex items-center gap-1 border border-slate-200 dark:border-[#24352F] shadow-xs active:scale-95"
+                  title="View Customer Statement PDF"
+                >
+                  <Eye className="w-3.5 h-3.5 text-amber-500" />
+                  <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => handlePrintCustomerStatementPDF(selectedLedgerCustomer)}

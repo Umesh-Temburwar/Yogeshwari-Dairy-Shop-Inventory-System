@@ -3,7 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { computeExpiryStatus, ExpiryStatus } from '../../lib/shelfLifeUtils';
 import { ProductBatch, DamageReason } from '../../types';
-import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import {
   AlertTriangle,
   Clock,
@@ -22,7 +22,8 @@ import {
   TrendingDown,
   FileText,
   Download,
-  X
+  X,
+  Eye
 } from 'lucide-react';
 
 export const ExpiryDashboard: React.FC = () => {
@@ -270,6 +271,10 @@ export const ExpiryDashboard: React.FC = () => {
     notes: 'FEFO नियमानुसार प्रथम मुदत संपणारा माल आधी विक्री करावा. मुदत संपलेला माल विक्रीसाठी ग्राह्य धरू नये.'
   });
 
+  const handleViewExpiryPDF = () => {
+    viewReportPDF(getExpiryReportPayload());
+  };
+
   const handlePrintExpiryPDF = () => {
     printReport(getExpiryReportPayload());
   };
@@ -302,8 +307,17 @@ export const ExpiryDashboard: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2">
           <button
+            onClick={handleViewExpiryPDF}
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            title="View Expiry Report PDF"
+          >
+            <Eye className="w-4 h-4 text-rose-300" />
+            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+          </button>
+
+          <button
             onClick={handlePrintExpiryPDF}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs shadow-md transition-all active:scale-95 border border-white/20"
             title="Print Expiry Report"
           >
             <Printer className="w-4 h-4 text-rose-300" />
@@ -312,16 +326,16 @@ export const ExpiryDashboard: React.FC = () => {
 
           <button
             onClick={handleDownloadExpiryPDF}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
             title="Download PDF Report"
           >
             <Download className="w-4 h-4" />
-            <span>{language === 'mr' ? 'एक्सपायरी PDF' : language === 'hi' ? 'एक्सपायरी PDF' : 'Download PDF'}</span>
+            <span>{language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
           </button>
 
           <button
             onClick={handleCopyWhatsAppAlert}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
           >
             {copiedAlert ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             <span>{copiedAlert ? (language === 'mr' ? 'अलर्ट कॉपी झाला!' : 'अलर्ट कॉपी हुआ!') : (language === 'mr' ? 'व्हाट्सॲप रिस्क अलर्ट' : 'व्हाट्सएप अलर्ट')}</span>

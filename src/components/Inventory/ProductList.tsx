@@ -36,9 +36,10 @@ import {
   Barcode,
   FileText,
   Printer,
-  Download
+  Download,
+  Eye
 } from 'lucide-react';
-import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 
 interface ProductListProps {
@@ -157,6 +158,10 @@ export const ProductList: React.FC<ProductListProps> = ({
     },
     notes: 'दुकान साठा तपशील. कमी साठा असलेली उत्पादने वेळेत खरेदी करावीत.'
   });
+
+  const handleViewStockPDF = () => {
+    viewReportPDF(getStockReportPayload());
+  };
 
   const handlePrintStockPDF = () => {
     printReport(getStockReportPayload());
@@ -295,6 +300,16 @@ export const ProductList: React.FC<ProductListProps> = ({
               <span>{lowStockCount + outOfStockCount} {language === 'mr' ? 'माल संपत आला' : language === 'hi' ? 'माल खत्म हो रहा है' : 'items running low'}</span>
             </button>
           )}
+
+          {/* View PDF Button */}
+          <button
+            onClick={handleViewStockPDF}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            title="View Stock Valuation PDF"
+          >
+            <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+          </button>
 
           {/* Print PDF Button */}
           <button

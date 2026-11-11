@@ -3,7 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { DamageReason } from '../../types';
-import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import {
   PackageX,
   Plus,
@@ -12,7 +12,8 @@ import {
   Printer,
   Download,
   Truck,
-  RotateCcw
+  RotateCcw,
+  Eye
 } from 'lucide-react';
 import { SupplierReturnModal } from '../Returns/SupplierReturnModal';
 import { SupplierReturnReason } from '../../types';
@@ -114,6 +115,10 @@ export const DamageTracker: React.FC = () => {
     };
   };
 
+  const handleViewDamagePDF = () => {
+    viewReportPDF(getDamageReportPayload());
+  };
+
   const handlePrintDamagePDF = () => {
     printReport(getDamageReportPayload());
   };
@@ -142,10 +147,20 @@ export const DamageTracker: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* View PDF Button */}
+          <button
+            onClick={handleViewDamagePDF}
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            title="View Spoilage & Loss Report PDF"
+          >
+            <Eye className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+          </button>
+
           {/* Print PDF Button */}
           <button
             onClick={handlePrintDamagePDF}
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
             title="Print Spoilage & Loss Report"
           >
             <Printer className="w-4 h-4 text-rose-600 dark:text-rose-400" />

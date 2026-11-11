@@ -27,9 +27,10 @@ import {
   Package,
   ArrowRight,
   ArrowLeft,
-  RotateCcw
+  RotateCcw,
+  Eye
 } from 'lucide-react';
-import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import confetti from 'canvas-confetti';
 
@@ -275,6 +276,11 @@ export const BillingCounter: React.FC = () => {
     },
     notes: `${language === 'mr' ? 'धन्यवाद! पुन्हा भेट द्या • शुद्धता हीच आमची ओळख' : 'Thank you! Visit again • Purity is our identity'} | UPI ID: Q226038088@ybl (IDFC FIRST Bank)`
   });
+
+  const handleViewInvoicePDF = (sale: any) => {
+    if (!sale) return;
+    viewReportPDF(getInvoiceReportPayload(sale));
+  };
 
   const handlePrintInvoicePDF = (sale: any) => {
     if (!sale) return;
@@ -1100,7 +1106,16 @@ export const BillingCounter: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 pt-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => handleViewInvoicePDF(lastCompletedSale)}
+                className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-800 dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-xs border border-slate-300 dark:border-slate-700"
+                title="View Invoice PDF"
+              >
+                <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+              </button>
               <button
                 type="button"
                 onClick={() => handlePrintInvoicePDF(lastCompletedSale)}
@@ -1122,7 +1137,7 @@ export const BillingCounter: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsSuccessModalOpen(false)}
-                className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white font-bold text-xs active:scale-95"
+                className="py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white font-bold text-xs active:scale-95"
               >
                 {t('nextBill')}
               </button>

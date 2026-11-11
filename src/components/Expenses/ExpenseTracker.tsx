@@ -3,7 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { ExpenseCategory } from '../../types';
-import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import {
   Fuel,
   Plus,
@@ -19,7 +19,8 @@ import {
   Layers,
   FileText,
   Printer,
-  Download
+  Download,
+  Eye
 } from 'lucide-react';
 
 export const ExpenseTracker: React.FC = () => {
@@ -128,6 +129,10 @@ export const ExpenseTracker: React.FC = () => {
     };
   };
 
+  const handleViewExpensesPDF = () => {
+    viewReportPDF(getExpensesPayload());
+  };
+
   const handlePrintExpensesPDF = () => {
     printReport(getExpensesPayload());
   };
@@ -156,6 +161,15 @@ export const ExpenseTracker: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleViewExpensesPDF}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2621] dark:hover:bg-[#24352F] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-all shadow-xs"
+            title="View Expenses PDF Report"
+          >
+            <Eye className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
+          </button>
+
           <button
             onClick={handlePrintExpensesPDF}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2621] dark:hover:bg-[#24352F] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-all shadow-xs"

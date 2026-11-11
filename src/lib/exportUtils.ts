@@ -32,8 +32,15 @@ export interface PDFReportOptions {
   notes?: string;
   author?: string;
   orientation?: 'portrait' | 'landscape';
-  mode?: 'print' | 'download';
+  mode?: 'print' | 'download' | 'view';
 }
+
+/**
+ * Convenience alias for Viewing / Previewing Report in In-App Modal
+ */
+export const viewReportPDF = (options: PDFReportOptions) => {
+  return exportReportToPDF({ ...options, mode: 'view' });
+};
 
 /**
  * Convenience alias for Printing Report / Slip
@@ -408,7 +415,7 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
             window.print();
           }
         }
-        ${options.mode === 'download' ? '' : 'setTimeout(triggerPrint, 350);'}
+        ${options.mode === 'print' ? 'setTimeout(triggerPrint, 350);' : ''}
       </script>
     </body>
     </html>
@@ -433,20 +440,22 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
     }
   }
 
-  // 1. Try opening dedicated Print & PDF preview tab
-  let printWindow: Window | null = null;
-  try {
-    printWindow = window.open(blobUrl, '_blank');
-  } catch (err) {
-    printWindow = null;
+  // If mode === 'print', try opening dedicated print tab first
+  if (options.mode === 'print') {
+    let printWindow: Window | null = null;
+    try {
+      printWindow = window.open(blobUrl, '_blank');
+    } catch (err) {
+      printWindow = null;
+    }
+
+    if (printWindow && !printWindow.closed) {
+      printWindow.focus();
+      return;
+    }
   }
 
-  if (printWindow && !printWindow.closed) {
-    printWindow.focus();
-    return;
-  }
-
-  // 2. If popup was blocked or mobile, render full in-app preview & print modal
+  // If mode === 'view' or print popup was blocked or mobile, render full in-app preview & print modal
   const existingModal = document.getElementById('yd-report-modal');
   if (existingModal) existingModal.remove();
 
@@ -461,23 +470,24 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
   modalContainer.style.flexDirection = 'column';
   modalContainer.style.alignItems = 'center';
   modalContainer.style.justifyContent = 'center';
-  modalContainer.style.padding = '12px';
+  modalContainer.style.padding = '8px';
 
   const modalBox = document.createElement('div');
   modalBox.style.backgroundColor = '#ffffff';
-  modalBox.style.borderRadius = '20px';
+  modalBox.style.borderRadius = '18px';
   modalBox.style.width = '100%';
-  modalBox.style.maxWidth = '880px';
-  modalBox.style.height = '88vh';
+  modalBox.style.maxWidth = '920px';
+  modalBox.style.height = '94vh';
   modalBox.style.display = 'flex';
   modalBox.style.flexDirection = 'column';
   modalBox.style.overflow = 'hidden';
-  modalBox.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.35)';
+  modalBox.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.45)';
+  modalBox.style.border = '1px solid #059669';
 
   const topBar = document.createElement('div');
   topBar.style.backgroundColor = '#064e3b';
   topBar.style.color = '#ffffff';
-  topBar.style.padding = '10px 16px';
+  topBar.style.padding = '10px 14px';
   topBar.style.display = 'flex';
   topBar.style.justifyContent = 'space-between';
   topBar.style.alignItems = 'center';
@@ -485,17 +495,20 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
   topBar.style.gap = '8px';
   topBar.innerHTML = `
     <div style="display: flex; align-items: center; gap: 8px;">
-      <span style="font-size: 16px;">📄</span>
-      <span style="font-weight: 800; font-size: 13px;">${title} — अधिकृत PDF अहवाल</span>
+      <span style="font-size: 18px;">📄</span>
+      <div>
+        <div style="font-weight: 800; font-size: 13px; color: #ecfdf5;">${title}</div>
+        <div style="font-size: 10px; color: #a7f3d0;">योगेश्वरी डेअरी अधिकृत PDF पूर्वदृश्य (Preview)</div>
+      </div>
     </div>
-    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-      <button id="yd-modal-print-btn" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">
-        🖨️ प्रिंट (Print PDF)
+    <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+      <button id="yd-modal-print-btn" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+        <span>🖨️</span> <span>प्रिंट (Print)</span>
       </button>
-      <button id="yd-modal-download-btn" style="background: #2563eb; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">
-        📥 डाउनलोड (Download)
+      <button id="yd-modal-download-btn" style="background: #2563eb; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+        <span>📥</span> <span>डाउनलोड PDF</span>
       </button>
-      <button id="yd-modal-close-btn" style="background: #334155; color: white; border: none; padding: 6px 10px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">
+      <button id="yd-modal-close-btn" style="background: #e11d48; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">
         ✕ बंद करा
       </button>
     </div>
@@ -505,6 +518,7 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
   iframe.style.flex = '1';
   iframe.style.width = '100%';
   iframe.style.border = 'none';
+  iframe.style.backgroundColor = '#ffffff';
   iframe.src = blobUrl;
 
   modalBox.appendChild(topBar);
@@ -515,6 +529,21 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
   const printBtn = modalContainer.querySelector('#yd-modal-print-btn');
   const downloadBtn = modalContainer.querySelector('#yd-modal-download-btn');
   const closeBtn = modalContainer.querySelector('#yd-modal-close-btn');
+
+  const removeModal = () => {
+    modalContainer.remove();
+    document.removeEventListener('keydown', handleKeyEsc);
+  };
+
+  const handleKeyEsc = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') removeModal();
+  };
+  document.addEventListener('keydown', handleKeyEsc);
+
+  // Close when tapping backdrop
+  modalContainer.addEventListener('click', (e) => {
+    if (e.target === modalContainer) removeModal();
+  });
 
   printBtn?.addEventListener('click', () => {
     try {
@@ -539,7 +568,7 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
   });
 
   closeBtn?.addEventListener('click', () => {
-    modalContainer.remove();
+    removeModal();
   });
 };
 

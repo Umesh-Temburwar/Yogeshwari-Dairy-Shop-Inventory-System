@@ -3,7 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { MilkFatCalculator } from './MilkFatCalculator';
-import { exportToCSV, exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
+import { exportToCSV, exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { 
   getShelfLifeDays, 
   getSuggestedExpiryDate, 
@@ -23,7 +23,8 @@ import {
   Layers,
   Clock,
   FileText,
-  RotateCcw
+  RotateCcw,
+  Eye
 } from 'lucide-react';
 import { SupplierReturnModal } from '../Returns/SupplierReturnModal';
 
@@ -197,6 +198,10 @@ export const PurchaseTracker: React.FC = () => {
     };
   };
 
+  const handleViewPurchasePDF = () => {
+    viewReportPDF(getPurchaseReportPayload());
+  };
+
   const handlePrintPurchasePDF = () => {
     printReport(getPurchaseReportPayload());
   };
@@ -233,10 +238,20 @@ export const PurchaseTracker: React.FC = () => {
             <span>{language === 'mr' ? 'दूध फॅट कॅल्क्युलेटर' : language === 'hi' ? 'दूध फैट कैलकुलेटर' : 'Milk Fat Calculator'}</span>
           </button>
 
+          {/* View PDF Button */}
+          <button
+            onClick={handleViewPurchasePDF}
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            title="View Purchases PDF Report"
+          >
+            <Eye className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+          </button>
+
           {/* Print PDF Button */}
           <button
             onClick={handlePrintPurchasePDF}
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
             title="Print Purchases Report"
           >
             <Printer className="w-4 h-4 text-sky-600 dark:text-sky-400" />

@@ -15,9 +15,10 @@ import {
   Clock, 
   FileText,
   Download,
-  BadgeAlert
+  BadgeAlert,
+  Eye
 } from 'lucide-react';
-import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { YDO_LOGO_BASE64 } from '../../assets/logoBase64';
 
 interface SupplierReturnModalProps {
@@ -148,6 +149,11 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
     };
   };
 
+  const handleViewDebitNote = () => {
+    const payload = getDebitNotePayload();
+    if (payload) viewReportPDF(payload);
+  };
+
   const handlePrintDebitNote = () => {
     const payload = getDebitNotePayload();
     if (payload) printReport(payload);
@@ -228,7 +234,16 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-2 pt-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+              <button
+                type="button"
+                onClick={handleViewDebitNote}
+                className="py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-800 dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs border border-slate-300 dark:border-slate-700"
+                title="View Debit Note Voucher PDF"
+              >
+                <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <span>{language === 'mr' ? 'पहा' : 'देखें'}</span>
+              </button>
               <button
                 type="button"
                 onClick={handlePrintDebitNote}

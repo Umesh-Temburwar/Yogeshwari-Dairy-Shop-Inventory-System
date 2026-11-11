@@ -278,6 +278,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     const handlePopState = (e: PopStateEvent) => {
+      // If in-app report preview modal is open, dismiss it on back navigation
+      const reportModal = document.getElementById('yd-report-modal');
+      if (reportModal) {
+        reportModal.remove();
+      }
+
       const currentRawHash = window.location.hash.replace(/^#\/?/, '').split('?')[0] as AppView;
       const target: AppView = (e.state && e.state.view && VALID_APP_VIEWS.includes(e.state.view))
         ? e.state.view

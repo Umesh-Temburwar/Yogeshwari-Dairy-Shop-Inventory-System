@@ -12,9 +12,10 @@ import {
   Download,
   TrendingUp,
   Sparkles,
-  RotateCcw
+  RotateCcw,
+  Eye
 } from 'lucide-react';
-import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { computeExpiryStatus } from '../../lib/shelfLifeUtils';
 
 export const ReorderNeedsView: React.FC = () => {
@@ -155,6 +156,10 @@ export const ReorderNeedsView: React.FC = () => {
       : 'सध्या दुकानातील सर्व साठा सुरक्षित मर्यादेत आहे. कोणत्याही तात्काळ मागणीची गरज नाही.'
   });
 
+  const handleViewReorderPDF = () => {
+    viewReportPDF(getReorderPayload());
+  };
+
   const handlePrintReorderPDF = () => {
     printReport(getReorderPayload());
   };
@@ -183,26 +188,35 @@ export const ReorderNeedsView: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2">
           <button
+            onClick={handleViewReorderPDF}
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            title="View Reorder PDF Sheet"
+          >
+            <Eye className="w-4 h-4 text-amber-300" />
+            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+          </button>
+
+          <button
             onClick={handlePrintReorderPDF}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs shadow-md transition-all active:scale-95 border border-white/20"
             title="Print Reorder Sheet"
           >
             <Printer className="w-4 h-4 text-amber-300" />
-            <span>{language === 'mr' ? 'प्रिंट (Print)' : language === 'hi' ? 'प्रिंट (Print)' : 'Print'}</span>
+            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
           </button>
 
           <button
             onClick={handleDownloadReorderPDF}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
             title="Download PDF Order Sheet"
           >
             <Download className="w-4 h-4" />
-            <span>{language === 'mr' ? 'मागणी पत्रक PDF' : language === 'hi' ? 'मांग पत्रक PDF' : 'Download PDF'}</span>
+            <span>{language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
           </button>
 
           <button
             onClick={handleCopyWhatsAppList}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? t('orderCopied') : t('copyWhatsAppOrder')}</span>

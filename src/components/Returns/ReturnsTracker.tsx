@@ -20,9 +20,10 @@ import {
   Printer,
   Download,
   RefreshCw,
-  BadgeAlert
+  BadgeAlert,
+  Eye
 } from 'lucide-react';
-import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { SupplierReturnModal } from './SupplierReturnModal';
 import { SupplierReturn, SupplierRefundStatus } from '../../types';
 
@@ -147,6 +148,10 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
     notes: 'ग्राहक परतावा अहवाल. पुन्हा विक्रीयोग्य माल इन्व्हेंटरीमध्ये जोडला गेला आहे.'
   });
 
+  const handleViewCustomerPDF = () => {
+    viewReportPDF(getCustomerReturnsPayload());
+  };
+
   const handlePrintCustomerPDF = () => {
     printReport(getCustomerReturnsPayload());
   };
@@ -197,6 +202,10 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
     notes: 'सप्लायरकडून खराब/कालबाह्य मालाचा रिफंड किंवा पुढील खरेदी बिलातून वजावट तपासून घ्यावी.'
   });
 
+  const handleViewSupplierPDF = () => {
+    viewReportPDF(getSupplierReturnsPayload());
+  };
+
   const handlePrintSupplierPDF = () => {
     printReport(getSupplierReturnsPayload());
   };
@@ -228,6 +237,16 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
             <>
               <button
                 type="button"
+                onClick={handleViewCustomerPDF}
+                className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
+                title="View Customer Returns PDF"
+              >
+                <Eye className="w-4 h-4 text-purple-600" />
+                <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : 'देखें'}</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={handlePrintCustomerPDF}
                 className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
                 title="Print Customer Returns Report"
@@ -256,6 +275,16 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
             </>
           ) : (
             <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={handleViewSupplierPDF}
+                className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
+                title="View Supplier Returns PDF"
+              >
+                <Eye className="w-4 h-4 text-amber-600" />
+                <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : 'देखें'}</span>
+              </button>
+
               <button
                 type="button"
                 onClick={handlePrintSupplierPDF}

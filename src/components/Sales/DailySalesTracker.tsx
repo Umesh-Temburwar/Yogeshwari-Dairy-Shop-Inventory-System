@@ -3,7 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { Sale } from '../../types';
-import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { 
   ReceiptIndianRupee, 
   Search, 
@@ -109,6 +109,10 @@ export const DailySalesTracker: React.FC = () => {
     notes: 'संगणकीय तयार केलेला अधिकृत विक्री अहवाल. रोकड व ऑनलाईन पावती तपासून घ्यावी.'
   });
 
+  const handleViewSalesPDF = () => {
+    viewReportPDF(getSalesPDFPayload());
+  };
+
   const handlePrintSalesPDF = () => {
     printReport(getSalesPDFPayload());
   };
@@ -140,17 +144,26 @@ export const DailySalesTracker: React.FC = () => {
 
         <div className="flex items-center gap-2 flex-wrap">
           <button
+            onClick={handleViewSalesPDF}
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2621] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-all shadow-xs active:scale-95"
+            title={language === 'mr' ? 'अहवाल पहा (View PDF)' : language === 'hi' ? 'रिपोर्ट देखें (View PDF)' : 'View Sales PDF'}
+          >
+            <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+          </button>
+
+          <button
             onClick={handlePrintSalesPDF}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
             title={language === 'mr' ? 'अहवाल थेट प्रिंट करा' : language === 'hi' ? 'रिपोर्ट प्रिंट करें' : 'Print Sales Report'}
           >
             <Printer className="w-4 h-4 text-emerald-400" />
-            <span>{language === 'mr' ? 'प्रिंट (Print)' : language === 'hi' ? 'प्रिंट (Print)' : 'Print'}</span>
+            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
           </button>
 
           <button
             onClick={handleDownloadSalesPDF}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
             title={language === 'mr' ? 'अहवाल PDF फाईल डाउनलोड करा' : language === 'hi' ? 'रिपोर्ट PDF डाउनलोड करें' : 'Download Sales PDF'}
           >
             <Download className="w-4 h-4" />
@@ -479,7 +492,32 @@ export const DailySalesTracker: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 pt-1">
+            <div className="grid grid-cols-3 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedSaleForView) {
+                    viewReportPDF({
+                      title: `विक्री बिल / Cash Memo (${selectedSaleForView.invoice_no})`,
+                      periodText: `बिल क्र. ${selectedSaleForView.invoice_no} | तारीख: ${selectedSaleForView.sale_date}`,
+                      kpis: [
+                        { label: 'एकूण रक्कम', value: `₹${selectedSaleForView.net_amount}`, color: 'emerald' },
+                        { label: 'पेमेंट मोड', value: selectedSaleForView.payment_mode, color: 'blue' }
+                      ],
+                      table: {
+                        headers: ['वस्तू', 'नग/प्रमाण', 'दर', 'एकूण'],
+                        rows: selectedSaleForView.items?.map(i => [i.product_name, `${i.quantity} ${i.unit}`, `₹${i.unit_price}`, `₹${i.total_price}`]) || [],
+                        summaryRow: ['एकूण', '', '', `₹${selectedSaleForView.net_amount}`]
+                      }
+                    });
+                  }
+                }}
+                className="py-2.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2621] text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center justify-center gap-1 border border-slate-300 dark:border-slate-700 active:scale-95"
+              >
+                <Eye className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -499,10 +537,10 @@ export const DailySalesTracker: React.FC = () => {
                     });
                   }
                 }}
-                className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95"
+                className="py-2.5 px-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95"
               >
-                <Printer className="w-4 h-4 text-emerald-400" />
-                <span>{language === 'mr' ? 'बिल प्रिंट' : language === 'hi' ? 'बिल प्रिंट' : 'Print Bill'}</span>
+                <Printer className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
               </button>
 
               <button
@@ -524,10 +562,10 @@ export const DailySalesTracker: React.FC = () => {
                     });
                   }
                 }}
-                className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95"
+                className="py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95"
               >
-                <Download className="w-4 h-4" />
-                <span>{language === 'mr' ? 'बिल PDF' : language === 'hi' ? 'बिल PDF' : 'Download PDF'}</span>
+                <Download className="w-3.5 h-3.5" />
+                <span>{language === 'mr' ? 'डाउनलोड' : language === 'hi' ? 'डाउनलोड' : 'Download'}</span>
               </button>
             </div>
 

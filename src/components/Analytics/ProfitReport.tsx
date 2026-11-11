@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
+import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import {
   Sparkles,
   Trophy,
@@ -12,9 +13,9 @@ import {
   TrendingUp,
   Heart,
   FileText,
-  Download
+  Download,
+  Eye
 } from 'lucide-react';
-import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 export const ProfitReport: React.FC = () => {
@@ -264,6 +265,10 @@ export const ProfitReport: React.FC = () => {
     notes: 'योगेश्वरी डेअरी अधिकृत आर्थिक विवरणपत्र. सीए/कर सल्लागारासाठी वैध.'
   });
 
+  const handleViewPLPDF = () => {
+    viewReportPDF(getPLReportPayload());
+  };
+
   const handlePrintPLPDF = () => {
     printReport(getPLReportPayload());
   };
@@ -294,10 +299,20 @@ export const ProfitReport: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* View PDF Button */}
+          <button
+            onClick={handleViewPLPDF}
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-800 dark:text-white text-xs font-bold transition-all border border-slate-300 dark:border-[#24352F] active:scale-95 shadow-xs"
+            title="View Official P&L Statement PDF"
+          >
+            <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+          </button>
+
           {/* Print PDF Button */}
           <button
             onClick={handlePrintPLPDF}
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-white text-xs font-bold transition-all border border-transparent dark:border-[#24352F] active:scale-95 shadow-xs"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-white text-xs font-bold transition-all border border-transparent dark:border-[#24352F] active:scale-95 shadow-xs"
             title="Print Official P&L Statement"
           >
             <Printer className="w-4 h-4 text-emerald-400" />

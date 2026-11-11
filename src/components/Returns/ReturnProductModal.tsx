@@ -15,9 +15,10 @@ import {
   Wallet, 
   Smartphone, 
   BookOpen, 
-  Repeat
+  Repeat,
+  Eye
 } from 'lucide-react';
-import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 
 interface ReturnProductModalProps {
   onClose: () => void;
@@ -111,6 +112,11 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
     };
   };
 
+  const handleViewSlipPDF = () => {
+    const payload = getReturnSlipPayload();
+    if (payload) viewReportPDF(payload);
+  };
+
   const handlePrintSlip = () => {
     const payload = getReturnSlipPayload();
     if (payload) printReport(payload);
@@ -168,7 +174,15 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 pt-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+              <button
+                type="button"
+                onClick={handleViewSlipPDF}
+                className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-800 dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 border border-slate-300 dark:border-slate-700 shadow-xs"
+              >
+                <Eye className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
+              </button>
               <button
                 type="button"
                 onClick={handlePrintSlip}
@@ -188,9 +202,9 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] font-bold text-xs transition active:scale-95"
+                className="py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] font-bold text-xs transition active:scale-95"
               >
-                {language === 'mr' ? 'पूर्ण (Done)' : language === 'hi' ? 'पूर्ण (Done)' : 'Done'}
+                {language === 'mr' ? 'पूर्ण' : language === 'hi' ? 'पूर्ण' : 'Done'}
               </button>
             </div>
           </div>

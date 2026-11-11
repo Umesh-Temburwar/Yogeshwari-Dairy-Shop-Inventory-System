@@ -369,66 +369,113 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
       </div>
 
       <script>
-        window.addEventListener('load', function() {
-          setTimeout(function() {
-            try {
-              window.print();
-            } catch(e) {}
-          }, 350);
-        });
+        function triggerPrint() {
+          try {
+            window.focus();
+            window.print();
+          } catch(e) {
+            console.error('Print trigger error', e);
+          }
+        }
+        setTimeout(triggerPrint, 350);
       </script>
     </body>
     </html>
   `;
 
-  // 1. Try opening clean dedicated Print & PDF preview window
+  // Create Blob URL for rock-solid cross-browser rendering
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+  const blobUrl = URL.createObjectURL(blob);
+
+  // 1. Try opening dedicated Print & PDF preview tab
+  let printWindow: Window | null = null;
   try {
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.open();
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-      printWindow.focus();
-      return;
-    }
+    printWindow = window.open(blobUrl, '_blank');
   } catch (err) {
-    console.warn('Popup blocked, falling back to iframe print', err);
+    printWindow = null;
   }
 
-  // 2. Fallback using hidden iframe for constrained environments
-  const printFrame = document.createElement('iframe');
-  printFrame.style.position = 'fixed';
-  printFrame.style.right = '0';
-  printFrame.style.bottom = '0';
-  printFrame.style.width = '0';
-  printFrame.style.height = '0';
-  printFrame.style.border = '0';
-
-  document.body.appendChild(printFrame);
-
-  const frameDoc = printFrame.contentWindow?.document || printFrame.contentDocument;
-  if (frameDoc) {
-    frameDoc.open();
-    frameDoc.write(htmlContent);
-    frameDoc.close();
-
-    // Trigger print once ready
-    printFrame.contentWindow?.focus();
-    setTimeout(() => {
-      try {
-        printFrame.contentWindow?.print();
-      } catch (e) {
-        console.error('Frame print failed', e);
-      }
-    }, 500);
-
-    // Safely cleanup after print dialog completes
-    window.addEventListener('afterprint', () => {
-      try {
-        document.body.removeChild(printFrame);
-      } catch (e) {}
-    }, { once: true });
+  if (printWindow && !printWindow.closed) {
+    printWindow.focus();
+    return;
   }
+
+  // 2. If popup was blocked or mobile, render full in-app preview & print modal
+  const existingModal = document.getElementById('yd-report-modal');
+  if (existingModal) existingModal.remove();
+
+  const modalContainer = document.createElement('div');
+  modalContainer.id = 'yd-report-modal';
+  modalContainer.style.position = 'fixed';
+  modalContainer.style.inset = '0';
+  modalContainer.style.zIndex = '99999';
+  modalContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.75)';
+  modalContainer.style.backdropFilter = 'blur(4px)';
+  modalContainer.style.display = 'flex';
+  modalContainer.style.flexDirection = 'column';
+  modalContainer.style.alignItems = 'center';
+  modalContainer.style.justifyContent = 'center';
+  modalContainer.style.padding = '12px';
+
+  const modalBox = document.createElement('div');
+  modalBox.style.backgroundColor = '#ffffff';
+  modalBox.style.borderRadius = '20px';
+  modalBox.style.width = '100%';
+  modalBox.style.maxWidth = '880px';
+  modalBox.style.height = '88vh';
+  modalBox.style.display = 'flex';
+  modalBox.style.flexDirection = 'column';
+  modalBox.style.overflow = 'hidden';
+  modalBox.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.35)';
+
+  const topBar = document.createElement('div');
+  topBar.style.backgroundColor = '#064e3b';
+  topBar.style.color = '#ffffff';
+  topBar.style.padding = '12px 18px';
+  topBar.style.display = 'flex';
+  topBar.style.justifyContent = 'space-between';
+  topBar.style.alignItems = 'center';
+  topBar.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 16px;">📄</span>
+      <span style="font-weight: 800; font-size: 13px;">${title} — अधिकृत PDF अहवाल</span>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <button id="yd-modal-print-btn" style="background: #10b981; color: white; border: none; padding: 7px 14px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">
+        🖨️ PDF सेव्ह / प्रिंट करा
+      </button>
+      <button id="yd-modal-close-btn" style="background: #334155; color: white; border: none; padding: 7px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">
+        ✕ बंद करा
+      </button>
+    </div>
+  `;
+
+  const iframe = document.createElement('iframe');
+  iframe.style.flex = '1';
+  iframe.style.width = '100%';
+  iframe.style.border = 'none';
+  iframe.src = blobUrl;
+
+  modalBox.appendChild(topBar);
+  modalBox.appendChild(iframe);
+  modalContainer.appendChild(modalBox);
+  document.body.appendChild(modalContainer);
+
+  const printBtn = modalContainer.querySelector('#yd-modal-print-btn');
+  const closeBtn = modalContainer.querySelector('#yd-modal-close-btn');
+
+  printBtn?.addEventListener('click', () => {
+    try {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    } catch (e) {
+      window.print();
+    }
+  });
+
+  closeBtn?.addEventListener('click', () => {
+    modalContainer.remove();
+  });
 };
 
 /**

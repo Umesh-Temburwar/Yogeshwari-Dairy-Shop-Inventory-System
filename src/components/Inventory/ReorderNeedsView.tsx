@@ -116,7 +116,7 @@ export const ReorderNeedsView: React.FC = () => {
       table: {
         headers: ['अ.क्र.', 'उत्पादनाचे नाव (Product)', 'प्रवर्ग (Category)', 'सध्याचा साठा', 'किमान मर्यादा', 'मागणी प्रमाण (Order Qty)', 'अंदाजे दर (₹)', 'एकूण रक्कम (₹)'],
         alignments: ['center', 'left', 'center', 'right', 'right', 'right', 'right', 'right'],
-        rows: itemsNeedingRestock.map((it, idx) => [
+        rows: itemsNeedingRestock.length > 0 ? itemsNeedingRestock.map((it, idx) => [
           idx + 1,
           getDisplayName(it),
           it.category,
@@ -125,7 +125,9 @@ export const ReorderNeedsView: React.FC = () => {
           `${it.recommendedOrderQty} ${it.unit}`,
           `₹${it.purchase_price}`,
           `₹${it.estimatedCost.toLocaleString('en-IN')}`
-        ]),
+        ]) : [
+          [1, language === 'mr' ? 'सर्व उत्पादने पुरेशा साठ्यात उपलब्ध आहेत (साठा सुरक्षित)' : 'सभी उत्पाद पर्याप्त स्टॉक में उपलब्ध हैं (सुरक्षित)', '—', '—', '—', '—', '—', '₹0']
+        ],
         summaryRow: [
           'एकूण (Total)',
           `${itemsNeedingRestock.length} वस्तू`,
@@ -137,7 +139,9 @@ export const ReorderNeedsView: React.FC = () => {
           `₹${totalEstimatedCost.toLocaleString('en-IN')}`
         ]
       },
-      notes: 'सदर माल लवकरात लवकर पुरवठादार/सप्लायरकडून मागवून घ्यावा.'
+      notes: itemsNeedingRestock.length > 0 
+        ? 'सदर माल लवकरात लवकर पुरवठादार/सप्लायरकडून मागवून घ्यावा.'
+        : 'सध्या दुकानातील सर्व साठा सुरक्षित मर्यादेत आहे. कोणत्याही तात्काळ मागणीची गरज नाही.'
     });
   };
 
@@ -162,8 +166,7 @@ export const ReorderNeedsView: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleDownloadReorderPDF}
-            disabled={itemsNeedingRestock.length === 0}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
             title="Download PDF Order Sheet"
           >
             <FileText className="w-4 h-4" />
@@ -172,8 +175,7 @@ export const ReorderNeedsView: React.FC = () => {
 
           <button
             onClick={handleCopyWhatsAppList}
-            disabled={itemsNeedingRestock.length === 0}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? t('orderCopied') : t('copyWhatsAppOrder')}</span>
@@ -181,8 +183,7 @@ export const ReorderNeedsView: React.FC = () => {
 
           <button
             onClick={() => window.print()}
-            disabled={itemsNeedingRestock.length === 0}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 transition-all active:scale-95"
           >
             <Printer className="w-4 h-4" />
             <span>{t('print')}</span>

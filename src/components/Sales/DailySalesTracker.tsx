@@ -86,7 +86,7 @@ export const DailySalesTracker: React.FC = () => {
       table: {
         headers: ['बिल क्र.', 'तारीख', 'ग्राहक नाव', 'पेमेंट पद्धत', 'आयटम्स', 'सवलत (₹)', 'एकूण रक्कम (₹)'],
         alignments: ['left', 'center', 'left', 'center', 'left', 'right', 'right'],
-        rows: filtered.map(s => [
+        rows: filtered.length > 0 ? filtered.map(s => [
           s.invoice_no,
           s.sale_date,
           s.customer_name + (s.customer_phone ? ` (${s.customer_phone})` : ''),
@@ -94,7 +94,9 @@ export const DailySalesTracker: React.FC = () => {
           s.items ? s.items.map(i => `${i.product_name} x ${i.quantity}`).join(', ') : '—',
           s.discount > 0 ? `₹${s.discount}` : '₹0',
           `₹${s.net_amount.toLocaleString('en-IN')}`
-        ]),
+        ]) : [
+          ['—', '—', language === 'mr' ? 'या निवडलेल्या कालावधीत कोणतीही विक्री नोंद नाही' : 'इस अवधि में कोई बिक्री दर्ज नहीं', '—', '—', '—', '₹0']
+        ],
         summaryRow: [
           'एकूण (Total)',
           `${filtered.length} बिले`,
@@ -102,7 +104,7 @@ export const DailySalesTracker: React.FC = () => {
           '',
           '',
           '',
-          `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`
+          `₹${(metrics.totalSalesRevenue || 0).toLocaleString('en-IN')}`
         ]
       },
       notes: 'संगणकीय तयार केलेला अधिकृत विक्री अहवाल. रोकड व ऑनलाईन पावती तपासून घ्यावी.'

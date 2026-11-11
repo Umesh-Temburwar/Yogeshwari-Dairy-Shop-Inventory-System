@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ydoLogo from '../../assets/YDO_logo.jpg';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { 
@@ -145,9 +146,15 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
           <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 bg-gradient-to-tr from-emerald-600 to-teal-400 shadow-xl flex items-center justify-center">
             <div className="w-full h-full rounded-full bg-white p-0.5 overflow-hidden flex items-center justify-center">
               <img 
-                src="/YDO_logo.jpg" 
+                src={ydoLogo} 
                 alt="Yogeshwari Dairy" 
                 className="w-full h-full object-cover rounded-full"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.src.endsWith('/YDO_logo.png')) {
+                    target.src = '/YDO_logo.png';
+                  }
+                }}
               />
             </div>
             <div className="absolute -bottom-1 -right-1 bg-emerald-600 text-white p-1 rounded-full shadow-md border-2 border-white dark:border-[#131F1B]">

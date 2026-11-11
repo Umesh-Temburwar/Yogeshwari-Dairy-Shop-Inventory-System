@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ydoLogo from '../../assets/YDO_logo.jpg';
 import { Sparkles, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -114,9 +115,15 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-white p-1.5 shadow-2xl shadow-emerald-600/30 ring-4 ring-emerald-500/30 dark:ring-emerald-400/40 border-2 border-white flex items-center justify-center overflow-hidden">
             {/* The Authentic YDO Circular Logo */}
             <img
-              src="/YDO_logo.jpg"
+              src={ydoLogo}
               alt="Yogeshwari Dairy Logo"
               className="w-full h-full rounded-full object-cover scale-105"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.src.endsWith('/YDO_logo.png')) {
+                  target.src = '/YDO_logo.png';
+                }
+              }}
             />
 
             {/* Shimmer Light Reflection Sweep */}

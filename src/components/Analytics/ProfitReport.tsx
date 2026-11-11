@@ -231,6 +231,7 @@ export const ProfitReport: React.FC = () => {
               ['(=) स्थूल नफा (Gross Profit Margin)', `₹${metrics.grossProfit.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.grossProfit / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
               ['(-) दुकान दैनंदिन चालू खर्च (Operating Expenses)', `₹${metrics.operatingExpenses.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.operatingExpenses / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
               ['(-) नासलेले दूध व खराब माल नुकसान (Damages & Spoilage)', `₹${metrics.totalDamagesLoss.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.totalDamagesLoss / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
+              ['(-) ग्राहक माल परतावा रिफंड (Customer Refunds)', `₹${(metrics.totalRefundAmount || 0).toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${(((metrics.totalRefundAmount || 0) / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
               ['(=) अंतिम निव्वळ शिल्लक नफा (Net Profit In Hand)', `₹${metrics.netProfit.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.netProfit / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%']
             ]
           }
@@ -372,6 +373,13 @@ export const ProfitReport: React.FC = () => {
             <span>4. {language === 'mr' ? 'वजा: नासलेला / खराब माल नुकसान (Spoilage Loss):' : language === 'hi' ? 'घटाएं: डैमेज व खराब माल का नुकसान (Spoilage Loss):' : 'Less: Spoilage & Damaged Goods Loss:'}</span>
             <span className="font-black text-rose-700 dark:text-rose-400">-₹{metrics.totalDamagesLoss.toLocaleString('en-IN')}</span>
           </div>
+
+          {(metrics.totalRefundAmount || 0) > 0 && (
+            <div className="flex justify-between items-center p-3 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 text-slate-800 dark:text-[#E7F0EC] font-semibold border border-purple-100 dark:border-purple-900/40">
+              <span>5. {language === 'mr' ? 'वजा: ग्राहक माल परतावा रिफंड (Returns & Refunds):' : language === 'hi' ? 'घटाएं: ग्राहक सामान वापसी रिफंड (Returns & Refunds):' : 'Less: Customer Returns & Refunds:'}</span>
+              <span className="font-black text-rose-700 dark:text-rose-400">-₹{metrics.totalRefundAmount.toLocaleString('en-IN')}</span>
+            </div>
+          )}
 
           <div className="flex justify-between items-baseline p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-extrabold text-sm shadow-md mt-4">
             <div>

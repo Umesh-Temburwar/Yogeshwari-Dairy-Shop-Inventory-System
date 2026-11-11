@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ydoLogo from '../../assets/YDO_logo.jpg';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -232,9 +233,15 @@ export const LoginPage: React.FC = () => {
         <div className="relative z-10 flex items-center gap-3.5 bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/20 w-fit shadow-xl">
           <div className="w-13 h-13 xl:w-16 xl:h-16 rounded-full bg-white p-0.5 shadow-md border-2 border-emerald-400/50 shrink-0 overflow-hidden flex items-center justify-center">
             <img
-              src="/YDO_logo.jpg"
+              src={ydoLogo}
               alt="Yogeshwari Dairy Logo"
               className="w-full h-full rounded-full object-cover scale-105"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.src.endsWith('/YDO_logo.png')) {
+                  target.src = '/YDO_logo.png';
+                }
+              }}
             />
           </div>
           <div className="pr-2">
@@ -402,9 +409,15 @@ export const LoginPage: React.FC = () => {
           <div className="lg:hidden flex items-center gap-3 mb-4 text-center">
             <div className="w-12 h-12 rounded-full bg-white p-0.5 shadow-md border-2 border-emerald-500/40 shrink-0 overflow-hidden flex items-center justify-center">
               <img
-                src="/YDO_logo.jpg"
+                src={ydoLogo}
                 alt="Yogeshwari Dairy Logo"
                 className="w-full h-full rounded-full object-cover scale-105"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.src.endsWith('/YDO_logo.png')) {
+                    target.src = '/YDO_logo.png';
+                  }
+                }}
               />
             </div>
             <div className="text-left">
@@ -426,9 +439,15 @@ export const LoginPage: React.FC = () => {
             <div className="mb-5 flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-white dark:bg-[#1A2A25] p-0.5 border-2 border-emerald-500/40 shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
                 <img
-                  src="/YDO_logo.jpg"
+                  src={ydoLogo}
                   alt="Yogeshwari Dairy Logo"
                   className="w-full h-full rounded-full object-cover scale-105"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.src.endsWith('/YDO_logo.png')) {
+                      target.src = '/YDO_logo.png';
+                    }
+                  }}
                 />
               </div>
               <div>

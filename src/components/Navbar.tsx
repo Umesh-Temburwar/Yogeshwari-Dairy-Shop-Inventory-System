@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ydoLogo from '../assets/YDO_logo.jpg';
 import { useLanguage, Language } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -85,9 +86,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Brand Logo - Enlarged & Circular */}
           <div className="w-11 h-11 sm:w-[50px] sm:h-[50px] rounded-full bg-white p-0.5 shadow-md border-2 border-emerald-500/40 dark:border-emerald-500/60 ring-2 ring-emerald-500/10 flex items-center justify-center shrink-0 overflow-hidden transition-transform hover:scale-105">
             <img 
-              src="/YDO_logo.jpg" 
+              src={ydoLogo} 
               alt="Yogeshwari Dairy Logo" 
               className="w-full h-full rounded-full object-cover scale-105"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.src.endsWith('/YDO_logo.png')) {
+                  target.src = '/YDO_logo.png';
+                }
+              }}
             />
           </div>
 

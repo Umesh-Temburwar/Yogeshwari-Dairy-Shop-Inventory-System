@@ -4,6 +4,8 @@
  * Professional Dairy ERP Header, KPI Summary Cards, and Print-to-PDF generation.
  */
 
+import { YDO_LOGO_BASE64 } from '../assets/logoBase64';
+
 export interface KPIItem {
   label: string;
   value: string | number;
@@ -300,19 +302,38 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
           body {
             padding: 0;
           }
-          button {
+          .no-print {
             display: none !important;
           }
         }
       </style>
     </head>
     <body>
+      <!-- Top Action Bar (Hidden during Print / PDF generation) -->
+      <div class="no-print" style="position: sticky; top: 0; z-index: 9999; background: #064e3b; color: #ffffff; padding: 12px 18px; margin: -10px -10px 14px -10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-family: sans-serif;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 16px;">📄</span>
+          <div>
+            <div style="font-weight: 800; font-size: 13px; color: #ecfdf5;">योगेश्वरी डेअरी अहवाल (Official Dairy Report)</div>
+            <div style="font-size: 10px; color: #a7f3d0;">PDF स्वरूपात सेव्ह करण्यासाठी खालील बटण दाबा</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="window.print()" style="background: #10b981; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            <span>🖨️ PDF सेव्ह / प्रिंट करा (Save as PDF)</span>
+          </button>
+          <button onclick="window.close()" style="background: #334155; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer;">
+            ✕ बंद करा
+          </button>
+        </div>
+      </div>
+
       <!-- Header -->
       <div class="report-header">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <img src="/YDO_logo.jpg" alt="Logo" style="width: 48px; height: 48px; border-radius: 10px; object-fit: contain; border: 1px solid #cbd5e1; background: #ffffff; padding: 2px;" />
+          <img src="${YDO_LOGO_BASE64}" alt="Logo" style="width: 52px; height: 52px; border-radius: 12px; object-fit: contain; border: 1.5px solid #059669; background: #ffffff; padding: 2px;" />
           <div>
-            <div class="brand-title">योगेश्वरी डेअरी &उत्पादन</div>
+            <div class="brand-title">योगेश्वरी डेअरी & उत्पादने</div>
             <div class="brand-subtitle">Yogeshwari Dairy Farm & Products &bull; Enterprise ERP & Khata System</div>
             <div class="report-title-badge">${title}</div>
             ${periodText ? `<div style="font-size: 10px; color: #047857; font-weight: 700; margin-top: 4px;">कालावधी: ${periodText}</div>` : ''}
@@ -348,15 +369,33 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
       </div>
 
       <script>
-        window.onload = function() {
-          window.print();
-        };
+        window.addEventListener('load', function() {
+          setTimeout(function() {
+            try {
+              window.print();
+            } catch(e) {}
+          }, 350);
+        });
       </script>
     </body>
     </html>
   `;
 
-  // Print using hidden iframe for clean instant PDF download
+  // 1. Try opening clean dedicated Print & PDF preview window
+  try {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.open();
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.focus();
+      return;
+    }
+  } catch (err) {
+    console.warn('Popup blocked, falling back to iframe print', err);
+  }
+
+  // 2. Fallback using hidden iframe for constrained environments
   const printFrame = document.createElement('iframe');
   printFrame.style.position = 'fixed';
   printFrame.style.right = '0';
@@ -373,12 +412,22 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
     frameDoc.write(htmlContent);
     frameDoc.close();
 
-    // Remove frame after printing
+    // Trigger print once ready
+    printFrame.contentWindow?.focus();
     setTimeout(() => {
       try {
+        printFrame.contentWindow?.print();
+      } catch (e) {
+        console.error('Frame print failed', e);
+      }
+    }, 500);
+
+    // Safely cleanup after print dialog completes
+    window.addEventListener('afterprint', () => {
+      try {
         document.body.removeChild(printFrame);
-      } catch (e) { }
-    }, 2000);
+      } catch (e) {}
+    }, { once: true });
   }
 };
 

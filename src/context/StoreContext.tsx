@@ -172,6 +172,9 @@ interface StoreContextType {
     totalReturnsCount: number;
     totalRefundAmount: number;
     todayRefundAmount: number;
+    // Compatibility Aliases
+    totalCOGS: number;
+    creditGiven: number;
   };
 }
 
@@ -519,7 +522,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Returns Metrics
       totalReturnsCount: filteredReturns.length,
       totalRefundAmount: filteredReturns.reduce((acc, r) => acc + (r.refund_amount || 0), 0),
-      todayRefundAmount: returns.filter(r => r.return_date === new Date().toISOString().split('T')[0]).reduce((acc, r) => acc + (r.refund_amount || 0), 0)
+      todayRefundAmount: returns.filter(r => r.return_date === new Date().toISOString().split('T')[0]).reduce((acc, r) => acc + (r.refund_amount || 0), 0),
+      // Compatibility Aliases
+      totalCOGS: cogs,
+      creditGiven: udharGiven
     };
   }, [filteredSales, filteredPurchases, filteredExpenses, filteredDamages, filteredReturns, returns, customers, products, batches]);
 

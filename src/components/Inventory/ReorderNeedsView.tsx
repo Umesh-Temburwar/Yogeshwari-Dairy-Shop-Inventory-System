@@ -8,23 +8,45 @@ import {
   Check,
   Truck,
   CheckCircle2,
-  FileText
+  FileText,
+  TrendingUp,
+  Sparkles,
+  RotateCcw
 } from 'lucide-react';
 import { exportReportToPDF } from '../../lib/exportUtils';
+import { computeExpiryStatus } from '../../lib/shelfLifeUtils';
 
 export const ReorderNeedsView: React.FC = () => {
-  const { products, setActiveView } = useStore();
+  const { products, batches, sales, returns, setActiveView } = useStore();
   const { t, language } = useLanguage();
   const [copied, setCopied] = useState(false);
 
-  // Identify all products needing restock
+  // Train & Analyze inventory based on sales velocity, customer returns, and shelf life
   const itemsNeedingRestock = useMemo(() => {
     return products
       .filter(p => p.stock_quantity <= p.min_stock_alert)
       .map(p => {
+        // 1. Calculate actual sales volume
+        const totalSold = sales.reduce((sum, s) => {
+          const item = s.items?.find(it => it.product_id === p.id);
+          return sum + (item ? item.quantity : 0);
+        }, 0);
+
+        // 2. Calculate customer returns
+        const totalReturned = returns
+          .filter(r => r.product_id === p.id)
+          .reduce((sum, r) => sum + r.quantity, 0);
+
+        // 3. Check for batches nearing expiry
+        const hasNearExpiryBatch = batches.some(
+          b => b.product_id === p.id && b.qty_remaining > 0 && ['EXPIRING_TODAY', 'EXPIRING_TOMORROW'].includes(computeExpiryStatus(b.expiry_date).status)
+        );
+
+        // Dynamic demand-trained reorder recommendation
+        const demandBuffer = totalSold > 0 ? Math.max(p.min_stock_alert * 1.5, totalSold * 1.2) : p.min_stock_alert * 2.5;
         const recommendedOrderQty = Math.max(
           p.min_stock_alert,
-          Number(((p.min_stock_alert * 2.5) - p.stock_quantity).toFixed(1))
+          Number((demandBuffer - p.stock_quantity).toFixed(1))
         );
         const estimatedCost = Number((recommendedOrderQty * p.purchase_price).toFixed(2));
 
@@ -32,11 +54,15 @@ export const ReorderNeedsView: React.FC = () => {
           ...p,
           recommendedOrderQty,
           estimatedCost,
-          isCritical: p.stock_quantity <= 0
+          isCritical: p.stock_quantity <= 0,
+          totalSold,
+          totalReturned,
+          hasNearExpiryBatch,
+          isFastMover: totalSold >= (p.min_stock_alert * 2)
         };
       })
       .sort((a, b) => (a.isCritical === b.isCritical ? 0 : a.isCritical ? -1 : 1));
-  }, [products]);
+  }, [products, batches, sales, returns]);
 
   const totalEstimatedCost = itemsNeedingRestock.reduce((acc, it) => acc + it.estimatedCost, 0);
 
@@ -241,7 +267,24 @@ export const ReorderNeedsView: React.FC = () => {
                 {itemsNeedingRestock.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/80 dark:hover:bg-[#1A2A25]/60 transition-colors">
                     <td className="px-4 py-3">
-                      <div className="font-bold text-slate-900 dark:text-white">{getDisplayName(item)}</div>
+                      <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+                        <span>{getDisplayName(item)}</span>
+                        {item.isFastMover && (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300">
+                            🔥 {language === 'mr' ? 'जलद खप' : language === 'hi' ? 'तेज़ बिक्री' : 'Fast Mover'}
+                          </span>
+                        )}
+                        {item.hasNearExpiryBatch && (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                            ⚠️ {language === 'mr' ? 'बॅच आधी विका' : language === 'hi' ? 'बैच पहले बेचें' : 'Sell batch first'}
+                          </span>
+                        )}
+                        {item.totalReturned > 0 && (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300">
+                            ↩️ {item.totalReturned} {item.unit} {language === 'mr' ? 'परत' : 'वापस'}
+                          </span>
+                        )}
+                      </div>
                       {getDisplayName(item) !== item.name && (
                         <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">{item.name}</div>
                       )}

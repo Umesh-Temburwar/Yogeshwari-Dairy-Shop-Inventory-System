@@ -78,10 +78,10 @@ export const DailySalesTracker: React.FC = () => {
       subtitle: 'Yogeshwari Dairy Farm & Sweets ERP',
       periodText: language === 'mr' ? 'निवडलेला कालावधी हिशोब' : 'चुनी गई अवधि का हिसाब',
       kpis: [
-        { label: 'एकूण विक्री (Total Sales)', value: `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`, color: 'emerald' },
-        { label: 'रोख जमा (Cash)', value: `₹${metrics.cashCollected.toLocaleString('en-IN')}`, color: 'blue' },
-        { label: 'ऑनलाईन UPI', value: `₹${metrics.onlineCollected.toLocaleString('en-IN')}`, color: 'purple' },
-        { label: 'उधारी दिली (Udhar)', value: `₹${metrics.creditGiven.toLocaleString('en-IN')}`, color: 'amber' }
+        { label: 'एकूण विक्री (Total Sales)', value: `₹${(metrics.totalSalesRevenue || 0).toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: 'रोख जमा (Cash)', value: `₹${(metrics.cashCollected || 0).toLocaleString('en-IN')}`, color: 'blue' },
+        { label: 'ऑनलाईन UPI', value: `₹${(metrics.onlineCollected || 0).toLocaleString('en-IN')}`, color: 'purple' },
+        { label: 'उधारी दिली (Udhar)', value: `₹${(metrics.udharGiven || 0).toLocaleString('en-IN')}`, color: 'amber' }
       ],
       table: {
         headers: ['बिल क्र.', 'तारीख', 'ग्राहक नाव', 'पेमेंट पद्धत', 'आयटम्स', 'सवलत (₹)', 'एकूण रक्कम (₹)'],

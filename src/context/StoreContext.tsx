@@ -3,7 +3,7 @@ import {
   Product, Sale, Purchase, DamageRecord, UdharCustomer, 
   UdharTransaction, Expense, TimeRangeFilter, PaymentMode,
   CustomerGender, CustomerAgeGroup, ProductBatch, ExpiryStatus,
-  ProductReturn
+  ProductReturn, SupplierReturn, SupplierReturnReason, SupplierRefundStatus
 } from '../types';
 import { 
   INITIAL_PRODUCTS, INITIAL_SALES, INITIAL_PURCHASES, 
@@ -49,6 +49,7 @@ interface StoreContextType {
   udharTransactions: UdharTransaction[];
   expenses: Expense[];
   returns: ProductReturn[];
+  supplierReturns: SupplierReturn[];
   
   // Receipt
   currentReceipt: Sale | null;
@@ -134,9 +135,19 @@ interface StoreContextType {
   addExpense: (expenseData: Omit<Expense, 'id' | 'created_at'>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
 
-  // Product Returns
+  // Product Returns (Customer)
   createReturn: (returnData: Omit<ProductReturn, 'id' | 'return_no' | 'created_at'>) => Promise<ProductReturn>;
   deleteReturn: (id: string) => Promise<void>;
+
+  // Supplier Returns (खरेदी व सप्लायर परतावा - खराब/एक्सपायर माल परत करणे)
+  createSupplierReturn: (returnData: Omit<SupplierReturn, 'id' | 'return_no' | 'created_at'>) => Promise<SupplierReturn>;
+  updateSupplierRefundStatus: (
+    id: string, 
+    newStatus: SupplierRefundStatus, 
+    refundMode?: 'Cash' | 'Online_UPI' | 'Credit_Deduction' | 'Replacement', 
+    notes?: string
+  ) => Promise<void>;
+  deleteSupplierReturn: (id: string) => Promise<void>;
 
   // Filtered views and analytics
   filteredSales: Sale[];
@@ -144,6 +155,7 @@ interface StoreContextType {
   filteredExpenses: Expense[];
   filteredDamages: DamageRecord[];
   filteredReturns: ProductReturn[];
+  filteredSupplierReturns: SupplierReturn[];
   
   // Metrics
   metrics: {
@@ -172,6 +184,12 @@ interface StoreContextType {
     totalReturnsCount: number;
     totalRefundAmount: number;
     todayRefundAmount: number;
+    // Supplier Returns Metrics
+    totalSupplierReturnsCount: number;
+    totalSupplierRefundAmount: number;
+    totalSupplierRefundReceived: number;
+    pendingSupplierRefundAmount: number;
+    supplierReplacementCount: number;
     // Compatibility Aliases
     totalCOGS: number;
     creditGiven: number;
@@ -269,10 +287,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   });
 
+  const [supplierReturns, setSupplierReturns] = useState<SupplierReturn[]>(() => {
+    const saved = localStorage.getItem('yd_supplier_returns');
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+
   // Save to localStorage on state changes
   useEffect(() => {
     localStorage.setItem('yd_returns', JSON.stringify(returns));
   }, [returns]);
+  useEffect(() => {
+    localStorage.setItem('yd_supplier_returns', JSON.stringify(supplierReturns));
+  }, [supplierReturns]);
   useEffect(() => {
     localStorage.setItem('yd_products', JSON.stringify(products));
   }, [products]);
@@ -382,6 +414,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setUdharTransactions(INITIAL_UDHAR_TRANSACTIONS);
     setExpenses(INITIAL_EXPENSES);
     setReturns([]);
+    setSupplierReturns([]);
     try {
       localStorage.removeItem('yd_products');
       localStorage.removeItem('yd_batches');
@@ -392,6 +425,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       localStorage.removeItem('yd_udhar_transactions');
       localStorage.removeItem('yd_expenses');
       localStorage.removeItem('yd_returns');
+      localStorage.removeItem('yd_supplier_returns');
     } catch {
       // Ignore
     }
@@ -439,6 +473,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const filteredReturns = useMemo(() => {
     return returns.filter(r => filterByDate(r.return_date));
   }, [returns, timeFilter]);
+
+  const filteredSupplierReturns = useMemo(() => {
+    return supplierReturns.filter(r => filterByDate(r.return_date));
+  }, [supplierReturns, timeFilter]);
 
   // Aggregated Financial Metrics
   const metrics = useMemo(() => {
@@ -523,6 +561,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       totalReturnsCount: filteredReturns.length,
       totalRefundAmount: filteredReturns.reduce((acc, r) => acc + (r.refund_amount || 0), 0),
       todayRefundAmount: returns.filter(r => r.return_date === new Date().toISOString().split('T')[0]).reduce((acc, r) => acc + (r.refund_amount || 0), 0),
+      // Supplier Returns Metrics
+      totalSupplierReturnsCount: filteredSupplierReturns.length,
+      totalSupplierRefundAmount: filteredSupplierReturns.reduce((acc, r) => acc + (r.total_refund_amount || 0), 0),
+      totalSupplierRefundReceived: filteredSupplierReturns.filter(r => r.refund_status === 'Refund_Received' || r.refund_status === 'Adjusted_In_Next_Bill').reduce((acc, r) => acc + (r.total_refund_amount || 0), 0),
+      pendingSupplierRefundAmount: filteredSupplierReturns.filter(r => r.refund_status === 'Pending').reduce((acc, r) => acc + (r.total_refund_amount || 0), 0),
+      supplierReplacementCount: filteredSupplierReturns.filter(r => r.refund_status === 'Replacement_Received').length,
       // Compatibility Aliases
       totalCOGS: cogs,
       creditGiven: udharGiven
@@ -1339,6 +1383,162 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  // Supplier Returns (खरेदी व सप्लायर परतावा - खराब/एक्सपायर माल परत करणे)
+  const createSupplierReturn = async (returnData: Omit<SupplierReturn, 'id' | 'return_no' | 'created_at'>): Promise<SupplierReturn> => {
+    const returnNo = `VRET-${new Date().getFullYear()}-${String(supplierReturns.length + 1).padStart(4, '0')}`;
+    const newReturn: SupplierReturn = {
+      ...returnData,
+      id: 'vret-' + Date.now(),
+      return_no: returnNo,
+      created_at: new Date().toISOString()
+    };
+
+    setSupplierReturns(prev => [newReturn, ...prev]);
+
+    // 1. Defective / expired goods returned to supplier: deduct from product stock
+    setProducts(prev => prev.map(p => {
+      if (p.id === returnData.product_id) {
+        // If replacement is already received immediately, stock stays maintained
+        if (returnData.refund_status === 'Replacement_Received') {
+          return p;
+        }
+        return {
+          ...p,
+          stock_quantity: Math.max(0, Number((p.stock_quantity - returnData.quantity).toFixed(2)))
+        };
+      }
+      return p;
+    }));
+
+    // 2. Batch stock deduction
+    setBatches(prev => {
+      if (returnData.refund_status === 'Replacement_Received') {
+        const todayFormatted = new Date().toISOString().split('T')[0];
+        const targetProd = products.find(p => p.id === returnData.product_id);
+        const shelfDays = targetProd ? getShelfLifeDays(targetProd.category, targetProd.name) : 3;
+        const replBatch: ProductBatch = {
+          id: 'bat-repl-' + Date.now(),
+          product_id: returnData.product_id,
+          product_name: returnData.product_name,
+          batch_no: `REPL-${Date.now().toString().slice(-4)}`,
+          mfg_date: todayFormatted,
+          expiry_date: getSuggestedExpiryDate(todayFormatted, shelfDays),
+          qty_received: returnData.quantity,
+          qty_remaining: returnData.quantity,
+          purchase_price: returnData.purchase_price,
+          supplier_name: returnData.supplier_name,
+          notes: `Replacement received for supplier return ${returnNo}`,
+          created_at: new Date().toISOString()
+        };
+        return [replBatch, ...prev];
+      }
+
+      let remainingToDeduct = returnData.quantity;
+      return prev.map(b => {
+        if (remainingToDeduct <= 0) return b;
+        const isTarget = returnData.batch_no 
+          ? (b.batch_no === returnData.batch_no || b.id === returnData.batch_no) 
+          : (b.product_id === returnData.product_id && b.qty_remaining > 0);
+        
+        if (isTarget) {
+          const deductAmt = Math.min(b.qty_remaining, remainingToDeduct);
+          remainingToDeduct -= deductAmt;
+          return {
+            ...b,
+            qty_remaining: Number((b.qty_remaining - deductAmt).toFixed(2))
+          };
+        }
+        return b;
+      });
+    });
+
+    // 3. Supabase sync if connected
+    if (supabase && isSupabaseConnected) {
+      try {
+        await supabase.from('supplier_returns').insert([newReturn]);
+      } catch (err) {
+        console.error('Failed to sync supplier return to Supabase', err);
+      }
+    }
+
+    return newReturn;
+  };
+
+  const updateSupplierRefundStatus = async (
+    id: string, 
+    newStatus: SupplierRefundStatus, 
+    refundMode?: 'Cash' | 'Online_UPI' | 'Credit_Deduction' | 'Replacement', 
+    notes?: string
+  ) => {
+    const target = supplierReturns.find(r => r.id === id);
+    if (!target) return;
+
+    const todayFormatted = new Date().toISOString().split('T')[0];
+
+    // If changing to replacement received and wasn't before, restore product stock
+    if (newStatus === 'Replacement_Received' && target.refund_status !== 'Replacement_Received') {
+      setProducts(curr => curr.map(p => {
+        if (p.id === target.product_id) {
+          return {
+            ...p,
+            stock_quantity: Number((p.stock_quantity + target.quantity).toFixed(2))
+          };
+        }
+        return p;
+      }));
+    }
+
+    setSupplierReturns(prev => prev.map(r => {
+      if (r.id === id) {
+        return {
+          ...r,
+          refund_status: newStatus,
+          refund_mode: refundMode || r.refund_mode,
+          refund_date: todayFormatted,
+          notes: notes ? (r.notes ? `${r.notes} | ${notes}` : notes) : r.notes
+        };
+      }
+      return r;
+    }));
+
+    if (supabase && isSupabaseConnected) {
+      try {
+        await supabase.from('supplier_returns').update({
+          refund_status: newStatus,
+          refund_mode: refundMode,
+          refund_date: todayFormatted,
+          notes
+        }).eq('id', id);
+      } catch (err) {
+        console.error('Failed to update supplier return in Supabase', err);
+      }
+    }
+  };
+
+  const deleteSupplierReturn = async (id: string) => {
+    const target = supplierReturns.find(r => r.id === id);
+    if (target && target.refund_status !== 'Replacement_Received') {
+      // Restore product stock
+      setProducts(prev => prev.map(p => {
+        if (p.id === target.product_id) {
+          return {
+            ...p,
+            stock_quantity: Number((p.stock_quantity + target.quantity).toFixed(2))
+          };
+        }
+        return p;
+      }));
+    }
+    setSupplierReturns(prev => prev.filter(r => r.id !== id));
+    if (supabase && isSupabaseConnected) {
+      try {
+        await supabase.from('supplier_returns').delete().eq('id', id);
+      } catch (err) {
+        console.error('Failed to delete supplier return from Supabase', err);
+      }
+    }
+  };
+
   return (
     <StoreContext.Provider value={{
       activeView,
@@ -1358,6 +1558,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       udharTransactions,
       expenses,
       returns,
+      supplierReturns,
       currentReceipt,
       setCurrentReceipt,
       addProduct,
@@ -1377,11 +1578,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       deleteExpense,
       createReturn,
       deleteReturn,
+      createSupplierReturn,
+      updateSupplierRefundStatus,
+      deleteSupplierReturn,
       filteredSales,
       filteredPurchases,
       filteredExpenses,
       filteredDamages,
       filteredReturns,
+      filteredSupplierReturns,
       metrics
     }}>
       {children}

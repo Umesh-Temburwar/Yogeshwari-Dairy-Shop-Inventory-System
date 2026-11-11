@@ -21,8 +21,10 @@ import {
   Sparkles,
   Layers,
   Clock,
-  FileText
+  FileText,
+  RotateCcw
 } from 'lucide-react';
+import { SupplierReturnModal } from '../Returns/SupplierReturnModal';
 
 export const PurchaseTracker: React.FC = () => {
   const { products, filteredPurchases, createPurchase, metrics } = useStore();
@@ -30,6 +32,13 @@ export const PurchaseTracker: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFatCalcOpen, setIsFatCalcOpen] = useState(false);
+  const [isSupplierReturnOpen, setIsSupplierReturnOpen] = useState(false);
+  const [selectedPurForReturn, setSelectedPurForReturn] = useState<{
+    productId?: string;
+    supplierName?: string;
+    batchNo?: string;
+    quantity?: number;
+  }>({});
 
   const [selectedProductId, setSelectedProductId] = useState(products[0]?.id || '');
   const [supplierName, setSupplierName] = useState('');
@@ -313,6 +322,7 @@ export const PurchaseTracker: React.FC = () => {
                   <th className="px-3 py-3 text-right">{language === 'mr' ? 'एकूण रक्कम' : language === 'hi' ? 'कुल रकम' : 'Total Amount'}</th>
                   <th className="px-3 py-3 text-center">{t('paymentMethod')}</th>
                   <th className="px-4 py-3">{language === 'mr' ? 'शेरा / फॅट' : language === 'hi' ? 'रिमार्क / नोट्स' : 'Notes / Remarks'}</th>
+                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'खराब माल परतावा' : 'वापसी'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
@@ -367,6 +377,26 @@ export const PurchaseTracker: React.FC = () => {
 
                     <td className="px-4 py-3 text-slate-500 dark:text-[#8FA69C] italic max-w-xs truncate">
                       {pur.notes || '-'}
+                    </td>
+
+                    <td className="px-3 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPurForReturn({
+                            productId: pur.product_id,
+                            supplierName: pur.supplier_name,
+                            batchNo: pur.batch_no,
+                            quantity: pur.quantity
+                          });
+                          setIsSupplierReturnOpen(true);
+                        }}
+                        className="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold text-[10px] border border-amber-200 dark:border-amber-800/40 transition flex items-center gap-1 active:scale-95 ml-auto whitespace-nowrap shadow-2xs"
+                        title="सप्लायरला खराब/कालबाह्य माल परत पाठवून रिफंड मागा"
+                      >
+                        <RotateCcw className="w-3 h-3 text-amber-600" />
+                        <span>{language === 'mr' ? 'परत करा' : 'वापस करें'}</span>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -604,6 +634,17 @@ export const PurchaseTracker: React.FC = () => {
 
           </div>
         </div>
+      )}
+
+      {/* SUPPLIER RETURN MODAL */}
+      {isSupplierReturnOpen && (
+        <SupplierReturnModal
+          onClose={() => setIsSupplierReturnOpen(false)}
+          prefillProductId={selectedPurForReturn.productId}
+          prefillSupplierName={selectedPurForReturn.supplierName}
+          prefillBatchNo={selectedPurForReturn.batchNo}
+          prefillQuantity={selectedPurForReturn.quantity}
+        />
       )}
 
     </div>

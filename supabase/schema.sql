@@ -128,6 +128,50 @@ CREATE TABLE IF NOT EXISTS expenses (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 9. CUSTOMER SALES RETURNS TABLE
+CREATE TABLE IF NOT EXISTS product_returns (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    return_no VARCHAR(100) UNIQUE NOT NULL,
+    sale_id UUID REFERENCES sales(id) ON DELETE SET NULL,
+    invoice_no VARCHAR(100),
+    product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+    product_name VARCHAR(255) NOT NULL,
+    quantity NUMERIC(10, 2) NOT NULL,
+    unit VARCHAR(50) NOT NULL,
+    unit_price NUMERIC(10, 2) NOT NULL,
+    refund_amount NUMERIC(10, 2) NOT NULL,
+    refund_mode VARCHAR(50) NOT NULL DEFAULT 'Cash', -- 'Cash', 'Online_UPI', 'Udhar_Credit', 'Replacement'
+    reason VARCHAR(100) NOT NULL,
+    condition VARCHAR(50) NOT NULL DEFAULT 'Resellable', -- 'Resellable', 'Damaged_Waste'
+    customer_name VARCHAR(255),
+    customer_phone VARCHAR(20),
+    notes TEXT,
+    return_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 10. SUPPLIER / INWARD GOODS RETURNS TABLE (खरेदी व सप्लायर परतावा - खराब/एक्सपायर माल परत करणे)
+CREATE TABLE IF NOT EXISTS supplier_returns (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    return_no VARCHAR(100) UNIQUE NOT NULL,
+    supplier_name VARCHAR(255) NOT NULL,
+    product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+    product_name VARCHAR(255) NOT NULL,
+    batch_no VARCHAR(100),
+    purchase_id UUID REFERENCES purchases(id) ON DELETE SET NULL,
+    quantity NUMERIC(10, 2) NOT NULL,
+    unit VARCHAR(50) NOT NULL,
+    purchase_price NUMERIC(10, 2) NOT NULL,
+    total_refund_amount NUMERIC(10, 2) NOT NULL,
+    reason VARCHAR(100) NOT NULL, -- 'Damaged / Leaked on Delivery', 'Expired on Delivery', 'Curdled / Spoiled Milk', etc.
+    refund_status VARCHAR(50) NOT NULL DEFAULT 'Pending', -- 'Pending', 'Refund_Received', 'Adjusted_In_Next_Bill', 'Replacement_Received'
+    refund_mode VARCHAR(50), -- 'Cash', 'Online_UPI', 'Credit_Deduction', 'Replacement'
+    refund_date DATE,
+    return_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- INDEXES FOR HIGH-SPEED AGGREGATIONS
 CREATE INDEX IF NOT EXISTS idx_sales_date ON sales(sale_date);
 CREATE INDEX IF NOT EXISTS idx_purchases_date ON purchases(purchase_date);
@@ -135,6 +179,9 @@ CREATE INDEX IF NOT EXISTS idx_damage_date ON damage_records(damage_date);
 CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(expense_date);
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
 CREATE INDEX IF NOT EXISTS idx_udhar_balance ON udhar_customers(current_balance);
+CREATE INDEX IF NOT EXISTS idx_product_returns_date ON product_returns(return_date);
+CREATE INDEX IF NOT EXISTS idx_supplier_returns_date ON supplier_returns(return_date);
+CREATE INDEX IF NOT EXISTS idx_supplier_returns_status ON supplier_returns(refund_status);
 
 -- DUMMY DATA REMOVED: Clean schema ready for production
 

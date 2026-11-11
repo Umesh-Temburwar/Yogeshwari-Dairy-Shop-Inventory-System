@@ -17,11 +17,11 @@ import { exportReportToPDF } from '../../lib/exportUtils';
 import { computeExpiryStatus } from '../../lib/shelfLifeUtils';
 
 export const ReorderNeedsView: React.FC = () => {
-  const { products, batches, sales, returns, setActiveView } = useStore();
+  const { products, batches, sales, returns, supplierReturns, metrics, setActiveView } = useStore();
   const { t, language } = useLanguage();
   const [copied, setCopied] = useState(false);
 
-  // Train & Analyze inventory based on sales velocity, customer returns, and shelf life
+  // Train & Analyze inventory based on sales velocity, customer returns, supplier defects, and shelf life
   const itemsNeedingRestock = useMemo(() => {
     return products
       .filter(p => p.stock_quantity <= p.min_stock_alert)
@@ -37,7 +37,16 @@ export const ReorderNeedsView: React.FC = () => {
           .filter(r => r.product_id === p.id)
           .reduce((sum, r) => sum + r.quantity, 0);
 
-        // 3. Check for batches nearing expiry
+        // 3. Calculate supplier / inward returns (defective/expired goods returned to vendor)
+        const vendorReturnedQty = supplierReturns
+          .filter(sr => sr.product_id === p.id)
+          .reduce((sum, sr) => sum + sr.quantity, 0);
+
+        const vendorPendingRefund = supplierReturns
+          .filter(sr => sr.product_id === p.id && sr.refund_status === 'Pending')
+          .reduce((sum, sr) => sum + sr.total_refund_amount, 0);
+
+        // 4. Check for batches nearing expiry
         const hasNearExpiryBatch = batches.some(
           b => b.product_id === p.id && b.qty_remaining > 0 && ['EXPIRING_TODAY', 'EXPIRING_TOMORROW'].includes(computeExpiryStatus(b.expiry_date).status)
         );
@@ -57,12 +66,14 @@ export const ReorderNeedsView: React.FC = () => {
           isCritical: p.stock_quantity <= 0,
           totalSold,
           totalReturned,
+          vendorReturnedQty,
+          vendorPendingRefund,
           hasNearExpiryBatch,
           isFastMover: totalSold >= (p.min_stock_alert * 2)
         };
       })
       .sort((a, b) => (a.isCritical === b.isCritical ? 0 : a.isCritical ? -1 : 1));
-  }, [products, batches, sales, returns]);
+  }, [products, batches, sales, returns, supplierReturns]);
 
   const totalEstimatedCost = itemsNeedingRestock.reduce((acc, it) => acc + it.estimatedCost, 0);
 
@@ -235,6 +246,34 @@ export const ReorderNeedsView: React.FC = () => {
         </div>
       </div>
 
+      {/* Pending Supplier Refund Recovery Alert Banner */}
+      {metrics.pendingSupplierRefundAmount > 0 && (
+        <div className="bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-amber-500/10 border-2 border-amber-500/40 rounded-2xl p-3.5 flex items-center justify-between gap-3 animate-fadeIn">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+              <Truck className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                {language === 'mr' ? '💰 सप्लायरकडे अडकलेला रिफंड: ' : '💰 सप्लायर से बाकी रिफंड: '}
+                <span className="text-rose-600 dark:text-rose-400">₹{metrics.pendingSupplierRefundAmount.toLocaleString('en-IN')}</span>
+              </h4>
+              <p className="text-[11px] text-slate-600 dark:text-[#8FA69C]">
+                {language === 'mr' 
+                  ? 'मागील खेपेत खराब/एक्सपायर निघालेल्या मालाचा परतावा येणे बाकी आहे. नवीन खरेदीच्या बिलातून ही रक्कम वजा करून घ्या!' 
+                  : 'पिछली खेप में खराब/एक्सपायर निकले माल का रिफंड बाकी है। नए बिल से यह रकम काटकर भुगतान करें!'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setActiveView('returns')}
+            className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 shadow-xs transition active:scale-95"
+          >
+            {language === 'mr' ? 'रिफंड हिशोब पहा' : 'रिफंड हिसाब देखें'}
+          </button>
+        </div>
+      )}
+
       {/* Procurement Items Table */}
       <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs overflow-hidden transition-colors">
         <div className="p-4 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between">
@@ -283,6 +322,11 @@ export const ReorderNeedsView: React.FC = () => {
                         {item.totalReturned > 0 && (
                           <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300">
                             ↩️ {item.totalReturned} {item.unit} {language === 'mr' ? 'परत' : 'वापस'}
+                          </span>
+                        )}
+                        {item.vendorReturnedQty > 0 && (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300" title="सप्लायरकडून खराब/कालबाह्य माल आला होता!">
+                            🚚 {language === 'mr' ? 'सप्लायर डिफेक्ट' : 'सप्लायर डिफेक्ट'} ({item.vendorReturnedQty} {item.unit})
                           </span>
                         )}
                       </div>

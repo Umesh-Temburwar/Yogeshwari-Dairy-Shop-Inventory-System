@@ -232,6 +232,7 @@ export const ProfitReport: React.FC = () => {
               ['(-) दुकान दैनंदिन चालू खर्च (Operating Expenses)', `₹${metrics.operatingExpenses.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.operatingExpenses / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
               ['(-) नासलेले दूध व खराब माल नुकसान (Damages & Spoilage)', `₹${metrics.totalDamagesLoss.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.totalDamagesLoss / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
               ['(-) ग्राहक माल परतावा रिफंड (Customer Refunds)', `₹${(metrics.totalRefundAmount || 0).toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${(((metrics.totalRefundAmount || 0) / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
+              ['(+) सप्लायरकडून मिळालेला रिफंड / भरपाई (Supplier Refunds)', `+₹${(metrics.totalSupplierRefundReceived || 0).toLocaleString('en-IN')}`, '—'],
               ['(=) अंतिम निव्वळ शिल्लक नफा (Net Profit In Hand)', `₹${metrics.netProfit.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.netProfit / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%']
             ]
           }
@@ -378,6 +379,13 @@ export const ProfitReport: React.FC = () => {
             <div className="flex justify-between items-center p-3 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 text-slate-800 dark:text-[#E7F0EC] font-semibold border border-purple-100 dark:border-purple-900/40">
               <span>5. {language === 'mr' ? 'वजा: ग्राहक माल परतावा रिफंड (Returns & Refunds):' : language === 'hi' ? 'घटाएं: ग्राहक सामान वापसी रिफंड (Returns & Refunds):' : 'Less: Customer Returns & Refunds:'}</span>
               <span className="font-black text-rose-700 dark:text-rose-400">-₹{metrics.totalRefundAmount.toLocaleString('en-IN')}</span>
+            </div>
+          )}
+
+          {(metrics.totalSupplierRefundReceived || 0) > 0 && (
+            <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 text-slate-800 dark:text-[#E7F0EC] font-semibold border border-emerald-200 dark:border-emerald-900/40">
+              <span>6. {language === 'mr' ? 'अधिक: सप्लायरकडून मिळालेला परतावा/रिफंड (Vendor Refunds):' : language === 'hi' ? 'जोड़ें: सप्लायर से प्राप्त रिफंड (Vendor Refunds):' : 'Add: Supplier Refunds & Compensations:'}</span>
+              <span className="font-black text-emerald-700 dark:text-emerald-400">+₹{metrics.totalSupplierRefundReceived.toLocaleString('en-IN')}</span>
             </div>
           )}
 

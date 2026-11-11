@@ -114,8 +114,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'returns',
       labelKey: 'returnsNav',
       icon: RotateCcw,
-      badge: metrics.totalReturnsCount > 0 ? metrics.totalReturnsCount : undefined,
-      badgeColor: 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 font-bold',
+      badge: metrics.pendingSupplierRefundAmount > 0 
+        ? `₹${metrics.pendingSupplierRefundAmount.toFixed(0)} ⏳` 
+        : (metrics.totalReturnsCount + (metrics.totalSupplierReturnsCount || 0)) > 0 
+        ? (metrics.totalReturnsCount + (metrics.totalSupplierReturnsCount || 0)) 
+        : undefined,
+      badgeColor: metrics.pendingSupplierRefundAmount > 0 
+        ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 font-extrabold animate-pulse'
+        : 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 font-bold',
       section: 'inventory'
     },
 

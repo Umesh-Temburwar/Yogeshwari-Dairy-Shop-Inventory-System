@@ -8,8 +8,12 @@ import {
   PackageX,
   Plus,
   X,
-  FileText
+  FileText,
+  Truck,
+  RotateCcw
 } from 'lucide-react';
+import { SupplierReturnModal } from '../Returns/SupplierReturnModal';
+import { SupplierReturnReason } from '../../types';
 
 export const DamageTracker: React.FC = () => {
   const { products, filteredDamages, recordDamage, metrics } = useStore();
@@ -20,6 +24,13 @@ export const DamageTracker: React.FC = () => {
   const [quantity, setQuantity] = useState('');
   const [reason, setReason] = useState<DamageReason>('Doodh Fat Gya (Curdled)');
   const [notes, setNotes] = useState('');
+
+  const [isSupplierReturnOpen, setIsSupplierReturnOpen] = useState(false);
+  const [selectedDmgForReturn, setSelectedDmgForReturn] = useState<{
+    productId?: string;
+    quantity?: number;
+    reason?: SupplierReturnReason;
+  }>({});
 
   const selectedProduct = products.find(p => p.id === selectedProductId) || products[0];
   const estimatedLoss = (parseFloat(quantity) || 0) * (selectedProduct?.purchase_price || 0);
@@ -204,6 +215,7 @@ export const DamageTracker: React.FC = () => {
                   <th className="px-3 py-3">{language === 'mr' ? 'नासाडीचे कारण' : language === 'hi' ? 'खराबी का कारण' : 'Reason'}</th>
                   <th className="px-3 py-3 text-right">{language === 'mr' ? 'अंदाजे नुकसान' : language === 'hi' ? 'अनुमानित नुकसान' : 'Est. Loss'}</th>
                   <th className="px-4 py-3">{language === 'mr' ? 'तपशील / शेरा' : language === 'hi' ? 'विवरण / नोट्स' : 'Notes / Remarks'}</th>
+                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'सप्लायर रिफंड' : 'सप्लायर रिफंड'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
@@ -233,6 +245,36 @@ export const DamageTracker: React.FC = () => {
 
                     <td className="px-4 py-3 text-slate-500 dark:text-[#8FA69C] italic max-w-sm truncate">
                       {dmg.notes || '-'}
+                    </td>
+
+                    <td className="px-3 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          let mappedReason: SupplierReturnReason = 'Other';
+                          if (dmg.reason.includes('Curdled') || dmg.reason.includes('Fat Gya')) {
+                            mappedReason = 'Curdled / Spoiled Milk';
+                          } else if (dmg.reason.includes('Leaked') || dmg.reason.includes('Phat Gayi')) {
+                            mappedReason = 'Damaged / Leaked on Delivery';
+                          } else if (dmg.reason.includes('Expiry')) {
+                            mappedReason = 'Expired on Delivery';
+                          } else if (dmg.reason.includes('Spoilage')) {
+                            mappedReason = 'Poor Quality / Bad Taste';
+                          }
+
+                          setSelectedDmgForReturn({
+                            productId: dmg.product_id,
+                            quantity: dmg.quantity,
+                            reason: mappedReason
+                          });
+                          setIsSupplierReturnOpen(true);
+                        }}
+                        className="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] border border-emerald-200 dark:border-emerald-800/40 transition flex items-center gap-1 active:scale-95 ml-auto whitespace-nowrap shadow-2xs"
+                        title="सप्लायरला परत पाठवून रिफंड मागा"
+                      >
+                        <Truck className="w-3 h-3 text-emerald-600" />
+                        <span>{language === 'mr' ? 'रिफंड क्लेम' : 'रिफंड क्लेम'}</span>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -365,6 +407,16 @@ export const DamageTracker: React.FC = () => {
 
           </div>
         </div>
+      )}
+
+      {/* SUPPLIER RETURN MODAL */}
+      {isSupplierReturnOpen && (
+        <SupplierReturnModal
+          onClose={() => setIsSupplierReturnOpen(false)}
+          prefillProductId={selectedDmgForReturn.productId}
+          prefillQuantity={selectedDmgForReturn.quantity}
+          prefillReason={selectedDmgForReturn.reason}
+        />
       )}
 
     </div>

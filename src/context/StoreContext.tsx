@@ -163,6 +163,30 @@ interface StoreContextType {
   };
 }
 
+// LocalStorage Version Migration: Clean all dummy/sample data from previous versions
+const STORAGE_CLEAN_VERSION_KEY = 'yd_clean_data_version';
+const CURRENT_CLEAN_VERSION = 'v2_clean_zero_dummy_2026';
+
+if (typeof window !== 'undefined') {
+  try {
+    const currentVersion = localStorage.getItem(STORAGE_CLEAN_VERSION_KEY);
+    if (currentVersion !== CURRENT_CLEAN_VERSION) {
+      // Clear out legacy mock data
+      localStorage.removeItem('yd_products');
+      localStorage.removeItem('yd_batches');
+      localStorage.removeItem('yd_sales');
+      localStorage.removeItem('yd_purchases');
+      localStorage.removeItem('yd_damages');
+      localStorage.removeItem('yd_customers');
+      localStorage.removeItem('yd_udhar_transactions');
+      localStorage.removeItem('yd_expenses');
+      localStorage.setItem(STORAGE_CLEAN_VERSION_KEY, CURRENT_CLEAN_VERSION);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -188,11 +212,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!saved) return INITIAL_SALES;
     try {
       const parsed: Sale[] = JSON.parse(saved);
-      const hasDemographics = parsed.some(s => s.customer_gender);
-      if (!hasDemographics) {
-        return INITIAL_SALES;
-      }
-      return parsed;
+      return Array.isArray(parsed) ? parsed : INITIAL_SALES;
     } catch {
       return INITIAL_SALES;
     }
@@ -332,6 +352,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCustomers(INITIAL_CUSTOMERS);
     setUdharTransactions(INITIAL_UDHAR_TRANSACTIONS);
     setExpenses(INITIAL_EXPENSES);
+    try {
+      localStorage.removeItem('yd_products');
+      localStorage.removeItem('yd_batches');
+      localStorage.removeItem('yd_sales');
+      localStorage.removeItem('yd_purchases');
+      localStorage.removeItem('yd_damages');
+      localStorage.removeItem('yd_customers');
+      localStorage.removeItem('yd_udhar_transactions');
+      localStorage.removeItem('yd_expenses');
+    } catch {
+      // Ignore
+    }
   };
 
   // Helper date filter

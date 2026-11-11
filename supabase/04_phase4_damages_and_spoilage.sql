@@ -16,6 +16,7 @@
 CREATE TABLE IF NOT EXISTS public.damage_records (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
+    batch_id UUID REFERENCES public.batches(id) ON DELETE SET NULL,
     product_name VARCHAR(255) NOT NULL,
     batch_no VARCHAR(100),
     quantity NUMERIC(12, 2) NOT NULL CHECK (quantity > 0),

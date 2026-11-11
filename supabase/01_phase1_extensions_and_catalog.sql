@@ -80,3 +80,22 @@ CREATE TRIGGER trg_categories_updated_at
 BEFORE UPDATE ON public.categories
 FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
 
+-- 6. Initial Standard Taxonomy (Categories & Units Lookup - Safe Insert)
+INSERT INTO public.categories (name, marathi_name, hindi_name, description) VALUES
+('Milk', 'दूध', 'दूध', 'Fresh Raw Buffalo Milk, Cow Milk, and Pasteurized Pouches'),
+('Curd & Chaas', 'दही व ताक', 'दही व छाछ', 'Fresh Desi Dahi, Packaged Curd, Spiced Chaas and Lassi'),
+('Paneer & Butter', 'पनीर व लोणी', 'पनीर व मक्खन', 'Fresh Malai Paneer, Table White Butter, and Butter Bricks'),
+('Ghee', 'शुद्ध तूप', 'शुद्ध घी', 'Pure Desi Cow Ghee, Buffalo Danedaar Ghee jars & tins'),
+('Sweets/Mithai', 'मिठाई व पेढे', 'मिठाई व मावा', 'Fresh Shuddh Khoya/Mawa, Kaju Katli, Gulab Jamun, Pedha'),
+('Bakery & Extras', 'बेकरी व इतर', 'बेकरी व अन्य', 'Fresh Milk Bread, Pav, Farm Fresh Eggs, and packaging extras')
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO public.units (name, short_code) VALUES
+('Litre', 'Litre'),
+('Kilogram', 'Kg'),
+('Packet (500ml)', 'Packet (500ml)'),
+('Packet (1L)', 'Packet (1L)'),
+('Piece', 'Piece'),
+('Gram', 'Gram')
+ON CONFLICT (name) DO NOTHING;
+

@@ -23,7 +23,9 @@ import {
   FileText,
   QrCode,
   Copy,
-  Package
+  Package,
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react';
 import { exportReportToPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
@@ -36,6 +38,9 @@ export const BillingCounter: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   
+  // Mobile responsive tab (Products vs Cart/Checkout)
+  const [mobileTab, setMobileTab] = useState<'products' | 'cart'>('products');
+
   // Cart state
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [customerName, setCustomerName] = useState('');
@@ -231,6 +236,7 @@ export const BillingCounter: React.FC = () => {
 
     // Reset Form
     clearCart();
+    setMobileTab('products');
     setCustomerName('');
     setCustomerPhone('');
     setCustomerGender('Male');
@@ -272,10 +278,39 @@ export const BillingCounter: React.FC = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[calc(100vh-8rem)]">
-      
-      {/* LEFT COLUMN: Product Catalog & Fast Selection */}
-      <div className="lg:col-span-7 flex flex-col space-y-4">
+    <div className="relative">
+      {/* Mobile Tab Switcher: Products vs Bill Checkout (Native App Feel) */}
+      <div className="lg:hidden grid grid-cols-2 p-1 bg-slate-200/80 dark:bg-[#1A2A25] rounded-2xl border border-slate-300/60 dark:border-[#24352F] mb-3 sticky top-0 z-20 backdrop-blur-md">
+        <button
+          type="button"
+          onClick={() => setMobileTab('products')}
+          className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+            mobileTab === 'products'
+              ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-sm'
+              : 'text-slate-600 dark:text-[#8FA69C]'
+          }`}
+        >
+          <Package className="w-3.5 h-3.5" />
+          <span>{language === 'mr' ? '१. माल निवडा' : language === 'hi' ? '१. सामान चुनें' : '1. Products'}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab('cart')}
+          className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+            mobileTab === 'cart'
+              ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-sm'
+              : 'text-slate-600 dark:text-[#8FA69C]'
+          }`}
+        >
+          <ShoppingCart className="w-3.5 h-3.5" />
+          <span>{language === 'mr' ? '२. बिल' : language === 'hi' ? '२. बिल' : '2. Bill'} ({cart.length}) {netTotal > 0 ? `• ₹${netTotal.toFixed(0)}` : ''}</span>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[calc(100vh-8rem)]">
+        
+        {/* LEFT COLUMN: Product Catalog & Fast Selection */}
+        <div className={`lg:col-span-7 flex flex-col space-y-4 ${mobileTab === 'cart' ? 'hidden lg:flex' : 'flex'}`}>
         
         {/* Search & Category Filter Pills */}
         <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-3 transition-colors">
@@ -445,12 +480,22 @@ export const BillingCounter: React.FC = () => {
       </div>
 
       {/* RIGHT COLUMN: Active Cart, Customer Info & Payment Checkout */}
-      <div className="lg:col-span-5 flex flex-col bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-sm p-5 justify-between transition-colors">
+      <div className={`lg:col-span-5 flex flex-col bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-sm p-4 sm:p-5 justify-between transition-colors ${mobileTab === 'products' ? 'hidden lg:flex' : 'flex'}`}>
         <div className="space-y-4">
           
           {/* Header & Clear */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#24352F]">
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setMobileTab('products')}
+                className="lg:hidden p-1.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] hover:text-slate-900 flex items-center gap-1 text-xs font-bold"
+                title="Back to products"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">{language === 'mr' ? 'माल' : 'सामान'}</span>
+              </button>
+
               <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400">
                 <ShoppingCart className="w-5 h-5" />
               </div>
@@ -753,6 +798,38 @@ export const BillingCounter: React.FC = () => {
         </div>
 
       </div>
+
+      </div>
+
+      {/* Floating Bottom Cart Bar on Mobile (Appears when products are selected on phone) */}
+      {cart.length > 0 && mobileTab === 'products' && (
+        <div className="lg:hidden fixed bottom-16 left-3 right-3 z-30 animate-fadeIn">
+          <button
+            type="button"
+            onClick={() => setMobileTab('cart')}
+            className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-xl shadow-emerald-600/30 flex items-center justify-between border border-white/20 active:scale-98 transition-all"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-black">
+                {cart.length}
+              </div>
+              <div className="text-left">
+                <span className="text-[10px] text-emerald-100 font-bold block leading-tight">
+                  {language === 'mr' ? 'बिल तयार आहे' : language === 'hi' ? 'बिल तैयार है' : 'Cart Ready'}
+                </span>
+                <span className="text-sm font-black leading-tight">
+                  ₹{netTotal.toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 text-xs font-black bg-white/20 px-3 py-1.5 rounded-xl">
+              <span>{language === 'mr' ? 'बिल पहा व भरा' : language === 'hi' ? 'बिल देखें व भुगतान करें' : 'View Bill & Pay'}</span>
+              <ArrowRight className="w-4 h-4" />
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* QUICK RUPEE TO QTY CALCULATOR MODAL */}
       {quickCalcProduct && (

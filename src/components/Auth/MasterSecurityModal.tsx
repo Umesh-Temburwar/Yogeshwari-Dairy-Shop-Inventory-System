@@ -131,9 +131,9 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#05120D]/90 backdrop-blur-xl flex items-center justify-center p-4 select-none">
+    <div className="fixed inset-0 z-[9999] bg-[#05120D]/90 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 select-none overflow-y-auto">
       <div 
-        className={`bg-white dark:bg-[#131F1B] border border-emerald-500/30 dark:border-emerald-500/20 rounded-3xl max-w-md w-full shadow-2xl p-6 sm:p-7 relative overflow-hidden transition-transform ${
+        className={`bg-white dark:bg-[#131F1B] border border-emerald-500/30 dark:border-emerald-500/20 rounded-3xl max-w-md w-full shadow-2xl p-5 sm:p-7 relative overflow-y-auto max-h-[95dvh] my-auto transition-transform ${
           isShake ? 'animate-shake' : ''
         }`}
       >

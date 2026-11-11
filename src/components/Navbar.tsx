@@ -14,7 +14,8 @@ import {
   Lock,
   ChevronDown,
   CheckCircle2,
-  ShieldCheck
+  ShieldCheck,
+  Globe
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -109,8 +110,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Center / Right Controls: Trilingual Selector, Live Clock, 1-Click Theme, User Profile */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           
-          {/* TRILINGUAL LANGUAGE SELECTOR - Clean 1-Tap Segmented Pill (No broken flag codes) */}
-          <div className="flex items-center bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl border border-slate-200/80 dark:border-[#24352F] h-9">
+          {/* TRILINGUAL LANGUAGE SELECTOR */}
+          {/* Desktop/Tablet Segmented Pill */}
+          <div className="hidden sm:flex items-center bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl border border-slate-200/80 dark:border-[#24352F] h-9">
             {languagesList.map((lang) => {
               const isActive = language === lang.code;
               return (
@@ -130,6 +132,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               );
             })}
           </div>
+
+          {/* Mobile 1-Tap Language Cycle Button */}
+          <button
+            type="button"
+            onClick={() => {
+              const next: Language = language === 'mr' ? 'hi' : language === 'hi' ? 'en' : 'mr';
+              setLanguage(next);
+            }}
+            className="sm:hidden h-9 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-emerald-800 dark:text-emerald-400 border border-slate-200 dark:border-[#24352F] font-black text-xs flex items-center gap-1 active:scale-95 transition"
+            title="भाषा बदला (Tap to switch language)"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>{language === 'mr' ? 'मराठी' : language === 'hi' ? 'हिंदी' : 'EN'}</span>
+          </button>
 
           {/* Live Clock & Date Badge (Hidden below xl) */}
           <div className="hidden xl:flex items-center gap-2 px-3 h-9 rounded-xl bg-slate-100/80 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] text-xs">

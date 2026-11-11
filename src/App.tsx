@@ -61,7 +61,7 @@ const MainContent: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#f8fafc] dark:bg-[#0B1210] text-[#0f172a] dark:text-[#E7F0EC] transition-colors duration-150 selection:bg-emerald-500 selection:text-white">
+    <div className="h-dvh w-full flex flex-col overflow-hidden bg-[#f8fafc] dark:bg-[#0B1210] text-[#0f172a] dark:text-[#E7F0EC] transition-colors duration-150 selection:bg-emerald-500 selection:text-white">
       {/* Top Header (Fixed 64px, nothing clipped or overflowing) */}
       <Navbar 
         onOpenSettings={() => setIsSettingsOpen(true)}
@@ -79,8 +79,8 @@ const MainContent: React.FC = () => {
           onCloseMobile={() => setIsMobileSidebarOpen(false)}
         />
 
-        {/* Main Content Area */}
-        <main className="flex-1 h-full p-4 sm:p-6 lg:p-6 min-w-0 overflow-y-auto">
+        {/* Main Content Area - pb-24 on mobile prevents bottom nav overlap */}
+        <main className="flex-1 h-full p-3 sm:p-6 min-w-0 overflow-y-auto pb-24 lg:pb-6 overscroll-contain">
           {activeView === 'dashboard' && (
             <DashboardView 
               onOpenAddProduct={() => {
@@ -120,12 +120,13 @@ const MainContent: React.FC = () => {
         </main>
       </div>
 
-      {/* Mobile Floating Action Bar for Quick F2 / F3 / F4 Actions */}
+      {/* Mobile Bottom Navigation Bar (PWA / App Navigation) */}
       <MobileActionBar 
         onOpenAddProduct={() => {
           setProductToEdit(null);
           setIsAddProductOpen(true);
         }}
+        onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
       />
 
       {/* Modals */}

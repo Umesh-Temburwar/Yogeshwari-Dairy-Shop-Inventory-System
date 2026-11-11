@@ -3,6 +3,7 @@ import ydoLogo from '../assets/YDO_logo.jpg';
 import { useLanguage, Language } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useStore } from '../context/StoreContext';
 import { 
   Clock, 
   Sun, 
@@ -11,12 +12,13 @@ import {
   PanelLeftClose, 
   PanelLeft, 
   LogOut, 
-  User,
-  Lock,
-  ChevronDown,
-  CheckCircle2,
-  ShieldCheck,
-  Globe
+  User, 
+  Lock, 
+  ChevronDown, 
+  CheckCircle2, 
+  ShieldCheck, 
+  Globe,
+  RotateCw
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -34,10 +36,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { language, setLanguage, t } = useLanguage();
   const { resolvedTheme, toggleTheme } = useTheme();
   const { user, role, setRole, lockSecurity, signOut } = useAuth();
+  const { refreshData, isSyncing } = useStore();
 
   const [currentTime, setCurrentTime] = useState<string>('');
   const [currentDate, setCurrentDate] = useState<string>('');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showRefreshedToast, setShowRefreshedToast] = useState(false);
+
+  const handleManualRefresh = async () => {
+    await refreshData();
+    setShowRefreshedToast(true);
+    setTimeout(() => setShowRefreshedToast(false), 2000);
+  };
 
   useEffect(() => {
     const updateDateTime = () => {
@@ -165,6 +175,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               {currentDate}
             </span>
           </div>
+
+          {/* 1-TAP REFRESH BUTTON (Syncs data, updates views) */}
+          <button
+            type="button"
+            onClick={handleManualRefresh}
+            disabled={isSyncing}
+            className="h-9 px-2 sm:px-2.5 rounded-xl flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 font-bold text-xs transition-all active:scale-95 shadow-2xs disabled:opacity-60"
+            title={language === 'mr' ? 'माहिती रिफ्रेश करा (Refresh Data)' : language === 'hi' ? 'डेटा रिफ्रेश करें (Refresh)' : 'Refresh Data'}
+          >
+            <RotateCw className={`w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 ${isSyncing ? 'animate-spin' : ''}`} />
+            <span className="hidden md:inline">
+              {language === 'mr' ? 'रिफ्रेश' : language === 'hi' ? 'रिफ्रेश' : 'Refresh'}
+            </span>
+          </button>
 
           {/* 1-CLICK THEME TOGGLE (Sun <-> Moon, No annoying overlapping popup) */}
           <button
@@ -316,6 +340,14 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
       </div>
+
+      {/* Floating Refresh Confirmation Toast */}
+      {showRefreshedToast && (
+        <div className="fixed top-18 right-4 z-50 bg-emerald-700 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 border border-emerald-500/50 backdrop-blur-md">
+          <CheckCircle2 className="w-4 h-4 text-emerald-200 shrink-0" />
+          <span>{language === 'mr' ? 'माहिती यशस्वीरित्या रिफ्रेश झाली!' : language === 'hi' ? 'डेटा सफलतापूर्वक रिफ्रेश हुआ!' : 'Data Refreshed Successfully!'}</span>
+        </div>
+      )}
     </header>
   );
 };

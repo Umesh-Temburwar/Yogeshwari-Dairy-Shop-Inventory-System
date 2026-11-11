@@ -3,7 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { MilkFatCalculator } from './MilkFatCalculator';
-import { exportToCSV, exportReportToPDF } from '../../lib/exportUtils';
+import { exportToCSV, exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
 import { 
   getShelfLifeDays, 
   getSuggestedExpiryDate, 
@@ -18,6 +18,7 @@ import {
   X,
   Calculator,
   Download,
+  Printer,
   Sparkles,
   Layers,
   Clock,
@@ -151,14 +152,14 @@ export const PurchaseTracker: React.FC = () => {
     exportToCSV('Dairy_Purchases_Report', headers, rows);
   };
 
-  const handleDownloadPurchasePDF = () => {
+  const getPurchaseReportPayload = () => {
     const totalQty = filteredPurchases.reduce((acc, p) => acc + p.quantity, 0);
     const totalAmt = filteredPurchases.reduce((acc, p) => acc + p.total_amount, 0);
     const cashAmt = filteredPurchases.filter(p => p.payment_mode === 'Cash').reduce((acc, p) => acc + p.total_amount, 0);
     const onlineAmt = filteredPurchases.filter(p => p.payment_mode === 'Online_UPI' || p.payment_mode === 'Bank_Transfer').reduce((acc, p) => acc + p.total_amount, 0);
     const udharAmt = filteredPurchases.filter(p => p.payment_mode === 'Udhar').reduce((acc, p) => acc + p.total_amount, 0);
 
-    exportReportToPDF({
+    return {
       title: language === 'mr' ? 'दूध व माल खरेदी लेजर अहवाल' : language === 'hi' ? 'दूध व सामान खरीद लेजर रिपोर्ट' : 'Dairy Purchases & Supplier Ledger Report',
       subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Inward Procurement',
       periodText: language === 'mr' ? 'निवडलेला खरेदी कालावधी' : 'चुनी गई खरीद अवधि',
@@ -170,7 +171,7 @@ export const PurchaseTracker: React.FC = () => {
       ],
       table: {
         headers: ['तारीख', 'पुरवठादार / शेतकरी', 'उत्पादन (Product)', 'नग / प्रमाण', 'खरेदी दर (₹)', 'एकूण रक्कम (₹)', 'पेमेंट पद्धत', 'नोंद (Notes)'],
-        alignments: ['center', 'left', 'left', 'right', 'right', 'right', 'center', 'left'],
+        alignments: ['center', 'left', 'left', 'right', 'right', 'right', 'center', 'left'] as ('center' | 'left' | 'right')[],
         rows: filteredPurchases.map(p => [
           p.purchase_date,
           p.supplier_name,
@@ -193,7 +194,15 @@ export const PurchaseTracker: React.FC = () => {
         ]
       },
       notes: 'डेअरी संकलन व कच्चा माल आवक तपशील. सर्व पावत्या तपासून बिल पास करावे.'
-    });
+    };
+  };
+
+  const handlePrintPurchasePDF = () => {
+    printReport(getPurchaseReportPayload());
+  };
+
+  const handleDownloadPurchasePDF = () => {
+    downloadReportPDF(getPurchaseReportPayload());
   };
 
   return (
@@ -224,13 +233,23 @@ export const PurchaseTracker: React.FC = () => {
             <span>{language === 'mr' ? 'दूध फॅट कॅल्क्युलेटर' : language === 'hi' ? 'दूध फैट कैलकुलेटर' : 'Milk Fat Calculator'}</span>
           </button>
 
+          {/* Print PDF Button */}
+          <button
+            onClick={handlePrintPurchasePDF}
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            title="Print Purchases Report"
+          >
+            <Printer className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+          </button>
+
           {/* PDF Report Download Button */}
           <button
             onClick={handleDownloadPurchasePDF}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-900 dark:text-sky-300 border border-sky-300 dark:border-sky-800/60 text-xs font-bold transition-all"
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-900 dark:text-sky-300 border border-sky-300 dark:border-sky-800/60 text-xs font-bold transition-all active:scale-95"
             title="Download Purchases PDF Report"
           >
-            <FileText className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+            <Download className="w-4 h-4 text-sky-600 dark:text-sky-400" />
             <span>{language === 'mr' ? 'खरेदी PDF' : language === 'hi' ? 'खरीद PDF' : 'Purchases PDF'}</span>
           </button>
 

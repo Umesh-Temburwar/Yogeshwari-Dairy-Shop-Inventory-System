@@ -11,9 +11,10 @@ import {
   UserCheck,
   TrendingUp,
   Heart,
-  FileText
+  FileText,
+  Download
 } from 'lucide-react';
-import { exportReportToPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 export const ProfitReport: React.FC = () => {
@@ -208,61 +209,67 @@ export const ProfitReport: React.FC = () => {
     : 0;
   const otherShare = Math.max(0, 100 - maleShare - femaleShare);
 
-  const handleDownloadPLPDF = () => {
-    exportReportToPDF({
-      title: language === 'mr' ? 'दुकान नफा-तोटा व व्यवसाय विश्लेषण अहवाल (P&L Statement)' : language === 'hi' ? 'दुकान लाभ-हानि व व्यापार विश्लेषण रिपोर्ट (P&L Statement)' : 'Dairy Profit & Loss Statement & Sales Intelligence Report',
-      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Financial Statement',
-      periodText: language === 'mr' ? 'कालावधी आर्थिक विवरणपत्र' : 'अवधि वित्तीय विवरणपत्र',
-      kpis: [
-        { label: 'एकूण विक्री (Revenue)', value: `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`, color: 'emerald' },
-        { label: 'स्थूल नफा (Gross Profit)', value: `₹${metrics.grossProfit.toLocaleString('en-IN')}`, color: 'blue' },
-        { label: 'एकूण खर्च (Opex + Loss)', value: `₹${(metrics.operatingExpenses + metrics.totalDamagesLoss).toLocaleString('en-IN')}`, color: 'rose' },
-        { label: 'निव्वळ नफा (Net Profit)', value: `₹${metrics.netProfit.toLocaleString('en-IN')}`, color: metrics.netProfit >= 0 ? 'emerald' : 'rose' }
-      ],
-      tables: [
-        {
-          heading: language === 'mr' ? '१. नफा-तोटा ताळेबंद (P&L Summary Breakdown)' : '1. Profit & Loss Summary Breakdown',
-          data: {
-            headers: ['तपशील (Financial Line Item)', 'रक्कम (₹)', 'टक्केवारी / शेरा (Share)'],
-            alignments: ['left', 'right', 'right'],
-            rows: [
-              ['(+) एकूण विक्री कमाई (Total Sales Revenue)', `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`, '100.0%'],
-              ['(-) विकलेल्या मालाचा मूळ खरेदी खर्च (COGS)', `₹${metrics.totalCOGS.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.totalCOGS / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
-              ['(=) स्थूल नफा (Gross Profit Margin)', `₹${metrics.grossProfit.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.grossProfit / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
-              ['(-) दुकान दैनंदिन चालू खर्च (Operating Expenses)', `₹${metrics.operatingExpenses.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.operatingExpenses / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
-              ['(-) नासलेले दूध व खराब माल नुकसान (Damages & Spoilage)', `₹${metrics.totalDamagesLoss.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.totalDamagesLoss / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
-              ['(-) ग्राहक माल परतावा रिफंड (Customer Refunds)', `₹${(metrics.totalRefundAmount || 0).toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${(((metrics.totalRefundAmount || 0) / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
-              ['(+) सप्लायरकडून मिळालेला रिफंड / भरपाई (Supplier Refunds)', `+₹${(metrics.totalSupplierRefundReceived || 0).toLocaleString('en-IN')}`, '—'],
-              ['(=) अंतिम निव्वळ शिल्लक नफा (Net Profit In Hand)', `₹${metrics.netProfit.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.netProfit / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%']
-            ]
-          }
-        },
-        {
-          heading: language === 'mr' ? '२. उत्पादननिहाय नफा व विक्री कामगिरी (Product Margins)' : '2. Product Performance & Margins',
-          data: {
-            headers: ['उत्पादनाचे नाव (Product)', 'विक्री प्रमाण (Qty)', 'कमाई (Revenue ₹)', 'खर्च (Cost ₹)', 'नफा (Profit ₹)', 'नफा मार्जिन %'],
-            alignments: ['left', 'right', 'right', 'right', 'right', 'right'],
-            rows: productPerformance.map(p => [
-              p.name,
-              `${p.quantity} ${p.unit}`,
-              `₹${p.revenue.toLocaleString('en-IN')}`,
-              `₹${Math.round(p.cost).toLocaleString('en-IN')}`,
-              `₹${Math.round(p.profit).toLocaleString('en-IN')}`,
-              p.revenue > 0 ? `${((p.profit / p.revenue) * 100).toFixed(1)}%` : '0%'
-            ]),
-            summaryRow: [
-              'एकूण (Total)',
-              `${productPerformance.length} उत्पादने`,
-              `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`,
-              `₹${metrics.totalCOGS.toLocaleString('en-IN')}`,
-              `₹${metrics.grossProfit.toLocaleString('en-IN')}`,
-              metrics.totalSalesRevenue > 0 ? `${((metrics.grossProfit / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'
-            ]
-          }
+  const getPLReportPayload = () => ({
+    title: language === 'mr' ? 'दुकान नफा-तोटा व व्यवसाय विश्लेषण अहवाल (P&L Statement)' : language === 'hi' ? 'दुकान लाभ-हानि व व्यापार विश्लेषण रिपोर्ट (P&L Statement)' : 'Dairy Profit & Loss Statement & Sales Intelligence Report',
+    subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Financial Statement',
+    periodText: language === 'mr' ? 'कालावधी आर्थिक विवरणपत्र' : 'अवधि वित्तीय विवरणपत्र',
+    kpis: [
+      { label: 'एकूण विक्री (Revenue)', value: `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`, color: 'emerald' },
+      { label: 'स्थूल नफा (Gross Profit)', value: `₹${metrics.grossProfit.toLocaleString('en-IN')}`, color: 'blue' },
+      { label: 'एकूण खर्च (Opex + Loss)', value: `₹${(metrics.operatingExpenses + metrics.totalDamagesLoss).toLocaleString('en-IN')}`, color: 'rose' },
+      { label: 'निव्वळ नफा (Net Profit)', value: `₹${metrics.netProfit.toLocaleString('en-IN')}`, color: metrics.netProfit >= 0 ? 'emerald' : 'rose' }
+    ],
+    tables: [
+      {
+        heading: language === 'mr' ? '१. नफा-तोटा ताळेबंद (P&L Summary Breakdown)' : '1. Profit & Loss Summary Breakdown',
+        data: {
+          headers: ['तपशील (Financial Line Item)', 'रक्कम (₹)', 'टक्केवारी / शेरा (Share)'],
+          alignments: ['left', 'right', 'right'] as ('left' | 'right')[],
+          rows: [
+            ['(+) एकूण विक्री कमाई (Total Sales Revenue)', `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`, '100.0%'],
+            ['(-) विकलेल्या मालाचा मूळ खरेदी खर्च (COGS)', `₹${metrics.totalCOGS.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.totalCOGS / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
+            ['(=) स्थूल नफा (Gross Profit Margin)', `₹${metrics.grossProfit.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.grossProfit / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
+            ['(-) दुकान दैनंदिन चालू खर्च (Operating Expenses)', `₹${metrics.operatingExpenses.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.operatingExpenses / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
+            ['(-) नासलेले दूध व खराब माल नुकसान (Damages & Spoilage)', `₹${metrics.totalDamagesLoss.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.totalDamagesLoss / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
+            ['(-) ग्राहक माल परतावा रिफंड (Customer Refunds)', `₹${(metrics.totalRefundAmount || 0).toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${(((metrics.totalRefundAmount || 0) / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
+            ['(+) सप्लायरकडून मिळालेला रिफंड / भरपाई (Supplier Refunds)', `+₹${(metrics.totalSupplierRefundReceived || 0).toLocaleString('en-IN')}`, '—'],
+            ['(=) अंतिम निव्वळ शिल्लक नफा (Net Profit In Hand)', `₹${metrics.netProfit.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.netProfit / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%']
+          ]
         }
-      ],
-      notes: 'योगेश्वरी डेअरी अधिकृत आर्थिक विवरणपत्र. सीए/कर सल्लागारासाठी वैध.'
-    });
+      },
+      {
+        heading: language === 'mr' ? '२. उत्पादननिहाय नफा व विक्री कामगिरी (Product Margins)' : '2. Product Performance & Margins',
+        data: {
+          headers: ['उत्पादनाचे नाव (Product)', 'विक्री प्रमाण (Qty)', 'कमाई (Revenue ₹)', 'खर्च (Cost ₹)', 'नफा (Profit ₹)', 'नफा मार्जिन %'],
+          alignments: ['left', 'right', 'right', 'right', 'right', 'right'] as ('left' | 'right')[],
+          rows: productPerformance.map(p => [
+            p.name,
+            `${p.quantity} ${p.unit}`,
+            `₹${p.revenue.toLocaleString('en-IN')}`,
+            `₹${Math.round(p.cost).toLocaleString('en-IN')}`,
+            `₹${Math.round(p.profit).toLocaleString('en-IN')}`,
+            p.revenue > 0 ? `${((p.profit / p.revenue) * 100).toFixed(1)}%` : '0%'
+          ]),
+          summaryRow: [
+            'एकूण (Total)',
+            `${productPerformance.length} उत्पादने`,
+            `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`,
+            `₹${metrics.totalCOGS.toLocaleString('en-IN')}`,
+            `₹${metrics.grossProfit.toLocaleString('en-IN')}`,
+            metrics.totalSalesRevenue > 0 ? `${((metrics.grossProfit / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'
+          ]
+        }
+      }
+    ],
+    notes: 'योगेश्वरी डेअरी अधिकृत आर्थिक विवरणपत्र. सीए/कर सल्लागारासाठी वैध.'
+  });
+
+  const handlePrintPLPDF = () => {
+    printReport(getPLReportPayload());
+  };
+
+  const handleDownloadPLPDF = () => {
+    downloadReportPDF(getPLReportPayload());
   };
 
   return (
@@ -287,21 +294,24 @@ export const ProfitReport: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Print PDF Button */}
           <button
-            onClick={handleDownloadPLPDF}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs"
-            title="Download Official P&L Statement PDF"
+            onClick={handlePrintPLPDF}
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-white text-xs font-bold transition-all border border-transparent dark:border-[#24352F] active:scale-95 shadow-xs"
+            title="Print Official P&L Statement"
           >
-            <FileText className="w-4 h-4" />
-            <span>{language === 'mr' ? 'नफा-तोटा PDF' : language === 'hi' ? 'P&L PDF डाउनलोड' : 'Download P&L PDF'}</span>
+            <Printer className="w-4 h-4 text-emerald-400" />
+            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
           </button>
 
+          {/* Download PDF Button */}
           <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-white text-xs font-bold transition-all border border-transparent dark:border-[#24352F]"
+            onClick={handleDownloadPLPDF}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
+            title="Download Official P&L Statement PDF"
           >
-            <Printer className="w-4 h-4" />
-            <span>{t('print')}</span>
+            <Download className="w-4 h-4" />
+            <span>{language === 'mr' ? 'नफा-तोटा PDF' : language === 'hi' ? 'P&L PDF' : 'Download PDF'}</span>
           </button>
         </div>
       </div>

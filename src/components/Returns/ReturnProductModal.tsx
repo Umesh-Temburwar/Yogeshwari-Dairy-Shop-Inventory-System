@@ -8,6 +8,7 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   Printer, 
+  Download,
   Search, 
   PackageCheck, 
   Trash2, 
@@ -16,6 +17,7 @@ import {
   BookOpen, 
   Repeat
 } from 'lucide-react';
+import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
 
 interface ReturnProductModalProps {
   onClose: () => void;
@@ -83,8 +85,41 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
     }
   };
 
+  const getReturnSlipPayload = () => {
+    if (!completedReturn) return null;
+    return {
+      title: `ग्राहक माल परतावा पावती / Return Slip (${completedReturn.return_no})`,
+      periodText: `पावती क्र. ${completedReturn.return_no} | तारीख: ${completedReturn.return_date}`,
+      kpis: [
+        { label: 'परतावा रक्कम', value: `₹${completedReturn.refund_amount.toFixed(2)}`, color: 'emerald' },
+        { label: 'रिफंड पद्धत', value: completedReturn.refund_mode, color: 'blue' }
+      ],
+      table: {
+        headers: ['उत्पादनाचे नाव', 'नग/प्रमाण', 'कारण', 'मालाची स्थिती', 'रिफंड रक्कम'],
+        rows: [
+          [
+            completedReturn.product_name,
+            `${completedReturn.quantity} ${completedReturn.unit}`,
+            completedReturn.reason,
+            completedReturn.condition === 'Resellable' ? 'पुन्हा विक्रीयोग्य (Restocked)' : 'खराब / नासलेला (Damaged)',
+            `₹${completedReturn.refund_amount.toFixed(2)}`
+          ]
+        ],
+        summaryRow: ['एकूण रिफंड', '', '', '', `₹${completedReturn.refund_amount.toFixed(2)}`]
+      },
+      notes: `ग्राहक नाव: ${completedReturn.customer_name || 'Counter Customer'} | फोन: ${completedReturn.customer_phone || '—'} | योगेश्वरी डेअरी ERP`
+    };
+  };
+
   const handlePrintSlip = () => {
-    window.print();
+    const payload = getReturnSlipPayload();
+    if (payload) printReport(payload);
+    else window.print();
+  };
+
+  const handleDownloadSlipPDF = () => {
+    const payload = getReturnSlipPayload();
+    if (payload) downloadReportPDF(payload);
   };
 
   return (
@@ -133,19 +168,27 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            <div className="grid grid-cols-3 gap-2 pt-2">
               <button
                 type="button"
                 onClick={handlePrintSlip}
-                className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] font-bold text-xs flex items-center justify-center gap-1.5 transition"
+                className="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs"
               >
-                <Printer className="w-4 h-4" />
-                <span>{language === 'mr' ? 'पावती प्रिंट करा' : language === 'hi' ? 'रसीद प्रिंट करें' : 'Print Slip'}</span>
+                <Printer className="w-4 h-4 text-purple-400" />
+                <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadSlipPDF}
+                className="py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95"
+              >
+                <Download className="w-4 h-4" />
+                <span>{language === 'mr' ? 'पावती PDF' : language === 'hi' ? 'रसीद PDF' : 'Slip PDF'}</span>
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition"
+                className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] font-bold text-xs transition active:scale-95"
               >
                 {language === 'mr' ? 'पूर्ण (Done)' : language === 'hi' ? 'पूर्ण (Done)' : 'Done'}
               </button>

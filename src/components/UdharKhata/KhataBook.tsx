@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { UdharCustomer } from '../../types';
-import { exportReportToPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
 import {
   BookOpen,
   Search,
@@ -12,7 +12,9 @@ import {
   Smartphone,
   X,
   UserPlus,
-  FileText
+  FileText,
+  Printer,
+  Download
 } from 'lucide-react';
 
 export const KhataBook: React.FC = () => {
@@ -120,12 +122,12 @@ export const KhataBook: React.FC = () => {
     setPaymentNotes('');
   };
 
-  const handleDownloadKhataBookPDF = () => {
+  const getMasterKhataPayload = () => {
     const totalDue = customers.reduce((sum, c) => sum + Math.max(0, c.current_balance), 0);
     const totalCredit = customers.reduce((sum, c) => sum + c.total_credit, 0);
     const totalPaid = customers.reduce((sum, c) => sum + c.total_paid, 0);
 
-    exportReportToPDF({
+    return {
       title: language === 'mr' ? 'उधारी खातेवही संपूर्ण लेजर अहवाल' : language === 'hi' ? 'उधारी खाता-बही संपूर्ण लेजर रिपोर्ट' : 'Customer Credit Ledger & Udhar Khata Book',
       subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Customer Accounts',
       periodText: language === 'mr' ? 'सद्यस्थिती खातेवही बाकी' : 'वर्तमान खाता-बही बकाया',
@@ -137,7 +139,7 @@ export const KhataBook: React.FC = () => {
       ],
       table: {
         headers: ['अ.क्र.', 'ग्राहकाचे नाव (Customer)', 'मोबाईल क्र.', 'पत्ता / Landmark', 'एकूण उधारी (₹)', 'जमा रक्कम (₹)', 'बाकी येणे (Due ₹)'],
-        alignments: ['center', 'left', 'center', 'left', 'right', 'right', 'right'],
+        alignments: ['center', 'left', 'center', 'left', 'right', 'right', 'right'] as ('center' | 'left' | 'right')[],
         rows: filteredCustomers.map((c, idx) => [
           idx + 1,
           c.name,
@@ -158,15 +160,23 @@ export const KhataBook: React.FC = () => {
         ]
       },
       notes: 'उधारी खातेवही अहवाल. सर्व नियमित ग्राहकांकडून आठवडा/महिना अखेरीस वसुली करावी.'
-    });
+    };
   };
 
-  const handleDownloadCustomerStatementPDF = (customer: UdharCustomer) => {
+  const handlePrintKhataBookPDF = () => {
+    printReport(getMasterKhataPayload());
+  };
+
+  const handleDownloadKhataBookPDF = () => {
+    downloadReportPDF(getMasterKhataPayload());
+  };
+
+  const getCustomerStatementPayload = (customer: UdharCustomer) => {
     const custTxs = udharTransactions.filter(
       t => t.customer_id === customer.id || t.customer_id === customer.name
     );
 
-    exportReportToPDF({
+    return {
       title: `${customer.name} - ${language === 'mr' ? 'खातेवही स्टेटमेंट' : language === 'hi' ? 'खाता स्टेटमेंट' : 'Customer Account Statement'}`,
       subtitle: `Yogeshwari Dairy Farm & Sweets ERP — Phone: ${customer.phone} | ${customer.address || 'Local'}`,
       periodText: language === 'mr' ? 'वैयक्तिक हिशोब व व्यवहार' : 'व्यक्तिगत हिसाब व लेन-देन',
@@ -178,7 +188,7 @@ export const KhataBook: React.FC = () => {
       ],
       table: {
         headers: ['तारीख', 'तपशील (Transaction Details)', 'प्रकार', 'पेमेंट पद्धत / बिल क्र.', 'उधारी रक्कम (+₹)', 'जमा रक्कम (-₹)'],
-        alignments: ['center', 'left', 'center', 'left', 'right', 'right'],
+        alignments: ['center', 'left', 'center', 'left', 'right', 'right'] as ('center' | 'left' | 'right')[],
         rows: custTxs.map(tx => [
           tx.transaction_date,
           tx.notes || (tx.type === 'Credit_Given' ? 'दूध / डेअरी माल खरेदी' : 'रक्कम जमा'),
@@ -197,7 +207,15 @@ export const KhataBook: React.FC = () => {
         ]
       },
       notes: `ग्राहक स्वाक्षरी: ___________________ | अधिकृत शिक्का: योगेश्वरी डेअरी. शिल्लक बाकी: ₹${customer.current_balance.toLocaleString('en-IN')}`
-    });
+    };
+  };
+
+  const handlePrintCustomerStatementPDF = (customer: UdharCustomer) => {
+    printReport(getCustomerStatementPayload(customer));
+  };
+
+  const handleDownloadCustomerStatementPDF = (customer: UdharCustomer) => {
+    downloadReportPDF(getCustomerStatementPayload(customer));
   };
 
   return (
@@ -220,12 +238,23 @@ export const KhataBook: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Print PDF Button */}
+          <button
+            onClick={handlePrintKhataBookPDF}
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            title="Print Udhar Khata Book Report"
+          >
+            <Printer className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+          </button>
+
+          {/* Download PDF Button */}
           <button
             onClick={handleDownloadKhataBookPDF}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 text-xs font-bold transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 text-xs font-bold transition-all active:scale-95"
             title="Download Udhar Khata Book PDF Report"
           >
-            <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <Download className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             <span>{language === 'mr' ? 'खातेवही PDF' : language === 'hi' ? 'खाता-बही PDF' : 'Khata PDF'}</span>
           </button>
 
@@ -641,13 +670,24 @@ export const KhataBook: React.FC = () => {
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <button
+                  type="button"
+                  onClick={() => handlePrintCustomerStatementPDF(selectedLedgerCustomer)}
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1 shadow-xs active:scale-95"
+                  title="Print Customer Statement"
+                >
+                  <Printer className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => handleDownloadCustomerStatementPDF(selectedLedgerCustomer)}
-                  className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs"
+                  className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1 shadow-xs active:scale-95"
                   title="Download Customer Statement PDF"
                 >
-                  <FileText className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5" />
                   <span>{language === 'mr' ? 'स्टेटमेंट PDF' : language === 'hi' ? 'स्टेटमेंट PDF' : 'Statement PDF'}</span>
                 </button>
 

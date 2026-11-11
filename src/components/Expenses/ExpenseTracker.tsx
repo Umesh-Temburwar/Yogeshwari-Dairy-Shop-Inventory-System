@@ -3,7 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { ExpenseCategory } from '../../types';
-import { exportReportToPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
 import {
   Fuel,
   Plus,
@@ -17,7 +17,9 @@ import {
   X,
   TrendingDown,
   Layers,
-  FileText
+  FileText,
+  Printer,
+  Download
 } from 'lucide-react';
 
 export const ExpenseTracker: React.FC = () => {
@@ -85,12 +87,12 @@ export const ExpenseTracker: React.FC = () => {
     return map;
   }, [filteredExpenses]);
 
-  const handleDownloadExpensesPDF = () => {
+  const getExpensesPayload = () => {
     const totalExp = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
     const opExp = filteredExpenses.filter(e => !e.is_capital_investment).reduce((sum, e) => sum + e.amount, 0);
     const capExp = filteredExpenses.filter(e => e.is_capital_investment).reduce((sum, e) => sum + e.amount, 0);
 
-    exportReportToPDF({
+    return {
       title: language === 'mr' ? 'दुकान खर्च व भांडवली गुंतवणूक लेजर अहवाल' : language === 'hi' ? 'दुकान खर्च व पूंजी निवेश लेजर रिपोर्ट' : 'Shop Operating & Capital Expenses Ledger Report',
       subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Operating Outflows',
       periodText: language === 'mr' ? 'निवडलेला खर्च कालावधी' : 'चुनी गई खर्च अवधि',
@@ -102,7 +104,7 @@ export const ExpenseTracker: React.FC = () => {
       ],
       table: {
         headers: ['तारीख', 'खर्चाचा तपशील (Expense Title)', 'प्रवर्ग (Category)', 'पेमेंट पद्धत', 'प्रकार', 'रक्कम (₹)', 'तपशील / शेरा'],
-        alignments: ['center', 'left', 'center', 'center', 'center', 'right', 'left'],
+        alignments: ['center', 'left', 'center', 'center', 'center', 'right', 'left'] as ('center' | 'left' | 'right')[],
         rows: filteredExpenses.map(e => [
           e.expense_date,
           e.title,
@@ -123,7 +125,15 @@ export const ExpenseTracker: React.FC = () => {
         ]
       },
       notes: 'दुकान दैनंदिन खर्च व उपकरणांची गुंतवणूक. खर्चाच्या पावत्या जपून ठेवाव्यात.'
-    });
+    };
+  };
+
+  const handlePrintExpensesPDF = () => {
+    printReport(getExpensesPayload());
+  };
+
+  const handleDownloadExpensesPDF = () => {
+    downloadReportPDF(getExpensesPayload());
   };
 
   return (
@@ -147,12 +157,21 @@ export const ExpenseTracker: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2">
           <button
+            onClick={handlePrintExpensesPDF}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2621] dark:hover:bg-[#24352F] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-all shadow-xs"
+            title="Print Expenses PDF"
+          >
+            <Printer className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+          </button>
+
+          <button
             onClick={handleDownloadExpensesPDF}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 text-xs font-bold transition-all"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-xs"
             title="Download Expenses PDF Report"
           >
-            <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span>{language === 'mr' ? 'खर्च PDF' : language === 'hi' ? 'खर्च PDF' : 'Expenses PDF'}</span>
+            <Download className="w-3.5 h-3.5" />
+            <span>{language === 'mr' ? 'डाऊनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
           </button>
 
           <button

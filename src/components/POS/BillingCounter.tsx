@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   Barcode,
   FileText,
+  Download,
   QrCode,
   Copy,
   Package,
@@ -28,7 +29,7 @@ import {
   ArrowLeft,
   RotateCcw
 } from 'lucide-react';
-import { exportReportToPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import confetti from 'canvas-confetti';
 
@@ -245,37 +246,44 @@ export const BillingCounter: React.FC = () => {
     setCustomerAge('');
   };
 
+  const getInvoiceReportPayload = (sale: any) => ({
+    title: `${t('shopName')} - ${language === 'mr' ? 'कर पावती (Cash Memo)' : 'Cash Memo'}`,
+    subtitle: `${language === 'mr' ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : 'Fresh Milk, Dairy & Sweets'} | FSSAI: 21524012000341`,
+    periodText: `${language === 'mr' ? 'बिल क्र.' : 'Invoice No:'} ${sale.invoice_no} | ${sale.sale_date}`,
+    kpis: [
+      { label: 'निव्वळ देय रक्कम (Net Bill)', value: `₹${sale.net_amount.toLocaleString('en-IN')}`, color: 'emerald' },
+      { label: 'पेमेंट पद्धत (Mode)', value: sale.payment_mode, color: 'blue' },
+      { label: 'ग्राहक (Customer)', value: sale.customer_name, color: 'purple' }
+    ],
+    table: {
+      headers: ['अ.क्र.', 'मालाचे नाव (Product Description)', 'प्रमाण (Qty)', 'दर (Rate ₹)', 'एकूण (Amount ₹)'],
+      alignments: ['center', 'left', 'right', 'right', 'right'] as ('center' | 'left' | 'right')[],
+      rows: (sale.items || []).map((it: any, idx: number) => [
+        idx + 1,
+        it.product_name,
+        `${it.quantity} ${it.unit}`,
+        `₹${it.unit_price}`,
+        `₹${it.total_price.toLocaleString('en-IN')}`
+      ]),
+      summaryRow: [
+        'एकूण निव्वळ रक्कम',
+        `${sale.items?.length || 0} वस्तू`,
+        '',
+        sale.discount > 0 ? `सवलत: ₹${sale.discount}` : '',
+        `₹${sale.net_amount.toLocaleString('en-IN')}`
+      ]
+    },
+    notes: `${language === 'mr' ? 'धन्यवाद! पुन्हा भेट द्या • शुद्धता हीच आमची ओळख' : 'Thank you! Visit again • Purity is our identity'} | UPI ID: Q226038088@ybl (IDFC FIRST Bank)`
+  });
+
+  const handlePrintInvoicePDF = (sale: any) => {
+    if (!sale) return;
+    printReport(getInvoiceReportPayload(sale));
+  };
+
   const handleDownloadInvoicePDF = (sale: any) => {
     if (!sale) return;
-    exportReportToPDF({
-      title: `${t('shopName')} - ${language === 'mr' ? 'कर पावती (Cash Memo)' : 'Cash Memo'}`,
-      subtitle: `${language === 'mr' ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : 'Fresh Milk, Dairy & Sweets'} | FSSAI: 21524012000341`,
-      periodText: `${language === 'mr' ? 'बिल क्र.' : 'Invoice No:'} ${sale.invoice_no} | ${sale.sale_date}`,
-      kpis: [
-        { label: 'निव्वळ देय रक्कम (Net Bill)', value: `₹${sale.net_amount.toLocaleString('en-IN')}`, color: 'emerald' },
-        { label: 'पेमेंट पद्धत (Mode)', value: sale.payment_mode, color: 'blue' },
-        { label: 'ग्राहक (Customer)', value: sale.customer_name, color: 'purple' }
-      ],
-      table: {
-        headers: ['अ.क्र.', 'मालाचे नाव (Product Description)', 'प्रमाण (Qty)', 'दर (Rate ₹)', 'एकूण (Amount ₹)'],
-        alignments: ['center', 'left', 'right', 'right', 'right'],
-        rows: (sale.items || []).map((it: any, idx: number) => [
-          idx + 1,
-          it.product_name,
-          `${it.quantity} ${it.unit}`,
-          `₹${it.unit_price}`,
-          `₹${it.total_price.toLocaleString('en-IN')}`
-        ]),
-        summaryRow: [
-          'एकूण निव्वळ रक्कम',
-          `${sale.items?.length || 0} वस्तू`,
-          '',
-          sale.discount > 0 ? `सवलत: ₹${sale.discount}` : '',
-          `₹${sale.net_amount.toLocaleString('en-IN')}`
-        ]
-      },
-      notes: `${language === 'mr' ? 'धन्यवाद! पुन्हा भेट द्या • शुद्धता हीच आमची ओळख' : 'Thank you! Visit again • Purity is our identity'} | UPI ID: Q226038088@ybl (IDFC FIRST Bank)`
-    });
+    downloadReportPDF(getInvoiceReportPayload(sale));
   };
 
   return (
@@ -1094,23 +1102,27 @@ export const BillingCounter: React.FC = () => {
 
             <div className="grid grid-cols-3 gap-2 pt-2">
               <button
+                type="button"
+                onClick={() => handlePrintInvoicePDF(lastCompletedSale)}
+                className="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-xs"
+                title="Print Invoice"
+              >
+                <Printer className="w-4 h-4 text-emerald-400" />
+                <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => handleDownloadInvoicePDF(lastCompletedSale)}
-                className="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs"
+                className="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95"
                 title="Download Bill as PDF"
               >
-                <FileText className="w-4 h-4" />
-                <span>{language === 'mr' ? 'पावती PDF' : language === 'hi' ? 'बिल PDF' : 'Bill PDF'}</span>
+                <Download className="w-4 h-4" />
+                <span>{language === 'mr' ? 'बिल PDF' : language === 'hi' ? 'बिल PDF' : 'Bill PDF'}</span>
               </button>
               <button
-                onClick={() => window.print()}
-                className="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5"
-              >
-                <Printer className="w-4 h-4" />
-                <span>{t('print')}</span>
-              </button>
-              <button
+                type="button"
                 onClick={() => setIsSuccessModalOpen(false)}
-                className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white font-bold text-xs"
+                className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white font-bold text-xs active:scale-95"
               >
                 {t('nextBill')}
               </button>

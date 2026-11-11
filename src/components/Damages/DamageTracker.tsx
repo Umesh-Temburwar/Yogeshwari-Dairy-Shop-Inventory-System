@@ -3,12 +3,14 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { DamageReason } from '../../types';
-import { exportReportToPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
 import {
   PackageX,
   Plus,
   X,
   FileText,
+  Printer,
+  Download,
   Truck,
   RotateCcw
 } from 'lucide-react';
@@ -72,13 +74,13 @@ export const DamageTracker: React.FC = () => {
     { id: 'Other', label: language === 'mr' ? 'इतर कारण' : language === 'hi' ? 'अन्य कारण' : 'Other' }
   ];
 
-  const handleDownloadDamagePDF = () => {
+  const getDamageReportPayload = () => {
     const totalLoss = filteredDamages.reduce((acc, d) => acc + d.estimated_loss_amount, 0);
     const curdledCount = filteredDamages.filter(d => d.reason.includes('Curdled') || d.reason.includes('Fat Gya')).length;
     const leakedCount = filteredDamages.filter(d => d.reason.includes('Leaked') || d.reason.includes('Phat Gayi')).length;
     const expiredCount = filteredDamages.filter(d => d.reason.includes('Expiry')).length;
 
-    exportReportToPDF({
+    return {
       title: language === 'mr' ? 'दूध नासणे व नुकसान अहवाल (Damages & Spoilage)' : language === 'hi' ? 'दूध खराबी व नुकसान रिपोर्ट (Damages & Spoilage)' : 'Dairy Damages, Spoilage & Loss Report',
       subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Quality & Spoilage Ledger',
       periodText: language === 'mr' ? 'निवडलेला नुकसान कालावधी' : 'चुनी गई नुकसान अवधि',
@@ -90,7 +92,7 @@ export const DamageTracker: React.FC = () => {
       ],
       table: {
         headers: ['तारीख', 'उत्पादनाचे नाव (Product)', 'नुकसान प्रमाण (Qty)', 'नुकसानीचे कारण (Reason)', 'अंदाजे नुकसान मूल्य (₹)', 'तपशील / नोंद'],
-        alignments: ['center', 'left', 'right', 'left', 'right', 'left'],
+        alignments: ['center', 'left', 'right', 'left', 'right', 'left'] as ('center' | 'left' | 'right')[],
         rows: filteredDamages.map(d => [
           d.damage_date,
           d.product_name,
@@ -109,7 +111,15 @@ export const DamageTracker: React.FC = () => {
         ]
       },
       notes: 'नासलेल्या दुधाचे कारण शोधून शीतकरण (Chilling) व हाताळणी (Handling) सुधारावी.'
-    });
+    };
+  };
+
+  const handlePrintDamagePDF = () => {
+    printReport(getDamageReportPayload());
+  };
+
+  const handleDownloadDamagePDF = () => {
+    downloadReportPDF(getDamageReportPayload());
   };
 
   return (
@@ -132,12 +142,23 @@ export const DamageTracker: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Print PDF Button */}
+          <button
+            onClick={handlePrintDamagePDF}
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            title="Print Spoilage & Loss Report"
+          >
+            <Printer className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+          </button>
+
+          {/* PDF Report Download Button */}
           <button
             onClick={handleDownloadDamagePDF}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-800/60 text-xs font-bold transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-800/60 text-xs font-bold transition-all active:scale-95"
             title="Download Spoilage & Loss PDF Report"
           >
-            <FileText className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+            <Download className="w-4 h-4 text-rose-600 dark:text-rose-400" />
             <span>{language === 'mr' ? 'नुकसान PDF' : language === 'hi' ? 'नुकसान PDF' : 'Damages PDF'}</span>
           </button>
 

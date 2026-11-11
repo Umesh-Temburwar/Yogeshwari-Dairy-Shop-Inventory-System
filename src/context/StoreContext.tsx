@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   Product, Sale, Purchase, DamageRecord, UdharCustomer, 
   UdharTransaction, Expense, TimeRangeFilter, PaymentMode,
@@ -37,6 +37,7 @@ interface StoreContextType {
   isSupabaseConnected: boolean;
   isSyncing: boolean;
   syncWithSupabase: () => Promise<void>;
+  refreshData: () => Promise<void>;
   resetToSampleData: () => void;
   
   // Data State
@@ -220,10 +221,82 @@ if (typeof window !== 'undefined') {
   }
 }
 
+const VALID_APP_VIEWS: AppView[] = [
+  'dashboard', 'pos', 'sales', 'inventory', 'purchases', 
+  'damages', 'udhar', 'expenses', 'analytics', 'reorder', 
+  'expiry', 'returns'
+];
+
+const getInitialAppView = (): AppView => {
+  if (typeof window !== 'undefined') {
+    const rawHash = window.location.hash.replace(/^#\/?/, '').split('?')[0];
+    if (VALID_APP_VIEWS.includes(rawHash as AppView)) {
+      return rawHash as AppView;
+    }
+    try {
+      const saved = localStorage.getItem('yd_active_view');
+      if (saved && VALID_APP_VIEWS.includes(saved as AppView)) {
+        return saved as AppView;
+      }
+    } catch {
+      // Ignore
+    }
+  }
+  return 'dashboard';
+};
+
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activeView, setActiveView] = useState<AppView>('dashboard');
+  const [activeView, setActiveViewState] = useState<AppView>(getInitialAppView);
+
+  const setActiveView = useCallback((newView: AppView, pushHistory = true) => {
+    setActiveViewState(newView);
+    try {
+      localStorage.setItem('yd_active_view', newView);
+      if (pushHistory && typeof window !== 'undefined') {
+        const targetHash = `#/${newView}`;
+        if (window.location.hash !== targetHash) {
+          window.history.pushState({ view: newView }, '', targetHash);
+        }
+      }
+    } catch {
+      // Ignore history errors
+    }
+  }, []);
+
+  // Listen for browser Back/Forward (popstate) so website NEVER exits on back gesture
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Normalize initial URL hash
+    const initialRaw = window.location.hash.replace(/^#\/?/, '').split('?')[0];
+    if (!initialRaw || !VALID_APP_VIEWS.includes(initialRaw as AppView)) {
+      window.history.replaceState({ view: activeView }, '', `#/${activeView}`);
+    } else {
+      window.history.replaceState({ view: initialRaw }, '', `#/${initialRaw}`);
+    }
+
+    const handlePopState = (e: PopStateEvent) => {
+      const currentRawHash = window.location.hash.replace(/^#\/?/, '').split('?')[0] as AppView;
+      const target: AppView = (e.state && e.state.view && VALID_APP_VIEWS.includes(e.state.view))
+        ? e.state.view
+        : VALID_APP_VIEWS.includes(currentRawHash)
+          ? currentRawHash
+          : 'dashboard';
+
+      setActiveViewState(target);
+      try {
+        localStorage.setItem('yd_active_view', target);
+      } catch {
+        // Ignore
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const [timeFilter, setTimeFilter] = useState<TimeRangeFilter>('today');
   const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -396,9 +469,61 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (custData && custData.length > 0) {
         setCustomers(custData);
       }
+      // Fetch customer returns
+      const { data: retData } = await supabase.from('product_returns').select('*').order('created_at', { ascending: false });
+      if (retData && retData.length > 0) {
+        setReturns(retData);
+      }
+      // Fetch supplier returns
+      const { data: supRetData } = await supabase.from('supplier_returns').select('*').order('created_at', { ascending: false });
+      if (supRetData && supRetData.length > 0) {
+        setSupplierReturns(supRetData);
+      }
+      // Fetch udhar transactions
+      const { data: utData } = await supabase.from('udhar_transactions').select('*').order('created_at', { ascending: false });
+      if (utData && utData.length > 0) {
+        setUdharTransactions(utData);
+      }
       setIsSupabaseConnected(true);
     } catch (err) {
       console.error('Supabase sync error:', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const refreshData = async () => {
+    setIsSyncing(true);
+    try {
+      if (supabase && isSupabaseConnected) {
+        await syncWithSupabase();
+      } else {
+        // Reload fresh state from localStorage
+        try {
+          const p = localStorage.getItem('yd_products');
+          if (p) setProducts(JSON.parse(p));
+          const b = localStorage.getItem('yd_batches');
+          if (b) setBatches(JSON.parse(b));
+          const s = localStorage.getItem('yd_sales');
+          if (s) setSales(JSON.parse(s));
+          const pu = localStorage.getItem('yd_purchases');
+          if (pu) setPurchases(JSON.parse(pu));
+          const d = localStorage.getItem('yd_damages');
+          if (d) setDamages(JSON.parse(d));
+          const c = localStorage.getItem('yd_customers');
+          if (c) setCustomers(JSON.parse(c));
+          const ut = localStorage.getItem('yd_udhar_transactions');
+          if (ut) setUdharTransactions(JSON.parse(ut));
+          const ex = localStorage.getItem('yd_expenses');
+          if (ex) setExpenses(JSON.parse(ex));
+          const ret = localStorage.getItem('yd_returns');
+          if (ret) setReturns(JSON.parse(ret));
+          const sRet = localStorage.getItem('yd_supplier_returns');
+          if (sRet) setSupplierReturns(JSON.parse(sRet));
+        } catch {
+          // ignore parsing error
+        }
+      }
     } finally {
       setIsSyncing(false);
     }
@@ -1548,6 +1673,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       isSupabaseConnected,
       isSyncing,
       syncWithSupabase,
+      refreshData,
       resetToSampleData,
       products,
       batches,

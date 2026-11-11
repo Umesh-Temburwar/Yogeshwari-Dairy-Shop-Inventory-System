@@ -3,7 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { Sale } from '../../types';
-import { exportReportToPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
 import { 
   ReceiptIndianRupee, 
   Search, 
@@ -72,43 +72,49 @@ export const DailySalesTracker: React.FC = () => {
     setExpandedSaleId(prev => prev === id ? null : id);
   };
 
-  const handleDownloadSalesPDF = () => {
-    exportReportToPDF({
-      title: language === 'mr' ? 'दैनिक विक्री व रोकड लेजर अहवाल' : language === 'hi' ? 'दैनिक बिक्री & रोकड़ रिपोर्ट' : 'Daily Sales & Cash/Online Ledger Report',
-      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP',
-      periodText: language === 'mr' ? 'निवडलेला कालावधी हिशोब' : 'चुनी गई अवधि का हिसाब',
-      kpis: [
-        { label: 'एकूण विक्री (Total Sales)', value: `₹${(metrics.totalSalesRevenue || 0).toLocaleString('en-IN')}`, color: 'emerald' },
-        { label: 'रोख जमा (Cash)', value: `₹${(metrics.cashCollected || 0).toLocaleString('en-IN')}`, color: 'blue' },
-        { label: 'ऑनलाईन UPI', value: `₹${(metrics.onlineCollected || 0).toLocaleString('en-IN')}`, color: 'purple' },
-        { label: 'उधारी दिली (Udhar)', value: `₹${(metrics.udharGiven || 0).toLocaleString('en-IN')}`, color: 'amber' }
+  const getSalesPDFPayload = () => ({
+    title: language === 'mr' ? 'दैनिक विक्री व रोकड लेजर अहवाल' : language === 'hi' ? 'दैनिक बिक्री & रोकड़ रिपोर्ट' : 'Daily Sales & Cash/Online Ledger Report',
+    subtitle: 'Yogeshwari Dairy Farm & Sweets ERP',
+    periodText: language === 'mr' ? 'निवडलेला कालावधी हिशोब' : 'चुनी गई अवधि का हिसाब',
+    kpis: [
+      { label: 'एकूण विक्री (Total Sales)', value: `₹${(metrics.totalSalesRevenue || 0).toLocaleString('en-IN')}`, color: 'emerald' },
+      { label: 'रोख जमा (Cash)', value: `₹${(metrics.cashCollected || 0).toLocaleString('en-IN')}`, color: 'blue' },
+      { label: 'ऑनलाईन UPI', value: `₹${(metrics.onlineCollected || 0).toLocaleString('en-IN')}`, color: 'purple' },
+      { label: 'उधारी दिली (Udhar)', value: `₹${(metrics.udharGiven || 0).toLocaleString('en-IN')}`, color: 'amber' }
+    ],
+    table: {
+      headers: ['बिल क्र.', 'तारीख', 'ग्राहक नाव', 'पेमेंट पद्धत', 'आयटम्स', 'सवलत (₹)', 'एकूण रक्कम (₹)'],
+      alignments: ['left', 'center', 'left', 'center', 'left', 'right', 'right'] as ('left' | 'center' | 'right')[],
+      rows: filtered.length > 0 ? filtered.map(s => [
+        s.invoice_no,
+        s.sale_date,
+        s.customer_name + (s.customer_phone ? ` (${s.customer_phone})` : ''),
+        s.payment_mode,
+        s.items ? s.items.map(i => `${i.product_name} x ${i.quantity}`).join(', ') : '—',
+        s.discount > 0 ? `₹${s.discount}` : '₹0',
+        `₹${s.net_amount.toLocaleString('en-IN')}`
+      ]) : [
+        ['—', '—', language === 'mr' ? 'या निवडलेल्या कालावधीत कोणतीही विक्री नोंद नाही' : 'इस अवधि में कोई बिक्री दर्ज नहीं', '—', '—', '—', '₹0']
       ],
-      table: {
-        headers: ['बिल क्र.', 'तारीख', 'ग्राहक नाव', 'पेमेंट पद्धत', 'आयटम्स', 'सवलत (₹)', 'एकूण रक्कम (₹)'],
-        alignments: ['left', 'center', 'left', 'center', 'left', 'right', 'right'],
-        rows: filtered.length > 0 ? filtered.map(s => [
-          s.invoice_no,
-          s.sale_date,
-          s.customer_name + (s.customer_phone ? ` (${s.customer_phone})` : ''),
-          s.payment_mode,
-          s.items ? s.items.map(i => `${i.product_name} x ${i.quantity}`).join(', ') : '—',
-          s.discount > 0 ? `₹${s.discount}` : '₹0',
-          `₹${s.net_amount.toLocaleString('en-IN')}`
-        ]) : [
-          ['—', '—', language === 'mr' ? 'या निवडलेल्या कालावधीत कोणतीही विक्री नोंद नाही' : 'इस अवधि में कोई बिक्री दर्ज नहीं', '—', '—', '—', '₹0']
-        ],
-        summaryRow: [
-          'एकूण (Total)',
-          `${filtered.length} बिले`,
-          '',
-          '',
-          '',
-          '',
-          `₹${(metrics.totalSalesRevenue || 0).toLocaleString('en-IN')}`
-        ]
-      },
-      notes: 'संगणकीय तयार केलेला अधिकृत विक्री अहवाल. रोकड व ऑनलाईन पावती तपासून घ्यावी.'
-    });
+      summaryRow: [
+        'एकूण (Total)',
+        `${filtered.length} बिले`,
+        '',
+        '',
+        '',
+        '',
+        `₹${(metrics.totalSalesRevenue || 0).toLocaleString('en-IN')}`
+      ]
+    },
+    notes: 'संगणकीय तयार केलेला अधिकृत विक्री अहवाल. रोकड व ऑनलाईन पावती तपासून घ्यावी.'
+  });
+
+  const handlePrintSalesPDF = () => {
+    printReport(getSalesPDFPayload());
+  };
+
+  const handleDownloadSalesPDF = () => {
+    downloadReportPDF(getSalesPDFPayload());
   };
 
   return (
@@ -132,22 +138,23 @@ export const DailySalesTracker: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
-            onClick={handleDownloadSalesPDF}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs"
-            title="Download PDF Report"
+            onClick={handlePrintSalesPDF}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
+            title={language === 'mr' ? 'अहवाल थेट प्रिंट करा' : language === 'hi' ? 'रिपोर्ट प्रिंट करें' : 'Print Sales Report'}
           >
-            <FileText className="w-4 h-4" />
-            <span>{language === 'mr' ? 'विक्री PDF डाउनलोड' : language === 'hi' ? 'बिक्री PDF डाउनलोड' : 'Download Sales PDF'}</span>
+            <Printer className="w-4 h-4 text-emerald-400" />
+            <span>{language === 'mr' ? 'प्रिंट (Print)' : language === 'hi' ? 'प्रिंट (Print)' : 'Print'}</span>
           </button>
 
           <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F]"
-            title="Print"
+            onClick={handleDownloadSalesPDF}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
+            title={language === 'mr' ? 'अहवाल PDF फाईल डाउनलोड करा' : language === 'hi' ? 'रिपोर्ट PDF डाउनलोड करें' : 'Download Sales PDF'}
           >
-            <Printer className="w-4 h-4" />
+            <Download className="w-4 h-4" />
+            <span>{language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
           </button>
         </div>
       </div>
@@ -472,13 +479,57 @@ export const DailySalesTracker: React.FC = () => {
               </div>
             </div>
 
-            <button
-              onClick={() => window.print()}
-              className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5"
-            >
-              <Printer className="w-4 h-4" />
-              <span>{t('print')}</span>
-            </button>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedSaleForView) {
+                    printReport({
+                      title: `विक्री बिल / Cash Memo (${selectedSaleForView.invoice_no})`,
+                      periodText: `बिल क्र. ${selectedSaleForView.invoice_no} | तारीख: ${selectedSaleForView.sale_date}`,
+                      kpis: [
+                        { label: 'एकूण रक्कम', value: `₹${selectedSaleForView.net_amount}`, color: 'emerald' },
+                        { label: 'पेमेंट मोड', value: selectedSaleForView.payment_mode, color: 'blue' }
+                      ],
+                      table: {
+                        headers: ['वस्तू', 'नग/प्रमाण', 'दर', 'एकूण'],
+                        rows: selectedSaleForView.items?.map(i => [i.product_name, `${i.quantity} ${i.unit}`, `₹${i.unit_price}`, `₹${i.total_price}`]) || [],
+                        summaryRow: ['एकूण', '', '', `₹${selectedSaleForView.net_amount}`]
+                      }
+                    });
+                  }
+                }}
+                className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                <Printer className="w-4 h-4 text-emerald-400" />
+                <span>{language === 'mr' ? 'बिल प्रिंट' : language === 'hi' ? 'बिल प्रिंट' : 'Print Bill'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedSaleForView) {
+                    downloadReportPDF({
+                      title: `Bill_${selectedSaleForView.invoice_no}`,
+                      periodText: `बिल क्र. ${selectedSaleForView.invoice_no} | तारीख: ${selectedSaleForView.sale_date}`,
+                      kpis: [
+                        { label: 'एकूण रक्कम', value: `₹${selectedSaleForView.net_amount}`, color: 'emerald' },
+                        { label: 'पेमेंट मोड', value: selectedSaleForView.payment_mode, color: 'blue' }
+                      ],
+                      table: {
+                        headers: ['वस्तू', 'नग/प्रमाण', 'दर', 'एकूण'],
+                        rows: selectedSaleForView.items?.map(i => [i.product_name, `${i.quantity} ${i.unit}`, `₹${i.unit_price}`, `₹${i.total_price}`]) || [],
+                        summaryRow: ['एकूण', '', '', `₹${selectedSaleForView.net_amount}`]
+                      }
+                    });
+                  }
+                }}
+                className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                <Download className="w-4 h-4" />
+                <span>{language === 'mr' ? 'बिल PDF' : language === 'hi' ? 'बिल PDF' : 'Download PDF'}</span>
+              </button>
+            </div>
 
           </div>
         </div>

@@ -34,9 +34,11 @@ import {
   Calendar,
   Clock,
   Barcode,
-  FileText
+  FileText,
+  Printer,
+  Download
 } from 'lucide-react';
-import { exportReportToPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 
 interface ProductListProps {
@@ -118,44 +120,50 @@ export const ProductList: React.FC<ProductListProps> = ({
     return products.reduce((sum, p) => sum + (p.stock_quantity * p.selling_price), 0);
   }, [products]);
 
+  const getStockReportPayload = () => ({
+    title: language === 'mr' ? 'दुकान शिल्लक माल व साठा मूल्यांकन अहवाल' : language === 'hi' ? 'दुकान स्टॉक व मूल्यांकन रिपोर्ट' : 'Dairy Inventory Stock Valuation & Catalog Report',
+    subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Product Inventory',
+    periodText: language === 'mr' ? 'सद्यस्थिती साठा मूल्य' : 'वर्तमान स्टॉक इन्वेंटरी',
+    kpis: [
+      { label: 'एकूण उत्पादने (Total SKUs)', value: `${products.length} वस्तू`, color: 'emerald' },
+      { label: 'खरेदीनुसार साठा मूल्य (Cost)', value: `₹${totalStockCostValuation.toLocaleString('en-IN')}`, color: 'blue' },
+      { label: 'विक्रीनुकसार साठा मूल्य (Retail)', value: `₹${totalStockRetailValuation.toLocaleString('en-IN')}`, color: 'purple' },
+      { label: 'कमी साठा (Low Stock)', value: `${lowStockCount + outOfStockCount} उत्पादने`, color: 'rose' }
+    ],
+    table: {
+      headers: ['उत्पादनाचे नाव (Product)', 'प्रवर्ग (Category)', 'शिल्लक साठा', 'खरेदी दर', 'विक्री दर', 'किमान मर्यादा', 'साठा मूल्य (₹)'],
+      alignments: ['left', 'center', 'right', 'right', 'right', 'center', 'right'] as ('left' | 'center' | 'right')[],
+      rows: filteredProducts.map(p => {
+        const val = p.stock_quantity * p.purchase_price;
+        return [
+          getProductDisplayName(p),
+          p.category,
+          `${p.stock_quantity} ${p.unit}`,
+          `₹${p.purchase_price}`,
+          `₹${p.selling_price}`,
+          `${p.min_stock_alert} ${p.unit}`,
+          `₹${val.toLocaleString('en-IN')}`
+        ];
+      }),
+      summaryRow: [
+        'एकूण (Total)',
+        `${filteredProducts.length} उत्पादने`,
+        '',
+        '',
+        '',
+        '',
+        `₹${filteredProducts.reduce((sum, p) => sum + (p.stock_quantity * p.purchase_price), 0).toLocaleString('en-IN')}`
+      ]
+    },
+    notes: 'दुकान साठा तपशील. कमी साठा असलेली उत्पादने वेळेत खरेदी करावीत.'
+  });
+
+  const handlePrintStockPDF = () => {
+    printReport(getStockReportPayload());
+  };
+
   const handleDownloadStockPDF = () => {
-    exportReportToPDF({
-      title: language === 'mr' ? 'दुकान शिल्लक माल व साठा मूल्यांकन अहवाल' : language === 'hi' ? 'दुकान स्टॉक व मूल्यांकन रिपोर्ट' : 'Dairy Inventory Stock Valuation & Catalog Report',
-      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Product Inventory',
-      periodText: language === 'mr' ? 'सद्यस्थिती साठा मूल्य' : 'वर्तमान स्टॉक इन्वेंटरी',
-      kpis: [
-        { label: 'एकूण उत्पादने (Total SKUs)', value: `${products.length} वस्तू`, color: 'emerald' },
-        { label: 'खरेदीनुसार साठा मूल्य (Cost)', value: `₹${totalStockCostValuation.toLocaleString('en-IN')}`, color: 'blue' },
-        { label: 'विक्रीनुकसार साठा मूल्य (Retail)', value: `₹${totalStockRetailValuation.toLocaleString('en-IN')}`, color: 'purple' },
-        { label: 'कमी साठा (Low Stock)', value: `${lowStockCount + outOfStockCount} उत्पादने`, color: 'rose' }
-      ],
-      table: {
-        headers: ['उत्पादनाचे नाव (Product)', 'प्रवर्ग (Category)', 'शिल्लक साठा', 'खरेदी दर', 'विक्री दर', 'किमान मर्यादा', 'साठा मूल्य (₹)'],
-        alignments: ['left', 'center', 'right', 'right', 'right', 'center', 'right'],
-        rows: filteredProducts.map(p => {
-          const val = p.stock_quantity * p.purchase_price;
-          return [
-            getProductDisplayName(p),
-            p.category,
-            `${p.stock_quantity} ${p.unit}`,
-            `₹${p.purchase_price}`,
-            `₹${p.selling_price}`,
-            `${p.min_stock_alert} ${p.unit}`,
-            `₹${val.toLocaleString('en-IN')}`
-          ];
-        }),
-        summaryRow: [
-          'एकूण (Total)',
-          `${filteredProducts.length} उत्पादने`,
-          '',
-          '',
-          '',
-          '',
-          `₹${filteredProducts.reduce((sum, p) => sum + (p.stock_quantity * p.purchase_price), 0).toLocaleString('en-IN')}`
-        ]
-      },
-      notes: 'दुकान साठा तपशील. कमी साठा असलेली उत्पादने वेळेत खरेदी करावीत.'
-    });
+    downloadReportPDF(getStockReportPayload());
   };
 
   const getProductDisplayName = (prod: Product) => {
@@ -288,13 +296,23 @@ export const ProductList: React.FC<ProductListProps> = ({
             </button>
           )}
 
+          {/* Print PDF Button */}
+          <button
+            onClick={handlePrintStockPDF}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            title="Print Stock Valuation Report"
+          >
+            <Printer className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+          </button>
+
           {/* PDF Download Button */}
           <button
             onClick={handleDownloadStockPDF}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F]"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition-all border border-emerald-300 dark:border-emerald-700/60 active:scale-95"
             title="Download Stock Valuation PDF"
           >
-            <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>{language === 'mr' ? 'साठा PDF' : language === 'hi' ? 'स्टॉक PDF' : 'Stock PDF'}</span>
           </button>
 

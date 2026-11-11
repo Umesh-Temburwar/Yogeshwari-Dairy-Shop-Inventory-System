@@ -3,7 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { computeExpiryStatus, ExpiryStatus } from '../../lib/shelfLifeUtils';
 import { ProductBatch, DamageReason } from '../../types';
-import { exportReportToPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
 import {
   AlertTriangle,
   Clock,
@@ -21,6 +21,7 @@ import {
   IndianRupee,
   TrendingDown,
   FileText,
+  Download,
   X
 } from 'lucide-react';
 
@@ -230,45 +231,51 @@ export const ExpiryDashboard: React.FC = () => {
     }
   };
 
+  const getExpiryReportPayload = () => ({
+    title: language === 'mr' ? 'मुदत समाप्ती व एक्सपायरी जोखीम अहवाल' : language === 'hi' ? 'एक्सपायरी डेट व जोखिम रिपोर्ट' : 'Expiry Management & Risk Assessment Report',
+    subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Batch Expiry Control',
+    periodText: language === 'mr' ? 'आजपर्यंतची सर्व बॅचेस स्थिती' : 'आज तक का संपूर्ण बैच स्टेटस',
+    kpis: [
+      { label: 'मुदत संपलेला माल (Expired)', value: `₹${kpis.expiredCostLoss.toLocaleString('en-IN')}`, color: 'rose' },
+      { label: 'आज एक्सपायर होणारे (Today)', value: `₹${kpis.todayAtRiskValue.toLocaleString('en-IN')}`, color: 'rose' },
+      { label: '३ दिवसांत मुदत संपणारे (In 3 Days)', value: `₹${kpis.nearExpiryRiskTotal.toLocaleString('en-IN')}`, color: 'amber' },
+      { label: 'एकूण सक्रिय साठा (Active Cost)', value: `₹${kpis.totalStockCost.toLocaleString('en-IN')}`, color: 'emerald' }
+    ],
+    table: {
+      headers: ['उत्पादन (Product)', 'बॅच क्र.', 'शिल्लक नग', 'खरेदी दर', 'विक्री दर', 'एक्सपायरी दिनांक', 'स्थिती (Status)', 'जोखीम मूल्य (₹)'],
+      alignments: ['left', 'center', 'right', 'right', 'right', 'center', 'center', 'right'] as ('left' | 'center' | 'right')[],
+      rows: filteredBatches.map(b => [
+        getProductDisplayName(b),
+        b.batch_no || '—',
+        `${b.qty_remaining} ${b.product?.unit || ''}`,
+        `₹${b.purchase_price}`,
+        `₹${b.selling_price || b.product?.selling_price || 0}`,
+        b.expiry_date,
+        b.daysToExpiry < 0 ? `मुदत संपली (${Math.abs(b.daysToExpiry)} दिवस आधी)` :
+          b.daysToExpiry === 0 ? 'आज शेवटचा दिवस' :
+            b.daysToExpiry === 1 ? 'उद्या संपणार' : `${b.daysToExpiry} दिवस शिल्लक`,
+        `₹${b.costValue.toLocaleString('en-IN')}`
+      ]),
+      summaryRow: [
+        'एकूण (Total)',
+        `${filteredBatches.length} बॅचेस`,
+        '',
+        '',
+        '',
+        '',
+        '',
+        `₹${filteredBatches.reduce((sum, b) => sum + b.costValue, 0).toLocaleString('en-IN')}`
+      ]
+    },
+    notes: 'FEFO नियमानुसार प्रथम मुदत संपणारा माल आधी विक्री करावा. मुदत संपलेला माल विक्रीसाठी ग्राह्य धरू नये.'
+  });
+
+  const handlePrintExpiryPDF = () => {
+    printReport(getExpiryReportPayload());
+  };
+
   const handleDownloadExpiryPDF = () => {
-    exportReportToPDF({
-      title: language === 'mr' ? 'मुदत समाप्ती व एक्सपायरी जोखीम अहवाल' : language === 'hi' ? 'एक्सपायरी डेट व जोखिम रिपोर्ट' : 'Expiry Management & Risk Assessment Report',
-      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Batch Expiry Control',
-      periodText: language === 'mr' ? 'आजपर्यंतची सर्व बॅचेस स्थिती' : 'आज तक का संपूर्ण बैच स्टेटस',
-      kpis: [
-        { label: 'मुदत संपलेला माल (Expired)', value: `₹${kpis.expiredCostLoss.toLocaleString('en-IN')}`, color: 'rose' },
-        { label: 'आज एक्सपायर होणारे (Today)', value: `₹${kpis.todayAtRiskValue.toLocaleString('en-IN')}`, color: 'rose' },
-        { label: '३ दिवसांत मुदत संपणारे (In 3 Days)', value: `₹${kpis.nearExpiryRiskTotal.toLocaleString('en-IN')}`, color: 'amber' },
-        { label: 'एकूण सक्रिय साठा (Active Cost)', value: `₹${kpis.totalStockCost.toLocaleString('en-IN')}`, color: 'emerald' }
-      ],
-      table: {
-        headers: ['उत्पादन (Product)', 'बॅच क्र.', 'शिल्लक नग', 'खरेदी दर', 'विक्री दर', 'एक्सपायरी दिनांक', 'स्थिती (Status)', 'जोखीम मूल्य (₹)'],
-        alignments: ['left', 'center', 'right', 'right', 'right', 'center', 'center', 'right'],
-        rows: filteredBatches.map(b => [
-          getProductDisplayName(b),
-          b.batch_no || '—',
-          `${b.qty_remaining} ${b.product?.unit || ''}`,
-          `₹${b.purchase_price}`,
-          `₹${b.selling_price || b.product?.selling_price || 0}`,
-          b.expiry_date,
-          b.daysToExpiry < 0 ? `मुदत संपली (${Math.abs(b.daysToExpiry)} दिवस आधी)` :
-            b.daysToExpiry === 0 ? 'आज शेवटचा दिवस' :
-              b.daysToExpiry === 1 ? 'उद्या संपणार' : `${b.daysToExpiry} दिवस शिल्लक`,
-          `₹${b.costValue.toLocaleString('en-IN')}`
-        ]),
-        summaryRow: [
-          'एकूण (Total)',
-          `${filteredBatches.length} बॅचेस`,
-          '',
-          '',
-          '',
-          '',
-          '',
-          `₹${filteredBatches.reduce((sum, b) => sum + b.costValue, 0).toLocaleString('en-IN')}`
-        ]
-      },
-      notes: 'FEFO नियमानुसार प्रथम मुदत संपणारा माल आधी विक्री करावा. मुदत संपलेला माल विक्रीसाठी ग्राह्य धरू नये.'
-    });
+    downloadReportPDF(getExpiryReportPayload());
   };
 
   return (
@@ -295,28 +302,29 @@ export const ExpiryDashboard: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2">
           <button
+            onClick={handlePrintExpiryPDF}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            title="Print Expiry Report"
+          >
+            <Printer className="w-4 h-4 text-rose-300" />
+            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+          </button>
+
+          <button
             onClick={handleDownloadExpiryPDF}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
             title="Download PDF Report"
           >
-            <FileText className="w-4 h-4" />
-            <span>{language === 'mr' ? 'एक्सपायरी PDF' : language === 'hi' ? 'एक्सपायरी PDF' : 'Download Expiry PDF'}</span>
+            <Download className="w-4 h-4" />
+            <span>{language === 'mr' ? 'एक्सपायरी PDF' : language === 'hi' ? 'एक्सपायरी PDF' : 'Download PDF'}</span>
           </button>
 
           <button
             onClick={handleCopyWhatsAppAlert}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
           >
             {copiedAlert ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             <span>{copiedAlert ? (language === 'mr' ? 'अलर्ट कॉपी झाला!' : 'अलर्ट कॉपी हुआ!') : (language === 'mr' ? 'व्हाट्सॲप रिस्क अलर्ट' : 'व्हाट्सएप अलर्ट')}</span>
-          </button>
-
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 transition-all"
-          >
-            <Printer className="w-4 h-4" />
-            <span>{t('print')}</span>
           </button>
         </div>
       </div>

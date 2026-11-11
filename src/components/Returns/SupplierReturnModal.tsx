@@ -14,8 +14,10 @@ import {
   RefreshCw, 
   Clock, 
   FileText,
+  Download,
   BadgeAlert
 } from 'lucide-react';
+import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
 import { YDO_LOGO_BASE64 } from '../../assets/logoBase64';
 
 interface SupplierReturnModalProps {
@@ -118,8 +120,43 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
     }
   };
 
+  const getDebitNotePayload = () => {
+    if (!completedReturn) return null;
+    return {
+      title: `सप्लायर माल परतावा डेबिट नोट / Debit Note (${completedReturn.return_no})`,
+      periodText: `डेबिट नोट क्र. ${completedReturn.return_no} | तारीख: ${completedReturn.return_date}`,
+      kpis: [
+        { label: 'एकूण रिफंड दावा', value: `₹${completedReturn.total_refund_amount.toLocaleString('en-IN')}`, color: 'rose' },
+        { label: 'रिफंड स्थिती', value: completedReturn.refund_status, color: 'blue' }
+      ],
+      table: {
+        headers: ['सप्लायर नाव', 'उत्पादन', 'बॅच क्र.', 'नग/प्रमाण', 'दर (₹)', 'एकूण रिफंड दावा (₹)', 'कारण'],
+        rows: [
+          [
+            completedReturn.supplier_name,
+            completedReturn.product_name,
+            completedReturn.batch_no || '—',
+            `${completedReturn.quantity} ${completedReturn.unit}`,
+            `₹${completedReturn.purchase_price}`,
+            `₹${completedReturn.total_refund_amount.toLocaleString('en-IN')}`,
+            completedReturn.reason
+          ]
+        ],
+        summaryRow: ['एकूण रिफंड दावा', '', '', '', '', `₹${completedReturn.total_refund_amount.toLocaleString('en-IN')}`, '']
+      },
+      notes: `सप्लायर स्वाक्षरी: ___________________ | अधिकृत स्वाक्षरी: योगेश्वरी डेअरी. डेबिट नोट रक्कम पुढील बिलात वजावट करावी किंवा बँक खात्यात जमा करावी.`
+    };
+  };
+
   const handlePrintDebitNote = () => {
-    window.print();
+    const payload = getDebitNotePayload();
+    if (payload) printReport(payload);
+    else window.print();
+  };
+
+  const handleDownloadDebitNotePDF = () => {
+    const payload = getDebitNotePayload();
+    if (payload) downloadReportPDF(payload);
   };
 
   return (
@@ -191,19 +228,29 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
               )}
             </div>
 
-            <div className="flex gap-2 pt-2">
+            <div className="grid grid-cols-3 gap-2 pt-2">
               <button
                 type="button"
                 onClick={handlePrintDebitNote}
-                className="flex-1 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 border border-slate-200 dark:border-[#24352F]"
+                className="py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs"
+                title="Print Debit Note Voucher"
               >
-                <Printer className="w-4 h-4 text-emerald-600" />
-                <span>{language === 'mr' ? 'पावती प्रिंट (Debit Note)' : 'रसीद प्रिंट करें'}</span>
+                <Printer className="w-4 h-4 text-emerald-400" />
+                <span>{language === 'mr' ? 'प्रिंट' : 'प्रिंट'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadDebitNotePDF}
+                className="py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5"
+                title="Download Debit Note PDF"
+              >
+                <Download className="w-4 h-4" />
+                <span>{language === 'mr' ? 'डेबिट नोट PDF' : 'डेबिट नोट PDF'}</span>
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition active:scale-95"
+                className="py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs transition active:scale-95 border border-slate-200 dark:border-[#24352F]"
               >
                 {language === 'mr' ? 'पूर्ण झाले (Done)' : 'संपन्न (Done)'}
               </button>

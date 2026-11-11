@@ -9,11 +9,12 @@ import {
   Truck,
   CheckCircle2,
   FileText,
+  Download,
   TrendingUp,
   Sparkles,
   RotateCcw
 } from 'lucide-react';
-import { exportReportToPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF } from '../../lib/exportUtils';
 import { computeExpiryStatus } from '../../lib/shelfLifeUtils';
 
 export const ReorderNeedsView: React.FC = () => {
@@ -114,46 +115,52 @@ export const ReorderNeedsView: React.FC = () => {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleDownloadReorderPDF = () => {
-    exportReportToPDF({
-      title: language === 'mr' ? 'माल खरेदी मागणी पत्रक (Reorder Sheet)' : language === 'hi' ? 'सामान खरीद मांग पत्रक (Reorder Sheet)' : 'Procurement & Reorder Requirements Sheet',
-      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Supplier Restock Order',
-      periodText: language === 'mr' ? 'तात्काळ आवश्यक माल मागणी' : 'तत्काल आवश्यक मांग',
-      kpis: [
-        { label: 'एकूण आवश्यक वस्तू', value: `${itemsNeedingRestock.length} उत्पादने`, color: 'rose' },
-        { label: 'संपलेली उत्पादने (0 साठा)', value: `${itemsNeedingRestock.filter(i => i.isCritical).length} उत्पादने`, color: 'rose' },
-        { label: 'अंदाजे खरेदी बजेट', value: `₹${totalEstimatedCost.toLocaleString('en-IN')}`, color: 'amber' }
+  const getReorderPayload = () => ({
+    title: language === 'mr' ? 'माल खरेदी मागणी पत्रक (Reorder Sheet)' : language === 'hi' ? 'सामान खरीद मांग पत्रक (Reorder Sheet)' : 'Procurement & Reorder Requirements Sheet',
+    subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Supplier Restock Order',
+    periodText: language === 'mr' ? 'तात्काळ आवश्यक माल मागणी' : 'तत्काल आवश्यक मांग',
+    kpis: [
+      { label: 'एकूण आवश्यक वस्तू', value: `${itemsNeedingRestock.length} उत्पादने`, color: 'rose' },
+      { label: 'संपलेली उत्पादने (0 साठा)', value: `${itemsNeedingRestock.filter(i => i.isCritical).length} उत्पादने`, color: 'rose' },
+      { label: 'अंदाजे खरेदी बजेट', value: `₹${totalEstimatedCost.toLocaleString('en-IN')}`, color: 'amber' }
+    ],
+    table: {
+      headers: ['अ.क्र.', 'उत्पादनाचे नाव (Product)', 'प्रवर्ग (Category)', 'सध्याचा साठा', 'किमान मर्यादा', 'मागणी प्रमाण (Order Qty)', 'अंदाजे दर (₹)', 'एकूण रक्कम (₹)'],
+      alignments: ['center', 'left', 'center', 'right', 'right', 'right', 'right', 'right'] as ('center' | 'left' | 'right')[],
+      rows: itemsNeedingRestock.length > 0 ? itemsNeedingRestock.map((it, idx) => [
+        idx + 1,
+        getDisplayName(it),
+        it.category,
+        `${it.stock_quantity} ${it.unit}`,
+        `${it.min_stock_alert} ${it.unit}`,
+        `${it.recommendedOrderQty} ${it.unit}`,
+        `₹${it.purchase_price}`,
+        `₹${it.estimatedCost.toLocaleString('en-IN')}`
+      ]) : [
+        [1, language === 'mr' ? 'सर्व उत्पादने पुरेशा साठ्यात उपलब्ध आहेत (साठा सुरक्षित)' : 'सभी उत्पाद पर्याप्त स्टॉक में उपलब्ध हैं (सुरक्षित)', '—', '—', '—', '—', '—', '₹0']
       ],
-      table: {
-        headers: ['अ.क्र.', 'उत्पादनाचे नाव (Product)', 'प्रवर्ग (Category)', 'सध्याचा साठा', 'किमान मर्यादा', 'मागणी प्रमाण (Order Qty)', 'अंदाजे दर (₹)', 'एकूण रक्कम (₹)'],
-        alignments: ['center', 'left', 'center', 'right', 'right', 'right', 'right', 'right'],
-        rows: itemsNeedingRestock.length > 0 ? itemsNeedingRestock.map((it, idx) => [
-          idx + 1,
-          getDisplayName(it),
-          it.category,
-          `${it.stock_quantity} ${it.unit}`,
-          `${it.min_stock_alert} ${it.unit}`,
-          `${it.recommendedOrderQty} ${it.unit}`,
-          `₹${it.purchase_price}`,
-          `₹${it.estimatedCost.toLocaleString('en-IN')}`
-        ]) : [
-          [1, language === 'mr' ? 'सर्व उत्पादने पुरेशा साठ्यात उपलब्ध आहेत (साठा सुरक्षित)' : 'सभी उत्पाद पर्याप्त स्टॉक में उपलब्ध हैं (सुरक्षित)', '—', '—', '—', '—', '—', '₹0']
-        ],
-        summaryRow: [
-          'एकूण (Total)',
-          `${itemsNeedingRestock.length} वस्तू`,
-          '',
-          '',
-          '',
-          '',
-          '',
-          `₹${totalEstimatedCost.toLocaleString('en-IN')}`
-        ]
-      },
-      notes: itemsNeedingRestock.length > 0 
-        ? 'सदर माल लवकरात लवकर पुरवठादार/सप्लायरकडून मागवून घ्यावा.'
-        : 'सध्या दुकानातील सर्व साठा सुरक्षित मर्यादेत आहे. कोणत्याही तात्काळ मागणीची गरज नाही.'
-    });
+      summaryRow: [
+        'एकूण (Total)',
+        `${itemsNeedingRestock.length} वस्तू`,
+        '',
+        '',
+        '',
+        '',
+        '',
+        `₹${totalEstimatedCost.toLocaleString('en-IN')}`
+      ]
+    },
+    notes: itemsNeedingRestock.length > 0 
+      ? 'सदर माल लवकरात लवकर पुरवठादार/सप्लायरकडून मागवून घ्यावा.'
+      : 'सध्या दुकानातील सर्व साठा सुरक्षित मर्यादेत आहे. कोणत्याही तात्काळ मागणीची गरज नाही.'
+  });
+
+  const handlePrintReorderPDF = () => {
+    printReport(getReorderPayload());
+  };
+
+  const handleDownloadReorderPDF = () => {
+    downloadReportPDF(getReorderPayload());
   };
 
   return (
@@ -176,28 +183,29 @@ export const ReorderNeedsView: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2">
           <button
+            onClick={handlePrintReorderPDF}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            title="Print Reorder Sheet"
+          >
+            <Printer className="w-4 h-4 text-amber-300" />
+            <span>{language === 'mr' ? 'प्रिंट (Print)' : language === 'hi' ? 'प्रिंट (Print)' : 'Print'}</span>
+          </button>
+
+          <button
             onClick={handleDownloadReorderPDF}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
             title="Download PDF Order Sheet"
           >
-            <FileText className="w-4 h-4" />
-            <span>{language === 'mr' ? 'मागणी पत्रक PDF' : language === 'hi' ? 'मांग पत्रक PDF' : 'Download Order PDF'}</span>
+            <Download className="w-4 h-4" />
+            <span>{language === 'mr' ? 'मागणी पत्रक PDF' : language === 'hi' ? 'मांग पत्रक PDF' : 'Download PDF'}</span>
           </button>
 
           <button
             onClick={handleCopyWhatsAppList}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? t('orderCopied') : t('copyWhatsAppOrder')}</span>
-          </button>
-
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 transition-all active:scale-95"
-          >
-            <Printer className="w-4 h-4" />
-            <span>{t('print')}</span>
           </button>
         </div>
       </div>

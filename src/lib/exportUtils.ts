@@ -32,7 +32,22 @@ export interface PDFReportOptions {
   notes?: string;
   author?: string;
   orientation?: 'portrait' | 'landscape';
+  mode?: 'print' | 'download';
 }
+
+/**
+ * Convenience alias for Printing Report / Slip
+ */
+export const printReport = (options: PDFReportOptions) => {
+  return exportReportToPDF({ ...options, mode: 'print' });
+};
+
+/**
+ * Convenience alias for Downloading PDF / Report File
+ */
+export const downloadReportPDF = (options: PDFReportOptions) => {
+  return exportReportToPDF({ ...options, mode: 'download' });
+};
 
 /**
  * Universal PDF Generator for all Dairy Inventory modules
@@ -310,19 +325,22 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
     </head>
     <body>
       <!-- Top Action Bar (Hidden during Print / PDF generation) -->
-      <div class="no-print" style="position: sticky; top: 0; z-index: 9999; background: #064e3b; color: #ffffff; padding: 12px 18px; margin: -10px -10px 14px -10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-family: sans-serif;">
+      <div class="no-print" style="position: sticky; top: 0; z-index: 9999; background: #064e3b; color: #ffffff; padding: 10px 18px; margin: -10px -10px 14px -10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-family: sans-serif; flex-wrap: wrap; gap: 8px;">
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 16px;">📄</span>
+          <span style="font-size: 18px;">📄</span>
           <div>
             <div style="font-weight: 800; font-size: 13px; color: #ecfdf5;">योगेश्वरी डेअरी अहवाल (Official Dairy Report)</div>
-            <div style="font-size: 10px; color: #a7f3d0;">PDF स्वरूपात सेव्ह करण्यासाठी खालील बटण दाबा</div>
+            <div style="font-size: 10px; color: #a7f3d0;">प्रिंट करा किंवा PDF स्वरूपात सेव्ह करा</div>
           </div>
         </div>
-        <div style="display: flex; gap: 8px;">
-          <button onclick="window.print()" style="background: #10b981; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            <span>🖨️ PDF सेव्ह / प्रिंट करा (Save as PDF)</span>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button onclick="window.print()" style="background: #10b981; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            <span>🖨️ प्रिंट (Print PDF)</span>
           </button>
-          <button onclick="window.close()" style="background: #334155; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer;">
+          <button onclick="downloadReportHTML()" style="background: #2563eb; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            <span>📥 डाउनलोड PDF / अहवाल (Download)</span>
+          </button>
+          <button onclick="window.close()" style="background: #334155; color: #ffffff; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer;">
             ✕ बंद करा
           </button>
         </div>
@@ -377,7 +395,20 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
             console.error('Print trigger error', e);
           }
         }
-        setTimeout(triggerPrint, 350);
+        function downloadReportHTML() {
+          try {
+            const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = '${title.replace(/[^a-zA-Z0-9_\u0900-\u097F]/g, '_')}_${new Date().toISOString().split('T')[0]}.html';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => a.remove(), 100);
+          } catch(e) {
+            window.print();
+          }
+        }
+        ${options.mode === 'download' ? '' : 'setTimeout(triggerPrint, 350);'}
       </script>
     </body>
     </html>
@@ -386,6 +417,21 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
   // Create Blob URL for rock-solid cross-browser rendering
   const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
   const blobUrl = URL.createObjectURL(blob);
+  const cleanFilename = `${title.replace(/[^a-zA-Z0-9_\u0900-\u097F]/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
+
+  // If mode === 'download', trigger direct file download
+  if (options.mode === 'download') {
+    try {
+      const downloadLink = document.createElement('a');
+      downloadLink.href = blobUrl;
+      downloadLink.download = cleanFilename;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      setTimeout(() => downloadLink.remove(), 200);
+    } catch (err) {
+      console.warn('Direct file download warning:', err);
+    }
+  }
 
   // 1. Try opening dedicated Print & PDF preview tab
   let printWindow: Window | null = null;
@@ -431,20 +477,25 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
   const topBar = document.createElement('div');
   topBar.style.backgroundColor = '#064e3b';
   topBar.style.color = '#ffffff';
-  topBar.style.padding = '12px 18px';
+  topBar.style.padding = '10px 16px';
   topBar.style.display = 'flex';
   topBar.style.justifyContent = 'space-between';
   topBar.style.alignItems = 'center';
+  topBar.style.flexWrap = 'wrap';
+  topBar.style.gap = '8px';
   topBar.innerHTML = `
     <div style="display: flex; align-items: center; gap: 8px;">
       <span style="font-size: 16px;">📄</span>
       <span style="font-weight: 800; font-size: 13px;">${title} — अधिकृत PDF अहवाल</span>
     </div>
-    <div style="display: flex; gap: 8px;">
-      <button id="yd-modal-print-btn" style="background: #10b981; color: white; border: none; padding: 7px 14px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">
-        🖨️ PDF सेव्ह / प्रिंट करा
+    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+      <button id="yd-modal-print-btn" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">
+        🖨️ प्रिंट (Print PDF)
       </button>
-      <button id="yd-modal-close-btn" style="background: #334155; color: white; border: none; padding: 7px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">
+      <button id="yd-modal-download-btn" style="background: #2563eb; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">
+        📥 डाउनलोड (Download)
+      </button>
+      <button id="yd-modal-close-btn" style="background: #334155; color: white; border: none; padding: 6px 10px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">
         ✕ बंद करा
       </button>
     </div>
@@ -462,6 +513,7 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
   document.body.appendChild(modalContainer);
 
   const printBtn = modalContainer.querySelector('#yd-modal-print-btn');
+  const downloadBtn = modalContainer.querySelector('#yd-modal-download-btn');
   const closeBtn = modalContainer.querySelector('#yd-modal-close-btn');
 
   printBtn?.addEventListener('click', () => {
@@ -470,6 +522,19 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
       iframe.contentWindow?.print();
     } catch (e) {
       window.print();
+    }
+  });
+
+  downloadBtn?.addEventListener('click', () => {
+    try {
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = cleanFilename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => a.remove(), 200);
+    } catch (e) {
+      iframe.contentWindow?.print();
     }
   });
 

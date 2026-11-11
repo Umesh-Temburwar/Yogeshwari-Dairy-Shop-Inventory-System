@@ -24,10 +24,11 @@ import { ReturnProductModal } from './components/Returns/ReturnProductModal';
 import { AddProductModal } from './components/Inventory/AddProductModal';
 import { SupabaseConfigModal } from './components/Settings/SupabaseConfigModal';
 import { MasterSecurityModal } from './components/Auth/MasterSecurityModal';
+import { RotateCw } from 'lucide-react';
 import { Product } from './types';
 
 const MainContent: React.FC = () => {
-  const { activeView, setActiveView } = useStore();
+  const { activeView, setActiveView, refreshData, isSyncing } = useStore();
 
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
@@ -38,6 +39,11 @@ const MainContent: React.FC = () => {
   // Sidebar states: Collapsible on desktop (264px <-> 72px) and Drawer on mobile
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Pull-to-refresh mobile state
+  const [pullY, setPullY] = useState(0);
+  const [isPulling, setIsPulling] = useState(false);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
 
   // Global Keyboard Shortcuts (F2, F3, F4)
   useEffect(() => {
@@ -58,6 +64,52 @@ const MainContent: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [setActiveView]);
+
+  // Handle hardware / browser Back button when modals or mobile drawers are open
+  useEffect(() => {
+    const isAnyModalOpen = isAddProductOpen || isSettingsOpen || isReturnModalOpen || isMobileSidebarOpen;
+    if (isAnyModalOpen) {
+      window.history.pushState({ modalOpen: true }, '');
+      const handleModalPop = () => {
+        if (isMobileSidebarOpen) setIsMobileSidebarOpen(false);
+        if (isAddProductOpen) { setIsAddProductOpen(false); setProductToEdit(null); }
+        if (isSettingsOpen) setIsSettingsOpen(false);
+        if (isReturnModalOpen) setIsReturnModalOpen(false);
+      };
+      window.addEventListener('popstate', handleModalPop, { once: true });
+      return () => {
+        window.removeEventListener('popstate', handleModalPop);
+      };
+    }
+  }, [isAddProductOpen, isSettingsOpen, isReturnModalOpen, isMobileSidebarOpen]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const mainEl = e.currentTarget;
+    if (mainEl.scrollTop <= 0) {
+      setTouchStartY(e.touches[0].clientY);
+    } else {
+      setTouchStartY(null);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY === null) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - touchStartY;
+    if (diff > 0 && e.currentTarget.scrollTop <= 0) {
+      setPullY(Math.min(diff * 0.45, 80));
+      setIsPulling(true);
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (pullY > 50) {
+      await refreshData();
+    }
+    setPullY(0);
+    setIsPulling(false);
+    setTouchStartY(null);
+  };
 
   const handleEditProduct = (prod: Product) => {
     setProductToEdit(prod);
@@ -84,7 +136,22 @@ const MainContent: React.FC = () => {
         />
 
         {/* Main Content Area - pb-24 on mobile prevents bottom nav overlap */}
-        <main className="flex-1 h-full p-3 sm:p-6 min-w-0 overflow-y-auto pb-24 lg:pb-6 overscroll-contain">
+        <main 
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className="flex-1 h-full p-3 sm:p-6 min-w-0 overflow-y-auto pb-24 lg:pb-6 overscroll-y-auto relative"
+        >
+          {/* Mobile Pull-to-Refresh Indicator */}
+          {(isPulling || (isSyncing && pullY > 0)) && (
+            <div 
+              style={{ height: `${pullY}px` }} 
+              className="sm:hidden flex items-center justify-center overflow-hidden transition-all duration-150 text-emerald-700 dark:text-emerald-400 font-bold text-xs gap-2 bg-emerald-50/80 dark:bg-emerald-950/30 rounded-xl mb-2"
+            >
+              <RotateCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isSyncing ? 'रिफ्रेश होत आहे...' : pullY > 50 ? 'सोडून द्या (रिफ्रेश करा)' : 'खाली ओढा (रिफ्रेश)'}</span>
+            </div>
+          )}
           {activeView === 'dashboard' && (
             <DashboardView 
               onOpenAddProduct={() => {

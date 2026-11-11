@@ -111,7 +111,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   const outOfStockCount = products.filter(p => p.stock_quantity <= 0).length;
 
   const totalStockCostValuation = useMemo(() => {
-    return products.reduce((sum, p) => sum + (p.stock_quantity * p.cost_price), 0);
+    return products.reduce((sum, p) => sum + (p.stock_quantity * p.purchase_price), 0);
   }, [products]);
 
   const totalStockRetailValuation = useMemo(() => {
@@ -133,12 +133,12 @@ export const ProductList: React.FC<ProductListProps> = ({
         headers: ['उत्पादनाचे नाव (Product)', 'प्रवर्ग (Category)', 'शिल्लक साठा', 'खरेदी दर', 'विक्री दर', 'किमान मर्यादा', 'साठा मूल्य (₹)'],
         alignments: ['left', 'center', 'right', 'right', 'right', 'center', 'right'],
         rows: filteredProducts.map(p => {
-          const val = p.stock_quantity * p.cost_price;
+          const val = p.stock_quantity * p.purchase_price;
           return [
             getProductDisplayName(p),
             p.category,
             `${p.stock_quantity} ${p.unit}`,
-            `₹${p.cost_price}`,
+            `₹${p.purchase_price}`,
             `₹${p.selling_price}`,
             `${p.min_stock_alert} ${p.unit}`,
             `₹${val.toLocaleString('en-IN')}`
@@ -151,7 +151,7 @@ export const ProductList: React.FC<ProductListProps> = ({
           '',
           '',
           '',
-          `₹${filteredProducts.reduce((sum, p) => sum + (p.stock_quantity * p.cost_price), 0).toLocaleString('en-IN')}`
+          `₹${filteredProducts.reduce((sum, p) => sum + (p.stock_quantity * p.purchase_price), 0).toLocaleString('en-IN')}`
         ]
       },
       notes: 'दुकान साठा तपशील. कमी साठा असलेली उत्पादने वेळेत खरेदी करावीत.'

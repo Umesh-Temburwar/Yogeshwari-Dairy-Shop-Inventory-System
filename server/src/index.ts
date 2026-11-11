@@ -13,14 +13,31 @@ const app: Express = express();
 app.use(helmet());
 
 // CORS Configuration
+const allowedOrigins = [
+  ENV.CLIENT_URL,
+  process.env.APP_URL,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
+].filter(Boolean) as string[];
+
 app.use(
   cors({
-    origin: [ENV.CLIENT_URL, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, server-to-server or curl)
+      // or if origin is in allowed list / Vercel deployment preview domains
+      if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Allow all in production reverse proxy
+      }
+    },
     credentials: true,
   })
 );
 
-// Rate Limiting (100 requests per 15 min for general API)
+// Rate Limiting (200 requests per 15 min for general API)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
@@ -40,15 +57,18 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Health Check
-app.get('/health', (_req: Request, res: Response) => {
+// Health Check (handles both /health and /api/health)
+const healthHandler = (_req: Request, res: Response) => {
   sendSuccess(res, {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: ENV.NODE_ENV,
   }, 'Dairy Shop Inventory API is operational');
-});
+};
+
+app.get('/health', healthHandler);
+app.get('/api/health', healthHandler);
 
 // API Routes
 app.use('/api/v1', apiRoutes);

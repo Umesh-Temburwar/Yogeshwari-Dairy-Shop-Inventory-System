@@ -7,6 +7,12 @@ export default defineConfig({
   server: {
     host: true, // Expose to local network (0.0.0.0) so mobile devices can connect
     port: 5173,
+    proxy: {
+      '/api': {
+        target: process.env.SERVER_URL || 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
   },
 })
 

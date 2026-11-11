@@ -1,6 +1,21 @@
 import { ApiResponse } from '../types/index.js';
 
-const API_BASE_URL = '/api/v1';
+// Resolve API base URL dynamically:
+// 1. In Node / runtime environments with service binding: reads process.env.SERVER_URL
+// 2. In Vite browser environments with explicit env: reads import.meta.env.VITE_API_BASE_URL
+// 3. Fallback: '/api/v1' (same-origin relative path routed via Vercel rewrites or local proxy)
+const getApiBaseUrl = (): string => {
+  if (typeof process !== 'undefined' && process.env && process.env.SERVER_URL) {
+    return `${process.env.SERVER_URL.replace(/\/$/, '')}/api/v1`;
+  }
+  const metaEnv = typeof import.meta !== 'undefined' ? (import.meta as any).env : undefined;
+  if (metaEnv?.VITE_API_BASE_URL) {
+    return metaEnv.VITE_API_BASE_URL;
+  }
+  return '/api/v1';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export class ApiError extends Error {
   public code: string;

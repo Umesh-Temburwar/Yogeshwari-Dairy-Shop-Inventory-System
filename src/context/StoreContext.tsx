@@ -1,13 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { 
   Product, Sale, Purchase, DamageRecord, UdharCustomer, 
-  UdharTransaction, Expense, TimeRangeFilter, PaymentMode 
+  UdharTransaction, Expense, TimeRangeFilter, PaymentMode,
+  CustomerGender, CustomerAgeGroup, ProductBatch, ExpiryStatus 
 } from '../types';
 import { 
   INITIAL_PRODUCTS, INITIAL_SALES, INITIAL_PURCHASES, 
   INITIAL_DAMAGES, INITIAL_CUSTOMERS, INITIAL_UDHAR_TRANSACTIONS, 
-  INITIAL_EXPENSES 
+  INITIAL_EXPENSES, INITIAL_BATCHES 
 } from '../lib/mockInitialData';
+import { getShelfLifeDays, getSuggestedExpiryDate, generateBatchNumber, computeExpiryStatus } from '../lib/shelfLifeUtils';
 import { supabase, getSupabaseConfig } from '../lib/supabase';
 import { startOfDay, startOfWeek, startOfMonth, startOfYear, isWithinInterval, parseISO } from 'date-fns';
 
@@ -36,6 +38,7 @@ interface StoreContextType {
   
   // Data State
   products: Product[];
+  batches: ProductBatch[];
   sales: Sale[];
   purchases: Purchase[];
   damages: DamageRecord[];
@@ -51,11 +54,44 @@ interface StoreContextType {
   addProduct: (product: Omit<Product, 'id' | 'created_at'>) => Promise<Product>;
   updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
-  adjustStock: (id: string, qtyDelta: number, reason?: string) => Promise<void>;
+  adjustStock: (
+    id: string, 
+    qtyDelta: number, 
+    reason?: string,
+    batchInfo?: { 
+      batch_id?: string; 
+      batch_no?: string; 
+      expiry_date?: string; 
+      mfg_date?: string;
+      supplier_name?: string;
+    }
+  ) => Promise<void>;
+
+  addStockEntries: (
+    productId: string,
+    entries: Array<{
+      batch_id?: string;
+      batch_no?: string;
+      mfg_date?: string;
+      expiry_date: string;
+      quantity: number;
+      purchase_price?: number;
+      supplier_name?: string;
+      lot_type?: 'fresh_today' | 'previous_lot' | 'existing_batch';
+      notes?: string;
+    }>
+  ) => Promise<void>;
+
+  addBatch: (batchData: Omit<ProductBatch, 'id' | 'created_at'>) => Promise<ProductBatch>;
+  updateBatch: (id: string, updates: Partial<ProductBatch>) => Promise<void>;
+  deleteBatch: (id: string) => Promise<void>;
   
   createSale: (saleData: {
     customer_name: string;
     customer_phone?: string;
+    customer_gender?: CustomerGender;
+    customer_age_group?: CustomerAgeGroup;
+    customer_age?: number;
     total_amount: number;
     discount: number;
     net_amount: number;
@@ -116,6 +152,13 @@ interface StoreContextType {
     totalOutstandingUdhar: number;
     lowStockCount: number;
     outOfStockCount: number;
+    // Batch Expiry Metrics
+    expiredBatchesCount: number;
+    expiringTodayBatchesCount: number;
+    expiringTomorrowBatchesCount: number;
+    expiring3DaysBatchesCount: number;
+    freshBatchesCount: number;
+    totalActiveBatches: number;
   };
 }
 
@@ -134,9 +177,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
   });
 
+  const [batches, setBatches] = useState<ProductBatch[]>(() => {
+    const saved = localStorage.getItem('yd_batches');
+    return saved ? JSON.parse(saved) : INITIAL_BATCHES;
+  });
+
   const [sales, setSales] = useState<Sale[]>(() => {
     const saved = localStorage.getItem('yd_sales');
-    return saved ? JSON.parse(saved) : INITIAL_SALES;
+    if (!saved) return INITIAL_SALES;
+    try {
+      const parsed: Sale[] = JSON.parse(saved);
+      const hasDemographics = parsed.some(s => s.customer_gender);
+      if (!hasDemographics) {
+        return INITIAL_SALES;
+      }
+      return parsed;
+    } catch {
+      return INITIAL_SALES;
+    }
   });
 
   const [purchases, setPurchases] = useState<Purchase[]>(() => {
@@ -168,6 +226,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     localStorage.setItem('yd_products', JSON.stringify(products));
   }, [products]);
+
+  useEffect(() => {
+    localStorage.setItem('yd_batches', JSON.stringify(batches));
+  }, [batches]);
 
   useEffect(() => {
     localStorage.setItem('yd_sales', JSON.stringify(sales));
@@ -252,6 +314,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const resetToSampleData = () => {
     setProducts(INITIAL_PRODUCTS);
+    setBatches(INITIAL_BATCHES);
     setSales(INITIAL_SALES);
     setPurchases(INITIAL_PURCHASES);
     setDamages(INITIAL_DAMAGES);
@@ -340,6 +403,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const lowStockCount = products.filter(p => p.stock_quantity <= p.min_stock_alert && p.stock_quantity > 0).length;
     const outOfStockCount = products.filter(p => p.stock_quantity <= 0).length;
 
+    // Batch Expiry Alert Counts
+    let expiredBatchesCount = 0;
+    let expiringTodayBatchesCount = 0;
+    let expiringTomorrowBatchesCount = 0;
+    let expiring3DaysBatchesCount = 0;
+    let freshBatchesCount = 0;
+
+    batches.forEach(b => {
+      if (b.qty_remaining <= 0) return;
+      const { status } = computeExpiryStatus(b.expiry_date);
+      if (status === 'EXPIRED') expiredBatchesCount += 1;
+      else if (status === 'EXPIRING_TODAY') expiringTodayBatchesCount += 1;
+      else if (status === 'EXPIRING_TOMORROW') expiringTomorrowBatchesCount += 1;
+      else if (status === 'EXPIRING_IN_3_DAYS') expiring3DaysBatchesCount += 1;
+      else freshBatchesCount += 1;
+    });
+
     return {
       totalSalesRevenue,
       cashCollected,
@@ -354,9 +434,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       totalDamagesLoss,
       totalOutstandingUdhar,
       lowStockCount,
-      outOfStockCount
+      outOfStockCount,
+      expiredBatchesCount,
+      expiringTodayBatchesCount,
+      expiringTomorrowBatchesCount,
+      expiring3DaysBatchesCount,
+      freshBatchesCount,
+      totalActiveBatches: batches.filter(b => b.qty_remaining > 0).length
     };
-  }, [filteredSales, filteredPurchases, filteredExpenses, filteredDamages, customers, products]);
+  }, [filteredSales, filteredPurchases, filteredExpenses, filteredDamages, customers, products, batches]);
 
   // Actions
   const addProduct = async (productData: Omit<Product, 'id' | 'created_at'>): Promise<Product> => {
@@ -367,6 +453,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     setProducts(prev => [newProduct, ...prev]);
+
+    // If initial stock is provided, auto-create its initial batch with variety shelf life
+    if (newProduct.stock_quantity > 0) {
+      const todayFormatted = new Date().toISOString().split('T')[0];
+      const shelfDays = getShelfLifeDays(newProduct.category, newProduct.name);
+      const initialBatch: ProductBatch = {
+        id: 'bat-' + Date.now(),
+        product_id: newProduct.id,
+        product_name: newProduct.name,
+        batch_no: generateBatchNumber(newProduct.name, todayFormatted),
+        mfg_date: todayFormatted,
+        expiry_date: getSuggestedExpiryDate(todayFormatted, shelfDays),
+        qty_received: newProduct.stock_quantity,
+        qty_remaining: newProduct.stock_quantity,
+        purchase_price: newProduct.purchase_price,
+        notes: 'Initial stock on product creation',
+        created_at: new Date().toISOString()
+      };
+      setBatches(prev => [initialBatch, ...prev]);
+    }
 
     if (supabase && isSupabaseConnected) {
       try {
@@ -400,7 +506,81 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const adjustStock = async (id: string, qtyDelta: number) => {
+  const adjustStock = async (
+    id: string, 
+    qtyDelta: number, 
+    reason?: string,
+    batchInfo?: { 
+      batch_id?: string; 
+      batch_no?: string; 
+      expiry_date?: string; 
+      mfg_date?: string;
+      supplier_name?: string;
+    }
+  ) => {
+    const prod = products.find(p => p.id === id);
+    if (!prod) return;
+
+    if (qtyDelta > 0) {
+      if (batchInfo?.batch_id) {
+        // Add quantity to an existing previous batch
+        setBatches(prev => prev.map(b => {
+          if (b.id === batchInfo.batch_id) {
+            return {
+              ...b,
+              qty_received: Number((b.qty_received + qtyDelta).toFixed(2)),
+              qty_remaining: Number((b.qty_remaining + qtyDelta).toFixed(2)),
+              notes: reason || b.notes
+            };
+          }
+          return b;
+        }));
+      } else {
+        // Stock In: create a new batch with variety-specific shelf life
+        const todayFormatted = new Date().toISOString().split('T')[0];
+        const shelfDays = getShelfLifeDays(prod.category, prod.name);
+        const batchNo = batchInfo?.batch_no || generateBatchNumber(prod.name, todayFormatted);
+        const expiryDate = batchInfo?.expiry_date || getSuggestedExpiryDate(batchInfo?.mfg_date || todayFormatted, shelfDays);
+
+        const newBatch: ProductBatch = {
+          id: 'bat-' + Date.now(),
+          product_id: id,
+          product_name: prod.name,
+          batch_no: batchNo,
+          mfg_date: batchInfo?.mfg_date || todayFormatted,
+          expiry_date: expiryDate,
+          qty_received: qtyDelta,
+          qty_remaining: qtyDelta,
+          purchase_price: prod.purchase_price,
+          supplier_name: batchInfo?.supplier_name,
+          notes: reason || 'Stock In adjustment',
+          created_at: new Date().toISOString()
+        };
+        setBatches(prev => [newBatch, ...prev]);
+      }
+    } else if (qtyDelta < 0) {
+      // Stock Out: FEFO deduction from earliest expiring batch
+      let remainingDeduct = Math.abs(qtyDelta);
+      setBatches(prev => {
+        const prodBatches = prev
+          .filter(b => b.product_id === id && b.qty_remaining > 0)
+          .sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime());
+
+        return prev.map(b => {
+          if (b.product_id !== id || b.qty_remaining <= 0 || remainingDeduct <= 0) return b;
+          if (prodBatches.some(pb => pb.id === b.id)) {
+            const deduct = Math.min(b.qty_remaining, remainingDeduct);
+            remainingDeduct -= deduct;
+            return {
+              ...b,
+              qty_remaining: Number((b.qty_remaining - deduct).toFixed(2))
+            };
+          }
+          return b;
+        });
+      });
+    }
+
     setProducts(prev => prev.map(p => {
       if (p.id === id) {
         const newQty = Math.max(0, Number((p.stock_quantity + qtyDelta).toFixed(2)));
@@ -410,17 +590,124 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }));
 
     if (supabase && isSupabaseConnected) {
-      const prod = products.find(p => p.id === id);
-      if (prod) {
-        const newQty = Math.max(0, Number((prod.stock_quantity + qtyDelta).toFixed(2)));
+      const prodToSync = products.find(p => p.id === id);
+      if (prodToSync) {
+        const newQty = Math.max(0, Number((prodToSync.stock_quantity + qtyDelta).toFixed(2)));
         await supabase.from('products').update({ stock_quantity: newQty }).eq('id', id);
       }
     }
   };
 
+  const addStockEntries = async (
+    productId: string,
+    entries: Array<{
+      batch_id?: string;
+      batch_no?: string;
+      mfg_date?: string;
+      expiry_date: string;
+      quantity: number;
+      purchase_price?: number;
+      supplier_name?: string;
+      lot_type?: 'fresh_today' | 'previous_lot' | 'existing_batch';
+      notes?: string;
+    }>
+  ) => {
+    const prod = products.find(p => p.id === productId);
+    if (!prod || entries.length === 0) return;
+
+    let totalQtyAdded = 0;
+    const newBatchesToAppend: ProductBatch[] = [];
+
+    entries.forEach((entry, idx) => {
+      const qty = entry.quantity;
+      if (qty <= 0) return;
+      totalQtyAdded += qty;
+
+      if (entry.batch_id) {
+        // Increment existing batch
+        setBatches(prev => prev.map(b => {
+          if (b.id === entry.batch_id) {
+            return {
+              ...b,
+              qty_received: Number((b.qty_received + qty).toFixed(2)),
+              qty_remaining: Number((b.qty_remaining + qty).toFixed(2))
+            };
+          }
+          return b;
+        }));
+      } else {
+        // New batch entry
+        const todayStr = new Date().toISOString().split('T')[0];
+        const mfg = entry.mfg_date || todayStr;
+        const shelfDays = getShelfLifeDays(prod.category, prod.name);
+        const exp = entry.expiry_date || getSuggestedExpiryDate(mfg, shelfDays);
+        const batchNo = entry.batch_no || generateBatchNumber(prod.name, mfg);
+
+        newBatchesToAppend.push({
+          id: `bat-${Date.now()}-${idx}`,
+          product_id: prod.id,
+          product_name: prod.name,
+          batch_no: batchNo,
+          mfg_date: mfg,
+          expiry_date: exp,
+          qty_received: qty,
+          qty_remaining: qty,
+          purchase_price: entry.purchase_price || prod.purchase_price,
+          supplier_name: entry.supplier_name,
+          notes: entry.notes || (entry.lot_type === 'previous_lot' ? 'Previous stock lot entry' : "Today's fresh lot arrival"),
+          created_at: new Date().toISOString()
+        });
+      }
+    });
+
+    if (newBatchesToAppend.length > 0) {
+      setBatches(prev => [...newBatchesToAppend, ...prev]);
+    }
+
+    setProducts(prev => prev.map(p => {
+      if (p.id === productId) {
+        return {
+          ...p,
+          stock_quantity: Number((p.stock_quantity + totalQtyAdded).toFixed(2))
+        };
+      }
+      return p;
+    }));
+  };
+
+  const addBatch = async (batchData: Omit<ProductBatch, 'id' | 'created_at'>): Promise<ProductBatch> => {
+    const newBatch: ProductBatch = {
+      ...batchData,
+      id: 'bat-' + Date.now(),
+      created_at: new Date().toISOString()
+    };
+    setBatches(prev => [newBatch, ...prev]);
+    setProducts(prev => prev.map(p => {
+      if (p.id === batchData.product_id) {
+        return {
+          ...p,
+          stock_quantity: Number((p.stock_quantity + batchData.qty_remaining).toFixed(2))
+        };
+      }
+      return p;
+    }));
+    return newBatch;
+  };
+
+  const updateBatch = async (id: string, updates: Partial<ProductBatch>) => {
+    setBatches(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
+  };
+
+  const deleteBatch = async (id: string) => {
+    setBatches(prev => prev.filter(b => b.id !== id));
+  };
+
   const createSale = async (saleData: {
     customer_name: string;
     customer_phone?: string;
+    customer_gender?: CustomerGender;
+    customer_age_group?: CustomerAgeGroup;
+    customer_age?: number;
     total_amount: number;
     discount: number;
     net_amount: number;
@@ -453,6 +740,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       invoice_no: invoiceNo,
       customer_name: saleData.customer_name || 'Counter Customer',
       customer_phone: saleData.customer_phone || '',
+      customer_gender: saleData.customer_gender,
+      customer_age_group: saleData.customer_age_group,
+      customer_age: saleData.customer_age,
       total_amount: saleData.total_amount,
       discount: saleData.discount,
       net_amount: saleData.net_amount,
@@ -465,7 +755,37 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       items: saleItems
     };
 
-    // Deduct stock for sold items
+    // Deduct stock for sold items using FEFO across active batches
+    setBatches(prev => {
+      let updatedBatches = [...prev];
+      saleData.items.forEach(soldItem => {
+        let remainingNeeded = soldItem.quantity;
+        // 1. Filter out expired batches (Business Rule 4) and zero-stock batches
+        // 2. Sort by earliest expiry date first (FEFO)
+        const candidateBatches = updatedBatches
+          .filter(b => b.product_id === soldItem.product_id && b.qty_remaining > 0 && computeExpiryStatus(b.expiry_date).status !== 'EXPIRED')
+          .sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime());
+
+        for (const candidate of candidateBatches) {
+          if (remainingNeeded <= 0) break;
+          const takeQty = Math.min(candidate.qty_remaining, remainingNeeded);
+          remainingNeeded -= takeQty;
+
+          updatedBatches = updatedBatches.map(b => {
+            if (b.id === candidate.id) {
+              return {
+                ...b,
+                qty_remaining: Number((b.qty_remaining - takeQty).toFixed(2))
+              };
+            }
+            return b;
+          });
+        }
+      });
+      return updatedBatches;
+    });
+
+    // Deduct stock for sold items on aggregate product
     setProducts(prev => {
       return prev.map(prod => {
         const soldItem = saleData.items.find(i => i.product_id === prod.id);
@@ -572,11 +892,36 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const createPurchase = async (purchaseData: Omit<Purchase, 'id' | 'created_at'>) => {
+    const todayFormatted = new Date().toISOString().split('T')[0];
+    const targetProd = products.find(p => p.id === purchaseData.product_id);
+    const shelfDays = targetProd ? getShelfLifeDays(targetProd.category, targetProd.name) : 2;
+    const batchNo = purchaseData.batch_no || generateBatchNumber(purchaseData.product_name, purchaseData.purchase_date || todayFormatted);
+    const expiryDate = purchaseData.expiry_date || getSuggestedExpiryDate(purchaseData.purchase_date || todayFormatted, shelfDays);
+
     const newPur: Purchase = {
       ...purchaseData,
       id: 'pur-' + Date.now(),
+      batch_no: batchNo,
+      expiry_date: expiryDate,
       created_at: new Date().toISOString()
     };
+
+    // Auto-create batch with variety-specific shelf life
+    const newBatch: ProductBatch = {
+      id: 'bat-' + Date.now(),
+      product_id: purchaseData.product_id,
+      product_name: purchaseData.product_name,
+      batch_no: batchNo,
+      mfg_date: purchaseData.purchase_date || todayFormatted,
+      expiry_date: expiryDate,
+      qty_received: purchaseData.quantity,
+      qty_remaining: purchaseData.quantity,
+      purchase_price: purchaseData.purchase_price,
+      supplier_name: purchaseData.supplier_name,
+      notes: purchaseData.notes,
+      created_at: new Date().toISOString()
+    };
+    setBatches(prev => [newBatch, ...prev]);
 
     // Auto-increase product stock
     setProducts(prev => {
@@ -609,6 +954,34 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       id: 'dmg-' + Date.now(),
       created_at: new Date().toISOString()
     };
+
+    // Deduct from batches: if an expired batch exists for this product, deduct from it first!
+    setBatches(prev => {
+      let remainingDeduct = damageData.quantity;
+      const prodBatches = prev
+        .filter(b => b.product_id === damageData.product_id && b.qty_remaining > 0)
+        // Sort expired first, then earliest expiry
+        .sort((a, b) => {
+          const aExp = computeExpiryStatus(a.expiry_date).status === 'EXPIRED';
+          const bExp = computeExpiryStatus(b.expiry_date).status === 'EXPIRED';
+          if (aExp && !bExp) return -1;
+          if (!aExp && bExp) return 1;
+          return new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime();
+        });
+
+      return prev.map(b => {
+        if (b.product_id !== damageData.product_id || b.qty_remaining <= 0 || remainingDeduct <= 0) return b;
+        if (prodBatches.some(pb => pb.id === b.id)) {
+          const deduct = Math.min(b.qty_remaining, remainingDeduct);
+          remainingDeduct -= deduct;
+          return {
+            ...b,
+            qty_remaining: Number((b.qty_remaining - deduct).toFixed(2))
+          };
+        }
+        return b;
+      });
+    });
 
     // Deduct stock
     setProducts(prev => {
@@ -749,6 +1122,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       syncWithSupabase,
       resetToSampleData,
       products,
+      batches,
       sales,
       purchases,
       damages,
@@ -761,6 +1135,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       updateProduct,
       deleteProduct,
       adjustStock,
+      addStockEntries,
+      addBatch,
+      updateBatch,
+      deleteBatch,
       createSale,
       createPurchase,
       recordDamage,

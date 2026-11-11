@@ -67,8 +67,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'inventory',
       labelKey: 'inventoryNav',
       icon: Package,
-      badge: products.length,
-      badgeColor: 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] font-semibold',
+      badge: metrics.expiredBatchesCount > 0 
+        ? `${metrics.expiredBatchesCount} ⚠️` 
+        : products.length,
+      badgeColor: metrics.expiredBatchesCount > 0
+        ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 font-extrabold animate-pulse'
+        : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] font-semibold',
       section: 'inventory'
     },
     {

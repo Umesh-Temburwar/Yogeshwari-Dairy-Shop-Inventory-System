@@ -76,7 +76,7 @@ export const KhataBook: React.FC = () => {
         `📌 *Outstanding Balance: ₹${customer.current_balance.toLocaleString('en-IN')}*\n\n` +
         `Kindly settle the due amount at your earliest convenience.\n` +
         `💳 *UPI ID:* yogeshwaridairy@okaxis\n` +
-        `Thank you!\nYogeshwari Dairy & Sweets`;
+        `Thank you!\nYogeshwari Dairy & Products `;
     }
 
     const message = encodeURIComponent(messageText);
@@ -105,7 +105,7 @@ export const KhataBook: React.FC = () => {
     e.preventDefault();
     if (!paymentCustomer || !paymentAmount || parseFloat(paymentAmount) <= 0) return;
 
-    const defaultNotes = language === 'mr' ? 'उधारी खाते पावती जमा' : 'उधारी खाता जमा (Payment)';
+    const defaultNotes = language === 'mr' ? 'उधारी खाते पावती जमा' : language === 'hi' ? 'उधारी खाता जमा (Payment)' : 'Udhar Credit Payment Received';
     await recordUdharPayment(
       paymentCustomer.id,
       parseFloat(paymentAmount),
@@ -131,7 +131,9 @@ export const KhataBook: React.FC = () => {
           <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
             {language === 'mr'
               ? 'नियमित ग्राहक, मिठाईवाले आणि हॉटेलांचे उधारी व जमा खातेवही'
-              : 'नियमित ग्राहकों, हलवाइयों व होटलों का उधारी व जमा हिसाब-किताब'}
+              : language === 'hi'
+                ? 'नियमित ग्राहकों, हलवाइयों व होटलों का उधारी व जमा हिसाब-किताब'
+                : 'Customer credit ledger for retail clients, halwais, and hotels'}
           </p>
         </div>
 
@@ -140,7 +142,7 @@ export const KhataBook: React.FC = () => {
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md shadow-amber-600/20 transition-all active:scale-95"
         >
           <UserPlus className="w-4 h-4" />
-          <span>+ {language === 'mr' ? 'नवीन ग्राहक खाते जोडा' : 'नया खाता खोलें'}</span>
+          <span>+ {language === 'mr' ? 'नवीन ग्राहक खाते जोडा' : language === 'hi' ? 'नया खाता खोलें' : 'Add New Customer'}</span>
         </button>
       </div>
 
@@ -154,31 +156,31 @@ export const KhataBook: React.FC = () => {
             ₹{metrics.totalOutstandingUdhar.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {customers.filter(c => c.current_balance > 0).length} {language === 'mr' ? 'ग्राहकांकडून येणे बाकी आहे' : 'ग्राहकों से वसूली बाकी है'}
+            {customers.filter(c => c.current_balance > 0).length} {language === 'mr' ? 'ग्राहकांकडून येणे बाकी आहे' : language === 'hi' ? 'ग्राहकों से वसूली बाकी है' : 'customers with dues'}
           </span>
         </div>
 
         <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
           <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'एकूण दिलेली उधारी' : 'कुल उधारी दी गई'}
+            {language === 'mr' ? 'एकूण दिलेली उधारी' : language === 'hi' ? 'कुल उधारी दी गई' : 'Total Credit Given'}
           </span>
           <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">
             ₹{customers.reduce((acc, c) => acc + c.total_credit, 0).toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? 'सर्व खात्यांमधील एकूण उधारी' : 'सभी खातों में कुल दी गई उधारी'}
+            {language === 'mr' ? 'सर्व खात्यांमधील एकूण उधारी' : language === 'hi' ? 'सभी खातों में कुल दी गई उधारी' : 'Cumulative credit extended'}
           </span>
         </div>
 
         <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
           <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'एकूण वसूल झालेली रक्कम' : 'कुल जमा रकम (Recovered)'}
+            {language === 'mr' ? 'एकूण वसूल झालेली रक्कम' : language === 'hi' ? 'कुल जमा रकम (Recovered)' : 'Total Recovered'}
           </span>
           <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1 block">
             ₹{customers.reduce((acc, c) => acc + c.total_paid, 0).toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? 'यशस्वीपणे जमा झालेली रक्कम' : 'सफलतापूर्वक वसूल की गई राशि'}
+            {language === 'mr' ? 'यशस्वीपणे जमा झालेली रक्कम' : language === 'hi' ? 'सफलतापूर्वक वसूल की गई राशि' : 'Successfully received'}
           </span>
         </div>
       </div>
@@ -189,7 +191,7 @@ export const KhataBook: React.FC = () => {
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder={language === 'mr' ? 'ग्राहकाचे नाव किंवा मोबाईल क्रमांक शोधा...' : 'ग्राहक का नाम या मोबाइल नंबर खोजें...'}
+            placeholder={language === 'mr' ? 'ग्राहकाचे नाव किंवा मोबाईल क्रमांक शोधा...' : language === 'hi' ? 'ग्राहक का नाम या मोबाइल नंबर खोजें...' : 'Search customer by name or phone...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -246,7 +248,7 @@ export const KhataBook: React.FC = () => {
 
                   <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${hasBalance ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-transparent dark:border-amber-800/40' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
                     }`}>
-                    {hasBalance ? (language === 'mr' ? 'बाकी आहे' : 'बाकी है') : (language === 'mr' ? 'चुकता' : 'चुकता')}
+                    {hasBalance ? (language === 'mr' ? 'बाकी आहे' : language === 'hi' ? 'बाकी है' : 'Due') : (language === 'mr' ? 'चुकता' : language === 'hi' ? 'चुकता' : 'Cleared')}
                   </span>
                 </div>
 
@@ -259,11 +261,11 @@ export const KhataBook: React.FC = () => {
                 {/* Balance & Ledger stats */}
                 <div className="bg-slate-50 dark:bg-[#1A2A25] p-2.5 rounded-xl border border-slate-100 dark:border-[#24352F] my-2 space-y-1 text-xs">
                   <div className="flex justify-between text-slate-500 dark:text-[#8FA69C]">
-                    <span>{language === 'mr' ? 'एकूण उधारी घेतली:' : 'कुल उधारी ली:'}</span>
+                    <span>{language === 'mr' ? 'एकूण उधारी घेतली:' : language === 'hi' ? 'कुल उधारी ली:' : 'Total Credit:'}</span>
                     <span className="font-semibold text-slate-800 dark:text-white">₹{cust.total_credit.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between text-slate-500 dark:text-[#8FA69C]">
-                    <span>{language === 'mr' ? 'एकूण जमा केली:' : 'कुल जमा किया:'}</span>
+                    <span>{language === 'mr' ? 'एकूण जमा केली:' : language === 'hi' ? 'कुल जमा किया:' : 'Total Paid:'}</span>
                     <span className="font-semibold text-emerald-700 dark:text-emerald-400">₹{cust.total_paid.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between items-baseline pt-1.5 border-t border-slate-200 dark:border-[#24352F]">
@@ -297,7 +299,7 @@ export const KhataBook: React.FC = () => {
                     title={t('sendWhatsAppReminder')}
                   >
                     <MessageCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span>{language === 'mr' ? 'तगादा' : 'तकादा'}</span>
+                    <span>{language === 'mr' ? 'तगादा' : language === 'hi' ? 'तकादा' : 'Remind'}</span>
                   </button>
                 )}
 
@@ -305,7 +307,7 @@ export const KhataBook: React.FC = () => {
                   onClick={() => setSelectedLedgerCustomer(cust)}
                   className="py-2 px-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-[#8FA69C] font-semibold text-xs"
                 >
-                  {language === 'mr' ? 'हिशोब वही' : 'हिसाब लेजर'}
+                  {language === 'mr' ? 'हिशोब वही' : language === 'hi' ? 'हिसाब लेजर' : 'Ledger'}
                 </button>
               </div>
 
@@ -322,10 +324,10 @@ export const KhataBook: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-2">
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                  {language === 'mr' ? 'उधारी जमा नोंदवा (Jama Payment)' : 'उधारी जमा दर्ज करें (Jama Payment)'}
+                  {language === 'mr' ? 'उधारी जमा नोंदवा (Jama Payment)' : language === 'hi' ? 'उधारी जमा दर्ज करें (Jama Payment)' : 'Record Customer Payment (Jama)'}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                  {paymentCustomer.name} ({language === 'mr' ? 'बाकी:' : 'बाकी:'} ₹{paymentCustomer.current_balance})
+                  {paymentCustomer.name} ({language === 'mr' ? 'बाकी:' : language === 'hi' ? 'बाकी:' : 'Due:'} ₹{paymentCustomer.current_balance})
                 </p>
               </div>
               <button
@@ -340,7 +342,7 @@ export const KhataBook: React.FC = () => {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'जमा करावयाची रक्कम (₹ Amount) *' : 'जमा की जाने वाली रकम (₹ Amount) *'}
+                  {language === 'mr' ? 'जमा करावयाची रक्कम (₹ Amount) *' : language === 'hi' ? 'जमा की जाने वाली रकम (₹ Amount) *' : 'Amount Received (₹) *'}
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500 dark:text-[#8FA69C]">₹</span>
@@ -364,8 +366,8 @@ export const KhataBook: React.FC = () => {
                     type="button"
                     onClick={() => setPaymentMode('Cash')}
                     className={`p-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 ${paymentMode === 'Cash'
-                        ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-300'
-                        : 'border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C]'
+                      ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-300'
+                      : 'border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C]'
                       }`}
                   >
                     <Banknote className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -376,8 +378,8 @@ export const KhataBook: React.FC = () => {
                     type="button"
                     onClick={() => setPaymentMode('Online_UPI')}
                     className={`p-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 ${paymentMode === 'Online_UPI'
-                        ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/50 text-purple-900 dark:text-purple-300'
-                        : 'border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C]'
+                      ? 'border-purple-600 bg-purple-50 dark:bg-purple-950/50 text-purple-900 dark:text-purple-300'
+                      : 'border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C]'
                       }`}
                   >
                     <Smartphone className="w-4 h-4 text-purple-600 dark:text-purple-400" />
@@ -388,11 +390,11 @@ export const KhataBook: React.FC = () => {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'तपशील / शेरा' : 'विवरण / नोट्स'}
+                  {language === 'mr' ? 'तपशील / शेरा' : language === 'hi' ? 'विवरण / नोट्स' : 'Notes / Remarks'}
                 </label>
                 <input
                   type="text"
-                  placeholder={language === 'mr' ? 'उदा. PhonePe द्वारे जमा / रोख पावती' : 'उदा. PhonePe से प्राप्त / नकद जमा'}
+                  placeholder={language === 'mr' ? 'उदा. PhonePe द्वारे जमा / रोख पावती' : language === 'hi' ? 'उदा. PhonePe से प्राप्त / नकद जमा' : 'e.g. Received via PhonePe / Cash slip'}
                   value={paymentNotes}
                   onChange={(e) => setPaymentNotes(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white rounded-xl text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
@@ -411,7 +413,7 @@ export const KhataBook: React.FC = () => {
                   type="submit"
                   className="w-1/2 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
                 >
-                  {language === 'mr' ? 'जमा पावती करा' : 'जमा सुरक्षित करें'}
+                  {language === 'mr' ? 'जमा पावती करा' : language === 'hi' ? 'जमा सुरक्षित करें' : 'Confirm Payment'}
                 </button>
               </div>
 
@@ -428,7 +430,7 @@ export const KhataBook: React.FC = () => {
 
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-2">
               <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                {language === 'mr' ? 'नवीन ग्राहक उधारी खाते उघडा' : 'नया ग्राहक खाता जोड़ें'}
+                {language === 'mr' ? 'नवीन ग्राहक उधारी खाते उघडा' : language === 'hi' ? 'नया ग्राहक खाता जोड़ें' : 'Open New Customer Credit Account'}
               </h3>
               <button
                 onClick={() => setIsAddCustModalOpen(false)}
@@ -441,12 +443,12 @@ export const KhataBook: React.FC = () => {
             <form onSubmit={handleAddCustomerSubmit} className="space-y-3">
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'ग्राहकाचे नाव *' : 'ग्राहक का नाम *'}
+                  {language === 'mr' ? 'ग्राहकाचे नाव *' : language === 'hi' ? 'ग्राहक का नाम *' : 'Customer Name *'}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder={language === 'mr' ? 'उदा. गणेश हलवाई / तानाजी हॉटेल' : 'उदा. रमेश हलवाई / गुप्ता जी'}
+                  placeholder={language === 'mr' ? 'उदा. गणेश हलवाई / तानाजी हॉटेल' : language === 'hi' ? 'उदा. रमेश हलवाई / गुप्ता जी' : 'e.g. Sharma Halwai / Hotel Ganesh'}
                   value={newCustName}
                   onChange={(e) => setNewCustName(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500"
@@ -455,7 +457,7 @@ export const KhataBook: React.FC = () => {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'मोबाईल नंबर (WhatsApp तगाद्यासाठी) *' : 'मोबाइल नंबर (WhatsApp Reminder के लिए) *'}
+                  {language === 'mr' ? 'मोबाईल नंबर (WhatsApp तगाद्यासाठी) *' : language === 'hi' ? 'मोबाइल नंबर (WhatsApp Reminder के लिए) *' : 'Phone Number (for WhatsApp reminders) *'}
                 </label>
                 <input
                   type="tel"
@@ -469,11 +471,11 @@ export const KhataBook: React.FC = () => {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'पत्ता किंवा दुकानाचे नाव' : 'पता या दुकान का नाम'}
+                  {language === 'mr' ? 'पत्ता किंवा दुकानाचे नाव' : language === 'hi' ? 'पता या दुकान का नाम' : 'Address / Landmark'}
                 </label>
                 <input
                   type="text"
-                  placeholder={language === 'mr' ? 'उदा. बस स्टँड चौक, मेन रोड' : 'उदा. बस स्टैंड चौक, दुकान नं 4'}
+                  placeholder={language === 'mr' ? 'उदा. बस स्टँड चौक, मेन रोड' : language === 'hi' ? 'उदा. बस स्टैंड चौक, दुकान नं 4' : 'e.g. Near Bus Stand, Main Road'}
                   value={newCustAddress}
                   onChange={(e) => setNewCustAddress(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500"
@@ -482,11 +484,11 @@ export const KhataBook: React.FC = () => {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'शेरा / नोट्स' : 'नोट्स'}
+                  {language === 'mr' ? 'शेरा / नोट्स' : language === 'hi' ? 'नोट्स' : 'Notes / Remarks'}
                 </label>
                 <input
                   type="text"
-                  placeholder={language === 'mr' ? 'उदा. दर सोमवारी हिशोब करतात' : 'उदा. हर सोमवार को भुगतान करता है'}
+                  placeholder={language === 'mr' ? 'उदा. दर सोमवारी हिशोब करतात' : language === 'hi' ? 'उदा. हर सोमवार को भुगतान करता है' : 'e.g. Settles bill every Monday'}
                   value={newCustNotes}
                   onChange={(e) => setNewCustNotes(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500"
@@ -505,7 +507,7 @@ export const KhataBook: React.FC = () => {
                   type="submit"
                   className="w-1/2 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs"
                 >
-                  {language === 'mr' ? 'खाते सुरू करा' : 'खाता खोलें'}
+                  {language === 'mr' ? 'खाते सुरू करा' : language === 'hi' ? 'खाता खोलें' : 'Create Account'}
                 </button>
               </div>
             </form>
@@ -522,7 +524,7 @@ export const KhataBook: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
               <div>
                 <h3 className="font-extrabold text-slate-900 dark:text-white text-base">
-                  {selectedLedgerCustomer.name} - {language === 'mr' ? 'हिशोब लेजर' : 'हिसाब लेजर'}
+                  {selectedLedgerCustomer.name} - {language === 'mr' ? 'हिशोब लेजर' : language === 'hi' ? 'हिसाब लेजर' : 'Account Ledger'}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
                   📱 {selectedLedgerCustomer.phone} &bull; 📍 {selectedLedgerCustomer.address || 'Local'}
@@ -539,7 +541,7 @@ export const KhataBook: React.FC = () => {
             <div className="bg-amber-50 dark:bg-[#1A2A25] p-3 rounded-2xl border border-amber-200 dark:border-[#24352F] flex justify-between items-center text-xs">
               <div>
                 <span className="text-amber-800 dark:text-amber-300 font-semibold block">
-                  {language === 'mr' ? 'एकूण बाकी रक्कम:' : 'कुल बाकी रकम:'}
+                  {language === 'mr' ? 'एकूण बाकी रक्कम:' : language === 'hi' ? 'कुल बाकी रकम:' : 'Outstanding Balance:'}
                 </span>
                 <span className="text-xl font-black text-amber-950 dark:text-amber-400">
                   ₹{selectedLedgerCustomer.current_balance.toLocaleString('en-IN')}
@@ -551,13 +553,13 @@ export const KhataBook: React.FC = () => {
                 className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>{language === 'mr' ? 'WhatsApp तगादा' : 'WhatsApp तकादा'}</span>
+                <span>{language === 'mr' ? 'WhatsApp तगादा' : language === 'hi' ? 'WhatsApp तकादा' : 'WhatsApp Reminder'}</span>
               </button>
             </div>
 
             <div className="space-y-2 max-h-60 overflow-y-auto">
               <h4 className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] uppercase tracking-wider">
-                {language === 'mr' ? 'अलिकडील व्यवहार (Transactions):' : 'हाल के लेन-देन (Transactions):'}
+                {language === 'mr' ? 'अलिकडील व्यवहार (Transactions):' : language === 'hi' ? 'हाल के लेन-देन (Transactions):' : 'Recent Transactions:'}
               </h4>
 
               {udharTransactions
@@ -570,8 +572,8 @@ export const KhataBook: React.FC = () => {
                     <div>
                       <div className="font-bold text-slate-900 dark:text-white">
                         {tx.type === 'Credit_Given'
-                          ? (language === 'mr' ? 'उधारी दिली (Goods Credit)' : 'उधारी दी (Goods Credit)')
-                          : (language === 'mr' ? 'रक्कम जमा झाली (Payment Recv)' : 'जमा प्राप्त हुई (Payment Recv)')}
+                          ? (language === 'mr' ? 'उधारी दिली (Goods Credit)' : language === 'hi' ? 'उधारी दी (Goods Credit)' : 'Credit Given')
+                          : (language === 'mr' ? 'रक्कम जमा झाली (Payment Recv)' : language === 'hi' ? 'जमा प्राप्त हुई (Payment Recv)' : 'Payment Received')}
                       </div>
                       <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">
                         {tx.transaction_date} &bull; {tx.notes || tx.payment_mode}
@@ -591,7 +593,7 @@ export const KhataBook: React.FC = () => {
                 onClick={() => setSelectedLedgerCustomer(null)}
                 className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-[#1A2A25] hover:bg-slate-800 dark:hover:bg-[#24352F] text-white font-bold text-xs"
               >
-                {language === 'mr' ? 'बंद करा' : 'बंद करें'}
+                {language === 'mr' ? 'बंद करा' : language === 'hi' ? 'बंद करें' : 'Close'}
               </button>
             </div>
 

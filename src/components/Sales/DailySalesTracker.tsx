@@ -22,15 +22,32 @@ export const DailySalesTracker: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPaymentMode, setSelectedPaymentMode] = useState<string>('All');
+  const [selectedGender, setSelectedGender] = useState<string>('All');
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>('All');
   const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
   const [selectedSaleForView, setSelectedSaleForView] = useState<Sale | null>(null);
 
   const paymentModes = [
-    { id: 'All', label: language === 'mr' ? 'सर्व' : language === 'hi' ? 'सभी' : 'All' },
+    { id: 'All', label: language === 'mr' ? 'सर्व पेमेंट' : language === 'hi' ? 'सभी भुगतान' : 'All Modes' },
     { id: 'Cash', label: t('cash') },
     { id: 'Online_UPI', label: t('onlineUpi') },
     { id: 'Split', label: t('splitPay') },
     { id: 'Udhar', label: t('udharPay') }
+  ];
+
+  const genderOptions = [
+    { id: 'All', label: language === 'mr' ? 'सर्व लिंग' : language === 'hi' ? 'सभी जेंडर' : 'All Genders' },
+    { id: 'Male', label: language === 'mr' ? '👨 पुरुष' : language === 'hi' ? '👨 पुरुष' : '👨 Male' },
+    { id: 'Female', label: language === 'mr' ? '👩 महिला' : language === 'hi' ? '👩 महिला' : '👩 Female' },
+    { id: 'Other', label: language === 'mr' ? '🧑 इतर' : language === 'hi' ? '🧑 अन्य' : '🧑 Other' }
+  ];
+
+  const ageGroupOptions = [
+    { id: 'All', label: language === 'mr' ? 'सर्व वय' : language === 'hi' ? 'सभी आयु' : 'All Ages' },
+    { id: 'Kids/Teens (<18)', label: '<18' },
+    { id: 'Youth (18-25)', label: '18-25' },
+    { id: 'Adults (26-45)', label: '26-45' },
+    { id: 'Seniors (45+)', label: '45+' }
   ];
 
   const filtered = filteredSales.filter(sale => {
@@ -39,7 +56,10 @@ export const DailySalesTracker: React.FC = () => {
       (sale.customer_phone && sale.customer_phone.includes(searchQuery));
 
     const matchesMode = selectedPaymentMode === 'All' || sale.payment_mode === selectedPaymentMode;
-    return matchesSearch && matchesMode;
+    const matchesGender = selectedGender === 'All' || sale.customer_gender === selectedGender;
+    const matchesAgeGroup = selectedAgeGroup === 'All' || sale.customer_age_group === selectedAgeGroup;
+
+    return matchesSearch && matchesMode && matchesGender && matchesAgeGroup;
   });
 
   const toggleExpand = (id: string) => {
@@ -55,13 +75,15 @@ export const DailySalesTracker: React.FC = () => {
           <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
             <ReceiptIndianRupee className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             <span>
-              {language === 'mr' ? 'दैनिक विक्री व रोख-ऑनलाईन लेजर (Daily Sales History)' : 'दैनिक बिक्री & रोकड़-ऑनलाइन लेजर (Daily Sales History)'}
+              {language === 'mr' ? 'दैनिक विक्री व रोख-ऑनलाईन लेजर (Daily Sales History)' : language === 'hi' ? 'दैनिक बिक्री & रोकड़-ऑनलाइन लेजर (Daily Sales History)' : 'Daily Sales & Cash/Online Ledger'}
             </span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
             {language === 'mr' 
               ? 'किती माल गेला, काय गेला, रोख किती आली आणि ऑनलाईन UPI किती आले याचा हिशोब' 
-              : 'कितना माल बिका, क्या बिका, कैश कितना आया और ऑनलाइन UPI कितना आया'}
+              : language === 'hi'
+              ? 'कितना माल बिका, क्या बिका, कैश कितना आया और ऑनलाइन UPI कितना आया'
+              : 'Detailed tracking of items sold, cash inflow, and online UPI collections'}
           </p>
         </div>
 
@@ -70,7 +92,7 @@ export const DailySalesTracker: React.FC = () => {
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-xs"
         >
           <Printer className="w-4 h-4" />
-          <span>{language === 'mr' ? 'प्रिंट विक्री अहवाल' : 'प्रिंट बिक्री रिपोर्ट'}</span>
+          <span>{language === 'mr' ? 'प्रिंट विक्री अहवाल' : language === 'hi' ? 'प्रिंट बिक्री रिपोर्ट' : 'Print Sales Report'}</span>
         </button>
       </div>
 
@@ -87,7 +109,7 @@ export const DailySalesTracker: React.FC = () => {
             ₹{metrics.totalSalesRevenue.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {filtered.length} {language === 'mr' ? 'बिले फाडली' : 'बिल काटे गए'}
+            {filtered.length} {language === 'mr' ? 'बिले फाडली' : language === 'hi' ? 'बिल काटे गए' : 'invoices billed'}
           </span>
         </div>
 
@@ -100,7 +122,7 @@ export const DailySalesTracker: React.FC = () => {
             ₹{metrics.cashCollected.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
-            {language === 'mr' ? 'गल्ल्यातील रोख रक्कम' : 'रोकड़ गल्ला कलेक्शन'}
+            {language === 'mr' ? 'गल्ल्यातील रोख रक्कम' : language === 'hi' ? 'रोकड़ गल्ला कलेक्शन' : 'Cash Drawer Inflow'}
           </span>
         </div>
 
@@ -120,44 +142,87 @@ export const DailySalesTracker: React.FC = () => {
         <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-orange-700 dark:text-amber-400">
             <BookOpen className="w-4 h-4" />
-            <span>{language === 'mr' ? 'उधार माल दिला (Credit)' : 'उधार दिया (Credit)'}</span>
+            <span>{language === 'mr' ? 'उधार माल दिला (Credit)' : language === 'hi' ? 'उधार दिया (Credit)' : 'Credit Given'}</span>
           </div>
           <span className="text-2xl font-black text-orange-900 dark:text-amber-200 mt-1 block">
             ₹{metrics.udharGiven.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-orange-600 dark:text-amber-400 font-medium">
-            {language === 'mr' ? 'खात्यावर नोंदवलेली उधारी' : 'खाते में दर्ज उधारी'}
+            {language === 'mr' ? 'खात्यावर नोंदवलेली उधारी' : language === 'hi' ? 'खाते में दर्ज उधारी' : 'Recorded in Khata'}
           </span>
         </div>
       </div>
 
-      {/* Search & Mode Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 bg-white dark:bg-[#131F1B] p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
-          <input
-            type="text"
-            placeholder={language === 'mr' ? 'बिल क्रमांक, ग्राहक नाव किंवा मोबाईल नंबर शोधा...' : 'बिल नंबर, ग्राहक नाम या फोन नंबर से खोजें...'}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
+      {/* Search & Mode + Demographic Filters */}
+      <div className="bg-white dark:bg-[#131F1B] p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-3 transition-colors">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
+            <input
+              type="text"
+              placeholder={language === 'mr' ? 'बिल क्रमांक, ग्राहक नाव किंवा मोबाईल नंबर शोधा...' : language === 'hi' ? 'बिल नंबर, ग्राहक नाम या फोन नंबर से खोजें...' : 'Search invoice no, customer name or phone...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl shrink-0 overflow-x-auto">
+            {paymentModes.map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => setSelectedPaymentMode(mode.id)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                  selectedPaymentMode === mode.id
+                    ? 'bg-white dark:bg-[#131F1B] text-emerald-800 dark:text-emerald-400 shadow-xs font-bold border dark:border-[#24352F]'
+                    : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl shrink-0">
-          {paymentModes.map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => setSelectedPaymentMode(mode.id)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                selectedPaymentMode === mode.id
-                  ? 'bg-white dark:bg-[#131F1B] text-emerald-800 dark:text-emerald-400 shadow-xs font-bold border dark:border-[#24352F]'
-                  : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              {mode.label}
-            </button>
-          ))}
+        {/* Demographic Filter Chips (Gender & Age Group) */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F]">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] uppercase tracking-wider">
+            {t('customerGender')}:
+          </span>
+          <div className="flex items-center gap-1">
+            {genderOptions.map((g) => (
+              <button
+                key={g.id}
+                onClick={() => setSelectedGender(g.id)}
+                className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold transition-all ${
+                  selectedGender === g.id
+                    ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                    : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#223630]'
+                }`}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
+
+          <span className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] uppercase tracking-wider ml-2">
+            {t('customerAgeGroup')}:
+          </span>
+          <div className="flex items-center gap-1">
+            {ageGroupOptions.map((ag) => (
+              <button
+                key={ag.id}
+                onClick={() => setSelectedAgeGroup(ag.id)}
+                className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold transition-all ${
+                  selectedAgeGroup === ag.id
+                    ? 'bg-teal-600 text-white font-bold shadow-xs'
+                    : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#223630]'
+                }`}
+              >
+                {ag.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -165,10 +230,10 @@ export const DailySalesTracker: React.FC = () => {
       <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs overflow-hidden transition-colors">
         <div className="p-4 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between">
           <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-            {language === 'mr' ? 'बिक्री बिल तपशील (Invoices Ledger)' : 'बिक्री बिल विवरण (Invoices Ledger)'}
+            {language === 'mr' ? 'विक्री बिल तपशील (Invoices Ledger)' : language === 'hi' ? 'बिक्री बिल विवरण (Invoices Ledger)' : 'Invoices Ledger'}
           </h3>
           <span className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
-            {filtered.length} {language === 'mr' ? 'बिले' : 'बिल प्रदर्शित'}
+            {filtered.length} {language === 'mr' ? 'बिले' : language === 'hi' ? 'बिल प्रदर्शित' : 'invoices displayed'}
           </span>
         </div>
 
@@ -196,11 +261,23 @@ export const DailySalesTracker: React.FC = () => {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
+                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
                         <span>{sale.sale_date}</span>
                         <span>&bull;</span>
                         <span className="font-semibold text-slate-700 dark:text-[#E7F0EC]">{sale.customer_name}</span>
                         {sale.customer_phone && <span>({sale.customer_phone})</span>}
+                        {sale.customer_gender && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F]">
+                            {sale.customer_gender === 'Male' ? '👨' : sale.customer_gender === 'Female' ? '👩' : '🧑'}
+                            {sale.customer_gender === 'Male' 
+                              ? (language === 'mr' ? 'पुरुष' : language === 'hi' ? 'पुरुष' : 'Male') 
+                              : sale.customer_gender === 'Female' 
+                              ? (language === 'mr' ? 'महिला' : language === 'hi' ? 'महिला' : 'Female') 
+                              : (language === 'mr' ? 'इतर' : language === 'hi' ? 'अन्य' : 'Other')}
+                            {sale.customer_age_group && ` • ${sale.customer_age_group}`}
+                            {sale.customer_age && ` (${sale.customer_age}y)`}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -212,7 +289,7 @@ export const DailySalesTracker: React.FC = () => {
                         </div>
                         <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">
                           {sale.payment_mode === 'Split' && (
-                            <span>{language === 'mr' ? 'रोख' : 'कैश'}: ₹{sale.cash_amount} | UPI: ₹{sale.online_amount}</span>
+                            <span>{language === 'mr' ? 'रोख' : language === 'hi' ? 'कैश' : 'Cash'}: ₹{sale.cash_amount} | UPI: ₹{sale.online_amount}</span>
                           )}
                           {sale.discount > 0 && <span>{t('discount')}: ₹{sale.discount}</span>}
                         </div>
@@ -242,7 +319,7 @@ export const DailySalesTracker: React.FC = () => {
                   {isExpanded && (
                     <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-[#24352F] bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-xl space-y-1.5 text-xs">
                       <div className="font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {language === 'mr' ? 'या बिलामध्ये गेलेला माल (Sold Items):' : 'इस बिल में क्या-क्या सामान गया (Sold Items):'}
+                        {language === 'mr' ? 'या बिलामध्ये गेलेला माल (Sold Items):' : language === 'hi' ? 'इस बिल में बिका सामान (Sold Items):' : 'Items in this Bill (Sold Items):'}
                       </div>
                       {sale.items?.map((it, idx) => (
                         <div key={idx} className="flex justify-between items-center text-slate-700 dark:text-[#8FA69C]">
@@ -261,7 +338,7 @@ export const DailySalesTracker: React.FC = () => {
           </div>
         ) : (
           <div className="p-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs">
-            {language === 'mr' ? 'या कालावधीत कोणतेही बिल आढळले नाही.' : 'इस अवधि में कोई बिक्री बिल नहीं मिला।'}
+            {language === 'mr' ? 'या कालावधीत कोणतेही बिल आढळले नाही.' : language === 'hi' ? 'इस अवधि में कोई बिक्री बिल नहीं मिला।' : 'No sales bills found for this period.'}
           </div>
         )}
       </div>
@@ -273,7 +350,7 @@ export const DailySalesTracker: React.FC = () => {
             
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-2">
               <span className="text-xs font-bold text-slate-500 dark:text-[#8FA69C]">
-                {language === 'mr' ? 'पावती तपशील:' : 'रसीद विवरण:'} {selectedSaleForView.invoice_no}
+                {language === 'mr' ? 'पावती तपशील:' : language === 'hi' ? 'रसीद विवरण:' : 'Receipt Details:'} {selectedSaleForView.invoice_no}
               </span>
               <button 
                 onClick={() => setSelectedSaleForView(null)}
@@ -287,15 +364,23 @@ export const DailySalesTracker: React.FC = () => {
               <div className="text-center border-b border-slate-200 dark:border-[#24352F] pb-2">
                 <div className="font-bold text-sm text-slate-900 dark:text-white">{t('shopName')}</div>
                 <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">
-                  {language === 'mr' ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : 'ताज़ा दूध, पनीर, दही, शुद्ध देसी घी'}
+                  {language === 'mr' ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : language === 'hi' ? 'ताज़ा दूध, पनीर, दही, शुद्ध देसी घी' : 'Fresh Milk, Paneer, Curd, Pure Desi Ghee'}
                 </div>
               </div>
 
               <div className="flex justify-between text-[11px] text-slate-700 dark:text-[#E7F0EC] pt-1">
-                <span>{language === 'mr' ? 'बिल:' : 'बिल:'} {selectedSaleForView.invoice_no}</span>
+                <span>{language === 'mr' ? 'बिल:' : language === 'hi' ? 'बिल:' : 'Bill:'} {selectedSaleForView.invoice_no}</span>
                 <span>{selectedSaleForView.sale_date}</span>
               </div>
-              <div className="text-[11px] text-slate-700 dark:text-[#E7F0EC]">{t('customerName')}: {selectedSaleForView.customer_name}</div>
+              <div className="flex justify-between text-[11px] text-slate-700 dark:text-[#E7F0EC]">
+                <span>{t('customerName')}: {selectedSaleForView.customer_name}</span>
+                {selectedSaleForView.customer_gender && (
+                  <span className="text-[10px] text-slate-500">
+                    {selectedSaleForView.customer_gender === 'Male' ? '👨 ' : selectedSaleForView.customer_gender === 'Female' ? '👩 ' : '🧑 '}
+                    {selectedSaleForView.customer_gender} ({selectedSaleForView.customer_age_group || (selectedSaleForView.customer_age ? `${selectedSaleForView.customer_age}y` : '')})
+                  </span>
+                )}
+              </div>
 
               <div className="border-t border-b border-slate-200 dark:border-[#24352F] py-1.5 space-y-1">
                 {selectedSaleForView.items?.map((it, i) => (

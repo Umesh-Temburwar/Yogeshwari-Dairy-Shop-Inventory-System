@@ -56,7 +56,7 @@ export const DamageTracker: React.FC = () => {
     { id: 'Theli Phat Gayi (Leaked)', label: t('leakedPouch') },
     { id: 'Expiry Date Over', label: t('expiredProduct') },
     { id: 'Handling Spoilage', label: t('handlingSpoilage') },
-    { id: 'Other', label: language === 'mr' ? 'इतर कारण' : 'Other' }
+    { id: 'Other', label: language === 'mr' ? 'इतर कारण' : language === 'hi' ? 'अन्य कारण' : 'Other' }
   ];
 
   return (
@@ -72,7 +72,9 @@ export const DamageTracker: React.FC = () => {
           <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
             {language === 'mr' 
               ? 'नासलेले दूध, लिकेज, मुदत संपलेली उत्पादने व आर्थिक नुकसानीचा हिशोब' 
-              : 'फटा दूध, पाउच लीकेज, दही की एक्सपायरी व नुकसान का वित्तीय हिसाब'}
+              : language === 'hi'
+              ? 'फटा दूध, पाउच लीकेज, दही की एक्सपायरी व नुकसान का वित्तीय हिसाब'
+              : 'Curdled milk, packet leakage, expired goods, and financial loss tracking'}
           </p>
         </div>
 
@@ -92,37 +94,37 @@ export const DamageTracker: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
           <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'एकूण झालेले नुकसान (Financial Loss)' : 'कुल डैमेज नुकसान (Financial Loss)'}
+            {language === 'mr' ? 'एकूण झालेले नुकसान (Financial Loss)' : language === 'hi' ? 'कुल डैमेज नुकसान (Financial Loss)' : 'Total Spoilage Loss'}
           </span>
           <span className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1 block">
             ₹{metrics.totalDamagesLoss.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? 'थेट नफ्यामधून वजा केलेले नुकसान' : 'सीधे लाभ (Net Profit) में से घटाया गया नुकसान'}
+            {language === 'mr' ? 'थेट नफ्यामधून वजा केलेले नुकसान' : language === 'hi' ? 'सीधे लाभ (Net Profit) में से घटाया गया नुकसान' : 'Directly deducted from net profit'}
           </span>
         </div>
 
         <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
           <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'नुकसान घटना (Incidents)' : 'डैमेज घटनाएं (Total Incidents)'}
+            {language === 'mr' ? 'नुकसान घटना (Incidents)' : language === 'hi' ? 'डैमेज घटनाएं (Total Incidents)' : 'Damage Incidents'}
           </span>
           <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
-            {filteredDamages.length} {language === 'mr' ? 'वेळा' : 'बार'}
+            {filteredDamages.length} {language === 'mr' ? 'वेळा' : language === 'hi' ? 'बार' : 'times'}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? 'कालावधीतील एकूण नासाडी नोंदी' : 'चुनी गई अवधि में दर्ज कुल खराबी'}
+            {language === 'mr' ? 'कालावधीतील एकूण नासाडी नोंदी' : language === 'hi' ? 'चुनी गई अवधि में दर्ज कुल खराबी' : 'Total recorded spoilage incidents'}
           </span>
         </div>
 
         <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
           <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'खरेदीवर नासाडीचे प्रमाण' : 'खरीद पर खराबी का प्रतिशत'}
+            {language === 'mr' ? 'खरेदीवर नासाडीचे प्रमाण' : language === 'hi' ? 'खरीद पर खराबी का प्रतिशत' : 'Spoilage % on Purchases'}
           </span>
           <span className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1 block">
             {((metrics.totalDamagesLoss / (metrics.totalPurchasesAmount || 1)) * 100).toFixed(1)}%
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            (1% ते 2% सामान्य मानले जाते)
+            {language === 'mr' ? '(1% ते 2% सामान्य मानले जाते)' : language === 'hi' ? '(1% से 2% सामान्य माना जाता है)' : '(1% to 2% is industry normal)'}
           </span>
         </div>
       </div>
@@ -131,10 +133,10 @@ export const DamageTracker: React.FC = () => {
       <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs overflow-hidden">
         <div className="p-4 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between">
           <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-            {language === 'mr' ? 'खराब / नासलेला माल नोंद वही' : 'खराब / डैमेज माल हिस्ट्री'}
+            {language === 'mr' ? 'खराब / नासलेला माल नोंद वही' : language === 'hi' ? 'खराब / डैमेज माल हिस्ट्री' : 'Damages & Spoilage Log'}
           </h3>
           <span className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
-            {filteredDamages.length} {language === 'mr' ? 'नोंदी' : 'रिकॉर्ड'}
+            {filteredDamages.length} {language === 'mr' ? 'नोंदी' : language === 'hi' ? 'रिकॉर्ड' : 'records'}
           </span>
         </div>
 
@@ -143,12 +145,12 @@ export const DamageTracker: React.FC = () => {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] font-bold uppercase">
                 <tr>
-                  <th className="px-4 py-3">{language === 'mr' ? 'तारीख' : 'दिनांक'}</th>
+                  <th className="px-4 py-3">{language === 'mr' ? 'तारीख' : language === 'hi' ? 'दिनांक' : 'Date'}</th>
                   <th className="px-4 py-3">{t('productNameCol')}</th>
-                  <th className="px-3 py-3 text-center">{language === 'mr' ? 'खराब प्रमाण' : 'खराब मात्रा'}</th>
-                  <th className="px-3 py-3">{language === 'mr' ? 'नासाडीचे कारण' : 'खराबी का कारण'}</th>
-                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'अंदाजे नुकसान' : 'अनुमानित नुकसान'}</th>
-                  <th className="px-4 py-3">{language === 'mr' ? 'तपशील / शेरा' : 'विवरण / नोट्स'}</th>
+                  <th className="px-3 py-3 text-center">{language === 'mr' ? 'खराब प्रमाण' : language === 'hi' ? 'खराब मात्रा' : 'Damaged Qty'}</th>
+                  <th className="px-3 py-3">{language === 'mr' ? 'नासाडीचे कारण' : language === 'hi' ? 'खराबी का कारण' : 'Reason'}</th>
+                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'अंदाजे नुकसान' : language === 'hi' ? 'अनुमानित नुकसान' : 'Est. Loss'}</th>
+                  <th className="px-4 py-3">{language === 'mr' ? 'तपशील / शेरा' : language === 'hi' ? 'विवरण / नोट्स' : 'Notes / Remarks'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
@@ -186,7 +188,7 @@ export const DamageTracker: React.FC = () => {
           </div>
         ) : (
           <div className="p-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs">
-            {language === 'mr' ? 'या कालावधीत कोणताही माल खराब झालेला नाही.' : 'इस अवधि में कोई डैमेज माल दर्ज नहीं है।'}
+            {language === 'mr' ? 'या कालावधीत कोणताही माल खराब झालेला नाही.' : language === 'hi' ? 'इस अवधि में कोई डैमेज माल दर्ज नहीं है।' : 'No damaged goods recorded for this period.'}
           </div>
         )}
       </div>
@@ -203,10 +205,10 @@ export const DamageTracker: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                    {language === 'mr' ? 'खराब / नासलेला माल नोंदवा' : 'खराब / डैमेज माल दर्ज करें'}
+                    {language === 'mr' ? 'खराब / नासलेला माल नोंदवा' : language === 'hi' ? 'खराब / डैमेज माल दर्ज करें' : 'Record Damaged / Spoiled Stock'}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                    {language === 'mr' ? 'शिल्लक साठ्यामधून प्रमाण आपोआप कमी होईल' : 'स्टॉक से मात्रा अपने आप घट जाएगी'}
+                    {language === 'mr' ? 'शिल्लक साठ्यामधून प्रमाण आपोआप कमी होईल' : language === 'hi' ? 'स्टॉक से मात्रा अपने आप घट जाएगी' : 'Quantity will automatically be deducted from inventory'}
                   </p>
                 </div>
               </div>
@@ -222,7 +224,7 @@ export const DamageTracker: React.FC = () => {
               
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'कोणता माल खराब झाला?' : 'कौनसा माल खराब हुआ?'} *
+                  {language === 'mr' ? 'कोणता माल खराब झाला?' : language === 'hi' ? 'कौनसा माल खराब हुआ?' : 'Select Damaged Item'} *
                 </label>
                 <select
                   value={selectedProductId}
@@ -240,7 +242,7 @@ export const DamageTracker: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                    {language === 'mr' ? `खराब प्रमाण (${selectedProduct?.unit}) *` : `खराब मात्रा (${selectedProduct?.unit}) *`}
+                    {language === 'mr' ? `खराब प्रमाण (${selectedProduct?.unit}) *` : language === 'hi' ? `खराब मात्रा (${selectedProduct?.unit}) *` : `Damaged Quantity (${selectedProduct?.unit}) *`}
                   </label>
                   <input
                     type="number"
@@ -255,7 +257,7 @@ export const DamageTracker: React.FC = () => {
 
                 <div>
                   <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                    {language === 'mr' ? 'नासाडीचे कारण *' : 'खराबी का कारण *'}
+                    {language === 'mr' ? 'नासाडीचे कारण *' : language === 'hi' ? 'खराबी का कारण *' : 'Reason for Spoilage *'}
                   </label>
                   <select
                     value={reason}
@@ -271,7 +273,7 @@ export const DamageTracker: React.FC = () => {
 
               {/* Estimated Loss preview */}
               <div className="bg-rose-50 dark:bg-rose-950/40 p-3 rounded-2xl border border-rose-200 dark:border-rose-900/60 flex justify-between items-center text-xs font-bold text-rose-950 dark:text-rose-300">
-                <span>{language === 'mr' ? 'अंदाजे आर्थिक नुकसान (Loss):' : 'अनुमानित वित्तीय नुकसान:'}</span>
+                <span>{language === 'mr' ? 'अंदाजे आर्थिक नुकसान (Loss):' : language === 'hi' ? 'अनुमानित वित्तीय नुकसान:' : 'Estimated Financial Loss:'}</span>
                 <span className="text-base font-black text-rose-700 dark:text-rose-400">
                   ₹{estimatedLoss.toLocaleString('en-IN')}
                 </span>
@@ -279,11 +281,11 @@ export const DamageTracker: React.FC = () => {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'तपशील किंवा शेरा' : 'विस्तार से कारण या नोट्स'}
+                  {language === 'mr' ? 'तपशील किंवा शेरा' : language === 'hi' ? 'विस्तार से कारण या नोट्स' : 'Detailed Notes / Remarks'}
                 </label>
                 <textarea
                   rows={2}
-                  placeholder={language === 'mr' ? 'उदा. दुपारी वीज गेल्यामुळे २.५ लिटर दूध नासले (पनीर/छान्यामध्ये वापरले)' : 'उदा. दोपहर में लाइट जाने के कारण दूध फट गया'}
+                  placeholder={language === 'mr' ? 'उदा. दुपारी वीज गेल्यामुळे २.५ लिटर दूध नासले (पनीर/छान्यामध्ये वापरले)' : language === 'hi' ? 'उदा. दोपहर में लाइट जाने के कारण दूध फट गया' : 'e.g. Power outage caused 2.5L curdling'}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none"
@@ -302,7 +304,7 @@ export const DamageTracker: React.FC = () => {
                   type="submit"
                   className="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-600/20"
                 >
-                  {t('save')} &amp; {language === 'mr' ? 'साठा वजा करा' : 'स्टॉक घटाएं'}
+                  {t('save')} &amp; {language === 'mr' ? 'साठा वजा करा' : language === 'hi' ? 'स्टॉक घटाएं' : 'Deduct Stock'}
                 </button>
               </div>
 

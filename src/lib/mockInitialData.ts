@@ -1,5 +1,5 @@
-import { Product, Sale, Purchase, DamageRecord, UdharCustomer, UdharTransaction, Expense } from '../types';
-import { format, subDays } from 'date-fns';
+import { Product, Sale, Purchase, DamageRecord, UdharCustomer, UdharTransaction, Expense, ProductBatch } from '../types';
+import { format, subDays, addDays } from 'date-fns';
 
 const today = new Date();
 const todayStr = format(today, 'yyyy-MM-dd');
@@ -290,6 +290,9 @@ export const INITIAL_SALES: Sale[] = [
     invoice_no: 'YD-2026-001',
     customer_name: 'Counter Customer',
     customer_phone: '',
+    customer_gender: 'Male',
+    customer_age_group: 'Adults (26-45)',
+    customer_age: 32,
     total_amount: 210,
     discount: 0,
     net_amount: 210,
@@ -316,7 +319,10 @@ export const INITIAL_SALES: Sale[] = [
     id: 'sale-2',
     invoice_no: 'YD-2026-002',
     customer_name: 'Sharma Halwai',
-    customer_phone: '9823145678',
+    customer_phone: '8856087984',
+    customer_gender: 'Male',
+    customer_age_group: 'Adults (26-45)',
+    customer_age: 42,
     total_amount: 1460,
     discount: 20,
     net_amount: 1440,
@@ -354,6 +360,9 @@ export const INITIAL_SALES: Sale[] = [
     invoice_no: 'YD-2026-003',
     customer_name: 'Mahesh Bhai',
     customer_phone: '9890123456',
+    customer_gender: 'Male',
+    customer_age_group: 'Youth (18-25)',
+    customer_age: 23,
     total_amount: 500,
     discount: 0,
     net_amount: 500,
@@ -401,6 +410,9 @@ export const INITIAL_SALES: Sale[] = [
     invoice_no: 'YD-2026-004',
     customer_name: 'Gupta General Store & Tea Stall',
     customer_phone: '9890123456',
+    customer_gender: 'Male',
+    customer_age_group: 'Adults (26-45)',
+    customer_age: 38,
     total_amount: 336,
     discount: 0,
     net_amount: 336,
@@ -423,12 +435,176 @@ export const INITIAL_SALES: Sale[] = [
       }
     ]
   },
+  // Additional Demographic-rich sales
+  {
+    id: 'sale-7',
+    invoice_no: 'YD-2026-007',
+    customer_name: 'Priya Sharma (College)',
+    customer_phone: '9822114455',
+    customer_gender: 'Female',
+    customer_age_group: 'Youth (18-25)',
+    customer_age: 21,
+    total_amount: 140,
+    discount: 0,
+    net_amount: 140,
+    payment_mode: 'Online_UPI',
+    cash_amount: 0,
+    online_amount: 140,
+    udhar_amount: 0,
+    sale_date: todayStr,
+    created_at: new Date().toISOString(),
+    items: [
+      {
+        id: 'si-13',
+        product_id: 'prod-14',
+        product_name: 'Kulhad Sweet Lassi',
+        quantity: 2,
+        unit: 'Piece',
+        unit_price: 40,
+        purchase_cost: 22,
+        total_price: 80
+      },
+      {
+        id: 'si-14',
+        product_id: 'prod-7',
+        product_name: 'Masala Chaas (Spiced Buttermilk)',
+        quantity: 4,
+        unit: 'Packet (500ml)',
+        unit_price: 15,
+        purchase_cost: 11,
+        total_price: 60
+      }
+    ]
+  },
+  {
+    id: 'sale-8',
+    invoice_no: 'YD-2026-008',
+    customer_name: 'Sunita Ben Kulkarni',
+    customer_phone: '9890223344',
+    customer_gender: 'Female',
+    customer_age_group: 'Seniors (45+)',
+    customer_age: 58,
+    total_amount: 1020,
+    discount: 0,
+    net_amount: 1020,
+    payment_mode: 'Cash',
+    cash_amount: 1020,
+    online_amount: 0,
+    udhar_amount: 0,
+    sale_date: todayStr,
+    created_at: new Date().toISOString(),
+    items: [
+      {
+        id: 'si-15',
+        product_id: 'prod-2',
+        product_name: 'Desi Cow Milk (Gai Ka Doodh)',
+        quantity: 5,
+        unit: 'Litre',
+        unit_price: 56,
+        purchase_cost: 44,
+        total_price: 280
+      },
+      {
+        id: 'si-16',
+        product_id: 'prod-8',
+        product_name: 'Desi Cow Ghee (Pure Jar)',
+        quantity: 1,
+        unit: 'Kg',
+        unit_price: 740,
+        purchase_cost: 590,
+        total_price: 740
+      }
+    ]
+  },
+  {
+    id: 'sale-9',
+    invoice_no: 'YD-2026-009',
+    customer_name: 'Aarav & Mother (Anita Verma)',
+    customer_phone: '9860112233',
+    customer_gender: 'Female',
+    customer_age_group: 'Adults (26-45)',
+    customer_age: 34,
+    total_amount: 605,
+    discount: 5,
+    net_amount: 600,
+    payment_mode: 'Online_UPI',
+    cash_amount: 0,
+    online_amount: 600,
+    udhar_amount: 0,
+    sale_date: todayStr,
+    created_at: new Date().toISOString(),
+    items: [
+      {
+        id: 'si-17',
+        product_id: 'prod-4',
+        product_name: 'Fresh Malai Paneer',
+        quantity: 1,
+        unit: 'Kg',
+        unit_price: 380,
+        purchase_cost: 310,
+        total_price: 380
+      },
+      {
+        id: 'si-18',
+        product_id: 'prod-5',
+        product_name: 'Fresh Desi Dahi (Khula Curd)',
+        quantity: 3,
+        unit: 'Kg',
+        unit_price: 75,
+        purchase_cost: 55,
+        total_price: 225
+      }
+    ]
+  },
+  {
+    id: 'sale-10',
+    invoice_no: 'YD-2026-010',
+    customer_name: 'Rahul Deshmukh (Hostel Student)',
+    customer_phone: '9833778899',
+    customer_gender: 'Male',
+    customer_age_group: 'Kids/Teens (<18)',
+    customer_age: 17,
+    total_amount: 310,
+    discount: 0,
+    net_amount: 310,
+    payment_mode: 'Online_UPI',
+    cash_amount: 0,
+    online_amount: 310,
+    udhar_amount: 0,
+    sale_date: todayStr,
+    created_at: new Date().toISOString(),
+    items: [
+      {
+        id: 'si-19',
+        product_id: 'prod-14',
+        product_name: 'Kulhad Sweet Lassi',
+        quantity: 1,
+        unit: 'Piece',
+        unit_price: 40,
+        purchase_cost: 22,
+        total_price: 40
+      },
+      {
+        id: 'si-20',
+        product_id: 'prod-12',
+        product_name: 'Kaju Katli (Pure Ghee)',
+        quantity: 0.287,
+        unit: 'Kg',
+        unit_price: 940,
+        purchase_cost: 720,
+        total_price: 270
+      }
+    ]
+  },
   // Yesterday's sales
   {
     id: 'sale-5',
     invoice_no: 'YD-2026-005',
     customer_name: 'Vikas General',
     customer_phone: '',
+    customer_gender: 'Male',
+    customer_age_group: 'Seniors (45+)',
+    customer_age: 52,
     total_amount: 3500,
     discount: 0,
     net_amount: 3500,
@@ -476,6 +652,9 @@ export const INITIAL_SALES: Sale[] = [
     invoice_no: 'YD-2026-006',
     customer_name: 'Pooja Sweet Mart',
     customer_phone: '9833445566',
+    customer_gender: 'Female',
+    customer_age_group: 'Adults (26-45)',
+    customer_age: 38,
     total_amount: 4850,
     discount: 50,
     net_amount: 4800,
@@ -553,7 +732,7 @@ export const INITIAL_CUSTOMERS: UdharCustomer[] = [
   {
     id: 'cust-1',
     name: 'Sharma Halwai (Ramesh)',
-    phone: '9823145678',
+    phone: '8856087984',
     address: 'Shop 14, Main Gol Market, Near Temple',
     total_credit: 8500,
     total_paid: 6100,
@@ -693,6 +872,205 @@ export const INITIAL_EXPENSES: Expense[] = [
     is_capital_investment: true,
     notes: 'Stamping certified digital scale for paneer and sweets counter',
     created_at: subDays(today, 25).toISOString()
+  }
+];
+
+export const INITIAL_BATCHES: ProductBatch[] = [
+  {
+    id: 'bat-1',
+    product_id: 'prod-1',
+    product_name: 'Fresh Buffalo Milk (Bhains Ka Doodh)',
+    batch_no: 'BUF-261111-M1',
+    mfg_date: todayStr,
+    expiry_date: format(addDays(today, 1), 'yyyy-MM-dd'),
+    qty_received: 85,
+    qty_remaining: 80,
+    purchase_price: 58,
+    supplier_name: 'Rampal Dairy Farmer (Village Sangam)',
+    notes: 'Morning fresh buffalo milk batch, fat 7.2',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'bat-2',
+    product_id: 'prod-1',
+    product_name: 'Fresh Buffalo Milk (Bhains Ka Doodh)',
+    batch_no: 'BUF-261110-E2',
+    mfg_date: yesterdayStr,
+    expiry_date: todayStr,
+    qty_received: 40,
+    qty_remaining: 30,
+    purchase_price: 58,
+    supplier_name: 'Rampal Dairy Farmer',
+    notes: 'Evening batch, must sell today or boil for paneer',
+    created_at: subDays(today, 1).toISOString()
+  },
+  {
+    id: 'bat-3',
+    product_id: 'prod-2',
+    product_name: 'Desi Cow Milk (Gai Ka Doodh)',
+    batch_no: 'COW-261111-M1',
+    mfg_date: todayStr,
+    expiry_date: format(addDays(today, 1), 'yyyy-MM-dd'),
+    qty_received: 65,
+    qty_remaining: 60,
+    purchase_price: 44,
+    supplier_name: 'Kishanlal Desi Goshala',
+    notes: 'Morning fresh Gir cow milk',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'bat-4',
+    product_id: 'prod-2',
+    product_name: 'Desi Cow Milk (Gai Ka Doodh)',
+    batch_no: 'COW-261110-E2',
+    mfg_date: yesterdayStr,
+    expiry_date: todayStr,
+    qty_received: 30,
+    qty_remaining: 20,
+    purchase_price: 44,
+    supplier_name: 'Kishanlal Desi Goshala',
+    notes: 'Evening batch expiring today',
+    created_at: subDays(today, 1).toISOString()
+  },
+  {
+    id: 'bat-5',
+    product_id: 'prod-3',
+    product_name: 'Toned Milk Pouch (500ml)',
+    batch_no: 'TON-261110-A1',
+    mfg_date: yesterdayStr,
+    expiry_date: format(addDays(today, 1), 'yyyy-MM-dd'),
+    qty_received: 30,
+    qty_remaining: 14,
+    purchase_price: 24,
+    supplier_name: 'Mahanand Dairy Plant',
+    notes: 'Pasteurized homogenised 500ml crate',
+    created_at: subDays(today, 1).toISOString()
+  },
+  {
+    id: 'bat-6',
+    product_id: 'prod-4',
+    product_name: 'Fresh Malai Paneer',
+    batch_no: 'PAN-261111-M1',
+    mfg_date: todayStr,
+    expiry_date: format(addDays(today, 3), 'yyyy-MM-dd'),
+    qty_received: 5,
+    qty_remaining: 4.5,
+    purchase_price: 310,
+    supplier_name: 'Shree Krishna Paneer Bhandar',
+    notes: 'Fresh soft malai paneer slab',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'bat-7',
+    product_id: 'prod-4',
+    product_name: 'Fresh Malai Paneer',
+    batch_no: 'PAN-261109-1',
+    mfg_date: twoDaysAgoStr,
+    expiry_date: todayStr,
+    qty_received: 10,
+    qty_remaining: 2.0,
+    purchase_price: 310,
+    supplier_name: 'Shree Krishna Paneer Bhandar',
+    notes: 'Expiring today - prioritize on counter billing',
+    created_at: subDays(today, 2).toISOString()
+  },
+  {
+    id: 'bat-8',
+    product_id: 'prod-5',
+    product_name: 'Fresh Desi Dahi (Khula Curd)',
+    batch_no: 'DAH-261110-1',
+    mfg_date: yesterdayStr,
+    expiry_date: format(addDays(today, 3), 'yyyy-MM-dd'),
+    qty_received: 25,
+    qty_remaining: 20,
+    purchase_price: 55,
+    supplier_name: 'In-House Fresh Set',
+    notes: 'Sweet thick curd',
+    created_at: subDays(today, 1).toISOString()
+  },
+  {
+    id: 'bat-9',
+    product_id: 'prod-5',
+    product_name: 'Fresh Desi Dahi (Khula Curd)',
+    batch_no: 'DAH-261108-1',
+    mfg_date: format(subDays(today, 3), 'yyyy-MM-dd'),
+    expiry_date: format(addDays(today, 1), 'yyyy-MM-dd'),
+    qty_received: 20,
+    qty_remaining: 12,
+    purchase_price: 55,
+    supplier_name: 'In-House Fresh Set',
+    notes: 'Expiring tomorrow',
+    created_at: subDays(today, 3).toISOString()
+  },
+  {
+    id: 'bat-10',
+    product_id: 'prod-7',
+    product_name: 'Masala Chaas (Spiced Buttermilk)',
+    batch_no: 'CHS-261111-1',
+    mfg_date: todayStr,
+    expiry_date: format(addDays(today, 3), 'yyyy-MM-dd'),
+    qty_received: 80,
+    qty_remaining: 65,
+    purchase_price: 11,
+    supplier_name: 'In-House Churning',
+    notes: 'Jeera tadka fresh pouch',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'bat-11',
+    product_id: 'prod-8',
+    product_name: 'Desi Cow Ghee (Pure Jar)',
+    batch_no: 'GHE-261015-1',
+    mfg_date: format(subDays(today, 25), 'yyyy-MM-dd'),
+    expiry_date: format(addDays(today, 155), 'yyyy-MM-dd'),
+    qty_received: 20,
+    qty_remaining: 18,
+    purchase_price: 590,
+    supplier_name: 'Kishanlal Goshala Bilona',
+    notes: 'A2 Vedic Bilona Ghee Jar',
+    created_at: subDays(today, 25).toISOString()
+  },
+  {
+    id: 'bat-12',
+    product_id: 'prod-11',
+    product_name: 'Shuddh Khoya / Mawa (Pindi)',
+    batch_no: 'KHO-261110-1',
+    mfg_date: yesterdayStr,
+    expiry_date: format(addDays(today, 2), 'yyyy-MM-dd'),
+    qty_received: 15,
+    qty_remaining: 12,
+    purchase_price: 290,
+    supplier_name: 'Sangamner Mawa Market',
+    notes: 'High solid pindi mawa',
+    created_at: subDays(today, 1).toISOString()
+  },
+  {
+    id: 'bat-13',
+    product_id: 'prod-14',
+    product_name: 'Kulhad Sweet Lassi',
+    batch_no: 'LAS-261111-1',
+    mfg_date: todayStr,
+    expiry_date: format(addDays(today, 3), 'yyyy-MM-dd'),
+    qty_received: 40,
+    qty_remaining: 35,
+    purchase_price: 22,
+    supplier_name: 'In-House Counter',
+    notes: 'Earthen pot malai lassi',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'bat-14',
+    product_id: 'prod-1',
+    product_name: 'Fresh Buffalo Milk (Bhains Ka Doodh)',
+    batch_no: 'BUF-261109-OLD',
+    mfg_date: format(subDays(today, 3), 'yyyy-MM-dd'),
+    expiry_date: yesterdayStr,
+    qty_received: 2.5,
+    qty_remaining: 2.5,
+    purchase_price: 58,
+    supplier_name: 'Local Farmer',
+    notes: 'Expired batch (curdled) - Blocked from billing, ready for damage write-off',
+    created_at: subDays(today, 3).toISOString()
   }
 ];
 

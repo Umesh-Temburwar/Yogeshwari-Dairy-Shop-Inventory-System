@@ -118,42 +118,42 @@ export const ReorderNeedsView: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
           <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'एकूण संपलेली उत्पादने' : 'कुल खत्म / कम स्टॉक'}
+            {language === 'mr' ? 'एकूण संपलेली उत्पादने' : language === 'hi' ? 'कुल खत्म / कम स्टॉक' : 'Total Low / Out of Stock'}
           </span>
           <span className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1 block">
-            {itemsNeedingRestock.length} {language === 'mr' ? 'उत्पादने' : 'आइटम्स'}
+            {itemsNeedingRestock.length} {language === 'mr' ? 'उत्पादने' : language === 'hi' ? 'आइटम्स' : 'items'}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-            {itemsNeedingRestock.filter(i => i.isCritical).length} {language === 'mr' ? 'उत्पादने पूर्णपणे संपली आहेत' : 'पूरी तरह शून्य हैं'}
+            {itemsNeedingRestock.filter(i => i.isCritical).length} {language === 'mr' ? 'उत्पादने पूर्णपणे संपली आहेत' : language === 'hi' ? 'पूरी तरह शून्य हैं' : 'completely out of stock'}
           </span>
         </div>
 
         <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
           <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'अंदाजे खरेदी बजेट' : 'अनुमानित खरीद बजट (Total Cost)'}
+            {language === 'mr' ? 'अंदाजे खरेदी बजेट' : language === 'hi' ? 'अनुमानित खरीद बजट (Total Cost)' : 'Estimated Procurement Budget'}
           </span>
           <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
             ₹{totalEstimatedCost.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-            {language === 'mr' ? 'घाऊक खरेदी दराप्रमाणे अंदाजे रक्कम' : 'थोक खरीद भाव के हिसाब से'}
+            {language === 'mr' ? 'घाऊक खरेदी दराप्रमाणे अंदाजे रक्कम' : language === 'hi' ? 'थोक खरीद भाव के हिसाब से' : 'Calculated at wholesale purchase rate'}
           </span>
         </div>
 
         <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex items-center justify-between transition-colors">
           <div>
             <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-              {language === 'mr' ? 'खरेदी नोंद' : 'खरीद एंट्री'}
+              {language === 'mr' ? 'खरेदी नोंद' : language === 'hi' ? 'खरीद एंट्री' : 'Record Purchase'}
             </span>
             <span className="text-xs text-slate-600 dark:text-[#8FA69C] block mt-1">
-              {language === 'mr' ? 'माल येताच थेट साठ्यात नोंदवा' : 'माल आते ही सीधे स्टॉक में जोड़ें'}
+              {language === 'mr' ? 'माल येताच थेट साठ्यात नोंदवा' : language === 'hi' ? 'माल आते ही सीधे स्टॉक में जोड़ें' : 'Directly add to stock upon arrival'}
             </span>
           </div>
           <button
             onClick={() => setActiveView('purchases')}
             className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs"
           >
-            + {language === 'mr' ? 'खरेदी नोंदवा' : 'खरीद दर्ज करें'}
+            + {language === 'mr' ? 'खरेदी नोंदवा' : language === 'hi' ? 'खरीद दर्ज करें' : 'Record Purchase'}
           </button>
         </div>
       </div>
@@ -164,11 +164,11 @@ export const ReorderNeedsView: React.FC = () => {
           <h3 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
             <Truck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             <span>
-              {language === 'mr' ? 'आजचे खरेदी मागणी पत्रक' : 'आज का आर्डर मांग पत्र'}
+              {language === 'mr' ? 'आजचे खरेदी मागणी पत्रक' : language === 'hi' ? 'आज का आर्डर मांग पत्र' : "Today's Restock Order Sheet"}
             </span>
           </h3>
           <span className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? 'किमान मर्यादेपेक्षा कमी माल' : 'न्यूनतम अलर्ट से कम उत्पाद'}
+            {language === 'mr' ? 'किमान मर्यादेपेक्षा कमी माल' : language === 'hi' ? 'न्यूनतम अलर्ट से कम उत्पाद' : 'Products below minimum alert threshold'}
           </span>
         </div>
 
@@ -180,10 +180,10 @@ export const ReorderNeedsView: React.FC = () => {
                   <th className="px-4 py-3">{t('productNameCol')}</th>
                   <th className="px-3 py-3">{t('categoryCol')}</th>
                   <th className="px-3 py-3 text-center">{t('currentStockCol')}</th>
-                  <th className="px-3 py-3 text-center">{language === 'mr' ? 'किमान मर्यादा' : 'न्यूनतम सीमा'}</th>
+                  <th className="px-3 py-3 text-center">{language === 'mr' ? 'किमान मर्यादा' : language === 'hi' ? 'न्यूनतम सीमा' : 'Min Alert'}</th>
                   <th className="px-3 py-3 text-center">{t('recommendedOrderQty')}</th>
                   <th className="px-3 py-3 text-right">{t('costPriceCol')}</th>
-                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'अंदाजे खर्च' : 'अनुमानित लागत'}</th>
+                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'अंदाजे खर्च' : language === 'hi' ? 'अनुमानित लागत' : 'Est Cost'}</th>
                   <th className="px-4 py-3 text-right">{t('actionsCol')}</th>
                 </tr>
               </thead>
@@ -232,7 +232,7 @@ export const ReorderNeedsView: React.FC = () => {
                         onClick={() => setActiveView('purchases')}
                         className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-2xs"
                       >
-                        + {language === 'mr' ? 'माल खरेदी' : 'माल खरीदें'}
+                        + {language === 'mr' ? 'माल खरेदी' : language === 'hi' ? 'माल खरीदें' : 'Buy Stock'}
                       </button>
                     </td>
                   </tr>
@@ -244,10 +244,10 @@ export const ReorderNeedsView: React.FC = () => {
           <div className="p-12 text-center space-y-2">
             <CheckCircle2 className="w-12 h-12 text-emerald-600 dark:text-emerald-400 mx-auto" />
             <h4 className="font-bold text-slate-900 dark:text-white text-base">
-              {language === 'mr' ? 'दुकानातील कोणताही माल संपलेला नाही!' : 'दुकान का कोई भी माल खत्म नहीं है!'}
+              {language === 'mr' ? 'दुकानातील कोणताही माल संपलेला नाही!' : language === 'hi' ? 'दुकान का कोई भी माल खत्म नहीं है!' : 'All dairy items are well stocked!'}
             </h4>
             <p className="text-xs text-slate-500 dark:text-[#8FA69C] max-w-sm mx-auto">
-              {language === 'mr' ? 'दूध, पनीर, दही, तूप आणि मिठाई पुरेशा साठ्यात उपलब्ध आहे.' : 'सभी डेरी उत्पाद, दूध, पनीर, दही व घी पर्याप्त स्टॉक में उपलब्ध हैं।'}
+              {language === 'mr' ? 'दूध, पनीर, दही, तूप आणि मिठाई पुरेशा साठ्यात उपलब्ध आहे.' : language === 'hi' ? 'सभी डेरी उत्पाद, दूध, पनीर, दही व घी पर्याप्त स्टॉक में उपलब्ध हैं।' : 'Fresh milk, paneer, curd, ghee, and sweets are available in sufficient quantities.'}
             </p>
           </div>
         )}

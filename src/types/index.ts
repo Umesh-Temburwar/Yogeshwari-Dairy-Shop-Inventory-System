@@ -45,11 +45,17 @@ export interface SaleItem {
 
 export type PaymentMode = 'Cash' | 'Online_UPI' | 'Split' | 'Udhar';
 
+export type CustomerGender = 'Male' | 'Female' | 'Other';
+export type CustomerAgeGroup = 'Kids/Teens (<18)' | 'Youth (18-25)' | 'Adults (26-45)' | 'Seniors (45+)';
+
 export interface Sale {
   id: string;
   invoice_no: string;
   customer_name: string;
   customer_phone?: string;
+  customer_gender?: CustomerGender;
+  customer_age_group?: CustomerAgeGroup;
+  customer_age?: number;
   total_amount: number;
   discount: number;
   net_amount: number;
@@ -60,6 +66,28 @@ export interface Sale {
   sale_date: string; // YYYY-MM-DD
   created_at: string;
   items: SaleItem[];
+}
+
+export type ExpiryStatus =
+  | 'EXPIRED'
+  | 'EXPIRING_TODAY'
+  | 'EXPIRING_TOMORROW'
+  | 'EXPIRING_IN_3_DAYS'
+  | 'FRESH';
+
+export interface ProductBatch {
+  id: string;
+  product_id: string;
+  product_name: string;
+  batch_no: string;
+  mfg_date: string; // YYYY-MM-DD
+  expiry_date: string; // YYYY-MM-DD
+  qty_received: number;
+  qty_remaining: number;
+  purchase_price: number;
+  supplier_name?: string;
+  notes?: string;
+  created_at: string;
 }
 
 export interface Purchase {
@@ -74,6 +102,8 @@ export interface Purchase {
   payment_mode: 'Cash' | 'Online_UPI' | 'Bank_Transfer' | 'Udhar';
   purchase_date: string; // YYYY-MM-DD
   invoice_number?: string;
+  batch_no?: string;
+  expiry_date?: string;
   notes?: string;
   created_at: string;
 }

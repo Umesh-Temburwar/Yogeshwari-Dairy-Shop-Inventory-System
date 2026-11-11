@@ -1,15 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { MilkFatCalculator } from './MilkFatCalculator';
 import { exportToCSV } from '../../lib/exportUtils';
 import { 
+  getShelfLifeDays, 
+  getSuggestedExpiryDate, 
+  generateBatchNumber, 
+  getShelfLifeNote, 
+  computeExpiryStatus, 
+  getExpiryBadgeInfo 
+} from '../../lib/shelfLifeUtils';
+import { 
   Truck, 
   Plus, 
   X,
   Calculator,
-  Download
+  Download,
+  Sparkles,
+  Layers,
+  Clock
 } from 'lucide-react';
 
 export const PurchaseTracker: React.FC = () => {
@@ -27,13 +38,40 @@ export const PurchaseTracker: React.FC = () => {
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [notes, setNotes] = useState('');
 
+  // Batch & Expiry auto-calculation states
+  const [batchNo, setBatchNo] = useState('');
+  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
+  const [expiryDate, setExpiryDate] = useState('');
+
   const selectedProduct = products.find(p => p.id === selectedProductId) || products[0];
+  const shelfDays = selectedProduct ? getShelfLifeDays(selectedProduct.category, selectedProduct.name) : 2;
+  const shelfLifeTip = selectedProduct ? getShelfLifeNote(selectedProduct.category, selectedProduct.name, language) : '';
+
+  useEffect(() => {
+    if (selectedProduct) {
+      setBatchNo(generateBatchNumber(selectedProduct.name, purchaseDate));
+      setExpiryDate(getSuggestedExpiryDate(purchaseDate, shelfDays));
+      if (!purchasePrice) {
+        setPurchasePrice(selectedProduct.purchase_price.toString());
+      }
+    }
+  }, [selectedProductId, purchaseDate, shelfDays]);
 
   const handleProductChange = (prodId: string) => {
     setSelectedProductId(prodId);
     const prod = products.find(p => p.id === prodId);
     if (prod) {
       setPurchasePrice(prod.purchase_price.toString());
+      const days = getShelfLifeDays(prod.category, prod.name);
+      setBatchNo(generateBatchNumber(prod.name, purchaseDate));
+      setExpiryDate(getSuggestedExpiryDate(purchaseDate, days));
+    }
+  };
+
+  const handleDateChange = (newDate: string) => {
+    setPurchaseDate(newDate);
+    if (selectedProduct) {
+      setExpiryDate(getSuggestedExpiryDate(newDate, shelfDays));
     }
   };
 
@@ -52,7 +90,7 @@ export const PurchaseTracker: React.FC = () => {
     const qty = parseFloat(quantity);
     const price = parseFloat(purchasePrice) || selectedProduct.purchase_price;
     const total = qty * price;
-    const defaultSupplier = language === 'mr' ? 'स्थानिक दुग्ध उत्पादक शेतकरी' : 'Local Dairy Farmer';
+    const defaultSupplier = language === 'mr' ? 'स्थानिक दुग्ध उत्पादक शेतकरी' : language === 'hi' ? 'स्थानीय डेयरी किसान' : 'Local Dairy Farmer';
 
     await createPurchase({
       product_id: selectedProduct.id,
@@ -63,7 +101,9 @@ export const PurchaseTracker: React.FC = () => {
       purchase_price: price,
       total_amount: total,
       payment_mode: paymentMode,
-      purchase_date: new Date().toISOString().split('T')[0],
+      purchase_date: purchaseDate,
+      batch_no: batchNo.trim() || generateBatchNumber(selectedProduct.name, purchaseDate),
+      expiry_date: expiryDate || getSuggestedExpiryDate(purchaseDate, shelfDays),
       invoice_number: invoiceNumber.trim() || undefined,
       notes: notes.trim() || undefined
     });
@@ -114,7 +154,7 @@ export const PurchaseTracker: React.FC = () => {
             </span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
-            {language === 'mr' ? 'शेतकरी, डेअरी संस्था आणि पुरवठादारांकडून कच्चा माल खरेदी' : 'Raw milk & wholesale inventory purchase tracking from farmers and plants'}
+            {language === 'mr' ? 'शेतकरी, डेअरी संस्था आणि पुरवठादारांकडून कच्चा माल खरेदी' : language === 'hi' ? 'किसान, डेयरी संस्था और सप्लायर्स से कच्चा माल खरीद' : 'Raw milk & wholesale inventory purchase tracking from farmers and plants'}
           </p>
         </div>
 
@@ -126,7 +166,7 @@ export const PurchaseTracker: React.FC = () => {
             title="Milk Fat & SNF Testing Rate Calculator"
           >
             <Calculator className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span>{language === 'mr' ? 'दूध फॅट कॅल्क्युलेटर' : 'दूध फैट कैलकुलेटर'}</span>
+            <span>{language === 'mr' ? 'दूध फॅट कॅल्क्युलेटर' : language === 'hi' ? 'दूध फैट कैलकुलेटर' : 'Milk Fat Calculator'}</span>
           </button>
 
           <button
@@ -146,7 +186,7 @@ export const PurchaseTracker: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-md shadow-sky-600/20 transition-all active:scale-95"
           >
             <Plus className="w-4 h-4" />
-            <span>+ {language === 'mr' ? 'नवीन खरेदी नोंदवा' : 'नई खरीद दर्ज करें'}</span>
+            <span>+ {language === 'mr' ? 'नवीन खरेदी नोंदवा' : language === 'hi' ? 'नई खरीद दर्ज करें' : 'Record Purchase'}</span>
           </button>
         </div>
       </div>
@@ -164,7 +204,7 @@ export const PurchaseTracker: React.FC = () => {
             ₹{metrics.totalPurchasesAmount.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {filteredPurchases.length} {language === 'mr' ? 'खरेदी पावत्या' : 'इनवॉइस / बिल'}
+            {filteredPurchases.length} {language === 'mr' ? 'खरेदी पावत्या' : language === 'hi' ? 'इनवॉइस / बिल' : 'invoices'}
           </span>
         </div>
 
@@ -176,7 +216,7 @@ export const PurchaseTracker: React.FC = () => {
             ₹{metrics.totalSalesRevenue.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? 'खरेदी विरुद्ध विक्री प्रमाण:' : 'खरीद बनाम बिक्री अनुपात:'} {((metrics.totalSalesRevenue / (metrics.totalPurchasesAmount || 1)) * 100).toFixed(0)}%
+            {language === 'mr' ? 'खरेदी विरुद्ध विक्री प्रमाण:' : language === 'hi' ? 'खरीद बनाम बिक्री अनुपात:' : 'Sales vs Purchases Ratio:'} {((metrics.totalSalesRevenue / (metrics.totalPurchasesAmount || 1)) * 100).toFixed(0)}%
           </span>
         </div>
 
@@ -188,7 +228,7 @@ export const PurchaseTracker: React.FC = () => {
             ₹{metrics.grossProfit.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? 'विक्रीमधून माल खरेदी खर्च वजा केल्यावर' : 'बिक्री में से खरीद लागत घटाने के बाद'}
+            {language === 'mr' ? 'विक्रीमधून माल खरेदी खर्च वजा केल्यावर' : language === 'hi' ? 'बिक्री में से खरीद लागत घटाने के बाद' : 'After deducting purchase cost from sales'}
           </span>
         </div>
       </div>
@@ -197,10 +237,10 @@ export const PurchaseTracker: React.FC = () => {
       <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs overflow-hidden">
         <div className="p-4 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between">
           <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-            {language === 'mr' ? 'खरेदी तपशील यादी (Purchases History)' : 'खरीद विवरण लेजर (Purchases History)'}
+            {language === 'mr' ? 'खरेदी तपशील यादी (Purchases History)' : language === 'hi' ? 'खरीद विवरण लेजर (Purchases History)' : 'Purchases Ledger History'}
           </h3>
           <span className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
-            {filteredPurchases.length} {language === 'mr' ? 'नोंदी' : 'रिकॉर्ड'}
+            {filteredPurchases.length} {language === 'mr' ? 'नोंदी' : language === 'hi' ? 'रिकॉर्ड' : 'records'}
           </span>
         </div>
 
@@ -209,14 +249,14 @@ export const PurchaseTracker: React.FC = () => {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] font-bold uppercase">
                 <tr>
-                  <th className="px-4 py-3">{language === 'mr' ? 'तारीख' : 'दिनांक'}</th>
-                  <th className="px-3 py-3">{language === 'mr' ? 'शेतकरी / पुरवठादार' : 'सप्लायर / किसान'}</th>
+                  <th className="px-4 py-3">{language === 'mr' ? 'तारीख' : language === 'hi' ? 'दिनांक' : 'Date'}</th>
+                  <th className="px-3 py-3">{language === 'mr' ? 'शेतकरी / पुरवठादार' : language === 'hi' ? 'सप्लायर / किसान' : 'Supplier / Farmer'}</th>
                   <th className="px-4 py-3">{t('productNameCol')}</th>
-                  <th className="px-3 py-3 text-center">{language === 'mr' ? 'प्रमाण (Quantity)' : 'मात्रा'}</th>
-                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'दर (Rate)' : 'दर'}</th>
-                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'एकूण रक्कम' : 'कुल रकम'}</th>
+                  <th className="px-3 py-3 text-center">{language === 'mr' ? 'प्रमाण (Quantity)' : language === 'hi' ? 'मात्रा (Quantity)' : 'Quantity'}</th>
+                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'दर (Rate)' : language === 'hi' ? 'दर (Rate)' : 'Rate'}</th>
+                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'एकूण रक्कम' : language === 'hi' ? 'कुल रकम' : 'Total Amount'}</th>
                   <th className="px-3 py-3 text-center">{t('paymentMethod')}</th>
-                  <th className="px-4 py-3">{language === 'mr' ? 'शेरा / फॅट' : 'रिमार्क / नोट्स'}</th>
+                  <th className="px-4 py-3">{language === 'mr' ? 'शेरा / फॅट' : language === 'hi' ? 'रिमार्क / नोट्स' : 'Notes / Remarks'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
@@ -237,6 +277,18 @@ export const PurchaseTracker: React.FC = () => {
 
                     <td className="px-4 py-3">
                       <div className="font-bold text-slate-900 dark:text-white">{pur.product_name}</div>
+                      {(pur.batch_no || pur.expiry_date) && (
+                        <div className="flex items-center gap-1.5 text-[10px] mt-0.5">
+                          {pur.batch_no && (
+                            <span className="font-mono text-slate-500 font-semibold">{pur.batch_no}</span>
+                          )}
+                          {pur.expiry_date && (
+                            <span className="text-emerald-700 dark:text-emerald-400 font-bold">
+                              • Exp: {pur.expiry_date}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </td>
 
                     <td className="px-3 py-3 text-center font-black text-slate-900 dark:text-white">
@@ -267,7 +319,7 @@ export const PurchaseTracker: React.FC = () => {
           </div>
         ) : (
           <div className="p-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs">
-            {language === 'mr' ? 'या कालावधीत कोणतीही खरेदी नोंदवलेली नाही.' : 'इस चुनी गई अवधि में कोई खरीद दर्ज नहीं है।'}
+            {language === 'mr' ? 'या कालावधीत कोणतीही खरेदी नोंदवलेली नाही.' : language === 'hi' ? 'इस चुनी गई अवधि में कोई खरीद दर्ज नहीं है।' : 'No purchases recorded for this selected period.'}
           </div>
         )}
       </div>
@@ -291,10 +343,10 @@ export const PurchaseTracker: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                    {language === 'mr' ? 'नवीन माल खरेदी नोंदवा (Add Purchase)' : 'नई खरीद दर्ज करें (Add Purchase Entry)'}
+                    {language === 'mr' ? 'नवीन माल खरेदी नोंदवा (Add Purchase)' : language === 'hi' ? 'नई खरीद दर्ज करें (Add Purchase Entry)' : 'Record New Purchase Entry'}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                    {language === 'mr' ? 'खरेदी करताच शिल्लक साठा आपोआप वाढेल' : 'माल आते ही स्टॉक अपने आप बढ़ जाएगा'}
+                    {language === 'mr' ? 'खरेदी करताच शिल्लक साठा आपोआप वाढेल' : language === 'hi' ? 'माल आते ही स्टॉक अपने आप बढ़ जाएगा' : 'Stock quantity increases automatically upon purchase'}
                   </p>
                 </div>
               </div>
@@ -308,9 +360,10 @@ export const PurchaseTracker: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               
+              {/* Product Selection */}
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'कोणता माल खरेदी केला?' : 'कौनसा माल खरीदा?'} *
+                  {language === 'mr' ? 'कोणता माल खरेदी केला?' : language === 'hi' ? 'कौनसा माल खरीदा?' : 'Select Product Purchased'} *
                 </label>
                 <select
                   value={selectedProductId}
@@ -325,14 +378,68 @@ export const PurchaseTracker: React.FC = () => {
                 </select>
               </div>
 
+              {/* Variety-Specific Shelf-Life & Batch Expiry Intelligence */}
+              <div className="bg-emerald-50/80 dark:bg-emerald-950/30 p-3 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/40 space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-emerald-900 dark:text-emerald-300">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="truncate">{shelfLifeTip}</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900/60 text-emerald-950 dark:text-emerald-200 text-[10px] font-extrabold shrink-0">
+                    +{shelfDays} {language === 'mr' ? 'दिवस शेल्फ लाईफ' : language === 'hi' ? 'दिन शेल्फ लाइफ' : 'days shelf-life'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-1 text-xs">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-0.5">
+                      {language === 'mr' ? 'आवक तारीख' : language === 'hi' ? 'खरीद तारीख' : 'Purchase Date'}
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={purchaseDate}
+                      onChange={(e) => handleDateChange(e.target.value)}
+                      className="w-full px-2 py-1.5 rounded-lg border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-xs font-bold text-slate-900 dark:text-white focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-0.5">
+                      {language === 'mr' ? 'बॅच क्र. (Batch #)' : language === 'hi' ? 'बैच नंबर (Batch #)' : 'Batch Number'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={batchNo}
+                      onChange={(e) => setBatchNo(e.target.value)}
+                      className="w-full px-2 py-1.5 rounded-lg border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] font-mono text-xs font-bold text-slate-900 dark:text-white focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 block mb-0.5 flex items-center gap-0.5">
+                      <span>{language === 'mr' ? 'मुदत तारीख ✨' : language === 'hi' ? 'एक्सपायरी तारीख ✨' : 'Expiry Date ✨'}</span>
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={expiryDate}
+                      onChange={(e) => setExpiryDate(e.target.value)}
+                      className="w-full px-2 py-1.5 rounded-lg border border-emerald-500 bg-white dark:bg-[#131F1B] text-xs font-black text-emerald-800 dark:text-emerald-300 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'शेतकरी किंवा पुरवठादाराचे नाव *' : 'सप्लायर या किसान का नाम *'}
+                  {language === 'mr' ? 'शेतकरी किंवा पुरवठादाराचे नाव *' : language === 'hi' ? 'सप्लायर या किसान का नाम *' : 'Farmer / Supplier Name *'}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder={language === 'mr' ? 'उदा. विलास पाटील (शेतकरी) / वारणा डेअरी' : 'उदा. रामपाल गुर्जर (किसान) / बनास डेरी'}
+                  placeholder={language === 'mr' ? 'उदा. विलास पाटील (शेतकरी) / वारणा डेअरी' : language === 'hi' ? 'उदा. रामपाल गुर्जर (किसान) / बनास डेरी' : 'e.g. Rampal Dairy Farmer / Local Dairy'}
                   value={supplierName}
                   onChange={(e) => setSupplierName(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-sky-500 focus:outline-none"
@@ -342,7 +449,7 @@ export const PurchaseTracker: React.FC = () => {
               <div className="grid grid-cols-2 gap-3 bg-sky-50/60 dark:bg-[#1A2A25] p-3 rounded-2xl border border-sky-100 dark:border-[#24352F]">
                 <div>
                   <label className="text-xs font-bold text-sky-900 dark:text-sky-300 block mb-1">
-                    {language === 'mr' ? `खरेदी प्रमाण (${selectedProduct?.unit}) *` : `कितनी मात्रा खरीदी? (${selectedProduct?.unit}) *`}
+                    {language === 'mr' ? `खरेदी प्रमाण (${selectedProduct?.unit}) *` : language === 'hi' ? `कितनी मात्रा खरीदी? (${selectedProduct?.unit}) *` : `Purchase Quantity (${selectedProduct?.unit}) *`}
                   </label>
                   <input
                     type="number"
@@ -357,7 +464,7 @@ export const PurchaseTracker: React.FC = () => {
 
                 <div>
                   <label className="text-xs font-bold text-sky-900 dark:text-sky-300 block mb-1">
-                    {language === 'mr' ? `खरेदी दर प्रति ${selectedProduct?.unit} (₹) *` : `खरीद भाव प्रति ${selectedProduct?.unit} (₹) *`}
+                    {language === 'mr' ? `खरेदी दर प्रति ${selectedProduct?.unit} (₹) *` : language === 'hi' ? `खरीद भाव प्रति ${selectedProduct?.unit} (₹) *` : `Purchase Rate per ${selectedProduct?.unit} (₹) *`}
                   </label>
                   <input
                     type="number"
@@ -370,7 +477,7 @@ export const PurchaseTracker: React.FC = () => {
                 </div>
 
                 <div className="col-span-2 flex justify-between items-center pt-2 border-t border-sky-200 dark:border-[#24352F] text-xs font-bold text-sky-950 dark:text-sky-300">
-                  <span>{language === 'mr' ? 'एकूण देय रक्कम:' : 'कुल भुगतान राशि:'}</span>
+                  <span>{language === 'mr' ? 'एकूण देय रक्कम:' : language === 'hi' ? 'कुल भुगतान राशि:' : 'Total Payable Amount:'}</span>
                   <span className="text-base font-black text-sky-900 dark:text-sky-400">
                     ₹{calculatedTotal.toLocaleString('en-IN')}
                   </span>
@@ -389,14 +496,14 @@ export const PurchaseTracker: React.FC = () => {
                   >
                     <option value="Cash">{t('cash')}</option>
                     <option value="Online_UPI">{t('onlineUpi')}</option>
-                    <option value="Bank_Transfer">{language === 'mr' ? 'बँक ट्रान्सफर (NEFT)' : 'बैंक ट्रांसफर'}</option>
-                    <option value="Udhar">{language === 'mr' ? 'पुरवठादार उधारी' : 'सप्लायर उधारी'}</option>
+                    <option value="Bank_Transfer">{language === 'mr' ? 'बँक ट्रान्सफर (NEFT)' : language === 'hi' ? 'बैंक ट्रांसफर (NEFT)' : 'Bank Transfer (NEFT)'}</option>
+                    <option value="Udhar">{language === 'mr' ? 'पुरवठादार उधारी' : language === 'hi' ? 'सप्लायर उधारी' : 'Supplier Credit (Udhar)'}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                    {language === 'mr' ? 'पावती / बिल क्रमांक' : 'बिल नंबर'}
+                    {language === 'mr' ? 'पावती / बिल क्रमांक' : language === 'hi' ? 'बिल नंबर' : 'Bill / Invoice Number'}
                   </label>
                   <input
                     type="text"
@@ -410,11 +517,11 @@ export const PurchaseTracker: React.FC = () => {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'शेरा / फॅट किंवा इतर नोंद' : 'रिमार्क / फैट या विवरण'}
+                  {language === 'mr' ? 'शेरा / फॅट किंवा इतर नोंद' : language === 'hi' ? 'रिमार्क / फैट या विवरण' : 'Notes / Fat Test details'}
                 </label>
                 <input
                   type="text"
-                  placeholder={language === 'mr' ? 'उदा. सकाळची खेप, फॅट ७.२, म्हशीचे ताजे दूध' : 'उदा. सुबह की खेप, फैट 7.1'}
+                  placeholder={language === 'mr' ? 'उदा. सकाळची खेप, फॅट ७.२, म्हशीचे ताजे दूध' : language === 'hi' ? 'उदा. सुबह की खेप, फैट 7.1' : 'e.g. Morning batch, 7.2 fat buffalo milk'}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -433,7 +540,7 @@ export const PurchaseTracker: React.FC = () => {
                   type="submit"
                   className="w-1/2 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-md shadow-sky-600/20"
                 >
-                  {t('save')} &amp; {language === 'mr' ? 'साठा वाढवा' : 'स्टॉक बढ़ाएं'}
+                  {t('save')} &amp; {language === 'mr' ? 'साठा वाढवा' : language === 'hi' ? 'स्टॉक बढ़ाएं' : 'Update Stock'}
                 </button>
               </div>
 

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product, ProductCategory, ProductUnit } from '../../types';
-import { X, Save, PackagePlus } from 'lucide-react';
+import { getShelfLifeNote } from '../../lib/shelfLifeUtils';
+import { X, Save, PackagePlus, Clock } from 'lucide-react';
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -115,7 +116,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   : (language === 'mr' ? 'दुकानात नवीन माल जोडा' : language === 'hi' ? 'दुकान में नया माल जोड़ें' : 'Add New Dairy Product')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                {language === 'mr' ? 'दूध, पनीर, तूप, खवा, मिठाई किंवा इतर उत्पादने' : 'Milk, Paneer, Ghee, Sweets or Dairy items'}
+                {language === 'mr' ? 'दूध, पनीर, तूप, खवा, मिठाई किंवा इतर उत्पादने' : language === 'hi' ? 'दूध, पनीर, घी, खोया, मिठाई या अन्य डेरी उत्पाद' : 'Milk, Paneer, Ghee, Sweets or Dairy items'}
               </p>
             </div>
           </div>
@@ -132,7 +133,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           {/* Trilingual Names: English, Marathi, Hindi */}
           <div>
             <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-              इंग्रजी नाव (English Name) *
+              {language === 'mr' ? 'इंग्रजी नाव' : language === 'hi' ? 'अंग्रेजी नाम' : 'English Name'} *
             </label>
             <input
               type="text"
@@ -147,7 +148,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                मराठी नाव (Marathi Name)
+                {language === 'mr' ? 'मराठी नाव' : language === 'hi' ? 'मराठी नाम' : 'Marathi Name'}
               </label>
               <input
                 type="text"
@@ -159,7 +160,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
             </div>
             <div>
               <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                हिंदी नाम (Hindi Name)
+                {language === 'mr' ? 'हिंदी नाव' : language === 'hi' ? 'हिंदी नाम' : 'Hindi Name'}
               </label>
               <input
                 type="text"
@@ -202,10 +203,10 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               >
                 <option value="Litre">{language === 'mr' ? 'लिटर (Litre)' : language === 'hi' ? 'लीटर (Litre)' : 'Litre'}</option>
                 <option value="Kg">{language === 'mr' ? 'किलो (Kg)' : language === 'hi' ? 'किलोग्राम (Kg)' : 'Kg'}</option>
-                <option value="Packet (500ml)">{language === 'mr' ? 'पिशवी ५०० मिली' : 'Packet 500ml'}</option>
-                <option value="Packet (1L)">{language === 'mr' ? 'पिशवी १ लिटर' : 'Packet 1L'}</option>
-                <option value="Piece">{language === 'mr' ? 'नग / पीस' : 'Piece'}</option>
-                <option value="Gram">{language === 'mr' ? 'ग्रॅम' : 'Gram'}</option>
+                <option value="Packet (500ml)">{language === 'mr' ? 'पिशवी ५०० मिली' : language === 'hi' ? 'थैली ५०० मिली' : 'Packet (500ml)'}</option>
+                <option value="Packet (1L)">{language === 'mr' ? 'पिशवी १ लिटर' : language === 'hi' ? 'थैली १ लीटर' : 'Packet (1L)'}</option>
+                <option value="Piece">{language === 'mr' ? 'नग / पीस' : language === 'hi' ? 'नग / पीस' : 'Piece'}</option>
+                <option value="Gram">{language === 'mr' ? 'ग्रॅम' : language === 'hi' ? 'ग्राम' : 'Gram'}</option>
               </select>
             </div>
           </div>
@@ -214,7 +215,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-2xl border border-slate-200 dark:border-[#24352F]">
             <div>
               <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {language === 'mr' ? `खरेदी दर प्रति ${unit} (₹)` : `खरीद भाव प्रति ${unit} (₹)`} *
+                {language === 'mr' ? `खरेदी दर प्रति ${unit} (₹)` : language === 'hi' ? `खरीद भाव प्रति ${unit} (₹)` : `Purchase Rate per ${unit} (₹)`} *
               </label>
               <input
                 type="number"
@@ -229,7 +230,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
             <div>
               <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {language === 'mr' ? `विक्री दर प्रति ${unit} (₹)` : `बिक्री भाव प्रति ${unit} (₹)`} *
+                {language === 'mr' ? `विक्री दर प्रति ${unit} (₹)` : language === 'hi' ? `बिक्री भाव प्रति ${unit} (₹)` : `Selling Rate per ${unit} (₹)`} *
               </label>
               <input
                 type="number"
@@ -244,9 +245,9 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
             {/* Live Profit Margin Calculator Indicator */}
             <div className="col-span-2 flex items-center justify-between text-xs font-semibold pt-1 text-slate-600 dark:text-[#8FA69C] border-t border-slate-200 dark:border-[#24352F]">
-              <span>{language === 'mr' ? `प्रति ${unit} नफा:` : `प्रति ${unit} अनुमानित लाभ:`}</span>
+              <span>{language === 'mr' ? `प्रति ${unit} नफा:` : language === 'hi' ? `प्रति ${unit} अनुमानित लाभ:` : `Est Profit per ${unit}:`}</span>
               <span className={`font-bold ${marginPerUnit >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600'}`}>
-                ₹{marginPerUnit.toFixed(2)} ({marginPct}% {language === 'mr' ? 'मार्जिन' : 'Margin'})
+                ₹{marginPerUnit.toFixed(2)} ({marginPct}% {language === 'mr' ? 'मार्जिन' : language === 'hi' ? 'मार्जिन' : 'Margin'})
               </span>
             </div>
           </div>
@@ -255,7 +256,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {language === 'mr' ? `सध्याचा साठा (${unit} मध्ये)` : `मौजूदा स्टॉक (${unit} में)`}
+                {language === 'mr' ? `सध्याचा साठा (${unit} मध्ये)` : language === 'hi' ? `मौजूदा स्टॉक (${unit} में)` : `Current Stock (in ${unit})`}
               </label>
               <input
                 type="number"
@@ -268,7 +269,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
             <div>
               <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {language === 'mr' ? `कमी साठा मर्यादा (${unit})` : `कम स्टॉक अलर्ट सीमा (${unit})`}
+                {language === 'mr' ? `कमी साठा मर्यादा (${unit})` : language === 'hi' ? `कम स्टॉक अलर्ट सीमा (${unit})` : `Low Stock Threshold (${unit})`}
               </label>
               <input
                 type="number"
@@ -278,6 +279,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-amber-700 dark:text-amber-400 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
+
+            {!productToEdit && (
+              <div className="col-span-2 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/40 flex items-center gap-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold">
+                <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{getShelfLifeNote(category, name, language)} &bull; {language === 'mr' ? 'आरंभीच्या साठ्याची बॅच आपोआप तयार होईल' : language === 'hi' ? 'आरंभिक स्टॉक का बैच स्वतः बन जाएगा' : 'Initial stock batch auto-created with variety expiry'}</span>
+              </div>
+            )}
           </div>
 
           {/* Form Actions */}
@@ -294,7 +302,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               className="w-1/2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5"
             >
               <Save className="w-4 h-4" />
-              <span>{productToEdit ? (language === 'mr' ? 'माहिती जतन करा' : 'अपडेट सुरक्षित करें') : t('save')}</span>
+              <span>{productToEdit ? (language === 'mr' ? 'माहिती जतन करा' : language === 'hi' ? 'अपडेट सुरक्षित करें' : 'Update Details') : t('save')}</span>
             </button>
           </div>
 

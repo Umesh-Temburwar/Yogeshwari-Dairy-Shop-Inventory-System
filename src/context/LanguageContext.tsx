@@ -13,7 +13,7 @@ export interface Translations {
 export const TRANSLATIONS: Translations = {
   // Brand & General
   shopName: {
-    en: 'Yogeshwari Dairy & Sweets',
+    en: 'Yogeshwari Dairy & Products ',
     hi: 'योगेश्वरी डेरी फार्म & स्वीट्स',
     mr: 'योगेश्वरी डेअरी फार्म & स्वीट्स'
   },
@@ -726,6 +726,262 @@ export const TRANSLATIONS: Translations = {
     en: 'Bakery & Extras',
     hi: 'बेकरी व अन्य',
     mr: 'बेकरी व इतर'
+  },
+  // Customer Demographics Translations
+  customerGender: {
+    en: 'Customer Gender',
+    hi: 'ग्राहक का लिंग',
+    mr: 'ग्राहकाचे लिंग'
+  },
+  customerAge: {
+    en: 'Age',
+    hi: 'उम्र (वर्ष)',
+    mr: 'वय (वर्षे)'
+  },
+  customerAgeGroup: {
+    en: 'Age Group',
+    hi: 'आयु वर्ग',
+    mr: 'वय गट'
+  },
+  male: {
+    en: 'Male',
+    hi: 'पुरुष',
+    mr: 'पुरुष'
+  },
+  female: {
+    en: 'Female',
+    hi: 'महिला',
+    mr: 'महिला'
+  },
+  otherGender: {
+    en: 'Other',
+    hi: 'अन्य',
+    mr: 'इतर'
+  },
+  ageKids: {
+    en: 'Kids/Teens (<18)',
+    hi: 'बच्चे/किशोर (<18)',
+    mr: 'मुले/किशोर (<१८)'
+  },
+  ageYouth: {
+    en: 'Youth (18-25)',
+    hi: 'युवा (18-25)',
+    mr: 'तरुण/युवा (१८-२५)'
+  },
+  ageAdults: {
+    en: 'Adults (26-45)',
+    hi: 'प्रौढ़ (26-45)',
+    mr: 'प्रौढ (२६-४५)'
+  },
+  ageSeniors: {
+    en: 'Seniors (45+)',
+    hi: 'वरिष्ठ (45+)',
+    mr: 'ज्येष्ठ नागरिक (४५+)'
+  },
+  demographicsTitle: {
+    en: 'Customer Demographics & Buying Intelligence',
+    hi: 'ग्राहक जनसांख्यिकी और उत्पाद प्राथमिकता (Customer Demographics)',
+    mr: 'ग्राहक डेमोग्राफिक्स व खरेदी कल (Customer Demographics)'
+  },
+  demographicsSub: {
+    en: 'Track which gender and age group buys which dairy products and quantities',
+    hi: 'किस उम्र और जेंडर के ग्राहक कौनसा माल कितना खरीदते हैं उसका पूरा विश्लेषण',
+    mr: 'कोणत्या वयाचे व लिंगाचे ग्राहक कोणता माल किती प्रमाणात खरेदी करतात याचे संपूर्ण विश्लेषण'
+  },
+  genderBreakdown: {
+    en: 'Gender-wise Sales & Volume',
+    hi: 'जेंडर अनुसार बिक्री व मात्रा',
+    mr: 'लिंगानुसार विक्री व प्रमाण'
+  },
+  ageBreakdown: {
+    en: 'Age Group Product Preference',
+    hi: 'आयु वर्ग अनुसार उत्पाद प्राथमिकता',
+    mr: 'वय गटानुसार उत्पादन प्राधान्य'
+  },
+  whoBuysWhat: {
+    en: 'Who Buys What? (Product Demographics)',
+    hi: 'कौनसा ग्राहक क्या खरीदता है? (Product Demographics)',
+    mr: 'कोणता ग्राहक काय खरेदी करतो? (Product Demographics)'
+  },
+  whoBuysWhatSub: {
+    en: 'Breakdown of buyers by gender and age group for every dairy product',
+    hi: 'प्रत्येक डेयरी उत्पाद के लिए जेंडर और आयु वर्ग का विस्तृत ब्यौरा',
+    mr: 'प्रत्येक डेअरी उत्पादनासाठी लिंग आणि वय गटानुसार सविस्तर तपशील'
+  },
+  topBuyerGender: {
+    en: 'Top Buyer Gender',
+    hi: 'मुख्य खरीदार जेंडर',
+    mr: 'मुख्य खरेदीदार लिंग'
+  },
+  topBuyerAge: {
+    en: 'Top Age Group',
+    hi: 'मुख्य आयु वर्ग',
+    mr: 'मुख्य वय गट'
+  },
+  filterByGender: {
+    en: 'Filter by Gender',
+    hi: 'जेंडर से छांटें',
+    mr: 'लिंगानुसार फिल्टर'
+  },
+  filterByAge: {
+    en: 'Filter by Age',
+    hi: 'आयु वर्ग से छांटें',
+    mr: 'वय गटानुसार फिल्टर'
+  },
+  allGenders: {
+    en: 'All Genders',
+    hi: 'सभी जेंडर',
+    mr: 'सर्व लिंग'
+  },
+  allAges: {
+    en: 'All Age Groups',
+    hi: 'सभी आयु वर्ग',
+    mr: 'सर्व वय गट'
+  },
+  maleBuyers: {
+    en: 'Male Buyers',
+    hi: 'पुरुष ग्राहक',
+    mr: 'पुरुष ग्राहक'
+  },
+  femaleBuyers: {
+    en: 'Female Buyers',
+    hi: 'महिला ग्राहक',
+    mr: 'महिला ग्राहक'
+  },
+  batchNo: {
+    en: 'Batch No.',
+    hi: 'बैच नंबर',
+    mr: 'बॅच क्रमांक'
+  },
+  mfgDate: {
+    en: 'Mfg Date',
+    hi: 'उत्पादन तारीख (Mfg)',
+    mr: 'उत्पादन तारीख (Mfg)'
+  },
+  expiryDate: {
+    en: 'Expiry Date',
+    hi: 'एक्सपायरी तारीख',
+    mr: 'मुदत समाप्ती तारीख (Expiry)'
+  },
+  shelfLife: {
+    en: 'Shelf Life',
+    hi: 'शेल्फ लाइफ',
+    mr: 'टिकण्याची मुदत'
+  },
+  batches: {
+    en: 'Batches',
+    hi: 'बैचेस',
+    mr: 'बॅचेस'
+  },
+  viewBatches: {
+    en: 'View Batches',
+    hi: 'बैच देखें',
+    mr: 'बॅचेस पहा'
+  },
+  manageBatches: {
+    en: 'Manage Batches',
+    hi: 'बैच प्रबंधित करें',
+    mr: 'बॅच व्यवस्थापन'
+  },
+  activeBatches: {
+    en: 'Active Batches',
+    hi: 'सक्रिय बैचेस',
+    mr: 'सक्रिय बॅचेस'
+  },
+  allBatches: {
+    en: 'All Batches',
+    hi: 'सभी बैचेस',
+    mr: 'सर्व बॅचेस'
+  },
+  expiredBatches: {
+    en: 'Expired Batches',
+    hi: 'एक्सपायर्ड बैचेस',
+    mr: 'मुदत संपलेल्या बॅचेस'
+  },
+  expiringToday: {
+    en: 'Expiring Today',
+    hi: 'आज एक्सपायर होने वाले',
+    mr: 'आज मुदत संपणारे'
+  },
+  expiringTomorrow: {
+    en: 'Expiring Tomorrow',
+    hi: 'कल एक्सपायर होने वाले',
+    mr: 'उद्या मुदत संपणारे'
+  },
+  freshBatches: {
+    en: 'Fresh Batches',
+    hi: 'ताज़ा बैचेस',
+    mr: 'ताजा बॅचेस'
+  },
+  markDamage: {
+    en: 'Mark Spoilage/Damage',
+    hi: 'खराब माल दर्ज करें',
+    mr: 'खराब माल नोंदवा'
+  },
+  autoSuggestedExpiry: {
+    en: 'Auto-suggested by variety shelf-life',
+    hi: 'उत्पाद वेरायटी अनुसार सुझाई गई तारीख',
+    mr: 'उत्पादन प्रकारानुसार सुचवलेली तारीख'
+  },
+  lotType: {
+    en: 'Lot / Arrival Type',
+    hi: 'लॉट / आवक प्रकार',
+    mr: 'लॉट / आवक प्रकार'
+  },
+  freshTodayLot: {
+    en: "Today's Fresh Arrival",
+    hi: 'आज का ताज़ा माल (Fresh Lot)',
+    mr: 'आजचा ताजा माल (नवीन लॉट)'
+  },
+  previousLot: {
+    en: 'Previous / Earlier Stock',
+    hi: 'पहले का / पुराना माल (Past Lot)',
+    mr: 'आधीचा / मागील माल (शिल्लक लॉट)'
+  },
+  addToExistingBatch: {
+    en: 'Add to Existing Batch',
+    hi: 'मौजूदा पुराने बैच में जोड़ें',
+    mr: 'आधीच्या चालू बॅचमध्ये वाढवा'
+  },
+  createNewBatch: {
+    en: 'Create New Batch Entry',
+    hi: 'नया अलग बैच दर्ज करें',
+    mr: 'नवीन वेगळी बॅच नोंद'
+  },
+  multiLotEntry: {
+    en: 'Multi-Lot Split Entry',
+    hi: 'अलग-अलग एक्सपायरी के लॉट्स',
+    mr: 'एकाच वेळी विविध लॉट नोंदी'
+  },
+  addAnotherLot: {
+    en: '+ Add Another Lot',
+    hi: '+ एक और लॉट जोड़ें',
+    mr: '+ आणखी एक लॉट जोडा'
+  },
+  removeLot: {
+    en: 'Remove Lot',
+    hi: 'लॉट हटाएं',
+    mr: 'लॉट काढा'
+  },
+  selectBatch: {
+    en: 'Select Batch',
+    hi: 'बैच चुनें',
+    mr: 'बॅच निवडा'
+  },
+  totalInward: {
+    en: 'Total Inward Stock',
+    hi: 'कुल आवक स्टॉक',
+    mr: 'एकूण आवक साठा'
+  },
+  newTotalStock: {
+    en: 'New Shop Stock',
+    hi: 'नया कुल स्टॉक',
+    mr: 'नवीन एकूण शिल्लक'
+  },
+  stockInModalTitle: {
+    en: 'Add Stock & Batch Expiry Entry',
+    hi: 'माल आवक व बैच एक्सपायरी एंट्री',
+    mr: 'माल आवक व बॅच मुदत नोंद'
   }
 };
 
@@ -733,6 +989,8 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
+  tText: (obj: { en: string; hi: string; mr: string }) => string;
+  getProductDisplayName: (prod: any) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -767,8 +1025,19 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return key;
   };
 
+  const tText = (obj: { en: string; hi: string; mr: string }): string => {
+    return obj[language] || obj.en || '';
+  };
+
+  const getProductDisplayName = (prod: any): string => {
+    if (!prod) return '';
+    if (language === 'mr' && prod.marathi_name) return prod.marathi_name;
+    if (language === 'hi' && prod.hindi_name) return prod.hindi_name;
+    return prod.name || '';
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, tText, getProductDisplayName }}>
       {children}
     </LanguageContext.Provider>
   );

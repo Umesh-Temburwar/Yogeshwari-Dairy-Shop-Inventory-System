@@ -166,7 +166,7 @@ INSERT INTO expenses (title, category, amount, payment_mode, expense_date, is_ca
 
 -- SEED INITIAL UDHAR CUSTOMERS
 INSERT INTO udhar_customers (name, phone, address, total_credit, total_paid, current_balance, status, notes) VALUES
-('Ramesh Verma (Sharma Halwai)', '9823145678', 'Plot 42, Main Bazar', 5400.00, 3000.00, 2400.00, 'Active', 'Takes 10L Buffalo milk and 2kg Paneer regularly'),
+('Ramesh Verma (Sharma Halwai)', '8856087984', 'Plot 42, Main Bazar', 5400.00, 3000.00, 2400.00, 'Active', 'Takes 10L Buffalo milk and 2kg Paneer regularly'),
 ('Gupta General Store & Tea Stall', '9890123456', 'Bus Stand Corner', 3800.00, 2000.00, 1800.00, 'Active', 'Takes cow milk every morning at 6 AM'),
 ('Sunita Tai (Flat 204)', '9765432109', 'Sai Krupa Apartment', 1250.00, 1250.00, 0.00, 'Cleared', 'Monthly home delivery milk customer - cleared yesterday');
 

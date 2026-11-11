@@ -48,10 +48,10 @@ export const ExpenseTracker: React.FC = () => {
     { id: 'Gadi Petrol / Diesel', label: t('fuelPetrol') },
     { id: 'Deep Chiller Maintenance', label: t('chillerMaint') },
     { id: 'Staff Salary', label: t('staffSalary') },
-    { id: 'Packaging / Theli', label: language === 'mr' ? 'पॅकिंग पिशव्या / खोकी' : 'पैकिंग थैलियां / डिब्बे' },
-    { id: 'Shop Capital Investment', label: language === 'mr' ? 'दुकान भांडवली गुंतवणूक (फ्रीझर, काउंटर)' : 'दुकान पूंजी निवेश (मशीनरी)' },
-    { id: 'General Repair', label: language === 'mr' ? 'सर्वसाधारण दुरुस्ती' : 'जनरल रिपेयर' },
-    { id: 'Other', label: language === 'mr' ? 'इतर खर्च' : 'अन्य खर्च' }
+    { id: 'Packaging / Theli', label: language === 'mr' ? 'पॅकिंग पिशव्या / खोकी' : language === 'hi' ? 'पैकिंग थैलियां / डिब्बे' : 'Packaging & Containers' },
+    { id: 'Shop Capital Investment', label: language === 'mr' ? 'दुकान भांडवली गुंतवणूक (फ्रीझर, काउंटर)' : language === 'hi' ? 'दुकान पूंजी निवेश (मशीनरी)' : 'Shop Capital Investment (Assets)' },
+    { id: 'General Repair', label: language === 'mr' ? 'सर्वसाधारण दुरुस्ती' : language === 'hi' ? 'जनरल रिपेयर' : 'General Maintenance & Repairs' },
+    { id: 'Other', label: language === 'mr' ? 'इतर खर्च' : language === 'hi' ? 'अन्य खर्च' : 'Other Expenses' }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,7 +96,9 @@ export const ExpenseTracker: React.FC = () => {
           <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
             {language === 'mr' 
               ? 'दुकानाचे भाडे, चिलरचे वीज बिल, गाडी पेट्रोल, शीतकरण दुरुस्ती व नवीन उपकरणांची गुंतवणूक'
-              : 'दुकान किराया, चिलर का लाइट बिल, गाड़ी पेट्रोल, मशीनें व दुकान निवेश का पूरा हिसाब'}
+              : language === 'hi'
+              ? 'दुकान किराया, चिलर का लाइट बिल, गाड़ी पेट्रोल, मशीनें व दुकान निवेश का पूरा हिसाब'
+              : 'Tracking of shop rent, electricity, vehicle fuel, chiller maintenance, and capital investments'}
           </p>
         </div>
 
@@ -123,7 +125,7 @@ export const ExpenseTracker: React.FC = () => {
             ₹{metrics.operatingExpenses.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-            {language === 'mr' ? 'भाडे, वीज, पेट्रोल, पॅकिंग व पगार' : 'किराया, बिजली, पेट्रोल, पैकिंग व वेतन'}
+            {language === 'mr' ? 'भाडे, वीज, पेट्रोल, पॅकिंग व पगार' : language === 'hi' ? 'किराया, बिजली, पेट्रोल, पैकिंग व वेतन' : 'Rent, power, fuel, packaging & salaries'}
           </span>
         </div>
 
@@ -136,20 +138,20 @@ export const ExpenseTracker: React.FC = () => {
             ₹{metrics.capitalInvestments.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-            {language === 'mr' ? 'नवीन डीप फ्रीझर, वजन काटा, फर्निचर' : 'नया डीप फ्रीजर, डिजिटल तराजू, फर्नीचर'}
+            {language === 'mr' ? 'नवीन डीप फ्रीझर, वजन काटा, फर्निचर' : language === 'hi' ? 'नया डीप फ्रीजर, डिजिटल तराजू, फर्नीचर' : 'New deep chillers, digital scales, fixtures'}
           </span>
         </div>
 
         <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-[#8FA69C]">
             <TrendingDown className="w-4 h-4 text-slate-400" />
-            <span>{language === 'mr' ? 'एकूण खर्च व गुंतवणूक (Total)' : 'कुल व्यय (Total Outflow)'}</span>
+            <span>{language === 'mr' ? 'एकूण खर्च व गुंतवणूक (Total)' : language === 'hi' ? 'कुल व्यय (Total Outflow)' : 'Total Outflow (Expenses + Assets)'}</span>
           </div>
           <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
             ₹{(metrics.operatingExpenses + metrics.capitalInvestments).toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-            {language === 'mr' ? 'कालावधीतील एकूण बाहेर पडलेली रक्कम' : 'चुनी गई अवधि में कुल भुगतान'}
+            {language === 'mr' ? 'कालावधीतील एकूण बाहेर पडलेली रक्कम' : language === 'hi' ? 'चुनी गई अवधि में कुल भुगतान' : 'Total cash outflow during period'}
           </span>
         </div>
       </div>
@@ -160,7 +162,7 @@ export const ExpenseTracker: React.FC = () => {
           { label: t('shopRent'), key: 'Dukan Rent', icon: Home, color: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50' },
           { label: t('lightBill'), key: 'Light / Electricity Bill', icon: Zap, color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50' },
           { label: t('fuelPetrol'), key: 'Gadi Petrol / Diesel', icon: Fuel, color: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50' },
-          { label: language === 'mr' ? 'भांडवली गुंतवणूक' : 'दुकान इन्वेस्टमेंट', key: 'Shop Capital Investment', icon: Sparkles, color: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50' }
+          { label: language === 'mr' ? 'भांडवली गुंतवणूक' : language === 'hi' ? 'दुकान इन्वेस्टमेंट' : 'Capital Assets', key: 'Shop Capital Investment', icon: Sparkles, color: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/50' }
         ].map(cat => {
           const Icon = cat.icon;
           const total = categoryTotals[cat.key] || 0;
@@ -182,10 +184,10 @@ export const ExpenseTracker: React.FC = () => {
       <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs overflow-hidden">
         <div className="p-4 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between">
           <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-            {language === 'mr' ? 'खर्च व गुंतवणूक यादी (Expenses List)' : 'खर्च व निवेश लेजर (Expenses List)'}
+            {language === 'mr' ? 'खर्च व गुंतवणूक यादी (Expenses List)' : language === 'hi' ? 'खर्च व निवेश लेजर (Expenses List)' : 'Expenses & Investments Ledger'}
           </h3>
           <span className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
-            {filteredExpenses.length} {language === 'mr' ? 'नोंदी' : 'रिकॉर्ड'}
+            {filteredExpenses.length} {language === 'mr' ? 'नोंदी' : language === 'hi' ? 'रिकॉर्ड' : 'records'}
           </span>
         </div>
 
@@ -194,13 +196,13 @@ export const ExpenseTracker: React.FC = () => {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] font-bold uppercase">
                 <tr>
-                  <th className="px-4 py-3">{language === 'mr' ? 'तारीख' : 'दिनांक'}</th>
-                  <th className="px-4 py-3">{language === 'mr' ? 'खर्चाचे नाव (Title)' : 'खर्च का नाम'}</th>
+                  <th className="px-4 py-3">{language === 'mr' ? 'तारीख' : language === 'hi' ? 'दिनांक' : 'Date'}</th>
+                  <th className="px-4 py-3">{language === 'mr' ? 'खर्चाचे नाव (Title)' : language === 'hi' ? 'खर्च का नाम' : 'Expense Title'}</th>
                   <th className="px-3 py-3">{t('categoryCol')}</th>
-                  <th className="px-3 py-3 text-center">{language === 'mr' ? 'प्रकार' : 'प्रकार'}</th>
-                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'रक्कम (₹)' : 'रकम (Amount)'}</th>
+                  <th className="px-3 py-3 text-center">{language === 'mr' ? 'प्रकार' : language === 'hi' ? 'प्रकार' : 'Type'}</th>
+                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'रक्कम (₹)' : language === 'hi' ? 'रकम (Amount)' : 'Amount (₹)'}</th>
                   <th className="px-3 py-3 text-center">{t('paymentMethod')}</th>
-                  <th className="px-4 py-3">{language === 'mr' ? 'शेरा' : 'नोट्स'}</th>
+                  <th className="px-4 py-3">{language === 'mr' ? 'शेरा' : language === 'hi' ? 'नोट्स' : 'Notes'}</th>
                   <th className="px-3 py-3 text-right">{t('actionsCol')}</th>
                 </tr>
               </thead>
@@ -228,7 +230,7 @@ export const ExpenseTracker: React.FC = () => {
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           exp.is_capital_investment ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300' : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
                         }`}>
-                          {exp.is_capital_investment ? (language === 'mr' ? 'गुंतवणूक' : 'Shop Investment') : (language === 'mr' ? 'दैनिक खर्च' : 'Daily Expense')}
+                          {exp.is_capital_investment ? (language === 'mr' ? 'गुंतवणूक' : language === 'hi' ? 'निवेश' : 'Asset Investment') : (language === 'mr' ? 'दैनिक खर्च' : language === 'hi' ? 'दैनिक खर्च' : 'Daily Expense')}
                         </span>
                       </td>
 
@@ -247,7 +249,7 @@ export const ExpenseTracker: React.FC = () => {
                       <td className="px-3 py-3 text-right">
                         <button
                           onClick={() => {
-                            const confirmText = language === 'mr' ? `तुम्हाला "${exp.title}" हटवायचे आहे का?` : `क्या आप "${exp.title}" खर्च को हटाना चाहते हैं?`;
+                            const confirmText = language === 'mr' ? `तुम्हाला "${exp.title}" हटवायचे आहे का?` : language === 'hi' ? `क्या आप "${exp.title}" खर्च को हटाना चाहते हैं?` : `Are you sure you want to delete "${exp.title}"?`;
                             if (window.confirm(confirmText)) {
                               deleteExpense(exp.id);
                             }
@@ -265,7 +267,7 @@ export const ExpenseTracker: React.FC = () => {
           </div>
         ) : (
           <div className="p-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs">
-            {language === 'mr' ? 'या कालावधीत कोणताही खर्च किंवा गुंतवणूक नोंदवलेली नाही.' : 'इस अवधि में कोई खर्च या निवेश दर्ज नहीं है।'}
+            {language === 'mr' ? 'या कालावधीत कोणताही खर्च किंवा गुंतवणूक नोंदवलेली नाही.' : language === 'hi' ? 'इस अवधि में कोई खर्च या निवेश दर्ज नहीं है।' : 'No expenses or investments recorded for this period.'}
           </div>
         )}
       </div>
@@ -282,10 +284,10 @@ export const ExpenseTracker: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                    {language === 'mr' ? 'खर्च किंवा दुकान गुंतवणूक नोंदवा' : 'खर्च या दुकान निवेश दर्ज करें'}
+                    {language === 'mr' ? 'खर्च किंवा दुकान गुंतवणूक नोंदवा' : language === 'hi' ? 'खर्च या दुकान निवेश दर्ज करें' : 'Record Expense or Capital Asset'}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                    {language === 'mr' ? 'भाडे, वीज बिल, पेट्रोल, पगार किंवा नवीन फ्रीझर' : 'किराया, लाइट बिल, पेट्रोल, सैलरी या नई मशीनरी'}
+                    {language === 'mr' ? 'भाडे, वीज बिल, पेट्रोल, पगार किंवा नवीन फ्रीझर' : language === 'hi' ? 'किराया, लाइट बिल, पेट्रोल, सैलरी या नई मशीनरी' : 'Shop rent, electricity bill, petrol, salary, or chiller investment'}
                   </p>
                 </div>
               </div>
@@ -301,12 +303,12 @@ export const ExpenseTracker: React.FC = () => {
               
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'खर्चाचा तपशील (Title) *' : 'खर्च का विवरण (Title) *'}
+                  {language === 'mr' ? 'खर्चाचा तपशील (Title) *' : language === 'hi' ? 'खर्च का विवरण (Title) *' : 'Expense Title / Description *'}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder={language === 'mr' ? 'उदा. दुकानाचे मासिक भाडे / चिलर वीज बिल / पेट्रोल' : 'उदा. दुकान का मासिक किराया / फ्रीजर बिल / पेट्रोल'}
+                  placeholder={language === 'mr' ? 'उदा. दुकानाचे मासिक भाडे / चिलर वीज बिल / पेट्रोल' : language === 'hi' ? 'उदा. दुकान का मासिक किराया / फ्रीजर बिल / पेट्रोल' : 'e.g. Shop monthly rent / Chiller power bill / Fuel'}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none"
@@ -337,7 +339,7 @@ export const ExpenseTracker: React.FC = () => {
 
                 <div>
                   <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                    {language === 'mr' ? 'रक्कम (₹ Amount) *' : 'रकम (₹ Amount) *'}
+                    {language === 'mr' ? 'रक्कम (₹ Amount) *' : language === 'hi' ? 'रकम (₹ Amount) *' : 'Amount (₹) *'}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500 dark:text-[#8FA69C]">₹</span>
@@ -366,7 +368,9 @@ export const ExpenseTracker: React.FC = () => {
                 <label htmlFor="capital-toggle" className="text-xs font-bold text-purple-900 dark:text-purple-300 cursor-pointer">
                   {language === 'mr' 
                     ? 'ही दुकानासाठी भांडवली गुंतवणूक आहे (उदा. नवीन डीप फ्रीझर, वजन काटा, फर्निचर)'
-                    : 'यह दुकान के लिए पूंजी निवेश (Capital Investment) है (उदा. नया डीप फ्रीजर, तराजू, काउंटर)'}
+                    : language === 'hi'
+                    ? 'यह दुकान के लिए पूंजी निवेश (Capital Investment) है (उदा. नया डीप फ्रीजर, तराजू, काउंटर)'
+                    : 'This is a long-term capital investment (e.g. Deep freezer, digital weighing scale, shop fixtures)'}
                 </label>
               </div>
 
@@ -382,13 +386,13 @@ export const ExpenseTracker: React.FC = () => {
                   >
                     <option value="Online_UPI">{t('onlineUpi')}</option>
                     <option value="Cash">{t('cash')}</option>
-                    <option value="Bank_Transfer">{language === 'mr' ? 'बँक ट्रान्सफर' : 'बैंक ट्रांसफर'}</option>
+                    <option value="Bank_Transfer">{language === 'mr' ? 'बँक ट्रान्सफर' : language === 'hi' ? 'बैंक ट्रांसफर' : 'Bank Transfer (NEFT/IMPS)'}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                    {language === 'mr' ? 'पावती क्रमांक किंवा शेरा' : 'रसीद नंबर या नोट्स'}
+                    {language === 'mr' ? 'पावती क्रमांक किंवा शेरा' : language === 'hi' ? 'रसीद नंबर या नोट्स' : 'Receipt No. or Notes'}
                   </label>
                   <input
                     type="text"

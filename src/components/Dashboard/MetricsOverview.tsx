@@ -86,12 +86,20 @@ export const MetricsOverview: React.FC = () => {
     {
       title: t('lowStockAlert'),
       amount: `${metrics.lowStockCount} ${language === 'mr' ? 'उत्पादने' : language === 'hi' ? 'आइटम्स' : 'items'}`,
-      subtitle: metrics.lowStockCount > 0 
+      subtitle: (metrics.expiredBatchesCount > 0 || metrics.expiringTodayBatchesCount > 0)
+        ? (language === 'mr' 
+            ? `⚠️ ${metrics.expiredBatchesCount} एक्सपायर्ड • ${metrics.expiringTodayBatchesCount} आज मुदत संपणारे` 
+            : language === 'hi' 
+            ? `⚠️ ${metrics.expiredBatchesCount} एक्सपायर • ${metrics.expiringTodayBatchesCount} आज एक्सपायर` 
+            : `⚠️ ${metrics.expiredBatchesCount} expired • ${metrics.expiringTodayBatchesCount} exp. today`)
+        : metrics.lowStockCount > 0 
         ? (language === 'mr' ? 'त्वरित मागवण्याची गरज आहे' : language === 'hi' ? 'तुरंत मंगाने की ज़रूरत है' : 'Reorder needed now')
         : (language === 'mr' ? 'सर्व माल पुरेसा उपलब्ध आहे' : language === 'hi' ? 'सभी माल पर्याप्त मात्रा में है' : 'Stock level is healthy'),
       icon: AlertTriangle,
-      iconBoxClass: 'bg-orange-500/15 text-orange-600 dark:text-orange-400',
-      action: () => setActiveView('reorder'),
+      iconBoxClass: (metrics.expiredBatchesCount > 0) 
+        ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' 
+        : 'bg-orange-500/15 text-orange-600 dark:text-orange-400',
+      action: () => setActiveView('inventory'),
       isProfit: false
     }
   ];

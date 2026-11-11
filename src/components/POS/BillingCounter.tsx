@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { Product, PaymentMode, SaleItem } from '../../types';
+import { Product, PaymentMode, SaleItem, CustomerGender, CustomerAgeGroup } from '../../types';
+import { computeExpiryStatus } from '../../lib/shelfLifeUtils';
 import { 
   Search, 
   ShoppingCart, 
@@ -15,12 +16,14 @@ import {
   CheckCircle2, 
   X,
   CreditCard,
-  Calculator
+  Calculator,
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const BillingCounter: React.FC = () => {
-  const { products, createSale } = useStore();
+  const { products, batches, createSale } = useStore();
   const { t, language } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,6 +33,9 @@ export const BillingCounter: React.FC = () => {
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [customerName, setCustomerName] = useState('Counter Customer');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [customerGender, setCustomerGender] = useState<CustomerGender>('Male');
+  const [customerAgeGroup, setCustomerAgeGroup] = useState<CustomerAgeGroup>('Adults (26-45)');
+  const [customerAge, setCustomerAge] = useState<string>('');
   const [discount, setDiscount] = useState<number>(0);
   const [paymentMode, setPaymentMode] = useState<PaymentMode>('Cash');
   const [tenderedCash, setTenderedCash] = useState<number>(0);
@@ -73,8 +79,23 @@ export const BillingCounter: React.FC = () => {
     return prod.name;
   };
 
-  // Add item to cart
+  // Add item to cart (with FEFO non-expired safety check)
   const addToCart = (product: Product, quantityToAdd: number = 1) => {
+    const prodBatches = batches.filter(b => b.product_id === product.id && b.qty_remaining > 0);
+    const validBatches = prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status !== 'EXPIRED');
+    const availableNonExpiredStock = prodBatches.length > 0 
+      ? validBatches.reduce((sum, b) => sum + b.qty_remaining, 0)
+      : product.stock_quantity;
+
+    if (availableNonExpiredStock <= 0) {
+      alert(language === 'mr' 
+        ? 'हा माल संपला आहे किंवा मुदत संपली (Expired) आहे. बिलात जोडता येणार नाही!' 
+        : language === 'hi' 
+        ? 'यह माल खत्म या एक्सपायर हो चुका है, बिल में नहीं जोड़ा जा सकता!' 
+        : 'This item is out of stock or expired and cannot be billed!');
+      return;
+    }
+
     const displayName = getProductDisplayName(product);
     setCart(prev => {
       const existing = prev.find(item => item.product_id === product.id);
@@ -171,6 +192,9 @@ export const BillingCounter: React.FC = () => {
     const sale = await createSale({
       customer_name: customerName,
       customer_phone: customerPhone,
+      customer_gender: customerGender,
+      customer_age_group: customerAgeGroup,
+      customer_age: customerAge ? parseInt(customerAge) : undefined,
       total_amount: subtotal,
       discount,
       net_amount: netTotal,
@@ -189,6 +213,9 @@ export const BillingCounter: React.FC = () => {
     clearCart();
     setCustomerName('Counter Customer');
     setCustomerPhone('');
+    setCustomerGender('Male');
+    setCustomerAgeGroup('Adults (26-45)');
+    setCustomerAge('');
   };
 
   return (
@@ -238,15 +265,24 @@ export const BillingCounter: React.FC = () => {
         {/* Product Cards Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto max-h-[600px] pr-1">
           {filteredProducts.map((prod) => {
-            const isOutOfStock = prod.stock_quantity <= 0;
-            const isLowStock = prod.stock_quantity <= prod.min_stock_alert;
+            const prodBatches = batches.filter(b => b.product_id === prod.id && b.qty_remaining > 0);
+            const validBatches = prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status !== 'EXPIRED');
+            const availableStock = prodBatches.length > 0 
+              ? validBatches.reduce((sum, b) => sum + b.qty_remaining, 0)
+              : prod.stock_quantity;
+
+            const isOutOfStock = availableStock <= 0;
+            const isLowStock = availableStock <= prod.min_stock_alert && !isOutOfStock;
+            const hasExpiredOnly = prodBatches.length > 0 && validBatches.length === 0;
+            const hasExpiringToday = prodBatches.some(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRING_TODAY');
+            const hasExpiringTomorrow = prodBatches.some(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRING_TOMORROW');
             const displayName = getProductDisplayName(prod);
 
             return (
               <div
                 key={prod.id}
                 className={`relative bg-white dark:bg-[#131F1B] rounded-xl p-3.5 border transition-all duration-150 flex flex-col justify-between group ${
-                  isOutOfStock 
+                  isOutOfStock || hasExpiredOnly
                     ? 'border-slate-200 dark:border-[#24352F] opacity-60 bg-slate-50/50 dark:bg-[#16221E]' 
                     : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500 dark:hover:border-emerald-500/60 hover:shadow-md cursor-pointer'
                 }`}
@@ -257,10 +293,14 @@ export const BillingCounter: React.FC = () => {
                       {prod.unit}
                     </span>
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                      hasExpiredOnly 
+                        ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800' :
                       isOutOfStock ? 'bg-red-100 dark:bg-rose-950/60 text-red-700 dark:text-rose-400' :
                       isLowStock ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
                     }`}>
-                      {prod.stock_quantity} {language === 'mr' ? 'शिल्लक' : language === 'hi' ? 'बचे' : 'left'}
+                      {hasExpiredOnly 
+                        ? (language === 'mr' ? 'मुदत संपली' : language === 'hi' ? 'एक्सपायर्ड' : 'Expired')
+                        : `${availableStock} ${language === 'mr' ? 'शिल्लक' : language === 'hi' ? 'बचे' : 'left'}`}
                     </span>
                   </div>
 
@@ -271,6 +311,20 @@ export const BillingCounter: React.FC = () => {
                     <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium truncate mt-0.5">
                       {prod.name}
                     </p>
+                  )}
+
+                  {/* Near Expiry Warning Pill for Cashier */}
+                  {hasExpiringToday && !hasExpiredOnly && (
+                    <div className="mt-1.5 flex items-center gap-1 text-[10px] font-extrabold text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-2 py-0.5 rounded-md border border-orange-200 dark:border-orange-900/50">
+                      <Clock className="w-3 h-3 text-orange-600 dark:text-orange-400 shrink-0" />
+                      <span>{language === 'mr' ? 'आज संपत आहे (आधी विका)' : language === 'hi' ? 'आज एक्सपायर (पहले बेचें)' : 'Expiring Today (Sell first)'}</span>
+                    </div>
+                  )}
+                  {hasExpiringTomorrow && !hasExpiringToday && !hasExpiredOnly && (
+                    <div className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900/50">
+                      <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                      <span>{language === 'mr' ? 'उद्या एक्सपायर' : language === 'hi' ? 'कल एक्सपायर' : 'Exp. Tomorrow'}</span>
+                    </div>
                   )}
                 </div>
 
@@ -298,10 +352,10 @@ export const BillingCounter: React.FC = () => {
 
                     {/* Add to Cart button */}
                     <button
-                      disabled={isOutOfStock}
+                      disabled={isOutOfStock || hasExpiredOnly}
                       onClick={() => addToCart(prod, 1)}
                       className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-slate-300 dark:disabled:bg-slate-800 transition-colors"
-                      title="Add 1 Unit"
+                      title={hasExpiredOnly ? 'Expired Batch Blocked' : 'Add 1 Unit'}
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -344,31 +398,96 @@ export const BillingCounter: React.FC = () => {
             )}
           </div>
 
-          {/* Customer Selection / Udhar Lookup */}
-          <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-[#1A2A25] p-2.5 rounded-xl border border-slate-200/80 dark:border-[#24352F]">
-            <div>
-              <label className="text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C] block mb-1">
-                {t('customerName')}
-              </label>
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Counter Customer"
-                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              />
+          {/* Customer Selection & Demographic Tracking */}
+          <div className="bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-xl border border-slate-200/80 dark:border-[#24352F] space-y-2.5">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C] block mb-1">
+                  {t('customerName')}
+                </label>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Counter Customer"
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C] block mb-1">
+                  {t('customerPhone')}
+                </label>
+                <input
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="98XXXXXXXX"
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
             </div>
-            <div>
-              <label className="text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C] block mb-1">
-                {t('customerPhone')}
-              </label>
-              <input
-                type="tel"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="98XXXXXXXX"
-                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              />
+
+            {/* Demographics 1-Tap Selectors: Gender & Age */}
+            <div className="pt-2 border-t border-slate-200/70 dark:border-[#24352F] space-y-2">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C]">
+                  {t('customerGender')}
+                </span>
+                <div className="flex items-center gap-1">
+                  {[
+                    { id: 'Male', label: language === 'mr' ? '👨 पुरुष' : language === 'hi' ? '👨 पुरुष' : '👨 Male' },
+                    { id: 'Female', label: language === 'mr' ? '👩 महिला' : language === 'hi' ? '👩 महिला' : '👩 Female' },
+                    { id: 'Other', label: language === 'mr' ? '🧑 इतर' : language === 'hi' ? '🧑 अन्य' : '🧑 Other' }
+                  ].map((g) => (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => setCustomerGender(g.id as CustomerGender)}
+                      className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-all ${
+                        customerGender === g.id
+                          ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                          : 'bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#223630]'
+                      }`}
+                    >
+                      {g.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C]">
+                  {t('customerAgeGroup')}
+                </span>
+                <div className="flex items-center gap-1">
+                  {[
+                    { id: 'Kids/Teens (<18)', label: '<18' },
+                    { id: 'Youth (18-25)', label: '18-25' },
+                    { id: 'Adults (26-45)', label: '26-45' },
+                    { id: 'Seniors (45+)', label: '45+' }
+                  ].map((ag) => (
+                    <button
+                      key={ag.id}
+                      type="button"
+                      onClick={() => setCustomerAgeGroup(ag.id as CustomerAgeGroup)}
+                      className={`px-1.5 py-0.5 rounded-md text-[11px] font-semibold transition-all whitespace-nowrap ${
+                        customerAgeGroup === ag.id
+                          ? 'bg-teal-600 text-white font-bold shadow-xs'
+                          : 'bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#223630]'
+                      }`}
+                    >
+                      {ag.label}
+                    </button>
+                  ))}
+                  <input
+                    type="number"
+                    placeholder={language === 'mr' ? 'वय' : language === 'hi' ? 'उम्र' : 'Age'}
+                    value={customerAge}
+                    onChange={(e) => setCustomerAge(e.target.value)}
+                    className="w-11 px-1 py-0.5 rounded border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-[10px] text-center font-bold focus:outline-none"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -738,7 +857,15 @@ export const BillingCounter: React.FC = () => {
                 <span>{language === 'mr' ? 'बिल:' : language === 'hi' ? 'बिल:' : 'Bill:'} {lastCompletedSale.invoice_no}</span>
                 <span>{lastCompletedSale.sale_date}</span>
               </div>
-              <div className="text-[11px] text-slate-700 dark:text-[#E7F0EC]">{t('customerName')}: {lastCompletedSale.customer_name}</div>
+              <div className="flex justify-between text-[11px] text-slate-700 dark:text-[#E7F0EC]">
+                <span>{t('customerName')}: {lastCompletedSale.customer_name}</span>
+                {lastCompletedSale.customer_gender && (
+                  <span className="text-[10px] text-slate-500">
+                    {lastCompletedSale.customer_gender === 'Male' ? '👨 ' : lastCompletedSale.customer_gender === 'Female' ? '👩 ' : '🧑 '}
+                    {lastCompletedSale.customer_gender} ({lastCompletedSale.customer_age_group || (lastCompletedSale.customer_age ? `${lastCompletedSale.customer_age}y` : '')})
+                  </span>
+                )}
+              </div>
 
               <div className="border-t border-b border-slate-200 dark:border-[#24352F] py-1.5 space-y-1">
                 {lastCompletedSale.items?.map((it: any, i: number) => (

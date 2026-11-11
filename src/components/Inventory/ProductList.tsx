@@ -1,7 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { Product, ProductCategory, ProductUnit } from '../../types';
+import { Product, ProductCategory, ProductUnit, ExpiryStatus } from '../../types';
+import { BatchExpiryAlertBanner } from './BatchExpiryAlertBanner';
+import { ProductBatchesModal } from './ProductBatchesModal';
+import { StockInwardModal } from './StockInwardModal';
+import { 
+  getShelfLifeDays, 
+  getSuggestedExpiryDate, 
+  generateBatchNumber, 
+  computeExpiryStatus, 
+  getShelfLifeNote 
+} from '../../lib/shelfLifeUtils';
 import { 
   Search, 
   Plus, 
@@ -19,7 +29,10 @@ import {
   X,
   Sparkles,
   Milk,
-  Check
+  Check,
+  Layers,
+  Calendar,
+  Clock
 } from 'lucide-react';
 
 interface ProductListProps {
@@ -31,17 +44,25 @@ export const ProductList: React.FC<ProductListProps> = ({
   onOpenAddProduct, 
   onEditProduct 
 }) => {
-  const { products, deleteProduct, adjustStock, addProduct, setActiveView } = useStore();
+  const { products, batches, deleteProduct, adjustStock, addProduct, setActiveView } = useStore();
   const { t, language } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards'); // Default to ultra-simple cards!
 
+  // Expiry Filter & Batch Modal states
+  const [selectedExpiryFilter, setSelectedExpiryFilter] = useState<ExpiryStatus | 'ALL'>('ALL');
+  const [selectedProductForBatches, setSelectedProductForBatches] = useState<Product | null>(null);
+  const [selectedProductForStockIn, setSelectedProductForStockIn] = useState<Product | null>(null);
+
   // Quick Stock In/Out Modal
   const [adjustModalProduct, setAdjustModalProduct] = useState<Product | null>(null);
   const [adjustAmount, setAdjustAmount] = useState<string>('10');
   const [adjustType, setAdjustType] = useState<'in' | 'out'>('in');
+  const [adjustBatchNo, setAdjustBatchNo] = useState<string>('');
+  const [adjustMfgDate, setAdjustMfgDate] = useState<string>('');
+  const [adjustExpiryDate, setAdjustExpiryDate] = useState<string>('');
 
   // Quick Inline Add Bar State
   const [showQuickAdd, setShowQuickAdd] = useState(false);
@@ -62,16 +83,24 @@ export const ProductList: React.FC<ProductListProps> = ({
     { id: 'Bakery & Extras', label: t('catBakery') }
   ];
 
-  // Filtered products
+  // Filtered products (Search + Category + Expiry Status)
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
         (p.hindi_name && p.hindi_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (p.marathi_name && p.marathi_name.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+      
+      // Expiry filter
+      if (selectedExpiryFilter !== 'ALL') {
+        const prodBatches = batches.filter(b => b.product_id === p.id && b.qty_remaining > 0);
+        const hasMatchingBatch = prodBatches.some(b => computeExpiryStatus(b.expiry_date).status === selectedExpiryFilter);
+        return matchesSearch && matchesCategory && hasMatchingBatch;
+      }
+
       return matchesSearch && matchesCategory;
     });
-  }, [products, searchQuery, selectedCategory]);
+  }, [products, searchQuery, selectedCategory, selectedExpiryFilter, batches]);
 
   const lowStockCount = products.filter(p => p.stock_quantity <= p.min_stock_alert && p.stock_quantity > 0).length;
   const outOfStockCount = products.filter(p => p.stock_quantity <= 0).length;
@@ -82,6 +111,26 @@ export const ProductList: React.FC<ProductListProps> = ({
     return prod.name;
   };
 
+  // Open Quick Stock Modal with auto-calculated batch & expiry for Stock In
+  const handleOpenAdjustModal = (prod: Product, type: 'in' | 'out') => {
+    setAdjustModalProduct(prod);
+    setAdjustType(type);
+    setAdjustAmount(type === 'in' ? '10' : '5');
+    if (type === 'in') {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const generatedBatch = generateBatchNumber(prod.name, todayStr);
+      const shelfDays = getShelfLifeDays(prod.category, prod.name);
+      const autoExpiry = getSuggestedExpiryDate(todayStr, shelfDays);
+      setAdjustBatchNo(generatedBatch);
+      setAdjustMfgDate(todayStr);
+      setAdjustExpiryDate(autoExpiry);
+    } else {
+      setAdjustBatchNo('');
+      setAdjustMfgDate('');
+      setAdjustExpiryDate('');
+    }
+  };
+
   // Handle Quick Adjust (Stock In / Out)
   const handleConfirmAdjust = () => {
     if (!adjustModalProduct) return;
@@ -89,7 +138,16 @@ export const ProductList: React.FC<ProductListProps> = ({
     if (isNaN(qty) || qty <= 0) return;
 
     const delta = adjustType === 'in' ? qty : -qty;
-    adjustStock(adjustModalProduct.id, delta);
+    const todayStr = new Date().toISOString().split('T')[0];
+    const shelfDays = getShelfLifeDays(adjustModalProduct.category, adjustModalProduct.name);
+
+    const batchInfo = adjustType === 'in' ? {
+      batch_no: adjustBatchNo.trim() || generateBatchNumber(adjustModalProduct.name, todayStr),
+      mfg_date: adjustMfgDate || todayStr,
+      expiry_date: adjustExpiryDate || getSuggestedExpiryDate(todayStr, shelfDays)
+    } : undefined;
+
+    adjustStock(adjustModalProduct.id, delta, undefined, batchInfo);
     setAdjustModalProduct(null);
     setAdjustAmount('10');
   };
@@ -134,7 +192,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                 {language === 'mr' ? 'दुकान माल व साठा (Inventory)' : language === 'hi' ? 'दुकान का माल और स्टॉक (Inventory)' : 'Dairy Stock & Inventory'}
               </h2>
               <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
-                {language === 'mr' ? 'एकदम सोपे: माल आला की (+) दाबा, माल संपला की (-) दाबा' : 'एकदम सरल: माल आया तो (+) दबाएं, बिका तो (-) दबाएं'}
+                {language === 'mr' ? 'एकदम सोपे: माल आला की (+) दाबा, माल संपला की (-) दाबा' : language === 'hi' ? 'एकदम सरल: माल आया तो (+) दबाएं, बिका तो (-) दबाएं' : 'Simple: click (+) for Stock In, (-) for Stock Out'}
               </p>
             </div>
           </div>
@@ -173,7 +231,7 @@ export const ProductList: React.FC<ProductListProps> = ({
               className="flex items-center gap-1 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 text-xs font-black animate-pulse"
             >
               <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-              <span>{lowStockCount + outOfStockCount} {language === 'mr' ? 'माल संपत आला' : 'माल खत्म हो रहा है'}</span>
+              <span>{lowStockCount + outOfStockCount} {language === 'mr' ? 'माल संपत आला' : language === 'hi' ? 'माल खत्म हो रहा है' : 'items running low'}</span>
             </button>
           )}
 
@@ -183,7 +241,7 @@ export const ProductList: React.FC<ProductListProps> = ({
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
           >
             <Plus className="w-4 h-4" />
-            <span>{language === 'mr' ? '+ नवीन माल जोडा' : '+ नया माल जोड़ें'}</span>
+            <span>{language === 'mr' ? '+ नवीन माल जोडा' : language === 'hi' ? '+ नया माल जोड़ें' : '+ Add New Product'}</span>
           </button>
         </div>
       </div>
@@ -194,7 +252,7 @@ export const ProductList: React.FC<ProductListProps> = ({
           <div className="flex items-center justify-between mb-3 border-b border-emerald-200 dark:border-[#24352F] pb-2">
             <h3 className="font-extrabold text-emerald-950 dark:text-emerald-300 text-sm flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>{language === 'mr' ? 'फक्त १ मिनिटात नवीन माल जोडा' : 'सिर्फ 1 मिनट में नया माल जोड़ें'}</span>
+              <span>{language === 'mr' ? 'फक्त १ मिनिटात नवीन माल जोडा' : language === 'hi' ? 'सिर्फ 1 मिनट में नया माल जोड़ें' : 'Add New Product in 1 Minute'}</span>
             </h3>
             <button onClick={() => setShowQuickAdd(false)} className="text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white">
               <X className="w-4 h-4" />
@@ -204,12 +262,12 @@ export const ProductList: React.FC<ProductListProps> = ({
           <form onSubmit={handleQuickAddSubmit} className="grid grid-cols-2 sm:grid-cols-6 gap-3 items-end">
             <div className="col-span-2">
               <label className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
-                {language === 'mr' ? 'मालाचे नाव (उदा. मलाई पनीर) *' : 'माल का नाम (उदा. मलाई पनीर) *'}
+                {language === 'mr' ? 'मालाचे नाव (उदा. मलाई पनीर) *' : language === 'hi' ? 'माल का नाम (उदा. मलाई पनीर) *' : 'Product Name (e.g. Malai Paneer) *'}
               </label>
               <input
                 type="text"
                 required
-                placeholder="उदा. म्हशीचे दूध / पनीर / तूप"
+                placeholder={language === 'mr' ? 'उदा. म्हशीचे दूध / पनीर / तूप' : language === 'hi' ? 'उदा. भैंस का दूध / पनीर / घी' : 'e.g. Buffalo Milk / Paneer / Ghee'}
                 value={quickName}
                 onChange={(e) => setQuickName(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-[#24352F] text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
@@ -218,7 +276,7 @@ export const ProductList: React.FC<ProductListProps> = ({
 
             <div>
               <label className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
-                {language === 'mr' ? 'प्रवर्ग (Category)' : 'केटेगरी'}
+                {language === 'mr' ? 'प्रवर्ग (Category)' : language === 'hi' ? 'केटेगरी' : 'Category'}
               </label>
               <select
                 value={quickCategory}
@@ -236,29 +294,29 @@ export const ProductList: React.FC<ProductListProps> = ({
 
             <div>
               <label className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
-                {language === 'mr' ? 'एकक (Unit)' : 'नाप (Unit)'}
+                {language === 'mr' ? 'एकक (Unit)' : language === 'hi' ? 'नाप (Unit)' : 'Unit'}
               </label>
               <select
                 value={quickUnit}
                 onChange={(e) => setQuickUnit(e.target.value as ProductUnit)}
                 className="w-full px-2.5 py-2 rounded-xl bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-[#24352F] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none"
               >
-                <option value="Litre">{language === 'mr' ? 'लिटर (Ltr)' : 'लीटर'}</option>
-                <option value="Kg">{language === 'mr' ? 'किलो (Kg)' : 'किलो'}</option>
-                <option value="Packet (500ml)">{language === 'mr' ? '५००ml पिशवी' : '500ml थैली'}</option>
-                <option value="Piece">{language === 'mr' ? 'नग / पीस' : 'पीस'}</option>
+                <option value="Litre">{language === 'mr' ? 'लिटर (Ltr)' : language === 'hi' ? 'लीटर' : 'Litre (Ltr)'}</option>
+                <option value="Kg">{language === 'mr' ? 'किलो (Kg)' : language === 'hi' ? 'किलो' : 'Kg'}</option>
+                <option value="Packet (500ml)">{language === 'mr' ? '५००ml पिशवी' : language === 'hi' ? '500ml थैली' : '500ml Pouch'}</option>
+                <option value="Piece">{language === 'mr' ? 'नग / पीस' : language === 'hi' ? 'पीस' : 'Piece'}</option>
               </select>
             </div>
 
             <div>
               <label className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
-                {language === 'mr' ? 'विक्री भाव (₹ Rate) *' : 'बिक्री भाव (₹ Rate) *'}
+                {language === 'mr' ? 'विक्री भाव (₹ Rate) *' : language === 'hi' ? 'बिक्री भाव (₹ Rate) *' : 'Selling Price (₹ Rate) *'}
               </label>
               <input
                 type="number"
                 step="0.01"
                 required
-                placeholder="उदा. 70"
+                placeholder={language === 'mr' ? 'उदा. 70' : language === 'hi' ? 'उदा. 70' : 'e.g. 70'}
                 value={quickSellPrice}
                 onChange={(e) => setQuickSellPrice(e.target.value)}
                 className="w-full px-2.5 py-2 rounded-xl bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-[#24352F] text-xs font-black text-emerald-900 dark:text-emerald-400 focus:outline-none"
@@ -270,7 +328,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                 type="submit"
                 className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
               >
-                {language === 'mr' ? 'जतन करा' : 'जोड़ें'}
+                {language === 'mr' ? 'जतन करा' : language === 'hi' ? 'जोड़ें' : 'Save'}
               </button>
             </div>
           </form>
@@ -283,7 +341,7 @@ export const ProductList: React.FC<ProductListProps> = ({
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
           <input
             type="text"
-            placeholder={language === 'mr' ? 'दूध, पनीर, दही, तूप शोधा (Search)...' : 'दूध, पनीर, दही, घी खोजें (Search)...'}
+            placeholder={language === 'mr' ? 'दूध, पनीर, दही, तूप शोधा (Search)...' : language === 'hi' ? 'दूध, पनीर, दही, घी खोजें (Search)...' : 'Search milk, paneer, curd, ghee...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -313,6 +371,12 @@ export const ProductList: React.FC<ProductListProps> = ({
         </div>
       </div>
 
+      {/* DYNAMIC BATCH & EXPIRY ALERT & FILTER BANNER */}
+      <BatchExpiryAlertBanner 
+        selectedStatusFilter={selectedExpiryFilter} 
+        onSelectStatusFilter={setSelectedExpiryFilter} 
+      />
+
       {/* VIEW 1: ULTRA-SIMPLE LARGE TOUCH CARDS VIEW (DEFAULT) */}
       {viewMode === 'cards' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -320,6 +384,12 @@ export const ProductList: React.FC<ProductListProps> = ({
             const isOutOfStock = prod.stock_quantity <= 0;
             const isLowStock = prod.stock_quantity <= prod.min_stock_alert && !isOutOfStock;
             const displayName = getProductDisplayName(prod);
+
+            const prodBatches = batches.filter(b => b.product_id === prod.id && b.qty_remaining > 0);
+            const expiredBatches = prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRED');
+            const expiringTodayBatches = prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRING_TODAY');
+            const expiringTomorrowBatches = prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRING_TOMORROW');
+            const expiring3DaysBatches = prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRING_IN_3_DAYS');
 
             return (
               <div 
@@ -349,17 +419,17 @@ export const ProductList: React.FC<ProductListProps> = ({
                       {isOutOfStock ? (
                         <>
                           <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-                          <span>{language === 'mr' ? 'माल संपला' : 'खत्म'}</span>
+                          <span>{language === 'mr' ? 'माल संपला' : language === 'hi' ? 'खत्म' : 'Out of Stock'}</span>
                         </>
                       ) : isLowStock ? (
                         <>
                           <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                          <span>{language === 'mr' ? 'कमी साठा' : 'कम स्टॉक'}</span>
+                          <span>{language === 'mr' ? 'कमी साठा' : language === 'hi' ? 'कम स्टॉक' : 'Low Stock'}</span>
                         </>
                       ) : (
                         <>
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                          <span>{language === 'mr' ? 'उपलब्ध आहे' : 'उपलब्ध'}</span>
+                          <span>{language === 'mr' ? 'उपलब्ध आहे' : language === 'hi' ? 'उपलब्ध' : 'In Stock'}</span>
                         </>
                       )}
                     </span>
@@ -375,11 +445,47 @@ export const ProductList: React.FC<ProductListProps> = ({
                     </p>
                   )}
 
+                  {/* BATCH & EXPIRY STATUS STRIP */}
+                  <div className="mt-2.5 mb-2 flex items-center justify-between gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProductForBatches(prod)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-emerald-50 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-700 hover:text-emerald-800 dark:text-[#E7F0EC] dark:hover:text-emerald-300 border border-slate-200/80 dark:border-[#24352F] text-[11px] font-black transition-all group"
+                      title={language === 'mr' ? 'सर्व बॅचेस व एक्सपायरी तपशील पहा' : language === 'hi' ? 'सभी बैचेस व एक्सपायरी विवरण देखें' : 'View batches & expiry details'}
+                    >
+                      <Layers className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
+                      <span>{prodBatches.length} {t('batches')}</span>
+                      <span className="text-[10px] text-slate-400 dark:text-[#8FA69C]">&bull; {t('viewBatches')} &rarr;</span>
+                    </button>
+
+                    {expiredBatches.length > 0 ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 font-black border border-rose-300 dark:border-rose-800/80 text-[10px] animate-pulse">
+                        🔴 {expiredBatches.length} {language === 'mr' ? 'मुदत संपली' : language === 'hi' ? 'एक्सपायर्ड' : 'Expired'}
+                      </span>
+                    ) : expiringTodayBatches.length > 0 ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-100 dark:bg-orange-950/80 text-orange-900 dark:text-orange-300 font-black border border-orange-300 dark:border-orange-800/80 text-[10px]">
+                        🟠 {language === 'mr' ? 'आज संपत आहे' : language === 'hi' ? 'आज एक्सपायर' : 'Expiring Today'}
+                      </span>
+                    ) : expiringTomorrowBatches.length > 0 ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 font-black border border-amber-300 dark:border-amber-800/80 text-[10px]">
+                        🟡 {language === 'mr' ? 'उद्या संपेल' : language === 'hi' ? 'कल एक्सपायर' : 'Exp. Tomorrow'}
+                      </span>
+                    ) : expiring3DaysBatches.length > 0 ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-800/80 text-[10px]">
+                        🟢 3 {language === 'mr' ? 'दिवसांत' : language === 'hi' ? 'दिनों में' : 'Days'}
+                      </span>
+                    ) : prodBatches.length > 0 ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-[#1A2A25] text-emerald-700 dark:text-emerald-400 font-bold text-[10px]">
+                        ✅ {language === 'mr' ? 'ताजा माल' : language === 'hi' ? 'ताज़ा माल' : 'Fresh'}
+                      </span>
+                    ) : null}
+                  </div>
+
                   {/* Big Number: Current Stock In Hand */}
-                  <div className="bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-2xl border border-slate-100 dark:border-[#24352F] my-3 flex items-center justify-between">
+                  <div className="bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-2xl border border-slate-100 dark:border-[#24352F] my-2 flex items-center justify-between">
                     <div>
                       <span className="text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] block">
-                        {language === 'mr' ? 'सध्या दुकानात शिल्लक:' : 'दुकान में कितना बचा है:'}
+                        {language === 'mr' ? 'सध्या दुकानात शिल्लक:' : language === 'hi' ? 'दुकान में कितना बचा है:' : 'Stock in Shop:'}
                       </span>
                       <span className={`text-2xl font-black ${isOutOfStock ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
                         {prod.stock_quantity} <span className="text-sm font-bold text-slate-500 dark:text-[#8FA69C]">{prod.unit}</span>
@@ -388,7 +494,7 @@ export const ProductList: React.FC<ProductListProps> = ({
 
                     <div className="text-right">
                       <span className="text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] block">
-                        {language === 'mr' ? 'विक्री भाव:' : 'बिक्री भाव:'}
+                        {language === 'mr' ? 'विक्री भाव:' : language === 'hi' ? 'बिक्री भाव:' : 'Selling Rate:'}
                       </span>
                       <span className="text-xl font-black text-emerald-700 dark:text-emerald-400">
                         ₹{prod.selling_price}
@@ -403,29 +509,21 @@ export const ProductList: React.FC<ProductListProps> = ({
                     
                     {/* BUTTON 1: माल आया (+ STOCK IN) */}
                     <button
-                      onClick={() => {
-                        setAdjustModalProduct(prod);
-                        setAdjustType('in');
-                        setAdjustAmount('10');
-                      }}
+                      onClick={() => setSelectedProductForStockIn(prod)}
                       className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all"
                     >
                       <ArrowUpCircle className="w-4 h-4 text-emerald-200" />
-                      <span>{language === 'mr' ? '+ माल आला' : '+ माल आया'}</span>
+                      <span>{language === 'mr' ? '+ माल आला' : language === 'hi' ? '+ माल आया' : '+ Stock In'}</span>
                     </button>
 
                     {/* BUTTON 2: माल गया (- STOCK OUT) */}
                     <button
-                      onClick={() => {
-                        setAdjustModalProduct(prod);
-                        setAdjustType('out');
-                        setAdjustAmount('5');
-                      }}
+                      onClick={() => handleOpenAdjustModal(prod, 'out')}
                       disabled={prod.stock_quantity <= 0}
                       className="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-800 dark:text-[#E7F0EC] hover:text-rose-700 dark:hover:text-rose-300 border border-slate-200 dark:border-[#24352F] font-extrabold text-xs flex items-center justify-center gap-1.5 disabled:opacity-40 active:scale-95 transition-all"
                     >
                       <ArrowDownCircle className="w-4 h-4 text-slate-500 dark:text-[#8FA69C] hover:text-rose-600" />
-                      <span>{language === 'mr' ? '- माल गेला' : '- माल गया'}</span>
+                      <span>{language === 'mr' ? '- माल गेला' : language === 'hi' ? '- माल गया' : '- Stock Out'}</span>
                     </button>
 
                   </div>
@@ -433,7 +531,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                   {/* Edit / Delete footer */}
                   <div className="flex items-center justify-between text-xs pt-1 px-1 text-slate-400 dark:text-[#8FA69C]">
                     <span>
-                      {language === 'mr' ? 'खरेदी दर:' : 'खरीद भाव:'} ₹{prod.purchase_price}
+                      {language === 'mr' ? 'खरेदी दर:' : language === 'hi' ? 'खरीद भाव:' : 'Cost Price:'} ₹{prod.purchase_price}
                     </span>
                     <div className="flex items-center gap-2">
                       <button
@@ -448,7 +546,9 @@ export const ProductList: React.FC<ProductListProps> = ({
                         onClick={() => {
                           const confirmMsg = language === 'mr' 
                             ? `तुम्हाला "${displayName}" हटवायचे आहे का?` 
-                            : `क्या आप "${displayName}" को हटाना चाहते हैं?`;
+                            : language === 'hi'
+                            ? `क्या आप "${displayName}" को हटाना चाहते हैं?`
+                            : `Are you sure you want to delete "${displayName}"?`;
                           if (window.confirm(confirmMsg)) {
                             deleteProduct(prod.id);
                           }
@@ -480,7 +580,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                   <th className="px-3 py-3 text-right">{t('costPriceCol')}</th>
                   <th className="px-3 py-3 text-right">{t('sellingPriceCol')}</th>
                   <th className="px-4 py-3 text-center">{t('currentStockCol')}</th>
-                  <th className="px-3 py-3 text-center">{language === 'mr' ? 'साठा बदल (+/-)' : 'स्टॉक बदलें (+/-)'}</th>
+                  <th className="px-3 py-3 text-center">{language === 'mr' ? 'साठा बदल (+/-)' : language === 'hi' ? 'स्टॉक बदलें (+/-)' : 'Stock Adjust (+/-)'}</th>
                   <th className="px-4 py-3 text-right">{t('actionsCol')}</th>
                 </tr>
               </thead>
@@ -500,13 +600,24 @@ export const ProductList: React.FC<ProductListProps> = ({
                       <td className="px-3 py-3 text-right font-medium text-slate-600 dark:text-[#8FA69C]">₹{prod.purchase_price}</td>
                       <td className="px-3 py-3 text-right font-black text-slate-900 dark:text-white">₹{prod.selling_price}</td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black ${
-                          isOutOfStock ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300' :
-                          isLowStock ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300' :
-                          'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
-                        }`}>
-                          {prod.stock_quantity} {prod.unit}
-                        </span>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black ${
+                            isOutOfStock ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300' :
+                            isLowStock ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300' :
+                            'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
+                          }`}>
+                            {prod.stock_quantity} {prod.unit}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedProductForBatches(prod)}
+                            className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 hover:underline"
+                            title={t('viewBatches')}
+                          >
+                            <Layers className="w-3 h-3" />
+                            <span>{batches.filter(b => b.product_id === prod.id && b.qty_remaining > 0).length} {t('batches')}</span>
+                          </button>
+                        </div>
                       </td>
                       <td className="px-3 py-3 text-center">
                         <div className="inline-flex items-center gap-1 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-lg border border-slate-200/60 dark:border-[#24352F]">
@@ -520,9 +631,9 @@ export const ProductList: React.FC<ProductListProps> = ({
                           </button>
                           <span className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] px-1">1</span>
                           <button
-                            onClick={() => adjustStock(prod.id, 1)}
+                            onClick={() => setSelectedProductForStockIn(prod)}
                             className="p-1 hover:bg-slate-200 dark:hover:bg-[#283C35] rounded text-emerald-700 dark:text-emerald-400"
-                            title="+1"
+                            title="+ माल आला (Stock In)"
                           >
                             <PlusCircle className="w-3.5 h-3.5" />
                           </button>
@@ -537,7 +648,8 @@ export const ProductList: React.FC<ProductListProps> = ({
                         </button>
                         <button
                           onClick={() => {
-                            if (window.confirm(`हटाएं ${displayName}?`)) deleteProduct(prod.id);
+                            const confirmDel = language === 'mr' ? `"${displayName}" हटवायचे?` : language === 'hi' ? `हटाएं ${displayName}?` : `Delete ${displayName}?`;
+                            if (window.confirm(confirmDel)) deleteProduct(prod.id);
                           }}
                           className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
                         >
@@ -564,14 +676,14 @@ export const ProductList: React.FC<ProductListProps> = ({
                   adjustType === 'in' ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300' : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
                 }`}>
                   {adjustType === 'in' 
-                    ? (language === 'mr' ? '+ नवीन माल आला (Stock In)' : '+ नया माल आया (Stock In)')
-                    : (language === 'mr' ? '- माल गेला / विक्री (Stock Out)' : '- माल गया / बिक्री (Stock Out)')}
+                    ? (language === 'mr' ? '+ नवीन माल आला (Stock In)' : language === 'hi' ? '+ नया माल आया (Stock In)' : '+ Stock In')
+                    : (language === 'mr' ? '- माल गेला / विक्री (Stock Out)' : language === 'hi' ? '- माल गया / बिक्री (Stock Out)' : '- Stock Out')}
                 </span>
                 <h4 className="font-black text-slate-900 dark:text-white text-base mt-1">
                   {getProductDisplayName(adjustModalProduct)}
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                  {language === 'mr' ? 'सध्याचा साठा:' : 'वर्तमान स्टॉक:'} <b>{adjustModalProduct.stock_quantity} {adjustModalProduct.unit}</b>
+                  {language === 'mr' ? 'सध्याचा साठा:' : language === 'hi' ? 'वर्तमान स्टॉक:' : 'Current Stock:'} <b>{adjustModalProduct.stock_quantity} {adjustModalProduct.unit}</b>
                 </p>
               </div>
 
@@ -583,8 +695,8 @@ export const ProductList: React.FC<ProductListProps> = ({
             <div>
               <label className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
                 {adjustType === 'in'
-                  ? (language === 'mr' ? `किती ${adjustModalProduct.unit} माल आला?` : `कितनी ${adjustModalProduct.unit} माल आया?`)
-                  : (language === 'mr' ? `किती ${adjustModalProduct.unit} माल गेला?` : `कितना ${adjustModalProduct.unit} माल गया?`)}
+                  ? (language === 'mr' ? `किती ${adjustModalProduct.unit} माल आला?` : language === 'hi' ? `कितनी ${adjustModalProduct.unit} माल आया?` : `How many ${adjustModalProduct.unit} arrived?`)
+                  : (language === 'mr' ? `किती ${adjustModalProduct.unit} माल गेला?` : language === 'hi' ? `कितना ${adjustModalProduct.unit} माल गया?` : `How many ${adjustModalProduct.unit} dispensed?`)}
               </label>
 
               <div className="relative">
@@ -615,10 +727,47 @@ export const ProductList: React.FC<ProductListProps> = ({
                 ))}
               </div>
 
+              {/* BATCH & EXPIRY INPUT (When Stock In) */}
+              {adjustType === 'in' && (
+                <div className="space-y-2.5 pt-3 border-t border-slate-100 dark:border-[#24352F]">
+                  <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-[11px] text-emerald-900 dark:text-emerald-300 font-semibold flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>{getShelfLifeNote(adjustModalProduct.category, adjustModalProduct.name, language)}</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
+                        {t('batchNo')}
+                      </label>
+                      <input
+                        type="text"
+                        value={adjustBatchNo}
+                        onChange={(e) => setAdjustBatchNo(e.target.value)}
+                        placeholder="BN-..."
+                        className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
+                        {t('expiryDate')}
+                      </label>
+                      <input
+                        type="date"
+                        value={adjustExpiryDate}
+                        onChange={(e) => setAdjustExpiryDate(e.target.value)}
+                        className="w-full px-2.5 py-1.5 rounded-xl border border-emerald-400 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Preview resulting stock */}
               <div className="mt-3 p-3 bg-slate-50 dark:bg-[#1A2A25] rounded-xl border border-slate-200 dark:border-[#24352F] flex justify-between items-center text-xs">
                 <span className="font-semibold text-slate-600 dark:text-[#8FA69C]">
-                  {language === 'mr' ? 'नवीन शिल्लक साठा होईल:' : 'नया कुल स्टॉक बनेगा:'}
+                  {language === 'mr' ? 'नवीन शिल्लक साठा होईल:' : language === 'hi' ? 'नया कुल स्टॉक बनेगा:' : 'Resulting Total Stock:'}
                 </span>
                 <span className="text-base font-black text-emerald-700 dark:text-emerald-400">
                   {Math.max(0, adjustType === 'in' 
@@ -643,12 +792,28 @@ export const ProductList: React.FC<ProductListProps> = ({
                 onClick={handleConfirmAdjust}
                 className="w-1/2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md shadow-emerald-600/20"
               >
-                {language === 'mr' ? 'होय, साठा अपडेट करा' : 'हाँ, स्टॉक अपडेट करें'}
+                {language === 'mr' ? 'होय, साठा अपडेट करा' : language === 'hi' ? 'हाँ, स्टॉक अपडेट करें' : 'Confirm Stock Update'}
               </button>
             </div>
 
           </div>
         </div>
+      )}
+
+      {/* COMPREHENSIVE STOCK INWARD & LOT ENTRY MODAL */}
+      {selectedProductForStockIn && (
+        <StockInwardModal 
+          product={selectedProductForStockIn} 
+          onClose={() => setSelectedProductForStockIn(null)} 
+        />
+      )}
+
+      {/* PRODUCT BATCHES & EXPIRY MANAGEMENT MODAL */}
+      {selectedProductForBatches && (
+        <ProductBatchesModal 
+          product={selectedProductForBatches} 
+          onClose={() => setSelectedProductForBatches(null)} 
+        />
       )}
 
     </div>

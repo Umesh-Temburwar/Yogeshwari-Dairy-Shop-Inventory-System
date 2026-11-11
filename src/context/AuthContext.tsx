@@ -25,7 +25,6 @@ interface AuthContextType {
   lockSecurity: () => void;
   signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
   signUpWithEmail: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
-  signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   continueAsGuest: () => void;
   resetPassword: (email: string) => Promise<{ error: any }>;
@@ -269,25 +268,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Google OAuth
-  const signInWithGoogle = async () => {
-    if (!supabase) return { error: { message: 'Supabase client not initialized' } };
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-        },
-      });
-      if (error) throw error;
-      lockSecurity();
-      return { error: null };
-    } catch (err: any) {
-      console.error('Google OAuth sign-in error:', err);
-      return { error: err };
-    }
-  };
-
   // Sign Out
   const signOut = async () => {
     setIsLoading(true);
@@ -341,7 +321,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         lockSecurity,
         signInWithEmail,
         signUpWithEmail,
-        signInWithGoogle,
         signOut,
         continueAsGuest,
         resetPassword,

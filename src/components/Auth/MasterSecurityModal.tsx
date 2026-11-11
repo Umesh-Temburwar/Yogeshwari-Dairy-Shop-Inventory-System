@@ -323,3 +323,4 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
     </div>
   );
 };
+

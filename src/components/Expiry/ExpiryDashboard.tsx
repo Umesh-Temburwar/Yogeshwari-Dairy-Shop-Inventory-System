@@ -232,44 +232,62 @@ export const ExpiryDashboard: React.FC = () => {
     }
   };
 
-  const getExpiryReportPayload = () => ({
-    title: language === 'mr' ? 'मुदत समाप्ती व एक्सपायरी जोखीम अहवाल' : language === 'hi' ? 'एक्सपायरी डेट व जोखिम रिपोर्ट' : 'Expiry Management & Risk Assessment Report',
-    subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Batch Expiry Control',
-    periodText: language === 'mr' ? 'आजपर्यंतची सर्व बॅचेस स्थिती' : 'आज तक का संपूर्ण बैच स्टेटस',
-    kpis: [
-      { label: 'मुदत संपलेला माल (Expired)', value: `₹${kpis.expiredCostLoss.toLocaleString('en-IN')}`, color: 'rose' },
-      { label: 'आज एक्सपायर होणारे (Today)', value: `₹${kpis.todayAtRiskValue.toLocaleString('en-IN')}`, color: 'rose' },
-      { label: '३ दिवसांत मुदत संपणारे (In 3 Days)', value: `₹${kpis.nearExpiryRiskTotal.toLocaleString('en-IN')}`, color: 'amber' },
-      { label: 'एकूण सक्रिय साठा (Active Cost)', value: `₹${kpis.totalStockCost.toLocaleString('en-IN')}`, color: 'emerald' }
-    ],
-    table: {
-      headers: ['उत्पादन (Product)', 'बॅच क्र.', 'शिल्लक नग', 'खरेदी दर', 'विक्री दर', 'एक्सपायरी दिनांक', 'स्थिती (Status)', 'जोखीम मूल्य (₹)'],
-      alignments: ['left', 'center', 'right', 'right', 'right', 'center', 'center', 'right'] as ('left' | 'center' | 'right')[],
-      rows: filteredBatches.map(b => [
-        getProductDisplayName(b),
-        b.batch_no || '—',
-        `${b.qty_remaining} ${b.product?.unit || ''}`,
-        `₹${b.purchase_price}`,
-        `₹${b.selling_price || b.product?.selling_price || 0}`,
-        b.expiry_date,
-        b.daysToExpiry < 0 ? `मुदत संपली (${Math.abs(b.daysToExpiry)} दिवस आधी)` :
-          b.daysToExpiry === 0 ? 'आज शेवटचा दिवस' :
-            b.daysToExpiry === 1 ? 'उद्या संपणार' : `${b.daysToExpiry} दिवस शिल्लक`,
-        `₹${b.costValue.toLocaleString('en-IN')}`
-      ]),
-      summaryRow: [
-        'एकूण (Total)',
-        `${filteredBatches.length} बॅचेस`,
-        '',
-        '',
-        '',
-        '',
-        '',
-        `₹${filteredBatches.reduce((sum, b) => sum + b.costValue, 0).toLocaleString('en-IN')}`
-      ]
-    },
-    notes: 'FEFO नियमानुसार प्रथम मुदत संपणारा माल आधी विक्री करावा. मुदत संपलेला माल विक्रीसाठी ग्राह्य धरू नये.'
-  });
+  const getExpiryReportPayload = () => {
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
+
+    return {
+      title: isMr ? 'मुदत समाप्ती व एक्सपायरी जोखीम अहवाल' : isHi ? 'एक्सपायरी डेट व जोखिम नियंत्रण रिपोर्ट' : 'Expiry Management & Risk Assessment Report',
+      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: isMr ? 'आजपर्यंतची सर्व बॅचेस स्थिती' : isHi ? 'आज तक का संपूर्ण बैच स्टेटस' : 'Active Batches Expiry Audit',
+      language,
+      kpis: [
+        { label: isMr ? 'मुदत संपलेला माल' : isHi ? 'अवधि समाप्त माल' : 'Expired Stock Loss', value: `₹${kpis.expiredCostLoss.toLocaleString('en-IN')}`, color: 'rose' },
+        { label: isMr ? 'आज मुदत संपणारे' : isHi ? 'आज समाप्त होने वाले' : 'Expiring Today', value: `₹${kpis.todayAtRiskValue.toLocaleString('en-IN')}`, color: 'rose' },
+        { label: isMr ? '३ दिवसांत मुदत संपणारे' : isHi ? '३ दिनों में समाप्त होने वाले' : 'Expiring in 3 Days', value: `₹${kpis.nearExpiryRiskTotal.toLocaleString('en-IN')}`, color: 'amber' },
+        { label: isMr ? 'एकूण सक्रिय साठा मूल्य' : isHi ? 'कुल सक्रिय स्टॉक मूल्य' : 'Active Stock Valuation', value: `₹${kpis.totalStockCost.toLocaleString('en-IN')}`, color: 'emerald' }
+      ],
+      table: {
+        headers: isMr
+          ? ['उत्पादनाचे नाव', 'बॅच क्र.', 'शिल्लक नग', 'खरेदी दर (₹)', 'विक्री दर (₹)', 'एक्सपायरी दिनांक', 'स्थिती', 'जोखीम मूल्य (₹)']
+          : isHi
+          ? ['सामान का नाम', 'बैच क्र.', 'शेष मात्रा', 'खरीद दर (₹)', 'बिक्री दर (₹)', 'समाप्ति तिथि', 'स्थिति', 'जोखिम मूल्य (₹)']
+          : ['Product Name', 'Batch No.', 'Remaining Qty', 'Purchase Rate (₹)', 'Selling Rate (₹)', 'Expiry Date', 'Status', 'Risk Value (₹)'],
+        alignments: ['left', 'center', 'right', 'right', 'right', 'center', 'center', 'right'] as ('left' | 'center' | 'right' | 'right' | 'right' | 'center' | 'center' | 'right')[],
+        rows: filteredBatches.map(b => [
+          getProductDisplayName(b),
+          b.batch_no || '—',
+          `${b.qty_remaining} ${b.product?.unit || ''}`,
+          `₹${b.purchase_price}`,
+          `₹${b.selling_price || b.product?.selling_price || 0}`,
+          b.expiry_date,
+          b.daysToExpiry < 0 
+            ? (isMr ? `मुदत संपली (${Math.abs(b.daysToExpiry)} दिवस आधी)` : isHi ? `अवधि समाप्त (${Math.abs(b.daysToExpiry)} दिन पूर्व)` : `Expired (${Math.abs(b.daysToExpiry)}d ago)`) :
+            b.daysToExpiry === 0 
+            ? (isMr ? 'आज शेवटचा दिवस' : isHi ? 'आज अंतिम दिन' : 'Expiring Today') :
+            b.daysToExpiry === 1 
+            ? (isMr ? 'उद्या संपणार' : isHi ? 'कल समाप्त होगी' : 'Expiring Tomorrow') 
+            : (isMr ? `${b.daysToExpiry} दिवस शिल्लक` : isHi ? `${b.daysToExpiry} दिन शेष` : `${b.daysToExpiry} days left`),
+          `₹${b.costValue.toLocaleString('en-IN')}`
+        ]),
+        summaryRow: [
+          isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
+          `${filteredBatches.length} ${isMr ? 'बॅचेस' : isHi ? 'बैच' : 'Batches'}`,
+          '',
+          '',
+          '',
+          '',
+          '',
+          `₹${filteredBatches.reduce((sum, b) => sum + b.costValue, 0).toLocaleString('en-IN')}`
+        ]
+      },
+      notes: isMr 
+        ? 'FEFO नियमानुसार प्रथम मुदत संपणारा माल आधी विक्री करावा. मुदत संपलेला माल विक्रीसाठी ग्राह्य धरू नये.'
+        : isHi
+        ? 'FEFO नियमानुसार पहले समाप्त होने वाला माल पहले बेचें। एक्सपायर माल बिक्री में न लें।'
+        : 'Strictly enforce FEFO (First-Expired, First-Out). Do not dispense expired dairy goods for retail sale.'
+    };
+  };
 
   const handleViewExpiryPDF = () => {
     viewReportPDF(getExpiryReportPayload());
@@ -312,7 +330,7 @@ export const ExpiryDashboard: React.FC = () => {
             title="View Expiry Report PDF"
           >
             <Eye className="w-4 h-4 text-rose-300" />
-            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
           </button>
 
           <button

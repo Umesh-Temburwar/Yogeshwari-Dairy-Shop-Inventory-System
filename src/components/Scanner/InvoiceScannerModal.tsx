@@ -328,12 +328,12 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] font-bold">
                     <tr>
-                      <th className="px-3 py-2">माल नाव (Product)</th>
-                      <th className="px-2 py-2 text-center">मात्रा (Qty)</th>
-                      <th className="px-2 py-2 text-right">दर (Rate)</th>
-                      <th className="px-2 py-2 text-right">एकूण (Total)</th>
-                      <th className="px-2 py-2">बॅच व मुदत (Batch & Exp)</th>
-                      <th className="px-2 py-2 text-center">कृती</th>
+                      <th className="px-3 py-2">{language === 'mr' ? 'मालाचे नाव' : language === 'hi' ? 'सामान का नाम' : 'Product Name'}</th>
+                      <th className="px-2 py-2 text-center">{language === 'mr' ? 'प्रमाण' : language === 'hi' ? 'मात्रा' : 'Qty'}</th>
+                      <th className="px-2 py-2 text-right">{language === 'mr' ? 'दर (₹)' : language === 'hi' ? 'दर (₹)' : 'Rate (₹)'}</th>
+                      <th className="px-2 py-2 text-right">{language === 'mr' ? 'एकूण (₹)' : language === 'hi' ? 'कुल (₹)' : 'Total (₹)'}</th>
+                      <th className="px-2 py-2">{language === 'mr' ? 'बॅच व मुदत' : language === 'hi' ? 'बैच व अंतिम तिथि' : 'Batch & Expiry'}</th>
+                      <th className="px-2 py-2 text-center">{language === 'mr' ? 'कृती' : language === 'hi' ? 'कार्रवाई' : 'Action'}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">

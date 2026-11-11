@@ -121,43 +121,57 @@ export const ProductList: React.FC<ProductListProps> = ({
     return products.reduce((sum, p) => sum + (p.stock_quantity * p.selling_price), 0);
   }, [products]);
 
-  const getStockReportPayload = () => ({
-    title: language === 'mr' ? 'दुकान शिल्लक माल व साठा मूल्यांकन अहवाल' : language === 'hi' ? 'दुकान स्टॉक व मूल्यांकन रिपोर्ट' : 'Dairy Inventory Stock Valuation & Catalog Report',
-    subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Product Inventory',
-    periodText: language === 'mr' ? 'सद्यस्थिती साठा मूल्य' : 'वर्तमान स्टॉक इन्वेंटरी',
-    kpis: [
-      { label: 'एकूण उत्पादने (Total SKUs)', value: `${products.length} वस्तू`, color: 'emerald' },
-      { label: 'खरेदीनुसार साठा मूल्य (Cost)', value: `₹${totalStockCostValuation.toLocaleString('en-IN')}`, color: 'blue' },
-      { label: 'विक्रीनुकसार साठा मूल्य (Retail)', value: `₹${totalStockRetailValuation.toLocaleString('en-IN')}`, color: 'purple' },
-      { label: 'कमी साठा (Low Stock)', value: `${lowStockCount + outOfStockCount} उत्पादने`, color: 'rose' }
-    ],
-    table: {
-      headers: ['उत्पादनाचे नाव (Product)', 'प्रवर्ग (Category)', 'शिल्लक साठा', 'खरेदी दर', 'विक्री दर', 'किमान मर्यादा', 'साठा मूल्य (₹)'],
-      alignments: ['left', 'center', 'right', 'right', 'right', 'center', 'right'] as ('left' | 'center' | 'right')[],
-      rows: filteredProducts.map(p => {
-        const val = p.stock_quantity * p.purchase_price;
-        return [
-          getProductDisplayName(p),
-          p.category,
-          `${p.stock_quantity} ${p.unit}`,
-          `₹${p.purchase_price}`,
-          `₹${p.selling_price}`,
-          `${p.min_stock_alert} ${p.unit}`,
-          `₹${val.toLocaleString('en-IN')}`
-        ];
-      }),
-      summaryRow: [
-        'एकूण (Total)',
-        `${filteredProducts.length} उत्पादने`,
-        '',
-        '',
-        '',
-        '',
-        `₹${filteredProducts.reduce((sum, p) => sum + (p.stock_quantity * p.purchase_price), 0).toLocaleString('en-IN')}`
-      ]
-    },
-    notes: 'दुकान साठा तपशील. कमी साठा असलेली उत्पादने वेळेत खरेदी करावीत.'
-  });
+  const getStockReportPayload = () => {
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
+
+    return {
+      title: isMr ? 'दुकान शिल्लक माल व साठा मूल्यांकन अहवाल' : isHi ? 'दुकान स्टॉक व मूल्यांकन रिपोर्ट' : 'Dairy Inventory Stock Valuation & Catalog Report',
+      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: isMr ? 'सद्यस्थिती साठा मूल्य' : isHi ? 'वर्तमान स्टॉक इन्वेंटरी' : 'Current Stock & Inventory Valuation',
+      language,
+      kpis: [
+        { label: isMr ? 'एकूण उत्पादने' : isHi ? 'कुल उत्पाद संख्या' : 'Total SKUs', value: `${products.length}`, color: 'emerald' },
+        { label: isMr ? 'खरेदीनुसार साठा मूल्य' : isHi ? 'खरीद भाव अनुसार स्टॉक मूल्य' : 'Cost Valuation', value: `₹${totalStockCostValuation.toLocaleString('en-IN')}`, color: 'blue' },
+        { label: isMr ? 'विक्रीनुकसार साठा मूल्य' : isHi ? 'बिक्री भाव अनुसार स्टॉक मूल्य' : 'Retail Valuation', value: `₹${totalStockRetailValuation.toLocaleString('en-IN')}`, color: 'purple' },
+        { label: isMr ? 'कमी साठा उत्पादने' : isHi ? 'कम स्टॉक उत्पाद' : 'Low Stock Items', value: `${lowStockCount + outOfStockCount}`, color: 'rose' }
+      ],
+      table: {
+        headers: isMr 
+          ? ['उत्पादनाचे नाव', 'प्रवर्ग', 'शिल्लक साठा', 'खरेदी दर (₹)', 'विक्री दर (₹)', 'किमान मर्यादा', 'साठा मूल्य (₹)']
+          : isHi
+          ? ['सामान का नाम', 'वर्ग', 'वर्तमान स्टॉक', 'खरीद दर (₹)', 'बिक्री दर (₹)', 'न्यूनतम सीमा', 'स्टॉक मूल्य (₹)']
+          : ['Product Name', 'Category', 'Current Stock', 'Purchase Rate (₹)', 'Selling Rate (₹)', 'Min Alert', 'Valuation (₹)'],
+        alignments: ['left', 'center', 'right', 'right', 'right', 'center', 'right'] as ('left' | 'center' | 'right' | 'right' | 'right' | 'center' | 'right')[],
+        rows: filteredProducts.map(p => {
+          const val = p.stock_quantity * p.purchase_price;
+          return [
+            getProductDisplayName(p),
+            p.category,
+            `${p.stock_quantity} ${p.unit}`,
+            `₹${p.purchase_price}`,
+            `₹${p.selling_price}`,
+            `${p.min_stock_alert} ${p.unit}`,
+            `₹${val.toLocaleString('en-IN')}`
+          ];
+        }),
+        summaryRow: [
+          isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
+          `${filteredProducts.length} ${isMr ? 'उत्पादने' : isHi ? 'उत्पाद' : 'Products'}`,
+          '',
+          '',
+          '',
+          '',
+          `₹${filteredProducts.reduce((sum, p) => sum + (p.stock_quantity * p.purchase_price), 0).toLocaleString('en-IN')}`
+        ]
+      },
+      notes: isMr 
+        ? 'दुकान साठा तपशील. कमी साठा असलेली उत्पादने वेळेत खरेदी करावीत.'
+        : isHi
+        ? 'दुकान स्टॉक विवरण। कम स्टॉक वाले उत्पाद समय रहते खरीद लें।'
+        : 'Dairy inventory valuation statement. Ensure timely replenishment for items reaching reorder thresholds.'
+    };
+  };
 
   const handleViewStockPDF = () => {
     viewReportPDF(getStockReportPayload());
@@ -308,7 +322,7 @@ export const ProductList: React.FC<ProductListProps> = ({
             title="View Stock Valuation PDF"
           >
             <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
           </button>
 
           {/* Print PDF Button */}

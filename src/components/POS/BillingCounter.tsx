@@ -247,35 +247,52 @@ export const BillingCounter: React.FC = () => {
     setCustomerAge('');
   };
 
-  const getInvoiceReportPayload = (sale: any) => ({
-    title: `${t('shopName')} - ${language === 'mr' ? 'कर पावती (Cash Memo)' : 'Cash Memo'}`,
-    subtitle: `${language === 'mr' ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : 'Fresh Milk, Dairy & Sweets'} | FSSAI: 21524012000341`,
-    periodText: `${language === 'mr' ? 'बिल क्र.' : 'Invoice No:'} ${sale.invoice_no} | ${sale.sale_date}`,
-    kpis: [
-      { label: 'निव्वळ देय रक्कम (Net Bill)', value: `₹${sale.net_amount.toLocaleString('en-IN')}`, color: 'emerald' },
-      { label: 'पेमेंट पद्धत (Mode)', value: sale.payment_mode, color: 'blue' },
-      { label: 'ग्राहक (Customer)', value: sale.customer_name, color: 'purple' }
-    ],
-    table: {
-      headers: ['अ.क्र.', 'मालाचे नाव (Product Description)', 'प्रमाण (Qty)', 'दर (Rate ₹)', 'एकूण (Amount ₹)'],
-      alignments: ['center', 'left', 'right', 'right', 'right'] as ('center' | 'left' | 'right')[],
-      rows: (sale.items || []).map((it: any, idx: number) => [
-        idx + 1,
-        it.product_name,
-        `${it.quantity} ${it.unit}`,
-        `₹${it.unit_price}`,
-        `₹${it.total_price.toLocaleString('en-IN')}`
-      ]),
-      summaryRow: [
-        'एकूण निव्वळ रक्कम',
-        `${sale.items?.length || 0} वस्तू`,
-        '',
-        sale.discount > 0 ? `सवलत: ₹${sale.discount}` : '',
-        `₹${sale.net_amount.toLocaleString('en-IN')}`
-      ]
-    },
-    notes: `${language === 'mr' ? 'धन्यवाद! पुन्हा भेट द्या • शुद्धता हीच आमची ओळख' : 'Thank you! Visit again • Purity is our identity'} | UPI ID: Q226038088@ybl (IDFC FIRST Bank)`
-  });
+  const getInvoiceReportPayload = (sale: any) => {
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
+
+    return {
+      title: `${t('shopName')} - ${isMr ? 'अधिकृत विक्री पावती' : isHi ? 'अधिकृत बिक्री रसीद' : 'Cash Memo & Tax Invoice'}`,
+      subtitle: `${isMr ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : isHi ? 'ताज़ा दूध, पनीर, दही, शुद्ध देसी घी' : 'Fresh Milk, Dairy & Sweets'} | FSSAI: 21524012000341`,
+      periodText: `${isMr ? 'बिल क्र.' : isHi ? 'बिल क्र.' : 'Invoice No.'}: ${sale.invoice_no} | ${isMr ? 'तारीख' : isHi ? 'दिनांक' : 'Date'}: ${sale.sale_date}`,
+      language,
+      kpis: [
+        { label: isMr ? 'निव्वळ देय रक्कम' : isHi ? 'कुल देय राशि' : 'Net Payable', value: `₹${sale.net_amount.toLocaleString('en-IN')}`, color: 'emerald' },
+        { 
+          label: isMr ? 'पेमेंट पद्धत' : isHi ? 'भुगतान माध्यम' : 'Payment Mode', 
+          value: sale.payment_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
+                 sale.payment_mode === 'Online_UPI' ? (isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI') :
+                 sale.payment_mode === 'Udhar' ? (isMr ? 'उधारी' : isHi ? 'उधार' : 'Credit') :
+                 sale.payment_mode === 'Split' ? (isMr ? 'विभागून' : isHi ? 'विभाजित' : 'Split') : sale.payment_mode, 
+          color: 'blue' 
+        },
+        { label: isMr ? 'ग्राहक नाव' : isHi ? 'ग्राहक नाम' : 'Customer Name', value: sale.customer_name || (isMr ? 'काउंटर ग्राहक' : isHi ? 'काउंटर ग्राहक' : 'Counter Customer'), color: 'purple' }
+      ],
+      table: {
+        headers: isMr 
+          ? ['अ.क्र.', 'मालाचे नाव / तपशील', 'प्रमाण', 'दर (₹)', 'एकूण रक्कम (₹)']
+          : isHi
+          ? ['क्र.', 'सामान का नाम / विवरण', 'मात्रा', 'दर (₹)', 'कुल राशि (₹)']
+          : ['Sr.', 'Item Description', 'Qty', 'Rate (₹)', 'Total (₹)'],
+        alignments: ['center', 'left', 'right', 'right', 'right'] as ('center' | 'left' | 'right' | 'right' | 'right')[],
+        rows: (sale.items || []).map((it: any, idx: number) => [
+          idx + 1,
+          it.product_name,
+          `${it.quantity} ${it.unit}`,
+          `₹${it.unit_price}`,
+          `₹${it.total_price.toLocaleString('en-IN')}`
+        ]),
+        summaryRow: [
+          isMr ? 'एकूण निव्वळ रक्कम' : isHi ? 'कुल देय राशि' : 'Net Total',
+          `${sale.items?.length || 0} ${isMr ? 'वस्तू' : isHi ? 'सामान' : 'Items'}`,
+          '',
+          sale.discount > 0 ? `${isMr ? 'सवलत' : isHi ? 'छूट' : 'Discount'}: ₹${sale.discount}` : '',
+          `₹${sale.net_amount.toLocaleString('en-IN')}`
+        ]
+      },
+      notes: `${isMr ? 'धन्यवाद! पुन्हा भेट द्या • शुद्धता हीच आमची ओळख' : isHi ? 'धन्यवाद! फिर पधारें • शुद्धता ही हमारी पहचान है' : 'Thank you! Visit again • Purity is our identity'} | UPI ID: Q226038088@ybl (IDFC FIRST Bank)`
+    };
+  };
 
   const handleViewInvoicePDF = (sale: any) => {
     if (!sale) return;
@@ -743,7 +760,7 @@ export const BillingCounter: React.FC = () => {
             <div className="grid grid-cols-2 gap-2 bg-teal-50/70 dark:bg-[#1A2A25] p-3 rounded-xl border border-teal-200/80 dark:border-teal-500/30">
               <div>
                 <label className="text-[11px] font-bold text-teal-900 dark:text-teal-300 block mb-1">
-                  {language === 'mr' ? 'रोख रक्कम (Cash):' : language === 'hi' ? 'कैश में कितना (Cash):' : 'Cash Amount:'}
+                  {language === 'mr' ? 'रोख रक्कम:' : language === 'hi' ? 'रोकड़ राशि:' : 'Cash Amount:'}
                 </label>
                 <input
                   type="number"
@@ -758,7 +775,7 @@ export const BillingCounter: React.FC = () => {
               </div>
               <div>
                 <label className="text-[11px] font-bold text-teal-900 dark:text-teal-300 block mb-1">
-                  {language === 'mr' ? 'ऑनलाईन रक्कम (UPI):' : language === 'hi' ? 'UPI में कितना (Online):' : 'UPI Online Amount:'}
+                  {language === 'mr' ? 'ऑनलाईन UPI रक्कम:' : language === 'hi' ? 'ऑनलाइन UPI राशि:' : 'UPI Online Amount:'}
                 </label>
                 <input
                   type="number"
@@ -1114,7 +1131,7 @@ export const BillingCounter: React.FC = () => {
                 title="View Invoice PDF"
               >
                 <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+                <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
               </button>
               <button
                 type="button"

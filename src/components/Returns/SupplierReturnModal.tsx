@@ -123,15 +123,31 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
 
   const getDebitNotePayload = () => {
     if (!completedReturn) return null;
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
+
     return {
-      title: `सप्लायर माल परतावा डेबिट नोट / Debit Note (${completedReturn.return_no})`,
-      periodText: `डेबिट नोट क्र. ${completedReturn.return_no} | तारीख: ${completedReturn.return_date}`,
+      title: isMr ? `सप्लायर माल परतावा डेबिट नोट (${completedReturn.return_no})` : isHi ? `सप्लायर माल वापसी डेबिट नोट (${completedReturn.return_no})` : `Supplier Return Debit Note (${completedReturn.return_no})`,
+      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: `${isMr ? 'डेबिट नोट क्र.' : isHi ? 'डेबिट नोट क्र.' : 'Debit Note No.'}: ${completedReturn.return_no} | ${isMr ? 'तारीख' : isHi ? 'दिनांक' : 'Date'}: ${completedReturn.return_date}`,
+      language,
       kpis: [
-        { label: 'एकूण रिफंड दावा', value: `₹${completedReturn.total_refund_amount.toLocaleString('en-IN')}`, color: 'rose' },
-        { label: 'रिफंड स्थिती', value: completedReturn.refund_status, color: 'blue' }
+        { label: isMr ? 'एकूण रिफंड दावा' : isHi ? 'कुल रिफंड दावा' : 'Total Refund Claim', value: `₹${completedReturn.total_refund_amount.toLocaleString('en-IN')}`, color: 'rose' },
+        { 
+          label: isMr ? 'रिफंड स्थिती' : isHi ? 'रिफंड स्थिति' : 'Refund Status', 
+          value: completedReturn.refund_status === 'Refund_Received' ? (isMr ? 'रिफंड जमा' : isHi ? 'रिफंड प्राप्त' : 'Refund Received') :
+                 completedReturn.refund_status === 'Adjusted_In_Next_Bill' ? (isMr ? 'बिलात वजावट' : isHi ? 'बिल में कटौती' : 'Adjusted in Bill') :
+                 completedReturn.refund_status === 'Replacement_Received' ? (isMr ? 'माल बदलून मिळाला' : isHi ? 'बदलाव प्राप्त' : 'Replacement Received') :
+                 (isMr ? 'येणे बाकी' : isHi ? 'बाकी' : 'Pending'), 
+          color: 'blue' 
+        }
       ],
       table: {
-        headers: ['सप्लायर नाव', 'उत्पादन', 'बॅच क्र.', 'नग/प्रमाण', 'दर (₹)', 'एकूण रिफंड दावा (₹)', 'कारण'],
+        headers: isMr 
+          ? ['सप्लायर नाव', 'उत्पादन', 'बॅच क्र.', 'प्रमाण', 'दर (₹)', 'एकूण दावा (₹)', 'कारण']
+          : isHi
+          ? ['सप्लायर नाम', 'उत्पाद', 'बैच क्र.', 'मात्रा', 'दर (₹)', 'कुल दावा (₹)', 'कारण']
+          : ['Supplier Name', 'Product', 'Batch No.', 'Quantity', 'Rate (₹)', 'Total Claim (₹)', 'Reason'],
         rows: [
           [
             completedReturn.supplier_name,
@@ -143,9 +159,21 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
             completedReturn.reason
           ]
         ],
-        summaryRow: ['एकूण रिफंड दावा', '', '', '', '', `₹${completedReturn.total_refund_amount.toLocaleString('en-IN')}`, '']
+        summaryRow: [
+          isMr ? 'एकूण रिफंड दावा' : isHi ? 'कुल रिफंड दावा' : 'Total Claim', 
+          '', 
+          '', 
+          '', 
+          '', 
+          `₹${completedReturn.total_refund_amount.toLocaleString('en-IN')}`, 
+          ''
+        ]
       },
-      notes: `सप्लायर स्वाक्षरी: ___________________ | अधिकृत स्वाक्षरी: योगेश्वरी डेअरी. डेबिट नोट रक्कम पुढील बिलात वजावट करावी किंवा बँक खात्यात जमा करावी.`
+      notes: isMr 
+        ? 'सप्लायर स्वाक्षरी: ___________________ | अधिकृत स्वाक्षरी: योगेश्वरी डेअरी. डेबिट नोट रक्कम पुढील बिलात वजावट करावी किंवा बँक खात्यात जमा करावी.'
+        : isHi
+        ? 'सप्लायर हस्ताक्षर: ___________________ | अधिकृत हस्ताक्षर: योगेश्वरी डेरी। डेबिट नोट राशि अगले खरीद बिल में समायोजित करें अथवा बैंक खाते में जमा करें।'
+        : 'Supplier Signature: ___________________ | Authorized Signatory: Yogeshwari Dairy. Debit note amount to be adjusted in next bill or refunded to bank.'
     };
   };
 
@@ -239,35 +267,35 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
                 type="button"
                 onClick={handleViewDebitNote}
                 className="py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-800 dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs border border-slate-300 dark:border-slate-700"
-                title="View Debit Note Voucher PDF"
+                title={language === 'mr' ? 'डेबिट नोट पहा' : language === 'hi' ? 'डेबिट नोट देखें' : 'View Debit Note PDF'}
               >
                 <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span>{language === 'mr' ? 'पहा' : 'देखें'}</span>
+                <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
               </button>
               <button
                 type="button"
                 onClick={handlePrintDebitNote}
                 className="py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs"
-                title="Print Debit Note Voucher"
+                title={language === 'mr' ? 'डेबिट नोट प्रिंट करा' : language === 'hi' ? 'डेबिट नोट प्रिंट करें' : 'Print Debit Note'}
               >
                 <Printer className="w-4 h-4 text-emerald-400" />
-                <span>{language === 'mr' ? 'प्रिंट' : 'प्रिंट'}</span>
+                <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
               </button>
               <button
                 type="button"
                 onClick={handleDownloadDebitNotePDF}
                 className="py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5"
-                title="Download Debit Note PDF"
+                title={language === 'mr' ? 'डेबिट नोट PDF डाउनलोड करा' : language === 'hi' ? 'डेबिट नोट PDF डाउनलोड करें' : 'Download Debit Note PDF'}
               >
                 <Download className="w-4 h-4" />
-                <span>{language === 'mr' ? 'डेबिट नोट PDF' : 'डेबिट नोट PDF'}</span>
+                <span>{language === 'mr' ? 'डेबिट नोट PDF' : language === 'hi' ? 'डेबिट नोट PDF' : 'Download PDF'}</span>
               </button>
               <button
                 type="button"
                 onClick={onClose}
                 className="py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs transition active:scale-95 border border-slate-200 dark:border-[#24352F]"
               >
-                {language === 'mr' ? 'पूर्ण झाले (Done)' : 'संपन्न (Done)'}
+                {language === 'mr' ? 'पूर्ण' : language === 'hi' ? 'संपन्न' : 'Done'}
               </button>
             </div>
           </div>

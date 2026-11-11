@@ -124,23 +124,30 @@ export const KhataBook: React.FC = () => {
   };
 
   const getMasterKhataPayload = () => {
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
     const totalDue = customers.reduce((sum, c) => sum + Math.max(0, c.current_balance), 0);
     const totalCredit = customers.reduce((sum, c) => sum + c.total_credit, 0);
     const totalPaid = customers.reduce((sum, c) => sum + c.total_paid, 0);
 
     return {
-      title: language === 'mr' ? 'उधारी खातेवही संपूर्ण लेजर अहवाल' : language === 'hi' ? 'उधारी खाता-बही संपूर्ण लेजर रिपोर्ट' : 'Customer Credit Ledger & Udhar Khata Book',
-      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Customer Accounts',
-      periodText: language === 'mr' ? 'सद्यस्थिती खातेवही बाकी' : 'वर्तमान खाता-बही बकाया',
+      title: isMr ? 'उधारी खातेवही संपूर्ण लेजर अहवाल' : isHi ? 'उधारी खाता-बही संपूर्ण लेजर रिपोर्ट' : 'Customer Credit Ledger & Udhar Khata Book',
+      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: isMr ? 'सद्यस्थिती खातेवही बाकी' : isHi ? 'वर्तमान खाता-बही बकाया' : 'Current Outstanding Receivables',
+      language,
       kpis: [
-        { label: 'एकूण येणे बाकी (Total Due)', value: `₹${totalDue.toLocaleString('en-IN')}`, color: 'amber' },
-        { label: 'एकूण दिलेली उधारी', value: `₹${totalCredit.toLocaleString('en-IN')}`, color: 'blue' },
-        { label: 'एकूण जमा वसुली (Paid)', value: `₹${totalPaid.toLocaleString('en-IN')}`, color: 'emerald' },
-        { label: 'एकूण ग्राहक खाती', value: `${customers.length} खाती`, color: 'purple' }
+        { label: isMr ? 'एकूण येणे बाकी' : isHi ? 'कुल देय बाकी' : 'Total Outstanding Due', value: `₹${totalDue.toLocaleString('en-IN')}`, color: 'amber' },
+        { label: isMr ? 'एकूण दिलेली उधारी' : isHi ? 'कुल दी गई उधारी' : 'Total Credit Extended', value: `₹${totalCredit.toLocaleString('en-IN')}`, color: 'blue' },
+        { label: isMr ? 'एकूण जमा वसुली' : isHi ? 'कुल प्राप्त वसूली' : 'Total Payments Recovered', value: `₹${totalPaid.toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: isMr ? 'एकूण ग्राहक खाती' : isHi ? 'कुल ग्राहक खाते' : 'Total Accounts', value: `${customers.length}`, color: 'purple' }
       ],
       table: {
-        headers: ['अ.क्र.', 'ग्राहकाचे नाव (Customer)', 'मोबाईल क्र.', 'पत्ता / Landmark', 'एकूण उधारी (₹)', 'जमा रक्कम (₹)', 'बाकी येणे (Due ₹)'],
-        alignments: ['center', 'left', 'center', 'left', 'right', 'right', 'right'] as ('center' | 'left' | 'right')[],
+        headers: isMr
+          ? ['अ.क्र.', 'ग्राहकाचे नाव', 'मोबाईल क्र.', 'पत्ता', 'एकूण उधारी (₹)', 'जमा रक्कम (₹)', 'बाकी येणे (₹)']
+          : isHi
+          ? ['क्र.सं.', 'ग्राहक का नाम', 'मोबाइल नं.', 'पता', 'कुल उधारी (₹)', 'जमा राशि (₹)', 'बकाया राशि (₹)']
+          : ['Sr.No.', 'Customer Name', 'Phone', 'Address', 'Total Credit (₹)', 'Total Paid (₹)', 'Balance Due (₹)'],
+        alignments: ['center', 'left', 'center', 'left', 'right', 'right', 'right'] as ('center' | 'left' | 'center' | 'left' | 'right' | 'right' | 'right')[],
         rows: filteredCustomers.map((c, idx) => [
           idx + 1,
           c.name,
@@ -151,8 +158,8 @@ export const KhataBook: React.FC = () => {
           `₹${c.current_balance.toLocaleString('en-IN')}`
         ]),
         summaryRow: [
-          'एकूण (Total)',
-          `${filteredCustomers.length} ग्राहक`,
+          isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
+          `${filteredCustomers.length} ${isMr ? 'ग्राहक' : isHi ? 'ग्राहक' : 'Customers'}`,
           '',
           '',
           `₹${filteredCustomers.reduce((s, c) => s + c.total_credit, 0).toLocaleString('en-IN')}`,
@@ -160,7 +167,11 @@ export const KhataBook: React.FC = () => {
           `₹${filteredCustomers.reduce((s, c) => s + c.current_balance, 0).toLocaleString('en-IN')}`
         ]
       },
-      notes: 'उधारी खातेवही अहवाल. सर्व नियमित ग्राहकांकडून आठवडा/महिना अखेरीस वसुली करावी.'
+      notes: isMr 
+        ? 'उधारी खातेवही अहवाल. सर्व नियमित ग्राहकांकडून आठवडा/महिना अखेरीस वसुली करावी.'
+        : isHi
+        ? 'उधारी खाता-बही रिपोर्ट। सभी नियमित ग्राहकों से सप्ताह/माह के अंत में वसूली करें।'
+        : 'Official customer ledger report. Perform regular billing cycles and collections at week or month ends.'
     };
   };
 
@@ -177,33 +188,40 @@ export const KhataBook: React.FC = () => {
   };
 
   const getCustomerStatementPayload = (customer: UdharCustomer) => {
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
     const custTxs = udharTransactions.filter(
       t => t.customer_id === customer.id || t.customer_id === customer.name
     );
 
     return {
-      title: `${customer.name} - ${language === 'mr' ? 'खातेवही स्टेटमेंट' : language === 'hi' ? 'खाता स्टेटमेंट' : 'Customer Account Statement'}`,
-      subtitle: `Yogeshwari Dairy Farm & Sweets ERP — Phone: ${customer.phone} | ${customer.address || 'Local'}`,
-      periodText: language === 'mr' ? 'वैयक्तिक हिशोब व व्यवहार' : 'व्यक्तिगत हिसाब व लेन-देन',
+      title: `${customer.name} - ${isMr ? 'खातेवही स्टेटमेंट' : isHi ? 'खाता स्टेटमेंट' : 'Customer Account Statement'}`,
+      subtitle: isMr ? `योगेश्वरी डेअरी ERP — फोन: ${customer.phone || '—'} | ${customer.address || 'स्थानिक'}` : isHi ? `योगेश्वरी डेरी ERP — फोन: ${customer.phone || '—'} | ${customer.address || 'स्थानीय'}` : `Yogeshwari Dairy ERP — Phone: ${customer.phone || '—'} | ${customer.address || 'Local'}`,
+      periodText: isMr ? 'वैयक्तिक हिशोब व व्यवहार' : isHi ? 'व्यक्तिगत हिसाब व लेन-देन' : 'Individual Account Ledger & Transactions',
+      language,
       kpis: [
-        { label: 'सध्याची बाकी येणे (Balance Due)', value: `₹${customer.current_balance.toLocaleString('en-IN')}`, color: customer.current_balance > 0 ? 'amber' : 'emerald' },
-        { label: 'एकूण माल उधारी (Credit)', value: `₹${customer.total_credit.toLocaleString('en-IN')}`, color: 'blue' },
-        { label: 'एकूण जमा रक्कम (Paid)', value: `₹${customer.total_paid.toLocaleString('en-IN')}`, color: 'emerald' },
-        { label: 'व्यवहार संख्या', value: `${custTxs.length} व्यवहार`, color: 'purple' }
+        { label: isMr ? 'सध्याची बाकी येणे' : isHi ? 'वर्तमान बकाया राशि' : 'Balance Due', value: `₹${customer.current_balance.toLocaleString('en-IN')}`, color: customer.current_balance > 0 ? 'amber' : 'emerald' },
+        { label: isMr ? 'एकूण माल उधारी' : isHi ? 'कुल सामान उधारी' : 'Total Credit Extended', value: `₹${customer.total_credit.toLocaleString('en-IN')}`, color: 'blue' },
+        { label: isMr ? 'एकूण जमा रक्कम' : isHi ? 'कुल प्राप्त जमा' : 'Total Paid Received', value: `₹${customer.total_paid.toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: isMr ? 'व्यवहार संख्या' : isHi ? 'लेन-देन संख्या' : 'Total Transactions', value: `${custTxs.length}`, color: 'purple' }
       ],
       table: {
-        headers: ['तारीख', 'तपशील (Transaction Details)', 'प्रकार', 'पेमेंट पद्धत / बिल क्र.', 'उधारी रक्कम (+₹)', 'जमा रक्कम (-₹)'],
-        alignments: ['center', 'left', 'center', 'left', 'right', 'right'] as ('center' | 'left' | 'right')[],
+        headers: isMr
+          ? ['तारीख', 'तपशील', 'प्रकार', 'पेमेंट पद्धत', 'उधारी रक्कम (+₹)', 'जमा रक्कम (-₹)']
+          : isHi
+          ? ['दिनांक', 'विवरण', 'प्रकार', 'भुगतान माध्यम', 'उधारी राशि (+₹)', 'जमा राशि (-₹)']
+          : ['Date', 'Particulars / Description', 'Type', 'Payment Mode', 'Credit (+₹)', 'Paid (-₹)'],
+        alignments: ['center', 'left', 'center', 'left', 'right', 'right'] as ('center' | 'left' | 'center' | 'left' | 'right' | 'right')[],
         rows: custTxs.map(tx => [
           tx.transaction_date,
-          tx.notes || (tx.type === 'Credit_Given' ? 'दूध / डेअरी माल खरेदी' : 'रक्कम जमा'),
-          tx.type === 'Credit_Given' ? 'उधारी (+)' : 'जमा (-)',
+          tx.notes || (tx.type === 'Credit_Given' ? (isMr ? 'दूध / डेअरी माल खरेदी' : isHi ? 'दूध / डेरी सामान खरीद' : 'Dairy Goods Purchase') : (isMr ? 'रक्कम जमा' : isHi ? 'रकम जमा' : 'Payment Received')),
+          tx.type === 'Credit_Given' ? (isMr ? 'उधारी (+)' : isHi ? 'उधार (+)' : 'Credit (+)') : (isMr ? 'जमा (-)' : isHi ? 'जमा (-)' : 'Paid (-)'),
           tx.payment_mode || '—',
           tx.type === 'Credit_Given' ? `₹${tx.amount.toLocaleString('en-IN')}` : '—',
           tx.type === 'Payment_Received' ? `₹${tx.amount.toLocaleString('en-IN')}` : '—'
         ]),
         summaryRow: [
-          'अंतिम बाकी',
+          isMr ? 'अंतिम बाकी शिल्लक' : isHi ? 'अंतिम बकाया राशि' : 'Closing Balance',
           '',
           '',
           '',
@@ -211,7 +229,11 @@ export const KhataBook: React.FC = () => {
           `₹${customer.total_paid.toLocaleString('en-IN')}`
         ]
       },
-      notes: `ग्राहक स्वाक्षरी: ___________________ | अधिकृत शिक्का: योगेश्वरी डेअरी. शिल्लक बाकी: ₹${customer.current_balance.toLocaleString('en-IN')}`
+      notes: isMr 
+        ? `ग्राहक स्वाक्षरी: ___________________ | अधिकृत शिक्का: योगेश्वरी डेअरी. शिल्लक बाकी: ₹${customer.current_balance.toLocaleString('en-IN')}`
+        : isHi
+        ? `ग्राहक हस्ताक्षर: ___________________ | अधिकृत मुहर: योगेश्वरी डेरी. कुल बकाया: ₹${customer.current_balance.toLocaleString('en-IN')}`
+        : `Customer Signature: ___________________ | Authorized Stamp: Yogeshwari Dairy. Balance Due: ₹${customer.current_balance.toLocaleString('en-IN')}`
     };
   };
 
@@ -254,7 +276,7 @@ export const KhataBook: React.FC = () => {
             title="View Udhar Khata Book PDF Report"
           >
             <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
           </button>
 
           {/* Print PDF Button */}

@@ -72,42 +72,59 @@ export const DailySalesTracker: React.FC = () => {
     setExpandedSaleId(prev => prev === id ? null : id);
   };
 
-  const getSalesPDFPayload = () => ({
-    title: language === 'mr' ? 'दैनिक विक्री व रोकड लेजर अहवाल' : language === 'hi' ? 'दैनिक बिक्री & रोकड़ रिपोर्ट' : 'Daily Sales & Cash/Online Ledger Report',
-    subtitle: 'Yogeshwari Dairy Farm & Sweets ERP',
-    periodText: language === 'mr' ? 'निवडलेला कालावधी हिशोब' : 'चुनी गई अवधि का हिसाब',
-    kpis: [
-      { label: 'एकूण विक्री (Total Sales)', value: `₹${(metrics.totalSalesRevenue || 0).toLocaleString('en-IN')}`, color: 'emerald' },
-      { label: 'रोख जमा (Cash)', value: `₹${(metrics.cashCollected || 0).toLocaleString('en-IN')}`, color: 'blue' },
-      { label: 'ऑनलाईन UPI', value: `₹${(metrics.onlineCollected || 0).toLocaleString('en-IN')}`, color: 'purple' },
-      { label: 'उधारी दिली (Udhar)', value: `₹${(metrics.udharGiven || 0).toLocaleString('en-IN')}`, color: 'amber' }
-    ],
-    table: {
-      headers: ['बिल क्र.', 'तारीख', 'ग्राहक नाव', 'पेमेंट पद्धत', 'आयटम्स', 'सवलत (₹)', 'एकूण रक्कम (₹)'],
-      alignments: ['left', 'center', 'left', 'center', 'left', 'right', 'right'] as ('left' | 'center' | 'right')[],
-      rows: filtered.length > 0 ? filtered.map(s => [
-        s.invoice_no,
-        s.sale_date,
-        s.customer_name + (s.customer_phone ? ` (${s.customer_phone})` : ''),
-        s.payment_mode,
-        s.items ? s.items.map(i => `${i.product_name} x ${i.quantity}`).join(', ') : '—',
-        s.discount > 0 ? `₹${s.discount}` : '₹0',
-        `₹${s.net_amount.toLocaleString('en-IN')}`
-      ]) : [
-        ['—', '—', language === 'mr' ? 'या निवडलेल्या कालावधीत कोणतीही विक्री नोंद नाही' : 'इस अवधि में कोई बिक्री दर्ज नहीं', '—', '—', '—', '₹0']
+  const getSalesPDFPayload = () => {
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
+
+    return {
+      title: isMr ? 'दैनिक विक्री व रोकड लेजर अहवाल' : isHi ? 'दैनिक बिक्री व रोकड़ लेजर रिपोर्ट' : 'Daily Sales & Cash/Online Ledger Report',
+      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: isMr ? 'निवडलेला कालावधी हिशोब' : isHi ? 'चुनी गई अवधि का हिसाब' : 'Selected Period Sales & Collections',
+      language,
+      kpis: [
+        { label: isMr ? 'एकूण विक्री' : isHi ? 'कुल बिक्री' : 'Total Sales', value: `₹${(metrics.totalSalesRevenue || 0).toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: isMr ? 'रोख जमा' : isHi ? 'रोकड़ जमा' : 'Cash Inflow', value: `₹${(metrics.cashCollected || 0).toLocaleString('en-IN')}`, color: 'blue' },
+        { label: isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI', value: `₹${(metrics.onlineCollected || 0).toLocaleString('en-IN')}`, color: 'purple' },
+        { label: isMr ? 'उधारी दिली' : isHi ? 'उधारी दी' : 'Credit Given', value: `₹${(metrics.udharGiven || 0).toLocaleString('en-IN')}`, color: 'amber' }
       ],
-      summaryRow: [
-        'एकूण (Total)',
-        `${filtered.length} बिले`,
-        '',
-        '',
-        '',
-        '',
-        `₹${(metrics.totalSalesRevenue || 0).toLocaleString('en-IN')}`
-      ]
-    },
-    notes: 'संगणकीय तयार केलेला अधिकृत विक्री अहवाल. रोकड व ऑनलाईन पावती तपासून घ्यावी.'
-  });
+      table: {
+        headers: isMr 
+          ? ['बिल क्र.', 'तारीख', 'ग्राहक नाव', 'पेमेंट पद्धत', 'वस्तू तपशील', 'सवलत (₹)', 'एकूण रक्कम (₹)']
+          : isHi
+          ? ['बिल क्र.', 'दिनांक', 'ग्राहक नाम', 'भुगतान माध्यम', 'सामान विवरण', 'छूट (₹)', 'कुल राशि (₹)']
+          : ['Invoice No.', 'Date', 'Customer Name', 'Payment Mode', 'Items Sold', 'Discount (₹)', 'Net Amount (₹)'],
+        alignments: ['left', 'center', 'left', 'center', 'left', 'right', 'right'] as ('left' | 'center' | 'left' | 'center' | 'left' | 'right' | 'right')[],
+        rows: filtered.length > 0 ? filtered.map(s => [
+          s.invoice_no,
+          s.sale_date,
+          s.customer_name + (s.customer_phone ? ` (${s.customer_phone})` : ''),
+          s.payment_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
+          s.payment_mode === 'Online_UPI' ? (isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI') :
+          s.payment_mode === 'Udhar' ? (isMr ? 'उधारी' : isHi ? 'उधार' : 'Credit') :
+          s.payment_mode === 'Split' ? (isMr ? 'विभागून' : isHi ? 'विभाजित' : 'Split') : s.payment_mode,
+          s.items ? s.items.map(i => `${i.product_name} x ${i.quantity}`).join(', ') : '—',
+          s.discount > 0 ? `₹${s.discount}` : '₹0',
+          `₹${s.net_amount.toLocaleString('en-IN')}`
+        ]) : [
+          ['—', '—', isMr ? 'या निवडलेल्या कालावधीत कोणतीही विक्री नोंद नाही' : isHi ? 'इस अवधि में कोई बिक्री दर्ज नहीं' : 'No sales records found for this period', '—', '—', '—', '₹0']
+        ],
+        summaryRow: [
+          isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
+          `${filtered.length} ${isMr ? 'बिले' : isHi ? 'बिल' : 'Bills'}`,
+          '',
+          '',
+          '',
+          '',
+          `₹${(metrics.totalSalesRevenue || 0).toLocaleString('en-IN')}`
+        ]
+      },
+      notes: isMr 
+        ? 'संगणकीय तयार केलेला अधिकृत विक्री अहवाल. रोकड व ऑनलाईन पावती तपासून घ्यावी.'
+        : isHi
+        ? 'कंप्यूटर द्वारा जनरेटेड अधिकृत बिक्री रिपोर्ट। रोकड़ व ऑनलाइन रसीद जांच लें।'
+        : 'Computer generated official sales audit report. Please verify cash and online receipts.'
+    };
+  };
 
   const handleViewSalesPDF = () => {
     viewReportPDF(getSalesPDFPayload());
@@ -146,10 +163,10 @@ export const DailySalesTracker: React.FC = () => {
           <button
             onClick={handleViewSalesPDF}
             className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2621] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-all shadow-xs active:scale-95"
-            title={language === 'mr' ? 'अहवाल पहा (View PDF)' : language === 'hi' ? 'रिपोर्ट देखें (View PDF)' : 'View Sales PDF'}
+            title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View Sales PDF'}
           >
             <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
           </button>
 
           <button

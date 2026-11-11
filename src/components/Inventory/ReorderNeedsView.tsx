@@ -116,45 +116,55 @@ export const ReorderNeedsView: React.FC = () => {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const getReorderPayload = () => ({
-    title: language === 'mr' ? 'माल खरेदी मागणी पत्रक (Reorder Sheet)' : language === 'hi' ? 'सामान खरीद मांग पत्रक (Reorder Sheet)' : 'Procurement & Reorder Requirements Sheet',
-    subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Supplier Restock Order',
-    periodText: language === 'mr' ? 'तात्काळ आवश्यक माल मागणी' : 'तत्काल आवश्यक मांग',
-    kpis: [
-      { label: 'एकूण आवश्यक वस्तू', value: `${itemsNeedingRestock.length} उत्पादने`, color: 'rose' },
-      { label: 'संपलेली उत्पादने (0 साठा)', value: `${itemsNeedingRestock.filter(i => i.isCritical).length} उत्पादने`, color: 'rose' },
-      { label: 'अंदाजे खरेदी बजेट', value: `₹${totalEstimatedCost.toLocaleString('en-IN')}`, color: 'amber' }
-    ],
-    table: {
-      headers: ['अ.क्र.', 'उत्पादनाचे नाव (Product)', 'प्रवर्ग (Category)', 'सध्याचा साठा', 'किमान मर्यादा', 'मागणी प्रमाण (Order Qty)', 'अंदाजे दर (₹)', 'एकूण रक्कम (₹)'],
-      alignments: ['center', 'left', 'center', 'right', 'right', 'right', 'right', 'right'] as ('center' | 'left' | 'right')[],
-      rows: itemsNeedingRestock.length > 0 ? itemsNeedingRestock.map((it, idx) => [
-        idx + 1,
-        getDisplayName(it),
-        it.category,
-        `${it.stock_quantity} ${it.unit}`,
-        `${it.min_stock_alert} ${it.unit}`,
-        `${it.recommendedOrderQty} ${it.unit}`,
-        `₹${it.purchase_price}`,
-        `₹${it.estimatedCost.toLocaleString('en-IN')}`
-      ]) : [
-        [1, language === 'mr' ? 'सर्व उत्पादने पुरेशा साठ्यात उपलब्ध आहेत (साठा सुरक्षित)' : 'सभी उत्पाद पर्याप्त स्टॉक में उपलब्ध हैं (सुरक्षित)', '—', '—', '—', '—', '—', '₹0']
+  const getReorderPayload = () => {
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
+
+    return {
+      title: isMr ? 'माल खरेदी मागणी पत्रक' : isHi ? 'सामान खरीद मांग पत्रक' : 'Procurement & Reorder Requirements Sheet',
+      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: isMr ? 'तात्काळ आवश्यक माल मागणी' : isHi ? 'तत्काल आवश्यक सामान मांग' : 'Immediate Restock Requirements',
+      language,
+      kpis: [
+        { label: isMr ? 'एकूण आवश्यक उत्पादने' : isHi ? 'कुल आवश्यक उत्पाद' : 'Total Items Needed', value: `${itemsNeedingRestock.length}`, color: 'rose' },
+        { label: isMr ? 'शून्य साठा (संपलेला माल)' : isHi ? 'स्टॉक समाप्त उत्पाद' : 'Out of Stock Items', value: `${itemsNeedingRestock.filter(i => i.isCritical).length}`, color: 'rose' },
+        { label: isMr ? 'अंदाजे खरेदी बजेट' : isHi ? 'अनुमानित खरीद बजट' : 'Estimated Restock Budget', value: `₹${totalEstimatedCost.toLocaleString('en-IN')}`, color: 'amber' }
       ],
-      summaryRow: [
-        'एकूण (Total)',
-        `${itemsNeedingRestock.length} वस्तू`,
-        '',
-        '',
-        '',
-        '',
-        '',
-        `₹${totalEstimatedCost.toLocaleString('en-IN')}`
-      ]
-    },
-    notes: itemsNeedingRestock.length > 0 
-      ? 'सदर माल लवकरात लवकर पुरवठादार/सप्लायरकडून मागवून घ्यावा.'
-      : 'सध्या दुकानातील सर्व साठा सुरक्षित मर्यादेत आहे. कोणत्याही तात्काळ मागणीची गरज नाही.'
-  });
+      table: {
+        headers: isMr 
+          ? ['अ.क्र.', 'उत्पादनाचे नाव', 'प्रवर्ग', 'सध्याचा साठा', 'किमान मर्यादा', 'मागणी प्रमाण', 'अंदाजे दर (₹)', 'एकूण रक्कम (₹)']
+          : isHi
+          ? ['क्र.सं.', 'सामान का नाम', 'वर्ग', 'वर्तमान स्टॉक', 'न्यूनतम सीमा', 'मांग मात्रा', 'अनुमानित दर (₹)', 'कुल राशि (₹)']
+          : ['Sr.No.', 'Product Name', 'Category', 'Current Stock', 'Min Alert', 'Order Qty', 'Unit Price (₹)', 'Est. Total (₹)'],
+        alignments: ['center', 'left', 'center', 'right', 'right', 'right', 'right', 'right'] as ('center' | 'left' | 'center' | 'right' | 'right' | 'right' | 'right' | 'right')[],
+        rows: itemsNeedingRestock.length > 0 ? itemsNeedingRestock.map((it, idx) => [
+          idx + 1,
+          getDisplayName(it),
+          it.category,
+          `${it.stock_quantity} ${it.unit}`,
+          `${it.min_stock_alert} ${it.unit}`,
+          `${it.recommendedOrderQty} ${it.unit}`,
+          `₹${it.purchase_price}`,
+          `₹${it.estimatedCost.toLocaleString('en-IN')}`
+        ]) : [
+          [1, isMr ? 'सर्व उत्पादने पुरेशा साठ्यात उपलब्ध आहेत (साठा सुरक्षित)' : isHi ? 'सभी उत्पाद पर्याप्त स्टॉक में उपलब्ध हैं (सुरक्षित)' : 'All products are sufficiently stocked (Safe inventory)', '—', '—', '—', '—', '—', '₹0']
+        ],
+        summaryRow: [
+          isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
+          `${itemsNeedingRestock.length} ${isMr ? 'उत्पादने' : isHi ? 'उत्पाद' : 'Products'}`,
+          '',
+          '',
+          '',
+          '',
+          '',
+          `₹${totalEstimatedCost.toLocaleString('en-IN')}`
+        ]
+      },
+      notes: itemsNeedingRestock.length > 0 
+        ? (isMr ? 'सदर माल लवकरात लवकर पुरवठादार/सप्लायरकडून मागवून घ्यावा.' : isHi ? 'यह माल जल्द से जल्द सप्लायर या किसान से मंगा लें।' : 'Please issue purchase orders for these items to suppliers promptly.')
+        : (isMr ? 'सध्या दुकानातील सर्व साठा सुरक्षित मर्यादेत आहे. कोणत्याही तात्काळ मागणीची गरज नाही.' : isHi ? 'वर्तमान में दुकान का पूरा स्टॉक सुरक्षित है। तत्काल मांग की आवश्यकता नहीं है।' : 'All dairy inventory is currently at safe stock levels. No immediate procurement needed.')
+    };
+  };
 
   const handleViewReorderPDF = () => {
     viewReportPDF(getReorderPayload());
@@ -193,7 +203,7 @@ export const ReorderNeedsView: React.FC = () => {
             title="View Reorder PDF Sheet"
           >
             <Eye className="w-4 h-4 text-amber-300" />
-            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
           </button>
 
           <button

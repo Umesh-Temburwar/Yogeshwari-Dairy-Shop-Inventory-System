@@ -154,6 +154,8 @@ export const PurchaseTracker: React.FC = () => {
   };
 
   const getPurchaseReportPayload = () => {
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
     const totalQty = filteredPurchases.reduce((acc, p) => acc + p.quantity, 0);
     const totalAmt = filteredPurchases.reduce((acc, p) => acc + p.total_amount, 0);
     const cashAmt = filteredPurchases.filter(p => p.payment_mode === 'Cash').reduce((acc, p) => acc + p.total_amount, 0);
@@ -161,18 +163,23 @@ export const PurchaseTracker: React.FC = () => {
     const udharAmt = filteredPurchases.filter(p => p.payment_mode === 'Udhar').reduce((acc, p) => acc + p.total_amount, 0);
 
     return {
-      title: language === 'mr' ? 'दूध व माल खरेदी लेजर अहवाल' : language === 'hi' ? 'दूध व सामान खरीद लेजर रिपोर्ट' : 'Dairy Purchases & Supplier Ledger Report',
-      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Inward Procurement',
-      periodText: language === 'mr' ? 'निवडलेला खरेदी कालावधी' : 'चुनी गई खरीद अवधि',
+      title: isMr ? 'दूध व माल खरेदी लेजर अहवाल' : isHi ? 'दूध व सामान खरीद लेजर रिपोर्ट' : 'Dairy Purchases & Supplier Procurement Ledger Report',
+      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: isMr ? 'निवडलेला खरेदी कालावधी' : isHi ? 'चुनी गई खरीद अवधि' : 'Selected Procurement Period',
+      language,
       kpis: [
-        { label: 'एकूण खरेदी खर्च', value: `₹${totalAmt.toLocaleString('en-IN')}`, color: 'blue' },
-        { label: 'एकूण माल आवक', value: `${totalQty.toLocaleString('en-IN')} लिटर/नग`, color: 'emerald' },
-        { label: 'रोख/ऑनलाइन अदा', value: `₹${(cashAmt + onlineAmt).toLocaleString('en-IN')}`, color: 'purple' },
-        { label: 'बाकी देणे (उधार)', value: `₹${udharAmt.toLocaleString('en-IN')}`, color: 'amber' }
+        { label: isMr ? 'एकूण खरेदी खर्च' : isHi ? 'कुल खरीद खर्च' : 'Total Purchase Spend', value: `₹${totalAmt.toLocaleString('en-IN')}`, color: 'blue' },
+        { label: isMr ? 'एकूण माल आवक' : isHi ? 'कुल आवक मात्रा' : 'Total Inward Qty', value: `${totalQty.toLocaleString('en-IN')} ${isMr ? 'लिटर/नग' : isHi ? 'लीटर/नग' : 'Units'}`, color: 'emerald' },
+        { label: isMr ? 'रोख/ऑनलाइन अदा' : isHi ? 'नकद/ऑनलाइन भुगतान' : 'Paid (Cash/Online)', value: `₹${(cashAmt + onlineAmt).toLocaleString('en-IN')}`, color: 'purple' },
+        { label: isMr ? 'बाकी देणे (उधार)' : isHi ? 'देय बाकी (उधार)' : 'Payable Due (Credit)', value: `₹${udharAmt.toLocaleString('en-IN')}`, color: 'amber' }
       ],
       table: {
-        headers: ['तारीख', 'पुरवठादार / शेतकरी', 'उत्पादन (Product)', 'नग / प्रमाण', 'खरेदी दर (₹)', 'एकूण रक्कम (₹)', 'पेमेंट पद्धत', 'नोंद (Notes)'],
-        alignments: ['center', 'left', 'left', 'right', 'right', 'right', 'center', 'left'] as ('center' | 'left' | 'right')[],
+        headers: isMr 
+          ? ['तारीख', 'पुरवठादार / शेतकरी', 'उत्पादन', 'नग / प्रमाण', 'खरेदी दर (₹)', 'एकूण रक्कम (₹)', 'पेमेंट पद्धत', 'नोंद']
+          : isHi
+          ? ['दिनांक', 'सप्लायर / किसान', 'सामान', 'मात्रा', 'खरीद दर (₹)', 'कुल राशि (₹)', 'भुगतान माध्यम', 'नोट']
+          : ['Date', 'Supplier / Farmer', 'Product', 'Quantity', 'Rate (₹)', 'Total Amount (₹)', 'Payment Mode', 'Notes'],
+        alignments: ['center', 'left', 'left', 'right', 'right', 'right', 'center', 'left'] as ('center' | 'left' | 'left' | 'right' | 'right' | 'right' | 'center' | 'left')[],
         rows: filteredPurchases.map(p => [
           p.purchase_date,
           p.supplier_name,
@@ -180,21 +187,28 @@ export const PurchaseTracker: React.FC = () => {
           `${p.quantity} ${p.unit}`,
           `₹${p.purchase_price}`,
           `₹${p.total_amount.toLocaleString('en-IN')}`,
-          p.payment_mode,
+          p.payment_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
+          p.payment_mode === 'Online_UPI' ? (isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI') :
+          p.payment_mode === 'Bank_Transfer' ? (isMr ? 'बँक ट्रान्सफर' : isHi ? 'बैंक ट्रांसफर' : 'Bank Transfer') :
+          p.payment_mode === 'Udhar' ? (isMr ? 'उधारी' : isHi ? 'उधार' : 'Credit') : p.payment_mode,
           p.notes || '—'
         ]),
         summaryRow: [
-          'एकूण (Total)',
-          `${filteredPurchases.length} खरेदी नोंदी`,
+          isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
+          `${filteredPurchases.length} ${isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'Entries'}`,
           '',
-          `${totalQty} युनिट्स`,
+          `${totalQty} ${isMr ? 'युनिट्स' : isHi ? 'यूनिट' : 'Units'}`,
           '',
           `₹${totalAmt.toLocaleString('en-IN')}`,
           '',
           ''
         ]
       },
-      notes: 'डेअरी संकलन व कच्चा माल आवक तपशील. सर्व पावत्या तपासून बिल पास करावे.'
+      notes: isMr 
+        ? 'डेअरी संकलन व कच्चा माल आवक तपशील. सर्व पावत्या तपासून बिल पास करावे.'
+        : isHi
+        ? 'डेरी दूध संकलन व कच्चा माल आवक विवरण। सभी रसीदें जांचकर बिल पास करें।'
+        : 'Dairy procurement & raw milk inward ledger. Verify lab tests and gate passes before approving payout.'
     };
   };
 
@@ -245,7 +259,7 @@ export const PurchaseTracker: React.FC = () => {
             title="View Purchases PDF Report"
           >
             <Eye className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
           </button>
 
           {/* Print PDF Button */}
@@ -617,7 +631,7 @@ export const PurchaseTracker: React.FC = () => {
                     <option value="Cash">{t('cash')}</option>
                     <option value="Online_UPI">{t('onlineUpi')}</option>
                     <option value="Bank_Transfer">{language === 'mr' ? 'बँक ट्रान्सफर (NEFT)' : language === 'hi' ? 'बैंक ट्रांसफर (NEFT)' : 'Bank Transfer (NEFT)'}</option>
-                    <option value="Udhar">{language === 'mr' ? 'पुरवठादार उधारी' : language === 'hi' ? 'सप्लायर उधारी' : 'Supplier Credit (Udhar)'}</option>
+                    <option value="Udhar">{language === 'mr' ? 'पुरवठादार उधारी' : language === 'hi' ? 'सप्लायर उधारी' : 'Supplier Credit'}</option>
                   </select>
                 </div>
 

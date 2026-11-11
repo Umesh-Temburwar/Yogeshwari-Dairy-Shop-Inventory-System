@@ -88,27 +88,52 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
 
   const getReturnSlipPayload = () => {
     if (!completedReturn) return null;
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
+
     return {
-      title: `ग्राहक माल परतावा पावती / Return Slip (${completedReturn.return_no})`,
-      periodText: `पावती क्र. ${completedReturn.return_no} | तारीख: ${completedReturn.return_date}`,
+      title: isMr ? `ग्राहक माल परतावा पावती (${completedReturn.return_no})` : isHi ? `ग्राहक सामान वापसी रसीद (${completedReturn.return_no})` : `Customer Return Voucher (${completedReturn.return_no})`,
+      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: `${isMr ? 'पावती क्र.' : isHi ? 'रसीद क्र.' : 'Slip No.'}: ${completedReturn.return_no} | ${isMr ? 'तारीख' : isHi ? 'दिनांक' : 'Date'}: ${completedReturn.return_date}`,
+      language,
       kpis: [
-        { label: 'परतावा रक्कम', value: `₹${completedReturn.refund_amount.toFixed(2)}`, color: 'emerald' },
-        { label: 'रिफंड पद्धत', value: completedReturn.refund_mode, color: 'blue' }
+        { label: isMr ? 'परतावा रक्कम' : isHi ? 'वापसी राशि' : 'Refund Amount', value: `₹${completedReturn.refund_amount.toFixed(2)}`, color: 'emerald' },
+        { 
+          label: isMr ? 'रिफंड पद्धत' : isHi ? 'रिफंड माध्यम' : 'Refund Mode', 
+          value: completedReturn.refund_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
+                 completedReturn.refund_mode === 'UPI' ? 'UPI' :
+                 completedReturn.refund_mode === 'Credit_Note' ? (isMr ? 'क्रेडिट नोट' : isHi ? 'क्रेडिट नोट' : 'Credit Note') :
+                 completedReturn.refund_mode === 'Replacement' ? (isMr ? 'माल बदलून' : isHi ? 'बदलाव' : 'Replacement') : completedReturn.refund_mode, 
+          color: 'blue' 
+        }
       ],
       table: {
-        headers: ['उत्पादनाचे नाव', 'नग/प्रमाण', 'कारण', 'मालाची स्थिती', 'रिफंड रक्कम'],
+        headers: isMr 
+          ? ['उत्पादनाचे नाव', 'प्रमाण', 'कारण', 'मालाची स्थिती', 'रिफंड रक्कम (₹)']
+          : isHi
+          ? ['उत्पाद नाम', 'मात्रा', 'कारण', 'सामान स्थिति', 'रिफंड राशि (₹)']
+          : ['Product Name', 'Quantity', 'Reason', 'Condition', 'Refund Amount (₹)'],
+        alignments: ['left', 'center', 'left', 'center', 'right'] as ('left' | 'center' | 'left' | 'center' | 'right')[],
         rows: [
           [
             completedReturn.product_name,
             `${completedReturn.quantity} ${completedReturn.unit}`,
             completedReturn.reason,
-            completedReturn.condition === 'Resellable' ? 'पुन्हा विक्रीयोग्य (Restocked)' : 'खराब / नासलेला (Damaged)',
+            completedReturn.condition === 'Resellable' 
+              ? (isMr ? 'पुन्हा विक्रीयोग्य' : isHi ? 'पुनः बिक्री योग्य' : 'Restocked') 
+              : (isMr ? 'खराब / नासलेला' : isHi ? 'खराब / नुकसान' : 'Damaged / Waste'),
             `₹${completedReturn.refund_amount.toFixed(2)}`
           ]
         ],
-        summaryRow: ['एकूण रिफंड', '', '', '', `₹${completedReturn.refund_amount.toFixed(2)}`]
+        summaryRow: [
+          isMr ? 'एकूण रिफंड' : isHi ? 'कुल रिफंड' : 'Total Refund', 
+          '', 
+          '', 
+          '', 
+          `₹${completedReturn.refund_amount.toFixed(2)}`
+        ]
       },
-      notes: `ग्राहक नाव: ${completedReturn.customer_name || 'Counter Customer'} | फोन: ${completedReturn.customer_phone || '—'} | योगेश्वरी डेअरी ERP`
+      notes: `${isMr ? 'ग्राहक नाव' : isHi ? 'ग्राहक नाम' : 'Customer'}: ${completedReturn.customer_name || (isMr ? 'काउंटर ग्राहक' : isHi ? 'काउंटर ग्राहक' : 'Counter Customer')} | ${isMr ? 'फोन' : isHi ? 'फोन' : 'Phone'}: ${completedReturn.customer_phone || '—'} | ${isMr ? 'योगेश्वरी डेअरी अधिकृत परतावा व्हाउचर' : isHi ? 'योगेश्वरी डेरी अधिकृत वापसी वाउचर' : 'Official Return Voucher'}`
     };
   };
 

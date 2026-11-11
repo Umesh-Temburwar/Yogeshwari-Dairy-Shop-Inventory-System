@@ -81,19 +81,27 @@ export const DamageTracker: React.FC = () => {
     const leakedCount = filteredDamages.filter(d => d.reason.includes('Leaked') || d.reason.includes('Phat Gayi')).length;
     const expiredCount = filteredDamages.filter(d => d.reason.includes('Expiry')).length;
 
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
+
     return {
-      title: language === 'mr' ? 'दूध नासणे व नुकसान अहवाल (Damages & Spoilage)' : language === 'hi' ? 'दूध खराबी व नुकसान रिपोर्ट (Damages & Spoilage)' : 'Dairy Damages, Spoilage & Loss Report',
-      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Quality & Spoilage Ledger',
-      periodText: language === 'mr' ? 'निवडलेला नुकसान कालावधी' : 'चुनी गई नुकसान अवधि',
+      title: isMr ? 'दूध नासणे व नुकसान अहवाल' : isHi ? 'दूध खराबी व नुकसान रिपोर्ट' : 'Dairy Damages, Spoilage & Loss Audit Report',
+      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: isMr ? 'निवडलेला नुकसान कालावधी' : isHi ? 'चुनी गई नुकसान अवधि' : 'Selected Spoilage & Loss Period',
+      language,
       kpis: [
-        { label: 'एकूण नुकसान रक्कम (Loss)', value: `₹${totalLoss.toLocaleString('en-IN')}`, color: 'rose' },
-        { label: 'एकूण नुकसान नोंदी', value: `${filteredDamages.length} घटना`, color: 'amber' },
-        { label: 'नासलेले दूध नोंदी', value: `${curdledCount} वेळा`, color: 'purple' },
-        { label: 'लिकेज / एक्सपायरी', value: `${leakedCount + expiredCount} वेळा`, color: 'blue' }
+        { label: isMr ? 'एकूण नुकसान रक्कम' : isHi ? 'कुल नुकसान राशि' : 'Total Spoilage Loss', value: `₹${totalLoss.toLocaleString('en-IN')}`, color: 'rose' },
+        { label: isMr ? 'एकूण नुकसान नोंदी' : isHi ? 'कुल नुकसान प्रविष्टियां' : 'Damage Incidents', value: `${filteredDamages.length}`, color: 'amber' },
+        { label: isMr ? 'नासलेले दूध नोंदी' : isHi ? 'फटा दूध प्रविष्टियां' : 'Curdled Milk Entries', value: `${curdledCount}`, color: 'purple' },
+        { label: isMr ? 'लिकेज / एक्सपायरी' : isHi ? 'लीकेज / एक्सपायरी' : 'Leakage / Expiry', value: `${leakedCount + expiredCount}`, color: 'blue' }
       ],
       table: {
-        headers: ['तारीख', 'उत्पादनाचे नाव (Product)', 'नुकसान प्रमाण (Qty)', 'नुकसानीचे कारण (Reason)', 'अंदाजे नुकसान मूल्य (₹)', 'तपशील / नोंद'],
-        alignments: ['center', 'left', 'right', 'left', 'right', 'left'] as ('center' | 'left' | 'right')[],
+        headers: isMr
+          ? ['तारीख', 'उत्पादनाचे नाव', 'नुकसान प्रमाण', 'नुकसानीचे कारण', 'अंदाजे नुकसान मूल्य (₹)', 'तपशील']
+          : isHi
+          ? ['दिनांक', 'सामान का नाम', 'नुकसान मात्रा', 'नुकसान का कारण', 'अनुमानित नुकसान मूल्य (₹)', 'विवरण']
+          : ['Date', 'Product Name', 'Damaged Qty', 'Reason', 'Estimated Loss (₹)', 'Notes'],
+        alignments: ['center', 'left', 'right', 'left', 'right', 'left'] as ('center' | 'left' | 'right' | 'left' | 'right' | 'left')[],
         rows: filteredDamages.map(d => [
           d.damage_date,
           d.product_name,
@@ -103,15 +111,19 @@ export const DamageTracker: React.FC = () => {
           d.notes || '—'
         ]),
         summaryRow: [
-          'एकूण (Total)',
-          `${filteredDamages.length} नोंदी`,
+          isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
+          `${filteredDamages.length} ${isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'Incidents'}`,
           '',
           '',
           `₹${totalLoss.toLocaleString('en-IN')}`,
           ''
         ]
       },
-      notes: 'नासलेल्या दुधाचे कारण शोधून शीतकरण (Chilling) व हाताळणी (Handling) सुधारावी.'
+      notes: isMr 
+        ? 'नासलेल्या दुधाचे कारण शोधून शीतकरण व हाताळणी सुधारावी.'
+        : isHi
+        ? 'दूध खराबी का कारण जांचकर चिलिंग व रखरखाव में सुधार करें।'
+        : 'Quality audit report. Investigate cold-chain breaks, chiller calibration, and transit handling to minimize curdling and leakages.'
     };
   };
 
@@ -154,7 +166,7 @@ export const DamageTracker: React.FC = () => {
             title="View Spoilage & Loss Report PDF"
           >
             <Eye className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-            <span>{language === 'mr' ? 'पहा (View)' : language === 'hi' ? 'देखें (View)' : 'View'}</span>
+            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
           </button>
 
           {/* Print PDF Button */}

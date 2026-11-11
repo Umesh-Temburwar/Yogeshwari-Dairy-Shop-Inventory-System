@@ -282,7 +282,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <div className="flex items-center gap-2">
                         <span>👑</span>
-                        <span>{language === 'mr' ? 'दुकान मालक (Owner)' : language === 'hi' ? 'दुकान मालिक (Owner)' : 'Shop Owner'}</span>
+                        <span>{language === 'mr' ? 'दुकान मालक' : language === 'hi' ? 'दुकान मालिक' : 'Shop Owner'}</span>
                       </div>
                       {role === 'Owner' && <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />}
                     </button>
@@ -301,7 +301,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <div className="flex items-center gap-2">
                         <span>🛡️</span>
-                        <span>{language === 'mr' ? 'प्रशासक (Admin)' : language === 'hi' ? 'प्रशासक (Admin)' : 'Administrator'}</span>
+                        <span>{language === 'mr' ? 'प्रशासक' : language === 'hi' ? 'प्रशासक' : 'Administrator'}</span>
                       </div>
                       {role === 'Admin' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
                     </button>
@@ -329,7 +329,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
                     >
                       <LogOut className="w-3.5 h-3.5" />
-                      <span>{language === 'mr' ? 'बाहेर पडा (Sign Out)' : language === 'hi' ? 'साइन आउट करें' : 'Sign Out'}</span>
+                      <span>{language === 'mr' ? 'बाहेर पडा' : language === 'hi' ? 'साइन आउट करें' : 'Sign Out'}</span>
                     </button>
                   </div>
                 </div>

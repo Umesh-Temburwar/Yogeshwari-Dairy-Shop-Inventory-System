@@ -81,7 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: metrics.expiredBatchesCount > 0 
         ? `${metrics.expiredBatchesCount} ⚠️` 
         : metrics.expiringTodayBatchesCount > 0 
-        ? `${metrics.expiringTodayBatchesCount} आज` 
+        ? `${metrics.expiringTodayBatchesCount} ${language === 'en' ? 'Today' : 'आज'}` 
         : undefined,
       badgeColor: metrics.expiredBatchesCount > 0
         ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 font-extrabold animate-pulse'

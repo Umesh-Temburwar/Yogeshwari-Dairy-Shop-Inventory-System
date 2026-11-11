@@ -93,31 +93,43 @@ export const ExpenseTracker: React.FC = () => {
     const opExp = filteredExpenses.filter(e => !e.is_capital_investment).reduce((sum, e) => sum + e.amount, 0);
     const capExp = filteredExpenses.filter(e => e.is_capital_investment).reduce((sum, e) => sum + e.amount, 0);
 
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
+
     return {
-      title: language === 'mr' ? 'दुकान खर्च व भांडवली गुंतवणूक लेजर अहवाल' : language === 'hi' ? 'दुकान खर्च व पूंजी निवेश लेजर रिपोर्ट' : 'Shop Operating & Capital Expenses Ledger Report',
-      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Operating Outflows',
-      periodText: language === 'mr' ? 'निवडलेला खर्च कालावधी' : 'चुनी गई खर्च अवधि',
+      title: isMr ? 'दुकान खर्च व भांडवली गुंतवणूक लेजर अहवाल' : isHi ? 'दुकान खर्च व पूंजी निवेश लेजर रिपोर्ट' : 'Shop Operating & Capital Expenses Ledger Report',
+      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: isMr ? 'निवडलेला खर्च कालावधी' : isHi ? 'चुनी गई खर्च अवधि' : 'Expenses & Outflows Ledger',
+      language,
       kpis: [
-        { label: 'दैनंदिन चालू खर्च (Operating)', value: `₹${opExp.toLocaleString('en-IN')}`, color: 'rose' },
-        { label: 'भांडवली गुंतवणूक (Assets)', value: `₹${capExp.toLocaleString('en-IN')}`, color: 'blue' },
-        { label: 'एकूण खर्च रक्कम (Total)', value: `₹${totalExp.toLocaleString('en-IN')}`, color: 'purple' },
-        { label: 'एकूण खर्च नोंदी', value: `${filteredExpenses.length} नोंदी`, color: 'amber' }
+        { label: isMr ? 'दैनंदिन चालू खर्च' : isHi ? 'दैनिक चालू खर्च' : 'Operating Expenses', value: `₹${opExp.toLocaleString('en-IN')}`, color: 'rose' },
+        { label: isMr ? 'भांडवली गुंतवणूक' : isHi ? 'पूंजी निवेश' : 'Capital Investments', value: `₹${capExp.toLocaleString('en-IN')}`, color: 'blue' },
+        { label: isMr ? 'एकूण खर्च रक्कम' : isHi ? 'कुल खर्च राशि' : 'Total Expense Amount', value: `₹${totalExp.toLocaleString('en-IN')}`, color: 'purple' },
+        { label: isMr ? 'एकूण खर्च नोंदी' : isHi ? 'कुल खर्च प्रविष्टियां' : 'Total Entries', value: `${filteredExpenses.length} ${isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'Entries'}`, color: 'amber' }
       ],
       table: {
-        headers: ['तारीख', 'खर्चाचा तपशील (Expense Title)', 'प्रवर्ग (Category)', 'पेमेंट पद्धत', 'प्रकार', 'रक्कम (₹)', 'तपशील / शेरा'],
-        alignments: ['center', 'left', 'center', 'center', 'center', 'right', 'left'] as ('center' | 'left' | 'right')[],
-        rows: filteredExpenses.map(e => [
+        headers: isMr 
+          ? ['तारीख', 'खर्चाचा तपशील', 'प्रवर्ग', 'पेमेंट पद्धत', 'प्रकार', 'रक्कम (₹)', 'तपशील / शेरा']
+          : isHi
+          ? ['दिनांक', 'खर्च विवरण', 'श्रेणी', 'भुगतान माध्यम', 'प्रकार', 'राशि (₹)', 'विवरण / टिप्पणी']
+          : ['Date', 'Expense Title', 'Category', 'Payment Mode', 'Type', 'Amount (₹)', 'Notes'],
+        alignments: ['center', 'left', 'center', 'center', 'center', 'right', 'left'] as ('center' | 'left' | 'center' | 'center' | 'center' | 'right' | 'left')[],
+        rows: filteredExpenses.length > 0 ? filteredExpenses.map(e => [
           e.expense_date,
           e.title,
           e.category,
-          e.payment_mode,
-          e.is_capital_investment ? 'भांडवली गुंतवणूक' : 'दैनंदिन चालू खर्च',
+          e.payment_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
+          e.payment_mode === 'Online_UPI' ? (isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI') :
+          e.payment_mode === 'Udhar' ? (isMr ? 'उधारी' : isHi ? 'उधार' : 'Credit') : e.payment_mode,
+          e.is_capital_investment ? (isMr ? 'भांडवली गुंतवणूक' : isHi ? 'पूंजी निवेश' : 'Capital Investment') : (isMr ? 'दैनंदिन चालू खर्च' : isHi ? 'दैनिक परिचालन व्यय' : 'Operating Expense'),
           `₹${e.amount.toLocaleString('en-IN')}`,
           e.notes || '—'
-        ]),
+        ]) : [
+          ['—', isMr ? 'कोणतीही खर्च नोंद आढळली नाही' : isHi ? 'कोई खर्च प्रविष्टि नहीं मिली' : 'No expense records found', '—', '—', '—', '₹0', '—']
+        ],
         summaryRow: [
-          'एकूण (Total)',
-          `${filteredExpenses.length} खर्च नोंदी`,
+          isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
+          `${filteredExpenses.length} ${isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'Entries'}`,
           '',
           '',
           '',
@@ -125,7 +137,11 @@ export const ExpenseTracker: React.FC = () => {
           ''
         ]
       },
-      notes: 'दुकान दैनंदिन खर्च व उपकरणांची गुंतवणूक. खर्चाच्या पावत्या जपून ठेवाव्यात.'
+      notes: isMr 
+        ? 'दुकान दैनंदिन खर्च व उपकरणांची गुंतवणूक. अधिकृत हिशोबासाठी खर्चाच्या पावत्या जपून ठेवाव्यात.'
+        : isHi
+        ? 'दुकान दैनिक खर्च व उपकरण निवेश। लेखापरीक्षण हेतु खर्च की रसीदें संभालकर रखें।'
+        : 'Official shop operating & capital expense audit ledger. Maintain all expense vouchers and bills.'
     };
   };
 
@@ -232,7 +248,7 @@ export const ExpenseTracker: React.FC = () => {
         <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-[#8FA69C]">
             <TrendingDown className="w-4 h-4 text-slate-400" />
-            <span>{language === 'mr' ? 'एकूण खर्च व गुंतवणूक (Total)' : language === 'hi' ? 'कुल व्यय (Total Outflow)' : 'Total Outflow (Expenses + Assets)'}</span>
+            <span>{language === 'mr' ? 'एकूण खर्च व गुंतवणूक' : language === 'hi' ? 'कुल व्यय व निवेश' : 'Total Outflow'}</span>
           </div>
           <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
             ₹{(metrics.operatingExpenses + metrics.capitalInvestments).toLocaleString('en-IN')}

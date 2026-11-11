@@ -109,44 +109,61 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
   };
 
   // Export Customer Returns
-  const getCustomerReturnsPayload = () => ({
-    title: language === 'mr' ? 'ग्राहक माल परतावा अहवाल (Customer Returns)' : 'ग्राहक माल वापसी रिपोर्ट (Customer Returns)',
-    subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Sales Returns Ledger',
-    periodText: language === 'mr' ? 'कालावधी ग्राहक परतावा हिशोब' : 'अवधि ग्राहक वापसी हिसाब',
-    kpis: [
-      { label: 'एकूण ग्राहक परतावे', value: `${filteredReturns.length} नोंदी`, color: 'purple' },
-      { label: 'एकूण रिफंड रक्कम', value: `₹${(metrics.totalRefundAmount || 0).toLocaleString('en-IN')}`, color: 'rose' },
-      { label: 'पुन्हा विक्रीयोग्य माल', value: `${resellableCount} नोंदी (₹${resellableValue})`, color: 'emerald' },
-      { label: 'खराब / नासलेला माल', value: `${wasteCount} नोंदी (₹${wasteValue})`, color: 'amber' }
-    ],
-    table: {
-      headers: ['परतावा क्र.', 'तारीख', 'ग्राहक नाव', 'उत्पादन', 'प्रमाण', 'कारण', 'रिफंड पद्धत', 'रक्कम (₹)'],
-      alignments: ['left', 'center', 'left', 'left', 'center', 'left', 'center', 'right'] as ('left' | 'center' | 'right')[],
-      rows: filteredReturns.length > 0 ? filteredReturns.map(r => [
-        r.return_no,
-        r.return_date,
-        r.customer_name || 'Counter Customer',
-        r.product_name,
-        `${r.quantity} ${r.unit}`,
-        r.reason,
-        r.refund_mode,
-        `₹${r.refund_amount.toLocaleString('en-IN')}`
-      ]) : [
-        ['—', '—', 'कोणतीही परतावा नोंद नाही', '—', '—', '—', '—', '₹0']
+  const getCustomerReturnsPayload = () => {
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
+
+    return {
+      title: isMr ? 'ग्राहक माल परतावा अहवाल' : isHi ? 'ग्राहक माल वापसी रिपोर्ट' : 'Customer Sales Returns Report',
+      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: isMr ? 'कालावधी ग्राहक परतावा हिशोब' : isHi ? 'अवधि ग्राहक वापसी हिसाब' : 'Customer Returns Ledger',
+      language,
+      kpis: [
+        { label: isMr ? 'एकूण ग्राहक परतावे' : isHi ? 'कुल ग्राहक वापसी' : 'Total Returns', value: `${filteredReturns.length} ${isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'Records'}`, color: 'purple' },
+        { label: isMr ? 'एकूण रिफंड रक्कम' : isHi ? 'कुल रिफंड राशि' : 'Total Refund Amount', value: `₹${(metrics.totalRefundAmount || 0).toLocaleString('en-IN')}`, color: 'rose' },
+        { label: isMr ? 'पुन्हा विक्रीयोग्य माल' : isHi ? 'पुनः बिक्री योग्य माल' : 'Restocked Goods', value: `${resellableCount} (${isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'items'} - ₹${resellableValue})`, color: 'emerald' },
+        { label: isMr ? 'खराब / नासलेला माल' : isHi ? 'खराब / क्षतिग्रस्त माल' : 'Damaged / Waste', value: `${wasteCount} (${isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'items'} - ₹${wasteValue})`, color: 'amber' }
       ],
-      summaryRow: [
-        'एकूण (Total)',
-        '',
-        '',
-        '',
-        `${filteredReturns.length} नोंदी`,
-        '',
-        '',
-        `₹${filteredReturns.reduce((acc, r) => acc + r.refund_amount, 0).toLocaleString('en-IN')}`
-      ]
-    },
-    notes: 'ग्राहक परतावा अहवाल. पुन्हा विक्रीयोग्य माल इन्व्हेंटरीमध्ये जोडला गेला आहे.'
-  });
+      table: {
+        headers: isMr 
+          ? ['परतावा क्र.', 'तारीख', 'ग्राहक नाव', 'उत्पादन', 'प्रमाण', 'कारण', 'रिफंड पद्धत', 'रक्कम (₹)']
+          : isHi
+          ? ['वापसी क्र.', 'दिनांक', 'ग्राहक नाम', 'उत्पाद', 'मात्रा', 'कारण', 'रिफंड माध्यम', 'राशि (₹)']
+          : ['Return No.', 'Date', 'Customer Name', 'Product', 'Quantity', 'Reason', 'Refund Mode', 'Amount (₹)'],
+        alignments: ['left', 'center', 'left', 'left', 'center', 'left', 'center', 'right'] as ('left' | 'center' | 'left' | 'left' | 'center' | 'left' | 'center' | 'right')[],
+        rows: filteredReturns.length > 0 ? filteredReturns.map(r => [
+          r.return_no,
+          r.return_date,
+          r.customer_name || (isMr ? 'काउंटर ग्राहक' : isHi ? 'काउंटर ग्राहक' : 'Counter Customer'),
+          r.product_name,
+          `${r.quantity} ${r.unit}`,
+          r.reason,
+          r.refund_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
+          r.refund_mode === 'UPI' ? 'UPI' :
+          r.refund_mode === 'Credit_Note' ? (isMr ? 'क्रेडिट नोट' : isHi ? 'क्रेडिट नोट' : 'Credit Note') :
+          r.refund_mode === 'Replacement' ? (isMr ? 'माल बदलून' : isHi ? 'बदलाव' : 'Replacement') : r.refund_mode,
+          `₹${r.refund_amount.toLocaleString('en-IN')}`
+        ]) : [
+          ['—', '—', isMr ? 'कोणतीही परतावा नोंद नाही' : isHi ? 'कोई वापसी दर्ज नहीं' : 'No return records found', '—', '—', '—', '—', '₹0']
+        ],
+        summaryRow: [
+          isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
+          '',
+          '',
+          '',
+          `${filteredReturns.length} ${isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'Records'}`,
+          '',
+          '',
+          `₹${filteredReturns.reduce((acc, r) => acc + r.refund_amount, 0).toLocaleString('en-IN')}`
+        ]
+      },
+      notes: isMr 
+        ? 'ग्राहक परतावा अहवाल. पुन्हा विक्रीयोग्य माल साठ्यात पूर्ववत जोडला गेला आहे.'
+        : isHi
+        ? 'ग्राहक वापसी रिपोर्ट। पुनर्विक्रय योग्य माल इन्वेंट्री में पुनः जोड़ दिया गया है।'
+        : 'Customer sales returns report. Resellable items have been restocked to inventory.'
+    };
+  };
 
   const handleViewCustomerPDF = () => {
     viewReportPDF(getCustomerReturnsPayload());
@@ -161,46 +178,61 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
   };
 
   // Export Supplier Returns to PDF
-  const getSupplierReturnsPayload = () => ({
-    title: language === 'mr' ? 'सप्लायर माल परतावा व डेबिट नोट अहवाल' : 'सप्लायर माल वापसी व डेबिट नोट रिपोर्ट',
-    subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Vendor Return & Refund Statement',
-    periodText: language === 'mr' ? 'कालावधी सप्लायर परतावा हिशोब' : 'अवधि सप्लायर वापसी हिसाब',
-    kpis: [
-      { label: 'एकूण सप्लायर परतावे', value: `${metrics.totalSupplierReturnsCount || 0} नोंदी`, color: 'amber' },
-      { label: 'एकूण रिफंड दावा (Claim)', value: `₹${(metrics.totalSupplierRefundAmount || 0).toLocaleString('en-IN')}`, color: 'blue' },
-      { label: 'रिफंड वसूल / जमा', value: `₹${(metrics.totalSupplierRefundReceived || 0).toLocaleString('en-IN')}`, color: 'emerald' },
-      { label: 'सप्लायरकडे येणे बाकी (Due)', value: `₹${(metrics.pendingSupplierRefundAmount || 0).toLocaleString('en-IN')}`, color: 'rose' }
-    ],
-    table: {
-      headers: ['डेबिट नोट क्र.', 'तारीख', 'सप्लायर नाव', 'उत्पादन', 'नग/प्रमाण', 'कारण', 'रिफंड रक्कम', 'स्थिती'],
-      alignments: ['left', 'center', 'left', 'left', 'center', 'left', 'right', 'center'] as ('left' | 'center' | 'right')[],
-      rows: displayedSupplierReturns.length > 0 ? displayedSupplierReturns.map(r => [
-        r.return_no,
-        r.return_date,
-        r.supplier_name,
-        r.product_name,
-        `${r.quantity} ${r.unit}`,
-        r.reason,
-        `₹${r.total_refund_amount.toLocaleString('en-IN')}`,
-        r.refund_status === 'Refund_Received' ? 'रिफंड जमा' :
-        r.refund_status === 'Adjusted_In_Next_Bill' ? 'बिलात वजावट' :
-        r.refund_status === 'Replacement_Received' ? 'माल बदलून मिळाला' : 'येणे बाकी (Pending)'
-      ]) : [
-        ['—', '—', 'कोणतीही सप्लायर परतावा नोंद नाही', '—', '—', '—', '₹0', '—']
+  const getSupplierReturnsPayload = () => {
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
+
+    return {
+      title: isMr ? 'सप्लायर माल परतावा व डेबिट नोट अहवाल' : isHi ? 'सप्लायर माल वापसी व डेबिट नोट रिपोर्ट' : 'Supplier Returns & Debit Notes Report',
+      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: isMr ? 'कालावधी सप्लायर परतावा हिशोब' : isHi ? 'अवधि सप्लायर वापसी हिसाब' : 'Supplier Returns Ledger',
+      language,
+      kpis: [
+        { label: isMr ? 'एकूण सप्लायर परतावे' : isHi ? 'कुल सप्लायर वापसी' : 'Total Returns', value: `${metrics.totalSupplierReturnsCount || 0} ${isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'Records'}`, color: 'amber' },
+        { label: isMr ? 'एकूण रिफंड दावा' : isHi ? 'कुल रिफंड दावा' : 'Total Refund Claim', value: `₹${(metrics.totalSupplierRefundAmount || 0).toLocaleString('en-IN')}`, color: 'blue' },
+        { label: isMr ? 'रिफंड वसूल / जमा' : isHi ? 'रिफंड प्राप्त' : 'Refund Received', value: `₹${(metrics.totalSupplierRefundReceived || 0).toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: isMr ? 'सप्लायरकडे बाकी' : isHi ? 'सप्लायर से बाकी' : 'Pending Claim', value: `₹${(metrics.pendingSupplierRefundAmount || 0).toLocaleString('en-IN')}`, color: 'rose' }
       ],
-      summaryRow: [
-        'एकूण (Total)',
-        '',
-        '',
-        '',
-        `${displayedSupplierReturns.length} नोंदी`,
-        '',
-        `₹${displayedSupplierReturns.reduce((acc, r) => acc + r.total_refund_amount, 0).toLocaleString('en-IN')}`,
-        ''
-      ]
-    },
-    notes: 'सप्लायरकडून खराब/कालबाह्य मालाचा रिफंड किंवा पुढील खरेदी बिलातून वजावट तपासून घ्यावी.'
-  });
+      table: {
+        headers: isMr 
+          ? ['डेबिट नोट क्र.', 'तारीख', 'सप्लायर नाव', 'उत्पादन', 'नग/प्रमाण', 'कारण', 'रिफंड रक्कम', 'स्थिती']
+          : isHi
+          ? ['डेबिट नोट क्र.', 'दिनांक', 'सप्लायर नाम', 'उत्पाद', 'मात्रा', 'कारण', 'रिफंड राशि', 'स्थिति']
+          : ['Debit Note No.', 'Date', 'Supplier Name', 'Product', 'Quantity', 'Reason', 'Refund Amount', 'Status'],
+        alignments: ['left', 'center', 'left', 'left', 'center', 'left', 'right', 'center'] as ('left' | 'center' | 'left' | 'left' | 'center' | 'left' | 'right' | 'center')[],
+        rows: displayedSupplierReturns.length > 0 ? displayedSupplierReturns.map(r => [
+          r.return_no,
+          r.return_date,
+          r.supplier_name,
+          r.product_name,
+          `${r.quantity} ${r.unit}`,
+          r.reason,
+          `₹${r.total_refund_amount.toLocaleString('en-IN')}`,
+          r.refund_status === 'Refund_Received' ? (isMr ? 'रिफंड जमा' : isHi ? 'रिफंड प्राप्त' : 'Refund Received') :
+          r.refund_status === 'Adjusted_In_Next_Bill' ? (isMr ? 'बिलात वजावट' : isHi ? 'बिल में कटौती' : 'Adjusted In Bill') :
+          r.refund_status === 'Replacement_Received' ? (isMr ? 'माल बदलून मिळाला' : isHi ? 'बदलाव प्राप्त' : 'Replacement Received') :
+          (isMr ? 'येणे बाकी' : isHi ? 'बाकी' : 'Pending')
+        ]) : [
+          ['—', '—', isMr ? 'कोणतीही सप्लायर परतावा नोंद नाही' : isHi ? 'कोई सप्लायर वापसी दर्ज नहीं' : 'No supplier returns found', '—', '—', '—', '₹0', '—']
+        ],
+        summaryRow: [
+          isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
+          '',
+          '',
+          '',
+          `${displayedSupplierReturns.length} ${isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'Records'}`,
+          '',
+          `₹${displayedSupplierReturns.reduce((acc, r) => acc + r.total_refund_amount, 0).toLocaleString('en-IN')}`,
+          ''
+        ]
+      },
+      notes: isMr 
+        ? 'सप्लायरकडून खराब/कालबाह्य मालाचा रिफंड किंवा पुढील खरेदी बिलातून वजावट तपासून घ्यावी.'
+        : isHi
+        ? 'सप्लायर से खराब/अवधिपार माल का रिफंड अथवा अगले खरीद बिल में समायोजन सत्यापित करें।'
+        : 'Verify supplier debit note refund claim or adjustment in subsequent purchase bill.'
+    };
+  };
 
   const handleViewSupplierPDF = () => {
     viewReportPDF(getSupplierReturnsPayload());
@@ -239,30 +271,30 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                 type="button"
                 onClick={handleViewCustomerPDF}
                 className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
-                title="View Customer Returns PDF"
+                title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View Customer Returns PDF'}
               >
                 <Eye className="w-4 h-4 text-purple-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : 'देखें'}</span>
+                <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handlePrintCustomerPDF}
                 className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
-                title="Print Customer Returns Report"
+                title={language === 'mr' ? 'अहवाल प्रिंट करा' : language === 'hi' ? 'रिपोर्ट प्रिंट करें' : 'Print Customer Returns Report'}
               >
                 <Printer className="w-4 h-4 text-purple-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : 'प्रिंट'}</span>
+                <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleDownloadCustomerPDF}
                 className="px-3 py-2.5 rounded-2xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-800/60 text-purple-900 dark:text-purple-300 font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
-                title="Download Customer Returns PDF"
+                title={language === 'mr' ? 'PDF डाउनलोड करा' : language === 'hi' ? 'PDF डाउनलोड करें' : 'Download Customer Returns PDF'}
               >
                 <Download className="w-4 h-4 text-purple-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'परतावा PDF' : 'वापसी PDF'}</span>
+                <span className="hidden sm:inline">{language === 'mr' ? 'परतावा PDF' : language === 'hi' ? 'वापसी PDF' : 'Download PDF'}</span>
               </button>
 
               <button
@@ -279,30 +311,30 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                 type="button"
                 onClick={handleViewSupplierPDF}
                 className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
-                title="View Supplier Returns PDF"
+                title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View Supplier Returns PDF'}
               >
                 <Eye className="w-4 h-4 text-amber-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : 'देखें'}</span>
+                <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handlePrintSupplierPDF}
                 className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
-                title="Print Supplier Returns Report"
+                title={language === 'mr' ? 'अहवाल प्रिंट करा' : language === 'hi' ? 'रिपोर्ट प्रिंट करें' : 'Print Supplier Returns Report'}
               >
                 <Printer className="w-4 h-4 text-amber-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : 'प्रिंट'}</span>
+                <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleDownloadSupplierPDF}
                 className="px-3 py-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
-                title="Download Supplier Return Report"
+                title={language === 'mr' ? 'डेबिट नोट PDF डाउनलोड करा' : language === 'hi' ? 'डेबिट नोट PDF डाउनलोड करें' : 'Download Debit Note PDF'}
               >
                 <Download className="w-4 h-4 text-amber-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'डेबिट नोट PDF' : 'डेबिट नोट PDF'}</span>
+                <span className="hidden sm:inline">{language === 'mr' ? 'डेबिट नोट PDF' : language === 'hi' ? 'डेबिट नोट PDF' : 'Download PDF'}</span>
               </button>
 
               <button

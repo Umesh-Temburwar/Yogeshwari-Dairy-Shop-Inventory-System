@@ -108,9 +108,9 @@ export const TRANSLATIONS: Translations = {
     mr: 'नासलेले दूध, लिकेज, नुकसान'
   },
   returnsNav: {
-    en: 'Sales Returns',
-    hi: 'सामान वापसी (परतावा)',
-    mr: 'माल परतावा (Returns)'
+    en: 'Returns & Refunds',
+    hi: 'माल वापसी व रिफंड',
+    mr: 'माल परतावा व रिफंड'
   },
   returnsSub: {
     en: 'Customer returns & refunds',
@@ -173,27 +173,27 @@ export const TRANSLATIONS: Translations = {
   },
   thisWeek: {
     en: 'This Week',
-    hi: 'या आठवड्यात',
+    hi: 'इस सप्ताह',
     mr: 'या आठवड्यात'
   },
   thisMonth: {
     en: 'This Month',
-    hi: 'या महिन्यात',
+    hi: 'इस महीने',
     mr: 'या महिन्यात'
   },
   thisYear: {
     en: 'This Year',
-    hi: 'या वर्षी',
+    hi: 'इस वर्ष',
     mr: 'या वर्षी'
   },
   allTime: {
     en: 'All Time',
-    hi: 'एकूण कालावधी',
+    hi: 'अब तक (सभी)',
     mr: 'एकूण कालावधी'
   },
   timePeriodSelect: {
     en: 'Select Period:',
-    hi: 'कालावधी निवडा:',
+    hi: 'अवधि चुनें:',
     mr: 'कालावधी निवडा:'
   },
 
@@ -285,10 +285,35 @@ export const TRANSLATIONS: Translations = {
     hi: 'हटाएं',
     mr: 'हटवा'
   },
+  view: {
+    en: 'View',
+    hi: 'देखें',
+    mr: 'पहा'
+  },
   print: {
     en: 'Print',
-    hi: 'प्रिंट करें',
-    mr: 'प्रिंट काढा'
+    hi: 'प्रिंट',
+    mr: 'प्रिंट'
+  },
+  downloadPdf: {
+    en: 'Download PDF',
+    hi: 'डाउनलोड PDF',
+    mr: 'डाउनलोड PDF'
+  },
+  close: {
+    en: 'Close',
+    hi: 'बंद करें',
+    mr: 'बंद करा'
+  },
+  done: {
+    en: 'Done',
+    hi: 'पूर्ण',
+    mr: 'पूर्ण'
+  },
+  nextBill: {
+    en: 'Next Bill',
+    hi: 'अगला बिल',
+    mr: 'पुढील बिल'
   },
   searchPlaceholder: {
     en: 'Search milk, paneer, curd, ghee...',
@@ -421,9 +446,9 @@ export const TRANSLATIONS: Translations = {
 
   // POS & Billing
   currentBill: {
-    en: 'Current Bill',
-    hi: 'चालू बिल (Cart)',
-    mr: 'चालू बिल (Cart)'
+    en: 'Current Cart',
+    hi: 'चालू बिल',
+    mr: 'चालू बिल'
   },
   emptyCart: {
     en: 'Clear Bill',
@@ -447,13 +472,13 @@ export const TRANSLATIONS: Translations = {
   },
   subtotal: {
     en: 'Subtotal',
-    hi: 'उप-कुल (Subtotal)',
-    mr: 'उप-एकूण (Subtotal)'
+    hi: 'उप-कुल',
+    mr: 'उप-एकूण'
   },
   discount: {
-    en: 'Discount (₹)',
-    hi: 'छूट (Discount ₹)',
-    mr: 'सूट (Discount ₹)'
+    en: 'Discount',
+    hi: 'छूट',
+    mr: 'सवलत'
   },
   netAmount: {
     en: 'Net Payable',
@@ -467,23 +492,23 @@ export const TRANSLATIONS: Translations = {
   },
   cash: {
     en: 'Cash',
-    hi: 'रोकड़ (Cash)',
-    mr: 'रोख (Cash)'
+    hi: 'रोकड़ / नकद',
+    mr: 'रोख'
   },
   onlineUpi: {
-    en: 'Online UPI / QR',
-    hi: 'ऑनलाइन UPI / QR',
-    mr: 'ऑनलाईन UPI / QR'
+    en: 'Online UPI',
+    hi: 'ऑनलाइन UPI',
+    mr: 'ऑनलाईन UPI'
   },
   splitPay: {
     en: 'Split Payment',
-    hi: 'आधा कैश आधा UPI (Split)',
-    mr: 'विभागून पेमेंट (Split)'
+    hi: 'विभाजित भुगतान',
+    mr: 'विभागून पेमेंट'
   },
   udharPay: {
-    en: 'Credit (Udhar)',
-    hi: 'उधार खाता (Udhar)',
-    mr: 'उधारी खाते (Udhar)'
+    en: 'Credit',
+    hi: 'उधार खाता',
+    mr: 'उधारी खाते'
   },
   cashReceived: {
     en: 'Cash Received',
@@ -559,8 +584,8 @@ export const TRANSLATIONS: Translations = {
   },
   categoryCol: {
     en: 'Category',
-    hi: 'वर्ग (Category)',
-    mr: 'प्रवर्ग (Category)'
+    hi: 'वर्ग',
+    mr: 'प्रवर्ग'
   },
   currentStockCol: {
     en: 'Current Stock',
@@ -579,8 +604,8 @@ export const TRANSLATIONS: Translations = {
   },
   unitCol: {
     en: 'Unit',
-    hi: 'इकाई (Unit)',
-    mr: 'एकक (Unit)'
+    hi: 'इकाई',
+    mr: 'एकक'
   },
   actionsCol: {
     en: 'Action',

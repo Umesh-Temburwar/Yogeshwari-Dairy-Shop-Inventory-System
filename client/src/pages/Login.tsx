@@ -44,8 +44,8 @@ export const Login: React.FC = () => {
       <div className="w-full max-w-md space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/30">
-            <Milk className="h-9 w-9" />
+          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white p-1 border border-slate-200 shadow-lg shadow-emerald-600/10 overflow-hidden">
+            <img src="/YDO_logo.jpg" alt="Yogeshwari Dairy Logo" className="h-full w-full object-contain" />
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">
             Yogeshwari Dairy

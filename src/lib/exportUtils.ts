@@ -309,11 +309,14 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
     <body>
       <!-- Header -->
       <div class="report-header">
-        <div>
-          <div class="brand-title">योगेश्वरी डेअरी फार्म & स्वीट्स</div>
-          <div class="brand-subtitle">Yogeshwari Dairy Farm & Products &bull; Enterprise ERP & Khata System</div>
-          <div class="report-title-badge">${title}</div>
-          ${periodText ? `<div style="font-size: 10px; color: #047857; font-weight: 700; margin-top: 4px;">कालावधी: ${periodText}</div>` : ''}
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="/YDO_logo.jpg" alt="Logo" style="width: 48px; height: 48px; border-radius: 10px; object-fit: contain; border: 1px solid #cbd5e1; background: #ffffff; padding: 2px;" />
+          <div>
+            <div class="brand-title">योगेश्वरी डेअरी फार्म & स्वीट्स</div>
+            <div class="brand-subtitle">Yogeshwari Dairy Farm & Products &bull; Enterprise ERP & Khata System</div>
+            <div class="report-title-badge">${title}</div>
+            ${periodText ? `<div style="font-size: 10px; color: #047857; font-weight: 700; margin-top: 4px;">कालावधी: ${periodText}</div>` : ''}
+          </div>
         </div>
         <div class="meta-box">
           <div>तारीख: <strong>${dateFormatted}</strong></div>

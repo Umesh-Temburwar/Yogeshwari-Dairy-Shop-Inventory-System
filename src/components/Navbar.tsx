@@ -96,8 +96,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Brand Logo */}
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-sm shrink-0">
-            <Milk className="w-5 h-5 stroke-[2.2]" />
+          <div className="w-10 h-10 rounded-xl bg-white p-0.5 shadow-sm border border-slate-200 dark:border-[#24352F] flex items-center justify-center shrink-0 overflow-hidden">
+            <img 
+              src="/YDO_logo.jpg" 
+              alt="Yogeshwari Dairy Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
 
           {/* Shop Title - single line, truncate, subtitle hidden below xl */}

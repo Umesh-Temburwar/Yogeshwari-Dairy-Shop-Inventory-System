@@ -38,7 +38,7 @@ export const BillingCounter: React.FC = () => {
   
   // Cart state
   const [cart, setCart] = useState<SaleItem[]>([]);
-  const [customerName, setCustomerName] = useState('Counter Customer');
+  const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerGender, setCustomerGender] = useState<CustomerGender>('Male');
   const [customerAgeGroup, setCustomerAgeGroup] = useState<CustomerAgeGroup>('Adults (26-45)');
@@ -183,6 +183,15 @@ export const BillingCounter: React.FC = () => {
   const handleCheckout = async () => {
     if (cart.length === 0) return;
 
+    if (paymentMode === 'Udhar' && !customerName.trim()) {
+      alert(language === 'mr' 
+        ? 'कृपया उधार खात्यासाठी ग्राहकाचे नाव प्रविष्ट करा!' 
+        : language === 'hi' 
+        ? 'कृपया उधार खाते के लिए ग्राहक का नाम दर्ज करें!' 
+        : 'Please enter customer name for credit/udhar sale!');
+      return;
+    }
+
     let cashAmount = 0;
     let onlineAmount = 0;
     let udharAmount = 0;
@@ -198,9 +207,11 @@ export const BillingCounter: React.FC = () => {
       onlineAmount = splitOnlineAmount || (netTotal - splitCashAmount);
     }
 
+    const defaultCustomerName = language === 'mr' ? 'थेट ग्राहक' : language === 'hi' ? 'काउंटर ग्राहक' : 'Counter Customer';
+
     const sale = await createSale({
-      customer_name: customerName,
-      customer_phone: customerPhone,
+      customer_name: customerName.trim() || defaultCustomerName,
+      customer_phone: customerPhone.trim() || undefined,
       customer_gender: customerGender,
       customer_age_group: customerAgeGroup,
       customer_age: customerAge ? parseInt(customerAge) : undefined,
@@ -220,7 +231,7 @@ export const BillingCounter: React.FC = () => {
 
     // Reset Form
     clearCart();
-    setCustomerName('Counter Customer');
+    setCustomerName('');
     setCustomerPhone('');
     setCustomerGender('Male');
     setCustomerAgeGroup('Adults (26-45)');
@@ -464,99 +475,6 @@ export const BillingCounter: React.FC = () => {
             )}
           </div>
 
-          {/* Customer Selection & Demographic Tracking */}
-          <div className="bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-xl border border-slate-200/80 dark:border-[#24352F] space-y-2.5">
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C] block mb-1">
-                  {t('customerName')}
-                </label>
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Counter Customer"
-                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C] block mb-1">
-                  {t('customerPhone')}
-                </label>
-                <input
-                  type="tel"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  placeholder="98XXXXXXXX"
-                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                />
-              </div>
-            </div>
-
-            {/* Demographics 1-Tap Selectors: Gender & Age */}
-            <div className="pt-2 border-t border-slate-200/70 dark:border-[#24352F] space-y-2">
-              <div className="flex items-center justify-between gap-1.5">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C]">
-                  {t('customerGender')}
-                </span>
-                <div className="flex items-center gap-1">
-                  {[
-                    { id: 'Male', label: language === 'mr' ? '👨 पुरुष' : language === 'hi' ? '👨 पुरुष' : '👨 Male' },
-                    { id: 'Female', label: language === 'mr' ? '👩 महिला' : language === 'hi' ? '👩 महिला' : '👩 Female' },
-                    { id: 'Other', label: language === 'mr' ? '🧑 इतर' : language === 'hi' ? '🧑 अन्य' : '🧑 Other' }
-                  ].map((g) => (
-                    <button
-                      key={g.id}
-                      type="button"
-                      onClick={() => setCustomerGender(g.id as CustomerGender)}
-                      className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-all ${
-                        customerGender === g.id
-                          ? 'bg-emerald-600 text-white font-bold shadow-xs'
-                          : 'bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#223630]'
-                      }`}
-                    >
-                      {g.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between gap-1.5">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C]">
-                  {t('customerAgeGroup')}
-                </span>
-                <div className="flex items-center gap-1">
-                  {[
-                    { id: 'Kids/Teens (<18)', label: '<18' },
-                    { id: 'Youth (18-25)', label: '18-25' },
-                    { id: 'Adults (26-45)', label: '26-45' },
-                    { id: 'Seniors (45+)', label: '45+' }
-                  ].map((ag) => (
-                    <button
-                      key={ag.id}
-                      type="button"
-                      onClick={() => setCustomerAgeGroup(ag.id as CustomerAgeGroup)}
-                      className={`px-1.5 py-0.5 rounded-md text-[11px] font-semibold transition-all whitespace-nowrap ${
-                        customerAgeGroup === ag.id
-                          ? 'bg-teal-600 text-white font-bold shadow-xs'
-                          : 'bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#223630]'
-                      }`}
-                    >
-                      {ag.label}
-                    </button>
-                  ))}
-                  <input
-                    type="number"
-                    placeholder={language === 'mr' ? 'वय' : language === 'hi' ? 'उम्र' : 'Age'}
-                    value={customerAge}
-                    onChange={(e) => setCustomerAge(e.target.value)}
-                    className="w-11 px-1 py-0.5 rounded border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-[10px] text-center font-bold focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Cart Item Rows */}
           <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
             {cart.length > 0 ? (
@@ -786,6 +704,36 @@ export const BillingCounter: React.FC = () => {
                   <QrCode className="w-3 h-3" />
                   <span>{language === 'mr' ? 'ऑनलाइन QR कोड उघडा' : language === 'hi' ? 'ऑनलाइन QR कोड देखें' : 'View Online QR'}</span>
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Udhar / Credit Customer Input */}
+          {paymentMode === 'Udhar' && (
+            <div className="bg-amber-50/80 dark:bg-amber-950/25 p-3 rounded-xl border border-amber-300 dark:border-amber-700/50 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-950 dark:text-amber-200">
+                  {language === 'mr' ? 'उधार खाते / ग्राहकाचे नाव' : language === 'hi' ? 'उधार खाता / ग्राहक का नाम' : 'Customer Name for Credit / Udhar'}
+                </span>
+                <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
+                  {language === 'mr' ? '* नाव आवश्यक' : language === 'hi' ? '* नाम आवश्यक' : '* Name Required'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder={language === 'mr' ? 'उदा. रमेश पाटील' : language === 'hi' ? 'उदा. रमेश वर्मा' : 'e.g. Ramesh Patil'}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700/60 bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500"
+                />
+                <input
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder={language === 'mr' ? 'मोबाईल क्र. (ऐच्छिक)' : language === 'hi' ? 'मोबाइल नंबर (वैकल्पिक)' : 'Phone (Optional)'}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700/60 bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500"
+                />
               </div>
             </div>
           )}

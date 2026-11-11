@@ -25,14 +25,15 @@ import {
   Copy,
   Package,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  RotateCcw
 } from 'lucide-react';
 import { exportReportToPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import confetti from 'canvas-confetti';
 
 export const BillingCounter: React.FC = () => {
-  const { products, batches, createSale } = useStore();
+  const { products, batches, createSale, setActiveView } = useStore();
   const { t, language } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -342,6 +343,16 @@ export const BillingCounter: React.FC = () => {
             >
               <Barcode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span className="hidden sm:inline">{language === 'mr' ? 'बारकोड स्कॅन' : 'बारकोड स्कैन'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveView('returns')}
+              className="px-3 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800/40 text-purple-700 dark:text-purple-300 flex items-center gap-1.5 text-xs font-bold shrink-0 transition shadow-2xs active:scale-95"
+              title="माल परतावा (Customer Returns)"
+            >
+              <RotateCcw className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <span className="hidden sm:inline">{language === 'mr' ? 'माल परत' : language === 'hi' ? 'माल वापसी' : 'Return'}</span>
             </button>
           </div>
 

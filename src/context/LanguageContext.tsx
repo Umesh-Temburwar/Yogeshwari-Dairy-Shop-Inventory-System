@@ -107,6 +107,16 @@ export const TRANSLATIONS: Translations = {
     hi: 'फटा दूध, पाउच लीकेज',
     mr: 'नासलेले दूध, लिकेज, नुकसान'
   },
+  returnsNav: {
+    en: 'Sales Returns',
+    hi: 'सामान वापसी (परतावा)',
+    mr: 'माल परतावा (Returns)'
+  },
+  returnsSub: {
+    en: 'Customer returns & refunds',
+    hi: 'ग्राहक सामान वापसी व रिफंड',
+    mr: 'ग्राहक परतावा व परतावा जमा'
+  },
   udharNav: {
     en: 'Udhar Khata',
     hi: 'उधार खाता',

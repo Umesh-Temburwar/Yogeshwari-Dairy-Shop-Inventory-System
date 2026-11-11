@@ -19,6 +19,8 @@ import { KhataBook } from './components/UdharKhata/KhataBook';
 import { ExpenseTracker } from './components/Expenses/ExpenseTracker';
 import { ProfitReport } from './components/Analytics/ProfitReport';
 import { DailySalesTracker } from './components/Sales/DailySalesTracker';
+import { ReturnsTracker } from './components/Returns/ReturnsTracker';
+import { ReturnProductModal } from './components/Returns/ReturnProductModal';
 import { AddProductModal } from './components/Inventory/AddProductModal';
 import { SupabaseConfigModal } from './components/Settings/SupabaseConfigModal';
 import { MasterSecurityModal } from './components/Auth/MasterSecurityModal';
@@ -30,6 +32,8 @@ const MainContent: React.FC = () => {
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [returnPrefill, setReturnPrefill] = useState<{ productId?: string; invoiceNo?: string; customerName?: string; customerPhone?: string }>({});
 
   // Sidebar states: Collapsible on desktop (264px <-> 72px) and Drawer on mobile
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -117,6 +121,15 @@ const MainContent: React.FC = () => {
           {activeView === 'expenses' && <ExpenseTracker />}
 
           {activeView === 'analytics' && <ProfitReport />}
+
+          {activeView === 'returns' && (
+            <ReturnsTracker 
+              onOpenReturnModal={() => {
+                setReturnPrefill({});
+                setIsReturnModalOpen(true);
+              }} 
+            />
+          )}
         </main>
       </div>
 
@@ -143,6 +156,16 @@ const MainContent: React.FC = () => {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
       />
+
+      {isReturnModalOpen && (
+        <ReturnProductModal
+          onClose={() => setIsReturnModalOpen(false)}
+          prefillProductId={returnPrefill.productId}
+          prefillInvoiceNo={returnPrefill.invoiceNo}
+          prefillCustomerName={returnPrefill.customerName}
+          prefillCustomerPhone={returnPrefill.customerPhone}
+        />
+      )}
     </div>
   );
 };

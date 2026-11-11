@@ -9,6 +9,7 @@ import {
   ReceiptIndianRupee, 
   Truck, 
   PackageX, 
+  RotateCcw,
   BookOpen, 
   Fuel, 
   TrendingUp, 
@@ -106,6 +107,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: PackageX,
       badge: metrics.totalDamagesLoss > 0 ? `₹${metrics.totalDamagesLoss}` : undefined,
       badgeColor: 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300',
+      section: 'inventory'
+    },
+    {
+      id: 'returns',
+      labelKey: 'returnsNav',
+      icon: RotateCcw,
+      badge: metrics.totalReturnsCount > 0 ? metrics.totalReturnsCount : undefined,
+      badgeColor: 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 font-bold',
       section: 'inventory'
     },
 

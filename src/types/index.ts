@@ -188,3 +188,37 @@ export interface UserProfile {
   email: string;
 }
 
+// Product / Sales Return Management
+export type ReturnReason = 
+  | 'Customer Changed Mind'
+  | 'Defective / Spoiled'
+  | 'Wrong Product Taken'
+  | 'Quality Issue'
+  | 'Other';
+
+export type RefundMode = 'Cash' | 'Online_UPI' | 'Udhar_Credit' | 'Replacement';
+
+export type ReturnCondition = 'Resellable' | 'Damaged_Waste';
+
+export interface ProductReturn {
+  id: string;
+  return_no: string; // e.g. RET-2026-0001
+  sale_id?: string;
+  invoice_no?: string;
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  unit: string;
+  unit_price: number;
+  refund_amount: number;
+  refund_mode: RefundMode;
+  reason: ReturnReason;
+  condition: ReturnCondition; // 'Resellable' (restocked) or 'Damaged_Waste' (waste/damage record)
+  customer_name?: string;
+  customer_phone?: string;
+  notes?: string;
+  return_date: string; // YYYY-MM-DD
+  created_at: string;
+}
+
+

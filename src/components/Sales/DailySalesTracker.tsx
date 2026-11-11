@@ -16,11 +16,13 @@ import {
   ChevronDown, 
   ChevronUp, 
   Eye, 
-  X
+  X,
+  RotateCcw
 } from 'lucide-react';
+import { ReturnProductModal } from '../Returns/ReturnProductModal';
 
 export const DailySalesTracker: React.FC = () => {
-  const { filteredSales, metrics } = useStore();
+  const { filteredSales, metrics, setActiveView } = useStore();
   const { t, language } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,6 +30,7 @@ export const DailySalesTracker: React.FC = () => {
   const [selectedGender, setSelectedGender] = useState<string>('All');
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>('All');
   const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
+  const [returnTarget, setReturnTarget] = useState<{ productId?: string; invoiceNo?: string; customerName?: string; customerPhone?: string } | null>(null);
   const [selectedSaleForView, setSelectedSaleForView] = useState<Sale | null>(null);
 
   const paymentModes = [
@@ -348,6 +351,20 @@ export const DailySalesTracker: React.FC = () => {
 
                       <div className="flex items-center gap-1.5">
                         <button
+                          onClick={() => setReturnTarget({
+                            invoiceNo: sale.invoice_no,
+                            customerName: sale.customer_name,
+                            customerPhone: sale.customer_phone,
+                            productId: sale.items?.[0]?.product_id
+                          })}
+                          className="px-2 py-1 rounded-lg text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-950/50 flex items-center gap-1 text-[11px] font-bold transition"
+                          title="Record Customer Return"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">{language === 'mr' ? 'परतावा' : language === 'hi' ? 'वापसी' : 'Return'}</span>
+                        </button>
+
+                        <button
                           onClick={() => setSelectedSaleForView(sale)}
                           className="p-1.5 rounded-lg text-slate-600 dark:text-[#8FA69C] hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-[#1A2A25]"
                           title="View Bill Details"
@@ -463,6 +480,17 @@ export const DailySalesTracker: React.FC = () => {
 
           </div>
         </div>
+      )}
+
+      {/* RETURN PRODUCT MODAL */}
+      {returnTarget && (
+        <ReturnProductModal
+          onClose={() => setReturnTarget(null)}
+          prefillProductId={returnTarget.productId}
+          prefillInvoiceNo={returnTarget.invoiceNo}
+          prefillCustomerName={returnTarget.customerName}
+          prefillCustomerPhone={returnTarget.customerPhone}
+        />
       )}
 
     </div>

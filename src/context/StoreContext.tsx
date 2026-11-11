@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import { 
   Product, Sale, Purchase, DamageRecord, UdharCustomer, 
   UdharTransaction, Expense, TimeRangeFilter, PaymentMode,
-  CustomerGender, CustomerAgeGroup, ProductBatch, ExpiryStatus 
+  CustomerGender, CustomerAgeGroup, ProductBatch, ExpiryStatus,
+  ProductReturn
 } from '../types';
 import { 
   INITIAL_PRODUCTS, INITIAL_SALES, INITIAL_PURCHASES, 
@@ -24,7 +25,8 @@ export type AppView =
   | 'expenses' 
   | 'analytics' 
   | 'reorder'
-  | 'expiry';
+  | 'expiry'
+  | 'returns';
 
 interface StoreContextType {
   // Navigation & Settings
@@ -46,6 +48,7 @@ interface StoreContextType {
   customers: UdharCustomer[];
   udharTransactions: UdharTransaction[];
   expenses: Expense[];
+  returns: ProductReturn[];
   
   // Receipt
   currentReceipt: Sale | null;
@@ -131,11 +134,16 @@ interface StoreContextType {
   addExpense: (expenseData: Omit<Expense, 'id' | 'created_at'>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
 
+  // Product Returns
+  createReturn: (returnData: Omit<ProductReturn, 'id' | 'return_no' | 'created_at'>) => Promise<ProductReturn>;
+  deleteReturn: (id: string) => Promise<void>;
+
   // Filtered views and analytics
   filteredSales: Sale[];
   filteredPurchases: Purchase[];
   filteredExpenses: Expense[];
   filteredDamages: DamageRecord[];
+  filteredReturns: ProductReturn[];
   
   // Metrics
   metrics: {
@@ -160,6 +168,10 @@ interface StoreContextType {
     expiring3DaysBatchesCount: number;
     freshBatchesCount: number;
     totalActiveBatches: number;
+    // Returns Metrics
+    totalReturnsCount: number;
+    totalRefundAmount: number;
+    todayRefundAmount: number;
   };
 }
 
@@ -243,7 +255,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return saved ? JSON.parse(saved) : INITIAL_EXPENSES;
   });
 
+  const [returns, setReturns] = useState<ProductReturn[]>(() => {
+    const saved = localStorage.getItem('yd_returns');
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+
   // Save to localStorage on state changes
+  useEffect(() => {
+    localStorage.setItem('yd_returns', JSON.stringify(returns));
+  }, [returns]);
   useEffect(() => {
     localStorage.setItem('yd_products', JSON.stringify(products));
   }, [products]);
@@ -352,6 +378,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCustomers(INITIAL_CUSTOMERS);
     setUdharTransactions(INITIAL_UDHAR_TRANSACTIONS);
     setExpenses(INITIAL_EXPENSES);
+    setReturns([]);
     try {
       localStorage.removeItem('yd_products');
       localStorage.removeItem('yd_batches');
@@ -361,6 +388,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       localStorage.removeItem('yd_customers');
       localStorage.removeItem('yd_udhar_transactions');
       localStorage.removeItem('yd_expenses');
+      localStorage.removeItem('yd_returns');
     } catch {
       // Ignore
     }
@@ -404,6 +432,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const filteredDamages = useMemo(() => {
     return damages.filter(d => filterByDate(d.damage_date));
   }, [damages, timeFilter]);
+
+  const filteredReturns = useMemo(() => {
+    return returns.filter(r => filterByDate(r.return_date));
+  }, [returns, timeFilter]);
 
   // Aggregated Financial Metrics
   const metrics = useMemo(() => {
@@ -483,9 +515,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       expiringTomorrowBatchesCount,
       expiring3DaysBatchesCount,
       freshBatchesCount,
-      totalActiveBatches: batches.filter(b => b.qty_remaining > 0).length
+      totalActiveBatches: batches.filter(b => b.qty_remaining > 0).length,
+      // Returns Metrics
+      totalReturnsCount: filteredReturns.length,
+      totalRefundAmount: filteredReturns.reduce((acc, r) => acc + (r.refund_amount || 0), 0),
+      todayRefundAmount: returns.filter(r => r.return_date === new Date().toISOString().split('T')[0]).reduce((acc, r) => acc + (r.refund_amount || 0), 0)
     };
-  }, [filteredSales, filteredPurchases, filteredExpenses, filteredDamages, customers, products, batches]);
+  }, [filteredSales, filteredPurchases, filteredExpenses, filteredDamages, filteredReturns, returns, customers, products, batches]);
 
   // Actions
   const addProduct = async (productData: Omit<Product, 'id' | 'created_at'>): Promise<Product> => {
@@ -1181,6 +1217,122 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const createReturn = async (returnData: Omit<ProductReturn, 'id' | 'return_no' | 'created_at'>): Promise<ProductReturn> => {
+    const todayFormatted = new Date().toISOString().split('T')[0];
+    const returnCountToday = returns.filter(r => r.return_date === todayFormatted).length + 1;
+    const returnNo = `RET-${todayFormatted.replace(/-/g, '')}-${String(returnCountToday).padStart(3, '0')}`;
+    
+    const newReturn: ProductReturn = {
+      ...returnData,
+      id: 'ret-' + Date.now(),
+      return_no: returnNo,
+      created_at: new Date().toISOString()
+    };
+
+    setReturns(prev => [newReturn, ...prev]);
+
+    // 1. If condition is 'Resellable', add stock back to products & active batch
+    if (newReturn.condition === 'Resellable') {
+      setProducts(prev => prev.map(p => {
+        if (p.id === newReturn.product_id) {
+          return {
+            ...p,
+            stock_quantity: Math.round((p.stock_quantity + newReturn.quantity) * 100) / 100
+          };
+        }
+        return p;
+      }));
+
+      // Restock the earliest batch for this product
+      setBatches(prev => {
+        let restocked = false;
+        return prev.map(b => {
+          if (!restocked && b.product_id === newReturn.product_id) {
+            restocked = true;
+            return {
+              ...b,
+              qty_remaining: Math.round((b.qty_remaining + newReturn.quantity) * 100) / 100
+            };
+          }
+          return b;
+        });
+      });
+    } else {
+      // 2. If 'Damaged_Waste', automatically record in Damages
+      const autoDamage: DamageRecord = {
+        id: 'dmg-' + Date.now(),
+        product_id: newReturn.product_id,
+        product_name: newReturn.product_name,
+        quantity: newReturn.quantity,
+        unit: newReturn.unit,
+        estimated_loss_amount: newReturn.refund_amount,
+        damage_reason: `Customer Return: ${newReturn.reason}${newReturn.notes ? ' - ' + newReturn.notes : ''}`,
+        damage_date: newReturn.return_date,
+        batch_no: 'RETURN-WASTE',
+        created_at: new Date().toISOString()
+      };
+      setDamages(prev => [autoDamage, ...prev]);
+    }
+
+    // 3. If refund mode is 'Udhar_Credit' and customer is identified, credit their account
+    if (newReturn.refund_mode === 'Udhar_Credit' && (newReturn.customer_name || newReturn.customer_phone)) {
+      setCustomers(prev => prev.map(c => {
+        const match = (newReturn.customer_phone && c.phone === newReturn.customer_phone) || 
+                      (newReturn.customer_name && c.name.toLowerCase() === newReturn.customer_name.toLowerCase());
+        if (match) {
+          const newBalance = Math.max(0, Math.round((c.current_balance - newReturn.refund_amount) * 100) / 100);
+          return {
+            ...c,
+            current_balance: newBalance,
+            last_transaction_date: newReturn.return_date
+          };
+        }
+        return c;
+      }));
+
+      const matchedCust = customers.find(c => 
+        (newReturn.customer_phone && c.phone === newReturn.customer_phone) || 
+        (newReturn.customer_name && c.name.toLowerCase() === newReturn.customer_name.toLowerCase())
+      );
+
+      if (matchedCust) {
+        const udharTx: UdharTransaction = {
+          id: 'utx-' + Date.now(),
+          customer_id: matchedCust.id,
+          type: 'Payment_Received',
+          amount: newReturn.refund_amount,
+          balance_after: Math.max(0, matchedCust.current_balance - newReturn.refund_amount),
+          notes: `माल परतावा जमा (Return ${returnNo}): ${newReturn.product_name}`,
+          transaction_date: newReturn.return_date,
+          created_at: new Date().toISOString()
+        };
+        setUdharTransactions(prev => [udharTx, ...prev]);
+      }
+    }
+
+    // Sync to Supabase if available
+    if (supabase && isSupabaseConnected) {
+      try {
+        await supabase.from('product_returns').insert([newReturn]);
+      } catch (err) {
+        console.error('Failed to sync return to Supabase', err);
+      }
+    }
+
+    return newReturn;
+  };
+
+  const deleteReturn = async (id: string) => {
+    setReturns(prev => prev.filter(r => r.id !== id));
+    if (supabase && isSupabaseConnected) {
+      try {
+        await supabase.from('product_returns').delete().eq('id', id);
+      } catch (err) {
+        console.error('Failed to delete return from Supabase', err);
+      }
+    }
+  };
+
   return (
     <StoreContext.Provider value={{
       activeView,
@@ -1199,6 +1351,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       customers,
       udharTransactions,
       expenses,
+      returns,
       currentReceipt,
       setCurrentReceipt,
       addProduct,
@@ -1216,10 +1369,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       recordUdharPayment,
       addExpense,
       deleteExpense,
+      createReturn,
+      deleteReturn,
       filteredSales,
       filteredPurchases,
       filteredExpenses,
       filteredDamages,
+      filteredReturns,
       metrics
     }}>
       {children}

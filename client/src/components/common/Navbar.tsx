@@ -39,8 +39,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
         </button>
 
         <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white p-0.5 border border-slate-200 shadow-sm overflow-hidden">
-            <img src="/YDO_logo.jpg" alt="Yogeshwari Dairy Logo" className="h-full w-full object-contain" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white p-0.5 border-2 border-emerald-500/40 shadow-sm overflow-hidden shrink-0">
+            <img src="/YDO_logo.jpg" alt="Yogeshwari Dairy Logo" className="h-full w-full rounded-full object-cover scale-105" />
           </div>
           <div>
             <div className="flex items-center gap-2">

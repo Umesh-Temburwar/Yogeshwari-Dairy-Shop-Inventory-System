@@ -246,15 +246,15 @@ export const LoginPage: React.FC = () => {
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top Branding (YDO Logo + Dairy Shop Name - sitting prominently on top of the photo) */}
-        <div className="relative z-10 flex items-center gap-3.5 bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/20 w-fit shadow-xl">
-          <div className="w-12 h-12 xl:w-14 xl:h-14 rounded-xl bg-white p-1 shadow-md shrink-0 overflow-hidden flex items-center justify-center">
+        <div className="relative z-10 flex items-center gap-3.5 bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/20 w-fit shadow-xl">
+          <div className="w-13 h-13 xl:w-16 xl:h-16 rounded-full bg-white p-0.5 shadow-md border-2 border-emerald-400/50 shrink-0 overflow-hidden flex items-center justify-center">
             <img
               src="/YDO_logo.jpg"
               alt="Yogeshwari Dairy Logo"
-              className="w-full h-full object-contain"
+              className="w-full h-full rounded-full object-cover scale-105"
             />
           </div>
-          <div>
+          <div className="pr-2">
             <h1 className="text-base xl:text-xl font-black tracking-tight text-white leading-tight">
               {t('shopName')}
             </h1>
@@ -417,11 +417,11 @@ export const LoginPage: React.FC = () => {
           
           {/* Mobile-Only Compact Brand Header */}
           <div className="lg:hidden flex items-center gap-3 mb-4 text-center">
-            <div className="w-12 h-12 rounded-xl bg-white p-1 shadow-md border border-slate-200 dark:border-[#24352F] shrink-0 overflow-hidden flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-white p-0.5 shadow-md border-2 border-emerald-500/40 shrink-0 overflow-hidden flex items-center justify-center">
               <img
                 src="/YDO_logo.jpg"
                 alt="Yogeshwari Dairy Logo"
-                className="w-full h-full object-contain"
+                className="w-full h-full rounded-full object-cover scale-105"
               />
             </div>
             <div className="text-left">
@@ -441,11 +441,11 @@ export const LoginPage: React.FC = () => {
           >
             {/* Header: Title & Subtitle with YDO Logo */}
             <div className="mb-5 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-white dark:bg-[#1A2A25] p-1 border border-slate-200 dark:border-[#24352F] shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-white dark:bg-[#1A2A25] p-0.5 border-2 border-emerald-500/40 shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
                 <img
                   src="/YDO_logo.jpg"
                   alt="Yogeshwari Dairy Logo"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full rounded-full object-cover scale-105"
                 />
               </div>
               <div>

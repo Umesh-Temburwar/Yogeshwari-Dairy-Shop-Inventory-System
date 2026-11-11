@@ -207,8 +207,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Mobile Header Close Button */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-[#24352F] lg:hidden">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-white p-0.5 shadow-xs border border-slate-200 dark:border-[#24352F] shrink-0 overflow-hidden flex items-center justify-center">
-              <img src="/YDO_logo.jpg" alt="Logo" className="w-full h-full object-contain" />
+            <div className="w-10 h-10 rounded-full bg-white p-0.5 shadow-xs border-2 border-emerald-500/40 shrink-0 overflow-hidden flex items-center justify-center">
+              <img src="/YDO_logo.jpg" alt="Logo" className="w-full h-full rounded-full object-cover scale-105" />
             </div>
             <span className="font-extrabold text-sm text-slate-900 dark:text-[#E7F0EC] truncate">
               {t('shopName')}

@@ -150,8 +150,8 @@ const AppRoot: React.FC = () => {
   if (isLoading) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#f8fafc] dark:bg-[#0B1210] text-emerald-600">
-        <div className="w-16 h-16 rounded-2xl bg-white p-1 shadow-lg border border-slate-200 dark:border-[#24352F] mb-4 flex items-center justify-center overflow-hidden animate-pulse">
-          <img src="/YDO_logo.jpg" alt="Yogeshwari Dairy Logo" className="w-full h-full object-contain" />
+        <div className="w-18 h-18 rounded-full bg-white p-1 shadow-lg border-2 border-emerald-500/40 mb-4 flex items-center justify-center overflow-hidden animate-pulse">
+          <img src="/YDO_logo.jpg" alt="Yogeshwari Dairy Logo" className="w-full h-full rounded-full object-cover scale-105" />
         </div>
         <div className="w-7 h-7 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3" />
         <span className="text-xs font-bold text-slate-600 dark:text-[#8FA69C]">

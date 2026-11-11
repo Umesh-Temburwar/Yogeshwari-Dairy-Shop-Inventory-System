@@ -95,12 +95,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             {isSidebarCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
           </button>
 
-          {/* Brand Logo */}
-          <div className="w-10 h-10 rounded-xl bg-white p-0.5 shadow-sm border border-slate-200 dark:border-[#24352F] flex items-center justify-center shrink-0 overflow-hidden">
+          {/* Brand Logo - Enlarged & Circular */}
+          <div className="w-12 h-12 sm:w-[50px] sm:h-[50px] rounded-full bg-white p-0.5 shadow-md border-2 border-emerald-500/40 dark:border-emerald-500/60 ring-2 ring-emerald-500/10 flex items-center justify-center shrink-0 overflow-hidden transition-transform hover:scale-105">
             <img 
               src="/YDO_logo.jpg" 
               alt="Yogeshwari Dairy Logo" 
-              className="w-full h-full object-contain"
+              className="w-full h-full rounded-full object-cover scale-105"
             />
           </div>
 

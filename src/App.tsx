@@ -4,6 +4,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginPage } from './components/Auth/LoginPage';
+import { SplashScreen } from './components/Common/SplashScreen';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { MobileActionBar } from './components/MobileActionBar';
@@ -146,26 +147,25 @@ const MainContent: React.FC = () => {
 
 const AppRoot: React.FC = () => {
   const { user, isGuest, isLoading } = useAuth();
+  const [isSplashComplete, setIsSplashComplete] = useState(false);
 
-  if (isLoading) {
-    return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#f8fafc] dark:bg-[#0B1210] text-emerald-600">
-        <div className="w-18 h-18 rounded-full bg-white p-1 shadow-lg border-2 border-emerald-500/40 mb-4 flex items-center justify-center overflow-hidden animate-pulse">
-          <img src="/YDO_logo.jpg" alt="Yogeshwari Dairy Logo" className="w-full h-full rounded-full object-cover scale-105" />
-        </div>
-        <div className="w-7 h-7 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3" />
-        <span className="text-xs font-bold text-slate-600 dark:text-[#8FA69C]">
-          Yogeshwari Dairy ERP...
-        </span>
-      </div>
-    );
-  }
+  return (
+    <>
+      {/* Silky-smooth opening splash screen with logo & progress */}
+      {!isSplashComplete && (
+        <SplashScreen
+          isAppReady={!isLoading}
+          onFinished={() => setIsSplashComplete(true)}
+          minDurationMs={1300}
+        />
+      )}
 
-  if (!user && !isGuest) {
-    return <LoginPage />;
-  }
-
-  return <MainContent />;
+      {/* Render underlying views seamlessly behind splash so there is zero flicker on reveal */}
+      {(!isLoading || isSplashComplete) && (
+        !user && !isGuest ? <LoginPage /> : <MainContent />
+      )}
+    </>
+  );
 };
 
 export function App() {

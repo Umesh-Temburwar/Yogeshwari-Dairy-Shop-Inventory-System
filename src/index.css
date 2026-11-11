@@ -81,6 +81,48 @@
   scrollbar-width: none;
 }
 
+/* Opening Splash Screen & Logo Animations */
+@keyframes splash-glow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.75;
+  }
+}
+
+@keyframes logo-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-20deg);
+  }
+}
+
+.animate-splash-glow {
+  animation: splash-glow 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-logo-float {
+  animation: logo-float 2.4s ease-in-out infinite;
+}
+
+.animate-shimmer-sweep {
+  animation: shimmer-sweep 2s ease-in-out infinite;
+}
+
 /* Thermal receipt printing optimization - MUST ALWAYS PRINT IN LIGHT MODE */
 @media print {
   html, body {

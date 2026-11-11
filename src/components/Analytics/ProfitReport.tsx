@@ -259,7 +259,7 @@ export const ProfitReport: React.FC = () => {
           }
         }
       ],
-      notes: 'योगेश्वरी डेअरी फार्म अधिकृत आर्थिक विवरणपत्र. सीए/कर सल्लागारासाठी वैध.'
+      notes: 'योगेश्वरी डेअरी अधिकृत आर्थिक विवरणपत्र. सीए/कर सल्लागारासाठी वैध.'
     });
   };
 
@@ -464,8 +464,8 @@ export const ProfitReport: React.FC = () => {
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${idx === 0 ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-200' :
-                      idx === 1 ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200' :
-                        idx === 2 ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300' : 'bg-white dark:bg-[#131F1B] text-slate-600 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F]'
+                    idx === 1 ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200' :
+                      idx === 2 ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300' : 'bg-white dark:bg-[#131F1B] text-slate-600 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F]'
                     }`}>
                     #{idx + 1}
                   </span>
@@ -680,8 +680,8 @@ export const ProfitReport: React.FC = () => {
                               <span
                                 key={grp}
                                 className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${grp === maxAgeGroup
-                                    ? 'bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-700/60 font-bold'
-                                    : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
+                                  ? 'bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-700/60 font-bold'
+                                  : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
                                   }`}
                               >
                                 {shortLabel}: {data.qty.toFixed(1)} {item.unit}

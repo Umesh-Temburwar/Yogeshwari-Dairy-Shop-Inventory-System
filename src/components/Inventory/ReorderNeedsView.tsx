@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { 
-  AlertTriangle, 
-  Printer, 
-  Copy, 
-  Check, 
-  Truck, 
+import {
+  AlertTriangle,
+  Printer,
+  Copy,
+  Check,
+  Truck,
   CheckCircle2,
-  FileText 
+  FileText
 } from 'lucide-react';
 import { exportReportToPDF } from '../../lib/exportUtils';
 
@@ -23,7 +23,7 @@ export const ReorderNeedsView: React.FC = () => {
       .filter(p => p.stock_quantity <= p.min_stock_alert)
       .map(p => {
         const recommendedOrderQty = Math.max(
-          p.min_stock_alert, 
+          p.min_stock_alert,
           Number(((p.min_stock_alert * 2.5) - p.stock_quantity).toFixed(1))
         );
         const estimatedCost = Number((recommendedOrderQty * p.purchase_price).toFixed(2));
@@ -53,13 +53,13 @@ export const ReorderNeedsView: React.FC = () => {
 
     let text = '';
     if (language === 'mr') {
-      text = `🥛 *योगेश्वरी डेअरी फार्म - आजची माल खरेदी गरज / ऑर्डर यादी* 🥛\nतारीख: ${dateStr}\n\n`;
+      text = `🥛 *योगेश्वरी डेअरी - आजची माल खरेदी गरज / ऑर्डर यादी* 🥛\nतारीख: ${dateStr}\n\n`;
       itemsNeedingRestock.forEach((it, idx) => {
         text += `${idx + 1}. *${getDisplayName(it)}*\n   👉 आवश्यक मागणी: *${it.recommendedOrderQty} ${it.unit}* (सध्याचा साठा: ${it.stock_quantity})\n\n`;
       });
       text += `एकूण अंदाजे बजेट: ₹${totalEstimatedCost.toLocaleString('en-IN')}\nकृपया लवकरात लवकर माल पाठवून द्यावा. धन्यवाद!`;
     } else if (language === 'hi') {
-      text = `🥛 *योगेश्वरी डेरी फार्म - आज का आर्डर / माल की ज़रूरत* 🥛\nदिनांक: ${dateStr}\n\n`;
+      text = `🥛 *योगेश्वरी डेरी - आज का आर्डर / माल की ज़रूरत* 🥛\nदिनांक: ${dateStr}\n\n`;
       itemsNeedingRestock.forEach((it, idx) => {
         text += `${idx + 1}. *${getDisplayName(it)}*\n   👉 मंगाना है: *${it.recommendedOrderQty} ${it.unit}* (वर्तमान स्टॉक: ${it.stock_quantity})\n\n`;
       });
@@ -117,7 +117,7 @@ export const ReorderNeedsView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-amber-900 via-orange-900 to-amber-950 dark:from-[#3D1E0B] dark:to-[#131F1B] p-6 rounded-3xl text-white shadow-md border border-amber-800/40 dark:border-[#24352F] transition-colors">
         <div className="space-y-1">
@@ -252,9 +252,8 @@ export const ReorderNeedsView: React.FC = () => {
                     </td>
 
                     <td className="px-3 py-3 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-black ${
-                        item.isCritical ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60' : 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-black ${item.isCritical ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60' : 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60'
+                        }`}>
                         {item.stock_quantity} {item.unit}
                       </span>
                     </td>

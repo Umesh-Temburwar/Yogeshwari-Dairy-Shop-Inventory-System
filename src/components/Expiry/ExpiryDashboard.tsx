@@ -128,7 +128,7 @@ export const ExpiryDashboard: React.FC = () => {
       const batchNo = b.batch_no || '';
       const supplier = b.supplier_name || '';
 
-      const matchesSearch = 
+      const matchesSearch =
         prodName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         hindiName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         marathiName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -171,14 +171,14 @@ export const ExpiryDashboard: React.FC = () => {
 
     let text = '';
     if (language === 'mr') {
-      text = `🚨 *योगेश्वरी डेअरी फार्म - तातडीचा मुदत समाप्ती अलर्ट (Expiry Risk)* 🚨\nदिनांक: ${dateStr}\n\n`;
+      text = `🚨 *योगेश्वरी डेअरी - तातडीचा मुदत समाप्ती अलर्ट (Expiry Risk)* 🚨\nदिनांक: ${dateStr}\n\n`;
       urgentItems.forEach((it, idx) => {
         const statusText = it.expiryStatus === 'EXPIRED' ? '❌ मुदत संपली!' : it.expiryStatus === 'EXPIRING_TODAY' ? '⚠️ आज संपत आहे!' : '🟠 उद्या संपणार!';
         text += `${idx + 1}. *${getProductDisplayName(it)}* (बॅच: ${it.batch_no})\n   👉 शिल्लक: *${it.qty_remaining} ${it.product?.unit || ''}* | स्थिती: ${statusText}\n   खरेदी किंमत नुकसान: ₹${it.costValue}\n\n`;
       });
       text += `एकूण धोक्यातील नुकसान: ₹${kpis.nearExpiryRiskTotal + kpis.expiredCostLoss}\nकृपया आजच हा माल सवलतीत विका किंवा पुरवठादारास परत करा.`;
     } else if (language === 'hi') {
-      text = `🚨 *योगेश्वरी डेरी फार्म - एक्सपायरी जोखिम अलर्ट* 🚨\nतारीख: ${dateStr}\n\n`;
+      text = `🚨 *योगेश्वरी डेरी - एक्सपायरी जोखिम अलर्ट* 🚨\nतारीख: ${dateStr}\n\n`;
       urgentItems.forEach((it, idx) => {
         const statusText = it.expiryStatus === 'EXPIRED' ? '❌ एक्सपायर्ड!' : it.expiryStatus === 'EXPIRING_TODAY' ? '⚠️ आज एक्सपायर!' : '🟠 कल एक्सपायर!';
         text += `${idx + 1}. *${getProductDisplayName(it)}* (बैच: ${it.batch_no})\n   👉 शेष: *${it.qty_remaining} ${it.product?.unit || ''}* | स्थिति: ${statusText}\n   लागत मूल्य: ₹${it.costValue}\n\n`;
@@ -252,8 +252,8 @@ export const ExpiryDashboard: React.FC = () => {
           `₹${b.selling_price || b.product?.selling_price || 0}`,
           b.expiry_date,
           b.daysToExpiry < 0 ? `मुदत संपली (${Math.abs(b.daysToExpiry)} दिवस आधी)` :
-          b.daysToExpiry === 0 ? 'आज शेवटचा दिवस' :
-          b.daysToExpiry === 1 ? 'उद्या संपणार' : `${b.daysToExpiry} दिवस शिल्लक`,
+            b.daysToExpiry === 0 ? 'आज शेवटचा दिवस' :
+              b.daysToExpiry === 1 ? 'उद्या संपणार' : `${b.daysToExpiry} दिवस शिल्लक`,
           `₹${b.costValue.toLocaleString('en-IN')}`
         ]),
         summaryRow: [
@@ -273,7 +273,7 @@ export const ExpiryDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      
+
       {/* HEADER BANNER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 dark:from-[#1E0F14] dark:via-[#131F1B] dark:to-[#0F1A17] p-6 rounded-3xl text-white shadow-md border border-rose-900/40 dark:border-[#24352F] transition-colors">
         <div className="space-y-1">
@@ -288,8 +288,8 @@ export const ExpiryDashboard: React.FC = () => {
             {language === 'mr'
               ? 'बॅचनिहाय एक्सपायरी ट्रॅकिंग, मुदत संपलेला माल तात्काळ ब्लॉक करणे, आणि नुकसान अहवाल'
               : language === 'hi'
-              ? 'बैच-वाइज एक्सपायरी ट्रैकिंग, एक्सपायर्ड स्टॉक की बिक्री ब्लॉक करना और नुकसान नियंत्रण'
-              : 'Batch-wise expiry monitoring, auto-blocking expired products from billing, and write-off loss tracking'}
+                ? 'बैच-वाइज एक्सपायरी ट्रैकिंग, एक्सपायर्ड स्टॉक की बिक्री ब्लॉक करना और नुकसान नियंत्रण'
+                : 'Batch-wise expiry monitoring, auto-blocking expired products from billing, and write-off loss tracking'}
           </p>
         </div>
 
@@ -396,16 +396,14 @@ export const ExpiryDashboard: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                isActive
-                  ? `${tab.color} shadow-sm scale-102`
-                  : 'bg-white dark:bg-[#131F1B] border border-slate-200/90 dark:border-[#24352F] text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
-              }`}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${isActive
+                ? `${tab.color} shadow-sm scale-102`
+                : 'bg-white dark:bg-[#131F1B] border border-slate-200/90 dark:border-[#24352F] text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
+                }`}
             >
               <span>{tab.label}</span>
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                isActive ? 'bg-white/25 text-white' : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
-              }`}>
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${isActive ? 'bg-white/25 text-white' : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
+                }`}>
                 {tab.count}
               </span>
             </button>
@@ -467,9 +465,8 @@ export const ExpiryDashboard: React.FC = () => {
                   return (
                     <tr
                       key={batch.id}
-                      className={`hover:bg-slate-50/80 dark:hover:bg-[#1A2A25]/60 transition-colors ${
-                        isExpired ? 'bg-rose-50/40 dark:bg-rose-950/20' : isToday ? 'bg-orange-50/40 dark:bg-orange-950/20' : ''
-                      }`}
+                      className={`hover:bg-slate-50/80 dark:hover:bg-[#1A2A25]/60 transition-colors ${isExpired ? 'bg-rose-50/40 dark:bg-rose-950/20' : isToday ? 'bg-orange-50/40 dark:bg-orange-950/20' : ''
+                        }`}
                     >
                       {/* Product Name */}
                       <td className="px-4 py-3">
@@ -521,32 +518,30 @@ export const ExpiryDashboard: React.FC = () => {
                             {batch.expiry_date}
                           </span>
                         </div>
-                        <span className={`text-[10px] font-bold block mt-0.5 ${
-                          isExpired ? 'text-rose-600 dark:text-rose-400' : isToday ? 'text-orange-600 dark:text-orange-400' : 'text-slate-500'
-                        }`}>
+                        <span className={`text-[10px] font-bold block mt-0.5 ${isExpired ? 'text-rose-600 dark:text-rose-400' : isToday ? 'text-orange-600 dark:text-orange-400' : 'text-slate-500'
+                          }`}>
                           {isExpired
                             ? `${Math.abs(batch.daysToExpiry)} ${language === 'mr' ? 'दिवसांपूर्वी संपली' : 'दिन पहले समाप्त'}`
                             : isToday
-                            ? (language === 'mr' ? 'आजच संपत आहे!' : 'आज ही समाप्त!')
-                            : isTomorrow
-                            ? (language === 'mr' ? 'उद्या संपणार' : 'कल समाप्त')
-                            : `${batch.daysToExpiry} ${language === 'mr' ? 'दिवस शिल्लक' : 'दिन बचे'}`}
+                              ? (language === 'mr' ? 'आजच संपत आहे!' : 'आज ही समाप्त!')
+                              : isTomorrow
+                                ? (language === 'mr' ? 'उद्या संपणार' : 'कल समाप्त')
+                                : `${batch.daysToExpiry} ${language === 'mr' ? 'दिवस शिल्लक' : 'दिन बचे'}`}
                         </span>
                       </td>
 
                       {/* Status Badge */}
                       <td className="px-3 py-3 text-center">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                          isExpired
-                            ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900'
-                            : isToday
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${isExpired
+                          ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900'
+                          : isToday
                             ? 'bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900'
                             : isTomorrow
-                            ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900'
-                            : batch.expiryStatus === 'EXPIRING_IN_3_DAYS'
-                            ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900'
-                            : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900'
-                        }`}>
+                              ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900'
+                              : batch.expiryStatus === 'EXPIRING_IN_3_DAYS'
+                                ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900'
+                                : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900'
+                          }`}>
                           {isExpired ? 'मुदत संपली (Blocked)' : isToday ? 'आज संपत आहे' : isTomorrow ? 'उद्या संपणार' : 'सुरक्षित साठा'}
                         </span>
                       </td>

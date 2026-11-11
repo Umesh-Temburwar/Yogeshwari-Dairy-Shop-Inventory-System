@@ -81,18 +81,18 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
         <thead>
           <tr>
             ${headers.map((h, i) => {
-              const align = alignments[i] || 'left';
-              return `<th class="text-${align}">${h}</th>`;
-            }).join('')}
+      const align = alignments[i] || 'left';
+      return `<th class="text-${align}">${h}</th>`;
+    }).join('')}
           </tr>
         </thead>
         <tbody>
           ${rows.map((row, rIdx) => `
             <tr class="${rIdx % 2 === 1 ? 'even-row' : ''}">
               ${row.map((cell, cIdx) => {
-                const align = alignments[cIdx] || 'left';
-                return `<td class="text-${align}">${cell !== null && cell !== undefined ? cell : '—'}</td>`;
-              }).join('')}
+      const align = alignments[cIdx] || 'left';
+      return `<td class="text-${align}">${cell !== null && cell !== undefined ? cell : '—'}</td>`;
+    }).join('')}
             </tr>
           `).join('')}
         </tbody>
@@ -100,9 +100,9 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
           <tfoot>
             <tr class="summary-row">
               ${summaryRow.map((cell, cIdx) => {
-                const align = alignments[cIdx] || 'left';
-                return `<td class="text-${align}"><strong>${cell !== null && cell !== undefined ? cell : ''}</strong></td>`;
-              }).join('')}
+      const align = alignments[cIdx] || 'left';
+      return `<td class="text-${align}"><strong>${cell !== null && cell !== undefined ? cell : ''}</strong></td>`;
+    }).join('')}
             </tr>
           </tfoot>
         ` : ''}
@@ -116,7 +116,7 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
     <html lang="mr">
     <head>
       <meta charset="UTF-8">
-      <title>${title} - योगेश्वरी डेअरी फार्म</title>
+      <title>${title} - योगेश्वरी डेअरी</title>
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -312,7 +312,7 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
         <div style="display: flex; align-items: center; gap: 12px;">
           <img src="/YDO_logo.jpg" alt="Logo" style="width: 48px; height: 48px; border-radius: 10px; object-fit: contain; border: 1px solid #cbd5e1; background: #ffffff; padding: 2px;" />
           <div>
-            <div class="brand-title">योगेश्वरी डेअरी फार्म & स्वीट्स</div>
+            <div class="brand-title">योगेश्वरी डेअरी &उत्पादन</div>
             <div class="brand-subtitle">Yogeshwari Dairy Farm & Products &bull; Enterprise ERP & Khata System</div>
             <div class="report-title-badge">${title}</div>
             ${periodText ? `<div style="font-size: 10px; color: #047857; font-weight: 700; margin-top: 4px;">कालावधी: ${periodText}</div>` : ''}
@@ -377,7 +377,7 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
     setTimeout(() => {
       try {
         document.body.removeChild(printFrame);
-      } catch (e) {}
+      } catch (e) { }
     }, 2000);
   }
 };
@@ -399,11 +399,11 @@ export const exportToCSV = (filename: string, headers: string[], rows: (string |
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
-  
+
   link.setAttribute('href', url);
   link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
   link.style.visibility = 'hidden';
-  
+
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

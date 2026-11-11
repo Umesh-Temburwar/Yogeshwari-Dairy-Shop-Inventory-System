@@ -62,17 +62,17 @@ export const KhataBook: React.FC = () => {
 
     let messageText = '';
     if (language === 'mr') {
-      messageText = `नमस्ते ${customer.name} जी!\n\nयोगेश्वरी डेअरी फार्म (Yogeshwari Dairy) कडून आपले खाते बाकी आहे:\n` +
+      messageText = `नमस्ते ${customer.name} जी!\n\nयोगेश्वरी डेअरी (Yogeshwari Dairy) कडून आपले खाते बाकी आहे:\n` +
         `📌 *शिल्लक बाकी रक्कम (Balance Due): ₹${customer.current_balance.toLocaleString('en-IN')}*\n\n` +
         `कृपया लवकरात लवकर रक्कम जमा करावी ही नम्र विनंती.\n` +
         `💳 *GooglePay / PhonePe UPI:* Q226038088@ybl\n` +
-        `धन्यवाद!\nयोगेश्वरी डेअरी फार्म & स्वीट्स`;
+        `धन्यवाद!\nयोगेश्वरी डेअरी &उत्पादन`;
     } else if (language === 'hi') {
-      messageText = `नमस्ते ${customer.name} जी!\n\nयोगेश्वरी डेरी फार्म (Yogeshwari Dairy) से आपका हिसाब बाकी है:\n` +
+      messageText = `नमस्ते ${customer.name} जी!\n\nयोगेश्वरी डेरी (Yogeshwari Dairy) से आपका हिसाब बाकी है:\n` +
         `📌 *बकाया राशि (Balance Due): ₹${customer.current_balance.toLocaleString('en-IN')}*\n\n` +
         `कृपया जल्द से जल्द भुगतान करने की कृपा करें।\n` +
         `💳 *UPI आईडी:* Q226038088@ybl\n` +
-        `धन्यवाद!\nयोगेश्वरी डेरी फार्म & स्वीट्स`;
+        `धन्यवाद!\nयोगेश्वरी डेरी &उत्पादन`;
     } else {
       messageText = `Hello ${customer.name}!\n\nThis is a friendly payment reminder from Yogeshwari Dairy Farm:\n` +
         `📌 *Outstanding Balance: ₹${customer.current_balance.toLocaleString('en-IN')}*\n\n` +
@@ -196,7 +196,7 @@ export const KhataBook: React.FC = () => {
           `₹${customer.total_paid.toLocaleString('en-IN')}`
         ]
       },
-      notes: `ग्राहक स्वाक्षरी: ___________________ | अधिकृत शिक्का: योगेश्वरी डेअरी फार्म. शिल्लक बाकी: ₹${customer.current_balance.toLocaleString('en-IN')}`
+      notes: `ग्राहक स्वाक्षरी: ___________________ | अधिकृत शिक्का: योगेश्वरी डेअरी. शिल्लक बाकी: ₹${customer.current_balance.toLocaleString('en-IN')}`
     });
   };
 

@@ -30,15 +30,7 @@
     "server": {
       "root": "server",
       "framework": "express",
-      "buildCommand": "npm run build",
-      "bindings": [
-        {
-          "type": "service",
-          "service": "app",
-          "format": "url",
-          "env": "APP_URL"
-        }
-      ]
+      "buildCommand": "npm run build"
     }
   },
   "rewrites": [

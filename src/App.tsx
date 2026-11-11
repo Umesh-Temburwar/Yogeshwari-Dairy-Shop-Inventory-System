@@ -21,6 +21,7 @@ import { ProfitReport } from './components/Analytics/ProfitReport';
 import { DailySalesTracker } from './components/Sales/DailySalesTracker';
 import { AddProductModal } from './components/Inventory/AddProductModal';
 import { SupabaseConfigModal } from './components/Settings/SupabaseConfigModal';
+import { MasterSecurityModal } from './components/Auth/MasterSecurityModal';
 import { Product } from './types';
 
 const MainContent: React.FC = () => {
@@ -146,7 +147,7 @@ const MainContent: React.FC = () => {
 };
 
 const AppRoot: React.FC = () => {
-  const { user, isGuest, isLoading } = useAuth();
+  const { user, isSecurityUnlocked, isLoading } = useAuth();
   const [isSplashComplete, setIsSplashComplete] = useState(false);
 
   return (
@@ -160,9 +161,17 @@ const AppRoot: React.FC = () => {
         />
       )}
 
-      {/* Render underlying views seamlessly behind splash so there is zero flicker on reveal */}
+      {/* Render underlying views: Only authorized Owner and Admin users can enter */}
       {(!isLoading || isSplashComplete) && (
-        !user && !isGuest ? <LoginPage /> : <MainContent />
+        !user ? (
+          <LoginPage />
+        ) : (
+          <>
+            <MainContent />
+            {/* Two-step Master Security Passcode Popup: pops up after login and whenever counter is locked */}
+            <MasterSecurityModal isOpen={!isSecurityUnlocked} />
+          </>
+        )
       )}
     </>
   );

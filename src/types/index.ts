@@ -178,3 +178,13 @@ export interface Expense {
 
 export type TimeRangeFilter = 'today' | 'week' | 'month' | 'year' | 'all';
 
+// Strictly restricted to Owner and Admin profiles only (No cashier/staff/guest profiles)
+export type UserRole = 'Owner' | 'Admin';
+
+export interface UserProfile {
+  id: string;
+  role: UserRole;
+  displayName: string;
+  email: string;
+}
+

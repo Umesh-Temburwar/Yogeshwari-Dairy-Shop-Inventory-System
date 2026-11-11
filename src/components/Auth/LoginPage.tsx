@@ -40,8 +40,8 @@ export const LoginPage: React.FC = () => {
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Env flags (default false in production unless explicitly 'true')
-  const isGuestModeEnabled = import.meta.env.VITE_ENABLE_GUEST_MODE === 'true';
+  // Env flags (Guest mode strictly disabled for anti-tamper security)
+  const isGuestModeEnabled = false;
   const isRegistrationEnabled = import.meta.env.VITE_ENABLE_REGISTRATION === 'true';
 
   // Zod Schemas based on current mode
@@ -677,19 +677,50 @@ export const LoginPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Conditional Guest Mode Button (Env Flag) */}
-                {isGuestModeEnabled && (
-                  <div className="pt-2 border-t border-slate-100 dark:border-[#24352F]">
+                {/* Profile Security Notice & Quick Role Presets (Owner & Admin Only) */}
+                <div className="pt-3 border-t border-slate-100 dark:border-[#24352F] space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-[#8FA69C]">
+                    <span className="flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>{language === 'mr' ? 'प्रमाणित प्रवेश:' : language === 'hi' ? 'सत्यापित प्रवेश:' : 'Authorized Access:'}</span>
+                    </span>
+                    <span className="text-emerald-700 dark:text-emerald-400 font-extrabold">
+                      👑 Owner & 🛡️ Admin Only
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={continueAsGuest}
-                      className="w-full min-h-[44px] py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#20332D] text-slate-700 dark:text-[#E7F0EC] text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-[0.99]"
+                      onClick={() => {
+                        resetSignIn({
+                          email: 'owner@yogeshwaridairy.com',
+                          password: 'password123',
+                          rememberMe: true,
+                        });
+                      }}
+                      className="p-2 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/70 dark:bg-amber-950/20 text-left hover:bg-amber-100/70 dark:hover:bg-amber-900/30 transition text-xs font-bold text-amber-900 dark:text-amber-300"
                     >
-                      <span>{t('authGuestMode')}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <span className="block text-[10px] text-amber-700 dark:text-amber-400">👑 {language === 'mr' ? 'दुकान मालक' : language === 'hi' ? 'दुकान मालिक' : 'Shop Owner'}</span>
+                      <span className="truncate block font-mono text-[11px]">owner@...</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetSignIn({
+                          email: 'admin@yogeshwaridairy.com',
+                          password: 'password123',
+                          rememberMe: true,
+                        });
+                      }}
+                      className="p-2 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/70 dark:bg-emerald-950/20 text-left hover:bg-emerald-100/70 dark:hover:bg-emerald-900/30 transition text-xs font-bold text-emerald-900 dark:text-emerald-300"
+                    >
+                      <span className="block text-[10px] text-emerald-700 dark:text-emerald-400">🛡️ {language === 'mr' ? 'प्रशासक' : language === 'hi' ? 'प्रशासक' : 'Admin'}</span>
+                      <span className="truncate block font-mono text-[11px]">admin@...</span>
                     </button>
                   </div>
-                )}
+                </div>
 
               </div>
             )}

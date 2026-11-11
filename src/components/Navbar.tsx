@@ -10,7 +10,11 @@ import {
   PanelLeftClose, 
   PanelLeft, 
   LogOut, 
-  User 
+  User,
+  Lock,
+  ChevronDown,
+  CheckCircle2,
+  ShieldCheck
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -27,10 +31,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { language, setLanguage, t } = useLanguage();
   const { resolvedTheme, toggleTheme } = useTheme();
-  const { user, signOut } = useAuth();
+  const { user, role, setRole, lockSecurity, signOut } = useAuth();
 
   const [currentTime, setCurrentTime] = useState<string>('');
   const [currentDate, setCurrentDate] = useState<string>('');
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   useEffect(() => {
     const updateDateTime = () => {
@@ -153,22 +158,136 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </button>
 
-          {/* User Profile / Logout Button */}
-          <div className="flex items-center pl-1 sm:pl-1.5 border-l border-slate-200 dark:border-[#24352F]">
+          {/* 1-CLICK LOCK COUNTER BUTTON */}
+          <button
+            type="button"
+            onClick={() => lockSecurity()}
+            className="h-9 px-2.5 sm:px-3 rounded-xl flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 font-bold text-xs transition-all active:scale-95 shadow-2xs"
+            title={language === 'mr' ? 'काउंटर त्वरित लॉक करा (Lock)' : language === 'hi' ? 'काउंटर तुरंत लॉक करें (Lock)' : 'Quick Lock Counter'}
+          >
+            <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span className="hidden sm:inline">
+              {language === 'mr' ? 'लॉक करा' : language === 'hi' ? 'लॉक करें' : 'Lock'}
+            </span>
+          </button>
+
+          {/* OWNER / ADMIN PROFILE BADGE & DROPDOWN */}
+          <div className="relative pl-1 sm:pl-1.5 border-l border-slate-200 dark:border-[#24352F]">
             <button
               type="button"
-              onClick={() => signOut()}
-              className="h-9 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 rounded-xl bg-slate-100 hover:bg-rose-50 dark:bg-[#1A2A25] dark:hover:bg-rose-950/40 text-slate-700 hover:text-rose-600 dark:text-[#8FA69C] dark:hover:text-rose-400 border border-slate-200 dark:border-[#24352F] text-xs font-bold transition-all shadow-2xs group"
-              title={user ? `Logged in as ${user.email}. Click to Logout` : 'Guest Mode. Click to Login'}
+              onClick={() => setShowProfileMenu(prev => !prev)}
+              className="h-9 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] text-xs font-bold transition-all shadow-2xs group"
+              title="Profile & Role Settings"
             >
-              <div className="w-5 h-5 rounded-full bg-emerald-600/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-[10px] font-black shrink-0">
-                {user ? (user.email?.[0] || 'U').toUpperCase() : <User className="w-3 h-3" />}
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 ${
+                role === 'Owner' 
+                  ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300' 
+                  : 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+              }`}>
+                {role === 'Owner' ? '👑' : '🛡️'}
               </div>
-              <span className="hidden sm:inline font-bold">
-                {user ? user.email?.split('@')[0] : (language === 'mr' ? 'अतिथी' : language === 'hi' ? 'अतिथि' : 'Guest')}
-              </span>
-              <LogOut className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-500 transition-colors" />
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-black leading-none">
+                  {role === 'Owner' 
+                    ? (language === 'mr' ? 'मालक' : language === 'hi' ? 'मालिक' : 'Owner')
+                    : (language === 'mr' ? 'ॲडमिन' : language === 'hi' ? 'एडमिन' : 'Admin')}
+                </span>
+                <span className="text-[9px] text-slate-500 dark:text-[#8FA69C] leading-none mt-0.5 truncate max-w-[65px] sm:max-w-[90px]">
+                  {user?.email?.split('@')[0] || 'Yogeshwari'}
+                </span>
+              </div>
+              <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
             </button>
+
+            {/* Dropdown Menu */}
+            {showProfileMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+                <div className="absolute right-0 mt-2 w-60 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] shadow-2xl p-2 z-50 animate-fadeIn space-y-1">
+                  <div className="px-3 py-2 border-b border-slate-100 dark:border-[#24352F]">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <p className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] uppercase tracking-wider">
+                        {language === 'mr' ? 'प्रमाणित खाते (Verified)' : language === 'hi' ? 'सत्यापित खाता' : 'Verified Account'}
+                      </p>
+                    </div>
+                    <p className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
+                      {user?.email || 'owner@yogeshwaridairy.com'}
+                    </p>
+                  </div>
+
+                  {/* Switch Role: Owner vs Admin */}
+                  <div className="p-1 space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] px-2 py-0.5">
+                      {language === 'mr' ? 'प्रोफाइल निवडा' : language === 'hi' ? 'प्रोफ़ाइल चुनें' : 'Select Profile'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRole('Owner');
+                        setShowProfileMenu(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                        role === 'Owner'
+                          ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40'
+                          : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>👑</span>
+                        <span>{language === 'mr' ? 'दुकान मालक (Owner)' : language === 'hi' ? 'दुकान मालिक (Owner)' : 'Shop Owner'}</span>
+                      </div>
+                      {role === 'Owner' && <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRole('Admin');
+                        setShowProfileMenu(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                        role === 'Admin'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40'
+                          : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>🛡️</span>
+                        <span>{language === 'mr' ? 'प्रशासक (Admin)' : language === 'hi' ? 'प्रशासक (Admin)' : 'Administrator'}</span>
+                      </div>
+                      {role === 'Admin' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                    </button>
+                  </div>
+
+                  <div className="border-t border-slate-100 dark:border-[#24352F] pt-1 space-y-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        lockSecurity();
+                      }}
+                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition"
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>{language === 'mr' ? 'काउंटर त्वरित लॉक करा' : language === 'hi' ? 'काउंटर तुरंत लॉक करें' : 'Lock Counter Screen'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        signOut();
+                      }}
+                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>{language === 'mr' ? 'बाहेर पडा (Sign Out)' : language === 'hi' ? 'साइन आउट करें' : 'Sign Out'}</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
         </div>

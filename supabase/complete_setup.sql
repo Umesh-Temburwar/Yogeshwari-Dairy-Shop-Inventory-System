@@ -832,96 +832,24 @@ INSERT INTO public.units (id, name, short_code) VALUES
 ('22222222-2222-2222-2222-222222222206', 'Gram', 'Gram')
 ON CONFLICT (name) DO NOTHING;
 
--- 3. Suppliers
-INSERT INTO public.suppliers (id, name, contact_person, phone, address, is_active) VALUES
-('33333333-3333-3333-3333-333333333301', 'Rampal Dairy Farmer (Village Sangam)', 'Rampal Yadav', '9823145678', 'Sangam Dairy Hub, Shed 4', true),
-('33333333-3333-3333-3333-333333333302', 'Kishanlal Desi Goshala', 'Kishanlal Sharma', '9890123456', 'Gau Shala Road, Wardha', true),
-('33333333-3333-3333-3333-333333333303', 'Shree Krishna Paneer Bhandar', 'Gopal Bhai', '9822334455', 'MIDC Industrial Area, Plot 12', true),
-('33333333-3333-3333-3333-333333333304', 'Amul Dairy Distributor Pune', 'Sachin Kulkarni', '9881122334', 'Transport Nagar, Depot 7', true)
-ON CONFLICT DO NOTHING;
+-- ============================================================================
+-- DUMMY DATA REMOVED: Clean Production Setup Ready
+-- Master lookup categories and units are initialized above.
+-- No mock batches, no fake sales, no dummy customers, no fake expenses.
+-- ============================================================================
 
--- 4. Products (Authentic Dairy Catalog with Marathi & Hindi names)
-INSERT INTO public.products (
-    id, name, hindi_name, marathi_name, category, unit, 
-    purchase_price, selling_price, stock_quantity, min_stock_alert, 
-    shelf_life_days, has_expiry, barcode
-) VALUES
-('44444444-4444-4444-4444-444444444401', 'Fresh Buffalo Milk (Bhains Ka Doodh)', 'ताज़ा भैंस का दूध (फुल क्रीम)', 'ताजे म्हशीचे दूध (फुल क्रीम)', 'Milk', 'Litre', 58.00, 70.00, 110.00, 25.00, 2, true, '890100000001'),
-('44444444-4444-4444-4444-444444444402', 'Desi Cow Milk (Gai Ka Doodh)', 'देसी गाय का शुद्ध दूध', 'शुद्ध देशी गायीचे दूध (A2)', 'Milk', 'Litre', 44.00, 56.00, 80.00, 20.00, 2, true, '890100000002'),
-('44444444-4444-4444-4444-444444444403', 'Toned Milk Pouch (500ml)', 'टोन्ड दूध थैली (500ml)', 'टोन्ड दूध पाऊच (500ml)', 'Milk', 'Packet (500ml)', 24.00, 28.00, 14.00, 25.00, 2, true, '890100000003'),
-('44444444-4444-4444-4444-444444444404', 'Fresh Malai Paneer', 'ताज़ा मलाई पनीर', 'ताजे मलाईदार पनीर', 'Paneer & Butter', 'Kg', 310.00, 380.00, 6.50, 10.00, 4, true, '890100000004'),
-('44444444-4444-4444-4444-444444444405', 'Fresh Desi Dahi (Khula Curd)', 'ताज़ा मीठा दही (खुला)', 'ताजे गोड दही (खुले)', 'Curd & Chaas', 'Kg', 55.00, 75.00, 32.00, 15.00, 3, true, '890100000005'),
-('44444444-4444-4444-4444-444444444406', 'Dahi Cup/Pouch (400g)', 'दही पाउच/कप (400g)', 'दही कप / पाऊच (400g)', 'Curd & Chaas', 'Piece', 26.00, 32.00, 40.00, 12.00, 7, true, '890100000006'),
-('44444444-4444-4444-4444-444444444407', 'Masala Chaas (Spiced Buttermilk)', 'मसाला छाछ', 'मसाला ताक (थंडगार)', 'Curd & Chaas', 'Packet (500ml)', 11.00, 15.00, 65.00, 20.00, 3, true, '890100000007'),
-('44444444-4444-4444-4444-444444444408', 'Desi Cow Ghee (Pure Jar)', 'शुद्ध देसी गाय का घी (जार)', 'शुद्ध देशी गायीचे साजूक तूप (जार)', 'Ghee', 'Kg', 580.00, 740.00, 18.00, 5.00, 180, true, '890100000008'),
-('44444444-4444-4444-4444-444444444409', 'Danedaar Buffalo Ghee', 'दानेदार भैंस का शुद्ध घी', 'दाणेदार म्हशीचे शुद्ध तूप', 'Ghee', 'Kg', 540.00, 680.00, 21.00, 5.00, 180, true, '890100000009'),
-('44444444-4444-4444-4444-444444444410', 'Safed Makkhan (White Butter)', 'सफेद ताजा मक्खन (लोणी)', 'ताजे पांढरे लोणी (मक्खन)', 'Paneer & Butter', 'Kg', 420.00, 520.00, 9.00, 4.00, 5, true, '890100000010'),
-('44444444-4444-4444-4444-444444444411', 'Shuddh Khoya / Mawa (Pindi)', 'शुद्ध खोया / मावा (पिंडी)', 'शुद्ध खवा / मावा (पिंडी)', 'Sweets/Mithai', 'Kg', 290.00, 370.00, 12.00, 5.00, 5, true, '890100000011'),
-('44444444-4444-4444-4444-444444444412', 'Kaju Katli (Pure Ghee)', 'काजू कतली (प्योर घी)', 'काजू कतली (शुद्ध तुपातील)', 'Sweets/Mithai', 'Kg', 720.00, 940.00, 8.00, 3.00, 15, true, '890100000012'),
-('44444444-4444-4444-4444-444444444413', 'Desi Ghee Gulab Jamun', 'गुलाब जामुन (देसी घी)', 'गुलाब जामुन (साजूक तुपातील)', 'Sweets/Mithai', 'Kg', 240.00, 320.00, 15.00, 4.00, 10, true, '890100000013'),
-('44444444-4444-4444-4444-444444444414', 'Kulhad Sweet Lassi', 'कुल्हड़ मीठी लस्सी', 'कुल्हड गोड लस्सी', 'Curd & Chaas', 'Piece', 22.00, 40.00, 35.00, 10.00, 2, true, '890100000014'),
-('44444444-4444-4444-4444-444444444415', 'Farm Fresh Eggs (Crate 30 pcs)', 'अंडे की क्रेट (30 पीस)', 'अंडी क्रेट (३० नग)', 'Bakery & Extras', 'Piece', 165.00, 210.00, 12.00, 5.00, 21, true, '890100000015')
-ON CONFLICT (id) DO UPDATE SET
-    hindi_name = EXCLUDED.hindi_name,
-    marathi_name = EXCLUDED.marathi_name,
-    selling_price = EXCLUDED.selling_price,
-    purchase_price = EXCLUDED.purchase_price;
-
--- 5. Batches (Multi-Lot entries with Varied Expiry: Fresh, Expiring Today, Expiring Tomorrow, Expired)
-INSERT INTO public.batches (
-    id, product_id, batch_no, supplier_name,
-    mfg_date, expiry_date, qty_received, qty_remaining,
-    purchase_price, selling_price, status
-) VALUES
--- Buffalo Milk: Fresh batch (today + 1 day) and 1 yesterday's remaining
-('55555555-5555-5555-5555-555555555501', '44444444-4444-4444-4444-444444444401', 'BM-MOR-01', 'Rampal Dairy Farmer', CURRENT_DATE, CURRENT_DATE + INTERVAL '1 day', 80.00, 80.00, 58.00, 70.00, 'ACTIVE'),
-('55555555-5555-5555-5555-555555555502', '44444444-4444-4444-4444-444444444401', 'BM-EVE-02', 'Rampal Dairy Farmer', CURRENT_DATE - INTERVAL '1 day', CURRENT_DATE, 40.00, 30.00, 58.00, 70.00, 'ACTIVE'),
-
--- Cow Milk: Fresh batch
-('55555555-5555-5555-5555-555555555503', '44444444-4444-4444-4444-444444444402', 'CM-TODAY-01', 'Kishanlal Desi Goshala', CURRENT_DATE, CURRENT_DATE + INTERVAL '2 days', 80.00, 80.00, 44.00, 56.00, 'ACTIVE'),
-
--- Toned Milk Pouch: Expiring TODAY (critical alert for cashier)
-('55555555-5555-5555-5555-555555555504', '44444444-4444-4444-4444-444444444403', 'TM-AMUL-09', 'Amul Dairy Distributor', CURRENT_DATE - INTERVAL '2 days', CURRENT_DATE, 30.00, 14.00, 24.00, 28.00, 'ACTIVE'),
-
--- Malai Paneer: Lot expiring TOMORROW (orange alert)
-('55555555-5555-5555-5555-555555555505', '44444444-4444-4444-4444-444444444404', 'PN-KRISH-03', 'Shree Krishna Paneer', CURRENT_DATE - INTERVAL '2 days', CURRENT_DATE + INTERVAL '1 day', 15.00, 6.50, 310.00, 380.00, 'ACTIVE'),
-
--- Desi Dahi: Fresh batch
-('55555555-5555-5555-5555-555555555506', '44444444-4444-4444-4444-444444444405', 'DH-POT-01', 'In-House Preparation', CURRENT_DATE, CURRENT_DATE + INTERVAL '3 days', 40.00, 32.00, 55.00, 75.00, 'ACTIVE'),
-
--- Pure Cow Ghee: Long shelf life (Fresh)
-('55555555-5555-5555-5555-555555555507', '44444444-4444-4444-4444-444444444408', 'GH-JAR-101', 'Kishanlal Desi Goshala', CURRENT_DATE - INTERVAL '15 days', CURRENT_DATE + INTERVAL '165 days', 25.00, 18.00, 580.00, 740.00, 'ACTIVE'),
-
--- Danedaar Buffalo Ghee: Fresh
-('55555555-5555-5555-5555-555555555508', '44444444-4444-4444-4444-444444444409', 'GH-BUF-88', 'In-House Kitchen', CURRENT_DATE - INTERVAL '10 days', CURRENT_DATE + INTERVAL '170 days', 30.00, 21.00, 540.00, 680.00, 'ACTIVE'),
-
--- Shuddh Khoya / Mawa: Expiring in 2 days
-('55555555-5555-5555-5555-555555555509', '44444444-4444-4444-4444-444444444411', 'KW-DHABBA-04', 'Rampal Dairy Farmer', CURRENT_DATE - INTERVAL '2 days', CURRENT_DATE + INTERVAL '2 days', 20.00, 12.00, 290.00, 370.00, 'ACTIVE'),
-
--- Kaju Katli: Fresh
-('55555555-5555-5555-5555-555555555510', '44444444-4444-4444-4444-444444444412', 'KJ-SWEET-09', 'In-House Mithai Chef', CURRENT_DATE - INTERVAL '1 day', CURRENT_DATE + INTERVAL '14 days', 10.00, 8.00, 720.00, 940.00, 'ACTIVE')
-ON CONFLICT (id) DO NOTHING;
-
--- 6. Udhar Customers
-INSERT INTO public.udhar_customers (id, name, phone, address, total_credit, total_paid, current_balance, status) VALUES
-('66666666-6666-6666-6666-666666666601', 'Sharma Halwai (Ramesh)', '9823145678', 'Shop 14, Main Gol Market', 8500.00, 6100.00, 2400.00, 'Active'),
-('66666666-6666-6666-6666-666666666602', 'Gupta General Store & Tea Stall', '9890123456', 'Bus Stand Auto Stand Corner', 4200.00, 2400.00, 1800.00, 'Active'),
-('66666666-6666-6666-6666-666666666603', 'Deepak Sweet & Farsan Mart', '9811223344', 'Gandhi Chowk, Next to Bank', 6700.00, 3200.00, 3500.00, 'Active'),
-('66666666-6666-6666-6666-666666666604', 'Counter Customer', 'N/A', 'Walk-in Cash Customer', 680.00, 0.00, 680.00, 'Active')
-ON CONFLICT (id) DO NOTHING;
-
--- 7. Expenses
-INSERT INTO public.expenses (id, title, category, amount, payment_mode, expense_date, is_capital_investment, notes) VALUES
-('77777777-7777-7777-7777-777777777701', 'Delivery Bike & Van Petrol', 'Gadi Petrol / Diesel', 650.00, 'Cash', CURRENT_DATE, false, 'Morning door-to-door milk delivery petrol'),
-('77777777-7777-7777-7777-777777777702', 'Deep Chiller Commercial Electricity', 'Light / Electricity Bill', 5850.00, 'Online_UPI', CURRENT_DATE - INTERVAL '8 days', false, 'MSEDCL electricity power for 3 deep chillers'),
-('77777777-7777-7777-7777-777777777703', 'Shop Monthly Rent', 'Dukan Rent', 14000.00, 'Online_UPI', CURRENT_DATE - INTERVAL '10 days', false, 'Paid to shop owner Mr. Sharma')
-ON CONFLICT (id) DO NOTHING;
-
--- 8. Damage Records Sample
-INSERT INTO public.damage_records (id, product_name, quantity, unit, estimated_loss_amount, reason, damage_date, notes) VALUES
-('88888888-8888-8888-8888-888888888801', 'Fresh Buffalo Milk (Bhains Ka Doodh)', 2.50, 'Litre', 145.00, 'Doodh Fat Gya (Curdled)', CURRENT_DATE, 'Chiller temperature fluctuated due to power cut, morning 2.5L spoiled'),
-('88888888-8888-8888-8888-888888888802', 'Toned Milk Pouch (500ml)', 3.00, 'Packet (500ml)', 72.00, 'Theli Phat Gayi (Leaked)', CURRENT_DATE - INTERVAL '1 day', 'Damaged in transit crate')
-ON CONFLICT (id) DO NOTHING;
+-- If you already have existing dummy test data in your Supabase project,
+-- you can run the following cleanup query to instantly reset to a clean state:
+-- TRUNCATE TABLE public.sale_batch_allocations CASCADE;
+-- TRUNCATE TABLE public.sale_items CASCADE;
+-- TRUNCATE TABLE public.sales CASCADE;
+-- TRUNCATE TABLE public.damage_records CASCADE;
+-- TRUNCATE TABLE public.expenses CASCADE;
+-- TRUNCATE TABLE public.udhar_transactions CASCADE;
+-- TRUNCATE TABLE public.udhar_customers CASCADE;
+-- TRUNCATE TABLE public.stock_movements CASCADE;
+-- TRUNCATE TABLE public.batches CASCADE;
+-- TRUNCATE TABLE public.products CASCADE;
 
 -- ============================================================================
 -- SETUP COMPLETE

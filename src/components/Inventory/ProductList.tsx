@@ -455,7 +455,26 @@ export const ProductList: React.FC<ProductListProps> = ({
       {/* VIEW 1: ULTRA-SIMPLE LARGE TOUCH CARDS VIEW (DEFAULT) */}
       {viewMode === 'cards' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredProducts.map((prod) => {
+          {filteredProducts.length === 0 ? (
+            <div className="col-span-full bg-white dark:bg-[#131F1B] rounded-2xl p-12 border border-dashed border-slate-200 dark:border-[#24352F] text-center flex flex-col items-center justify-center">
+              <Package className="w-14 h-14 text-slate-300 dark:text-slate-600 mb-3" />
+              <h3 className="text-base font-bold text-slate-700 dark:text-slate-200">
+                {language === 'mr' ? 'कोणतेही उत्पादन उपलब्ध नाही' : language === 'hi' ? 'कोई उत्पाद उपलब्ध नहीं है' : 'No Products in Inventory'}
+              </h3>
+              <p className="text-xs text-slate-400 dark:text-[#8FA69C] mt-1 mb-4 max-w-sm">
+                {language === 'mr' ? 'नवीन उत्पादन जोडण्यासाठी खालील बटनावर क्लिक करा.' : language === 'hi' ? 'नया उत्पाद जोड़ने के लिए नीचे दिए गए बटन पर क्लिक करें।' : 'Click the button below to add your first dairy product.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => onEditProduct(null)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{t('addProduct')}</span>
+              </button>
+            </div>
+          ) : (
+            filteredProducts.map((prod) => {
             const isOutOfStock = prod.stock_quantity <= 0;
             const isLowStock = prod.stock_quantity <= prod.min_stock_alert && !isOutOfStock;
             const displayName = getProductDisplayName(prod);
@@ -638,7 +657,8 @@ export const ProductList: React.FC<ProductListProps> = ({
 
               </div>
             );
-          })}
+          })
+        )}
         </div>
       )}
 
@@ -660,7 +680,14 @@ export const ProductList: React.FC<ProductListProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
-                {filteredProducts.map((prod) => {
+                {filteredProducts.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-slate-400 dark:text-slate-500 text-xs">
+                      {language === 'mr' ? 'कोणतेही उत्पादन उपलब्ध नाही. "+ नवीन उत्पादन जोडा" वर क्लिक करा.' : language === 'hi' ? 'कोई उत्पाद उपलब्ध नहीं है। "+ नया उत्पाद जोड़ें" पर क्लिक करें।' : 'No products available. Click "+ Add Product".'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredProducts.map((prod) => {
                   const isOutOfStock = prod.stock_quantity <= 0;
                   const isLowStock = prod.stock_quantity <= prod.min_stock_alert && !isOutOfStock;
                   const displayName = getProductDisplayName(prod);
@@ -733,7 +760,8 @@ export const ProductList: React.FC<ProductListProps> = ({
                       </td>
                     </tr>
                   );
-                })}
+                })
+              )}
               </tbody>
             </table>
           </div>

@@ -22,7 +22,8 @@ import {
   Barcode,
   FileText,
   QrCode,
-  Copy
+  Copy,
+  Package
 } from 'lucide-react';
 import { exportReportToPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
@@ -317,7 +318,18 @@ export const BillingCounter: React.FC = () => {
 
         {/* Product Cards Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto max-h-[600px] pr-1">
-          {filteredProducts.map((prod) => {
+          {filteredProducts.length === 0 ? (
+            <div className="col-span-full py-16 px-4 bg-white dark:bg-[#131F1B] rounded-2xl border border-dashed border-slate-200 dark:border-[#24352F] text-center flex flex-col items-center justify-center">
+              <Package className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-2" />
+              <p className="font-bold text-sm text-slate-700 dark:text-slate-300">
+                {language === 'mr' ? 'कोणतेही उत्पादन उपलब्ध नाही' : language === 'hi' ? 'कोई उत्पाद उपलब्ध नहीं है' : 'No Products Available for Billing'}
+              </p>
+              <p className="text-xs text-slate-400 dark:text-[#8FA69C] mt-1">
+                {language === 'mr' ? 'प्रथम "Products & Stock" मध्ये माल किंवा उत्पादन जोडा.' : language === 'hi' ? 'पहले "Products & Stock" में जाकर उत्पाद जोड़ें।' : 'Add your products in "Products & Stock" first.'}
+              </p>
+            </div>
+          ) : (
+            filteredProducts.map((prod) => {
             const prodBatches = batches.filter(b => b.product_id === prod.id && b.qty_remaining > 0);
             const validBatches = prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status !== 'EXPIRED');
             const availableStock = prodBatches.length > 0 
@@ -416,7 +428,8 @@ export const BillingCounter: React.FC = () => {
                 </div>
               </div>
             );
-          })}
+          })
+        )}
         </div>
       </div>
 

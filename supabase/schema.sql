@@ -136,37 +136,5 @@ CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(expense_date);
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
 CREATE INDEX IF NOT EXISTS idx_udhar_balance ON udhar_customers(current_balance);
 
--- SEED INITIAL AUTHENTIC DAIRY PRODUCTS
-INSERT INTO products (name, hindi_name, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert) VALUES
-('Fresh Buffalo Milk (Bhains Ka Doodh)', 'ताज़ा भैंस का दूध (फुल क्रीम)', 'Milk', 'Litre', 58.00, 70.00, 120.00, 25.00),
-('Cow Milk (Desi Gai Ka Doodh)', 'देसी गाय का शुद्ध दूध', 'Milk', 'Litre', 44.00, 56.00, 85.00, 20.00),
-('Toned Milk Pouch (500ml)', 'टोन्ड दूध थैली', 'Milk', 'Packet (500ml)', 24.00, 28.00, 60.00, 15.00),
-('Fresh Malai Paneer', 'ताज़ा मलाई पनीर', 'Paneer & Butter', 'Kg', 310.00, 380.00, 22.50, 8.00),
-('Desi Dahi (Fresh Curd)', 'ताज़ा मीठा दही', 'Curd & Chaas', 'Kg', 55.00, 75.00, 35.00, 10.00),
-('Dahi Pouch (400g)', 'दही पाउच 400 ग्राम', 'Curd & Chaas', 'Piece', 26.00, 32.00, 45.00, 12.00),
-('Masala Buttermilk (Chaas)', 'मसाला छाछ', 'Curd & Chaas', 'Packet (500ml)', 11.00, 15.00, 50.00, 15.00),
-('Pure Desi Cow Ghee', 'शुद्ध देसी गाय का घी', 'Ghee', 'Kg', 580.00, 720.00, 18.00, 5.00),
-('Pure Buffalo Ghee', 'शुद्ध भैंस का दानेदार घी', 'Ghee', 'Kg', 540.00, 660.00, 20.00, 5.00),
-('Safed Makkhan (White Butter)', 'सफेद ताजा मक्खन', 'Paneer & Butter', 'Kg', 420.00, 520.00, 8.00, 3.00),
-('Fresh Khoya / Mawa (Dhabba)', 'ताज़ा शुद्ध मावा/खोया', 'Sweets/Mithai', 'Kg', 280.00, 360.00, 12.00, 5.00),
-('Kaju Katli', 'काजू कतली', 'Sweets/Mithai', 'Kg', 720.00, 940.00, 7.00, 2.00),
-('Gulab Jamun (Fresh Desi Ghee)', 'गुलाब जामुन', 'Sweets/Mithai', 'Kg', 240.00, 320.00, 14.00, 4.00),
-('Rasgulla (Spongy)', 'स्पंज रसगुल्ला', 'Sweets/Mithai', 'Kg', 210.00, 280.00, 15.00, 4.00),
-('Fresh Sweet Lassi (Glass/Cup)', 'ताज़ी मीठी लस्सी', 'Curd & Chaas', 'Piece', 22.00, 35.00, 40.00, 10.00),
-('Milk Bread (Large)', 'मिल्क ब्रेड (बड़ा)', 'Bakery & Extras', 'Piece', 38.00, 48.00, 25.00, 8.00),
-('Farm Fresh White Eggs (Tray)', 'अंडे की क्रेट (30 पीस)', 'Bakery & Extras', 'Piece', 165.00, 210.00, 10.00, 3.00);
-
--- SEED INITIAL EXPENSES SAMPLE
-INSERT INTO expenses (title, category, amount, payment_mode, expense_date, is_capital_investment, notes) VALUES
-('Monthly Shop Rent (Dukan Kiraya)', 'Dukan Rent', 14000.00, 'Online_UPI', CURRENT_DATE - INTERVAL '5 days', FALSE, 'Shop owner Mr. Sharma'),
-('Commercial Chiller Electricity Bill', 'Light / Electricity Bill', 5850.00, 'Online_UPI', CURRENT_DATE - INTERVAL '10 days', FALSE, 'MSEDCL electricity power for 3 deep chillers'),
-('Delivery Van & Bike Petrol', 'Gadi Petrol / Diesel', 1200.00, 'Cash', CURRENT_DATE - INTERVAL '1 days', FALSE, 'Morning and evening local customer door delivery fuel'),
-('New 500L Deep Freezer Chiller', 'Shop Capital Investment', 34500.00, 'Online_UPI', CURRENT_DATE - INTERVAL '20 days', TRUE, 'Blue Star Commercial Deep Freezer 500 Liters with warranty'),
-('Polythene & Dairy Carry Bags', 'Packaging / Theli', 1450.00, 'Cash', CURRENT_DATE - INTERVAL '3 days', FALSE, 'Biodegradable packaging pouches & shopping bags');
-
--- SEED INITIAL UDHAR CUSTOMERS
-INSERT INTO udhar_customers (name, phone, address, total_credit, total_paid, current_balance, status, notes) VALUES
-('Ramesh Verma (Sharma Halwai)', '8856087984', 'Plot 42, Main Bazar', 5400.00, 3000.00, 2400.00, 'Active', 'Takes 10L Buffalo milk and 2kg Paneer regularly'),
-('Gupta General Store & Tea Stall', '9890123456', 'Bus Stand Corner', 3800.00, 2000.00, 1800.00, 'Active', 'Takes cow milk every morning at 6 AM'),
-('Sunita Tai (Flat 204)', '9765432109', 'Sai Krupa Apartment', 1250.00, 1250.00, 0.00, 'Cleared', 'Monthly home delivery milk customer - cleared yesterday');
+-- DUMMY DATA REMOVED: Clean schema ready for production
 

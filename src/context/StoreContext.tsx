@@ -165,7 +165,7 @@ interface StoreContextType {
 
 // LocalStorage Version Migration: Clean all dummy/sample data from previous versions
 const STORAGE_CLEAN_VERSION_KEY = 'yd_clean_data_version';
-const CURRENT_CLEAN_VERSION = 'v2_clean_zero_dummy_2026';
+const CURRENT_CLEAN_VERSION = 'v4_clean_zero_all_dummy_data_2026';
 
 if (typeof window !== 'undefined') {
   try {

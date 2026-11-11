@@ -21,7 +21,8 @@ import {
   AlertTriangle,
   Barcode,
   FileText,
-  QrCode
+  QrCode,
+  Copy
 } from 'lucide-react';
 import { exportReportToPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
@@ -49,6 +50,7 @@ export const BillingCounter: React.FC = () => {
 
   // Modals & Confirmation
   const [showQrModal, setShowQrModal] = useState(false);
+  const [copiedUpi, setCopiedUpi] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [lastCompletedSale, setLastCompletedSale] = useState<any>(null);
@@ -253,7 +255,7 @@ export const BillingCounter: React.FC = () => {
           `₹${sale.net_amount.toLocaleString('en-IN')}`
         ]
       },
-      notes: `${language === 'mr' ? 'धन्यवाद! पुन्हा भेट द्या • शुद्धता हीच आमची ओळख.' : 'Thank you! Visit again • Purity is our identity.'}`
+      notes: `${language === 'mr' ? 'धन्यवाद! पुन्हा भेट द्या • शुद्धता हीच आमची ओळख' : 'Thank you! Visit again • Purity is our identity'} | UPI ID: Q226038088@ybl (IDFC FIRST Bank)`
     });
   };
 
@@ -679,8 +681,8 @@ export const BillingCounter: React.FC = () => {
                     <span className="text-xs font-bold text-purple-950 dark:text-purple-200 block">
                       {language === 'mr' ? 'QR कोड पेमेंट तयार' : language === 'hi' ? 'QR कोड पेमेंट तैयार' : 'QR Payment Ready'}
                     </span>
-                    <span className="text-[10px] text-purple-700/80 dark:text-purple-400 font-medium">
-                      GPay &bull; PhonePe &bull; Paytm
+                    <span className="text-[11px] font-mono font-bold text-purple-700 dark:text-purple-400 block">
+                      UPI: Q226038088@ybl
                     </span>
                   </div>
                 </div>
@@ -900,13 +902,51 @@ export const BillingCounter: React.FC = () => {
               </p>
             </div>
 
-            {/* The Authentic QR.jpg Standee Display */}
-            <div className="bg-white p-2 rounded-2xl border-2 border-emerald-500/40 shadow-md inline-block max-w-[270px] sm:max-w-[300px] mx-auto overflow-hidden">
+            {/* The Authentic Cropped High-Res QR.jpg Display */}
+            <div className="bg-white p-2 sm:p-3 rounded-2xl border-2 border-emerald-500/40 shadow-md inline-block max-w-[280px] sm:max-w-[320px] mx-auto overflow-hidden">
               <img
                 src="/QR.jpg"
                 alt="Yogeshwari Dairy Official UPI QR Code"
-                className="w-full max-h-[380px] sm:max-h-[420px] object-contain rounded-xl"
+                className="w-full max-h-[300px] sm:max-h-[340px] object-contain rounded-xl"
               />
+            </div>
+
+            {/* Copyable Official UPI ID Box */}
+            <div className="bg-slate-50 dark:bg-[#1A2A25] p-2.5 rounded-2xl border border-slate-200 dark:border-[#24352F] flex items-center justify-between gap-2 text-left">
+              <div className="min-w-0">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-[#8FA69C] block leading-tight">
+                  {language === 'mr' ? 'अधिकृत UPI आयडी:' : language === 'hi' ? 'अधिकृत UPI आईडी:' : 'Official UPI ID:'}
+                </span>
+                <span className="text-xs sm:text-sm font-black font-mono text-purple-700 dark:text-purple-300 truncate select-all block">
+                  Q226038088@ybl
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText('Q226038088@ybl');
+                  setCopiedUpi(true);
+                  setTimeout(() => setCopiedUpi(false), 2000);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all ${
+                  copiedUpi
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-purple-600 hover:bg-purple-700 text-white shadow-xs active:scale-95'
+                }`}
+                title="Copy UPI ID"
+              >
+                {copiedUpi ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                    <span>{language === 'mr' ? 'कॉपी झाले!' : language === 'hi' ? 'कॉपी हुआ!' : 'Copied!'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>{language === 'mr' ? 'UPI कॉपी' : language === 'hi' ? 'UPI कॉपी' : 'Copy'}</span>
+                  </>
+                )}
+              </button>
             </div>
 
             {/* Instruction Footer */}
@@ -992,6 +1032,9 @@ export const BillingCounter: React.FC = () => {
                 <div className="text-sm text-emerald-700 dark:text-emerald-400">{t('netAmount')} ₹{lastCompletedSale.net_amount}</div>
                 <div className="text-[10px] font-normal text-slate-500 dark:text-[#8FA69C]">
                   {t('paymentMethod')}: {lastCompletedSale.payment_mode}
+                  {lastCompletedSale.payment_mode === 'Online_UPI' && (
+                    <span className="block font-mono text-[9px] text-purple-700 dark:text-purple-400 font-bold">UPI ID: Q226038088@ybl</span>
+                  )}
                 </div>
               </div>
 

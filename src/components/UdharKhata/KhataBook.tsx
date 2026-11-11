@@ -65,19 +65,19 @@ export const KhataBook: React.FC = () => {
       messageText = `नमस्ते ${customer.name} जी!\n\nयोगेश्वरी डेअरी फार्म (Yogeshwari Dairy) कडून आपले खाते बाकी आहे:\n` +
         `📌 *शिल्लक बाकी रक्कम (Balance Due): ₹${customer.current_balance.toLocaleString('en-IN')}*\n\n` +
         `कृपया लवकरात लवकर रक्कम जमा करावी ही नम्र विनंती.\n` +
-        `💳 *GooglePay / PhonePe UPI:* yogeshwaridairy@okaxis\n` +
+        `💳 *GooglePay / PhonePe UPI:* Q226038088@ybl\n` +
         `धन्यवाद!\nयोगेश्वरी डेअरी फार्म & स्वीट्स`;
     } else if (language === 'hi') {
       messageText = `नमस्ते ${customer.name} जी!\n\nयोगेश्वरी डेरी फार्म (Yogeshwari Dairy) से आपका हिसाब बाकी है:\n` +
         `📌 *बकाया राशि (Balance Due): ₹${customer.current_balance.toLocaleString('en-IN')}*\n\n` +
         `कृपया जल्द से जल्द भुगतान करने की कृपा करें।\n` +
-        `💳 *UPI आईडी:* yogeshwaridairy@okaxis\n` +
+        `💳 *UPI आईडी:* Q226038088@ybl\n` +
         `धन्यवाद!\nयोगेश्वरी डेरी फार्म & स्वीट्स`;
     } else {
       messageText = `Hello ${customer.name}!\n\nThis is a friendly payment reminder from Yogeshwari Dairy Farm:\n` +
         `📌 *Outstanding Balance: ₹${customer.current_balance.toLocaleString('en-IN')}*\n\n` +
         `Kindly settle the due amount at your earliest convenience.\n` +
-        `💳 *UPI ID:* yogeshwaridairy@okaxis\n` +
+        `💳 *UPI ID:* Q226038088@ybl\n` +
         `Thank you!\nYogeshwari Dairy & Products `;
     }
 

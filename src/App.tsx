@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { LoginPage } from './components/Auth/LoginPage';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { MobileActionBar } from './components/MobileActionBar';
@@ -9,6 +11,7 @@ import { DashboardView } from './components/Dashboard/DashboardView';
 import { BillingCounter } from './components/POS/BillingCounter';
 import { ProductList } from './components/Inventory/ProductList';
 import { ReorderNeedsView } from './components/Inventory/ReorderNeedsView';
+import { ExpiryDashboard } from './components/Expiry/ExpiryDashboard';
 import { PurchaseTracker } from './components/Purchases/PurchaseTracker';
 import { DamageTracker } from './components/Damages/DamageTracker';
 import { KhataBook } from './components/UdharKhata/KhataBook';
@@ -101,6 +104,8 @@ const MainContent: React.FC = () => {
 
           {activeView === 'reorder' && <ReorderNeedsView />}
 
+          {activeView === 'expiry' && <ExpiryDashboard />}
+
           {activeView === 'purchases' && <PurchaseTracker />}
 
           {activeView === 'damages' && <DamageTracker />}
@@ -139,13 +144,36 @@ const MainContent: React.FC = () => {
   );
 };
 
+const AppRoot: React.FC = () => {
+  const { user, isGuest, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#f8fafc] dark:bg-[#0B1210] text-emerald-600">
+        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3" />
+        <span className="text-xs font-bold text-slate-600 dark:text-[#8FA69C]">
+          Yogeshwari Dairy ERP...
+        </span>
+      </div>
+    );
+  }
+
+  if (!user && !isGuest) {
+    return <LoginPage />;
+  }
+
+  return <MainContent />;
+};
+
 export function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <StoreProvider>
-          <MainContent />
-        </StoreProvider>
+        <AuthProvider>
+          <StoreProvider>
+            <AppRoot />
+          </StoreProvider>
+        </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

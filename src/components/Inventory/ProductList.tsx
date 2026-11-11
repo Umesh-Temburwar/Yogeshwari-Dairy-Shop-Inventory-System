@@ -32,8 +32,12 @@ import {
   Check,
   Layers,
   Calendar,
-  Clock
+  Clock,
+  Barcode,
+  FileText
 } from 'lucide-react';
+import { exportReportToPDF } from '../../lib/exportUtils';
+import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 
 interface ProductListProps {
   onOpenAddProduct: () => void;
@@ -66,6 +70,7 @@ export const ProductList: React.FC<ProductListProps> = ({
 
   // Quick Inline Add Bar State
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [quickName, setQuickName] = useState('');
   const [quickCategory, setQuickCategory] = useState<ProductCategory>('Milk');
   const [quickUnit, setQuickUnit] = useState<ProductUnit>('Litre');
@@ -104,6 +109,54 @@ export const ProductList: React.FC<ProductListProps> = ({
 
   const lowStockCount = products.filter(p => p.stock_quantity <= p.min_stock_alert && p.stock_quantity > 0).length;
   const outOfStockCount = products.filter(p => p.stock_quantity <= 0).length;
+
+  const totalStockCostValuation = useMemo(() => {
+    return products.reduce((sum, p) => sum + (p.stock_quantity * p.cost_price), 0);
+  }, [products]);
+
+  const totalStockRetailValuation = useMemo(() => {
+    return products.reduce((sum, p) => sum + (p.stock_quantity * p.selling_price), 0);
+  }, [products]);
+
+  const handleDownloadStockPDF = () => {
+    exportReportToPDF({
+      title: language === 'mr' ? 'दुकान शिल्लक माल व साठा मूल्यांकन अहवाल' : language === 'hi' ? 'दुकान स्टॉक व मूल्यांकन रिपोर्ट' : 'Dairy Inventory Stock Valuation & Catalog Report',
+      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Product Inventory',
+      periodText: language === 'mr' ? 'सद्यस्थिती साठा मूल्य' : 'वर्तमान स्टॉक इन्वेंटरी',
+      kpis: [
+        { label: 'एकूण उत्पादने (Total SKUs)', value: `${products.length} वस्तू`, color: 'emerald' },
+        { label: 'खरेदीनुसार साठा मूल्य (Cost)', value: `₹${totalStockCostValuation.toLocaleString('en-IN')}`, color: 'blue' },
+        { label: 'विक्रीनुकसार साठा मूल्य (Retail)', value: `₹${totalStockRetailValuation.toLocaleString('en-IN')}`, color: 'purple' },
+        { label: 'कमी साठा (Low Stock)', value: `${lowStockCount + outOfStockCount} उत्पादने`, color: 'rose' }
+      ],
+      table: {
+        headers: ['उत्पादनाचे नाव (Product)', 'प्रवर्ग (Category)', 'शिल्लक साठा', 'खरेदी दर', 'विक्री दर', 'किमान मर्यादा', 'साठा मूल्य (₹)'],
+        alignments: ['left', 'center', 'right', 'right', 'right', 'center', 'right'],
+        rows: filteredProducts.map(p => {
+          const val = p.stock_quantity * p.cost_price;
+          return [
+            getProductDisplayName(p),
+            p.category,
+            `${p.stock_quantity} ${p.unit}`,
+            `₹${p.cost_price}`,
+            `₹${p.selling_price}`,
+            `${p.min_stock_alert} ${p.unit}`,
+            `₹${val.toLocaleString('en-IN')}`
+          ];
+        }),
+        summaryRow: [
+          'एकूण (Total)',
+          `${filteredProducts.length} उत्पादने`,
+          '',
+          '',
+          '',
+          '',
+          `₹${filteredProducts.reduce((sum, p) => sum + (p.stock_quantity * p.cost_price), 0).toLocaleString('en-IN')}`
+        ]
+      },
+      notes: 'दुकान साठा तपशील. कमी साठा असलेली उत्पादने वेळेत खरेदी करावीत.'
+    });
+  };
 
   const getProductDisplayName = (prod: Product) => {
     if (language === 'mr' && prod.marathi_name) return prod.marathi_name;
@@ -235,6 +288,16 @@ export const ProductList: React.FC<ProductListProps> = ({
             </button>
           )}
 
+          {/* PDF Download Button */}
+          <button
+            onClick={handleDownloadStockPDF}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F]"
+            title="Download Stock Valuation PDF"
+          >
+            <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>{language === 'mr' ? 'साठा PDF' : language === 'hi' ? 'स्टॉक PDF' : 'Stock PDF'}</span>
+          </button>
+
           {/* New Product Button */}
           <button
             onClick={() => setShowQuickAdd(!showQuickAdd)}
@@ -337,20 +400,32 @@ export const ProductList: React.FC<ProductListProps> = ({
 
       {/* SEARCH & FAST CATEGORY FILTER PILLS */}
       <div className="bg-white dark:bg-[#131F1B] p-3 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-2.5 transition-colors">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
-          <input
-            type="text"
-            placeholder={language === 'mr' ? 'दूध, पनीर, दही, तूप शोधा (Search)...' : language === 'hi' ? 'दूध, पनीर, दही, घी खोजें (Search)...' : 'Search milk, paneer, curd, ghee...'}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] dark:hover:text-white">
-              <X className="w-4 h-4" />
-            </button>
-          )}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
+            <input
+              type="text"
+              placeholder={language === 'mr' ? 'दूध, पनीर, दही, तूप शोधा (Search)...' : language === 'hi' ? 'दूध, पनीर, दही, घी खोजें (Search)...' : 'Search milk, paneer, curd, ghee...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] dark:hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowBarcodeScanner(true)}
+            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#20332D] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-white flex items-center gap-1.5 text-xs font-bold shrink-0 transition"
+            title="Scan Barcode"
+          >
+            <Barcode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="hidden sm:inline">{language === 'mr' ? 'बारकोड' : 'बारकोड'}</span>
+          </button>
         </div>
 
         {/* Category Pills */}
@@ -815,6 +890,19 @@ export const ProductList: React.FC<ProductListProps> = ({
           onClose={() => setSelectedProductForBatches(null)} 
         />
       )}
+
+      {/* BARCODE SCANNER MODAL */}
+      <BarcodeScannerModal
+        isOpen={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        mode="lookup"
+        onProductSelected={(prod) => {
+          setSelectedProductForStockIn(prod);
+        }}
+        onBarcodeScanned={(code) => {
+          setSearchQuery(code);
+        }}
+      />
 
     </div>
   );

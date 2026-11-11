@@ -3,10 +3,13 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { Sale } from '../../types';
+import { exportReportToPDF } from '../../lib/exportUtils';
 import { 
   ReceiptIndianRupee, 
   Search, 
   Printer, 
+  FileText,
+  Download,
   Banknote, 
   Smartphone, 
   BookOpen, 
@@ -66,6 +69,43 @@ export const DailySalesTracker: React.FC = () => {
     setExpandedSaleId(prev => prev === id ? null : id);
   };
 
+  const handleDownloadSalesPDF = () => {
+    exportReportToPDF({
+      title: language === 'mr' ? 'दैनिक विक्री व रोकड लेजर अहवाल' : language === 'hi' ? 'दैनिक बिक्री & रोकड़ रिपोर्ट' : 'Daily Sales & Cash/Online Ledger Report',
+      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP',
+      periodText: language === 'mr' ? 'निवडलेला कालावधी हिशोब' : 'चुनी गई अवधि का हिसाब',
+      kpis: [
+        { label: 'एकूण विक्री (Total Sales)', value: `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: 'रोख जमा (Cash)', value: `₹${metrics.cashCollected.toLocaleString('en-IN')}`, color: 'blue' },
+        { label: 'ऑनलाईन UPI', value: `₹${metrics.onlineCollected.toLocaleString('en-IN')}`, color: 'purple' },
+        { label: 'उधारी दिली (Udhar)', value: `₹${metrics.creditGiven.toLocaleString('en-IN')}`, color: 'amber' }
+      ],
+      table: {
+        headers: ['बिल क्र.', 'तारीख', 'ग्राहक नाव', 'पेमेंट पद्धत', 'आयटम्स', 'सवलत (₹)', 'एकूण रक्कम (₹)'],
+        alignments: ['left', 'center', 'left', 'center', 'left', 'right', 'right'],
+        rows: filtered.map(s => [
+          s.invoice_no,
+          s.sale_date,
+          s.customer_name + (s.customer_phone ? ` (${s.customer_phone})` : ''),
+          s.payment_mode,
+          s.items ? s.items.map(i => `${i.product_name} x ${i.quantity}`).join(', ') : '—',
+          s.discount > 0 ? `₹${s.discount}` : '₹0',
+          `₹${s.net_amount.toLocaleString('en-IN')}`
+        ]),
+        summaryRow: [
+          'एकूण (Total)',
+          `${filtered.length} बिले`,
+          '',
+          '',
+          '',
+          '',
+          `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`
+        ]
+      },
+      notes: 'संगणकीय तयार केलेला अधिकृत विक्री अहवाल. रोकड व ऑनलाईन पावती तपासून घ्यावी.'
+    });
+  };
+
   return (
     <div className="space-y-6">
       
@@ -87,13 +127,24 @@ export const DailySalesTracker: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-xs"
-        >
-          <Printer className="w-4 h-4" />
-          <span>{language === 'mr' ? 'प्रिंट विक्री अहवाल' : language === 'hi' ? 'प्रिंट बिक्री रिपोर्ट' : 'Print Sales Report'}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDownloadSalesPDF}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs"
+            title="Download PDF Report"
+          >
+            <FileText className="w-4 h-4" />
+            <span>{language === 'mr' ? 'विक्री PDF डाउनलोड' : language === 'hi' ? 'बिक्री PDF डाउनलोड' : 'Download Sales PDF'}</span>
+          </button>
+
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F]"
+            title="Print"
+          >
+            <Printer className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Time Filter */}

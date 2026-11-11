@@ -3,7 +3,8 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product, ProductCategory, ProductUnit } from '../../types';
 import { getShelfLifeNote } from '../../lib/shelfLifeUtils';
-import { X, Save, PackagePlus, Clock } from 'lucide-react';
+import { X, Save, PackagePlus, Clock, Camera, Sparkles } from 'lucide-react';
+import { ProductPhotoModal } from '../Scanner/ProductPhotoModal';
 
 interface AddProductModalProps {
   isOpen: boolean;

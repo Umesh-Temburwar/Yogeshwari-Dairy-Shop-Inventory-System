@@ -7,8 +7,10 @@ import {
   Copy, 
   Check, 
   Truck, 
-  CheckCircle2 
+  CheckCircle2,
+  FileText 
 } from 'lucide-react';
+import { exportReportToPDF } from '../../lib/exportUtils';
 
 export const ReorderNeedsView: React.FC = () => {
   const { products, setActiveView } = useStore();
@@ -75,6 +77,44 @@ export const ReorderNeedsView: React.FC = () => {
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const handleDownloadReorderPDF = () => {
+    exportReportToPDF({
+      title: language === 'mr' ? 'माल खरेदी मागणी पत्रक (Reorder Sheet)' : language === 'hi' ? 'सामान खरीद मांग पत्रक (Reorder Sheet)' : 'Procurement & Reorder Requirements Sheet',
+      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Supplier Restock Order',
+      periodText: language === 'mr' ? 'तात्काळ आवश्यक माल मागणी' : 'तत्काल आवश्यक मांग',
+      kpis: [
+        { label: 'एकूण आवश्यक वस्तू', value: `${itemsNeedingRestock.length} उत्पादने`, color: 'rose' },
+        { label: 'संपलेली उत्पादने (0 साठा)', value: `${itemsNeedingRestock.filter(i => i.isCritical).length} उत्पादने`, color: 'rose' },
+        { label: 'अंदाजे खरेदी बजेट', value: `₹${totalEstimatedCost.toLocaleString('en-IN')}`, color: 'amber' }
+      ],
+      table: {
+        headers: ['अ.क्र.', 'उत्पादनाचे नाव (Product)', 'प्रवर्ग (Category)', 'सध्याचा साठा', 'किमान मर्यादा', 'मागणी प्रमाण (Order Qty)', 'अंदाजे दर (₹)', 'एकूण रक्कम (₹)'],
+        alignments: ['center', 'left', 'center', 'right', 'right', 'right', 'right', 'right'],
+        rows: itemsNeedingRestock.map((it, idx) => [
+          idx + 1,
+          getDisplayName(it),
+          it.category,
+          `${it.stock_quantity} ${it.unit}`,
+          `${it.min_stock_alert} ${it.unit}`,
+          `${it.recommendedOrderQty} ${it.unit}`,
+          `₹${it.purchase_price}`,
+          `₹${it.estimatedCost.toLocaleString('en-IN')}`
+        ]),
+        summaryRow: [
+          'एकूण (Total)',
+          `${itemsNeedingRestock.length} वस्तू`,
+          '',
+          '',
+          '',
+          '',
+          '',
+          `₹${totalEstimatedCost.toLocaleString('en-IN')}`
+        ]
+      },
+      notes: 'सदर माल लवकरात लवकर पुरवठादार/सप्लायरकडून मागवून घ्यावा.'
+    });
+  };
+
   return (
     <div className="space-y-6">
       
@@ -94,6 +134,16 @@ export const ReorderNeedsView: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleDownloadReorderPDF}
+            disabled={itemsNeedingRestock.length === 0}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 disabled:opacity-50"
+            title="Download PDF Order Sheet"
+          >
+            <FileText className="w-4 h-4" />
+            <span>{language === 'mr' ? 'मागणी पत्रक PDF' : language === 'hi' ? 'मांग पत्रक PDF' : 'Download Order PDF'}</span>
+          </button>
+
           <button
             onClick={handleCopyWhatsAppList}
             disabled={itemsNeedingRestock.length === 0}

@@ -3,7 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { MilkFatCalculator } from './MilkFatCalculator';
-import { exportToCSV } from '../../lib/exportUtils';
+import { exportToCSV, exportReportToPDF } from '../../lib/exportUtils';
 import { 
   getShelfLifeDays, 
   getSuggestedExpiryDate, 
@@ -20,7 +20,8 @@ import {
   Download,
   Sparkles,
   Layers,
-  Clock
+  Clock,
+  FileText
 } from 'lucide-react';
 
 export const PurchaseTracker: React.FC = () => {
@@ -141,6 +142,51 @@ export const PurchaseTracker: React.FC = () => {
     exportToCSV('Dairy_Purchases_Report', headers, rows);
   };
 
+  const handleDownloadPurchasePDF = () => {
+    const totalQty = filteredPurchases.reduce((acc, p) => acc + p.quantity, 0);
+    const totalAmt = filteredPurchases.reduce((acc, p) => acc + p.total_amount, 0);
+    const cashAmt = filteredPurchases.filter(p => p.payment_mode === 'Cash').reduce((acc, p) => acc + p.total_amount, 0);
+    const onlineAmt = filteredPurchases.filter(p => p.payment_mode === 'Online_UPI' || p.payment_mode === 'Bank_Transfer').reduce((acc, p) => acc + p.total_amount, 0);
+    const udharAmt = filteredPurchases.filter(p => p.payment_mode === 'Udhar').reduce((acc, p) => acc + p.total_amount, 0);
+
+    exportReportToPDF({
+      title: language === 'mr' ? 'दूध व माल खरेदी लेजर अहवाल' : language === 'hi' ? 'दूध व सामान खरीद लेजर रिपोर्ट' : 'Dairy Purchases & Supplier Ledger Report',
+      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Inward Procurement',
+      periodText: language === 'mr' ? 'निवडलेला खरेदी कालावधी' : 'चुनी गई खरीद अवधि',
+      kpis: [
+        { label: 'एकूण खरेदी खर्च', value: `₹${totalAmt.toLocaleString('en-IN')}`, color: 'blue' },
+        { label: 'एकूण माल आवक', value: `${totalQty.toLocaleString('en-IN')} लिटर/नग`, color: 'emerald' },
+        { label: 'रोख/ऑनलाइन अदा', value: `₹${(cashAmt + onlineAmt).toLocaleString('en-IN')}`, color: 'purple' },
+        { label: 'बाकी देणे (उधार)', value: `₹${udharAmt.toLocaleString('en-IN')}`, color: 'amber' }
+      ],
+      table: {
+        headers: ['तारीख', 'पुरवठादार / शेतकरी', 'उत्पादन (Product)', 'नग / प्रमाण', 'खरेदी दर (₹)', 'एकूण रक्कम (₹)', 'पेमेंट पद्धत', 'नोंद (Notes)'],
+        alignments: ['center', 'left', 'left', 'right', 'right', 'right', 'center', 'left'],
+        rows: filteredPurchases.map(p => [
+          p.purchase_date,
+          p.supplier_name,
+          p.product_name,
+          `${p.quantity} ${p.unit}`,
+          `₹${p.purchase_price}`,
+          `₹${p.total_amount.toLocaleString('en-IN')}`,
+          p.payment_mode,
+          p.notes || '—'
+        ]),
+        summaryRow: [
+          'एकूण (Total)',
+          `${filteredPurchases.length} खरेदी नोंदी`,
+          '',
+          `${totalQty} युनिट्स`,
+          '',
+          `₹${totalAmt.toLocaleString('en-IN')}`,
+          '',
+          ''
+        ]
+      },
+      notes: 'डेअरी संकलन व कच्चा माल आवक तपशील. सर्व पावत्या तपासून बिल पास करावे.'
+    });
+  };
+
   return (
     <div className="space-y-6">
       
@@ -167,6 +213,16 @@ export const PurchaseTracker: React.FC = () => {
           >
             <Calculator className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             <span>{language === 'mr' ? 'दूध फॅट कॅल्क्युलेटर' : language === 'hi' ? 'दूध फैट कैलकुलेटर' : 'Milk Fat Calculator'}</span>
+          </button>
+
+          {/* PDF Report Download Button */}
+          <button
+            onClick={handleDownloadPurchasePDF}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-900 dark:text-sky-300 border border-sky-300 dark:border-sky-800/60 text-xs font-bold transition-all"
+            title="Download Purchases PDF Report"
+          >
+            <FileText className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+            <span>{language === 'mr' ? 'खरेदी PDF' : language === 'hi' ? 'खरीद PDF' : 'Purchases PDF'}</span>
           </button>
 
           <button

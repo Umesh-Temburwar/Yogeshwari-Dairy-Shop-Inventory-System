@@ -3,10 +3,12 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { DamageReason } from '../../types';
+import { exportReportToPDF } from '../../lib/exportUtils';
 import { 
   PackageX, 
   Plus, 
-  X
+  X,
+  FileText
 } from 'lucide-react';
 
 export const DamageTracker: React.FC = () => {
@@ -59,6 +61,46 @@ export const DamageTracker: React.FC = () => {
     { id: 'Other', label: language === 'mr' ? 'इतर कारण' : language === 'hi' ? 'अन्य कारण' : 'Other' }
   ];
 
+  const handleDownloadDamagePDF = () => {
+    const totalLoss = filteredDamages.reduce((acc, d) => acc + d.estimated_loss_amount, 0);
+    const curdledCount = filteredDamages.filter(d => d.reason.includes('Curdled') || d.reason.includes('Fat Gya')).length;
+    const leakedCount = filteredDamages.filter(d => d.reason.includes('Leaked') || d.reason.includes('Phat Gayi')).length;
+    const expiredCount = filteredDamages.filter(d => d.reason.includes('Expiry')).length;
+
+    exportReportToPDF({
+      title: language === 'mr' ? 'दूध नासणे व नुकसान अहवाल (Damages & Spoilage)' : language === 'hi' ? 'दूध खराबी व नुकसान रिपोर्ट (Damages & Spoilage)' : 'Dairy Damages, Spoilage & Loss Report',
+      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Quality & Spoilage Ledger',
+      periodText: language === 'mr' ? 'निवडलेला नुकसान कालावधी' : 'चुनी गई नुकसान अवधि',
+      kpis: [
+        { label: 'एकूण नुकसान रक्कम (Loss)', value: `₹${totalLoss.toLocaleString('en-IN')}`, color: 'rose' },
+        { label: 'एकूण नुकसान नोंदी', value: `${filteredDamages.length} घटना`, color: 'amber' },
+        { label: 'नासलेले दूध नोंदी', value: `${curdledCount} वेळा`, color: 'purple' },
+        { label: 'लिकेज / एक्सपायरी', value: `${leakedCount + expiredCount} वेळा`, color: 'blue' }
+      ],
+      table: {
+        headers: ['तारीख', 'उत्पादनाचे नाव (Product)', 'नुकसान प्रमाण (Qty)', 'नुकसानीचे कारण (Reason)', 'अंदाजे नुकसान मूल्य (₹)', 'तपशील / नोंद'],
+        alignments: ['center', 'left', 'right', 'left', 'right', 'left'],
+        rows: filteredDamages.map(d => [
+          d.damage_date,
+          d.product_name,
+          `${d.quantity} ${d.unit}`,
+          d.reason,
+          `₹${d.estimated_loss_amount.toLocaleString('en-IN')}`,
+          d.notes || '—'
+        ]),
+        summaryRow: [
+          'एकूण (Total)',
+          `${filteredDamages.length} नोंदी`,
+          '',
+          '',
+          `₹${totalLoss.toLocaleString('en-IN')}`,
+          ''
+        ]
+      },
+      notes: 'नासलेल्या दुधाचे कारण शोधून शीतकरण (Chilling) व हाताळणी (Handling) सुधारावी.'
+    });
+  };
+
   return (
     <div className="space-y-6">
       
@@ -78,13 +120,24 @@ export const DamageTracker: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all active:scale-95"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t('logDamage')}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleDownloadDamagePDF}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-800/60 text-xs font-bold transition-all"
+            title="Download Spoilage & Loss PDF Report"
+          >
+            <FileText className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+            <span>{language === 'mr' ? 'नुकसान PDF' : language === 'hi' ? 'नुकसान PDF' : 'Damages PDF'}</span>
+          </button>
+
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all active:scale-95"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t('logDamage')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Time Filter */}

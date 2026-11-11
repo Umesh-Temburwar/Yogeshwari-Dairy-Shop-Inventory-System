@@ -13,6 +13,7 @@ import {
   Fuel, 
   TrendingUp, 
   Sparkles,
+  ShieldAlert,
   X
 } from 'lucide-react';
 
@@ -67,12 +68,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'inventory',
       labelKey: 'inventoryNav',
       icon: Package,
+      badge: products.length,
+      badgeColor: 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] font-semibold',
+      section: 'inventory'
+    },
+    {
+      id: 'expiry',
+      labelKey: 'expiryNav',
+      icon: ShieldAlert,
       badge: metrics.expiredBatchesCount > 0 
         ? `${metrics.expiredBatchesCount} ⚠️` 
-        : products.length,
+        : metrics.expiringTodayBatchesCount > 0 
+        ? `${metrics.expiringTodayBatchesCount} आज` 
+        : undefined,
       badgeColor: metrics.expiredBatchesCount > 0
         ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 font-extrabold animate-pulse'
-        : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] font-semibold',
+        : 'bg-orange-100 dark:bg-orange-950/70 text-orange-700 dark:text-orange-300 font-extrabold',
       section: 'inventory'
     },
     {

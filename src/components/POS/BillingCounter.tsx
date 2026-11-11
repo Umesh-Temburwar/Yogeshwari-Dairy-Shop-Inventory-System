@@ -18,8 +18,12 @@ import {
   CreditCard,
   Calculator,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Barcode,
+  FileText
 } from 'lucide-react';
+import { exportReportToPDF } from '../../lib/exportUtils';
+import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import confetti from 'canvas-confetti';
 
 export const BillingCounter: React.FC = () => {
@@ -44,6 +48,7 @@ export const BillingCounter: React.FC = () => {
 
   // Modals & Confirmation
   const [showQrModal, setShowQrModal] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [lastCompletedSale, setLastCompletedSale] = useState<any>(null);
 
@@ -218,6 +223,39 @@ export const BillingCounter: React.FC = () => {
     setCustomerAge('');
   };
 
+  const handleDownloadInvoicePDF = (sale: any) => {
+    if (!sale) return;
+    exportReportToPDF({
+      title: `${t('shopName')} - ${language === 'mr' ? 'कर पावती (Cash Memo)' : 'Cash Memo'}`,
+      subtitle: `${language === 'mr' ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : 'Fresh Milk, Dairy & Sweets'} | FSSAI: 21524012000341`,
+      periodText: `${language === 'mr' ? 'बिल क्र.' : 'Invoice No:'} ${sale.invoice_no} | ${sale.sale_date}`,
+      kpis: [
+        { label: 'निव्वळ देय रक्कम (Net Bill)', value: `₹${sale.net_amount.toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: 'पेमेंट पद्धत (Mode)', value: sale.payment_mode, color: 'blue' },
+        { label: 'ग्राहक (Customer)', value: sale.customer_name, color: 'purple' }
+      ],
+      table: {
+        headers: ['अ.क्र.', 'मालाचे नाव (Product Description)', 'प्रमाण (Qty)', 'दर (Rate ₹)', 'एकूण (Amount ₹)'],
+        alignments: ['center', 'left', 'right', 'right', 'right'],
+        rows: (sale.items || []).map((it: any, idx: number) => [
+          idx + 1,
+          it.product_name,
+          `${it.quantity} ${it.unit}`,
+          `₹${it.unit_price}`,
+          `₹${it.total_price.toLocaleString('en-IN')}`
+        ]),
+        summaryRow: [
+          'एकूण निव्वळ रक्कम',
+          `${sale.items?.length || 0} वस्तू`,
+          '',
+          sale.discount > 0 ? `सवलत: ₹${sale.discount}` : '',
+          `₹${sale.net_amount.toLocaleString('en-IN')}`
+        ]
+      },
+      notes: `${language === 'mr' ? 'धन्यवाद! पुन्हा भेट द्या • शुद्धता हीच आमची ओळख.' : 'Thank you! Visit again • Purity is our identity.'}`
+    });
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[calc(100vh-8rem)]">
       
@@ -226,23 +264,35 @@ export const BillingCounter: React.FC = () => {
         
         {/* Search & Category Filter Pills */}
         <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-3 transition-colors">
-          <div className="relative">
-            <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
-            <input
-              type="text"
-              placeholder={t('searchPlaceholder')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-medium"
-            />
-            {searchQuery && (
-              <button 
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
+              <input
+                type="text"
+                placeholder={t('searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-medium"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowBarcodeScanner(true)}
+              className="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] flex items-center gap-1.5 text-xs font-bold shrink-0 transition-colors shadow-2xs"
+              title="Camera Barcode Scanner"
+            >
+              <Barcode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden sm:inline">{language === 'mr' ? 'बारकोड स्कॅन' : 'बारकोड स्कैन'}</span>
+            </button>
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -891,17 +941,25 @@ export const BillingCounter: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            <div className="grid grid-cols-3 gap-2 pt-2">
+              <button
+                onClick={() => handleDownloadInvoicePDF(lastCompletedSale)}
+                className="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs"
+                title="Download Bill as PDF"
+              >
+                <FileText className="w-4 h-4" />
+                <span>{language === 'mr' ? 'पावती PDF' : language === 'hi' ? 'बिल PDF' : 'Bill PDF'}</span>
+              </button>
               <button
                 onClick={() => window.print()}
-                className="w-1/2 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5"
+                className="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5"
               >
                 <Printer className="w-4 h-4" />
                 <span>{t('print')}</span>
               </button>
               <button
                 onClick={() => setIsSuccessModalOpen(false)}
-                className="w-1/2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
+                className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white font-bold text-xs"
               >
                 {t('nextBill')}
               </button>
@@ -909,6 +967,19 @@ export const BillingCounter: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Barcode Scanner Camera Modal */}
+      <BarcodeScannerModal
+        isOpen={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        mode="pos"
+        onProductSelected={(prod) => {
+          addToCart(prod, 1);
+        }}
+        onBarcodeScanned={(code) => {
+          setSearchQuery(code);
+        }}
+      />
 
     </div>
   );

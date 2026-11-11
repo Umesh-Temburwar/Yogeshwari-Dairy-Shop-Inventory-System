@@ -6,7 +6,7 @@ export const getSupabaseConfig = () => {
   const localKey = localStorage.getItem('supabase_key');
   
   const envUrl = import.meta.env.VITE_SUPABASE_URL || '';
-  const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+  const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
 
   return {
     url: localUrl || envUrl || '',

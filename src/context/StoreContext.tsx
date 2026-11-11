@@ -23,7 +23,8 @@ export type AppView =
   | 'udhar' 
   | 'expenses' 
   | 'analytics' 
-  | 'reorder';
+  | 'reorder'
+  | 'expiry';
 
 interface StoreContextType {
   // Navigation & Settings
@@ -284,6 +285,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (pData && pData.length > 0) {
         setProducts(pData);
       }
+      // Fetch batches
+      const { data: bData } = await supabase.from('batches').select('*').order('expiry_date', { ascending: true });
+      if (bData && bData.length > 0) {
+        setBatches(bData);
+      }
       // Fetch sales
       const { data: sData } = await supabase.from('sales').select('*, items:sale_items(*)').order('created_at', { ascending: false });
       if (sData && sData.length > 0) {
@@ -293,6 +299,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const { data: purData } = await supabase.from('purchases').select('*').order('created_at', { ascending: false });
       if (purData && purData.length > 0) {
         setPurchases(purData);
+      }
+      // Fetch damages
+      const { data: dData } = await supabase.from('damage_records').select('*').order('created_at', { ascending: false });
+      if (dData && dData.length > 0) {
+        setDamages(dData);
       }
       // Fetch expenses
       const { data: expData } = await supabase.from('expenses').select('*').order('created_at', { ascending: false });
@@ -673,6 +684,33 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       return p;
     }));
+
+    if (supabase && isSupabaseConnected) {
+      try {
+        if (newBatchesToAppend.length > 0) {
+          await supabase.from('batches').insert(newBatchesToAppend.map(b => ({
+            id: b.id.startsWith('bat-') ? undefined : b.id,
+            product_id: b.product_id,
+            batch_no: b.batch_no,
+            mfg_date: b.mfg_date,
+            expiry_date: b.expiry_date,
+            qty_received: b.qty_received,
+            qty_remaining: b.qty_remaining,
+            purchase_price: b.purchase_price,
+            selling_price: b.selling_price || prod.selling_price || 0,
+            supplier_name: b.supplier_name,
+            notes: b.notes,
+            status: 'ACTIVE'
+          })));
+        }
+        await supabase.from('products').update({
+          stock_quantity: Number((prod.stock_quantity + totalQtyAdded).toFixed(2)),
+          updated_at: new Date().toISOString()
+        }).eq('id', productId);
+      } catch (err) {
+        console.warn('Supabase batch inward sync error:', err);
+      }
+    }
   };
 
   const addBatch = async (batchData: Omit<ProductBatch, 'id' | 'created_at'>): Promise<ProductBatch> => {

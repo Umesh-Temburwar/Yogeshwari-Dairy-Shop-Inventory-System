@@ -77,6 +77,16 @@ export const TRANSLATIONS: Translations = {
     hi: 'पुनः आर्डर मांग पत्र',
     mr: 'पुन्हा मागवायचा माल'
   },
+  expiryNav: {
+    en: 'Expiry Management',
+    hi: 'एक्सपायरी डेट प्रबंधन',
+    mr: 'मुदत समाप्ती व्यवस्थापन'
+  },
+  expirySub: {
+    en: 'FEFO & Expiry Dashboard',
+    hi: 'FEFO व एक्सपायरी डैशबोर्ड',
+    mr: 'FEFO व मुदत समाप्ती डॅशबोर्ड'
+  },
   purchasesNav: {
     en: 'Purchases',
     hi: 'माल खरीद',
@@ -982,6 +992,292 @@ export const TRANSLATIONS: Translations = {
     en: 'Add Stock & Batch Expiry Entry',
     hi: 'माल आवक व बैच एक्सपायरी एंट्री',
     mr: 'माल आवक व बॅच मुदत नोंद'
+  },
+  // Auth & Login Page Translations (100% pure en / hi / mr)
+  authErpBadge: {
+    en: 'Commercial Dairy ERP System',
+    hi: 'व्यावसायिक डेयरी ईआरपी सिस्टम',
+    mr: 'व्यावसायिक डेअरी ईआरपी प्रणाली'
+  },
+  authHeadline: {
+    en: 'Milk Collection, Batch Inventory & Counter POS',
+    hi: 'दूध संकलन, बैच इन्वेंटरी और तेज़ काउंटर बिलिंग',
+    mr: 'दूध संकलन, बॅच इन्व्हेंटरी आणि काउंटर बिलिंग'
+  },
+  authDescription: {
+    en: 'Farmer fat/SNF milk purchases, multi-batch FEFO inventory tracking, digital customer credit khata, and real-time profit analytics.',
+    hi: 'किसान दूध खरीद, बैच-वाइज एक्सपायरी ट्रैकिंग (FEFO), उधारी खाता और दैनिक शुद्ध मुनाफा।',
+    mr: 'शेतकरी दूध फॅट खरेदी, बॅचनिहाय मुदत समाप्ती (FEFO), ग्राहकांचे उधारी खाते आणि दैनंदिन नफा-तोटा एकाच छताखाली.'
+  },
+  authFeatureBatchTitle: {
+    en: 'Multi-Batch Inventory',
+    hi: 'मल्टी-बैच इन्वेंटरी',
+    mr: 'मल्टि-बॅच इन्व्हेंटरी'
+  },
+  authFeatureBatchDesc: {
+    en: 'Unique expiry & purchase cost for each batch',
+    hi: 'प्रत्येक बैच की अलग एक्सपायरी व खरीद भाव',
+    mr: 'प्रत्येक बॅचची स्वतंत्र एक्सपायरी व खरेदी दर'
+  },
+  authFeatureFefoTitle: {
+    en: 'FEFO Expiry Alerts',
+    hi: 'FEFO एक्सपायरी अलर्ट',
+    mr: 'FEFO मुदत समाप्ती अलर्ट'
+  },
+  authFeatureFefoDesc: {
+    en: 'First Expiry First Out sales deduction & blocking',
+    hi: 'पहले एक्सपायर होने वाला माल पहले बेचना व ब्लॉक',
+    mr: 'आधीचा माल आधी विकणे व मुदत संपलेला ब्लॉक'
+  },
+  authFeatureBillingTitle: {
+    en: 'Fast Counter Billing',
+    hi: 'तेज़ काउंटर बिलिंग',
+    mr: 'जलद काउंटर बिलिंग'
+  },
+  authFeatureBillingDesc: {
+    en: 'Cash, UPI, split payments & demographic insights',
+    hi: 'कैश, ऑनलाइन पेमेंट व ग्राहक डेमोग्राफिक्स',
+    mr: 'कॅश, UPI आणि ग्राहक वय/लिंग विश्लेषण'
+  },
+  authFeatureCloudTitle: {
+    en: 'Secure Cloud Sync',
+    hi: 'सुरक्षित क्लाउड सिंक',
+    mr: 'सुरक्षित क्लाउड सिंक'
+  },
+  authFeatureCloudDesc: {
+    en: 'Supabase PostgreSQL database & RLS security',
+    hi: 'सुपाबेस क्लाउड बैकअप व RLS सुरक्षा',
+    mr: 'सुपाबेस PostgreSQL डेटाबेस आणि RLS सुरक्षा'
+  },
+  authEnterpriseGrade: {
+    en: 'Enterprise Grade',
+    hi: 'एंटरप्राइज ग्रेड',
+    mr: 'एंटरप्राइझ ग्रेड'
+  },
+  authCopyright: {
+    en: 'Yogeshwari Dairy ERP. All rights reserved.',
+    hi: 'योगेश्वरी डेरी ईआरपी. सर्वाधिकार सुरक्षित.',
+    mr: 'योगेश्वरी डेअरी ईआरपी. सर्व हक्क राखीव.'
+  },
+  authSignInTitle: {
+    en: 'Sign in to your account',
+    hi: 'अपने खाते में साइन इन करें',
+    mr: 'तुमच्या खात्यामध्ये साइन इन करा'
+  },
+  authSignInSubtitle: {
+    en: 'Enter your credentials to continue',
+    hi: 'आगे बढ़ने के लिए अपना विवरण दर्ज करें',
+    mr: 'पुढे जाण्यासाठी तुमचा तपशील प्रविष्ट करा'
+  },
+  authSignUpTitle: {
+    en: 'Create a new account',
+    hi: 'नया ऑपरेटर खाता बनाएं',
+    mr: 'नवीन ऑपरेटर खाते तयार करा'
+  },
+  authSignUpSubtitle: {
+    en: 'Register a new dairy operator account',
+    hi: 'डेयरी प्रबंधन के लिए नया ऑपरेटर जोड़ें',
+    mr: 'डेअरी व्यवस्थापनासाठी नवीन ऑपरेटर जोडा'
+  },
+  authForgotTitle: {
+    en: 'Reset your password',
+    hi: 'अपना पासवर्ड रीसेट करें',
+    mr: 'तुमचा पासवर्ड रीसेट करा'
+  },
+  authForgotSubtitle: {
+    en: 'Enter your email to receive a password reset link',
+    hi: 'पासवर्ड रीसेट लिंक प्राप्त करने के लिए ईमेल दर्ज करें',
+    mr: 'पासवर्ड रीसेट लिंक मिळवण्यासाठी ईमेल प्रविष्ट करा'
+  },
+  authContinueGoogle: {
+    en: 'Continue with Google',
+    hi: 'गूगल से जारी रखें',
+    mr: 'गुगलद्वारे चालू ठेवा'
+  },
+  authOrWithEmail: {
+    en: 'or with email',
+    hi: 'या ईमेल से',
+    mr: 'किंवा ईमेलने'
+  },
+  authFullName: {
+    en: 'Full Name',
+    hi: 'पूरा नाम',
+    mr: 'पूर्ण नाव'
+  },
+  authFullNamePlaceholder: {
+    en: 'e.g. Ramesh Patil',
+    hi: 'उदा. रमेश पाटील',
+    mr: 'उदा. रमेश पाटील'
+  },
+  authEmail: {
+    en: 'Email address',
+    hi: 'ईमेल पता',
+    mr: 'ईमेल पत्ता'
+  },
+  authEmailPlaceholder: {
+    en: 'name@yogeshwaridairy.com',
+    hi: 'name@yogeshwaridairy.com',
+    mr: 'name@yogeshwaridairy.com'
+  },
+  authPassword: {
+    en: 'Password',
+    hi: 'पासवर्ड',
+    mr: 'पासवर्ड'
+  },
+  authPasswordPlaceholder: {
+    en: '••••••••',
+    hi: '••••••••',
+    mr: '••••••••'
+  },
+  authRememberMe: {
+    en: 'Remember me',
+    hi: 'मुझे याद रखें',
+    mr: 'माझी नोंद ठेवा'
+  },
+  authForgotPassword: {
+    en: 'Forgot password?',
+    hi: 'पासवर्ड भूल गए?',
+    mr: 'पासवर्ड विसरलात?'
+  },
+  authSignInButton: {
+    en: 'Sign in',
+    hi: 'साइन इन करें',
+    mr: 'साइन इन करा'
+  },
+  authSigningIn: {
+    en: 'Signing in...',
+    hi: 'साइन इन हो रहा है...',
+    mr: 'साइन इन होत आहे...'
+  },
+  authCreateAccountButton: {
+    en: 'Create account',
+    hi: 'खाता बनाएं',
+    mr: 'खाते तयार करा'
+  },
+  authCreatingAccount: {
+    en: 'Creating account...',
+    hi: 'खाता बन रहा है...',
+    mr: 'खाते तयार होत आहे...'
+  },
+  authSendResetLink: {
+    en: 'Send reset link',
+    hi: 'रीसेट लिंक भेजें',
+    mr: 'रीसेट लिंक पाठवा'
+  },
+  authSendingResetLink: {
+    en: 'Sending link...',
+    hi: 'लिंक भेजी जा रही है...',
+    mr: 'लिंक पाठवत आहे...'
+  },
+  authBackToSignIn: {
+    en: 'Back to sign in',
+    hi: 'साइन इन पर वापस जाएं',
+    mr: 'साइन इनवर परत जा'
+  },
+  authNewOperator: {
+    en: 'New operator?',
+    hi: 'नए ऑपरेटर हैं?',
+    mr: 'नवीन ऑपरेटर आहात?'
+  },
+  authRegisterHere: {
+    en: 'Register here',
+    hi: 'यहाँ रजिस्टर करें',
+    mr: 'येथे नोंदणी करा'
+  },
+  authAlreadyHaveAccount: {
+    en: 'Already have an account?',
+    hi: 'पहले से खाता है?',
+    mr: 'आधीच खाते आहे?'
+  },
+  authGuestMode: {
+    en: 'Continue in Guest / Demo mode',
+    hi: 'डेमो मोड में जारी रखें',
+    mr: 'डेमो मोडमध्ये चालू ठेवा'
+  },
+  authFooterHelp: {
+    en: 'For technical help or credential access, contact dairy management.',
+    hi: 'तकनीकी सहायता या लॉगिन क्रेडेंशियल के लिए डेरी प्रबंधक से संपर्क करें।',
+    mr: 'तांत्रिक मदत किंवा लॉगिन क्रेडेंशियलसाठी डेअरी व्यवस्थापनाशी संपर्क साधा.'
+  },
+  authCapsLockOn: {
+    en: 'Caps Lock is ON',
+    hi: 'कैप्स लॉक चालू है',
+    mr: 'कॅप्स लॉक सुरू आहे'
+  },
+  authShowPassword: {
+    en: 'Show password',
+    hi: 'पासवर्ड दिखाएं',
+    mr: 'पासवर्ड दाखवा'
+  },
+  authHidePassword: {
+    en: 'Hide password',
+    hi: 'पासवर्ड छुपाएं',
+    mr: 'पासवर्ड लपवा'
+  },
+  authToggleTheme: {
+    en: 'Toggle color theme',
+    hi: 'कलर थीम बदलें',
+    mr: 'रंग थीम बदला'
+  },
+  authSkipToForm: {
+    en: 'Skip to login form',
+    hi: 'सीधे लॉगिन फॉर्म पर जाएं',
+    mr: 'थेट लॉगिन फॉर्मवर जा'
+  },
+  authEmailRequired: {
+    en: 'Email address is required',
+    hi: 'ईमेल पता आवश्यक है',
+    mr: 'ईमेल पत्ता आवश्यक आहे'
+  },
+  authEmailInvalid: {
+    en: 'Please enter a valid email address',
+    hi: 'कृपया एक मान्य ईमेल पता दर्ज करें',
+    mr: 'कृपया वैध ईमेल पत्ता प्रविष्ट करा'
+  },
+  authPasswordRequired: {
+    en: 'Password is required',
+    hi: 'पासवर्ड आवश्यक है',
+    mr: 'पासवर्ड आवश्यक आहे'
+  },
+  authPasswordMinLength: {
+    en: 'Password must be at least 6 characters',
+    hi: 'पासवर्ड कम से कम 6 अक्षरों का होना चाहिए',
+    mr: 'पासवर्ड किमान ६ अक्षरांचा असावा'
+  },
+  authFullNameRequired: {
+    en: 'Full name is required',
+    hi: 'पूरा नाम आवश्यक है',
+    mr: 'पूर्ण नाव आवश्यक आहे'
+  },
+  authInvalidCredentials: {
+    en: 'Invalid email or password',
+    hi: 'अमान्य ईमेल या पासवर्ड',
+    mr: 'अवैध ईमेल किंवा पासवर्ड'
+  },
+  authTooManyAttempts: {
+    en: 'Too many attempts. Please wait a moment and try again.',
+    hi: 'बहुत सारे प्रयास। कृपया कुछ देर प्रतीक्षा करें और पुनः प्रयास करें।',
+    mr: 'अनेक प्रयत्न झाले. कृपया थोडा वेळ प्रतीक्षा करून पुन्हा प्रयत्न करा.'
+  },
+  authNetworkError: {
+    en: 'Network error. Please check your internet connection.',
+    hi: 'नेटवर्क समस्या। कृपया अपना इंटरनेट कनेक्शन जांचें।',
+    mr: 'नेटवर्क त्रुटी. कृपया तुमचे इंटरनेट कनेक्शन तपासा.'
+  },
+  authGoogleFailed: {
+    en: 'Google sign-in was cancelled or failed. Please try again.',
+    hi: 'गूगल साइन-इन रद्द हो गया या विफल रहा। कृपया पुनः प्रयास करें।',
+    mr: 'गुगल साइन-इन रद्द झाले किंवा अयशस्वी झाले. कृपया पुन्हा प्रयत्न करा.'
+  },
+  authResetEmailSent: {
+    en: 'Password reset link sent to your email.',
+    hi: 'पासवर्ड रीसेट लिंक आपके ईमेल पर भेज दी गई है।',
+    mr: 'पासवर्ड रीसेट लिंक तुमच्या ईमेलवर पाठवली आहे.'
+  },
+  authAccountCreated: {
+    en: 'Account created successfully! Please sign in.',
+    hi: 'खाता सफलतापूर्वक बन गया! कृपया साइन इन करें।',
+    mr: 'खाते यशस्वीरित्या तयार झाले! कृपया साइन इन करा.'
   }
 };
 

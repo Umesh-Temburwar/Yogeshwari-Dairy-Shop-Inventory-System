@@ -3,6 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { ExpenseCategory } from '../../types';
+import { exportReportToPDF } from '../../lib/exportUtils';
 import { 
   Fuel, 
   Plus, 
@@ -15,7 +16,8 @@ import {
   Trash2, 
   X, 
   TrendingDown,
-  Layers
+  Layers,
+  FileText
 } from 'lucide-react';
 
 export const ExpenseTracker: React.FC = () => {
@@ -83,6 +85,47 @@ export const ExpenseTracker: React.FC = () => {
     return map;
   }, [filteredExpenses]);
 
+  const handleDownloadExpensesPDF = () => {
+    const totalExp = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const opExp = filteredExpenses.filter(e => !e.is_capital_investment).reduce((sum, e) => sum + e.amount, 0);
+    const capExp = filteredExpenses.filter(e => e.is_capital_investment).reduce((sum, e) => sum + e.amount, 0);
+
+    exportReportToPDF({
+      title: language === 'mr' ? 'दुकान खर्च व भांडवली गुंतवणूक लेजर अहवाल' : language === 'hi' ? 'दुकान खर्च व पूंजी निवेश लेजर रिपोर्ट' : 'Shop Operating & Capital Expenses Ledger Report',
+      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Operating Outflows',
+      periodText: language === 'mr' ? 'निवडलेला खर्च कालावधी' : 'चुनी गई खर्च अवधि',
+      kpis: [
+        { label: 'दैनंदिन चालू खर्च (Operating)', value: `₹${opExp.toLocaleString('en-IN')}`, color: 'rose' },
+        { label: 'भांडवली गुंतवणूक (Assets)', value: `₹${capExp.toLocaleString('en-IN')}`, color: 'blue' },
+        { label: 'एकूण खर्च रक्कम (Total)', value: `₹${totalExp.toLocaleString('en-IN')}`, color: 'purple' },
+        { label: 'एकूण खर्च नोंदी', value: `${filteredExpenses.length} नोंदी`, color: 'amber' }
+      ],
+      table: {
+        headers: ['तारीख', 'खर्चाचा तपशील (Expense Title)', 'प्रवर्ग (Category)', 'पेमेंट पद्धत', 'प्रकार', 'रक्कम (₹)', 'तपशील / शेरा'],
+        alignments: ['center', 'left', 'center', 'center', 'center', 'right', 'left'],
+        rows: filteredExpenses.map(e => [
+          e.expense_date,
+          e.title,
+          e.category,
+          e.payment_mode,
+          e.is_capital_investment ? 'भांडवली गुंतवणूक' : 'दैनंदिन चालू खर्च',
+          `₹${e.amount.toLocaleString('en-IN')}`,
+          e.notes || '—'
+        ]),
+        summaryRow: [
+          'एकूण (Total)',
+          `${filteredExpenses.length} खर्च नोंदी`,
+          '',
+          '',
+          '',
+          `₹${totalExp.toLocaleString('en-IN')}`,
+          ''
+        ]
+      },
+      notes: 'दुकान दैनंदिन खर्च व उपकरणांची गुंतवणूक. खर्चाच्या पावत्या जपून ठेवाव्यात.'
+    });
+  };
+
   return (
     <div className="space-y-6">
       
@@ -102,13 +145,24 @@ export const ExpenseTracker: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md shadow-amber-600/20 transition-all active:scale-95"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t('addExpense')}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleDownloadExpensesPDF}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 text-xs font-bold transition-all"
+            title="Download Expenses PDF Report"
+          >
+            <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span>{language === 'mr' ? 'खर्च PDF' : language === 'hi' ? 'खर्च PDF' : 'Expenses PDF'}</span>
+          </button>
+
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md shadow-amber-600/20 transition-all active:scale-95"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t('addExpense')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Time Filter */}

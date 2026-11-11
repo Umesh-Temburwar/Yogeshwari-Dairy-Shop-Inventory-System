@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { UdharCustomer } from '../../types';
+import { exportReportToPDF } from '../../lib/exportUtils';
 import {
   BookOpen,
   Search,
@@ -10,7 +11,8 @@ import {
   Banknote,
   Smartphone,
   X,
-  UserPlus
+  UserPlus,
+  FileText
 } from 'lucide-react';
 
 export const KhataBook: React.FC = () => {
@@ -118,6 +120,86 @@ export const KhataBook: React.FC = () => {
     setPaymentNotes('');
   };
 
+  const handleDownloadKhataBookPDF = () => {
+    const totalDue = customers.reduce((sum, c) => sum + Math.max(0, c.current_balance), 0);
+    const totalCredit = customers.reduce((sum, c) => sum + c.total_credit, 0);
+    const totalPaid = customers.reduce((sum, c) => sum + c.total_paid, 0);
+
+    exportReportToPDF({
+      title: language === 'mr' ? 'उधारी खातेवही संपूर्ण लेजर अहवाल' : language === 'hi' ? 'उधारी खाता-बही संपूर्ण लेजर रिपोर्ट' : 'Customer Credit Ledger & Udhar Khata Book',
+      subtitle: 'Yogeshwari Dairy Farm & Sweets ERP — Customer Accounts',
+      periodText: language === 'mr' ? 'सद्यस्थिती खातेवही बाकी' : 'वर्तमान खाता-बही बकाया',
+      kpis: [
+        { label: 'एकूण येणे बाकी (Total Due)', value: `₹${totalDue.toLocaleString('en-IN')}`, color: 'amber' },
+        { label: 'एकूण दिलेली उधारी', value: `₹${totalCredit.toLocaleString('en-IN')}`, color: 'blue' },
+        { label: 'एकूण जमा वसुली (Paid)', value: `₹${totalPaid.toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: 'एकूण ग्राहक खाती', value: `${customers.length} खाती`, color: 'purple' }
+      ],
+      table: {
+        headers: ['अ.क्र.', 'ग्राहकाचे नाव (Customer)', 'मोबाईल क्र.', 'पत्ता / Landmark', 'एकूण उधारी (₹)', 'जमा रक्कम (₹)', 'बाकी येणे (Due ₹)'],
+        alignments: ['center', 'left', 'center', 'left', 'right', 'right', 'right'],
+        rows: filteredCustomers.map((c, idx) => [
+          idx + 1,
+          c.name,
+          c.phone || '—',
+          c.address || 'Local',
+          `₹${c.total_credit.toLocaleString('en-IN')}`,
+          `₹${c.total_paid.toLocaleString('en-IN')}`,
+          `₹${c.current_balance.toLocaleString('en-IN')}`
+        ]),
+        summaryRow: [
+          'एकूण (Total)',
+          `${filteredCustomers.length} ग्राहक`,
+          '',
+          '',
+          `₹${filteredCustomers.reduce((s, c) => s + c.total_credit, 0).toLocaleString('en-IN')}`,
+          `₹${filteredCustomers.reduce((s, c) => s + c.total_paid, 0).toLocaleString('en-IN')}`,
+          `₹${filteredCustomers.reduce((s, c) => s + c.current_balance, 0).toLocaleString('en-IN')}`
+        ]
+      },
+      notes: 'उधारी खातेवही अहवाल. सर्व नियमित ग्राहकांकडून आठवडा/महिना अखेरीस वसुली करावी.'
+    });
+  };
+
+  const handleDownloadCustomerStatementPDF = (customer: UdharCustomer) => {
+    const custTxs = udharTransactions.filter(
+      t => t.customer_id === customer.id || t.customer_id === customer.name
+    );
+
+    exportReportToPDF({
+      title: `${customer.name} - ${language === 'mr' ? 'खातेवही स्टेटमेंट' : language === 'hi' ? 'खाता स्टेटमेंट' : 'Customer Account Statement'}`,
+      subtitle: `Yogeshwari Dairy Farm & Sweets ERP — Phone: ${customer.phone} | ${customer.address || 'Local'}`,
+      periodText: language === 'mr' ? 'वैयक्तिक हिशोब व व्यवहार' : 'व्यक्तिगत हिसाब व लेन-देन',
+      kpis: [
+        { label: 'सध्याची बाकी येणे (Balance Due)', value: `₹${customer.current_balance.toLocaleString('en-IN')}`, color: customer.current_balance > 0 ? 'amber' : 'emerald' },
+        { label: 'एकूण माल उधारी (Credit)', value: `₹${customer.total_credit.toLocaleString('en-IN')}`, color: 'blue' },
+        { label: 'एकूण जमा रक्कम (Paid)', value: `₹${customer.total_paid.toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: 'व्यवहार संख्या', value: `${custTxs.length} व्यवहार`, color: 'purple' }
+      ],
+      table: {
+        headers: ['तारीख', 'तपशील (Transaction Details)', 'प्रकार', 'पेमेंट पद्धत / बिल क्र.', 'उधारी रक्कम (+₹)', 'जमा रक्कम (-₹)'],
+        alignments: ['center', 'left', 'center', 'left', 'right', 'right'],
+        rows: custTxs.map(tx => [
+          tx.transaction_date,
+          tx.notes || (tx.type === 'Credit_Given' ? 'दूध / डेअरी माल खरेदी' : 'रक्कम जमा'),
+          tx.type === 'Credit_Given' ? 'उधारी (+)' : 'जमा (-)',
+          tx.payment_mode || '—',
+          tx.type === 'Credit_Given' ? `₹${tx.amount.toLocaleString('en-IN')}` : '—',
+          tx.type === 'Payment_Received' ? `₹${tx.amount.toLocaleString('en-IN')}` : '—'
+        ]),
+        summaryRow: [
+          'अंतिम बाकी',
+          '',
+          '',
+          '',
+          `₹${customer.total_credit.toLocaleString('en-IN')}`,
+          `₹${customer.total_paid.toLocaleString('en-IN')}`
+        ]
+      },
+      notes: `ग्राहक स्वाक्षरी: ___________________ | अधिकृत शिक्का: योगेश्वरी डेअरी फार्म. शिल्लक बाकी: ₹${customer.current_balance.toLocaleString('en-IN')}`
+    });
+  };
+
   return (
     <div className="space-y-6">
 
@@ -137,13 +219,24 @@ export const KhataBook: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsAddCustModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md shadow-amber-600/20 transition-all active:scale-95"
-        >
-          <UserPlus className="w-4 h-4" />
-          <span>+ {language === 'mr' ? 'नवीन ग्राहक खाते जोडा' : language === 'hi' ? 'नया खाता खोलें' : 'Add New Customer'}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleDownloadKhataBookPDF}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 text-xs font-bold transition-all"
+            title="Download Udhar Khata Book PDF Report"
+          >
+            <FileText className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <span>{language === 'mr' ? 'खातेवही PDF' : language === 'hi' ? 'खाता-बही PDF' : 'Khata PDF'}</span>
+          </button>
+
+          <button
+            onClick={() => setIsAddCustModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md shadow-amber-600/20 transition-all active:scale-95"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>+ {language === 'mr' ? 'नवीन ग्राहक खाते जोडा' : language === 'hi' ? 'नया खाता खोलें' : 'Add New Customer'}</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Stats */}
@@ -548,13 +641,24 @@ export const KhataBook: React.FC = () => {
                 </span>
               </div>
 
-              <button
-                onClick={() => handleSendWhatsAppReminder(selectedLedgerCustomer)}
-                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>{language === 'mr' ? 'WhatsApp तगादा' : language === 'hi' ? 'WhatsApp तकादा' : 'WhatsApp Reminder'}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleDownloadCustomerStatementPDF(selectedLedgerCustomer)}
+                  className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs"
+                  title="Download Customer Statement PDF"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>{language === 'mr' ? 'स्टेटमेंट PDF' : language === 'hi' ? 'स्टेटमेंट PDF' : 'Statement PDF'}</span>
+                </button>
+
+                <button
+                  onClick={() => handleSendWhatsAppReminder(selectedLedgerCustomer)}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>{language === 'mr' ? 'WhatsApp तगादा' : language === 'hi' ? 'WhatsApp तकादा' : 'WhatsApp Reminder'}</span>
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2 max-h-60 overflow-y-auto">

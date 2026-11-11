@@ -20,8 +20,10 @@ import {
   CheckCircle2, 
   History, 
   Sparkles,
-  Info
+  Info,
+  Camera
 } from 'lucide-react';
+import { ExpiryOcrModal } from '../Scanner/ExpiryOcrModal';
 
 interface StockInwardModalProps {
   product: Product | null;
@@ -61,6 +63,7 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
 
   // Single Entry State (Fresh or Previous)
   const [quantity, setQuantity] = useState('10');
+  const [showOcrModal, setShowOcrModal] = useState(false);
   const [mfgDate, setMfgDate] = useState(todayStr);
   const [expiryDate, setExpiryDate] = useState('');
   const [batchNo, setBatchNo] = useState('');
@@ -438,6 +441,21 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
               {(inwardMode === 'fresh_today' || previousSubtype === 'new_previous_batch') && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/90 dark:border-[#24352F]">
                   
+                  {/* OCR Trigger Button */}
+                  <div className="sm:col-span-2 flex items-center justify-between pb-1">
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-[#8FA69C]">
+                      {language === 'mr' ? 'तारीख व बॅच माहिती:' : 'तारीख व बैच विवरण:'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowOcrModal(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/50 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-xs font-bold transition shadow-2xs"
+                    >
+                      <Camera className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                      <span>{language === 'mr' ? '📷 पॅकेटवरील मुदत स्कॅन करा (OCR)' : '📷 फोटो से एक्सपायरी स्कैन करें (OCR)'}</span>
+                    </button>
+                  </div>
+
                   {/* Mfg Date */}
                   <div>
                     <label className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
@@ -640,6 +658,17 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
         </form>
 
       </div>
+
+      {/* Expiry OCR Scanner Modal */}
+      <ExpiryOcrModal
+        isOpen={showOcrModal}
+        onClose={() => setShowOcrModal(false)}
+        onDatesExtracted={(extracted) => {
+          if (extracted.batchNo) setBatchNo(extracted.batchNo);
+          if (extracted.mfgDate) setMfgDate(extracted.mfgDate);
+          if (extracted.expiryDate) setExpiryDate(extracted.expiryDate);
+        }}
+      />
     </div>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../context/StoreContext';
 import { useLanguage, Language } from '../context/LanguageContext';
 import { useTheme, ThemeMode } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { 
   Milk, 
   Database, 
@@ -15,7 +16,9 @@ import {
   Menu,
   ChevronDown,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  LogOut,
+  User
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -39,6 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const { language, setLanguage, t } = useLanguage();
   const { theme, resolvedTheme, setTheme } = useTheme();
+  const { user, signOut } = useAuth();
 
   const [currentTime, setCurrentTime] = useState<string>('');
   const [currentDate, setCurrentDate] = useState<string>('');
@@ -290,6 +294,20 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Settings className="w-5 h-5" />
           </button>
+
+          {/* User Profile / Logout Button */}
+          <div className="flex items-center pl-1 border-l border-slate-200 dark:border-[#24352F]">
+            <button
+              onClick={() => signOut()}
+              className="flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 dark:bg-[#1A2A25] dark:hover:bg-rose-950/40 text-slate-700 hover:text-rose-600 dark:text-[#8FA69C] dark:hover:text-rose-400 border border-slate-200 dark:border-[#24352F] text-xs font-bold transition-all shadow-2xs"
+              title={user ? `Logged in as ${user.email}. Click to Logout` : 'Guest Mode. Click to Login'}
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden md:inline max-w-[110px] truncate">
+                {user ? user.email?.split('@')[0] : (language === 'mr' ? 'अतिथी' : 'Guest')}
+              </span>
+            </button>
+          </div>
 
         </div>
 

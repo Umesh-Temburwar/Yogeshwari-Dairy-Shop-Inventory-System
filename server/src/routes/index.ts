@@ -6,6 +6,7 @@ import brandRoutes from './brandRoutes.js';
 import unitRoutes from './unitRoutes.js';
 import supplierRoutes from './supplierRoutes.js';
 import stockRoutes from './stockRoutes.js';
+import aiRoutes from './aiRoutes.js';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.use('/brands', brandRoutes);
 router.use('/units', unitRoutes);
 router.use('/suppliers', supplierRoutes);
 router.use('/stock', stockRoutes);
+router.use('/ai', aiRoutes);
 
 export default router;
 

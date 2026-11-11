@@ -283,6 +283,50 @@ CREATE TABLE IF NOT EXISTS public.expenses (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- 16. CUSTOMER SALES RETURNS TABLE
+CREATE TABLE IF NOT EXISTS public.product_returns (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    return_no VARCHAR(100) UNIQUE NOT NULL,
+    sale_id UUID REFERENCES public.sales(id) ON DELETE SET NULL,
+    invoice_no VARCHAR(100),
+    product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
+    product_name VARCHAR(255) NOT NULL,
+    quantity NUMERIC(12, 2) NOT NULL CHECK (quantity > 0),
+    unit VARCHAR(50) NOT NULL,
+    unit_price NUMERIC(12, 2) NOT NULL CHECK (unit_price >= 0),
+    refund_amount NUMERIC(12, 2) NOT NULL CHECK (refund_amount >= 0),
+    refund_mode VARCHAR(50) NOT NULL DEFAULT 'Cash' CHECK (refund_mode IN ('Cash', 'Online_UPI', 'Udhar_Credit', 'Replacement')),
+    reason VARCHAR(100) NOT NULL,
+    condition VARCHAR(50) NOT NULL DEFAULT 'Resellable' CHECK (condition IN ('Resellable', 'Damaged_Waste')),
+    customer_name VARCHAR(255),
+    customer_phone VARCHAR(25),
+    notes TEXT,
+    return_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 17. SUPPLIER INWARD PURCHASES RETURNS TABLE (खरेदी व सप्लायर परतावा - खराब/एक्सपायर माल परत करणे)
+CREATE TABLE IF NOT EXISTS public.supplier_returns (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    return_no VARCHAR(100) UNIQUE NOT NULL,
+    supplier_name VARCHAR(255) NOT NULL,
+    product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
+    product_name VARCHAR(255) NOT NULL,
+    batch_no VARCHAR(100),
+    purchase_id UUID REFERENCES public.purchases(id) ON DELETE SET NULL,
+    quantity NUMERIC(12, 2) NOT NULL CHECK (quantity > 0),
+    unit VARCHAR(50) NOT NULL,
+    purchase_price NUMERIC(12, 2) NOT NULL CHECK (purchase_price >= 0),
+    total_refund_amount NUMERIC(12, 2) NOT NULL CHECK (total_refund_amount >= 0),
+    reason VARCHAR(100) NOT NULL,
+    refund_status VARCHAR(50) NOT NULL DEFAULT 'Pending' CHECK (refund_status IN ('Pending', 'Refund_Received', 'Adjusted_In_Next_Bill', 'Replacement_Received')),
+    refund_mode VARCHAR(50) CHECK (refund_mode IN ('Cash', 'Online_UPI', 'Credit_Deduction', 'Replacement')),
+    refund_date DATE,
+    return_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ============================================================================
 -- SECTION 3: PERFORMANCE INDEXES
 -- ============================================================================
@@ -768,6 +812,8 @@ ALTER TABLE public.damage_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.udhar_customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.udhar_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_returns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.supplier_returns ENABLE ROW LEVEL SECURITY;
 
 -- Clean existing policies to avoid duplicate errors
 DO $$ 
@@ -778,7 +824,8 @@ BEGIN
     FOR tbl IN SELECT unnest(ARRAY[
         'profiles', 'categories', 'units', 'suppliers', 'products', 'batches',
         'stock_movements', 'sales', 'sale_items', 'sale_batch_allocations',
-        'purchases', 'damage_records', 'expenses', 'udhar_customers', 'udhar_transactions'
+        'purchases', 'damage_records', 'expenses', 'udhar_customers', 'udhar_transactions',
+        'product_returns', 'supplier_returns'
     ])
     LOOP
         FOR pol IN SELECT policyname FROM pg_policies WHERE schemaname = 'public' AND tablename = tbl
@@ -807,6 +854,8 @@ CREATE POLICY "Allow all damage_records" ON public.damage_records FOR ALL USING 
 CREATE POLICY "Allow all expenses" ON public.expenses FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all udhar_customers" ON public.udhar_customers FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all udhar_transactions" ON public.udhar_transactions FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all product_returns" ON public.product_returns FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all supplier_returns" ON public.supplier_returns FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================================================
 -- SECTION 7: AUTHENTIC DAIRY SEED DATA

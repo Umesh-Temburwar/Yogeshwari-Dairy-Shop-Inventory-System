@@ -20,7 +20,8 @@ import {
   Clock,
   AlertTriangle,
   Barcode,
-  FileText
+  FileText,
+  QrCode
 } from 'lucide-react';
 import { exportReportToPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
@@ -666,6 +667,35 @@ export const BillingCounter: React.FC = () => {
             </div>
           </div>
 
+          {/* Online UPI Quick Card with QR Preview */}
+          {paymentMode === 'Online_UPI' && (
+            <div className="bg-purple-50/80 dark:bg-purple-950/25 p-3 rounded-2xl border border-purple-200/80 dark:border-purple-800/40 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-white p-0.5 shadow-xs border border-purple-200 dark:border-purple-800/60 overflow-hidden flex items-center justify-center shrink-0">
+                    <img src="/QR.jpg" alt="UPI QR" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-purple-950 dark:text-purple-200 block">
+                      {language === 'mr' ? 'QR कोड पेमेंट तयार' : language === 'hi' ? 'QR कोड पेमेंट तैयार' : 'QR Payment Ready'}
+                    </span>
+                    <span className="text-[10px] text-purple-700/80 dark:text-purple-400 font-medium">
+                      GPay &bull; PhonePe &bull; Paytm
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowQrModal(true)}
+                  className="px-2.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition active:scale-95"
+                >
+                  <QrCode className="w-3.5 h-3.5" />
+                  <span>{language === 'mr' ? 'QR उघडा' : language === 'hi' ? 'QR खोलें' : 'View QR'}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Cash Tender & Change Calculator */}
           {paymentMode === 'Cash' && (
             <div className="bg-blue-50/70 dark:bg-[#1A2A25] p-3 rounded-xl border border-blue-200/80 dark:border-blue-500/30 space-y-2">
@@ -733,6 +763,14 @@ export const BillingCounter: React.FC = () => {
                   onChange={(e) => setSplitOnlineAmount(parseFloat(e.target.value) || 0)}
                   className="w-full px-2 py-1 rounded bg-white dark:bg-[#131F1B] border border-teal-300 dark:border-teal-500/40 text-xs font-bold text-slate-900 dark:text-white"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowQrModal(true)}
+                  className="mt-1 text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
+                >
+                  <QrCode className="w-3 h-3" />
+                  <span>{language === 'mr' ? 'ऑनलाइन QR कोड उघडा' : language === 'hi' ? 'ऑनलाइन QR कोड देखें' : 'View Online QR'}</span>
+                </button>
               </div>
             </div>
           )}
@@ -832,46 +870,67 @@ export const BillingCounter: React.FC = () => {
         </div>
       )}
 
-      {/* UPI QR CODE POPUP MODAL */}
+      {/* UPI QR CODE POPUP MODAL (Official QR.jpg Merchant Standee) */}
       {showQrModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border border-slate-200/80 dark:border-[#24352F]">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-sm sm:max-w-md w-full p-5 sm:p-6 shadow-2xl text-center space-y-3.5 border border-slate-200/90 dark:border-[#24352F] max-h-[92vh] overflow-y-auto">
+            {/* Header: App badges + Close */}
             <div className="flex justify-between items-center">
-              <span className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/40 px-2 py-0.5 rounded-full">
-                PhonePe / GooglePay / Paytm QR
+              <span className="text-[11px] font-bold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/40 px-2.5 py-0.5 rounded-full">
+                PhonePe &bull; GPay &bull; Paytm &bull; BHIM
               </span>
-              <button onClick={() => setShowQrModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white">
+              <button
+                onClick={() => setShowQrModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white">
-                ₹{netTotal.toFixed(2)}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
-                {t('shopName')} Merchant QR Code
+            {/* Bill Net Amount Card */}
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-[#1A2A25] dark:to-[#131F1B] p-3 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/50">
+              <span className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 block">
+                {language === 'mr' ? 'एकूण देय रक्कम (Total Bill Amount)' : language === 'hi' ? 'कुल देय राशि (Total Bill Amount)' : 'Total Bill Payable'}
+              </span>
+              <div className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
+                ₹{(paymentMode === 'Split' ? (splitOnlineAmount || netTotal) : netTotal).toFixed(2)}
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 font-medium">
+                {t('shopName')} Official Merchant QR
               </p>
             </div>
 
-            {/* Generated QR Code Graphic */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] inline-block shadow-sm">
+            {/* The Authentic QR.jpg Standee Display */}
+            <div className="bg-white p-2 rounded-2xl border-2 border-emerald-500/40 shadow-md inline-block max-w-[270px] sm:max-w-[300px] mx-auto overflow-hidden">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=yogeshwaridairy@okaxis%26pn=Yogeshwari%20Dairy%26am=${netTotal}%26cu=INR`}
-                alt="UPI Payment QR Code"
-                className="w-44 h-44 mx-auto rounded-lg"
+                src="/QR.jpg"
+                alt="Yogeshwari Dairy Official UPI QR Code"
+                className="w-full max-h-[380px] sm:max-h-[420px] object-contain rounded-xl"
               />
             </div>
 
-            <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-              {language === 'mr' ? 'ग्राहक कोणत्याही UPI ॲपवरून स्कॅन करून पैसे देऊ शकतात.' : language === 'hi' ? 'ग्राहक अपने किसी भी UPI ऐप से स्कैन करके भुगतान कर सकता है।' : 'Customer can scan using any UPI App to pay.'}
+            {/* Instruction Footer */}
+            <p className="text-xs text-slate-600 dark:text-[#8FA69C] font-medium leading-relaxed">
+              {language === 'mr'
+                ? 'ग्राहक कोणत्याही UPI ॲपवरून हा QR स्कॅन करून थेट पेमेंट करू शकतात.'
+                : language === 'hi'
+                ? 'ग्राहक किसी भी UPI ऐप से यह QR स्कैन करके भुगतान कर सकते हैं।'
+                : 'Customer can scan this merchant QR code with any UPI app to pay.'}
             </p>
 
+            {/* Confirmation & Done Button */}
             <button
               onClick={() => setShowQrModal(false)}
-              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md"
+              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2"
             >
-              {language === 'mr' ? 'पैसे मिळाले (Payment Done)' : language === 'hi' ? 'भुगतान प्राप्त हुआ (Payment Done)' : 'Payment Received'}
+              <CheckCircle2 className="w-4 h-4" />
+              <span>
+                {language === 'mr'
+                  ? 'पेमेंट मिळाले (Payment Received ✓)'
+                  : language === 'hi'
+                  ? 'भुगतान प्राप्त हुआ (Payment Received ✓)'
+                  : 'Payment Received ✓'}
+              </span>
             </button>
           </div>
         </div>

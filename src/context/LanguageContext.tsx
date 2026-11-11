@@ -118,7 +118,7 @@ export const TRANSLATIONS: Translations = {
     mr: 'ग्राहक बाकी व वसुली'
   },
   expensesNav: {
-    en: 'Rent, Power & Fuel',
+    en: 'Rent, Electricity Bill & Fuel',
     hi: 'किराया, बिजली व खर्च',
     mr: 'भाडे, वीज बिल व खर्च'
   },

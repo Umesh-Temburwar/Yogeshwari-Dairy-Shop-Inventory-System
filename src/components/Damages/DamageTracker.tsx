@@ -4,9 +4,9 @@ import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { DamageReason } from '../../types';
 import { exportReportToPDF } from '../../lib/exportUtils';
-import { 
-  PackageX, 
-  Plus, 
+import {
+  PackageX,
+  Plus,
   X,
   FileText
 } from 'lucide-react';
@@ -103,7 +103,7 @@ export const DamageTracker: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#131F1B] p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
         <div>
@@ -112,11 +112,11 @@ export const DamageTracker: React.FC = () => {
             <span>{t('damageTitle')}</span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
-            {language === 'mr' 
-              ? 'नासलेले दूध, लिकेज, मुदत संपलेली उत्पादने व आर्थिक नुकसानीचा हिशोब' 
+            {language === 'mr'
+              ? 'नासलेले दूध, लिकेज, मुदत संपलेली उत्पादने व आर्थिक नुकसानीचा हिशोब'
               : language === 'hi'
-              ? 'फटा दूध, पाउच लीकेज, दही की एक्सपायरी व नुकसान का वित्तीय हिसाब'
-              : 'Curdled milk, packet leakage, expired goods, and financial loss tracking'}
+                ? 'फटा दूध, पाउच लीकेज, दही की एक्सपायरी व नुकसान का वित्तीय हिसाब'
+                : 'Curdled milk, packet leakage, expired goods, and financial loss tracking'}
           </p>
         </div>
 
@@ -250,7 +250,7 @@ export const DamageTracker: React.FC = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 border border-transparent dark:border-[#24352F]">
-            
+
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
               <div className="flex items-center gap-2">
                 <div className="p-2 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300">
@@ -265,7 +265,7 @@ export const DamageTracker: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
               >
@@ -274,7 +274,7 @@ export const DamageTracker: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              
+
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
                   {language === 'mr' ? 'कोणता माल खराब झाला?' : language === 'hi' ? 'कौनसा माल खराब हुआ?' : 'Select Damaged Item'} *
@@ -338,7 +338,7 @@ export const DamageTracker: React.FC = () => {
                 </label>
                 <textarea
                   rows={2}
-                  placeholder={language === 'mr' ? 'उदा. दुपारी वीज गेल्यामुळे २.५ लिटर दूध नासले (पनीर/छान्यामध्ये वापरले)' : language === 'hi' ? 'उदा. दोपहर में लाइट जाने के कारण दूध फट गया' : 'e.g. Power outage caused 2.5L curdling'}
+                  placeholder={language === 'mr' ? 'उदा. दुपारी वीज गेल्यामुळे २.५ लिटर दूध नासले (पनीर/छान्यामध्ये वापरले)' : language === 'hi' ? 'उदा. दोपहर में लाइट जाने के कारण दूध फट गया' : 'e.g. Electricity Bill outage caused 2.5L curdling'}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none"

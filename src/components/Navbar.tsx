@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useStore } from '../context/StoreContext';
 import { useLanguage, Language } from '../context/LanguageContext';
 import { useTheme, ThemeMode } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { 
   Milk, 
-  Database, 
-  RefreshCw, 
   Clock, 
   Languages,
-  Settings,
   Sun,
   Moon,
   Laptop,
@@ -22,24 +18,17 @@ import {
 } from 'lucide-react';
 
 interface NavbarProps {
-  onOpenSettings: () => void;
+  onOpenSettings?: () => void;
   isSidebarCollapsed: boolean;
   onToggleSidebarCollapse: () => void;
   onOpenMobileSidebar: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
-  onOpenSettings,
   isSidebarCollapsed,
   onToggleSidebarCollapse,
   onOpenMobileSidebar,
 }) => {
-  const { 
-    isSupabaseConnected, 
-    isSyncing, 
-    syncWithSupabase,
-  } = useStore();
-
   const { language, setLanguage, t } = useLanguage();
   const { theme, resolvedTheme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
@@ -260,44 +249,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
           </div>
-
-          {/* Database Cloud/Local Indicator */}
-          <button
-            onClick={onOpenSettings}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
-              isSupabaseConnected 
-                ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800/40' 
-                : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] border-slate-300 dark:border-[#24352F]'
-            }`}
-            title="Database Connection Status"
-          >
-            <Database className={`w-3.5 h-3.5 ${isSupabaseConnected ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`} />
-            <span className="hidden sm:inline">
-              {isSupabaseConnected ? 'Cloud' : 'Local'}
-            </span>
-            <span className={`w-2 h-2 rounded-full ${isSupabaseConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-          </button>
-
-          {/* Sync Button */}
-          {isSupabaseConnected && (
-            <button
-              onClick={syncWithSupabase}
-              disabled={isSyncing}
-              className="p-2 rounded-xl text-slate-500 dark:text-[#8FA69C] hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-[#1A2A25] transition"
-              title="Sync Database"
-            >
-              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-emerald-600' : ''}`} />
-            </button>
-          )}
-
-          {/* Settings Button */}
-          <button
-            onClick={onOpenSettings}
-            className="p-2 rounded-xl text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition"
-            title="Settings & Supabase Configuration"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
 
           {/* User Profile / Logout Button */}
           <div className="flex items-center pl-1 border-l border-slate-200 dark:border-[#24352F]">

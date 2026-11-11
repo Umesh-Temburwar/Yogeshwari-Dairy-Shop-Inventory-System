@@ -2,10 +2,10 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
-import { 
-  Sparkles, 
-  Trophy, 
-  ShoppingBag, 
+import {
+  Sparkles,
+  Trophy,
+  ShoppingBag,
   Printer,
   Users,
   UserCheck,
@@ -31,13 +31,13 @@ export const ProfitReport: React.FC = () => {
 
   // Aggregate product performance
   const productPerformance = useMemo(() => {
-    const map: Record<string, { 
-      name: string; 
-      quantity: number; 
-      unit: string; 
-      revenue: number; 
-      cost: number; 
-      profit: number 
+    const map: Record<string, {
+      name: string;
+      quantity: number;
+      unit: string;
+      revenue: number;
+      cost: number;
+      profit: number
     }> = {};
 
     filteredSales.forEach(s => {
@@ -200,11 +200,11 @@ export const ProfitReport: React.FC = () => {
     };
   }, [filteredSales]);
 
-  const maleShare = demographicStats.totalRevenue > 0 
-    ? Math.round(((demographicStats.genderStats['Male']?.revenue || 0) / demographicStats.totalRevenue) * 100) 
+  const maleShare = demographicStats.totalRevenue > 0
+    ? Math.round(((demographicStats.genderStats['Male']?.revenue || 0) / demographicStats.totalRevenue) * 100)
     : 0;
-  const femaleShare = demographicStats.totalRevenue > 0 
-    ? Math.round(((demographicStats.genderStats['Female']?.revenue || 0) / demographicStats.totalRevenue) * 100) 
+  const femaleShare = demographicStats.totalRevenue > 0
+    ? Math.round(((demographicStats.genderStats['Female']?.revenue || 0) / demographicStats.totalRevenue) * 100)
     : 0;
   const otherShare = Math.max(0, 100 - maleShare - femaleShare);
 
@@ -265,7 +265,7 @@ export const ProfitReport: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#131F1B] p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
         <div>
@@ -276,11 +276,11 @@ export const ProfitReport: React.FC = () => {
             </span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
-            {language === 'mr' 
+            {language === 'mr'
               ? 'निव्वळ नफा (Net Profit) आणि कोणत्या मालातून सर्वाधिक नफा मिळतो याचे संपूर्ण विश्लेषण'
               : language === 'hi'
-              ? 'शुद्ध मुनाफा (Net Profit) एवं कौनसा माल सबसे ज़्यादा बिकता है उसका पूरा विश्लेषण'
-              : 'Comprehensive Net Profit analysis and product-level margin breakdown'}
+                ? 'शुद्ध मुनाफा (Net Profit) एवं कौनसा माल सबसे ज़्यादा बिकता है उसका पूरा विश्लेषण'
+                : 'Comprehensive Net Profit analysis and product-level margin breakdown'}
           </p>
         </div>
 
@@ -315,11 +315,11 @@ export const ProfitReport: React.FC = () => {
               {t('plStatement')}
             </h3>
             <span className="text-xs text-slate-500 dark:text-[#8FA69C]">
-              {language === 'mr' 
+              {language === 'mr'
                 ? 'फॉर्म्युला: विक्री - खरेदी खर्च - दुकानाचे खर्च - नासाडी नुकसान'
                 : language === 'hi'
-                ? 'सटीक फॉर्मूला: बिक्री - खरीद लागत - दुकान खर्च - डैमेज नुकसान'
-                : 'Formula: Revenue - Cost of Goods - Operating Expenses - Spoilage'}
+                  ? 'सटीक फॉर्मूला: बिक्री - खरीद लागत - दुकान खर्च - डैमेज नुकसान'
+                  : 'Formula: Revenue - Cost of Goods - Operating Expenses - Spoilage'}
             </span>
           </div>
 
@@ -335,7 +335,7 @@ export const ProfitReport: React.FC = () => {
 
         {/* Step-by-Step Breakdown Table */}
         <div className="space-y-2 text-xs">
-          
+
           <div className="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-[#1A2A25] font-bold text-slate-900 dark:text-white">
             <span className="text-sm">
               1. {language === 'mr' ? 'एकूण विक्री महसूल (Total Sales Revenue):' : language === 'hi' ? 'कुल बिक्री राजस्व (Total Sales Revenue):' : 'Total Sales Revenue:'}
@@ -364,7 +364,7 @@ export const ProfitReport: React.FC = () => {
           </div>
 
           <div className="flex justify-between items-center p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 text-slate-800 dark:text-[#E7F0EC] font-semibold border border-amber-100 dark:border-amber-900/40">
-            <span>3. {language === 'mr' ? 'वजा: दुकानाचे दैनंदिन खर्च (भाडे + वीज बिल + पेट्रोल + इतर):' : language === 'hi' ? 'घटाएं: दुकान संचालन खर्च (Rent + Light + Petrol + Other):' : 'Less: Operating Expenses (Rent, Power, Fuel, Staff):'}</span>
+            <span>3. {language === 'mr' ? 'वजा: दुकानाचे दैनंदिन खर्च (भाडे + वीज बिल + पेट्रोल + इतर):' : language === 'hi' ? 'घटाएं: दुकान संचालन खर्च (Rent + Light + Petrol + Other):' : 'Less: Operating Expenses (Rent, Electricity Bill, Fuel, Staff):'}</span>
             <span className="font-black text-rose-700 dark:text-rose-400">-₹{metrics.operatingExpenses.toLocaleString('en-IN')}</span>
           </div>
 
@@ -390,7 +390,7 @@ export const ProfitReport: React.FC = () => {
 
       {/* TOP SELLING PRODUCTS & BEST SELLERS INSIGHTS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+
         {/* Visual Bar Chart */}
         <div className="bg-white dark:bg-[#131F1B] rounded-3xl p-5 border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
           <div>
@@ -412,7 +412,7 @@ export const ProfitReport: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#24352F' : '#f1f5f9'} />
                   <XAxis dataKey="name" tick={{ fontSize: 10, fill: isDark ? '#8FA69C' : '#64748b' }} angle={-15} textAnchor="end" />
                   <YAxis tick={{ fontSize: 10, fill: isDark ? '#8FA69C' : '#64748b' }} tickFormatter={(v) => `₹${v}`} />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(val: any) => [`₹${Number(val).toLocaleString('en-IN')}`, '']}
                     contentStyle={{
                       backgroundColor: isDark ? '#131F1B' : '#ffffff',
@@ -458,16 +458,15 @@ export const ProfitReport: React.FC = () => {
 
           <div className="space-y-2.5 my-3 max-h-72 overflow-y-auto pr-1">
             {productPerformance.map((prod, idx) => (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 className="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-[#24352F] bg-slate-50/60 dark:bg-[#1A2A25] text-xs hover:bg-slate-100/60 dark:hover:bg-[#1F332D] transition-colors"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${
-                    idx === 0 ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-200' : 
-                    idx === 1 ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200' :
-                    idx === 2 ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300' : 'bg-white dark:bg-[#131F1B] text-slate-600 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F]'
-                  }`}>
+                  <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${idx === 0 ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-200' :
+                      idx === 1 ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200' :
+                        idx === 2 ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300' : 'bg-white dark:bg-[#131F1B] text-slate-600 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F]'
+                    }`}>
                     #{idx + 1}
                   </span>
                   <div className="truncate">
@@ -516,7 +515,7 @@ export const ProfitReport: React.FC = () => {
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/40">
               {demographicStats.totalSalesCount} {language === 'mr' ? 'ग्राहक नोंदी' : language === 'hi' ? 'ग्राहक रिकॉर्ड' : 'Customer Bills'}
@@ -526,7 +525,7 @@ export const ProfitReport: React.FC = () => {
 
         {/* Demographic KPI Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          
+
           {/* Gender Ratio Card */}
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] space-y-2">
             <div className="flex justify-between items-center text-xs font-semibold text-slate-500 dark:text-[#8FA69C]">
@@ -678,13 +677,12 @@ export const ProfitReport: React.FC = () => {
                             if (data.qty <= 0) return null;
                             const shortLabel = grp.includes('<18') ? '<18' : grp.includes('18-25') ? '18-25' : grp.includes('26-45') ? '26-45' : '45+';
                             return (
-                              <span 
+                              <span
                                 key={grp}
-                                className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                                  grp === maxAgeGroup 
+                                className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${grp === maxAgeGroup
                                     ? 'bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-700/60 font-bold'
                                     : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
-                                }`}
+                                  }`}
                               >
                                 {shortLabel}: {data.qty.toFixed(1)} {item.unit}
                               </span>

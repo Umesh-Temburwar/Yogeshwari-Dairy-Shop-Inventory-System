@@ -47,3 +47,4 @@ CREATE TABLE IF NOT EXISTS public.udhar_transactions (
     transaction_date DATE NOT NULL DEFAULT CURRENT_DATE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+

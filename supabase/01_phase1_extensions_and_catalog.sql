@@ -79,3 +79,4 @@ DROP TRIGGER IF EXISTS trg_categories_updated_at ON public.categories;
 CREATE TRIGGER trg_categories_updated_at
 BEFORE UPDATE ON public.categories
 FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
+

@@ -26,3 +26,4 @@ CREATE TABLE IF NOT EXISTS public.damage_records (
     notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+

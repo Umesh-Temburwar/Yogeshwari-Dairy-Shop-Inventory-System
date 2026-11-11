@@ -54,3 +54,4 @@ CREATE TABLE IF NOT EXISTS public.purchases (
     notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+

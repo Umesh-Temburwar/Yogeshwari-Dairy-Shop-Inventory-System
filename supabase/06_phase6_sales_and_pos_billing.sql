@@ -64,3 +64,4 @@ CREATE TABLE IF NOT EXISTS public.sale_batch_allocations (
     ) STORED,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+

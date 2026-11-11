@@ -67,3 +67,4 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 1. ब्राऊझरमध्ये Yogeshwari Dairy सॉफ्टवेअर रिफ्रेश करा.
 2. वरती Navbar मध्ये किंवा सिस्टीम आपोआप क्लाऊड Supabase शी कनेक्ट होईल.
 3. तुम्ही काऊंटरवर नवीन बिल बनवल्यास किंवा नवीन खरेदी नोंदवल्यास ती माहिती थेट Supabase च्या **`Table Editor`** मध्ये रिअल-टाइम दिसेल!
+

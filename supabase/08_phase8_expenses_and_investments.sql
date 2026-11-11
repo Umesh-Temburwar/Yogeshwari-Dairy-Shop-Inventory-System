@@ -27,3 +27,4 @@ CREATE TABLE IF NOT EXISTS public.expenses (
     notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+

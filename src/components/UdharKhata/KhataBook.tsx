@@ -555,7 +555,7 @@ export const KhataBook: React.FC = () => {
                 <input
                   type="tel"
                   required
-                  placeholder="98XXXXXXXX"
+                  placeholder={language === 'mr' ? 'उदा. 9822XXXXXX' : language === 'hi' ? 'उदा. 9822XXXXXX' : 'e.g. 9822XXXXXX'}
                   value={newCustPhone}
                   onChange={(e) => setNewCustPhone(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500"

@@ -362,7 +362,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                   value={customerPhone}
                   onChange={e => setCustomerPhone(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-300 dark:border-[#24352F] text-xs font-semibold text-slate-800 dark:text-[#E7F0EC]"
-                  placeholder="98XXXXXXXX"
+                  placeholder={language === 'mr' ? 'उदा. 9822XXXXXX' : language === 'hi' ? 'उदा. 9822XXXXXX' : 'e.g. 9822XXXXXX'}
                 />
               </div>
             </div>

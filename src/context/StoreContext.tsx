@@ -1272,9 +1272,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         quantity: newReturn.quantity,
         unit: newReturn.unit,
         estimated_loss_amount: newReturn.refund_amount,
-        damage_reason: `Customer Return: ${newReturn.reason}${newReturn.notes ? ' - ' + newReturn.notes : ''}`,
+        reason: 'Other',
         damage_date: newReturn.return_date,
-        batch_no: 'RETURN-WASTE',
+        notes: `Customer Return: ${newReturn.reason}${newReturn.notes ? ' - ' + newReturn.notes : ''} (Batch: RETURN-WASTE)`,
         created_at: new Date().toISOString()
       };
       setDamages(prev => [autoDamage, ...prev]);

@@ -83,6 +83,38 @@ ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
 ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
+-- Drop any legacy check constraints on profiles that restrict 'role'
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_admin_slot_check;
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_default_redirect_view_check;
+
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (
+        SELECT c.conname
+        FROM pg_constraint c
+        JOIN pg_attribute a ON a.attnum = ANY(c.conkey) AND a.attrelid = c.conrelid
+        WHERE c.conrelid = 'public.profiles'::regclass
+          AND c.contype = 'c'
+          AND a.attname IN ('role', 'admin_slot', 'default_redirect_view')
+    ) LOOP
+        EXECUTE 'ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS ' || quote_ident(r.conname);
+    END LOOP;
+END $$;
+
+-- Normalize role values on all existing rows before reapplying clean constraints
+UPDATE public.profiles
+SET role = CASE 
+    WHEN LOWER(TRIM(role)) = 'owner' THEN 'Owner'
+    ELSE 'Admin'
+END;
+
+ALTER TABLE public.profiles 
+ADD CONSTRAINT profiles_role_check 
+CHECK (role IN ('Owner', 'Admin'));
+
 UPDATE public.profiles
 SET email = 'user_' || id || '@yogeshwaridairy.com'
 WHERE email IS NULL;
@@ -979,6 +1011,38 @@ ADD COLUMN IF NOT EXISTS default_redirect_view VARCHAR(50) DEFAULT 'dashboard',
 ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
 ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+-- Drop any legacy check constraints on profiles that restrict 'role'
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_admin_slot_check;
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_default_redirect_view_check;
+
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (
+        SELECT c.conname
+        FROM pg_constraint c
+        JOIN pg_attribute a ON a.attnum = ANY(c.conkey) AND a.attrelid = c.conrelid
+        WHERE c.conrelid = 'public.profiles'::regclass
+          AND c.contype = 'c'
+          AND a.attname IN ('role', 'admin_slot', 'default_redirect_view')
+    ) LOOP
+        EXECUTE 'ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS ' || quote_ident(r.conname);
+    END LOOP;
+END $$;
+
+-- Normalize role values on all existing rows before reapplying clean constraints
+UPDATE public.profiles
+SET role = CASE 
+    WHEN LOWER(TRIM(role)) = 'owner' THEN 'Owner'
+    ELSE 'Admin'
+END;
+
+ALTER TABLE public.profiles 
+ADD CONSTRAINT profiles_role_check 
+CHECK (role IN ('Owner', 'Admin'));
 
 UPDATE public.profiles
 SET email = 'user_' || id || '@yogeshwaridairy.com'

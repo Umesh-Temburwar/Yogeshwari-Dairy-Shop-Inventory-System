@@ -48,19 +48,71 @@ ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
 ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
+-- 2.1 CRITICAL: Drop any legacy CHECK constraints on profiles (specifically profiles_role_check)
+-- that reject 'Owner' or restrict legacy roles:
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_admin_slot_check;
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_default_redirect_view_check;
+
+-- Dynamically drop any other check constraints on role, admin_slot, or default_redirect_view
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (
+        SELECT c.conname
+        FROM pg_constraint c
+        JOIN pg_attribute a ON a.attnum = ANY(c.conkey) AND a.attrelid = c.conrelid
+        WHERE c.conrelid = 'public.profiles'::regclass
+          AND c.contype = 'c'
+          AND a.attname IN ('role', 'admin_slot', 'default_redirect_view')
+    ) LOOP
+        EXECUTE 'ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS ' || quote_ident(r.conname);
+    END LOOP;
+END $$;
+
 -- Clean up any existing rows with NULL email before applying constraints
 UPDATE public.profiles
 SET email = 'user_' || id || '@yogeshwaridairy.com'
 WHERE email IS NULL;
 
--- Normalize role case if previous test row had lowercase 'owner' or 'admin'
+-- Normalize role values on all existing rows before reapplying clean constraints
 UPDATE public.profiles
-SET role = 'Owner'
-WHERE LOWER(role) = 'owner';
+SET role = CASE 
+    WHEN LOWER(TRIM(role)) = 'owner' THEN 'Owner'
+    ELSE 'Admin'
+END;
+
+-- Clean existing admin_slot and default_redirect_view to prevent check constraint violations
+UPDATE public.profiles
+SET admin_slot = NULL
+WHERE role = 'Owner' OR (admin_slot NOT IN (1, 2));
 
 UPDATE public.profiles
-SET role = 'Admin'
-WHERE LOWER(role) = 'admin';
+SET default_redirect_view = CASE
+    WHEN role = 'Owner' THEN 'dashboard'
+    ELSE 'pos'
+END
+WHERE default_redirect_view NOT IN (
+    'dashboard', 'pos', 'inventory', 'sales', 'reorder', 'expiry', 
+    'purchases', 'damages', 'udhar', 'expenses', 'analytics', 'returns'
+) OR default_redirect_view IS NULL;
+
+-- Re-apply clean, official CHECK constraints that explicitly support 'Owner' and 'Admin'
+ALTER TABLE public.profiles 
+ADD CONSTRAINT profiles_role_check 
+CHECK (role IN ('Owner', 'Admin'));
+
+ALTER TABLE public.profiles 
+ADD CONSTRAINT profiles_admin_slot_check 
+CHECK (admin_slot IN (1, 2) OR admin_slot IS NULL);
+
+ALTER TABLE public.profiles 
+ADD CONSTRAINT profiles_default_redirect_view_check 
+CHECK (default_redirect_view IN (
+    'dashboard', 'pos', 'inventory', 'sales', 'reorder', 'expiry', 
+    'purchases', 'damages', 'udhar', 'expenses', 'analytics', 'returns'
+));
 
 -- PERMANENTLY DELETE nikhilsakhare9896@gmail.com and any admin 2 placeholder
 DELETE FROM public.profiles 

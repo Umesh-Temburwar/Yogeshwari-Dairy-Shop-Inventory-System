@@ -283,7 +283,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <div className="flex items-center gap-2">
                         <span>👑</span>
-                        <span>{language === 'mr' ? 'दुकान मालक' : language === 'hi' ? 'दुकान मालिक' : 'Shop Owner'}</span>
+                        <span>{language === 'mr' ? 'दुकान मालक (निखिल सखारे)' : language === 'hi' ? 'दुकान मालिक (निखिल सखारे)' : 'Shop Owner (Nikhil Sakhare)'}</span>
                       </div>
                       {role === 'Owner' && <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />}
                     </button>
@@ -303,7 +303,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <div className="flex items-center gap-2">
                         <span>🛡️</span>
-                        <span>{language === 'mr' ? 'प्रशासक (निलेश सखारे - बिलिंग)' : language === 'hi' ? 'प्रशासक (निलेश सखारे - बिलिंग)' : 'Admin (Nilesh Sakhare - POS Billing)'}</span>
+                        <span>{language === 'mr' ? 'प्रशासक (निलेश सखारे)' : language === 'hi' ? 'प्रशासक (निलेश सखारे)' : 'Admin (Nilesh Sakhare)'}</span>
                       </div>
                       {role === 'Admin' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
                     </button>

@@ -124,16 +124,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         role: 'Admin' as UserRole,
         slot: 1 as 1 | 2,
         redirectView: 'pos' as const,
-        fullName: 'निलेश सखारे (प्रशासक - काऊंटर १ बिलिंग)'
+        fullName: 'Nilesh Sakhare'
       };
     } 
-    // 2. Shop Owner: Yogeshwari Dairy Owner (yogeshwaridairy9896@gmail.com)
+    // 2. Shop Owner: Nikhil Sakhare (yogeshwaridairy9896@gmail.com)
     else {
       return {
         role: 'Owner' as UserRole,
         slot: null,
         redirectView: 'dashboard' as const,
-        fullName: 'योगेश्वरी डेअरी मालक (Shop Owner)'
+        fullName: 'Nikhil Sakhare'
       };
     }
   };

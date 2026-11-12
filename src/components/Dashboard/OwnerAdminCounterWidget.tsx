@@ -76,7 +76,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
         const itemsText = s.items ? s.items.map(i => `${i.product_name} (${i.quantity} ${i.unit})`).join(', ') : 'मालाची विक्री';
         const isOwner = s.created_by_role === 'Owner' || s.created_by_email === 'yogeshwaridairy9896@gmail.com';
         const defaultSlot = s.admin_slot ?? (isOwner ? undefined : 1);
-        const defaultName = s.created_by_name || (isOwner ? 'योगेश्वरी डेअरी मालक' : 'निलेश सखारे (प्रशासक)');
+        const defaultName = s.created_by_name || (isOwner ? (isMr ? 'निखिल सखारे' : 'Nikhil Sakhare') : (isMr ? 'निलेश सखारे' : 'Nilesh Sakhare'));
         const defaultEmail = s.created_by_email || (isOwner ? 'yogeshwaridairy9896@gmail.com' : 'nilusakhare2003@gmail.com');
         const defaultCounter = s.counter_name || (isOwner ? 'मुख्य मालक काऊंटर' : 'काऊंटर १ - मुख्य बिलिंग');
 
@@ -107,7 +107,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
     return allActivitiesStream.filter(act => {
       // Filter by tab
       if (activeTabFilter === 'admin1') {
-        const isAdm1 = act.admin_slot === 1 || act.admin_email === 'nilusakhare2003@gmail.com' || act.admin_name?.includes('निलेश');
+        const isAdm1 = act.admin_slot === 1 || act.admin_email === 'nilusakhare2003@gmail.com' || act.admin_name?.includes('निलेश') || act.admin_name?.toLowerCase().includes('nilesh');
         if (!isAdm1) return false;
       }
       if (activeTabFilter === 'inventory_changes') {
@@ -360,7 +360,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
               <span>{isMr ? 'थेट तपासणी नोंदवही (कोणत्या काऊंटरवरून काय विकले व इन्व्हेंटरी बदल):' : isHi ? 'लाइव ऑडिट रजिस्टर (किसने किस काउंटर से क्या बेचा और क्या बदला):' : 'Live Audit Stream (Who sold what from which counter & updates):'}</span>
             </h4>
             <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-              {isMr ? 'निलेश सखारे व मालक यांनी केलेल्या सर्व विक्री, साठा बदल, इन्व्हेंटरी अपडेट, खर्च व नुकसानीच्या थेट नोंदी.' : isHi ? 'निलेश सखारे और मालिक द्वारा की गई सभी बिक्री, स्टॉक अपडेट, इन्वेंट्री बदलाव और खर्च का ब्यौरा।' : 'Live ledger of all sales and inventory changes by Nilesh Sakhare and Owner.'}
+              {isMr ? 'निलेश सखारे व निखिल सखारे यांनी केलेल्या सर्व विक्री, साठा बदल, इन्व्हेंटरी अपडेट, खर्च व नुकसानीच्या थेट नोंदी.' : isHi ? 'निलेश सखारे और निखिल सखारे द्वारा की गई सभी बिक्री, स्टॉक अपडेट, इन्वेंट्री बदलाव और खर्च का ब्यौरा।' : 'Live ledger of all sales and inventory changes by Nilesh Sakhare and Nikhil Sakhare.'}
             </p>
           </div>
 
@@ -416,7 +416,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
             ) : (
               itemizedSales.map((sale) => {
                 const isOwner = sale.created_by_role === 'Owner' || sale.created_by_email === 'yogeshwaridairy9896@gmail.com';
-                const adminName = sale.created_by_name || (isOwner ? 'योगेश्वरी डेअरी मालक' : 'निलेश सखारे');
+                const adminName = sale.created_by_name || (isOwner ? (isMr ? 'निखिल सखारे' : 'Nikhil Sakhare') : (isMr ? 'निलेश सखारे' : 'Nilesh Sakhare'));
                 const adminEmail = sale.created_by_email || (isOwner ? 'yogeshwaridairy9896@gmail.com' : 'nilusakhare2003@gmail.com');
                 const counter = sale.counter_name || (isOwner ? 'मुख्य मालक काऊंटर' : 'काऊंटर १ - मुख्य बिलिंग');
 

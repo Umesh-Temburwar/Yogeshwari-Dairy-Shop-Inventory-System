@@ -50,7 +50,7 @@ export const BillingCounter: React.FC = () => {
         role: 'Admin' as const,
         slot: 1 as const,
         email: 'nilusakhare2003@gmail.com',
-        name: isMr ? 'निलेश सखारे (प्रशासक)' : isHi ? 'निलेश सखारे (प्रशासक)' : 'Nilesh Sakhare (Admin)',
+        name: isMr ? 'निलेश सखारे' : isHi ? 'निलेश सखारे' : 'Nilesh Sakhare',
         counter: isMr ? 'काऊंटर १ - मुख्य बिलिंग' : isHi ? 'काउंटर १ - मुख्य बिलिंग' : 'Counter 1 - Main Billing'
       };
     }
@@ -59,7 +59,7 @@ export const BillingCounter: React.FC = () => {
       role: 'Owner' as const,
       slot: null,
       email: 'yogeshwaridairy9896@gmail.com',
-      name: isMr ? 'योगेश्वरी डेअरी मालक' : isHi ? 'योगेश्वरी डेयरी मालिक' : 'Yogeshwari Dairy Owner',
+      name: isMr ? 'निखिल सखारे' : isHi ? 'निखिल सखारे' : 'Nikhil Sakhare',
       counter: isMr ? 'मुख्य मालक काऊंटर' : isHi ? 'मुख्य मालिक काउंटर' : 'Owner Master Counter'
     };
   }, [role, adminSlot, user?.email, language]);

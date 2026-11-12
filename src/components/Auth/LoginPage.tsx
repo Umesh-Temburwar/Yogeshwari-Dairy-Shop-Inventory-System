@@ -746,7 +746,7 @@ export const LoginPage: React.FC = () => {
                       className="p-2.5 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/70 dark:bg-amber-950/20 text-left hover:bg-amber-100/70 dark:hover:bg-amber-900/30 transition shadow-2xs group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-amber-700 dark:text-amber-400">👑 {language === 'mr' ? 'दुकान मालक' : language === 'hi' ? 'दुकान मालिक' : 'Owner'}</span>
+                        <span className="text-[10px] font-black text-amber-700 dark:text-amber-400">👑 {language === 'mr' ? 'निखिल सखारे (मालक)' : language === 'hi' ? 'निखिल सखारे (मालिक)' : 'Nikhil Sakhare (Owner)'}</span>
                         <span className="text-[9px] font-bold text-amber-600/80 dark:text-amber-400/80 bg-amber-100 dark:bg-amber-900/40 px-1 py-0.5 rounded">डॅशबोर्ड</span>
                       </div>
                       <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 font-bold">yogeshwaridairy...</span>
@@ -766,7 +766,7 @@ export const LoginPage: React.FC = () => {
                       className="p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/70 dark:bg-emerald-950/20 text-left hover:bg-emerald-100/70 dark:hover:bg-emerald-900/30 transition shadow-2xs group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400">🛡️ {language === 'mr' ? 'निलेश (ॲडमिन)' : language === 'hi' ? 'निलेश (एडमिन)' : 'Nilesh (Admin)'}</span>
+                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400">🛡️ {language === 'mr' ? 'निलेश सखारे' : language === 'hi' ? 'निलेश सखारे' : 'Nilesh Sakhare'}</span>
                         <span className="text-[9px] font-bold text-emerald-600/80 dark:text-emerald-400/80 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded">काऊंटर १</span>
                       </div>
                       <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 font-bold">nilusakhare2003...</span>
@@ -795,7 +795,7 @@ export const LoginPage: React.FC = () => {
                       type="button"
                       onClick={() => {
                         resetSignUp({
-                          fullName: 'योगेश्वरी डेअरी मालक (Shop Owner)',
+                          fullName: 'Nikhil Sakhare',
                           email: 'yogeshwaridairy9896@gmail.com',
                           password: 'password123',
                           confirmPassword: 'password123'
@@ -803,14 +803,14 @@ export const LoginPage: React.FC = () => {
                       }}
                       className="p-2 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/70 dark:bg-amber-950/20 text-left hover:bg-amber-100 dark:hover:bg-amber-900/40 transition shadow-2xs"
                     >
-                      <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 block truncate">👑 दुकान मालक</span>
+                      <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 block truncate">👑 {language === 'mr' ? 'निखिल सखारे (मालक)' : language === 'hi' ? 'निखिल सखारे (मालिक)' : 'Nikhil Sakhare (Owner)'}</span>
                       <span className="text-[9px] text-slate-500 dark:text-slate-400 truncate block font-mono">yogeshwari...</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => {
                         resetSignUp({
-                          fullName: 'निलेश सखारे (प्रशासक)',
+                          fullName: 'Nilesh Sakhare',
                           email: 'nilusakhare2003@gmail.com',
                           password: 'password123',
                           confirmPassword: 'password123'
@@ -818,7 +818,7 @@ export const LoginPage: React.FC = () => {
                       }}
                       className="p-2 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/70 dark:bg-emerald-950/20 text-left hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition shadow-2xs"
                     >
-                      <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 block truncate">🛡️ निलेश (ॲडमिन)</span>
+                      <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 block truncate">🛡️ {language === 'mr' ? 'निलेश सखारे' : language === 'hi' ? 'निलेश सखारे' : 'Nilesh Sakhare'}</span>
                       <span className="text-[9px] text-slate-500 dark:text-slate-400 truncate block font-mono">nilusakhare...</span>
                     </button>
                   </div>

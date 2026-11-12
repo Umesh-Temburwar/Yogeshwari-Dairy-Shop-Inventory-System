@@ -869,7 +869,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           role: 'Admin' as UserRole,
           slot: 1 as 1 | 2,
           email: 'nilusakhare2003@gmail.com',
-          name: 'निलेश सखारे (प्रशासक - काऊंटर १ बिलिंग)',
+          name: 'Nilesh Sakhare',
           counter: 'काऊंटर १ - मुख्य बिलिंग'
         };
       } else {
@@ -877,7 +877,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           role: 'Owner' as UserRole,
           slot: null,
           email: 'yogeshwaridairy9896@gmail.com',
-          name: 'योगेश्वरी डेअरी मालक (Shop Owner)',
+          name: 'Nikhil Sakhare',
           counter: 'मुख्य मालक काऊंटर'
         };
       }
@@ -886,7 +886,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         role: 'Admin' as UserRole, 
         slot: 1 as 1 | 2, 
         email: 'nilusakhare2003@gmail.com',
-        name: 'निलेश सखारे (प्रशासक १)', 
+        name: 'Nilesh Sakhare', 
         counter: 'काऊंटर १ - मुख्य बिलिंग' 
       };
     }

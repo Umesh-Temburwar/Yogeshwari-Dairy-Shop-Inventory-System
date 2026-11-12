@@ -1170,6 +1170,8 @@ AFTER INSERT ON public.sales
 FOR EACH ROW EXECUTE FUNCTION public.trg_fn_auto_log_sale_activity();
 
 -- 5. Owner Views
+DROP VIEW IF EXISTS public.v_owner_admin_counter_summary CASCADE;
+DROP VIEW IF EXISTS public.v_owner_recent_admin_activities CASCADE;
 CREATE OR REPLACE VIEW public.v_owner_admin_counter_summary AS
 SELECT 
     COALESCE(s.admin_slot, 0) AS admin_slot,
@@ -1290,6 +1292,9 @@ ON CONFLICT (email) DO UPDATE SET
     updated_at = NOW();
 
 -- 4. Analytical View: Shop Owner Dedicated Inventory Changes & Updates Ledger
+DROP VIEW IF EXISTS public.v_owner_admin_inventory_changes CASCADE;
+DROP VIEW IF EXISTS public.v_owner_admin_counter_sales_details CASCADE;
+DROP VIEW IF EXISTS public.v_owner_admin_counter_summary CASCADE;
 CREATE OR REPLACE VIEW public.v_owner_admin_inventory_changes AS
 SELECT 
     log.id,
@@ -1487,6 +1492,7 @@ WHERE LOWER(TRIM(p.email)) = LOWER(TRIM(u.email))
   AND (p.auth_user_id IS NULL OR p.auth_user_id != u.id);
 
 -- 4. Diagnostic View: Inspect Auth Users & Profiles status
+DROP VIEW IF EXISTS public.v_auth_profiles_status CASCADE;
 CREATE OR REPLACE VIEW public.v_auth_profiles_status AS
 SELECT 
     p.id AS profile_id,

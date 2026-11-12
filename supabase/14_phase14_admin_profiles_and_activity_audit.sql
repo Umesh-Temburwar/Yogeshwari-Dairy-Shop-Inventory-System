@@ -214,6 +214,12 @@ END;
 $$ LANGUAGE plpgsql SECURITY INVOKER;
 
 -- 5. Analytical View: Shop Owner Dedicated Inventory Changes & Updates Ledger
+-- Safely drop existing views first to allow column additions and structural updates without 42P16 error
+DROP VIEW IF EXISTS public.v_owner_admin_inventory_changes CASCADE;
+DROP VIEW IF EXISTS public.v_owner_admin_counter_sales_details CASCADE;
+DROP VIEW IF EXISTS public.v_owner_admin_counter_summary CASCADE;
+DROP VIEW IF EXISTS public.v_owner_recent_admin_activities CASCADE;
+
 CREATE OR REPLACE VIEW public.v_owner_admin_inventory_changes AS
 SELECT 
     log.id,

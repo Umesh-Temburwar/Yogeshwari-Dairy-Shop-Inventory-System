@@ -318,6 +318,7 @@ TO anon, authenticated
 WITH CHECK (true);
 
 -- 7. Diagnostic View: Inspect Auth Users & Profiles status
+DROP VIEW IF EXISTS public.v_auth_profiles_status CASCADE;
 CREATE OR REPLACE VIEW public.v_auth_profiles_status AS
 SELECT 
     p.id AS profile_id,

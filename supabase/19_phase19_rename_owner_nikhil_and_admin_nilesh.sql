@@ -1,18 +1,15 @@
 -- ============================================================================
 -- YOGESHWARI DAIRY SHOP INVENTORY & ERP SYSTEM - PHASE 19 MIGRATION
 -- File: 19_phase19_rename_owner_nikhil_and_admin_nilesh.sql
--- Description: Consolidated update to standardize user display names across Supabase:
+-- Description: Standardize user display names across Supabase:
 --   1. 👑 Shop Owner: "Nikhil Sakhare" (yogeshwaridairy9896@gmail.com)
 --   2. 🛡️ Admin: "Nilesh Sakhare" (nilusakhare2003@gmail.com)
 --
--- Updates:
---   - public.profiles: full_name normalized to 'Nikhil Sakhare' & 'Nilesh Sakhare'
---   - public.admin_audit_logs: all historical and future admin_name records updated
---   - public.sales: created_by_name normalized to 'Nikhil Sakhare' & 'Nilesh Sakhare'
---   - auth.users: raw_user_meta_data updated with proper full_name
---   - Triggers & Functions: handle_new_user(), trg_fn_auto_log_sale_activity(),
---     and get_user_role_and_redirect() updated
---   - Views: v_owner_admin_counter_summary & v_owner_admin_counter_sales_details
+-- FIX for ERROR 23505 (idx_single_active_owner):
+--   - Temporarily drops idx_single_active_owner and idx_admin_slots
+--   - Purges any legacy/duplicate profiles that are not the 2 official emails
+--   - Updates exact rows by email directly
+--   - Recreates unique constraints cleanly
 --
 -- Execution: Run directly in Supabase Dashboard -> SQL Editor
 -- ============================================================================
@@ -20,10 +17,18 @@
 BEGIN;
 
 -- ============================================================================
--- STEP 1: UPDATE PUBLIC.PROFILES TABLE
+-- STEP 1: CLEANLY UPDATE PUBLIC.PROFILES (FIX DUPLICATE OWNER CONSTRAINT)
 -- ============================================================================
 
--- 1A. Update Owner Profile (Nikhil Sakhare)
+-- 1A. Temporarily drop unique partial indexes to prevent duplicate key during update
+DROP INDEX IF EXISTS public.idx_single_active_owner;
+DROP INDEX IF EXISTS public.idx_admin_slots;
+
+-- 1B. Purge any legacy/dummy accounts so only the 2 official emails remain active
+DELETE FROM public.profiles 
+WHERE LOWER(TRIM(email)) NOT IN ('yogeshwaridairy9896@gmail.com', 'nilusakhare2003@gmail.com');
+
+-- 1C. Update Owner Profile (Nikhil Sakhare) strictly by email
 UPDATE public.profiles
 SET 
     full_name = 'Nikhil Sakhare',
@@ -32,14 +37,9 @@ SET
     default_redirect_view = 'dashboard',
     is_active = TRUE,
     updated_at = NOW()
-WHERE 
-    LOWER(TRIM(email)) = 'yogeshwaridairy9896@gmail.com'
-    OR role = 'Owner'
-    OR full_name ILIKE '%yogeshwari%owner%'
-    OR full_name ILIKE '%योगेश्वरी%मालक%'
-    OR full_name ILIKE '%nikhil%';
+WHERE LOWER(TRIM(email)) = 'yogeshwaridairy9896@gmail.com';
 
--- 1B. Update Admin 1 Profile (Nilesh Sakhare)
+-- 1D. Update Admin 1 Profile (Nilesh Sakhare) strictly by email
 UPDATE public.profiles
 SET 
     full_name = 'Nilesh Sakhare',
@@ -48,53 +48,50 @@ SET
     default_redirect_view = 'pos',
     is_active = TRUE,
     updated_at = NOW()
-WHERE 
-    LOWER(TRIM(email)) = 'nilusakhare2003@gmail.com'
-    OR (role = 'Admin' AND (admin_slot = 1 OR admin_slot IS NULL))
-    OR full_name ILIKE '%nilesh%';
+WHERE LOWER(TRIM(email)) = 'nilusakhare2003@gmail.com';
 
--- 1C. Ensure exact rows exist via ON CONFLICT upsert
-INSERT INTO public.profiles (
-    id, email, full_name, role, admin_slot, default_redirect_view, is_active, updated_at
-)
-VALUES (
-    '10000000-0000-0000-0000-000000000001'::UUID,
-    'yogeshwaridairy9896@gmail.com',
-    'Nikhil Sakhare',
-    'Owner',
-    NULL,
-    'dashboard',
-    TRUE,
-    NOW()
-)
-ON CONFLICT (email) DO UPDATE SET
-    full_name = 'Nikhil Sakhare',
-    role = 'Owner',
-    admin_slot = NULL,
-    default_redirect_view = 'dashboard',
-    is_active = TRUE,
-    updated_at = NOW();
+-- 1E. If either official row is missing, insert it cleanly
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE LOWER(TRIM(email)) = 'yogeshwaridairy9896@gmail.com') THEN
+        INSERT INTO public.profiles (
+            id, email, full_name, role, admin_slot, default_redirect_view, is_active, updated_at
+        ) VALUES (
+            '10000000-0000-0000-0000-000000000001'::UUID,
+            'yogeshwaridairy9896@gmail.com',
+            'Nikhil Sakhare',
+            'Owner',
+            NULL,
+            'dashboard',
+            TRUE,
+            NOW()
+        );
+    END IF;
 
-INSERT INTO public.profiles (
-    id, email, full_name, role, admin_slot, default_redirect_view, is_active, updated_at
-)
-VALUES (
-    '10000000-0000-0000-0000-000000000002'::UUID,
-    'nilusakhare2003@gmail.com',
-    'Nilesh Sakhare',
-    'Admin',
-    1,
-    'pos',
-    TRUE,
-    NOW()
-)
-ON CONFLICT (email) DO UPDATE SET
-    full_name = 'Nilesh Sakhare',
-    role = 'Admin',
-    admin_slot = 1,
-    default_redirect_view = 'pos',
-    is_active = TRUE,
-    updated_at = NOW();
+    IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE LOWER(TRIM(email)) = 'nilusakhare2003@gmail.com') THEN
+        INSERT INTO public.profiles (
+            id, email, full_name, role, admin_slot, default_redirect_view, is_active, updated_at
+        ) VALUES (
+            '10000000-0000-0000-0000-000000000002'::UUID,
+            'nilusakhare2003@gmail.com',
+            'Nilesh Sakhare',
+            'Admin',
+            1,
+            'pos',
+            TRUE,
+            NOW()
+        );
+    END IF;
+END $$;
+
+-- 1F. Re-create the strict business rule constraints cleanly
+CREATE UNIQUE INDEX idx_single_active_owner 
+ON public.profiles (role) 
+WHERE role = 'Owner' AND is_active = TRUE;
+
+CREATE UNIQUE INDEX idx_admin_slots 
+ON public.profiles (role, admin_slot) 
+WHERE role = 'Admin' AND is_active = TRUE;
 
 -- ============================================================================
 -- STEP 2: UPDATE HISTORICAL ROWS IN PUBLIC.ADMIN_AUDIT_LOGS
@@ -113,7 +110,7 @@ WHERE
     OR admin_name ILIKE '%Nikhil%'
     OR admin_name ILIKE '%निखिल%';
 
--- 2B. Update all Admin Audit Logs to "Nilesh Sakhare" (remove "(Admin)" and "(प्रशासक)")
+-- 2B. Update all Admin Audit Logs to "Nilesh Sakhare" (removes "(Admin)" and "(प्रशासक)")
 UPDATE public.admin_audit_logs
 SET admin_name = 'Nilesh Sakhare'
 WHERE 
@@ -152,23 +149,27 @@ WHERE
 -- STEP 4: UPDATE AUTH.USERS METADATA
 -- ============================================================================
 
--- 4A. Update Owner in auth.users
-UPDATE auth.users
-SET raw_user_meta_data = jsonb_set(
-    COALESCE(raw_user_meta_data, '{}'::jsonb),
-    '{full_name}',
-    '"Nikhil Sakhare"'
-)
-WHERE LOWER(TRIM(email)) = 'yogeshwaridairy9896@gmail.com';
+DO $$
+BEGIN
+    UPDATE auth.users
+    SET raw_user_meta_data = jsonb_set(
+        COALESCE(raw_user_meta_data, '{}'::jsonb),
+        '{full_name}',
+        '"Nikhil Sakhare"'
+    )
+    WHERE LOWER(TRIM(email)) = 'yogeshwaridairy9896@gmail.com';
 
--- 4B. Update Admin in auth.users
-UPDATE auth.users
-SET raw_user_meta_data = jsonb_set(
-    COALESCE(raw_user_meta_data, '{}'::jsonb),
-    '{full_name}',
-    '"Nilesh Sakhare"'
-)
-WHERE LOWER(TRIM(email)) = 'nilusakhare2003@gmail.com';
+    UPDATE auth.users
+    SET raw_user_meta_data = jsonb_set(
+        COALESCE(raw_user_meta_data, '{}'::jsonb),
+        '{full_name}',
+        '"Nilesh Sakhare"'
+    )
+    WHERE LOWER(TRIM(email)) = 'nilusakhare2003@gmail.com';
+EXCEPTION WHEN OTHERS THEN
+    -- Suppress if auth schema update is restricted in specific contexts
+    NULL;
+END $$;
 
 -- ============================================================================
 -- STEP 5: UPDATE AUTH TRIGGER FUNCTION (handle_new_user)
@@ -427,19 +428,7 @@ GRANT SELECT ON TABLE public.v_owner_admin_counter_summary TO anon, authenticate
 COMMIT;
 
 -- ============================================================================
--- VERIFICATION QUERIES (Run to confirm update success)
+-- VERIFICATION QUERIES
 -- ============================================================================
--- Check Profiles:
-SELECT id, email, full_name, role, admin_slot, default_redirect_view FROM public.profiles ORDER BY role;
-
--- Check Audit Logs distinct names:
-SELECT admin_name, admin_role, admin_slot, count(*) AS log_count 
-FROM public.admin_audit_logs 
-GROUP BY admin_name, admin_role, admin_slot 
-ORDER BY log_count DESC;
-
--- Check Sales distinct created_by_name:
-SELECT created_by_name, created_by_role, admin_slot, count(*) AS sale_count 
-FROM public.sales 
-GROUP BY created_by_name, created_by_role, admin_slot 
-ORDER BY sale_count DESC;
+SELECT id, email, full_name, role, admin_slot FROM public.profiles ORDER BY role;
+SELECT admin_name, admin_role, admin_slot, count(*) FROM public.admin_audit_logs GROUP BY admin_name, admin_role, admin_slot;

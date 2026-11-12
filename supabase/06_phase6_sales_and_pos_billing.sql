@@ -5,12 +5,12 @@
 -- ============================================================================
 -- Description:
 -- Sets up counter billing invoices, split payments (Cash, UPI, Udhar),
--- itemized sale line items with historical purchase cost for accurate gross profit.
+-- customer demographics, itemized sale lines, and batch allocations for COGS.
 --
 -- Instructions:
--- 1. Ensure Phases 1-5 have been executed.
+-- 1. Ensure Phases 1-5 have been executed successfully.
 -- 2. Open Supabase Dashboard -> SQL Editor -> New Query.
--- 3. Paste this entire script and click "Run".
+-- 3. Paste this entire script and click "Run" (or Ctrl + Enter).
 -- ============================================================================
 
 -- 1. Sales Billing Invoices Table
@@ -20,8 +20,9 @@ CREATE TABLE IF NOT EXISTS public.sales (
     customer_id UUID REFERENCES public.udhar_customers(id) ON DELETE SET NULL,
     customer_name VARCHAR(255) DEFAULT 'Counter Customer',
     customer_phone VARCHAR(25),
-    customer_gender VARCHAR(20) DEFAULT 'Male',       -- 'Male', 'Female', 'Other'
+    customer_gender VARCHAR(20) DEFAULT 'Male',             -- 'Male', 'Female', 'Other'
     customer_age_group VARCHAR(50) DEFAULT 'Adults (26-45)', -- '<18', '18-25', '26-45', '45+'
+    customer_age INTEGER CHECK (customer_age IS NULL OR (customer_age >= 0 AND customer_age <= 120)),
     total_amount NUMERIC(12, 2) NOT NULL CHECK (total_amount >= 0),
     discount NUMERIC(12, 2) DEFAULT 0.00 CHECK (discount >= 0),
     net_amount NUMERIC(12, 2) NOT NULL CHECK (net_amount >= 0),
@@ -64,4 +65,3 @@ CREATE TABLE IF NOT EXISTS public.sale_batch_allocations (
     ) STORED,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-

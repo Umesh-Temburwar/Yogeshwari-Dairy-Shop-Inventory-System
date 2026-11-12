@@ -9,9 +9,9 @@
 -- 2. Supplier Returns (Returning damaged, leaked, or expired deliveries to vendors)
 --
 -- Instructions:
--- 1. Ensure Phases 1-6 have been executed.
+-- 1. Ensure Phases 1-6 have been executed successfully.
 -- 2. Open Supabase Dashboard -> SQL Editor -> New Query.
--- 3. Paste this entire script and click "Run".
+-- 3. Paste this entire script and click "Run" (or Ctrl + Enter).
 -- ============================================================================
 
 -- 1. Customer Returns Table
@@ -57,4 +57,3 @@ CREATE TABLE IF NOT EXISTS public.supplier_returns (
     notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-

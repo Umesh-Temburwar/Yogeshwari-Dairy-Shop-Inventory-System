@@ -1,17 +1,17 @@
 -- ============================================================================
 -- YOGESHWARI DAIRY SHOP ERP - SUPABASE SETUP
--- PHASE 10: ROW LEVEL SECURITY (RLS), PERMISSIONS & ANALYTIC VIEWS
--- File: supabase/10_phase10_rls_security_and_views.sql
+-- PHASE 11: ROW LEVEL SECURITY (RLS), PERMISSIONS & ANALYTIC VIEWS
+-- File: supabase/11_phase11_rls_security_and_views.sql
 -- ============================================================================
 -- Description:
 -- Enables Row Level Security (RLS) on all public tables, establishes secure
--- policies for the Vite frontend and authorized roles, and adds real-time
--- analytical reporting views with security_invoker = true.
+-- Data API grants for the ERP client and roles, and creates high-performance
+-- analytical reporting views with WITH (security_invoker = true).
 --
 -- Instructions:
--- 1. Ensure Phases 1-9 have been executed.
+-- 1. Ensure Phases 1-10 have been executed successfully.
 -- 2. Open Supabase Dashboard -> SQL Editor -> New Query.
--- 3. Paste this entire script and click "Run".
+-- 3. Paste this entire script and click "Run" (or Ctrl + Enter).
 -- ============================================================================
 
 -- ============================================================================
@@ -20,6 +20,7 @@
 
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.units ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.brands ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.suppliers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.purchases ENABLE ROW LEVEL SECURITY;
@@ -44,7 +45,7 @@ GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
 GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated;
 
--- Default privileges for future tables
+-- Default privileges for future tables and routines
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ROUTINES TO anon, authenticated;
@@ -53,12 +54,11 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ROUTINES TO anon, authent
 -- 3. PERMISSIVE ERP CLIENT RLS POLICIES (Full Counter & Owner Operations)
 -- ============================================================================
 
--- Macro policy generator helper (applies clean full-access policies for shop counter)
 DO $$
 DECLARE
     tbl TEXT;
     tbls TEXT[] := ARRAY[
-        'categories', 'units', 'products', 'suppliers', 'purchases', 
+        'categories', 'units', 'brands', 'products', 'suppliers', 'purchases', 
         'batches', 'stock_movements', 'damage_records', 'udhar_customers', 
         'udhar_transactions', 'sales', 'sale_items', 'sale_batch_allocations', 
         'product_returns', 'supplier_returns', 'expenses'
@@ -80,7 +80,7 @@ BEGIN
 END $$;
 
 -- ============================================================================
--- 4. ANALYTICAL REPORTING VIEWS (security_invoker = true)
+-- 4. ANALYTICAL REPORTING VIEWS (WITH security_invoker = true)
 -- ============================================================================
 
 -- View 1: Real-time Stock & Inventory Valuation
@@ -105,7 +105,39 @@ SELECT
 FROM public.products p
 WHERE p.is_active = TRUE;
 
--- View 2: Expiring Batches Alert
+-- View 2: Product Real-time Stock Status (Server & Client Compatible)
+CREATE OR REPLACE VIEW public.v_product_stock
+WITH (security_invoker = true) AS
+SELECT 
+    p.id,
+    p.name,
+    p.category_id,
+    p.brand_id,
+    p.unit_id,
+    p.category,
+    p.unit,
+    p.sku,
+    p.barcode,
+    p.purchase_price,
+    p.selling_price,
+    p.gst_percent,
+    p.min_stock,
+    p.max_stock,
+    p.image_url,
+    p.is_active,
+    COALESCE(SUM(b.qty_remaining), p.stock_quantity) AS current_stock,
+    CASE 
+        WHEN COALESCE(SUM(b.qty_remaining), p.stock_quantity) <= 0 THEN 'OUT_OF_STOCK'
+        WHEN COALESCE(SUM(b.qty_remaining), p.stock_quantity) <= p.min_stock THEN 'LOW'
+        WHEN COALESCE(SUM(b.qty_remaining), p.stock_quantity) >= p.max_stock THEN 'OVERSTOCK'
+        ELSE 'NORMAL'
+    END AS stock_status,
+    ROUND(COALESCE(SUM(b.qty_remaining), p.stock_quantity) * p.purchase_price, 2) AS stock_value
+FROM public.products p
+LEFT JOIN public.batches b ON b.product_id = p.id AND b.qty_remaining > 0
+GROUP BY p.id;
+
+-- View 3: Expiring Batches Alert
 CREATE OR REPLACE VIEW public.v_expiring_batches_alert
 WITH (security_invoker = true) AS
 SELECT 
@@ -129,7 +161,35 @@ FROM public.batches b
 WHERE b.qty_remaining > 0
 ORDER BY b.expiry_date ASC;
 
--- View 3: Daily Sales & Cash vs UPI Summary
+-- View 4: Batch Expiry Status (Server & Client Compatible)
+CREATE OR REPLACE VIEW public.v_batch_expiry_status
+WITH (security_invoker = true) AS
+SELECT 
+    b.id,
+    b.product_id,
+    b.product_name,
+    b.batch_no,
+    b.mfg_date,
+    b.expiry_date,
+    b.qty_received,
+    b.qty_remaining,
+    b.purchase_price,
+    b.selling_price,
+    b.supplier_id,
+    b.supplier_name,
+    b.status,
+    b.expiry_date - CURRENT_DATE AS days_to_expiry,
+    CASE 
+        WHEN b.expiry_date < CURRENT_DATE THEN 'EXPIRED'
+        WHEN b.expiry_date = CURRENT_DATE THEN 'EXPIRING_TODAY'
+        WHEN b.expiry_date = CURRENT_DATE + 1 THEN 'EXPIRING_TOMORROW'
+        WHEN b.expiry_date <= CURRENT_DATE + 3 THEN 'EXPIRING_IN_3_DAYS'
+        ELSE 'FRESH'
+    END AS expiry_status
+FROM public.batches b
+ORDER BY b.expiry_date ASC;
+
+-- View 5: Daily Sales & Cash vs UPI Summary
 CREATE OR REPLACE VIEW public.v_daily_sales_summary
 WITH (security_invoker = true) AS
 SELECT 
@@ -145,7 +205,7 @@ FROM public.sales
 GROUP BY sale_date
 ORDER BY sale_date DESC;
 
--- View 4: Pending Supplier Refunds Tracker
+-- View 6: Pending Supplier Refunds Tracker
 CREATE OR REPLACE VIEW public.v_supplier_returns_pending
 WITH (security_invoker = true) AS
 SELECT 
@@ -162,4 +222,3 @@ SELECT
 FROM public.supplier_returns
 WHERE refund_status = 'Pending'
 ORDER BY return_date ASC;
-

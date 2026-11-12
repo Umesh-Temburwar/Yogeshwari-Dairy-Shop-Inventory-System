@@ -8,9 +8,9 @@
 -- transaction history (goods credit given and cash/online repayments received).
 --
 -- Instructions:
--- 1. Ensure Phases 1-4 have been executed.
+-- 1. Ensure Phases 1-4 have been executed successfully.
 -- 2. Open Supabase Dashboard -> SQL Editor -> New Query.
--- 3. Paste this entire script and click "Run".
+-- 3. Paste this entire script and click "Run" (or Ctrl + Enter).
 -- ============================================================================
 
 -- 1. Udhar Customers Account Table
@@ -47,4 +47,3 @@ CREATE TABLE IF NOT EXISTS public.udhar_transactions (
     transaction_date DATE NOT NULL DEFAULT CURRENT_DATE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-

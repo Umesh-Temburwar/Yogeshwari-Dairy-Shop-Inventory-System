@@ -8,9 +8,9 @@
 -- Salaries, Chiller maintenance, and capital investments in assets/machinery).
 --
 -- Instructions:
--- 1. Ensure Phases 1-7 have been executed.
+-- 1. Ensure Phases 1-7 have been executed successfully.
 -- 2. Open Supabase Dashboard -> SQL Editor -> New Query.
--- 3. Paste this entire script and click "Run".
+-- 3. Paste this entire script and click "Run" (or Ctrl + Enter).
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.expenses (
@@ -27,4 +27,3 @@ CREATE TABLE IF NOT EXISTS public.expenses (
     notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-

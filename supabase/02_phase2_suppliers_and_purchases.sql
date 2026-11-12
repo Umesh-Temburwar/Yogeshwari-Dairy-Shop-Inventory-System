@@ -5,12 +5,12 @@
 -- ============================================================================
 -- Description:
 -- Sets up Suppliers master table (Farmers, Dairy Cooperatives, Wholesalers)
--- and Purchases ledger table (tracking cost prices, inward volumes, and dates).
+-- and Purchases procurement ledger (tracking unit costs, inward volumes, and dates).
 --
 -- Instructions:
--- 1. Ensure Phase 1 has been executed.
+-- 1. Ensure Phase 1 has been executed successfully.
 -- 2. Open Supabase Dashboard -> SQL Editor -> New Query.
--- 3. Paste this entire script and click "Run".
+-- 3. Paste this entire script and click "Run" (or Ctrl + Enter).
 -- ============================================================================
 
 -- 1. Suppliers Master Table
@@ -54,4 +54,3 @@ CREATE TABLE IF NOT EXISTS public.purchases (
     notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-

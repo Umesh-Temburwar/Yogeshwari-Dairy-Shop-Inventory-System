@@ -8,9 +8,9 @@
 -- shelf life management, and immutable stock movement audit trails.
 --
 -- Instructions:
--- 1. Ensure Phase 1 and Phase 2 have been executed.
+-- 1. Ensure Phase 1 and Phase 2 have been executed successfully.
 -- 2. Open Supabase Dashboard -> SQL Editor -> New Query.
--- 3. Paste this entire script and click "Run".
+-- 3. Paste this entire script and click "Run" (or Ctrl + Enter).
 -- ============================================================================
 
 -- 1. Stock Movement Enum Type (Safe creation)
@@ -69,4 +69,3 @@ CREATE TABLE IF NOT EXISTS public.stock_movements (
     notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-

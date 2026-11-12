@@ -5,12 +5,12 @@
 -- ============================================================================
 -- Description:
 -- Sets up dairy spoilage management, recording curdled milk, leaked pouches,
--- and expired stock loss to maintain accurate P&L accounting.
+-- and expired stock loss to maintain accurate P&L and COGS accounting.
 --
 -- Instructions:
--- 1. Ensure Phases 1-3 have been executed.
+-- 1. Ensure Phases 1-3 have been executed successfully.
 -- 2. Open Supabase Dashboard -> SQL Editor -> New Query.
--- 3. Paste this entire script and click "Run".
+-- 3. Paste this entire script and click "Run" (or Ctrl + Enter).
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS public.damage_records (
@@ -27,4 +27,3 @@ CREATE TABLE IF NOT EXISTS public.damage_records (
     notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-

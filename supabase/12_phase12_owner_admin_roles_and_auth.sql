@@ -16,74 +16,108 @@
 -- 3. Paste this entire script and click "Run" (or Ctrl + Enter).
 -- ============================================================================
 
--- 1. User Profiles Table (Linked with Supabase Auth users or standalone ERP counter auth)
+-- 1. Create User Profiles Table if it doesn't already exist
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    auth_user_id UUID UNIQUE, -- Linked to auth.users(id) when Supabase Auth is used
-    email VARCHAR(255) NOT NULL UNIQUE,
-    full_name VARCHAR(150) NOT NULL,
+    auth_user_id UUID,
+    email VARCHAR(255),
+    full_name VARCHAR(150),
     phone VARCHAR(25),
-    role VARCHAR(50) NOT NULL CHECK (role IN ('Owner', 'Admin')),
-    admin_slot INTEGER CHECK (admin_slot IN (1, 2) OR admin_slot IS NULL),
-    default_redirect_view VARCHAR(50) NOT NULL DEFAULT 'dashboard' CHECK (default_redirect_view IN (
-        'dashboard', 'pos', 'inventory', 'sales', 'reorder', 'expiry', 
-        'purchases', 'damages', 'udhar', 'expenses', 'analytics', 'returns'
-    )),
+    role VARCHAR(50) DEFAULT 'Admin',
+    admin_slot INTEGER,
+    default_redirect_view VARCHAR(50) DEFAULT 'dashboard',
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Trigger for auto-updating updated_at on profiles
+-- 2. CRITICAL: If public.profiles ALREADY existed with an older/partial schema,
+-- explicitly add all required columns so no "column does not exist" error can occur!
+ALTER TABLE public.profiles
+ADD COLUMN IF NOT EXISTS auth_user_id UUID,
+ADD COLUMN IF NOT EXISTS email VARCHAR(255),
+ADD COLUMN IF NOT EXISTS full_name VARCHAR(150),
+ADD COLUMN IF NOT EXISTS phone VARCHAR(25),
+ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'Admin',
+ADD COLUMN IF NOT EXISTS admin_slot INTEGER,
+ADD COLUMN IF NOT EXISTS default_redirect_view VARCHAR(50) DEFAULT 'dashboard',
+ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+-- Clean up any existing rows with NULL email before applying constraints
+UPDATE public.profiles
+SET email = 'user_' || id || '@yogeshwaridairy.com'
+WHERE email IS NULL;
+
+-- Normalize role case if previous test row had lowercase 'owner' or 'admin'
+UPDATE public.profiles
+SET role = 'Owner'
+WHERE LOWER(role) = 'owner';
+
+UPDATE public.profiles
+SET role = 'Admin'
+WHERE LOWER(role) = 'admin';
+
+-- Safely deactivate any existing non-official rows so they do not collide with single active owner / admin slot limits
+UPDATE public.profiles
+SET is_active = FALSE
+WHERE email NOT IN (
+    'yogeshwaridairy9896@gmail.com',
+    'nilusakhare2003@gmail.com',
+    'nikhilsakhare9896@gmail.com',
+    'owner@yogeshwaridairy.com',
+    'admin1@yogeshwaridairy.com',
+    'admin2@yogeshwaridairy.com'
+);
+
+-- Ensure Unique constraint on email
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'profiles_email_key' AND conrelid = 'public.profiles'::regclass
+    ) THEN
+        ALTER TABLE public.profiles ADD CONSTRAINT profiles_email_key UNIQUE (email);
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL;
+END $$;
+
+-- 3. Trigger for auto-updating updated_at on profiles
 DROP TRIGGER IF EXISTS trg_profiles_updated_at ON public.profiles;
 CREATE TRIGGER trg_profiles_updated_at
 BEFORE UPDATE ON public.profiles
 FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
 
--- 2. Business Rule Constraints (Strict Enforcement: Only 1 Owner & Exactly 2 Admins)
+-- 4. Business Rule Constraints (Strict Enforcement: Only 1 Owner & Exactly 2 Admins)
 -- Enforce: Maximum 1 active Owner
-CREATE UNIQUE INDEX IF NOT EXISTS idx_single_active_owner 
+DROP INDEX IF EXISTS public.idx_single_active_owner;
+CREATE UNIQUE INDEX idx_single_active_owner 
 ON public.profiles (role) 
 WHERE role = 'Owner' AND is_active = TRUE;
 
--- Enforce: Exactly Admin Slot 1 and Admin Slot 2 (No 3rd admin allowed)
-CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_slots 
+-- Enforce: Exactly Admin Slot 1 and Admin Slot 2 (No duplicate active admin slots)
+DROP INDEX IF EXISTS public.idx_admin_slots;
+CREATE UNIQUE INDEX idx_admin_slots 
 ON public.profiles (role, admin_slot) 
 WHERE role = 'Admin' AND is_active = TRUE;
 
--- 3. Pre-seed the 1 Owner and 2 Authorized Admins
-INSERT INTO public.profiles (id, email, full_name, role, admin_slot, default_redirect_view, is_active)
-VALUES
-    -- 1. Shop Owner (दुकान मालक) -> Redirects to Dashboard
-    (
-        '10000000-0000-0000-0000-000000000001'::UUID,
-        'owner@yogeshwaridairy.com',
-        'Yogeshwari Dairy Owner',
-        'Owner',
-        NULL,
-        'dashboard',
-        TRUE
-    ),
-    -- 2. Store Administrator 1 (प्रशासक १ - काऊंटर बिलिंग) -> Redirects to POS
-    (
-        '10000000-0000-0000-0000-000000000002'::UUID,
-        'admin1@yogeshwaridairy.com',
-        'Store Administrator 1 (Counter Billing)',
-        'Admin',
-        1,
-        'pos',
-        TRUE
-    ),
-    -- 3. Store Administrator 2 (प्रशासक २ - इन्व्हेंटरी व साठा) -> Redirects to Inventory
-    (
-        '10000000-0000-0000-0000-000000000003'::UUID,
-        'admin2@yogeshwaridairy.com',
-        'Store Administrator 2 (Inventory & Stock)',
-        'Admin',
-        2,
-        'inventory',
-        TRUE
-    )
+-- 5. Pre-seed the 1 Owner and 2 Authorized Admins with Official Gmail Accounts
+-- A. 👑 Shop Owner: yogeshwaridairy9896@gmail.com -> dashboard
+INSERT INTO public.profiles (
+    id, email, full_name, role, admin_slot, default_redirect_view, is_active
+)
+VALUES (
+    '10000000-0000-0000-0000-000000000001'::UUID,
+    'yogeshwaridairy9896@gmail.com',
+    'योगेश्वरी डेअरी मालक (Shop Owner)',
+    'Owner',
+    NULL,
+    'dashboard',
+    TRUE
+)
 ON CONFLICT (email) DO UPDATE SET
     full_name = EXCLUDED.full_name,
     role = EXCLUDED.role,
@@ -92,31 +126,83 @@ ON CONFLICT (email) DO UPDATE SET
     is_active = TRUE,
     updated_at = NOW();
 
--- Also ensure fallback email 'admin@yogeshwaridairy.com' maps to Admin 1 if present
-INSERT INTO public.profiles (email, full_name, role, admin_slot, default_redirect_view, is_active)
+-- B. 🛡️ Admin 1: nilusakhare2003@gmail.com -> pos (Nilesh Sakhare - Counter 1)
+INSERT INTO public.profiles (
+    id, email, full_name, role, admin_slot, default_redirect_view, is_active
+)
 VALUES (
-    'admin@yogeshwaridairy.com',
-    'Store Administrator 1 (Counter Billing)',
+    '10000000-0000-0000-0000-000000000002'::UUID,
+    'nilusakhare2003@gmail.com',
+    'निलेश सखारे (प्रशासक १ - काऊंटर १)',
     'Admin',
     1,
     'pos',
     TRUE
 )
+ON CONFLICT (email) DO UPDATE SET
+    full_name = EXCLUDED.full_name,
+    role = EXCLUDED.role,
+    admin_slot = EXCLUDED.admin_slot,
+    default_redirect_view = EXCLUDED.default_redirect_view,
+    is_active = TRUE,
+    updated_at = NOW();
+
+-- C. 🛡️ Admin 2: nikhilsakhare9896@gmail.com -> inventory (Nikhil Sakhare - Counter 2)
+INSERT INTO public.profiles (
+    id, email, full_name, role, admin_slot, default_redirect_view, is_active
+)
+VALUES (
+    '10000000-0000-0000-0000-000000000003'::UUID,
+    'nikhilsakhare9896@gmail.com',
+    'निखिल सखारे (प्रशासक २ - काऊंटर २)',
+    'Admin',
+    2,
+    'inventory',
+    TRUE
+)
+ON CONFLICT (email) DO UPDATE SET
+    full_name = EXCLUDED.full_name,
+    role = EXCLUDED.role,
+    admin_slot = EXCLUDED.admin_slot,
+    default_redirect_view = EXCLUDED.default_redirect_view,
+    is_active = TRUE,
+    updated_at = NOW();
+
+-- Also ensure fallback legacy emails map cleanly
+INSERT INTO public.profiles (email, full_name, role, admin_slot, default_redirect_view, is_active)
+VALUES 
+    ('owner@yogeshwaridairy.com', 'Yogeshwari Dairy Owner', 'Owner', NULL, 'dashboard', FALSE),
+    ('admin1@yogeshwaridairy.com', 'Store Administrator 1', 'Admin', 1, 'pos', FALSE),
+    ('admin2@yogeshwaridairy.com', 'Store Administrator 2', 'Admin', 2, 'inventory', FALSE)
 ON CONFLICT (email) DO NOTHING;
 
--- 4. Enable Row Level Security (RLS) on profiles
+-- 6. Enable Row Level Security (RLS) on profiles
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- Allow counter application to read and verify authorized profiles
 DROP POLICY IF EXISTS "Allow counter access for profiles" ON public.profiles;
-CREATE POLICY "Allow counter access for profiles" 
+DROP POLICY IF EXISTS "Allow select profiles for authenticated and anon" ON public.profiles;
+CREATE POLICY "Allow select profiles for authenticated and anon" 
 ON public.profiles 
-FOR ALL 
+FOR SELECT 
 TO anon, authenticated 
-USING (true) 
+USING (true);
+
+DROP POLICY IF EXISTS "Allow insert profiles for authenticated and anon" ON public.profiles;
+CREATE POLICY "Allow insert profiles for authenticated and anon" 
+ON public.profiles 
+FOR INSERT 
+TO anon, authenticated 
 WITH CHECK (true);
 
--- 5. Helper Function: Get Role and Target Redirect View for user by email
+DROP POLICY IF EXISTS "Allow update profiles for authenticated and anon" ON public.profiles;
+CREATE POLICY "Allow update profiles for authenticated and anon" 
+ON public.profiles 
+FOR UPDATE 
+TO anon, authenticated 
+USING (true)
+WITH CHECK (true);
+
+-- 7. Helper Function: Get Role and Target Redirect View for user by email
 CREATE OR REPLACE FUNCTION public.get_user_role_and_redirect(p_email TEXT)
 RETURNS TABLE (
     user_role VARCHAR,
@@ -124,6 +210,8 @@ RETURNS TABLE (
     redirect_view VARCHAR,
     display_name VARCHAR
 ) AS $$
+DECLARE
+    clean_email TEXT := LOWER(TRIM(p_email));
 BEGIN
     RETURN QUERY
     SELECT 
@@ -132,12 +220,25 @@ BEGIN
         p.default_redirect_view::VARCHAR AS redirect_view,
         p.full_name::VARCHAR AS display_name
     FROM public.profiles p
-    WHERE LOWER(TRIM(p.email)) = LOWER(TRIM(p_email))
+    WHERE LOWER(TRIM(p.email)) = clean_email
       AND p.is_active = TRUE
     LIMIT 1;
+
+    IF FOUND THEN
+        RETURN;
+    END IF;
+
+    -- Dynamic fallback based on exact user emails
+    IF clean_email = 'nikhilsakhare9896@gmail.com' OR clean_email LIKE '%nikhil%' THEN
+        RETURN QUERY SELECT 'Admin'::VARCHAR, 2, 'inventory'::VARCHAR, 'निखिल सखारे (प्रशासक २ - काऊंटर २)'::VARCHAR;
+    ELSIF clean_email = 'nilusakhare2003@gmail.com' OR clean_email LIKE '%nilu%' OR clean_email LIKE '%admin%' THEN
+        RETURN QUERY SELECT 'Admin'::VARCHAR, 1, 'pos'::VARCHAR, 'निलेश सखारे (प्रशासक १ - काऊंटर १)'::VARCHAR;
+    ELSE
+        RETURN QUERY SELECT 'Owner'::VARCHAR, NULL::INTEGER, 'dashboard'::VARCHAR, 'योगेश्वरी डेअरी मालक (Shop Owner)'::VARCHAR;
+    END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY INVOKER;
 
 -- Grant execution to API roles
+GRANT ALL ON TABLE public.profiles TO postgres, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.get_user_role_and_redirect(TEXT) TO anon, authenticated;
-

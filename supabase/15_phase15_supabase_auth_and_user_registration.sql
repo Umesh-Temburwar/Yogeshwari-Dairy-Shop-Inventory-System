@@ -27,15 +27,36 @@
 -- 1. Ensure pgcrypto extension is installed
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 2. Ensure auth_user_id column and indices exist in public.profiles
+-- 2. Ensure all profile columns and indices exist in public.profiles
 ALTER TABLE public.profiles 
-ADD COLUMN IF NOT EXISTS auth_user_id UUID UNIQUE;
+ADD COLUMN IF NOT EXISTS auth_user_id UUID UNIQUE,
+ADD COLUMN IF NOT EXISTS email VARCHAR(255),
+ADD COLUMN IF NOT EXISTS full_name VARCHAR(150),
+ADD COLUMN IF NOT EXISTS phone VARCHAR(25),
+ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'Admin',
+ADD COLUMN IF NOT EXISTS admin_slot INTEGER,
+ADD COLUMN IF NOT EXISTS default_redirect_view VARCHAR(50) DEFAULT 'dashboard',
+ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
 
 CREATE INDEX IF NOT EXISTS idx_profiles_auth_user_id 
 ON public.profiles (auth_user_id);
 
 CREATE INDEX IF NOT EXISTS idx_profiles_email_lower 
 ON public.profiles (LOWER(TRIM(email)));
+
+-- Ensure unique constraint on email
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'profiles_email_key' AND conrelid = 'public.profiles'::regclass
+    ) THEN
+        ALTER TABLE public.profiles ADD CONSTRAINT profiles_email_key UNIQUE (email);
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL;
+END $$;
 
 -- 3. Supabase Auth Trigger Function: Handle New Auth Users Automatically
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -306,3 +327,4 @@ ORDER BY p.role, p.admin_slot;
 GRANT ALL ON TABLE public.profiles TO postgres, anon, authenticated, service_role;
 GRANT SELECT ON public.v_auth_profiles_status TO postgres, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.handle_new_user() TO postgres, service_role;
+

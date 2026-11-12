@@ -70,6 +70,23 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Ensure all required columns exist even if profiles table already existed
+ALTER TABLE public.profiles
+ADD COLUMN IF NOT EXISTS auth_user_id UUID,
+ADD COLUMN IF NOT EXISTS email VARCHAR(255),
+ADD COLUMN IF NOT EXISTS full_name VARCHAR(150),
+ADD COLUMN IF NOT EXISTS phone VARCHAR(25),
+ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'Admin',
+ADD COLUMN IF NOT EXISTS admin_slot INTEGER,
+ADD COLUMN IF NOT EXISTS default_redirect_view VARCHAR(50) DEFAULT 'dashboard',
+ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+UPDATE public.profiles
+SET email = 'user_' || id || '@yogeshwaridairy.com'
+WHERE email IS NULL;
+
 -- Strict Constraints: 1 Owner & Exactly 2 Admins
 CREATE UNIQUE INDEX IF NOT EXISTS idx_single_active_owner 
 ON public.profiles (role) 
@@ -941,25 +958,40 @@ ON CONFLICT (email) DO NOTHING;
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     auth_user_id UUID UNIQUE,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    full_name VARCHAR(150) NOT NULL,
+    email VARCHAR(255),
+    full_name VARCHAR(150),
     phone VARCHAR(25),
-    role VARCHAR(50) NOT NULL CHECK (role IN ('Owner', 'Admin')),
-    admin_slot INTEGER CHECK (admin_slot IN (1, 2) OR admin_slot IS NULL),
-    default_redirect_view VARCHAR(50) NOT NULL DEFAULT 'dashboard' CHECK (default_redirect_view IN (
-        'dashboard', 'pos', 'inventory', 'sales', 'reorder', 'expiry', 
-        'purchases', 'damages', 'udhar', 'expenses', 'analytics', 'returns'
-    )),
+    role VARCHAR(50) DEFAULT 'Admin',
+    admin_slot INTEGER,
+    default_redirect_view VARCHAR(50) DEFAULT 'dashboard',
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_single_active_owner 
+ALTER TABLE public.profiles
+ADD COLUMN IF NOT EXISTS auth_user_id UUID,
+ADD COLUMN IF NOT EXISTS email VARCHAR(255),
+ADD COLUMN IF NOT EXISTS full_name VARCHAR(150),
+ADD COLUMN IF NOT EXISTS phone VARCHAR(25),
+ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'Admin',
+ADD COLUMN IF NOT EXISTS admin_slot INTEGER,
+ADD COLUMN IF NOT EXISTS default_redirect_view VARCHAR(50) DEFAULT 'dashboard',
+ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+UPDATE public.profiles
+SET email = 'user_' || id || '@yogeshwaridairy.com'
+WHERE email IS NULL;
+
+DROP INDEX IF EXISTS public.idx_single_active_owner;
+CREATE UNIQUE INDEX idx_single_active_owner 
 ON public.profiles (role) 
 WHERE role = 'Owner' AND is_active = TRUE;
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_slots 
+DROP INDEX IF EXISTS public.idx_admin_slots;
+CREATE UNIQUE INDEX idx_admin_slots 
 ON public.profiles (role, admin_slot) 
 WHERE role = 'Admin' AND is_active = TRUE;
 

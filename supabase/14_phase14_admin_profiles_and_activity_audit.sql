@@ -35,15 +35,39 @@
 -- 3. Paste this entire script and click "Run" (or Ctrl + Enter).
 -- ============================================================================
 
--- 1. Extend sales and audit tables with email columns
+-- 1. Extend sales, audit and profiles tables with required columns
 ALTER TABLE public.sales
 ADD COLUMN IF NOT EXISTS created_by_email VARCHAR(255);
 
 ALTER TABLE public.admin_audit_logs
 ADD COLUMN IF NOT EXISTS admin_email VARCHAR(255);
 
+ALTER TABLE public.profiles
+ADD COLUMN IF NOT EXISTS auth_user_id UUID,
+ADD COLUMN IF NOT EXISTS email VARCHAR(255),
+ADD COLUMN IF NOT EXISTS full_name VARCHAR(150),
+ADD COLUMN IF NOT EXISTS phone VARCHAR(25),
+ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'Admin',
+ADD COLUMN IF NOT EXISTS admin_slot INTEGER,
+ADD COLUMN IF NOT EXISTS default_redirect_view VARCHAR(50) DEFAULT 'dashboard',
+ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
+
 CREATE INDEX IF NOT EXISTS idx_sales_created_by_email ON public.sales (created_by_email);
 CREATE INDEX IF NOT EXISTS idx_admin_audit_email ON public.admin_audit_logs (admin_email);
+
+-- Ensure email unique constraint on profiles if not present
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'profiles_email_key' AND conrelid = 'public.profiles'::regclass
+    ) THEN
+        ALTER TABLE public.profiles ADD CONSTRAINT profiles_email_key UNIQUE (email);
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL;
+END $$;
 
 -- 2. Safely Deactivate old dummy placeholder emails so unique constraints do not collide
 UPDATE public.profiles

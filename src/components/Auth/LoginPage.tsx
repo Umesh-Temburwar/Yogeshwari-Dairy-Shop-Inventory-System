@@ -43,7 +43,7 @@ export const LoginPage: React.FC = () => {
 
   // Env flags (Guest mode strictly disabled for anti-tamper security)
   const isGuestModeEnabled = false;
-  const isRegistrationEnabled = import.meta.env.VITE_ENABLE_REGISTRATION === 'true';
+  const isRegistrationEnabled = import.meta.env.VITE_ENABLE_REGISTRATION !== 'false';
 
   // Zod Schemas based on current mode
   const signInSchema = z.object({
@@ -55,7 +55,11 @@ export const LoginPage: React.FC = () => {
   const signUpSchema = z.object({
     fullName: z.string().min(1, { message: t('authFullNameRequired') }),
     email: z.string().min(1, { message: t('authEmailRequired') }).email({ message: t('authEmailInvalid') }),
-    password: z.string().min(1, { message: t('authPasswordRequired') }).min(6, { message: t('authPasswordMinLength') })
+    password: z.string().min(1, { message: t('authPasswordRequired') }).min(6, { message: t('authPasswordMinLength') }),
+    confirmPassword: z.string().min(1, { message: language === 'mr' ? 'पासवर्ड पुष्टी आवश्यक आहे' : language === 'hi' ? 'पासवर्ड पुष्टि आवश्यक है' : 'Confirm password is required' })
+  }).refine((data) => data.password === data.confirmPassword, {
+    message: language === 'mr' ? 'पासवर्ड जुळत नाही' : language === 'hi' ? 'पासवर्ड मेल नहीं खा रहे हैं' : 'Passwords do not match',
+    path: ['confirmPassword']
   });
 
   const forgotSchema = z.object({
@@ -92,7 +96,8 @@ export const LoginPage: React.FC = () => {
     defaultValues: {
       fullName: '',
       email: '',
-      password: ''
+      password: '',
+      confirmPassword: ''
     }
   });
 
@@ -160,12 +165,41 @@ export const LoginPage: React.FC = () => {
     setFormSuccess(null);
     setIsSubmitting(true);
     try {
-      const { error } = await signUpWithEmail(data.email.trim(), data.password, data.fullName.trim());
-      if (error) {
-        setFormError(error.message || t('authInvalidCredentials'));
+      const res = await signUpWithEmail(data.email.trim(), data.password, data.fullName.trim());
+      if (res.error) {
+        const msg = res.error.message || '';
+        if (msg.includes('already registered') || msg.includes('user_already_exists')) {
+          setFormError(
+            language === 'mr'
+              ? 'हा ईमेल आधीच नोंदणीकृत आहे. कृपया लॉगिन करा.'
+              : language === 'hi'
+              ? 'यह ईमेल पहले से पंजीकृत है। कृपया लॉगिन करें।'
+              : 'This email is already registered. Please sign in.'
+          );
+        } else {
+          setFormError(msg || t('authInvalidCredentials'));
+        }
+      } else if (res.needsEmailConfirmation) {
+        setFormSuccess(
+          language === 'mr'
+            ? 'नोंदणी यशस्वी! तुमचे खाते तयार झाले आहे. कृपया खालील पासवर्डने थेट लॉगिन करा.'
+            : language === 'hi'
+            ? 'पंजीकरण सफल! आपका खाता बन गया है। कृपया पासवर्ड दर्ज करके लॉगिन करें।'
+            : 'Registration successful! Please sign in with your credentials.'
+        );
+        resetSignIn({
+          email: data.email.trim(),
+          password: data.password,
+          rememberMe: true
+        });
+        setMode('signin');
       } else {
         setFormSuccess(t('authAccountCreated'));
-        resetSignUp();
+        resetSignIn({
+          email: data.email.trim(),
+          password: data.password,
+          rememberMe: true
+        });
         setMode('signin');
       }
     } catch {
@@ -478,6 +512,36 @@ export const LoginPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Top Auth Mode Tabs: Sign In vs Register */}
+            {isRegistrationEnabled && (
+              <div className="flex p-1 mb-5 bg-slate-100 dark:bg-[#1A2A25] rounded-2xl border border-slate-200/80 dark:border-[#24352F]">
+                <button
+                  type="button"
+                  onClick={() => switchMode('signin')}
+                  className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                    mode === 'signin'
+                      ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-xs border border-slate-200/60 dark:border-[#24352F]'
+                      : 'text-slate-500 dark:text-[#8FA69C] hover:text-slate-800 dark:hover:text-white'
+                  }`}
+                >
+                  <span>🔑</span>
+                  <span>{language === 'mr' ? 'लॉगिन करा (Sign In)' : language === 'hi' ? 'लॉगिन करें (Sign In)' : 'Sign In'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => switchMode('signup')}
+                  className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                    mode === 'signup'
+                      ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-xs border border-slate-200/60 dark:border-[#24352F]'
+                      : 'text-slate-500 dark:text-[#8FA69C] hover:text-slate-800 dark:hover:text-white'
+                  }`}
+                >
+                  <span>📝</span>
+                  <span>{language === 'mr' ? 'नवीन नोंदणी (Register)' : language === 'hi' ? 'नया पंजीकरण (Register)' : 'Register'}</span>
+                </button>
+              </div>
+            )}
+
             {/* Form-Level Error Banner */}
             {formError && (
               <div
@@ -740,6 +804,61 @@ export const LoginPage: React.FC = () => {
             {mode === 'signup' && (
               <form onSubmit={handleSignUpSubmit(onSignUp)} className="space-y-3.5" noValidate>
                 
+                {/* Quick 1-Click Role Fill Presets for Sign Up */}
+                <div className="space-y-1.5 pb-1">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>{language === 'mr' ? 'नोंदणीसाठी खाते निवडा (१-क्लिक):' : language === 'hi' ? 'पंजीकरण हेतु खाता चुनें (१-क्लिक):' : 'Select Account to Register:'}</span>
+                  </span>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetSignUp({
+                          fullName: 'योगेश्वरी डेअरी मालक (Shop Owner)',
+                          email: 'yogeshwaridairy9896@gmail.com',
+                          password: 'password123',
+                          confirmPassword: 'password123'
+                        });
+                      }}
+                      className="p-2 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/70 dark:bg-amber-950/20 text-left hover:bg-amber-100 dark:hover:bg-amber-900/40 transition shadow-2xs"
+                    >
+                      <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 block truncate">👑 मालक</span>
+                      <span className="text-[9px] text-slate-500 dark:text-slate-400 truncate block font-mono">yogeshwari...</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetSignUp({
+                          fullName: 'निलेश सखारे (प्रशासक १)',
+                          email: 'nilusakhare2003@gmail.com',
+                          password: 'password123',
+                          confirmPassword: 'password123'
+                        });
+                      }}
+                      className="p-2 rounded-xl border border-blue-200 dark:border-blue-800/40 bg-blue-50/70 dark:bg-blue-950/20 text-left hover:bg-blue-100 dark:hover:bg-blue-900/40 transition shadow-2xs"
+                    >
+                      <span className="text-[10px] font-black text-blue-700 dark:text-blue-400 block truncate">🛡️ ॲडमिन १</span>
+                      <span className="text-[9px] text-slate-500 dark:text-slate-400 truncate block font-mono">nilusakhare...</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetSignUp({
+                          fullName: 'निखिल सखारे (प्रशासक २)',
+                          email: 'nikhilsakhare9896@gmail.com',
+                          password: 'password123',
+                          confirmPassword: 'password123'
+                        });
+                      }}
+                      className="p-2 rounded-xl border border-teal-200 dark:border-teal-800/40 bg-teal-50/70 dark:bg-teal-950/20 text-left hover:bg-teal-100 dark:hover:bg-teal-900/40 transition shadow-2xs"
+                    >
+                      <span className="text-[10px] font-black text-teal-700 dark:text-teal-400 block truncate">🛡️ ॲडमिन २</span>
+                      <span className="text-[9px] text-slate-500 dark:text-slate-400 truncate block font-mono">nikhilsakhare...</span>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Full Name Field */}
                 <div>
                   <label
@@ -853,6 +972,39 @@ export const LoginPage: React.FC = () => {
                     <p id="signup-password-error" className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold mt-1 flex items-center gap-1">
                       <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                       <span>{signUpErrors.password.message}</span>
+                    </p>
+                  )}
+                </div>
+
+                {/* Confirm Password Field */}
+                <div>
+                  <label
+                    htmlFor="signup-confirm-password"
+                    className="block text-xs font-bold text-slate-700 dark:text-[#E7F0EC] mb-1.5"
+                  >
+                    {language === 'mr' ? 'पासवर्डची पुष्टी करा' : language === 'hi' ? 'पासवर्ड की पुष्टि करें' : 'Confirm Password'}
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />
+                    <input
+                      id="signup-confirm-password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      placeholder="••••••••"
+                      aria-invalid={signUpErrors.confirmPassword ? 'true' : 'false'}
+                      aria-describedby={signUpErrors.confirmPassword ? 'signup-confirm-password-error' : undefined}
+                      {...registerSignUp('confirmPassword')}
+                      className={`w-full min-h-[44px] pl-10 pr-10 py-2.5 bg-[#f8fafc] dark:bg-[#1A2A25] rounded-xl text-xs text-slate-900 dark:text-white font-medium border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                        signUpErrors.confirmPassword
+                          ? 'border-rose-500 dark:border-rose-500 ring-1 ring-rose-500'
+                          : 'border-slate-300 dark:border-[#24352F]'
+                      }`}
+                    />
+                  </div>
+                  {signUpErrors.confirmPassword && (
+                    <p id="signup-confirm-password-error" className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{signUpErrors.confirmPassword.message}</span>
                     </p>
                   )}
                 </div>

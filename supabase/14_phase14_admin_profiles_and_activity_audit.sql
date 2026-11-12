@@ -272,3 +272,4 @@ GRANT SELECT ON public.v_owner_admin_inventory_changes TO postgres, anon, authen
 GRANT SELECT ON public.v_owner_admin_counter_sales_details TO postgres, anon, authenticated, service_role;
 GRANT SELECT ON public.v_owner_admin_counter_summary TO postgres, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.get_user_role_and_redirect(TEXT) TO anon, authenticated;
+

@@ -1265,6 +1265,139 @@ GRANT SELECT ON public.v_owner_admin_counter_sales_details TO postgres, anon, au
 GRANT EXECUTE ON FUNCTION public.get_user_role_and_redirect(TEXT) TO anon, authenticated;
 
 -- ============================================================================
+-- PHASE 15: SUPABASE AUTH & USER REGISTRATION AUTOMATION
+-- ============================================================================
+-- 1. Ensure auth_user_id column and indices exist in public.profiles
+ALTER TABLE public.profiles 
+ADD COLUMN IF NOT EXISTS auth_user_id UUID UNIQUE;
+
+CREATE INDEX IF NOT EXISTS idx_profiles_auth_user_id 
+ON public.profiles (auth_user_id);
+
+CREATE INDEX IF NOT EXISTS idx_profiles_email_lower 
+ON public.profiles (LOWER(TRIM(email)));
+
+-- 2. Supabase Auth Trigger Function: Handle New Auth Users Automatically
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+DECLARE
+    detected_role VARCHAR(50);
+    detected_slot INTEGER;
+    detected_redirect VARCHAR(50);
+    detected_name VARCHAR(150);
+    clean_email TEXT := LOWER(TRIM(NEW.email));
+BEGIN
+    IF clean_email = 'nikhilsakhare9896@gmail.com' OR clean_email LIKE '%nikhil%' THEN
+        detected_role := 'Admin';
+        detected_slot := 2;
+        detected_redirect := 'inventory';
+        detected_name := COALESCE(
+            NEW.raw_user_meta_data->>'full_name',
+            'निखिल सखारे (प्रशासक २ - काऊंटर २)'
+        );
+    ELSIF clean_email = 'nilusakhare2003@gmail.com' OR clean_email LIKE '%nilu%' OR clean_email LIKE '%admin%' THEN
+        detected_role := 'Admin';
+        detected_slot := 1;
+        detected_redirect := 'pos';
+        detected_name := COALESCE(
+            NEW.raw_user_meta_data->>'full_name',
+            'निलेश सखारे (प्रशासक १ - काऊंटर १)'
+        );
+    ELSE
+        detected_role := 'Owner';
+        detected_slot := NULL;
+        detected_redirect := 'dashboard';
+        detected_name := COALESCE(
+            NEW.raw_user_meta_data->>'full_name',
+            'योगेश्वरी डेअरी मालक (Shop Owner)'
+        );
+    END IF;
+
+    IF NEW.raw_user_meta_data->>'role' IS NOT NULL THEN
+        IF (NEW.raw_user_meta_data->>'role') IN ('Owner', 'Admin') THEN
+            detected_role := NEW.raw_user_meta_data->>'role';
+        END IF;
+    END IF;
+
+    IF NEW.raw_user_meta_data->>'admin_slot' IS NOT NULL THEN
+        detected_slot := (NEW.raw_user_meta_data->>'admin_slot')::INTEGER;
+    END IF;
+
+    IF NEW.raw_user_meta_data->>'default_redirect_view' IS NOT NULL THEN
+        detected_redirect := NEW.raw_user_meta_data->>'default_redirect_view';
+    END IF;
+
+    INSERT INTO public.profiles (
+        auth_user_id,
+        email,
+        full_name,
+        role,
+        admin_slot,
+        default_redirect_view,
+        is_active,
+        created_at,
+        updated_at
+    ) VALUES (
+        NEW.id,
+        clean_email,
+        detected_name,
+        detected_role,
+        detected_slot,
+        detected_redirect,
+        TRUE,
+        NOW(),
+        NOW()
+    )
+    ON CONFLICT (email) DO UPDATE SET
+        auth_user_id = EXCLUDED.auth_user_id,
+        full_name = COALESCE(EXCLUDED.full_name, public.profiles.full_name),
+        role = EXCLUDED.role,
+        admin_slot = EXCLUDED.admin_slot,
+        default_redirect_view = EXCLUDED.default_redirect_view,
+        is_active = TRUE,
+        updated_at = NOW();
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+AFTER INSERT ON auth.users
+FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 3. Link existing auth.users with public.profiles
+UPDATE public.profiles p
+SET auth_user_id = u.id
+FROM auth.users u
+WHERE LOWER(TRIM(p.email)) = LOWER(TRIM(u.email))
+  AND (p.auth_user_id IS NULL OR p.auth_user_id != u.id);
+
+-- 4. Diagnostic View: Inspect Auth Users & Profiles status
+CREATE OR REPLACE VIEW public.v_auth_profiles_status AS
+SELECT 
+    p.id AS profile_id,
+    p.email,
+    p.full_name,
+    p.role,
+    p.admin_slot,
+    p.default_redirect_view,
+    p.is_active,
+    p.auth_user_id,
+    CASE 
+        WHEN u.id IS NOT NULL THEN 'SYNCED_WITH_SUPABASE_AUTH' 
+        ELSE 'LOCAL_OR_PENDING_AUTH_CREATION' 
+    END AS auth_status,
+    u.email_confirmed_at,
+    u.created_at AS auth_created_at
+FROM public.profiles p
+LEFT JOIN auth.users u ON p.auth_user_id = u.id OR LOWER(TRIM(p.email)) = LOWER(TRIM(u.email))
+ORDER BY p.role, p.admin_slot;
+
+GRANT SELECT ON public.v_auth_profiles_status TO postgres, anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.handle_new_user() TO postgres, service_role;
+
+-- ============================================================================
 -- SETUP COMPLETE
 -- ============================================================================
 -- To verify everything is working, run:

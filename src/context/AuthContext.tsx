@@ -26,7 +26,19 @@ interface AuthContextType {
   }>;
   lockSecurity: () => void;
   signInWithEmail: (email: string, password: string) => Promise<{ error: any; redirectView?: 'dashboard' | 'pos' | 'inventory' }>;
-  signUpWithEmail: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
+  signUpWithEmail: (
+    email: string, 
+    password: string, 
+    fullName?: string, 
+    roleChoice?: UserRole, 
+    slotChoice?: 1 | 2 | null
+  ) => Promise<{ 
+    error: any; 
+    user?: User | null; 
+    session?: Session | null;
+    needsEmailConfirmation?: boolean;
+    redirectView?: 'dashboard' | 'pos' | 'inventory';
+  }>;
   signOut: () => Promise<void>;
   continueAsGuest: () => void;
   resetPassword: (email: string) => Promise<{ error: any }>;
@@ -261,6 +273,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUser(data.user);
           setSession(data.session);
 
+          // Update profiles with auth_user_id if not linked
+          try {
+            await supabase
+              .from('profiles')
+              .update({ auth_user_id: data.user.id, is_active: true })
+              .eq('email', cleanEmail);
+          } catch {}
+
           // Fetch profile configuration if profiles table exists in Supabase
           try {
             const { data: prof } = await supabase
@@ -293,13 +313,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           // Always lock security initially after sign in so Master Passcode popup is triggered
           lockSecurity();
           return { error: null, redirectView: targetRedirect };
-        } else if (error && !cleanEmail.includes('owner') && !cleanEmail.includes('admin') && !cleanEmail.includes('umesh')) {
-          return { error };
+        } else if (error) {
+          // If specific Supabase error
+          if (error.message?.includes('Email not confirmed')) {
+            return { 
+              error: { 
+                message: 'ईमेल पडताळणी प्रलंबित आहे (Email not confirmed). कृपया तुमचा ईमेल इनबॉक्स तपासा किंवा Supabase Dashboard मधील Authentication -> Users मध्ये Confirm User करा.' 
+              } 
+            };
+          }
+
+          const isNetworkError = error.message?.toLowerCase().includes('failed to fetch') || error.message?.toLowerCase().includes('network');
+          const isOfficial = 
+            cleanEmail === 'yogeshwaridairy9896@gmail.com' ||
+            cleanEmail === 'nilusakhare2003@gmail.com' ||
+            cleanEmail === 'nikhilsakhare9896@gmail.com' ||
+            cleanEmail.includes('nilu') ||
+            cleanEmail.includes('nikhil') ||
+            cleanEmail.includes('yogeshwari');
+
+          if (!isOfficial || !isNetworkError) {
+            return { error };
+          }
         }
       } catch (err: any) {
-        if (!cleanEmail.includes('owner') && !cleanEmail.includes('admin') && !cleanEmail.includes('umesh')) {
-          return { error: err };
-        }
+        console.error('Supabase auth sign in error:', err);
       }
     }
 
@@ -351,29 +389,70 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { error: { message: 'Invalid credentials. Only verified 1 Owner and 2 Admin profiles are permitted.' } };
   };
 
-  // Sign Up with Email (restricted to Owner / Admin roles)
-  const signUpWithEmail = async (email: string, password: string, fullName?: string) => {
+  // Sign Up with Email (Supports Owner & Admin registration with auto-linking)
+  const signUpWithEmail = async (
+    email: string, 
+    password: string, 
+    fullName?: string, 
+    roleChoice?: UserRole, 
+    slotChoice?: 1 | 2 | null
+  ) => {
     if (!supabase) return { error: { message: 'Supabase client not initialized' } };
     setIsLoading(true);
     try {
+      const cleanEmail = email.trim().toLowerCase();
+      const detected = detectRoleAndSlot(cleanEmail);
+      const assignedRole = roleChoice || detected.role;
+      const assignedSlot = slotChoice !== undefined ? slotChoice : detected.slot;
+      const targetRedirect = detected.redirectView;
+      const finalName = fullName?.trim() || detected.fullName;
+
       const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: cleanEmail,
         password,
         options: {
           data: {
-            full_name: fullName,
-            role: 'Owner'
+            full_name: finalName,
+            role: assignedRole,
+            admin_slot: assignedSlot,
+            default_redirect_view: targetRedirect
           },
         },
       });
+
       if (error) throw error;
+
+      // Upsert profile in public.profiles table
+      if (data.user) {
+        try {
+          await supabase.from('profiles').upsert({
+            auth_user_id: data.user.id,
+            email: cleanEmail,
+            full_name: finalName,
+            role: assignedRole,
+            admin_slot: assignedSlot,
+            default_redirect_view: targetRedirect,
+            is_active: true
+          }, { onConflict: 'email' });
+        } catch (profErr) {
+          console.warn('Profile sync on signup:', profErr);
+        }
+      }
+
       if (data.user && data.session) {
         setUser(data.user);
         setSession(data.session);
-        setRole('Owner');
+        setRole(assignedRole, assignedSlot);
         lockSecurity();
       }
-      return { error: null };
+
+      return { 
+        error: null, 
+        user: data.user, 
+        session: data.session,
+        needsEmailConfirmation: !data.session && !!data.user,
+        redirectView: targetRedirect
+      };
     } catch (err: any) {
       return { error: err };
     } finally {

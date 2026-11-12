@@ -1,14 +1,14 @@
 # 🥛 योगेश्वरी डेअरी ERP — Supabase मॅन्युअल सेटअप मार्गदर्शक (Phase-Wise Guide)
 
-या डिरेक्टरीमध्ये Supabase PostgreSQL डेटाबेस मॅन्युअली आणि टप्प्याटप्प्याने (Phase-wise) सेटअप करण्यासाठी **१४ स्वतंत्र SQL फाइल्स** तयार केल्या आहेत. 
+या डिरेक्टरीमध्ये Supabase PostgreSQL डेटाबेस मॅन्युअली आणि टप्प्याटप्प्याने (Phase-wise) सेटअप करण्यासाठी **१५ स्वतंत्र SQL फाइल्स** तयार केल्या आहेत. 
 
 प्रत्येक फाइल प्रोजेक्टच्या विशिष्ट फिचर्सनुसार डिझाइन केलेली आहे, जेणेकरून तुम्ही कोणत्याही गोंधळाशिवाय व त्रुटीविना (Error-free) तुमचा संपूर्ण डेटाबेस तयार करू शकाल.
 
 ---
 
-## 📋 सर्व १४ टप्पे व फाइल्सची यादी (Phase-Wise Execution Order)
+## 📋 सर्व १५ टप्पे व फाइल्सची यादी (Phase-Wise Execution Order)
 
-तुम्हाला तुमच्या **Supabase Dashboard -> SQL Editor** मध्ये जाऊन खालील क्रमाने (Phase 1 ते Phase 14) या फाइल्स रन करायच्या आहेत:
+तुम्हाला तुमच्या **Supabase Dashboard -> SQL Editor** मध्ये जाऊन खालील क्रमाने (Phase 1 ते Phase 15) या फाइल्स रन करायच्या आहेत:
 
 | क्र. | फाइलचे नाव (File Name) | टप्प्याचे नाव (Phase Title) | काय तयार होते? (Tables / Functions / Views) |
 |:---:|:---|:---|:---|
@@ -26,6 +26,7 @@
 | **Phase 12** | [`12_phase12_owner_admin_roles_and_auth.sql`](./12_phase12_owner_admin_roles_and_auth.sql) | **१ मालक व २ ॲडमिन (Roles & Redirection)** | १ मालक व नेमके २ ॲडमिन निर्बंध (`profiles` टेबल), लॉगिननंतर भूमिकेनुसार स्वयंचलित रिडायरेक्ट (`dashboard`, `pos`, `inventory`) |
 | **Phase 13** | [`13_phase13_admin_audit_and_counter_tracking.sql`](./13_phase13_admin_audit_and_counter_tracking.sql) | **२ ॲडमिन तपासणी वही व काऊंटर ट्रॅकिंग** | दुकान मालक नियंत्रण कक्ष — २ ॲडमिनने कोणत्या काऊंटरवरून काय विकले व काय अपडेट केले याचा संपूर्ण रिअल-टाइम ऑडिट लेजर (`admin_audit_logs`, `v_owner_admin_counter_summary`, `v_owner_recent_admin_activities`) |
 | **Phase 14** | [`14_phase14_admin_profiles_and_activity_audit.sql`](./14_phase14_admin_profiles_and_activity_audit.sql) | **अधिकृत Gmail प्रोफाइल्स व इन्व्हेंटरी बदल ट्रॅकिंग** | अधिकृत Gmail प्रोफाइल्स: मालक (`yogeshwaridairy9896@gmail.com` -> `dashboard`), ॲडमिन १ निलेश सखारे (`nilusakhare2003@gmail.com` -> `pos`), ॲडमिन २ निखिल सखारे (`nikhilsakhare9896@gmail.com` -> `inventory`), आणि मालकासाठी इन्व्हेंटरी बदल व काऊंटर विक्री तपशील व्ह्यूज (`v_owner_admin_inventory_changes`, `v_owner_admin_counter_sales_details`) |
+| **Phase 15** | [`15_phase15_supabase_auth_and_user_registration.sql`](./15_phase15_supabase_auth_and_user_registration.sql) | **Supabase Auth व ऑटोमॅटिक युझर रजिस्ट्रेशन** | Supabase Auth (`auth.users`) व युझर प्रोफाइल्स (`public.profiles`) ऑटो-लिंक ट्रिगर (`on_auth_user_created`), ३ खात्यांचे स्वयंचलित कन्फर्मेशन, RLS सुरक्षितता, आणि डायग्नोस्टिक व्ह्यू (`v_auth_profiles_status`) |
 
 ---
 

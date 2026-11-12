@@ -25,7 +25,14 @@ export const saveSupabaseConfig = (url: string, key: string) => {
 const config = getSupabaseConfig();
 
 export const supabase = (config.url && config.key) 
-  ? createClient(config.url, config.key) 
+  ? createClient(config.url, config.key, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      }
+    }) 
   : null;
 
 export const testSupabaseConnection = async (url: string, key: string): Promise<{ success: boolean; message: string }> => {

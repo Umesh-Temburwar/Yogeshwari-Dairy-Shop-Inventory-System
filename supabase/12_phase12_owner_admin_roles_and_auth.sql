@@ -1,14 +1,17 @@
 -- ============================================================================
 -- YOGESHWARI DAIRY SHOP ERP - SUPABASE SETUP
--- PHASE 12: USER PROFILES, 1 OWNER & 2 ADMINS ENFORCEMENT & REDIRECTS
+-- PHASE 12: USER PROFILES, 1 OWNER & 1 ADMIN (NILESH SAKHARE) ENFORCEMENT & REDIRECTS
 -- File: supabase/12_phase12_owner_admin_roles_and_auth.sql
 -- ============================================================================
 -- Description:
--- Establishes role-based access control strictly restricted to 1 Owner and 2 Admins:
--- 1. 👑 Owner: Full store owner with executive dashboard redirection ('dashboard')
--- 2. 🛡️ Admin 1: Counter billing operator with POS counter redirection ('pos')
--- 3. 🛡️ Admin 2: Inventory manager with stock/batches redirection ('inventory')
--- Includes database unique constraints to strictly limit to 1 Owner and 2 Admins.
+-- Establishes role-based access control strictly restricted to 1 Owner and 1 Admin:
+-- 1. 👑 Owner: Store Owner with executive dashboard redirection ('dashboard')
+--    - Email: yogeshwaridairy9896@gmail.com
+-- 2. 🛡️ Admin: Counter billing administrator with POS counter redirection ('pos')
+--    - Name: निलेश सखारे (Nilesh Sakhare - Counter 1)
+--    - Email: nilusakhare2003@gmail.com
+--
+-- NOTE: 'nikhilsakhare9896@gmail.com' has been permanently removed/deleted.
 --
 -- Instructions:
 -- 1. Ensure Phases 1-11 have been executed successfully.
@@ -59,16 +62,21 @@ UPDATE public.profiles
 SET role = 'Admin'
 WHERE LOWER(role) = 'admin';
 
--- Safely deactivate any existing non-official rows so they do not collide with single active owner / admin slot limits
+-- PERMANENTLY DELETE nikhilsakhare9896@gmail.com and any admin 2 placeholder
+DELETE FROM public.profiles 
+WHERE email = 'nikhilsakhare9896@gmail.com' 
+   OR email = 'admin2@yogeshwaridairy.com' 
+   OR full_name ILIKE '%nikhil%';
+
+-- Safely deactivate any other non-official rows
 UPDATE public.profiles
 SET is_active = FALSE
 WHERE email NOT IN (
     'yogeshwaridairy9896@gmail.com',
     'nilusakhare2003@gmail.com',
-    'nikhilsakhare9896@gmail.com',
     'owner@yogeshwaridairy.com',
     'admin1@yogeshwaridairy.com',
-    'admin2@yogeshwaridairy.com'
+    'admin@yogeshwaridairy.com'
 );
 
 -- Ensure Unique constraint on email
@@ -91,20 +99,20 @@ CREATE TRIGGER trg_profiles_updated_at
 BEFORE UPDATE ON public.profiles
 FOR EACH ROW EXECUTE FUNCTION public.set_current_timestamp_updated_at();
 
--- 4. Business Rule Constraints (Strict Enforcement: Only 1 Owner & Exactly 2 Admins)
+-- 4. Business Rule Constraints (Strict Enforcement: Only 1 Owner & Exactly 1 Admin)
 -- Enforce: Maximum 1 active Owner
 DROP INDEX IF EXISTS public.idx_single_active_owner;
 CREATE UNIQUE INDEX idx_single_active_owner 
 ON public.profiles (role) 
 WHERE role = 'Owner' AND is_active = TRUE;
 
--- Enforce: Exactly Admin Slot 1 and Admin Slot 2 (No duplicate active admin slots)
+-- Enforce: Exactly Admin Slot 1 (Counter Billing)
 DROP INDEX IF EXISTS public.idx_admin_slots;
 CREATE UNIQUE INDEX idx_admin_slots 
 ON public.profiles (role, admin_slot) 
 WHERE role = 'Admin' AND is_active = TRUE;
 
--- 5. Pre-seed the 1 Owner and 2 Authorized Admins with Official Gmail Accounts
+-- 5. Pre-seed the 1 Owner and 1 Authorized Admin (Nilesh Sakhare)
 -- A. 👑 Shop Owner: yogeshwaridairy9896@gmail.com -> dashboard
 INSERT INTO public.profiles (
     id, email, full_name, role, admin_slot, default_redirect_view, is_active
@@ -126,38 +134,17 @@ ON CONFLICT (email) DO UPDATE SET
     is_active = TRUE,
     updated_at = NOW();
 
--- B. 🛡️ Admin 1: nilusakhare2003@gmail.com -> pos (Nilesh Sakhare - Counter 1)
+-- B. 🛡️ Admin: nilusakhare2003@gmail.com -> pos (Nilesh Sakhare - Counter 1)
 INSERT INTO public.profiles (
     id, email, full_name, role, admin_slot, default_redirect_view, is_active
 )
 VALUES (
     '10000000-0000-0000-0000-000000000002'::UUID,
     'nilusakhare2003@gmail.com',
-    'निलेश सखारे (प्रशासक १ - काऊंटर १)',
+    'निलेश सखारे (प्रशासक - काऊंटर १ बिलिंग)',
     'Admin',
     1,
     'pos',
-    TRUE
-)
-ON CONFLICT (email) DO UPDATE SET
-    full_name = EXCLUDED.full_name,
-    role = EXCLUDED.role,
-    admin_slot = EXCLUDED.admin_slot,
-    default_redirect_view = EXCLUDED.default_redirect_view,
-    is_active = TRUE,
-    updated_at = NOW();
-
--- C. 🛡️ Admin 2: nikhilsakhare9896@gmail.com -> inventory (Nikhil Sakhare - Counter 2)
-INSERT INTO public.profiles (
-    id, email, full_name, role, admin_slot, default_redirect_view, is_active
-)
-VALUES (
-    '10000000-0000-0000-0000-000000000003'::UUID,
-    'nikhilsakhare9896@gmail.com',
-    'निखिल सखारे (प्रशासक २ - काऊंटर २)',
-    'Admin',
-    2,
-    'inventory',
     TRUE
 )
 ON CONFLICT (email) DO UPDATE SET
@@ -172,8 +159,7 @@ ON CONFLICT (email) DO UPDATE SET
 INSERT INTO public.profiles (email, full_name, role, admin_slot, default_redirect_view, is_active)
 VALUES 
     ('owner@yogeshwaridairy.com', 'Yogeshwari Dairy Owner', 'Owner', NULL, 'dashboard', FALSE),
-    ('admin1@yogeshwaridairy.com', 'Store Administrator 1', 'Admin', 1, 'pos', FALSE),
-    ('admin2@yogeshwaridairy.com', 'Store Administrator 2', 'Admin', 2, 'inventory', FALSE)
+    ('admin1@yogeshwaridairy.com', 'Store Administrator 1', 'Admin', 1, 'pos', FALSE)
 ON CONFLICT (email) DO NOTHING;
 
 -- 6. Enable Row Level Security (RLS) on profiles
@@ -229,10 +215,8 @@ BEGIN
     END IF;
 
     -- Dynamic fallback based on exact user emails
-    IF clean_email = 'nikhilsakhare9896@gmail.com' OR clean_email LIKE '%nikhil%' THEN
-        RETURN QUERY SELECT 'Admin'::VARCHAR, 2, 'inventory'::VARCHAR, 'निखिल सखारे (प्रशासक २ - काऊंटर २)'::VARCHAR;
-    ELSIF clean_email = 'nilusakhare2003@gmail.com' OR clean_email LIKE '%nilu%' OR clean_email LIKE '%admin%' THEN
-        RETURN QUERY SELECT 'Admin'::VARCHAR, 1, 'pos'::VARCHAR, 'निलेश सखारे (प्रशासक १ - काऊंटर १)'::VARCHAR;
+    IF clean_email = 'nilusakhare2003@gmail.com' OR clean_email LIKE '%nilu%' OR clean_email LIKE '%admin%' THEN
+        RETURN QUERY SELECT 'Admin'::VARCHAR, 1, 'pos'::VARCHAR, 'निलेश सखारे (प्रशासक - काऊंटर १ बिलिंग)'::VARCHAR;
     ELSE
         RETURN QUERY SELECT 'Owner'::VARCHAR, NULL::INTEGER, 'dashboard'::VARCHAR, 'योगेश्वरी डेअरी मालक (Shop Owner)'::VARCHAR;
     END IF;

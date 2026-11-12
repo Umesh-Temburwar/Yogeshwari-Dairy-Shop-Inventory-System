@@ -750,20 +750,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const slotStr = localStorage.getItem('ydo_admin_slot');
       const slot: 1 | 2 | null = role === 'Owner' ? null : (slotStr === '2' ? (2 as const) : (1 as const));
 
-      if (userEmail === 'nikhilsakhare9896@gmail.com' || userEmail.includes('nikhil') || slot === 2) {
-        return {
-          role: 'Admin' as UserRole,
-          slot: 2 as 1 | 2,
-          email: 'nikhilsakhare9896@gmail.com',
-          name: 'निखिल सखारे (प्रशासक २)',
-          counter: 'काऊंटर २ - दुग्ध व साठा'
-        };
-      } else if (userEmail === 'nilusakhare2003@gmail.com' || userEmail.includes('nilu') || slot === 1) {
+      if (userEmail === 'nilusakhare2003@gmail.com' || userEmail.includes('nilu') || role === 'Admin' || slot === 1) {
         return {
           role: 'Admin' as UserRole,
           slot: 1 as 1 | 2,
           email: 'nilusakhare2003@gmail.com',
-          name: 'निलेश सखारे (प्रशासक १)',
+          name: 'निलेश सखारे (प्रशासक - काऊंटर १ बिलिंग)',
           counter: 'काऊंटर १ - मुख्य बिलिंग'
         };
       } else {

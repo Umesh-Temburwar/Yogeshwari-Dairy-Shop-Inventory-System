@@ -720,19 +720,19 @@ export const LoginPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Profile Security Notice & Quick Role Presets (Strictly 1 Owner & 2 Admins) */}
+                {/* Profile Security Notice & Quick Role Presets (Strictly 1 Owner & 1 Admin) */}
                 <div className="pt-3 border-t border-slate-100 dark:border-[#24352F] space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-[#8FA69C]">
                     <span className="flex items-center gap-1">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>{language === 'mr' ? 'प्रमाणित प्रवेश (३ खाती):' : language === 'hi' ? 'सत्यापित प्रवेश (३ खाते):' : 'Authorized Profiles (3 Users):'}</span>
+                      <span>{language === 'mr' ? 'प्रमाणित प्रवेश (२ खाती):' : language === 'hi' ? 'सत्यापित प्रवेश (२ खाते):' : 'Authorized Profiles (2 Users):'}</span>
                     </span>
                     <span className="text-emerald-700 dark:text-emerald-400 font-extrabold text-[10px]">
-                      👑 1 Owner & 🛡️ 2 Admins
+                      👑 1 Owner & 🛡️ 1 Admin
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {/* 1. Shop Owner */}
                     <button
                       type="button"
@@ -753,7 +753,7 @@ export const LoginPage: React.FC = () => {
                       <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">➡️ {language === 'mr' ? 'मालक डॅशबोर्ड' : language === 'hi' ? 'मालिक डैशबोर्ड' : 'Dashboard'}</span>
                     </button>
 
-                    {/* 2. Admin 1 - POS / Billing Counter (Nilesh Sakhare) */}
+                    {/* 2. Admin - POS / Billing Counter (Nilesh Sakhare) */}
                     <button
                       type="button"
                       onClick={() => {
@@ -766,31 +766,11 @@ export const LoginPage: React.FC = () => {
                       className="p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/70 dark:bg-emerald-950/20 text-left hover:bg-emerald-100/70 dark:hover:bg-emerald-900/30 transition shadow-2xs group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400">🛡️ {language === 'mr' ? 'निलेश (ॲडमिन १)' : language === 'hi' ? 'निलेश (एडमिन १)' : 'Nilesh (Admin 1)'}</span>
+                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400">🛡️ {language === 'mr' ? 'निलेश (ॲडमिन)' : language === 'hi' ? 'निलेश (एडमिन)' : 'Nilesh (Admin)'}</span>
                         <span className="text-[9px] font-bold text-emerald-600/80 dark:text-emerald-400/80 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded">काऊंटर १</span>
                       </div>
                       <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 font-bold">nilusakhare2003...</span>
                       <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">➡️ {language === 'mr' ? 'काऊंटर १ बिलिंग' : language === 'hi' ? 'काउंटर १ बिलिंग' : 'POS Billing'}</span>
-                    </button>
-
-                    {/* 3. Admin 2 - Inventory & Stock Management (Nikhil Sakhare) */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetSignIn({
-                          email: 'nikhilsakhare9896@gmail.com',
-                          password: 'password123',
-                          rememberMe: true,
-                        });
-                      }}
-                      className="p-2.5 rounded-xl border border-purple-200 dark:border-purple-800/40 bg-purple-50/70 dark:bg-purple-950/20 text-left hover:bg-purple-100/70 dark:hover:bg-purple-900/30 transition shadow-2xs group"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-purple-700 dark:text-purple-400">🛡️ {language === 'mr' ? 'निखिल (ॲडमिन २)' : language === 'hi' ? 'निखिल (एडमिन २)' : 'Nikhil (Admin 2)'}</span>
-                        <span className="text-[9px] font-bold text-purple-600/80 dark:text-purple-400/80 bg-purple-100 dark:bg-purple-900/40 px-1 py-0.5 rounded">काऊंटर २</span>
-                      </div>
-                      <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 font-bold">nikhilsakhare9896...</span>
-                      <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">➡️ {language === 'mr' ? 'इन्व्हेंटरी व साठा' : language === 'hi' ? 'इन्वेंट्री व स्टॉक' : 'Inventory'}</span>
                     </button>
                   </div>
                 </div>
@@ -810,7 +790,7 @@ export const LoginPage: React.FC = () => {
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>{language === 'mr' ? 'नोंदणीसाठी खाते निवडा (१-क्लिक):' : language === 'hi' ? 'पंजीकरण हेतु खाता चुनें (१-क्लिक):' : 'Select Account to Register:'}</span>
                   </span>
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-2 gap-1.5">
                     <button
                       type="button"
                       onClick={() => {
@@ -823,38 +803,23 @@ export const LoginPage: React.FC = () => {
                       }}
                       className="p-2 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/70 dark:bg-amber-950/20 text-left hover:bg-amber-100 dark:hover:bg-amber-900/40 transition shadow-2xs"
                     >
-                      <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 block truncate">👑 मालक</span>
+                      <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 block truncate">👑 दुकान मालक</span>
                       <span className="text-[9px] text-slate-500 dark:text-slate-400 truncate block font-mono">yogeshwari...</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => {
                         resetSignUp({
-                          fullName: 'निलेश सखारे (प्रशासक १)',
+                          fullName: 'निलेश सखारे (प्रशासक)',
                           email: 'nilusakhare2003@gmail.com',
                           password: 'password123',
                           confirmPassword: 'password123'
                         });
                       }}
-                      className="p-2 rounded-xl border border-blue-200 dark:border-blue-800/40 bg-blue-50/70 dark:bg-blue-950/20 text-left hover:bg-blue-100 dark:hover:bg-blue-900/40 transition shadow-2xs"
+                      className="p-2 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/70 dark:bg-emerald-950/20 text-left hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition shadow-2xs"
                     >
-                      <span className="text-[10px] font-black text-blue-700 dark:text-blue-400 block truncate">🛡️ ॲडमिन १</span>
+                      <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 block truncate">🛡️ निलेश (ॲडमिन)</span>
                       <span className="text-[9px] text-slate-500 dark:text-slate-400 truncate block font-mono">nilusakhare...</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetSignUp({
-                          fullName: 'निखिल सखारे (प्रशासक २)',
-                          email: 'nikhilsakhare9896@gmail.com',
-                          password: 'password123',
-                          confirmPassword: 'password123'
-                        });
-                      }}
-                      className="p-2 rounded-xl border border-teal-200 dark:border-teal-800/40 bg-teal-50/70 dark:bg-teal-950/20 text-left hover:bg-teal-100 dark:hover:bg-teal-900/40 transition shadow-2xs"
-                    >
-                      <span className="text-[10px] font-black text-teal-700 dark:text-teal-400 block truncate">🛡️ ॲडमिन २</span>
-                      <span className="text-[9px] text-slate-500 dark:text-slate-400 truncate block font-mono">nikhilsakhare...</span>
                     </button>
                   </div>
                 </div>

@@ -8,13 +8,13 @@
 -- 1. Automates linking between Supabase auth.users and public.profiles.
 -- 2. Creates the official Supabase trigger 'on_auth_user_created' on auth.users:
 --    - Detects user email upon sign up.
---    - Automatically assigns role ('Owner' or 'Admin'), slot (1 or 2), and
---      target redirect view ('dashboard', 'pos', or 'inventory').
+--    - Automatically assigns role ('Owner' or 'Admin'), slot (1), and
+--      target redirect view ('dashboard' or 'pos').
 --    - Upserts public.profiles with the linked auth_user_id.
--- 3. Provides optional pre-confirmed seed users in auth.users for the 3 accounts:
+-- 3. Provides pre-confirmed seed users in auth.users for the 2 official accounts:
 --    - 👑 Shop Owner: yogeshwaridairy9896@gmail.com (Password: password123)
 --    - 🛡️ Admin 1: nilusakhare2003@gmail.com (Password: password123)
---    - 🛡️ Admin 2: nikhilsakhare9896@gmail.com (Password: password123)
+--    (Note: nikhilsakhare9896@gmail.com is permanently removed/deleted)
 -- 4. Syncs any existing auth.users entries with public.profiles.
 -- 5. Configures Row Level Security (RLS) for auth.uid() authentication.
 --
@@ -69,21 +69,13 @@ DECLARE
     clean_email TEXT := LOWER(TRIM(NEW.email));
 BEGIN
     -- Determine role, slot, and redirect view based on email & metadata
-    IF clean_email = 'nikhilsakhare9896@gmail.com' OR clean_email LIKE '%nikhil%' THEN
-        detected_role := 'Admin';
-        detected_slot := 2;
-        detected_redirect := 'inventory';
-        detected_name := COALESCE(
-            NEW.raw_user_meta_data->>'full_name',
-            'निखिल सखारे (प्रशासक २ - काऊंटर २)'
-        );
-    ELSIF clean_email = 'nilusakhare2003@gmail.com' OR clean_email LIKE '%nilu%' OR clean_email LIKE '%admin%' THEN
+    IF clean_email = 'nilusakhare2003@gmail.com' OR clean_email LIKE '%nilu%' OR clean_email LIKE '%admin%' THEN
         detected_role := 'Admin';
         detected_slot := 1;
         detected_redirect := 'pos';
         detected_name := COALESCE(
             NEW.raw_user_meta_data->>'full_name',
-            'निलेश सखारे (प्रशासक १ - काऊंटर १)'
+            'निलेश सखारे (प्रशासक - काऊंटर १)'
         );
     ELSE
         detected_role := 'Owner';
@@ -158,7 +150,6 @@ DO $$
 DECLARE
     owner_uid UUID := '10000000-0000-0000-0000-000000000001'::UUID;
     admin1_uid UUID := '10000000-0000-0000-0000-000000000002'::UUID;
-    admin2_uid UUID := '10000000-0000-0000-0000-000000000003'::UUID;
     encrypted_pw TEXT := crypt('password123', gen_salt('bf', 10));
 BEGIN
     -- 1. Owner: yogeshwaridairy9896@gmail.com
@@ -233,41 +224,9 @@ BEGIN
         WHERE email = 'nilusakhare2003@gmail.com';
     END IF;
 
-    -- 3. Admin 2: nikhilsakhare9896@gmail.com
-    IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'nikhilsakhare9896@gmail.com') THEN
-        INSERT INTO auth.users (
-            id,
-            instance_id,
-            email,
-            encrypted_password,
-            email_confirmed_at,
-            raw_app_meta_data,
-            raw_user_meta_data,
-            aud,
-            role,
-            created_at,
-            updated_at
-        ) VALUES (
-            admin2_uid,
-            '00000000-0000-0000-0000-000000000000'::UUID,
-            'nikhilsakhare9896@gmail.com',
-            encrypted_pw,
-            NOW(),
-            '{"provider":"email","providers":["email"]}'::jsonb,
-            '{"full_name":"निखिल सखारे (प्रशासक २)","role":"Admin","admin_slot":2,"default_redirect_view":"inventory"}'::jsonb,
-            'authenticated',
-            'authenticated',
-            NOW(),
-            NOW()
-        );
-    ELSE
-        -- Ensure confirmed
-        UPDATE auth.users
-        SET email_confirmed_at = COALESCE(email_confirmed_at, NOW()),
-            raw_app_meta_data = '{"provider":"email","providers":["email"]}'::jsonb,
-            raw_user_meta_data = '{"full_name":"निखिल सखारे (प्रशासक २)","role":"Admin","admin_slot":2,"default_redirect_view":"inventory"}'::jsonb
-        WHERE email = 'nikhilsakhare9896@gmail.com';
-    END IF;
+    -- 3. Ensure Nikhil Sakhare / nikhilsakhare9896@gmail.com is permanently removed
+    DELETE FROM auth.users WHERE email = 'nikhilsakhare9896@gmail.com';
+    DELETE FROM public.profiles WHERE email = 'nikhilsakhare9896@gmail.com' OR full_name ILIKE '%nikhil%';
 END $$;
 
 -- 5. Link all auth.users IDs with public.profiles

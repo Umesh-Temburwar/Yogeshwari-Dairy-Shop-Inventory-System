@@ -35,7 +35,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
   const isMr = language === 'mr';
   const isHi = language === 'hi';
 
-  const [activeTabFilter, setActiveTabFilter] = useState<'all' | 'admin1' | 'admin2' | 'sales_details' | 'inventory_changes'>('all');
+  const [activeTabFilter, setActiveTabFilter] = useState<'all' | 'admin1' | 'sales_details' | 'inventory_changes'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSaleDetail, setSelectedSaleDetail] = useState<Sale | null>(null);
 
@@ -49,7 +49,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
     return sales.filter(s => 
       s.admin_slot === 1 || 
       s.created_by_email === 'nilusakhare2003@gmail.com' || 
-      (!s.admin_slot && s.created_by_role !== 'Owner' && !s.created_by_email?.includes('nikhil'))
+      (!s.admin_slot && s.created_by_role !== 'Owner')
     );
   }, [sales]);
 
@@ -61,21 +61,14 @@ export const OwnerAdminCounterWidget: React.FC = () => {
     return { count: admin1Sales.length, totalSales, cash, online, udhar };
   }, [admin1Sales]);
 
-  // Calculate Metrics for Admin 2 (Nikhil Sakhare - nikhilsakhare9896@gmail.com - Counter 2)
-  const admin2Sales = useMemo(() => {
-    return sales.filter(s => 
-      s.admin_slot === 2 || 
-      s.created_by_email === 'nikhilsakhare9896@gmail.com'
-    );
+  // Overall Store Metrics (Total across all operations)
+  const storeTotalStats = useMemo(() => {
+    const totalSales = sales.reduce((acc, s) => acc + s.net_amount, 0);
+    const cash = sales.reduce((acc, s) => acc + (s.cash_amount || 0), 0);
+    const online = sales.reduce((acc, s) => acc + (s.online_amount || 0), 0);
+    const udhar = sales.reduce((acc, s) => acc + (s.udhar_amount || 0), 0);
+    return { count: sales.length, totalSales, cash, online, udhar };
   }, [sales]);
-
-  const admin2Stats = useMemo(() => {
-    const totalSales = admin2Sales.reduce((acc, s) => acc + s.net_amount, 0);
-    const cash = admin2Sales.reduce((acc, s) => acc + (s.cash_amount || 0), 0);
-    const online = admin2Sales.reduce((acc, s) => acc + (s.online_amount || 0), 0);
-    const udhar = admin2Sales.reduce((acc, s) => acc + (s.udhar_amount || 0), 0);
-    return { count: admin2Sales.length, totalSales, cash, online, udhar };
-  }, [admin2Sales]);
 
   // Combine and deduplicate activities from adminActivities and sales
   const allActivitiesStream = useMemo(() => {
@@ -86,16 +79,17 @@ export const OwnerAdminCounterWidget: React.FC = () => {
       const alreadyLogged = list.some(a => a.reference_id === s.invoice_no);
       if (!alreadyLogged) {
         const itemsText = s.items ? s.items.map(i => `${i.product_name} (${i.quantity} ${i.unit})`).join(', ') : 'मालाची विक्री';
-        const defaultSlot = s.admin_slot ?? 1;
-        const defaultName = s.created_by_name || (defaultSlot === 2 ? 'निखिल सखारे (प्रशासक २)' : 'निलेश सखारे (प्रशासक १)');
-        const defaultEmail = s.created_by_email || (defaultSlot === 2 ? 'nikhilsakhare9896@gmail.com' : 'nilusakhare2003@gmail.com');
-        const defaultCounter = s.counter_name || (defaultSlot === 2 ? 'काऊंटर २ - दुग्ध व साठा' : 'काऊंटर १ - मुख्य बिलिंग');
+        const isOwner = s.created_by_role === 'Owner' || s.created_by_email === 'yogeshwaridairy9896@gmail.com';
+        const defaultSlot = s.admin_slot ?? (isOwner ? undefined : 1);
+        const defaultName = s.created_by_name || (isOwner ? 'योगेश्वरी डेअरी मालक' : 'निलेश सखारे (प्रशासक)');
+        const defaultEmail = s.created_by_email || (isOwner ? 'yogeshwaridairy9896@gmail.com' : 'nilusakhare2003@gmail.com');
+        const defaultCounter = s.counter_name || (isOwner ? 'मुख्य मालक काऊंटर' : 'काऊंटर १ - मुख्य बिलिंग');
 
         list.push({
           id: 'gen-sale-' + s.id,
           admin_name: defaultName,
           admin_email: defaultEmail,
-          admin_role: s.created_by_role || 'Admin',
+          admin_role: s.created_by_role || (isOwner ? 'Owner' : 'Admin'),
           admin_slot: defaultSlot,
           counter_name: defaultCounter,
           action_type: 'SALE_CREATED',
@@ -120,10 +114,6 @@ export const OwnerAdminCounterWidget: React.FC = () => {
       if (activeTabFilter === 'admin1') {
         const isAdm1 = act.admin_slot === 1 || act.admin_email === 'nilusakhare2003@gmail.com' || act.admin_name?.includes('निलेश');
         if (!isAdm1) return false;
-      }
-      if (activeTabFilter === 'admin2') {
-        const isAdm2 = act.admin_slot === 2 || act.admin_email === 'nikhilsakhare9896@gmail.com' || act.admin_name?.includes('निखिल');
-        if (!isAdm2) return false;
       }
       if (activeTabFilter === 'inventory_changes') {
         const isInvChange = act.action_type === 'STOCK_INWARD' || 
@@ -207,13 +197,13 @@ export const OwnerAdminCounterWidget: React.FC = () => {
               </span>
               <span className="text-xs text-slate-400 dark:text-[#8FA69C] hidden sm:inline">&bull;</span>
               <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] hidden sm:inline">
-                {isMr ? '२ प्रशासक थेट कामगिरी व इन्व्हेंटरी बदल' : isHi ? '२ एडमिन सीधा प्रदर्शन व इन्वेंट्री बदलाव' : '2 Admins Live Tracker & Inventory Audits'}
+                {isMr ? 'प्रशासक थेट कामगिरी व इन्व्हेंटरी बदल' : isHi ? 'एडमिन सीधा प्रदर्शन व इन्वेंट्री बदलाव' : 'Admin Live Tracker & Inventory Audits'}
               </span>
             </div>
             <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5">
-              {isMr ? 'दुकान मालक नियंत्रण कक्ष — २ ॲडमिन व काऊंटर हिशोब' : 
-               isHi ? 'दुकान मालिक नियंत्रण कक्ष — २ एडमिन व काउंटर हिसाब' : 
-               'Owner Control Center: 2 Admins & Counter Audit'}
+              {isMr ? 'दुकान मालक नियंत्रण कक्ष — ॲडमिन व काऊंटर हिशोब' : 
+               isHi ? 'दुकान मालिक नियंत्रण कक्ष — एडमिन व काउंटर हिसाब' : 
+               'Owner Control Center: Admin & Counter Audit'}
             </h2>
             <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-0.5">
               📧 {isMr ? 'मालक लॉगिन:' : isHi ? 'मालिक लॉगिन:' : 'Owner Login:'} <span className="font-bold text-amber-700 dark:text-amber-400">yogeshwaridairy9896@gmail.com</span>
@@ -298,27 +288,27 @@ export const OwnerAdminCounterWidget: React.FC = () => {
           </div>
         </div>
 
-        {/* Admin 2 / Counter 2 Card */}
-        <div className="bg-gradient-to-br from-teal-50/80 via-white to-teal-50/30 dark:from-[#132522] dark:via-[#131F1B] dark:to-[#0f1d1a] rounded-2xl p-4 sm:p-5 border-2 border-teal-200 dark:border-teal-900/60 shadow-xs relative overflow-hidden">
+        {/* Total Store Performance Card */}
+        <div className="bg-gradient-to-br from-amber-50/80 via-white to-amber-50/30 dark:from-[#2a2212] dark:via-[#131F1B] dark:to-[#1f190e] rounded-2xl p-4 sm:p-5 border-2 border-amber-300 dark:border-amber-800/60 shadow-xs relative overflow-hidden">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black text-sm shadow-xs">
-                २
+              <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center font-black text-sm shadow-xs">
+                👑
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-black text-slate-900 dark:text-white text-sm sm:text-base">
-                    निखिल सखारे
+                    {isMr ? 'योगेश्वरी डेअरी' : isHi ? 'योगेश्वरी डेयरी' : 'Yogeshwari Dairy'}
                   </h3>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-800">
-                    🛡️ {isMr ? 'प्रशासक २' : 'एडमिन २'}
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                    👑 {isMr ? 'एकूण उलाढाल' : isHi ? 'कुल टर्नओवर' : 'Total Turnover'}
                   </span>
                 </div>
-                <p className="text-xs font-semibold text-teal-700 dark:text-teal-400">
-                  📍 {isMr ? 'काऊंटर २ — दुग्ध व साठा काऊंटर' : isHi ? 'काउंटर २ — दुग्ध & स्टॉक काउंटर' : 'Counter 2 — Dairy & Stock Counter'}
+                <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                  📍 {isMr ? 'दुकान विक्री व गल्ला संकलन सारांश' : isHi ? 'दुकान बिक्री & गल्ला संकलन सारांश' : 'Total Store Sales & Collection Summary'}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                  📧 <span className="font-semibold text-teal-800 dark:text-teal-300">nikhilsakhare9896@gmail.com</span>
+                  📧 <span className="font-semibold text-amber-800 dark:text-amber-300">yogeshwaridairy9896@gmail.com</span>
                 </p>
               </div>
             </div>
@@ -326,34 +316,34 @@ export const OwnerAdminCounterWidget: React.FC = () => {
               <span className="text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] block">
                 {isMr ? 'एकूण बिले' : isHi ? 'कुल बिल' : 'Total Bills'}
               </span>
-              <span className="text-lg font-black text-teal-900 dark:text-teal-200">
-                {admin2Stats.count} {isMr ? 'पावत्या' : isHi ? 'बिल' : 'Bills'}
+              <span className="text-lg font-black text-amber-900 dark:text-amber-200">
+                {storeTotalStats.count} {isMr ? 'पावत्या' : isHi ? 'बिल' : 'Bills'}
               </span>
             </div>
           </div>
 
-          <div className="bg-white/80 dark:bg-[#131F1B]/90 rounded-xl p-3 border border-teal-100 dark:border-[#24352F] space-y-2">
+          <div className="bg-white/80 dark:bg-[#131F1B]/90 rounded-xl p-3 border border-amber-200 dark:border-[#24352F] space-y-2">
             <div className="flex items-baseline justify-between">
               <span className="text-xs font-bold text-slate-600 dark:text-[#8FA69C]">
-                {isMr ? 'एकूण विक्री रक्कम:' : isHi ? 'कुल बिक्री राशि:' : 'Total Sales:'}
+                {isMr ? 'दुकान एकूण विक्री:' : isHi ? 'दुकान कुल बिक्री:' : 'Total Store Sales:'}
               </span>
               <span className="text-xl font-black text-emerald-700 dark:text-emerald-400">
-                ₹{admin2Stats.totalSales.toLocaleString('en-IN')}
+                ₹{storeTotalStats.totalSales.toLocaleString('en-IN')}
               </span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F] text-[11px]">
               <div>
                 <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{isMr ? 'रोख जमा' : isHi ? 'रोकड़' : 'Cash'}</span>
-                <span className="font-extrabold text-blue-900 dark:text-blue-300">₹{admin2Stats.cash.toLocaleString('en-IN')}</span>
+                <span className="font-extrabold text-blue-900 dark:text-blue-300">₹{storeTotalStats.cash.toLocaleString('en-IN')}</span>
               </div>
               <div>
                 <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन' : 'UPI'}</span>
-                <span className="font-extrabold text-purple-900 dark:text-purple-300">₹{admin2Stats.online.toLocaleString('en-IN')}</span>
+                <span className="font-extrabold text-purple-900 dark:text-purple-300">₹{storeTotalStats.online.toLocaleString('en-IN')}</span>
               </div>
               <div>
                 <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{isMr ? 'उधारी दिली' : isHi ? 'उधार' : 'Credit'}</span>
-                <span className="font-extrabold text-amber-900 dark:text-amber-300">₹{admin2Stats.udhar.toLocaleString('en-IN')}</span>
+                <span className="font-extrabold text-amber-900 dark:text-amber-300">₹{storeTotalStats.udhar.toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
@@ -370,7 +360,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
               <span>{isMr ? 'थेट तपासणी नोंदवही (कोणत्या काऊंटरवरून काय विकले व इन्व्हेंटरी बदल):' : isHi ? 'लाइव ऑडिट रजिस्टर (किसने किस काउंटर से क्या बेचा और क्या बदला):' : 'Live Audit Stream (Who sold what from which counter & updates):'}</span>
             </h4>
             <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-              {isMr ? 'निलेश सखारे व निखिल सखारे यांनी केलेल्या सर्व विक्री, साठा बदल, इन्व्हेंटरी अपडेट, खर्च व नुकसानीच्या थेट नोंदी.' : isHi ? 'निलेश सखारे और निखिल सखारे द्वारा की गई सभी बिक्री, स्टॉक अपडेट, इन्वेंट्री बदलाव और खर्च का ब्यौरा।' : 'Live ledger of all sales and inventory changes by Nilesh Sakhare and Nikhil Sakhare.'}
+              {isMr ? 'निलेश सखारे व मालक यांनी केलेल्या सर्व विक्री, साठा बदल, इन्व्हेंटरी अपडेट, खर्च व नुकसानीच्या थेट नोंदी.' : isHi ? 'निलेश सखारे और मालिक द्वारा की गई सभी बिक्री, स्टॉक अपडेट, इन्वेंट्री बदलाव और खर्च का ब्यौरा।' : 'Live ledger of all sales and inventory changes by Nilesh Sakhare and Owner.'}
             </p>
           </div>
 
@@ -392,7 +382,6 @@ export const OwnerAdminCounterWidget: React.FC = () => {
           {[
             { id: 'all', label: isMr ? 'सर्व नोंदी (All)' : isHi ? 'सभी प्रविष्टियां (All)' : 'All Records' },
             { id: 'admin1', label: isMr ? '🛡️ निलेश सखारे (काऊंटर १)' : isHi ? '🛡️ निलेश सखारे (काउंटर १)' : 'Nilesh Sakhare (Counter 1)' },
-            { id: 'admin2', label: isMr ? '🛡️ निखिल सखारे (काऊंटर २)' : isHi ? '🛡️ निखिल सखारे (काउंटर २)' : 'Nikhil Sakhare (Counter 2)' },
             { id: 'sales_details', label: isMr ? '🧾 काऊंटर विक्री तपशील (Who Sold What)' : isHi ? '🧾 काउंटर बिक्री विवरण' : 'Counter Sales Details' },
             { id: 'inventory_changes', label: isMr ? '📦 इन्व्हेंटरी बदल तपशील (Inventory Changes)' : isHi ? '📦 इन्वेंट्री बदलाव' : 'Inventory Changes' },
           ].map(tab => (
@@ -414,7 +403,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
         {activeTabFilter === 'sales_details' ? (
           <div className="bg-slate-50/70 dark:bg-[#1A2A25]/50 rounded-2xl border border-slate-200/80 dark:border-[#24352F] overflow-hidden max-h-[500px] overflow-y-auto divide-y divide-slate-100 dark:divide-[#24352F]">
             <div className="p-3 bg-amber-50/80 dark:bg-amber-950/40 border-b border-amber-200/80 dark:border-amber-800/40 text-xs font-bold text-amber-950 dark:text-amber-200 flex items-center justify-between">
-              <span>{isMr ? 'काऊंटर विक्री तपशील: कोणत्या ॲडमिनने काय माल विकला' : isHi ? 'काउंटर बिक्री विवरण: किस एडमिन ने क्या माल बेचा' : 'Counter Sales: Who Sold What'}</span>
+              <span>{isMr ? 'काऊंटर विक्री तपशील: कोणी काय माल विकला' : isHi ? 'काउंटर बिक्री विवरण: किसने क्या माल बेचा' : 'Counter Sales: Who Sold What'}</span>
               <span>{itemizedSales.length} {isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'Records'}</span>
             </div>
             {itemizedSales.length === 0 ? (
@@ -426,19 +415,18 @@ export const OwnerAdminCounterWidget: React.FC = () => {
               </div>
             ) : (
               itemizedSales.map((sale) => {
-                const isAdm1 = sale.admin_slot === 1 || sale.created_by_email === 'nilusakhare2003@gmail.com';
-                const isAdm2 = sale.admin_slot === 2 || sale.created_by_email === 'nikhilsakhare9896@gmail.com';
-                const adminName = sale.created_by_name || (isAdm2 ? 'निखिल सखारे' : 'निलेश सखारे');
-                const adminEmail = sale.created_by_email || (isAdm2 ? 'nikhilsakhare9896@gmail.com' : 'nilusakhare2003@gmail.com');
-                const counter = sale.counter_name || (isAdm2 ? 'काऊंटर २ - दुग्ध व साठा' : 'काऊंटर १ - मुख्य बिलिंग');
+                const isOwner = sale.created_by_role === 'Owner' || sale.created_by_email === 'yogeshwaridairy9896@gmail.com';
+                const adminName = sale.created_by_name || (isOwner ? 'योगेश्वरी डेअरी मालक' : 'निलेश सखारे');
+                const adminEmail = sale.created_by_email || (isOwner ? 'yogeshwaridairy9896@gmail.com' : 'nilusakhare2003@gmail.com');
+                const counter = sale.counter_name || (isOwner ? 'मुख्य मालक काऊंटर' : 'काऊंटर १ - मुख्य बिलिंग');
 
                 return (
                   <div key={sale.id} className="p-3.5 hover:bg-white dark:hover:bg-[#131F1B] transition-colors space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
-                          isAdm2 
-                            ? 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 border-teal-300' 
+                          isOwner 
+                            ? 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border-amber-300' 
                             : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300'
                         }`}>
                           👤 {adminName}
@@ -539,8 +527,6 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                         <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
                           act.admin_slot === 1 || act.admin_email === 'nilusakhare2003@gmail.com'
                             ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border-blue-300/80 dark:border-blue-800/60'
-                            : act.admin_slot === 2 || act.admin_email === 'nikhilsakhare9896@gmail.com'
-                            ? 'bg-teal-100 text-teal-800 dark:bg-teal-950/80 dark:text-teal-300 border-teal-300/80 dark:border-teal-800/60'
                             : 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300/80 dark:border-amber-800/60'
                         }`}>
                           👤 {act.admin_name}

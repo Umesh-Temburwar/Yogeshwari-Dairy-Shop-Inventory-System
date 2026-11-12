@@ -45,22 +45,12 @@ export const BillingCounter: React.FC = () => {
     const isHi = language === 'hi';
     const email = (user?.email || '').toLowerCase().trim();
 
-    if (email === 'nikhilsakhare9896@gmail.com' || adminSlot === 2) {
-      return {
-        role: 'Admin' as const,
-        slot: 2 as const,
-        email: 'nikhilsakhare9896@gmail.com',
-        name: isMr ? 'निखिल सखारे (प्रशासक २)' : isHi ? 'निखिल सखारे (प्रशासक २)' : 'Nikhil Sakhare (Admin 2)',
-        counter: isMr ? 'काऊंटर २ - दुग्ध व साठा' : isHi ? 'काउंटर २ - दुग्ध & स्टॉक' : 'Counter 2 - Dairy & Stock'
-      };
-    }
-
-    if (email === 'nilusakhare2003@gmail.com' || adminSlot === 1) {
+    if (email === 'nilusakhare2003@gmail.com' || role === 'Admin' || adminSlot === 1) {
       return {
         role: 'Admin' as const,
         slot: 1 as const,
         email: 'nilusakhare2003@gmail.com',
-        name: isMr ? 'निलेश सखारे (प्रशासक १)' : isHi ? 'निलेश सखारे (प्रशासक १)' : 'Nilesh Sakhare (Admin 1)',
+        name: isMr ? 'निलेश सखारे (प्रशासक)' : isHi ? 'निलेश सखारे (प्रशासक)' : 'Nilesh Sakhare (Admin)',
         counter: isMr ? 'काऊंटर १ - मुख्य बिलिंग' : isHi ? 'काउंटर १ - मुख्य बिलिंग' : 'Counter 1 - Main Billing'
       };
     }

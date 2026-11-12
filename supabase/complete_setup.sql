@@ -914,12 +914,11 @@ INSERT INTO public.units (id, name, short_code) VALUES
 ('22222222-2222-2222-2222-222222222206', 'Gram', 'Gram')
 ON CONFLICT (name) DO NOTHING;
 
--- 3. Authorized Profiles (1 Owner & 2 Admins)
+-- 3. Authorized Profiles (1 Owner & 1 Admin)
 INSERT INTO public.profiles (id, email, full_name, role, admin_slot, default_redirect_view, is_active)
 VALUES
     ('10000000-0000-0000-0000-000000000001'::UUID, 'owner@yogeshwaridairy.com', 'Yogeshwari Dairy Owner', 'Owner', NULL, 'dashboard', TRUE),
-    ('10000000-0000-0000-0000-000000000002'::UUID, 'admin1@yogeshwaridairy.com', 'Store Administrator 1 (Counter Billing)', 'Admin', 1, 'pos', TRUE),
-    ('10000000-0000-0000-0000-000000000003'::UUID, 'admin2@yogeshwaridairy.com', 'Store Administrator 2 (Inventory & Stock)', 'Admin', 2, 'inventory', TRUE)
+    ('10000000-0000-0000-0000-000000000002'::UUID, 'admin1@yogeshwaridairy.com', 'Store Administrator 1 (Counter Billing)', 'Admin', 1, 'pos', TRUE)
 ON CONFLICT (email) DO UPDATE SET
     full_name = EXCLUDED.full_name,
     role = EXCLUDED.role,
@@ -995,12 +994,11 @@ CREATE UNIQUE INDEX idx_admin_slots
 ON public.profiles (role, admin_slot) 
 WHERE role = 'Admin' AND is_active = TRUE;
 
--- Pre-seed 1 Owner & 2 Admins
+-- Pre-seed 1 Owner & 1 Admin
 INSERT INTO public.profiles (id, email, full_name, role, admin_slot, default_redirect_view, is_active)
 VALUES
     ('10000000-0000-0000-0000-000000000001'::UUID, 'owner@yogeshwaridairy.com', 'Yogeshwari Dairy Owner', 'Owner', NULL, 'dashboard', TRUE),
-    ('10000000-0000-0000-0000-000000000002'::UUID, 'admin1@yogeshwaridairy.com', 'Store Administrator 1 (Counter Billing)', 'Admin', 1, 'pos', TRUE),
-    ('10000000-0000-0000-0000-000000000003'::UUID, 'admin2@yogeshwaridairy.com', 'Store Administrator 2 (Inventory & Stock)', 'Admin', 2, 'inventory', TRUE)
+    ('10000000-0000-0000-0000-000000000002'::UUID, 'admin1@yogeshwaridairy.com', 'Store Administrator 1 (Counter Billing)', 'Admin', 1, 'pos', TRUE)
 ON CONFLICT (email) DO UPDATE 
 SET full_name = EXCLUDED.full_name,
     role = EXCLUDED.role,
@@ -1126,16 +1124,21 @@ ADD COLUMN IF NOT EXISTS admin_email VARCHAR(255);
 CREATE INDEX IF NOT EXISTS idx_sales_created_by_email ON public.sales (created_by_email);
 CREATE INDEX IF NOT EXISTS idx_admin_audit_email ON public.admin_audit_logs (admin_email);
 
--- 2. Safely Deactivate old dummy placeholder emails
+-- 2. Permanently delete Nikhil Sakhare / nikhilsakhare9896@gmail.com
+DELETE FROM public.profiles 
+WHERE email = 'nikhilsakhare9896@gmail.com' 
+   OR email = 'admin2@yogeshwaridairy.com' 
+   OR full_name ILIKE '%nikhil%';
+
+-- Safely Deactivate old dummy placeholder emails
 UPDATE public.profiles
 SET is_active = FALSE
 WHERE email NOT IN (
     'yogeshwaridairy9896@gmail.com',
-    'nilusakhare2003@gmail.com',
-    'nikhilsakhare9896@gmail.com'
+    'nilusakhare2003@gmail.com'
 );
 
--- 3. Upsert the 3 Official Authorized Accounts
+-- 3. Upsert Official Authorized Accounts (1 Owner & 1 Admin)
 -- A. 👑 Shop Owner: yogeshwaridairy9896@gmail.com -> dashboard
 INSERT INTO public.profiles (
     id, email, full_name, role, admin_slot, default_redirect_view, is_active
@@ -1157,38 +1160,17 @@ ON CONFLICT (email) DO UPDATE SET
     is_active = TRUE,
     updated_at = NOW();
 
--- B. 🛡️ Admin 1: nilusakhare2003@gmail.com -> pos (Nilesh Sakhare - Counter 1)
+-- B. 🛡️ Admin: nilusakhare2003@gmail.com -> pos (Nilesh Sakhare - Counter 1)
 INSERT INTO public.profiles (
     id, email, full_name, role, admin_slot, default_redirect_view, is_active
 )
 VALUES (
     '10000000-0000-0000-0000-000000000002'::UUID,
     'nilusakhare2003@gmail.com',
-    'निलेश सखारे (प्रशासक १ - काऊंटर १)',
+    'निलेश सखारे (प्रशासक - काऊंटर १ बिलिंग)',
     'Admin',
     1,
     'pos',
-    TRUE
-)
-ON CONFLICT (email) DO UPDATE SET
-    full_name = EXCLUDED.full_name,
-    role = EXCLUDED.role,
-    admin_slot = EXCLUDED.admin_slot,
-    default_redirect_view = EXCLUDED.default_redirect_view,
-    is_active = TRUE,
-    updated_at = NOW();
-
--- C. 🛡️ Admin 2: nikhilsakhare9896@gmail.com -> inventory (Nikhil Sakhare - Counter 2)
-INSERT INTO public.profiles (
-    id, email, full_name, role, admin_slot, default_redirect_view, is_active
-)
-VALUES (
-    '10000000-0000-0000-0000-000000000003'::UUID,
-    'nikhilsakhare9896@gmail.com',
-    'निखिल सखारे (प्रशासक २ - काऊंटर २)',
-    'Admin',
-    2,
-    'inventory',
     TRUE
 )
 ON CONFLICT (email) DO UPDATE SET
@@ -1279,10 +1261,9 @@ BEGIN
         RETURN;
     END IF;
 
-    IF clean_email = 'nikhilsakhare9896@gmail.com' OR clean_email LIKE '%nikhil%' THEN
-        RETURN QUERY SELECT 'Admin'::VARCHAR, 2, 'inventory'::VARCHAR, 'निखिल सखारे (प्रशासक २ - काऊंटर २)'::VARCHAR;
-    ELSIF clean_email = 'nilusakhare2003@gmail.com' OR clean_email LIKE '%nilu%' OR clean_email LIKE '%admin%' THEN
-        RETURN QUERY SELECT 'Admin'::VARCHAR, 1, 'pos'::VARCHAR, 'निलेश सखारे (प्रशासक १ - काऊंटर १)'::VARCHAR;
+    -- Dynamic fallback based on exact user emails
+    IF clean_email = 'nilusakhare2003@gmail.com' OR clean_email LIKE '%nilu%' OR clean_email LIKE '%admin%' THEN
+        RETURN QUERY SELECT 'Admin'::VARCHAR, 1, 'pos'::VARCHAR, 'निलेश सखारे (प्रशासक - काऊंटर १ बिलिंग)'::VARCHAR;
     ELSE
         RETURN QUERY SELECT 'Owner'::VARCHAR, NULL::INTEGER, 'dashboard'::VARCHAR, 'योगेश्वरी डेअरी मालक (Shop Owner)'::VARCHAR;
     END IF;
@@ -1319,21 +1300,13 @@ DECLARE
     detected_name VARCHAR(150);
     clean_email TEXT := LOWER(TRIM(NEW.email));
 BEGIN
-    IF clean_email = 'nikhilsakhare9896@gmail.com' OR clean_email LIKE '%nikhil%' THEN
-        detected_role := 'Admin';
-        detected_slot := 2;
-        detected_redirect := 'inventory';
-        detected_name := COALESCE(
-            NEW.raw_user_meta_data->>'full_name',
-            'निखिल सखारे (प्रशासक २ - काऊंटर २)'
-        );
-    ELSIF clean_email = 'nilusakhare2003@gmail.com' OR clean_email LIKE '%nilu%' OR clean_email LIKE '%admin%' THEN
+    IF clean_email = 'nilusakhare2003@gmail.com' OR clean_email LIKE '%nilu%' OR clean_email LIKE '%admin%' THEN
         detected_role := 'Admin';
         detected_slot := 1;
         detected_redirect := 'pos';
         detected_name := COALESCE(
             NEW.raw_user_meta_data->>'full_name',
-            'निलेश सखारे (प्रशासक १ - काऊंटर १)'
+            'निलेश सखारे (प्रशासक - काऊंटर १)'
         );
     ELSE
         detected_role := 'Owner';

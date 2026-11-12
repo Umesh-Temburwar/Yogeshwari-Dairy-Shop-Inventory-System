@@ -69,7 +69,6 @@ export const DailySalesTracker: React.FC = () => {
     const matchesAgeGroup = selectedAgeGroup === 'All' || sale.customer_age_group === selectedAgeGroup;
     const matchesAdmin = selectedAdminSlot === 'All' ||
       (selectedAdminSlot === '1' && (sale.admin_slot === 1 || sale.created_by_email === 'nilusakhare2003@gmail.com' || (!sale.admin_slot && sale.created_by_role !== 'Owner'))) ||
-      (selectedAdminSlot === '2' && (sale.admin_slot === 2 || sale.created_by_email === 'nikhilsakhare9896@gmail.com')) ||
       (selectedAdminSlot === 'Owner' && (sale.created_by_role === 'Owner' || sale.created_by_email === 'yogeshwaridairy9896@gmail.com' || (sale.admin_slot === null && sale.created_by_name?.includes('मालक'))));
 
     return matchesSearch && matchesMode && matchesGender && matchesAgeGroup && matchesAdmin;
@@ -104,7 +103,7 @@ export const DailySalesTracker: React.FC = () => {
         rows: filtered.length > 0 ? filtered.map(s => [
           s.invoice_no,
           s.sale_date,
-          s.counter_name ? `${s.counter_name} (${s.created_by_name || 'Admin'})` : (s.admin_slot === 2 ? 'काऊंटर २ (प्रशासक २)' : 'काऊंटर १ (प्रशासक १)'),
+          s.counter_name ? `${s.counter_name} (${s.created_by_name || 'Admin'})` : (s.created_by_role === 'Owner' ? 'मुख्य मालक काऊंटर' : 'काऊंटर १ (निलेश सखारे)'),
           s.customer_name + (s.customer_phone ? ` (${s.customer_phone})` : ''),
           s.payment_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
           s.payment_mode === 'Online_UPI' ? (isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI') :
@@ -331,13 +330,12 @@ export const DailySalesTracker: React.FC = () => {
         {role === 'Owner' && (
           <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F]">
             <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
-              👑 {language === 'mr' ? '२ प्रशासक व काऊंटर तपशील फिल्टर:' : language === 'hi' ? '२ प्रशासक व काउंटर फिल्टर:' : '2 Admins & Counter Filter:'}
+              👑 {language === 'mr' ? 'प्रशासक व काऊंटर तपशील फिल्टर:' : language === 'hi' ? 'प्रशासक व काउंटर फिल्टर:' : 'Admin & Counter Filter:'}
             </span>
             <div className="flex items-center gap-1.5 flex-wrap">
               {[
                 { id: 'All', label: language === 'mr' ? 'सर्व नोंदी (All)' : language === 'hi' ? 'सभी रिकॉर्ड (All)' : 'All Counters' },
                 { id: '1', label: language === 'mr' ? '🛡️ निलेश सखारे (काऊंटर १)' : language === 'hi' ? '🛡️ निलेश सखारे (काउंटर १)' : '🛡️ Nilesh Sakhare (Counter 1)' },
-                { id: '2', label: language === 'mr' ? '🛡️ निखिल सखारे (काऊंटर २)' : language === 'hi' ? '🛡️ निखिल सखारे (काउंटर २)' : '🛡️ Nikhil Sakhare (Counter 2)' },
                 { id: 'Owner', label: language === 'mr' ? '👑 योगेश्वरी डेअरी मालक' : language === 'hi' ? '👑 योगेश्वरी डेयरी मालिक' : '👑 Yogeshwari Dairy Owner' },
               ].map((adm) => (
                 <button
@@ -393,13 +391,11 @@ export const DailySalesTracker: React.FC = () => {
 
                         {/* Admin Slot & Counter Badge */}
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                          sale.admin_slot === 2 
-                            ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border-teal-200 dark:border-teal-800/40' 
-                            : sale.created_by_role === 'Owner' || (sale.admin_slot === null && sale.created_by_name?.includes('मालक'))
+                          sale.created_by_role === 'Owner' || (sale.admin_slot === null && sale.created_by_name?.includes('मालक'))
                             ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border-amber-200 dark:border-amber-800/40'
                             : 'bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800/40'
                         }`}>
-                          📍 {sale.counter_name || (sale.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १')} • 👤 {sale.created_by_name || (sale.admin_slot === 2 ? 'निखिल सखारे' : 'निलेश सखारे')}
+                          📍 {sale.counter_name || (sale.created_by_role === 'Owner' ? 'मुख्य मालक काऊंटर' : 'काऊंटर १')} • 👤 {sale.created_by_name || (sale.created_by_role === 'Owner' ? 'योगेश्वरी डेअरी मालक' : 'निलेश सखारे')}
                           {sale.created_by_email && (
                             <span className="text-[10px] font-normal opacity-75 hidden sm:inline">({sale.created_by_email})</span>
                           )}

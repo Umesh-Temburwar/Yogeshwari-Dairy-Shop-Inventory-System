@@ -13,18 +13,16 @@
 --    - Email: nilusakhare2003@gmail.com
 --    - Role: Admin, Slot 1 (Redirects to POS Billing 'pos')
 --    - Name: निलेश सखारे (प्रशासक १ - काऊंटर १)
--- 3. 🛡️ Admin 2 (Counter 2 - Nikhil Sakhare):
---    - Email: nikhilsakhare9896@gmail.com
---    - Role: Admin, Slot 2 (Redirects to Inventory & Stock 'inventory')
---    - Name: निखिल सखारे (प्रशासक २ - काऊंटर २)
+--
+-- Note: 'nikhilsakhare9896@gmail.com' (Admin 2) has been permanently removed/deleted.
 --
 -- Features included in this Phase:
 -- - Deactivates any old placeholders to prevent constraint collisions.
--- - Upserts the 3 official profiles with strict role constraints.
+-- - Upserts the 2 official profiles with strict role constraints.
 -- - Adds 'admin_email' to 'admin_audit_logs' and 'created_by_email' to 'sales'.
 -- - Dedicated Views for Shop Owner:
 --   * v_owner_admin_inventory_changes: All inventory additions, updates, damages, and returns.
---   * v_owner_admin_counter_sales_details: All counter sales broken down by Nilesh vs Nikhil.
+--   * v_owner_admin_counter_sales_details: All counter sales broken down by operator.
 --   * v_owner_admin_counter_summary: Aggregated totals per Admin and Counter.
 -- - Automated trigger to track exact email of billing operator on every sale.
 -- - Grants and RLS security permissions.
@@ -69,16 +67,21 @@ EXCEPTION
         NULL;
 END $$;
 
--- 2. Safely Deactivate old dummy placeholder emails so unique constraints do not collide
+-- 2. Permanently delete Nikhil Sakhare / nikhilsakhare9896@gmail.com profile
+DELETE FROM public.profiles
+WHERE email = 'nikhilsakhare9896@gmail.com'
+   OR email = 'admin2@yogeshwaridairy.com'
+   OR full_name ILIKE '%nikhil%';
+
+-- Safely Deactivate old dummy placeholder emails so unique constraints do not collide
 UPDATE public.profiles
 SET is_active = FALSE
 WHERE email NOT IN (
     'yogeshwaridairy9896@gmail.com',
-    'nilusakhare2003@gmail.com',
-    'nikhilsakhare9896@gmail.com'
+    'nilusakhare2003@gmail.com'
 );
 
--- 3. Upsert the 3 Official Authorized Accounts
+-- 3. Upsert the Official Authorized Accounts (1 Owner & 1 Admin)
 -- A. 👑 Shop Owner: yogeshwaridairy9896@gmail.com
 INSERT INTO public.profiles (
     id, email, full_name, role, admin_slot, default_redirect_view, is_active
@@ -100,38 +103,17 @@ ON CONFLICT (email) DO UPDATE SET
     is_active = TRUE,
     updated_at = NOW();
 
--- B. 🛡️ Admin 1: nilusakhare2003@gmail.com (Nilesh Sakhare - Counter 1 POS)
+-- B. 🛡️ Admin: nilusakhare2003@gmail.com (Nilesh Sakhare - Counter 1 POS)
 INSERT INTO public.profiles (
     id, email, full_name, role, admin_slot, default_redirect_view, is_active
 )
 VALUES (
     '10000000-0000-0000-0000-000000000002'::UUID,
     'nilusakhare2003@gmail.com',
-    'निलेश सखारे (प्रशासक १ - काऊंटर १)',
+    'निलेश सखारे (प्रशासक - काऊंटर १ बिलिंग)',
     'Admin',
     1,
     'pos',
-    TRUE
-)
-ON CONFLICT (email) DO UPDATE SET
-    full_name = EXCLUDED.full_name,
-    role = EXCLUDED.role,
-    admin_slot = EXCLUDED.admin_slot,
-    default_redirect_view = EXCLUDED.default_redirect_view,
-    is_active = TRUE,
-    updated_at = NOW();
-
--- C. 🛡️ Admin 2: nikhilsakhare9896@gmail.com (Nikhil Sakhare - Counter 2 Inventory)
-INSERT INTO public.profiles (
-    id, email, full_name, role, admin_slot, default_redirect_view, is_active
-)
-VALUES (
-    '10000000-0000-0000-0000-000000000003'::UUID,
-    'nikhilsakhare9896@gmail.com',
-    'निखिल सखारे (प्रशासक २ - काऊंटर २)',
-    'Admin',
-    2,
-    'inventory',
     TRUE
 )
 ON CONFLICT (email) DO UPDATE SET
@@ -279,10 +261,8 @@ BEGIN
     END IF;
 
     -- Dynamic fallback based on exact user emails
-    IF clean_email = 'nikhilsakhare9896@gmail.com' OR clean_email LIKE '%nikhil%' THEN
-        RETURN QUERY SELECT 'Admin'::VARCHAR, 2, 'inventory'::VARCHAR, 'निखिल सखारे (प्रशासक २ - काऊंटर २)'::VARCHAR;
-    ELSIF clean_email = 'nilusakhare2003@gmail.com' OR clean_email LIKE '%nilu%' OR clean_email LIKE '%admin%' THEN
-        RETURN QUERY SELECT 'Admin'::VARCHAR, 1, 'pos'::VARCHAR, 'निलेश सखारे (प्रशासक १ - काऊंटर १)'::VARCHAR;
+    IF clean_email = 'nilusakhare2003@gmail.com' OR clean_email LIKE '%nilu%' OR clean_email LIKE '%admin%' THEN
+        RETURN QUERY SELECT 'Admin'::VARCHAR, 1, 'pos'::VARCHAR, 'निलेश सखारे (प्रशासक - काऊंटर १ बिलिंग)'::VARCHAR;
     ELSE
         RETURN QUERY SELECT 'Owner'::VARCHAR, NULL::INTEGER, 'dashboard'::VARCHAR, 'योगेश्वरी डेअरी मालक (Shop Owner)'::VARCHAR;
     END IF;

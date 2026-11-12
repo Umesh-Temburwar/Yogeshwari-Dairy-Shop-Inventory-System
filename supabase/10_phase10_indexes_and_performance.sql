@@ -79,3 +79,4 @@ CREATE INDEX IF NOT EXISTS idx_supplier_returns_status ON public.supplier_return
 CREATE INDEX IF NOT EXISTS idx_expenses_date ON public.expenses(expense_date);
 CREATE INDEX IF NOT EXISTS idx_expenses_category ON public.expenses(category);
 CREATE INDEX IF NOT EXISTS idx_expenses_is_capital ON public.expenses(is_capital_investment);
+

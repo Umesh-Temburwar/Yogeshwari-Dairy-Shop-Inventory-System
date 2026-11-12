@@ -31,6 +31,7 @@
 | **Phase 18** | [`18_phase18_central_sales_and_net_profit_fix.sql`](./18_phase18_central_sales_and_net_profit_fix.sql) | **सेंट्रल विक्री, नफा व काऊंटर सिंक फिक्स** | Collision-free इन्व्हॉइस, Realtime सेल्स ब्रॉडकास्ट, आणि Today Net Profit अचूक गणना |
 | **Phase 19** | [`19_phase19_rename_owner_nikhil_and_admin_nilesh.sql`](./19_phase19_rename_owner_nikhil_and_admin_nilesh.sql) | **युझर नावे मानकीकरण (Nikhil Sakhare & Nilesh Sakhare)** | मालकाचे नाव `Nikhil Sakhare` आणि ॲडमिनचे नाव `Nilesh Sakhare` डेटाबेस, ऑडिट लॉग, सेल्स व व्ह्यूजमध्ये अद्ययावत |
 | **Phase 20** | [`20_phase20_customer_returns_and_refunds_sync.sql`](./20_phase20_customer_returns_and_refunds_sync.sql) | **ग्राहक माल परतावा, संपूर्ण व आंशिक बिल वजावट सिंक** | संपूर्ण परतावा (पावती हटवणे व परतावा वहीत नोंद), आंशिक परतावा (शिल्लक माल पावतीत ठेवून बिल अपडेट), रिअल-टाइम सिंक व अहवाल व्ह्यू |
+| **Phase 21** | [`21_phase21_sales_return_ledger_and_invoice_sync.sql`](./21_phase21_sales_return_ledger_and_invoice_sync.sql) | **दैनिक विक्री व रोकड लेजर रिअल-टाइम परतावा वजावट** | आंशिक परताव्यावर पावती कट, डेली लेजरमध्ये मूळ व सुधारित रक्कम अपडेट, v_daily_sales_and_returns_ledger व्ह्यू व रिअल-टाइम सिंक |
 
 ---
 

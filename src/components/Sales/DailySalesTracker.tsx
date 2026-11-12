@@ -23,7 +23,7 @@ import { ReturnProductModal } from '../Returns/ReturnProductModal';
 import { useAuth } from '../../context/AuthContext';
 
 export const DailySalesTracker: React.FC = () => {
-  const { filteredSales, metrics, setActiveView } = useStore();
+  const { filteredSales, metrics, setActiveView, returns } = useStore();
   const { t, language } = useLanguage();
   const { role } = useAuth();
 
@@ -100,19 +100,23 @@ export const DailySalesTracker: React.FC = () => {
           ? ['बिल क्र.', 'दिनांक', 'काउंटर व ऑपरेटर', 'ग्राहक नाम', 'भुगतान', 'सामान विवरण', 'छूट (₹)', 'कुल (₹)']
           : ['Invoice No.', 'Date', 'Counter & Operator', 'Customer Name', 'Payment', 'Items Sold', 'Discount (₹)', 'Net (₹)'],
         alignments: ['left', 'center', 'left', 'left', 'center', 'left', 'right', 'right'] as ('left' | 'center' | 'left' | 'left' | 'center' | 'left' | 'right' | 'right')[],
-        rows: filtered.length > 0 ? filtered.map(s => [
-          s.invoice_no,
-          s.sale_date,
-          s.counter_name ? `${s.counter_name} (${s.created_by_name || 'Admin'})` : (s.created_by_role === 'Owner' ? 'मुख्य मालक काऊंटर (निखिल सखारे)' : 'काऊंटर १ (निलेश सखारे)'),
-          s.customer_name + (s.customer_phone ? ` (${s.customer_phone})` : ''),
-          s.payment_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
-          s.payment_mode === 'Online_UPI' ? (isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI') :
-          s.payment_mode === 'Udhar' ? (isMr ? 'उधारी' : isHi ? 'उधार' : 'Credit') :
-          s.payment_mode === 'Split' ? (isMr ? 'विभागून' : isHi ? 'विभाजित' : 'Split') : s.payment_mode,
-          s.items ? s.items.map(i => `${i.product_name} x ${i.quantity}`).join(', ') : '—',
-          s.discount > 0 ? `₹${s.discount}` : '₹0',
-          `₹${s.net_amount.toLocaleString('en-IN')}`
-        ]) : [
+        rows: filtered.length > 0 ? filtered.map(s => {
+          const sRets = (returns || []).filter(r => (r.sale_id && r.sale_id === s.id) || (r.invoice_no && r.invoice_no.trim().toLowerCase() === s.invoice_no.trim().toLowerCase()));
+          const sRefund = sRets.reduce((acc, r) => acc + r.refund_amount, 0);
+          return [
+            s.invoice_no + (sRefund > 0 ? ` (परतावा -₹${sRefund})` : ''),
+            s.sale_date,
+            s.counter_name ? `${s.counter_name} (${s.created_by_name || 'Admin'})` : (s.created_by_role === 'Owner' ? 'मुख्य मालक काऊंटर (निखिल सखारे)' : 'काऊंटर १ (निलेश सखारे)'),
+            s.customer_name + (s.customer_phone ? ` (${s.customer_phone})` : ''),
+            s.payment_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
+            s.payment_mode === 'Online_UPI' ? (isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI') :
+            s.payment_mode === 'Udhar' ? (isMr ? 'उधारी' : isHi ? 'उधार' : 'Credit') :
+            s.payment_mode === 'Split' ? (isMr ? 'विभागून' : isHi ? 'विभाजित' : 'Split') : s.payment_mode,
+            s.items ? s.items.map(i => `${i.product_name} x ${i.quantity}`).join(', ') : '—',
+            s.discount > 0 ? `₹${s.discount}` : '₹0',
+            `₹${s.net_amount.toLocaleString('en-IN')}`
+          ];
+        }) : [
           ['—', '—', '—', isMr ? 'या निवडलेल्या कालावधीत कोणतीही विक्री नोंद नाही' : isHi ? 'इस अवधि में कोई बिक्री दर्ज नहीं' : 'No sales records found for this period', '—', '—', '—', '₹0']
         ],
         summaryRow: [
@@ -370,6 +374,13 @@ export const DailySalesTracker: React.FC = () => {
           <div className="divide-y divide-slate-100 dark:divide-[#24352F]">
             {filtered.map((sale) => {
               const isExpanded = expandedSaleId === sale.id;
+              const saleReturns = (returns || []).filter(r => 
+                (r.sale_id && r.sale_id === sale.id) || 
+                (r.invoice_no && r.invoice_no.trim().toLowerCase() === sale.invoice_no.trim().toLowerCase())
+              );
+              const hasReturn = saleReturns.length > 0;
+              const totalRefundedOnSale = Number(saleReturns.reduce((sum, r) => sum + r.refund_amount, 0).toFixed(2));
+              const originalGross = Number((sale.net_amount + totalRefundedOnSale).toFixed(2));
 
               return (
                 <div key={sale.id} className="p-4 hover:bg-slate-50/60 dark:hover:bg-[#1A2A25]/60 transition-colors">
@@ -377,7 +388,7 @@ export const DailySalesTracker: React.FC = () => {
                     
                     {/* Invoice ID & Date */}
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="font-extrabold text-slate-900 dark:text-white text-sm">
                           {sale.invoice_no}
                         </span>
@@ -388,6 +399,14 @@ export const DailySalesTracker: React.FC = () => {
                         }`}>
                           {sale.payment_mode}
                         </span>
+
+                        {/* Return Cut Badge */}
+                        {hasReturn && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-900 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shadow-2xs">
+                            <RotateCcw className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                            <span>{language === 'mr' ? `परतावा वजावट: -₹${totalRefundedOnSale}` : language === 'hi' ? `वापसी कटौती: -₹${totalRefundedOnSale}` : `Return Cut: -₹${totalRefundedOnSale}`}</span>
+                          </span>
+                        )}
 
                         {/* Admin Slot & Counter Badge */}
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
@@ -428,6 +447,11 @@ export const DailySalesTracker: React.FC = () => {
                         <div className="text-lg font-black text-slate-900 dark:text-white">
                           ₹{sale.net_amount.toLocaleString('en-IN')}
                         </div>
+                        {hasReturn && (
+                          <div className="text-[10px] text-slate-400 line-through">
+                            {language === 'mr' ? 'मूळ' : language === 'hi' ? 'मूल' : 'Orig'}: ₹{originalGross.toLocaleString('en-IN')}
+                          </div>
+                        )}
                         <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">
                           {sale.payment_mode === 'Split' && (
                             <span>{language === 'mr' ? 'रोख' : language === 'hi' ? 'कैश' : 'Cash'}: ₹{sale.cash_amount} | UPI: ₹{sale.online_amount}</span>
@@ -472,18 +496,39 @@ export const DailySalesTracker: React.FC = () => {
 
                   {/* Expanded Items Drawer */}
                   {isExpanded && (
-                    <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-[#24352F] bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-xl space-y-1.5 text-xs">
-                      <div className="font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        {language === 'mr' ? 'या बिलामध्ये गेलेला माल (Sold Items):' : language === 'hi' ? 'इस बिल में बिका सामान (Sold Items):' : 'Items in this Bill (Sold Items):'}
+                    <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-[#24352F] bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-xl space-y-2 text-xs">
+                      <div className="font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between pb-1 border-b border-slate-200/60 dark:border-[#24352F]">
+                        <span>{language === 'mr' ? 'या बिलामध्ये शिल्लक असलेला माल (Active Items):' : language === 'hi' ? 'इस बिल में शेष सामान (Active Items):' : 'Items in this Bill:'}</span>
+                        <span className="text-emerald-700 dark:text-emerald-400 font-black">₹{sale.net_amount}</span>
                       </div>
+                      
                       {sale.items?.map((it, idx) => (
                         <div key={idx} className="flex justify-between items-center text-slate-700 dark:text-[#8FA69C]">
-                          <span>{it.product_name}</span>
+                          <span className="font-medium">{it.product_name}</span>
                           <span className="font-semibold text-slate-900 dark:text-white">
                             {it.quantity} {it.unit} &times; ₹{it.unit_price} = <b className="text-emerald-700 dark:text-emerald-400">₹{it.total_price}</b>
                           </span>
                         </div>
                       ))}
+
+                      {/* Returned Items Box */}
+                      {saleReturns.length > 0 && (
+                        <div className="mt-2.5 pt-2 border-t border-purple-200/60 dark:border-purple-800/50 space-y-1 bg-purple-50/50 dark:bg-purple-950/20 p-2.5 rounded-xl">
+                          <div className="font-bold text-[11px] text-purple-900 dark:text-purple-300 flex items-center justify-between">
+                            <span className="flex items-center gap-1.5">
+                              <RotateCcw className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                              <span>{language === 'mr' ? 'या पावतीतून परत केलेला माल (Returned Items):' : language === 'hi' ? 'इस बिल से वापस किया गया सामान:' : 'Returned Items:'}</span>
+                            </span>
+                            <span className="font-black text-rose-600 dark:text-rose-400">-₹{totalRefundedOnSale}</span>
+                          </div>
+                          {saleReturns.map(sr => (
+                            <div key={sr.id} className="flex justify-between items-center text-[10px] text-slate-600 dark:text-slate-300 py-0.5">
+                              <span>&bull; {sr.product_name} ({sr.quantity} {sr.unit} &times; ₹{sr.unit_price}) &bull; <span className="font-mono text-purple-600 dark:text-purple-400 font-bold">#{sr.return_no}</span></span>
+                              <span className="font-bold text-rose-600 dark:text-rose-400">-₹{sr.refund_amount} ({sr.refund_mode})</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -545,6 +590,31 @@ export const DailySalesTracker: React.FC = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Return Deductions on receipt if any */}
+              {(() => {
+                const viewModalReturns = (returns || []).filter(r => 
+                  (selectedSaleForView && r.sale_id === selectedSaleForView.id) || 
+                  (selectedSaleForView && r.invoice_no && r.invoice_no.trim().toLowerCase() === selectedSaleForView.invoice_no.trim().toLowerCase())
+                );
+                const viewModalRefundSum = Number(viewModalReturns.reduce((acc, r) => acc + r.refund_amount, 0).toFixed(2));
+                if (viewModalReturns.length === 0) return null;
+
+                return (
+                  <div className="border-b border-dashed border-purple-300 dark:border-purple-800 py-1.5 space-y-0.5 text-purple-900 dark:text-purple-300 bg-purple-50/60 dark:bg-purple-950/30 px-2 rounded-lg">
+                    <div className="text-[10px] font-bold uppercase tracking-wider flex items-center justify-between">
+                      <span>{language === 'mr' ? 'परतावा वजावट (Return Deduction):' : 'वापसी कटौती:'}</span>
+                      <span className="text-rose-600 dark:text-rose-400 font-extrabold">-₹{viewModalRefundSum}</span>
+                    </div>
+                    {viewModalReturns.map((mr, idx) => (
+                      <div key={idx} className="flex justify-between text-[10px] text-slate-600 dark:text-slate-300">
+                        <span>- {mr.product_name} ({mr.quantity} {mr.unit})</span>
+                        <span className="font-semibold">-₹{mr.refund_amount}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
 
               <div className="space-y-0.5 text-right font-bold text-xs pt-1 text-slate-900 dark:text-white">
                 {selectedSaleForView.discount > 0 && (

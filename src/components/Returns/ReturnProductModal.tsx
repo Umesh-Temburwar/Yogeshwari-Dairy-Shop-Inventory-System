@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { ReturnReason, RefundMode, ReturnCondition, Sale } from '../../types';
@@ -84,20 +84,37 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
     returnDate: string;
   } | null>(null);
 
+  // When selected sale changes, reset return quantities
+  const handleSelectSale = useCallback((sale: Sale, targetProductId?: string) => {
+    setSelectedSaleId(sale.id);
+    setInvoiceSearch(sale.invoice_no);
+    setCustomerName(sale.customer_name);
+    setCustomerPhone(sale.customer_phone || '');
+    if (sale.payment_mode === 'Udhar') {
+      setRefundMode('Udhar_Credit');
+    } else {
+      setRefundMode('Cash');
+    }
+
+    // Default return qty to 0 for each item, or prefill target product
+    const initQtys: Record<string, number> = {};
+    sale.items?.forEach(i => {
+      initQtys[i.product_id] = (targetProductId && i.product_id === targetProductId) ? Math.min(1, i.quantity) : 0;
+    });
+    setItemReturnQtys(initQtys);
+    setErrorMessage(null);
+  }, []);
+
   // Auto-locate sale if prefillInvoiceNo was provided
   useEffect(() => {
     if (prefillInvoiceNo) {
       const matched = sales.find(s => s.invoice_no.trim().toLowerCase() === prefillInvoiceNo.trim().toLowerCase());
       if (matched) {
-        setSelectedSaleId(matched.id);
-        setCustomerName(matched.customer_name);
-        setCustomerPhone(matched.customer_phone || '');
-        if (matched.payment_mode === 'Udhar') {
-          setRefundMode('Udhar_Credit');
-        }
+        handleSelectSale(matched, prefillProductId);
+        setReturnMode('invoice');
       }
     }
-  }, [prefillInvoiceNo, sales]);
+  }, [prefillInvoiceNo, prefillProductId, sales, handleSelectSale]);
 
   // Find currently active selected sale
   const selectedSale = useMemo(() => {
@@ -119,30 +136,10 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
     ).slice(0, 10);
   }, [sales, invoiceSearch]);
 
-  // When selected sale changes, reset return quantities
-  const handleSelectSale = (sale: Sale) => {
-    setSelectedSaleId(sale.id);
-    setInvoiceSearch(sale.invoice_no);
-    setCustomerName(sale.customer_name);
-    setCustomerPhone(sale.customer_phone || '');
-    if (sale.payment_mode === 'Udhar') {
-      setRefundMode('Udhar_Credit');
-    } else {
-      setRefundMode('Cash');
-    }
-
-    // Default return qty to 0 for each item
-    const initQtys: Record<string, number> = {};
-    sale.items?.forEach(i => {
-      initQtys[i.product_id] = 0;
-    });
-    setItemReturnQtys(initQtys);
-    setErrorMessage(null);
-  };
-
   // Helper: Set return quantity for an item
   const setItemQty = (productId: string, val: number, maxQty: number) => {
-    const clamped = Math.max(0, Math.min(Number(val.toFixed(2)), maxQty));
+    const num = isNaN(val) ? 0 : val;
+    const clamped = Math.max(0, Math.min(Number(num.toFixed(2)), maxQty));
     setItemReturnQtys(prev => ({
       ...prev,
       [productId]: clamped

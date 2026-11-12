@@ -2221,7 +2221,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       if (!isFullReturn) {
         updatedTotalAmount = Number(remainingItems.reduce((acc, i) => acc + i.total_price, 0).toFixed(2));
-        updatedDiscount = Math.min(targetSale.discount, updatedTotalAmount);
+        const discountRatio = targetSale.total_amount > 0 ? (updatedTotalAmount / targetSale.total_amount) : 1;
+        updatedDiscount = Number((targetSale.discount * discountRatio).toFixed(2));
         updatedNetAmount = Math.max(0, Number((updatedTotalAmount - updatedDiscount).toFixed(2)));
 
         // Proportionately adjust payment breakdown
@@ -2465,10 +2466,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
               // Update quantity and total of remaining items
               for (const remItem of remainingItems) {
-                await supabase.from('sale_items').update({
+                const { error: updErr } = await supabase.from('sale_items').update({
                   quantity: remItem.quantity,
                   total_price: remItem.total_price
-                }).eq('id', remItem.id);
+                }).eq('sale_id', targetSale.id).eq('product_id', remItem.product_id);
+
+                if (updErr && remItem.id) {
+                  await supabase.from('sale_items').update({
+                    quantity: remItem.quantity,
+                    total_price: remItem.total_price
+                  }).eq('id', remItem.id);
+                }
               }
 
               broadcastMutation('sales', 'update');

@@ -45,7 +45,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
   onClose,
   onInvoiceConfirmed
 }) => {
-  const { products, addStockEntries, addPurchase } = useStore();
+  const { products, addStockEntries, createPurchase } = useStore();
   const { language } = useLanguage();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -182,7 +182,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
         }]);
 
         // Record purchase history
-        await addPurchase({
+        await createPurchase({
           product_id: matchedProd.id,
           product_name: matchedProd.name,
           supplier_name: supplierName,

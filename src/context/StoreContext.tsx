@@ -125,6 +125,7 @@ interface StoreContextType {
   }) => Promise<Sale>;
 
   createPurchase: (purchaseData: Omit<Purchase, 'id' | 'created_at'>) => Promise<void>;
+  addPurchase: (purchaseData: Omit<Purchase, 'id' | 'created_at'>) => Promise<void>;
   recordDamage: (damageData: Omit<DamageRecord, 'id' | 'created_at'>) => Promise<void>;
   
   addUdharCustomer: (customerData: {
@@ -2532,6 +2533,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       deleteBatch,
       createSale,
       createPurchase,
+      addPurchase: createPurchase,
       recordDamage,
       addUdharCustomer,
       recordUdharPayment,

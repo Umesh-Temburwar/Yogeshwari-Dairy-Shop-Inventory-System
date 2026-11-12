@@ -1,6 +1,6 @@
 # 🥛 योगेश्वरी डेअरी ERP — Supabase मॅन्युअल सेटअप मार्गदर्शक (Phase-Wise Guide)
 
-या डिरेक्टरीमध्ये Supabase PostgreSQL डेटाबेस मॅन्युअली आणि टप्प्याटप्प्याने (Phase-wise) सेटअप करण्यासाठी **१२ स्वतंत्र SQL फाइल्स** तयार केल्या आहेत. 
+या डिरेक्टरीमध्ये Supabase PostgreSQL डेटाबेस मॅन्युअली आणि टप्प्याटप्प्याने (Phase-wise) सेटअप करण्यासाठी **१३ स्वतंत्र SQL फाइल्स** तयार केल्या आहेत. 
 
 प्रत्येक फाइल प्रोजेक्टच्या विशिष्ट फिचर्सनुसार डिझाइन केलेली आहे, जेणेकरून तुम्ही कोणत्याही गोंधळाशिवाय व त्रुटीविना (Error-free) तुमचा संपूर्ण डेटाबेस तयार करू शकाल.
 
@@ -8,7 +8,7 @@
 
 ## 📋 सर्व १२ टप्पे व फाइल्सची यादी (Phase-Wise Execution Order)
 
-तुम्हाला तुमच्या **Supabase Dashboard -> SQL Editor** मध्ये जाऊन खालील क्रमाने (Phase 1 ते Phase 12) या फाइल्स रन करायच्या आहेत:
+तुम्हाला तुमच्या **Supabase Dashboard -> SQL Editor** मध्ये जाऊन खालील क्रमाने (Phase 1 ते Phase 13) या फाइल्स रन करायच्या आहेत:
 
 | क्र. | फाइलचे नाव (File Name) | टप्प्याचे नाव (Phase Title) | काय तयार होते? (Tables / Functions / Views) |
 |:---:|:---|:---|:---|
@@ -24,6 +24,7 @@
 | **Phase 10** | [`10_phase10_indexes_and_performance.sql`](./10_phase10_indexes_and_performance.sql) | **हाय-स्पीड इंडेक्सिंग (Zero Lag)** | Foreign Keys, तारखा व सर्चसाठी सुपरफास्ट B-Tree व Partial Indexes |
 | **Phase 11** | [`11_phase11_rls_security_and_views.sql`](./11_phase11_rls_security_and_views.sql) | **सुरक्षा (RLS) व अहवाल व्ह्यूज** | RLS सुरक्षितता, API परवानग्या, आणि `v_inventory_valuation`, `v_product_stock`, `v_expiring_batches_alert`, `v_batch_expiry_status`, `v_daily_sales_summary`, `v_supplier_returns_pending` |
 | **Phase 12** | [`12_phase12_owner_admin_roles_and_auth.sql`](./12_phase12_owner_admin_roles_and_auth.sql) | **१ मालक व २ ॲडमिन (Roles & Redirection)** | १ मालक व नेमके २ ॲडमिन निर्बंध (`profiles` टेबल), लॉगिननंतर भूमिकेनुसार स्वयंचलित रिडायरेक्ट (`dashboard`, `pos`, `inventory`) |
+| **Phase 13** | [`13_phase13_admin_audit_and_counter_tracking.sql`](./13_phase13_admin_audit_and_counter_tracking.sql) | **२ ॲडमिन तपासणी वही व काऊंटर ट्रॅकिंग** | दुकान मालक नियंत्रण कक्ष — २ ॲडमिनने कोणत्या काऊंटरवरून काय विकले व काय अपडेट केले याचा संपूर्ण रिअल-टाइम ऑडिट लेजर (`admin_audit_logs`, `v_owner_admin_counter_summary`, `v_owner_recent_admin_activities`) |
 
 ---
 

@@ -33,10 +33,42 @@ import {
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import confetti from 'canvas-confetti';
+import { useAuth } from '../../context/AuthContext';
 
 export const BillingCounter: React.FC = () => {
   const { products, batches, createSale, setActiveView } = useStore();
   const { t, language } = useLanguage();
+  const { role, adminSlot } = useAuth();
+
+  const activeOperator = useMemo(() => {
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
+
+    if (role === 'Owner') {
+      return {
+        role: 'Owner' as const,
+        slot: null,
+        name: isMr ? 'दुकान मालक (उमेश)' : isHi ? 'दुकान मालिक (उमेश)' : 'Shop Owner (Umesh)',
+        counter: isMr ? 'मुख्य मालक काऊंटर' : isHi ? 'मुख्य मालिक काउंटर' : 'Owner Master Counter'
+      };
+    }
+
+    if (adminSlot === 2) {
+      return {
+        role: 'Admin' as const,
+        slot: 2 as const,
+        name: isMr ? 'प्रशासक २ (राहुल - साठा)' : isHi ? 'प्रशासक २ (राहुल - स्टॉक)' : 'Admin 2 (Rahul)',
+        counter: isMr ? 'काऊंटर २ - दुग्ध व साठा' : isHi ? 'काउंटर २ - दुग्ध & स्टॉक' : 'Counter 2 - Dairy & Stock'
+      };
+    }
+
+    return {
+      role: 'Admin' as const,
+      slot: 1 as const,
+      name: isMr ? 'प्रशासक १ (निलेश - काऊंटर)' : isHi ? 'प्रशासक १ (निलेश - काउंटर)' : 'Admin 1 (Nilesh)',
+      counter: isMr ? 'काऊंटर १ - मुख्य बिलिंग' : isHi ? 'काउंटर १ - मुख्य बिलिंग' : 'Counter 1 - Main Billing'
+    };
+  }, [role, adminSlot, language]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -230,6 +262,10 @@ export const BillingCounter: React.FC = () => {
       cash_amount: cashAmount,
       online_amount: onlineAmount,
       udhar_amount: udharAmount,
+      created_by_name: activeOperator.name,
+      created_by_role: activeOperator.role,
+      admin_slot: activeOperator.slot,
+      counter_name: activeOperator.counter,
       items: cart
     });
 
@@ -266,7 +302,9 @@ export const BillingCounter: React.FC = () => {
                  sale.payment_mode === 'Split' ? (isMr ? 'विभागून' : isHi ? 'विभाजित' : 'Split') : sale.payment_mode, 
           color: 'blue' 
         },
-        { label: isMr ? 'ग्राहक नाव' : isHi ? 'ग्राहक नाम' : 'Customer Name', value: sale.customer_name || (isMr ? 'काउंटर ग्राहक' : isHi ? 'काउंटर ग्राहक' : 'Counter Customer'), color: 'purple' }
+        { label: isMr ? 'काऊंटर' : isHi ? 'काउंटर' : 'Counter', value: sale.counter_name || (sale.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १'), color: 'teal' },
+        { label: isMr ? 'बिलिंग प्रशासक' : isHi ? 'बिलिंग ऑपरेटर' : 'Operator', value: sale.created_by_name || 'Admin 1', color: 'purple' },
+        { label: isMr ? 'ग्राहक नाव' : isHi ? 'ग्राहक नाम' : 'Customer Name', value: sale.customer_name || (isMr ? 'काउंटर ग्राहक' : isHi ? 'काउंटर ग्राहक' : 'Counter Customer'), color: 'blue' }
       ],
       table: {
         headers: isMr 
@@ -337,6 +375,33 @@ export const BillingCounter: React.FC = () => {
           <ShoppingCart className="w-3.5 h-3.5" />
           <span>{language === 'mr' ? '२. बिल' : language === 'hi' ? '२. बिल' : '2. Bill'} ({cart.length}) {netTotal > 0 ? `• ₹${netTotal.toFixed(0)}` : ''}</span>
         </button>
+      </div>
+
+      {/* Active Counter & Operator Badge Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-slate-50 via-emerald-50/40 to-teal-50/30 dark:from-[#131F1B] dark:via-[#16221E] dark:to-[#1A2A25] border border-slate-200/90 dark:border-[#24352F] text-xs mb-3 shadow-2xs">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+          <span className="font-semibold text-slate-600 dark:text-[#8FA69C]">
+            {language === 'mr' ? 'सक्रिय बिलिंग काऊंटर:' : language === 'hi' ? 'सक्रिय बिलिंग काउंटर:' : 'Active Billing Counter:'}
+          </span>
+          <span className="font-bold text-slate-900 dark:text-white px-2.5 py-0.5 rounded-lg bg-white dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] shadow-2xs">
+            📍 {activeOperator.counter}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-slate-600 dark:text-[#8FA69C]">
+            {language === 'mr' ? 'ऑपरेटर:' : language === 'hi' ? 'ऑपरेटर:' : 'Billing Operator:'}
+          </span>
+          <span className={`font-bold px-2.5 py-0.5 rounded-lg shadow-2xs ${
+            activeOperator.slot === 1 
+              ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200 dark:border-blue-900/40' 
+              : activeOperator.slot === 2 
+              ? 'bg-teal-100 text-teal-800 dark:bg-teal-950/70 dark:text-teal-300 border border-teal-200 dark:border-teal-900/40' 
+              : 'bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40'
+          }`}>
+            👤 {activeOperator.name}
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[calc(100vh-8rem)]">

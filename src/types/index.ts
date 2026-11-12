@@ -66,6 +66,10 @@ export interface Sale {
   sale_date: string; // YYYY-MM-DD
   created_at: string;
   items: SaleItem[];
+  created_by_name?: string;
+  created_by_role?: UserRole;
+  admin_slot?: 1 | 2 | null;
+  counter_name?: string;
 }
 
 export type ExpiryStatus =
@@ -259,6 +263,35 @@ export interface SupplierReturn {
   notes?: string;
   created_at: string;
 }
+
+// 2 Admins & Counter Activity Tracking
+export type AdminActionType = 
+  | 'SALE_CREATED'
+  | 'PRODUCT_ADDED'
+  | 'PRODUCT_UPDATED'
+  | 'STOCK_INWARD'
+  | 'EXPENSE_ADDED'
+  | 'DAMAGE_RECORDED'
+  | 'CUSTOMER_RETURN'
+  | 'SUPPLIER_RETURN'
+  | 'UDHAR_PAYMENT'
+  | 'UDHAR_GIVEN';
+
+export interface AdminActivity {
+  id: string;
+  admin_name: string;
+  admin_role: UserRole;
+  admin_slot?: 1 | 2 | null;
+  counter_name: string;
+  action_type: AdminActionType;
+  title: string;
+  details: string;
+  amount?: number;
+  reference_id?: string;
+  reference_table?: string;
+  created_at: string;
+}
+
 
 
 

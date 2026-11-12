@@ -934,6 +934,154 @@ ON CONFLICT (email) DO NOTHING;
 -- TRUNCATE TABLE public.products CASCADE;
 
 -- ============================================================================
+-- SECTION 8: 1 OWNER & 2 ADMINS ROLES, COUNTER TRACKING & AUDIT LOGS
+-- ============================================================================
+
+-- 1. Profiles Table with 1 Owner and 2 Admins constraint
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    auth_user_id UUID UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    full_name VARCHAR(150) NOT NULL,
+    phone VARCHAR(25),
+    role VARCHAR(50) NOT NULL CHECK (role IN ('Owner', 'Admin')),
+    admin_slot INTEGER CHECK (admin_slot IN (1, 2) OR admin_slot IS NULL),
+    default_redirect_view VARCHAR(50) NOT NULL DEFAULT 'dashboard' CHECK (default_redirect_view IN (
+        'dashboard', 'pos', 'inventory', 'sales', 'reorder', 'expiry', 
+        'purchases', 'damages', 'udhar', 'expenses', 'analytics', 'returns'
+    )),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_single_active_owner 
+ON public.profiles (role) 
+WHERE role = 'Owner' AND is_active = TRUE;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_slots 
+ON public.profiles (role, admin_slot) 
+WHERE role = 'Admin' AND is_active = TRUE;
+
+-- Pre-seed 1 Owner & 2 Admins
+INSERT INTO public.profiles (id, email, full_name, role, admin_slot, default_redirect_view, is_active)
+VALUES
+    ('10000000-0000-0000-0000-000000000001'::UUID, 'owner@yogeshwaridairy.com', 'Yogeshwari Dairy Owner', 'Owner', NULL, 'dashboard', TRUE),
+    ('10000000-0000-0000-0000-000000000002'::UUID, 'admin1@yogeshwaridairy.com', 'Store Administrator 1 (Counter Billing)', 'Admin', 1, 'pos', TRUE),
+    ('10000000-0000-0000-0000-000000000003'::UUID, 'admin2@yogeshwaridairy.com', 'Store Administrator 2 (Inventory & Stock)', 'Admin', 2, 'inventory', TRUE)
+ON CONFLICT (email) DO UPDATE 
+SET full_name = EXCLUDED.full_name,
+    role = EXCLUDED.role,
+    admin_slot = EXCLUDED.admin_slot,
+    default_redirect_view = EXCLUDED.default_redirect_view;
+
+-- 2. Extend sales table with counter & admin columns
+ALTER TABLE public.sales
+ADD COLUMN IF NOT EXISTS created_by_name VARCHAR(150) DEFAULT 'Admin 1',
+ADD COLUMN IF NOT EXISTS created_by_role VARCHAR(50) DEFAULT 'Admin',
+ADD COLUMN IF NOT EXISTS admin_slot INTEGER CHECK (admin_slot IN (1, 2) OR admin_slot IS NULL),
+ADD COLUMN IF NOT EXISTS counter_name VARCHAR(100) DEFAULT 'काऊंटर १ - मुख्य बिलिंग';
+
+-- 3. Admin Audit Logs table
+CREATE TABLE IF NOT EXISTS public.admin_audit_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    admin_name VARCHAR(150) NOT NULL,
+    admin_role VARCHAR(50) NOT NULL DEFAULT 'Admin' CHECK (admin_role IN ('Owner', 'Admin')),
+    admin_slot INTEGER CHECK (admin_slot IN (1, 2) OR admin_slot IS NULL),
+    counter_name VARCHAR(100) NOT NULL DEFAULT 'काऊंटर १ - मुख्य बिलिंग',
+    action_type VARCHAR(50) NOT NULL CHECK (action_type IN (
+        'SALE_CREATED', 'PRODUCT_ADDED', 'PRODUCT_UPDATED', 'STOCK_INWARD', 
+        'EXPENSE_ADDED', 'DAMAGE_RECORDED', 'CUSTOMER_RETURN', 'SUPPLIER_RETURN', 
+        'UDHAR_PAYMENT', 'UDHAR_GIVEN'
+    )),
+    title TEXT NOT NULL,
+    details TEXT,
+    amount NUMERIC(12, 2) DEFAULT 0.00,
+    reference_id VARCHAR(100),
+    reference_table VARCHAR(50),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 4. Trigger for automatic sale logging
+CREATE OR REPLACE FUNCTION public.trg_fn_auto_log_sale_activity()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.admin_audit_logs (
+        admin_name, admin_role, admin_slot, counter_name,
+        action_type, title, details, amount, reference_id, reference_table, created_at
+    ) VALUES (
+        COALESCE(NEW.created_by_name, 'Admin'),
+        COALESCE(NEW.created_by_role, 'Admin'),
+        NEW.admin_slot,
+        COALESCE(NEW.counter_name, 'काऊंटर १ - मुख्य बिलिंग'),
+        'SALE_CREATED',
+        'पावती विक्री: ' || NEW.invoice_no,
+        'ग्राहक: ' || COALESCE(NEW.customer_name, 'थेट ग्राहक') || ' | पेमेंट: ' || NEW.payment_mode || ' | निव्वळ रक्कम: ₹' || NEW.net_amount,
+        NEW.net_amount,
+        NEW.invoice_no,
+        'sales',
+        NEW.created_at
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY INVOKER;
+
+DROP TRIGGER IF EXISTS trg_sales_auto_audit_log ON public.sales;
+CREATE TRIGGER trg_sales_auto_audit_log
+AFTER INSERT ON public.sales
+FOR EACH ROW EXECUTE FUNCTION public.trg_fn_auto_log_sale_activity();
+
+-- 5. Owner Views
+CREATE OR REPLACE VIEW public.v_owner_admin_counter_summary AS
+SELECT 
+    COALESCE(s.admin_slot, 0) AS admin_slot,
+    COALESCE(s.created_by_name, 'प्रशासक') AS admin_name,
+    COALESCE(s.counter_name, 'काऊंटर') AS counter_name,
+    COUNT(s.id) AS total_bills_count,
+    COALESCE(SUM(s.net_amount), 0) AS total_sales_amount,
+    COALESCE(SUM(s.cash_amount), 0) AS total_cash_collected,
+    COALESCE(SUM(s.online_amount), 0) AS total_online_collected,
+    COALESCE(SUM(s.udhar_amount), 0) AS total_udhar_given,
+    MIN(s.created_at) AS first_sale_at,
+    MAX(s.created_at) AS latest_sale_at
+FROM public.sales s
+WHERE s.status = 'COMPLETED'
+GROUP BY s.admin_slot, s.created_by_name, s.counter_name
+ORDER BY total_sales_amount DESC;
+
+CREATE OR REPLACE VIEW public.v_owner_recent_admin_activities AS
+SELECT 
+    log.id, log.created_at, log.admin_name, log.admin_role, log.admin_slot,
+    log.counter_name, log.action_type, log.title, log.details, log.amount,
+    log.reference_id, log.reference_table
+FROM public.admin_audit_logs log
+ORDER BY log.created_at DESC;
+
+-- Indexes & RLS
+CREATE INDEX IF NOT EXISTS idx_sales_admin_slot ON public.sales (admin_slot);
+CREATE INDEX IF NOT EXISTS idx_sales_counter_name ON public.sales (counter_name);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_created ON public.admin_audit_logs (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_slot ON public.admin_audit_logs (admin_slot);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_action ON public.admin_audit_logs (action_type);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_audit_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow select profiles for all" ON public.profiles;
+CREATE POLICY "Allow select profiles for all" ON public.profiles FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow select admin_audit_logs for all" ON public.admin_audit_logs;
+CREATE POLICY "Allow select admin_audit_logs for all" ON public.admin_audit_logs FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow insert admin_audit_logs for all" ON public.admin_audit_logs;
+CREATE POLICY "Allow insert admin_audit_logs for all" ON public.admin_audit_logs FOR INSERT WITH CHECK (true);
+
+GRANT ALL ON TABLE public.profiles TO postgres, anon, authenticated, service_role;
+GRANT ALL ON TABLE public.admin_audit_logs TO postgres, anon, authenticated, service_role;
+GRANT SELECT ON public.v_owner_admin_counter_summary TO postgres, anon, authenticated, service_role;
+GRANT SELECT ON public.v_owner_recent_admin_activities TO postgres, anon, authenticated, service_role;
+
+-- ============================================================================
 -- SETUP COMPLETE
 -- ============================================================================
 -- To verify everything is working, run:

@@ -20,13 +20,16 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { ReturnProductModal } from '../Returns/ReturnProductModal';
+import { useAuth } from '../../context/AuthContext';
 
 export const DailySalesTracker: React.FC = () => {
   const { filteredSales, metrics, setActiveView } = useStore();
   const { t, language } = useLanguage();
+  const { role } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPaymentMode, setSelectedPaymentMode] = useState<string>('All');
+  const [selectedAdminSlot, setSelectedAdminSlot] = useState<string>('All'); // 'All' | '1' | '2' | 'Owner'
   const [selectedGender, setSelectedGender] = useState<string>('All');
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>('All');
   const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
@@ -64,8 +67,12 @@ export const DailySalesTracker: React.FC = () => {
     const matchesMode = selectedPaymentMode === 'All' || sale.payment_mode === selectedPaymentMode;
     const matchesGender = selectedGender === 'All' || sale.customer_gender === selectedGender;
     const matchesAgeGroup = selectedAgeGroup === 'All' || sale.customer_age_group === selectedAgeGroup;
+    const matchesAdmin = selectedAdminSlot === 'All' ||
+      (selectedAdminSlot === '1' && (sale.admin_slot === 1 || (!sale.admin_slot && sale.created_by_role !== 'Owner'))) ||
+      (selectedAdminSlot === '2' && sale.admin_slot === 2) ||
+      (selectedAdminSlot === 'Owner' && (sale.created_by_role === 'Owner' || (sale.admin_slot === null && sale.created_by_name?.includes('मालक'))));
 
-    return matchesSearch && matchesMode && matchesGender && matchesAgeGroup;
+    return matchesSearch && matchesMode && matchesGender && matchesAgeGroup && matchesAdmin;
   });
 
   const toggleExpand = (id: string) => {
@@ -89,14 +96,15 @@ export const DailySalesTracker: React.FC = () => {
       ],
       table: {
         headers: isMr 
-          ? ['बिल क्र.', 'तारीख', 'ग्राहक नाव', 'पेमेंट पद्धत', 'वस्तू तपशील', 'सवलत (₹)', 'एकूण रक्कम (₹)']
+          ? ['बिल क्र.', 'तारीख', 'काऊंटर व ऑपरेटर', 'ग्राहक नाव', 'पेमेंट', 'वस्तू तपशील', 'सवलत (₹)', 'एकूण (₹)']
           : isHi
-          ? ['बिल क्र.', 'दिनांक', 'ग्राहक नाम', 'भुगतान माध्यम', 'सामान विवरण', 'छूट (₹)', 'कुल राशि (₹)']
-          : ['Invoice No.', 'Date', 'Customer Name', 'Payment Mode', 'Items Sold', 'Discount (₹)', 'Net Amount (₹)'],
-        alignments: ['left', 'center', 'left', 'center', 'left', 'right', 'right'] as ('left' | 'center' | 'left' | 'center' | 'left' | 'right' | 'right')[],
+          ? ['बिल क्र.', 'दिनांक', 'काउंटर व ऑपरेटर', 'ग्राहक नाम', 'भुगतान', 'सामान विवरण', 'छूट (₹)', 'कुल (₹)']
+          : ['Invoice No.', 'Date', 'Counter & Operator', 'Customer Name', 'Payment', 'Items Sold', 'Discount (₹)', 'Net (₹)'],
+        alignments: ['left', 'center', 'left', 'left', 'center', 'left', 'right', 'right'] as ('left' | 'center' | 'left' | 'left' | 'center' | 'left' | 'right' | 'right')[],
         rows: filtered.length > 0 ? filtered.map(s => [
           s.invoice_no,
           s.sale_date,
+          s.counter_name ? `${s.counter_name} (${s.created_by_name || 'Admin'})` : (s.admin_slot === 2 ? 'काऊंटर २ (प्रशासक २)' : 'काऊंटर १ (प्रशासक १)'),
           s.customer_name + (s.customer_phone ? ` (${s.customer_phone})` : ''),
           s.payment_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
           s.payment_mode === 'Online_UPI' ? (isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI') :
@@ -106,7 +114,7 @@ export const DailySalesTracker: React.FC = () => {
           s.discount > 0 ? `₹${s.discount}` : '₹0',
           `₹${s.net_amount.toLocaleString('en-IN')}`
         ]) : [
-          ['—', '—', isMr ? 'या निवडलेल्या कालावधीत कोणतीही विक्री नोंद नाही' : isHi ? 'इस अवधि में कोई बिक्री दर्ज नहीं' : 'No sales records found for this period', '—', '—', '—', '₹0']
+          ['—', '—', '—', isMr ? 'या निवडलेल्या कालावधीत कोणतीही विक्री नोंद नाही' : isHi ? 'इस अवधि में कोई बिक्री दर्ज नहीं' : 'No sales records found for this period', '—', '—', '—', '₹0']
         ],
         summaryRow: [
           isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
@@ -115,7 +123,8 @@ export const DailySalesTracker: React.FC = () => {
           '',
           '',
           '',
-          `₹${(metrics.totalSalesRevenue || 0).toLocaleString('en-IN')}`
+          '',
+          `₹${filtered.reduce((acc, s) => acc + s.net_amount, 0).toLocaleString('en-IN')}`
         ]
       },
       notes: isMr 
@@ -317,6 +326,35 @@ export const DailySalesTracker: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {/* Admin & Counter Filter (Dedicated for Shop Owner) */}
+        {role === 'Owner' && (
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F]">
+            <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
+              👑 {language === 'mr' ? '२ प्रशासक व काऊंटर तपशील फिल्टर:' : language === 'hi' ? '२ प्रशासक व काउंटर फिल्टर:' : '2 Admins & Counter Filter:'}
+            </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {[
+                { id: 'All', label: language === 'mr' ? 'सर्व नोंदी (All)' : language === 'hi' ? 'सभी रिकॉर्ड (All)' : 'All Counters' },
+                { id: '1', label: language === 'mr' ? '🛡️ प्रशासक १ (काऊंटर १)' : language === 'hi' ? '🛡️ प्रशासक १ (काउंटर १)' : '🛡️ Admin 1 (Counter 1)' },
+                { id: '2', label: language === 'mr' ? '🛡️ प्रशासक २ (काऊंटर २)' : language === 'hi' ? '🛡️ प्रशासक २ (काउंटर २)' : '🛡️ Admin 2 (Counter 2)' },
+                { id: 'Owner', label: language === 'mr' ? '👑 दुकान मालक' : language === 'hi' ? '👑 दुकान मालिक' : '👑 Shop Owner' },
+              ].map((adm) => (
+                <button
+                  key={adm.id}
+                  onClick={() => setSelectedAdminSlot(adm.id)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                    selectedAdminSlot === adm.id
+                      ? 'bg-amber-500 text-amber-950 font-black shadow-xs'
+                      : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#223630]'
+                  }`}
+                >
+                  {adm.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Sales Invoices List */}
@@ -351,6 +389,17 @@ export const DailySalesTracker: React.FC = () => {
                           sale.payment_mode === 'Split' ? 'bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300' : 'bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300'
                         }`}>
                           {sale.payment_mode}
+                        </span>
+
+                        {/* Admin Slot & Counter Badge */}
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                          sale.admin_slot === 2 
+                            ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border-teal-200 dark:border-teal-800/40' 
+                            : sale.created_by_role === 'Owner' || (sale.admin_slot === null && sale.created_by_name?.includes('मालक'))
+                            ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border-amber-200 dark:border-amber-800/40'
+                            : 'bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800/40'
+                        }`}>
+                          📍 {sale.counter_name || (sale.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १')} • 👤 {sale.created_by_name || 'Admin 1'}
                         </span>
                       </div>
 

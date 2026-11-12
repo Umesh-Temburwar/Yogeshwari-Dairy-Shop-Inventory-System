@@ -140,3 +140,4 @@ $$ LANGUAGE plpgsql SECURITY INVOKER;
 
 -- Grant execution to API roles
 GRANT EXECUTE ON FUNCTION public.get_user_role_and_redirect(TEXT) TO anon, authenticated;
+

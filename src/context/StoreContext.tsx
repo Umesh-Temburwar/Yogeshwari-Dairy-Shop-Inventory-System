@@ -3,7 +3,8 @@ import {
   Product, Sale, Purchase, DamageRecord, UdharCustomer, 
   UdharTransaction, Expense, TimeRangeFilter, PaymentMode,
   CustomerGender, CustomerAgeGroup, ProductBatch, ExpiryStatus,
-  ProductReturn, SupplierReturn, SupplierReturnReason, SupplierRefundStatus
+  ProductReturn, SupplierReturn, SupplierReturnReason, SupplierRefundStatus,
+  UserRole, AdminActivity, AdminActionType
 } from '../types';
 import { 
   INITIAL_PRODUCTS, INITIAL_SALES, INITIAL_PURCHASES, 
@@ -51,6 +52,8 @@ interface StoreContextType {
   expenses: Expense[];
   returns: ProductReturn[];
   supplierReturns: SupplierReturn[];
+  adminActivities: AdminActivity[];
+  logAdminActivity: (activity: Omit<AdminActivity, 'id' | 'created_at'>) => Promise<AdminActivity>;
   
   // Receipt
   currentReceipt: Sale | null;
@@ -105,6 +108,10 @@ interface StoreContextType {
     cash_amount: number;
     online_amount: number;
     udhar_amount: number;
+    created_by_name?: string;
+    created_by_role?: UserRole;
+    admin_slot?: 1 | 2 | null;
+    counter_name?: string;
     items: Array<{
       product_id: string;
       product_name: string;
@@ -377,6 +384,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   });
 
+  const [adminActivities, setAdminActivities] = useState<AdminActivity[]>(() => {
+    const saved = localStorage.getItem('yd_admin_activities');
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+
   // Save to localStorage on state changes
   useEffect(() => {
     localStorage.setItem('yd_returns', JSON.stringify(returns));
@@ -384,6 +402,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     localStorage.setItem('yd_supplier_returns', JSON.stringify(supplierReturns));
   }, [supplierReturns]);
+  useEffect(() => {
+    localStorage.setItem('yd_admin_activities', JSON.stringify(adminActivities));
+  }, [adminActivities]);
   useEffect(() => {
     localStorage.setItem('yd_products', JSON.stringify(products));
   }, [products]);
@@ -490,6 +511,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (utData && utData.length > 0) {
         setUdharTransactions(utData);
       }
+      // Fetch admin audit logs
+      const { data: auditData } = await supabase.from('admin_audit_logs').select('*').order('created_at', { ascending: false }).limit(200);
+      if (auditData && auditData.length > 0) {
+        setAdminActivities(auditData);
+      }
       setIsSupabaseConnected(true);
     } catch (err) {
       console.error('Supabase sync error:', err);
@@ -526,6 +552,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (ret) setReturns(JSON.parse(ret));
           const sRet = localStorage.getItem('yd_supplier_returns');
           if (sRet) setSupplierReturns(JSON.parse(sRet));
+          const acts = localStorage.getItem('yd_admin_activities');
+          if (acts) setAdminActivities(JSON.parse(acts));
         } catch {
           // ignore parsing error
         }
@@ -704,6 +732,66 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [filteredSales, filteredPurchases, filteredExpenses, filteredDamages, filteredReturns, returns, customers, products, batches]);
 
+  // Helper to resolve currently active admin/owner profile details
+  const getActiveAdminInfo = useCallback(() => {
+    try {
+      const savedRole = (localStorage.getItem('ydo_active_role') || 'Admin') as UserRole;
+      const role: UserRole = (savedRole === 'Owner' || savedRole === 'Admin') ? savedRole : 'Owner';
+      const slotStr = localStorage.getItem('ydo_admin_slot');
+      const slot = role === 'Owner' ? null : (slotStr === '2' ? (2 as const) : (1 as const));
+      const name = role === 'Owner'
+        ? 'दुकान मालक (उमेश)'
+        : slot === 2
+        ? 'प्रशासक २ (राहुल - साठा)'
+        : 'प्रशासक १ (निलेश - काऊंटर)';
+      const counter = role === 'Owner'
+        ? 'मुख्य मालक काऊंटर'
+        : slot === 2
+        ? 'काऊंटर २ - दुग्ध व साठा'
+        : 'काऊंटर १ - मुख्य बिलिंग';
+      return { role, slot, name, counter };
+    } catch {
+      return { 
+        role: 'Admin' as UserRole, 
+        slot: 1 as 1 | 2, 
+        name: 'प्रशासक १ (निलेश - काऊंटर)', 
+        counter: 'काऊंटर १ - मुख्य बिलिंग' 
+      };
+    }
+  }, []);
+
+  const logAdminActivity = useCallback(async (activityData: Omit<AdminActivity, 'id' | 'created_at'>): Promise<AdminActivity> => {
+    const newActivity: AdminActivity = {
+      ...activityData,
+      id: 'act-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+      created_at: new Date().toISOString()
+    };
+
+    setAdminActivities(prev => [newActivity, ...prev]);
+
+    if (supabase && isSupabaseConnected) {
+      try {
+        await supabase.from('admin_audit_logs').insert([{
+          admin_name: newActivity.admin_name,
+          admin_role: newActivity.admin_role,
+          admin_slot: newActivity.admin_slot,
+          counter_name: newActivity.counter_name,
+          action_type: newActivity.action_type,
+          title: newActivity.title,
+          details: newActivity.details,
+          amount: newActivity.amount || 0,
+          reference_id: newActivity.reference_id,
+          reference_table: newActivity.reference_table,
+          created_at: newActivity.created_at
+        }]);
+      } catch (err) {
+        console.warn('Failed to sync admin audit log to Supabase', err);
+      }
+    }
+
+    return newActivity;
+  }, [isSupabaseConnected]);
+
   // Actions
   const addProduct = async (productData: Omit<Product, 'id' | 'created_at'>): Promise<Product> => {
     const newProduct: Product = {
@@ -741,6 +829,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.error('Failed to sync new product to Supabase', e);
       }
     }
+
+    const admin = getActiveAdminInfo();
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'PRODUCT_ADDED',
+      title: `नवीन उत्पादन जोडले: ${newProduct.name}`,
+      details: `प्रवर्ग: ${newProduct.category} | दर: ₹${newProduct.selling_price} | खरेदी: ₹${newProduct.purchase_price} | प्रारंभिक साठा: ${newProduct.stock_quantity} ${newProduct.unit}`,
+      amount: newProduct.selling_price,
+      reference_id: newProduct.id,
+      reference_table: 'products'
+    });
+
     return newProduct;
   };
 
@@ -753,6 +856,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.error('Failed to update product in Supabase', e);
       }
     }
+
+    const admin = getActiveAdminInfo();
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'PRODUCT_UPDATED',
+      title: `उत्पादन अपडेट केले: ID ${id}`,
+      details: `बदललेले तपशील: ${Object.keys(updates).join(', ')}`,
+      reference_id: id,
+      reference_table: 'products'
+    });
   };
 
   const deleteProduct = async (id: string) => {
@@ -960,6 +1076,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.warn('Supabase batch inward sync error:', err);
       }
     }
+
+    const admin = getActiveAdminInfo();
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'STOCK_INWARD',
+      title: `साठा/बॅच आवक नोंद: ${prod.name}`,
+      details: `वाढलेला साठा: +${totalQtyAdded} ${prod.unit} (${entries.length} बॅच नोंदी)`,
+      reference_id: prod.id,
+      reference_table: 'products'
+    });
   };
 
   const addBatch = async (batchData: Omit<ProductBatch, 'id' | 'created_at'>): Promise<ProductBatch> => {
@@ -1002,6 +1131,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     cash_amount: number;
     online_amount: number;
     udhar_amount: number;
+    created_by_name?: string;
+    created_by_role?: UserRole;
+    admin_slot?: 1 | 2 | null;
+    counter_name?: string;
     items: Array<{
       product_id: string;
       product_name: string;
@@ -1015,6 +1148,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const saleId = 'sale-' + Date.now();
     const invoiceNo = `YD-${new Date().getFullYear()}-${String(sales.length + 1).padStart(4, '0')}`;
     const todayFormatted = new Date().toISOString().split('T')[0];
+
+    const adminInfo = getActiveAdminInfo();
+    const createdByName = saleData.created_by_name || adminInfo.name;
+    const createdByRole = saleData.created_by_role || adminInfo.role;
+    const adminSlot = saleData.admin_slot !== undefined ? saleData.admin_slot : adminInfo.slot;
+    const counterName = saleData.counter_name || adminInfo.counter;
 
     const saleItems = saleData.items.map((item, idx) => ({
       id: `si-${Date.now()}-${idx}`,
@@ -1039,7 +1178,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       udhar_amount: saleData.udhar_amount,
       sale_date: todayFormatted,
       created_at: new Date().toISOString(),
-      items: saleItems
+      items: saleItems,
+      created_by_name: createdByName,
+      created_by_role: createdByRole,
+      admin_slot: adminSlot,
+      counter_name: counterName
     };
 
     // Deduct stock for sold items using FEFO across active batches
@@ -1155,7 +1298,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           cash_amount: newSale.cash_amount,
           online_amount: newSale.online_amount,
           udhar_amount: newSale.udhar_amount,
-          sale_date: newSale.sale_date
+          sale_date: newSale.sale_date,
+          created_by_name: newSale.created_by_name,
+          created_by_role: newSale.created_by_role,
+          admin_slot: newSale.admin_slot,
+          counter_name: newSale.counter_name
         }]);
         if (!error) {
           await supabase.from('sale_items').insert(saleItems.map(si => ({
@@ -1174,6 +1321,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.error('Error saving sale to Supabase:', err);
       }
     }
+
+    const itemsSummary = saleData.items.map(it => `${it.product_name} (${it.quantity} ${it.unit})`).join(', ');
+    logAdminActivity({
+      admin_name: createdByName,
+      admin_role: createdByRole,
+      admin_slot: adminSlot,
+      counter_name: counterName,
+      action_type: 'SALE_CREATED',
+      title: `पावती विक्री: #${invoiceNo}`,
+      details: `वस्तू: ${itemsSummary} | पद्धत: ${saleData.payment_mode} | निव्वळ रक्कम: ₹${saleData.net_amount}`,
+      amount: saleData.net_amount,
+      reference_id: invoiceNo,
+      reference_table: 'sales'
+    });
 
     return newSale;
   };
@@ -1292,6 +1453,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.error('Failed to sync damage to Supabase', err);
       }
     }
+
+    const admin = getActiveAdminInfo();
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'DAMAGE_RECORDED',
+      title: `खराब माल नोंद: ${damageData.product_name}`,
+      details: `कारण: ${damageData.reason} | प्रमाण: ${damageData.quantity} ${damageData.unit} | अंदाजे तोटा: ₹${damageData.estimated_loss_amount}`,
+      amount: damageData.estimated_loss_amount,
+      reference_id: damageData.product_id,
+      reference_table: 'damage_records'
+    });
   };
 
   const addUdharCustomer = async (custData: {
@@ -1367,6 +1542,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.error('Failed to sync udhar payment to Supabase', err);
       }
     }
+
+    const admin = getActiveAdminInfo();
+    const cust = customers.find(c => c.id === customerId);
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'UDHAR_PAYMENT',
+      title: `उधारी वसुली जमा: ₹${amount}`,
+      details: `ग्राहक: ${cust?.name || customerId} | पेमेंट: ${paymentMode} | उर्वरित बाकी: ₹${Math.max(0, (cust?.current_balance || 0) - amount)}`,
+      amount,
+      reference_id: customerId,
+      reference_table: 'udhar_customers'
+    });
   };
 
   const addExpense = async (expenseData: Omit<Expense, 'id' | 'created_at'>) => {
@@ -1385,6 +1575,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.error('Failed to sync expense to Supabase', err);
       }
     }
+
+    const admin = getActiveAdminInfo();
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'EXPENSE_ADDED',
+      title: `खर्च नोंद: ${expenseData.title}`,
+      details: `प्रवर्ग: ${expenseData.category} | पद्धत: ${expenseData.payment_mode} | रक्कम: ₹${expenseData.amount}`,
+      amount: expenseData.amount,
+      reference_table: 'expenses'
+    });
   };
 
   const deleteExpense = async (id: string) => {
@@ -1500,6 +1703,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }
 
+    const admin = getActiveAdminInfo();
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'CUSTOMER_RETURN',
+      title: `ग्राहक माल परतावा: ${newReturn.product_name}`,
+      details: `प्रमाण: ${newReturn.quantity} ${newReturn.unit} | परतावा: ₹${newReturn.refund_amount} (${newReturn.refund_mode}) | कारण: ${newReturn.reason}`,
+      amount: newReturn.refund_amount,
+      reference_id: returnNo,
+      reference_table: 'product_returns'
+    });
+
     return newReturn;
   };
 
@@ -1591,6 +1808,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.error('Failed to sync supplier return to Supabase', err);
       }
     }
+
+    const admin = getActiveAdminInfo();
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'SUPPLIER_RETURN',
+      title: `सप्लायर खरेदी परतावा: ${newReturn.product_name}`,
+      details: `सप्लायर: ${newReturn.supplier_name} | प्रमाण: ${newReturn.quantity} ${newReturn.unit} | रिफंड: ₹${newReturn.total_refund_amount} | कारण: ${newReturn.reason}`,
+      amount: newReturn.total_refund_amount,
+      reference_id: returnNo,
+      reference_table: 'supplier_returns'
+    });
 
     return newReturn;
   };
@@ -1691,6 +1922,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       expenses,
       returns,
       supplierReturns,
+      adminActivities,
+      logAdminActivity,
       currentReceipt,
       setCurrentReceipt,
       addProduct,

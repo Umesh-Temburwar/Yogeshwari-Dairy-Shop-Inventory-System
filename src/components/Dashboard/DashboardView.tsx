@@ -5,6 +5,7 @@ import { SalesProfitChart } from './SalesProfitChart';
 import { PaymentBreakdownChart } from './PaymentBreakdownChart';
 import { BestSellersWidget } from './BestSellersWidget';
 import { LowStockAlertsWidget } from './LowStockAlertsWidget';
+import { OwnerAdminCounterWidget } from './OwnerAdminCounterWidget';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { ShoppingCart, PlusCircle, Sparkles } from 'lucide-react';
@@ -75,6 +76,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddProduct }
 
       {/* Primary 8 Key Metric Cards */}
       <MetricsOverview />
+
+      {/* Shop Owner Control Center: 2 Admins & Counter Audit Ledger (Exclusively for Owner) */}
+      <OwnerAdminCounterWidget />
 
       {/* Analytical Visuals: Sales Trend (2/3) & Cash vs Online Distribution (1/3) */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

@@ -237,7 +237,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="text-xs font-black leading-none">
                   {role === 'Owner' 
                     ? (language === 'mr' ? 'मालक' : language === 'hi' ? 'मालिक' : 'Owner')
-                    : (language === 'mr' ? `ॲडमिन ${adminSlot || 1}` : language === 'hi' ? `एडमिन ${adminSlot || 1}` : `Admin ${adminSlot || 1}`)}
+                    : (language === 'mr' ? 'प्रशासक' : language === 'hi' ? 'प्रशासक' : 'Admin')}
                 </span>
                 <span className="text-[9px] text-slate-500 dark:text-[#8FA69C] leading-none mt-0.5 truncate max-w-[65px] sm:max-w-[90px]">
                   {user?.email?.split('@')[0] || 'Yogeshwari'}
@@ -259,14 +259,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </p>
                     </div>
                     <p className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
-                      {user?.email || 'owner@yogeshwaridairy.com'}
+                      {user?.email || 'yogeshwaridairy9896@gmail.com'}
                     </p>
                   </div>
 
-                  {/* Switch Role: 1 Owner vs 2 Admins */}
+                  {/* Switch Role: 1 Owner & 1 Admin */}
                   <div className="p-1 space-y-1">
                     <p className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] px-2 py-0.5">
-                      {language === 'mr' ? 'प्रोफाइल निवडा (३ खाती)' : language === 'hi' ? 'प्रोफ़ाइल चुनें (३ खाते)' : 'Select Profile (3 Users)'}
+                      {language === 'mr' ? 'प्रोफाइल निवडा (२ खाती)' : language === 'hi' ? 'प्रोफ़ाइल चुनें (२ खाते)' : 'Select Profile (2 Users)'}
                     </p>
                     {/* Owner */}
                     <button
@@ -288,7 +288,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       {role === 'Owner' && <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />}
                     </button>
 
-                    {/* Admin 1 - Counter Billing */}
+                    {/* Admin - Nilesh Sakhare (POS Billing) */}
                     <button
                       type="button"
                       onClick={() => {
@@ -296,36 +296,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setShowProfileMenu(false);
                       }}
                       className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
-                        role === 'Admin' && (adminSlot === 1 || !adminSlot)
+                        role === 'Admin'
                           ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40'
                           : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         <span>🛡️</span>
-                        <span>{language === 'mr' ? 'प्रशासक १ (काऊंटर बिलिंग)' : language === 'hi' ? 'प्रशासक १ (बिलिंग)' : 'Admin 1 (POS Billing)'}</span>
+                        <span>{language === 'mr' ? 'प्रशासक (निलेश सखारे - बिलिंग)' : language === 'hi' ? 'प्रशासक (निलेश सखारे - बिलिंग)' : 'Admin (Nilesh Sakhare - POS Billing)'}</span>
                       </div>
-                      {role === 'Admin' && (adminSlot === 1 || !adminSlot) && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
-                    </button>
-
-                    {/* Admin 2 - Inventory & Stock */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRole('Admin', 2);
-                        setShowProfileMenu(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
-                        role === 'Admin' && adminSlot === 2
-                          ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-900 dark:text-purple-300 border border-purple-200 dark:border-purple-800/40'
-                          : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span>🛡️</span>
-                        <span>{language === 'mr' ? 'प्रशासक २ (इन्व्हेंटरी व साठा)' : language === 'hi' ? 'प्रशासक २ (स्टॉक)' : 'Admin 2 (Inventory)'}</span>
-                      </div>
-                      {role === 'Admin' && adminSlot === 2 && <CheckCircle2 className="w-3.5 h-3.5 text-purple-600" />}
+                      {role === 'Admin' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
                     </button>
                   </div>
 

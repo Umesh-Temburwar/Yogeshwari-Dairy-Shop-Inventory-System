@@ -92,7 +92,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const defaultRedirectView: 'dashboard' | 'pos' | 'inventory' = 
-    role === 'Owner' ? 'dashboard' : (adminSlot === 2 ? 'inventory' : 'pos');
+    role === 'Owner' ? 'dashboard' : 'pos';
 
   const lockSecurity = () => {
     revokeSessionSecurity();

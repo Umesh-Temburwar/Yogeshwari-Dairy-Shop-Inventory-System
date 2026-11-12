@@ -38,6 +38,9 @@ ADD COLUMN IF NOT EXISTS admin_slot INTEGER,
 ADD COLUMN IF NOT EXISTS default_redirect_view VARCHAR(50) DEFAULT 'dashboard',
 ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
 
+-- Ensure id column always generates a valid UUID default
+ALTER TABLE public.profiles ALTER COLUMN id SET DEFAULT gen_random_uuid();
+
 CREATE INDEX IF NOT EXISTS idx_profiles_auth_user_id 
 ON public.profiles (auth_user_id);
 
@@ -155,6 +158,7 @@ BEGIN
 
     -- Upsert profile in public.profiles table
     INSERT INTO public.profiles (
+        id,
         auth_user_id,
         email,
         full_name,
@@ -165,6 +169,7 @@ BEGIN
         created_at,
         updated_at
     ) VALUES (
+        COALESCE(NEW.id, gen_random_uuid()),
         NEW.id,
         clean_email,
         detected_name,

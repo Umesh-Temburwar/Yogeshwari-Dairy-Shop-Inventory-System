@@ -48,6 +48,9 @@ ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
 ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
+-- Ensure id column always generates a valid UUID default
+ALTER TABLE public.profiles ALTER COLUMN id SET DEFAULT gen_random_uuid();
+
 -- 2.1 CRITICAL: Drop foreign key constraint on 'id' referencing auth.users (profiles_id_fkey)
 -- This allows inserting ERP profiles without requiring pre-existing auth.users rows,
 -- while auth_user_id cleanly links profiles to auth.users when Supabase Auth is used.
@@ -271,10 +274,10 @@ ON CONFLICT (email) DO UPDATE SET
     updated_at = NOW();
 
 -- Also ensure fallback legacy emails map cleanly
-INSERT INTO public.profiles (email, full_name, role, admin_slot, default_redirect_view, is_active)
+INSERT INTO public.profiles (id, email, full_name, role, admin_slot, default_redirect_view, is_active)
 VALUES 
-    ('owner@yogeshwaridairy.com', 'Yogeshwari Dairy Owner', 'Owner', NULL, 'dashboard', FALSE),
-    ('admin1@yogeshwaridairy.com', 'Store Administrator 1', 'Admin', 1, 'pos', FALSE)
+    (gen_random_uuid(), 'owner@yogeshwaridairy.com', 'Yogeshwari Dairy Owner', 'Owner', NULL, 'dashboard', FALSE),
+    (gen_random_uuid(), 'admin1@yogeshwaridairy.com', 'Store Administrator 1', 'Admin', 1, 'pos', FALSE)
 ON CONFLICT (email) DO NOTHING;
 
 -- 6. Enable Row Level Security (RLS) on profiles

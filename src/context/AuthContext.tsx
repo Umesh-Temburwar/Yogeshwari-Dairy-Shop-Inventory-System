@@ -408,6 +408,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (data.user) {
         try {
           await supabase.from('profiles').upsert({
+            id: data.user.id,
             auth_user_id: data.user.id,
             email: cleanEmail,
             full_name: finalName,

@@ -50,6 +50,9 @@ ADD COLUMN IF NOT EXISTS admin_slot INTEGER,
 ADD COLUMN IF NOT EXISTS default_redirect_view VARCHAR(50) DEFAULT 'dashboard',
 ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
 
+-- Ensure id column always generates a valid UUID default
+ALTER TABLE public.profiles ALTER COLUMN id SET DEFAULT gen_random_uuid();
+
 CREATE INDEX IF NOT EXISTS idx_sales_created_by_email ON public.sales (created_by_email);
 CREATE INDEX IF NOT EXISTS idx_admin_audit_email ON public.admin_audit_logs (admin_email);
 

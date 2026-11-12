@@ -10,7 +10,10 @@ const getApiBaseUrl = (): string => {
   }
   const metaEnv = typeof import.meta !== 'undefined' ? (import.meta as any).env : undefined;
   if (metaEnv?.VITE_API_BASE_URL) {
-    return metaEnv.VITE_API_BASE_URL;
+    return metaEnv.VITE_API_BASE_URL.replace(/\/$/, '');
+  }
+  if (metaEnv?.VITE_API_URL) {
+    return metaEnv.VITE_API_URL.replace(/\/$/, '');
   }
   return '/api/v1';
 };

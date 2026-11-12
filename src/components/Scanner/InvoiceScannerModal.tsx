@@ -77,8 +77,9 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
     setHasScanned(false);
 
     try {
-      // 1. Try server invoice endpoint if available
-      const response = await fetch('/api/v1/ai/scan-invoice', {
+      // 1. Try server invoice endpoint if available (Render backend or local proxy)
+      const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
+      const response = await fetch(`${apiBase}/ai/scan-invoice`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: imageUrl, fileName })

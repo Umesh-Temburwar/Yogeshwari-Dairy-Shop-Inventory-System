@@ -71,8 +71,9 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
     setIdentifiedData(null);
 
     try {
-      // 1. Try server AI recognition endpoint if available
-      const response = await fetch('/api/v1/ai/recognize-product', {
+      // 1. Try server AI recognition endpoint if available (Render backend or local proxy)
+      const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
+      const response = await fetch(`${apiBase}/ai/recognize-product`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: imageUrl, fileName })

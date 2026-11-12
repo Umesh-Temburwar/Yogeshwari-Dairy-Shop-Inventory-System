@@ -68,9 +68,9 @@ export const DailySalesTracker: React.FC = () => {
     const matchesGender = selectedGender === 'All' || sale.customer_gender === selectedGender;
     const matchesAgeGroup = selectedAgeGroup === 'All' || sale.customer_age_group === selectedAgeGroup;
     const matchesAdmin = selectedAdminSlot === 'All' ||
-      (selectedAdminSlot === '1' && (sale.admin_slot === 1 || (!sale.admin_slot && sale.created_by_role !== 'Owner'))) ||
-      (selectedAdminSlot === '2' && sale.admin_slot === 2) ||
-      (selectedAdminSlot === 'Owner' && (sale.created_by_role === 'Owner' || (sale.admin_slot === null && sale.created_by_name?.includes('मालक'))));
+      (selectedAdminSlot === '1' && (sale.admin_slot === 1 || sale.created_by_email === 'nilusakhare2003@gmail.com' || (!sale.admin_slot && sale.created_by_role !== 'Owner'))) ||
+      (selectedAdminSlot === '2' && (sale.admin_slot === 2 || sale.created_by_email === 'nikhilsakhare9896@gmail.com')) ||
+      (selectedAdminSlot === 'Owner' && (sale.created_by_role === 'Owner' || sale.created_by_email === 'yogeshwaridairy9896@gmail.com' || (sale.admin_slot === null && sale.created_by_name?.includes('मालक'))));
 
     return matchesSearch && matchesMode && matchesGender && matchesAgeGroup && matchesAdmin;
   });
@@ -336,9 +336,9 @@ export const DailySalesTracker: React.FC = () => {
             <div className="flex items-center gap-1.5 flex-wrap">
               {[
                 { id: 'All', label: language === 'mr' ? 'सर्व नोंदी (All)' : language === 'hi' ? 'सभी रिकॉर्ड (All)' : 'All Counters' },
-                { id: '1', label: language === 'mr' ? '🛡️ प्रशासक १ (काऊंटर १)' : language === 'hi' ? '🛡️ प्रशासक १ (काउंटर १)' : '🛡️ Admin 1 (Counter 1)' },
-                { id: '2', label: language === 'mr' ? '🛡️ प्रशासक २ (काऊंटर २)' : language === 'hi' ? '🛡️ प्रशासक २ (काउंटर २)' : '🛡️ Admin 2 (Counter 2)' },
-                { id: 'Owner', label: language === 'mr' ? '👑 दुकान मालक' : language === 'hi' ? '👑 दुकान मालिक' : '👑 Shop Owner' },
+                { id: '1', label: language === 'mr' ? '🛡️ निलेश सखारे (काऊंटर १)' : language === 'hi' ? '🛡️ निलेश सखारे (काउंटर १)' : '🛡️ Nilesh Sakhare (Counter 1)' },
+                { id: '2', label: language === 'mr' ? '🛡️ निखिल सखारे (काऊंटर २)' : language === 'hi' ? '🛡️ निखिल सखारे (काउंटर २)' : '🛡️ Nikhil Sakhare (Counter 2)' },
+                { id: 'Owner', label: language === 'mr' ? '👑 योगेश्वरी डेअरी मालक' : language === 'hi' ? '👑 योगेश्वरी डेयरी मालिक' : '👑 Yogeshwari Dairy Owner' },
               ].map((adm) => (
                 <button
                   key={adm.id}
@@ -399,7 +399,10 @@ export const DailySalesTracker: React.FC = () => {
                             ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border-amber-200 dark:border-amber-800/40'
                             : 'bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800/40'
                         }`}>
-                          📍 {sale.counter_name || (sale.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १')} • 👤 {sale.created_by_name || 'Admin 1'}
+                          📍 {sale.counter_name || (sale.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १')} • 👤 {sale.created_by_name || (sale.admin_slot === 2 ? 'निखिल सखारे' : 'निलेश सखारे')}
+                          {sale.created_by_email && (
+                            <span className="text-[10px] font-normal opacity-75 hidden sm:inline">({sale.created_by_email})</span>
+                          )}
                         </span>
                       </div>
 

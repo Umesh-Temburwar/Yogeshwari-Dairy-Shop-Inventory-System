@@ -674,7 +674,7 @@ export const LoginPage: React.FC = () => {
                       type="button"
                       onClick={() => {
                         resetSignIn({
-                          email: 'owner@yogeshwaridairy.com',
+                          email: 'yogeshwaridairy9896@gmail.com',
                           password: 'password123',
                           rememberMe: true,
                         });
@@ -685,16 +685,16 @@ export const LoginPage: React.FC = () => {
                         <span className="text-[10px] font-black text-amber-700 dark:text-amber-400">👑 {language === 'mr' ? 'दुकान मालक' : language === 'hi' ? 'दुकान मालिक' : 'Owner'}</span>
                         <span className="text-[9px] font-bold text-amber-600/80 dark:text-amber-400/80 bg-amber-100 dark:bg-amber-900/40 px-1 py-0.5 rounded">डॅशबोर्ड</span>
                       </div>
-                      <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5">owner@...</span>
-                      <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">➡️ {language === 'mr' ? 'कार्यकारी डॅशबोर्ड' : language === 'hi' ? 'डैशबोर्ड' : 'Dashboard'}</span>
+                      <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 font-bold">yogeshwaridairy...</span>
+                      <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">➡️ {language === 'mr' ? 'मालक डॅशबोर्ड' : language === 'hi' ? 'मालिक डैशबोर्ड' : 'Dashboard'}</span>
                     </button>
 
-                    {/* 2. Admin 1 - POS / Billing Counter */}
+                    {/* 2. Admin 1 - POS / Billing Counter (Nilesh Sakhare) */}
                     <button
                       type="button"
                       onClick={() => {
                         resetSignIn({
-                          email: 'admin1@yogeshwaridairy.com',
+                          email: 'nilusakhare2003@gmail.com',
                           password: 'password123',
                           rememberMe: true,
                         });
@@ -702,19 +702,19 @@ export const LoginPage: React.FC = () => {
                       className="p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/70 dark:bg-emerald-950/20 text-left hover:bg-emerald-100/70 dark:hover:bg-emerald-900/30 transition shadow-2xs group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400">🛡️ {language === 'mr' ? 'प्रशासक १' : language === 'hi' ? 'प्रशासक १' : 'Admin 1'}</span>
-                        <span className="text-[9px] font-bold text-emerald-600/80 dark:text-emerald-400/80 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded">POS बिलिंग</span>
+                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400">🛡️ {language === 'mr' ? 'निलेश (ॲडमिन १)' : language === 'hi' ? 'निलेश (एडमिन १)' : 'Nilesh (Admin 1)'}</span>
+                        <span className="text-[9px] font-bold text-emerald-600/80 dark:text-emerald-400/80 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded">काऊंटर १</span>
                       </div>
-                      <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5">admin1@...</span>
-                      <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">➡️ {language === 'mr' ? 'काऊंटर बिलिंग' : language === 'hi' ? 'काउंटर बिलिंग' : 'POS Counter'}</span>
+                      <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 font-bold">nilusakhare2003...</span>
+                      <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">➡️ {language === 'mr' ? 'काऊंटर १ बिलिंग' : language === 'hi' ? 'काउंटर १ बिलिंग' : 'POS Billing'}</span>
                     </button>
 
-                    {/* 3. Admin 2 - Inventory & Stock Management */}
+                    {/* 3. Admin 2 - Inventory & Stock Management (Nikhil Sakhare) */}
                     <button
                       type="button"
                       onClick={() => {
                         resetSignIn({
-                          email: 'admin2@yogeshwaridairy.com',
+                          email: 'nikhilsakhare9896@gmail.com',
                           password: 'password123',
                           rememberMe: true,
                         });
@@ -722,11 +722,11 @@ export const LoginPage: React.FC = () => {
                       className="p-2.5 rounded-xl border border-purple-200 dark:border-purple-800/40 bg-purple-50/70 dark:bg-purple-950/20 text-left hover:bg-purple-100/70 dark:hover:bg-purple-900/30 transition shadow-2xs group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-purple-700 dark:text-purple-400">🛡️ {language === 'mr' ? 'प्रशासक २' : language === 'hi' ? 'प्रशासक २' : 'Admin 2'}</span>
-                        <span className="text-[9px] font-bold text-purple-600/80 dark:text-purple-400/80 bg-purple-100 dark:bg-purple-900/40 px-1 py-0.5 rounded">इन्व्हेंटरी</span>
+                        <span className="text-[10px] font-black text-purple-700 dark:text-purple-400">🛡️ {language === 'mr' ? 'निखिल (ॲडमिन २)' : language === 'hi' ? 'निखिल (एडमिन २)' : 'Nikhil (Admin 2)'}</span>
+                        <span className="text-[9px] font-bold text-purple-600/80 dark:text-purple-400/80 bg-purple-100 dark:bg-purple-900/40 px-1 py-0.5 rounded">काऊंटर २</span>
                       </div>
-                      <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5">admin2@...</span>
-                      <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">➡️ {language === 'mr' ? 'साठा व बॅचेस' : language === 'hi' ? 'स्टॉक व बैच' : 'Inventory'}</span>
+                      <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 font-bold">nikhilsakhare9896...</span>
+                      <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">➡️ {language === 'mr' ? 'इन्व्हेंटरी व साठा' : language === 'hi' ? 'इन्वेंट्री व स्टॉक' : 'Inventory'}</span>
                     </button>
                   </div>
                 </div>

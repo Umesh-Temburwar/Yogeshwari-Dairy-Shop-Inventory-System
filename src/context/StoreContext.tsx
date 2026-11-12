@@ -109,6 +109,7 @@ interface StoreContextType {
     online_amount: number;
     udhar_amount: number;
     created_by_name?: string;
+    created_by_email?: string;
     created_by_role?: UserRole;
     admin_slot?: 1 | 2 | null;
     counter_name?: string;
@@ -735,26 +736,51 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Helper to resolve currently active admin/owner profile details
   const getActiveAdminInfo = useCallback(() => {
     try {
+      let userEmail = '';
+      try {
+        const storedUser = localStorage.getItem('ydo_auth_local_user');
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          userEmail = (parsed.email || '').toLowerCase().trim();
+        }
+      } catch {}
+
       const savedRole = (localStorage.getItem('ydo_active_role') || 'Admin') as UserRole;
       const role: UserRole = (savedRole === 'Owner' || savedRole === 'Admin') ? savedRole : 'Owner';
       const slotStr = localStorage.getItem('ydo_admin_slot');
-      const slot = role === 'Owner' ? null : (slotStr === '2' ? (2 as const) : (1 as const));
-      const name = role === 'Owner'
-        ? 'दुकान मालक (उमेश)'
-        : slot === 2
-        ? 'प्रशासक २ (राहुल - साठा)'
-        : 'प्रशासक १ (निलेश - काऊंटर)';
-      const counter = role === 'Owner'
-        ? 'मुख्य मालक काऊंटर'
-        : slot === 2
-        ? 'काऊंटर २ - दुग्ध व साठा'
-        : 'काऊंटर १ - मुख्य बिलिंग';
-      return { role, slot, name, counter };
+      const slot: 1 | 2 | null = role === 'Owner' ? null : (slotStr === '2' ? (2 as const) : (1 as const));
+
+      if (userEmail === 'nikhilsakhare9896@gmail.com' || userEmail.includes('nikhil') || slot === 2) {
+        return {
+          role: 'Admin' as UserRole,
+          slot: 2 as 1 | 2,
+          email: 'nikhilsakhare9896@gmail.com',
+          name: 'निखिल सखारे (प्रशासक २)',
+          counter: 'काऊंटर २ - दुग्ध व साठा'
+        };
+      } else if (userEmail === 'nilusakhare2003@gmail.com' || userEmail.includes('nilu') || slot === 1) {
+        return {
+          role: 'Admin' as UserRole,
+          slot: 1 as 1 | 2,
+          email: 'nilusakhare2003@gmail.com',
+          name: 'निलेश सखारे (प्रशासक १)',
+          counter: 'काऊंटर १ - मुख्य बिलिंग'
+        };
+      } else {
+        return {
+          role: 'Owner' as UserRole,
+          slot: null,
+          email: 'yogeshwaridairy9896@gmail.com',
+          name: 'योगेश्वरी डेअरी मालक (Shop Owner)',
+          counter: 'मुख्य मालक काऊंटर'
+        };
+      }
     } catch {
       return { 
         role: 'Admin' as UserRole, 
         slot: 1 as 1 | 2, 
-        name: 'प्रशासक १ (निलेश - काऊंटर)', 
+        email: 'nilusakhare2003@gmail.com',
+        name: 'निलेश सखारे (प्रशासक १)', 
         counter: 'काऊंटर १ - मुख्य बिलिंग' 
       };
     }
@@ -773,6 +799,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try {
         await supabase.from('admin_audit_logs').insert([{
           admin_name: newActivity.admin_name,
+          admin_email: newActivity.admin_email,
           admin_role: newActivity.admin_role,
           admin_slot: newActivity.admin_slot,
           counter_name: newActivity.counter_name,
@@ -833,6 +860,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const admin = getActiveAdminInfo();
     logAdminActivity({
       admin_name: admin.name,
+      admin_email: admin.email,
       admin_role: admin.role,
       admin_slot: admin.slot,
       counter_name: admin.counter,
@@ -848,6 +876,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateProduct = async (id: string, updates: Partial<Product>) => {
+    const existingProd = products.find(p => p.id === id);
     setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p));
     if (supabase && isSupabaseConnected) {
       try {
@@ -858,14 +887,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     const admin = getActiveAdminInfo();
+    const changes = Object.entries(updates)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(', ');
     logAdminActivity({
       admin_name: admin.name,
+      admin_email: admin.email,
       admin_role: admin.role,
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'PRODUCT_UPDATED',
-      title: `उत्पादन अपडेट केले: ID ${id}`,
-      details: `बदललेले तपशील: ${Object.keys(updates).join(', ')}`,
+      title: `उत्पादन माहिती बदल: ${existingProd?.name || id}`,
+      details: `बदललेले तपशील: ${changes}`,
       reference_id: id,
       reference_table: 'products'
     });
@@ -972,6 +1005,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         await supabase.from('products').update({ stock_quantity: newQty }).eq('id', id);
       }
     }
+
+    const admin = getActiveAdminInfo();
+    const oldQty = prod.stock_quantity;
+    const finalQty = Math.max(0, Number((prod.stock_quantity + qtyDelta).toFixed(2)));
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_email: admin.email,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'STOCK_INWARD',
+      title: `इन्व्हेंटरी साठा बदल: ${prod.name}`,
+      details: `बदल: ${qtyDelta > 0 ? '+' : ''}${qtyDelta} ${prod.unit} | कारण: ${reason || 'साठा समायोजन'} | आधी: ${oldQty} -> आता: ${finalQty}`,
+      reference_id: prod.id,
+      reference_table: 'products'
+    });
   };
 
   const addStockEntries = async (
@@ -1080,6 +1129,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const admin = getActiveAdminInfo();
     logAdminActivity({
       admin_name: admin.name,
+      admin_email: admin.email,
       admin_role: admin.role,
       admin_slot: admin.slot,
       counter_name: admin.counter,
@@ -1132,6 +1182,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     online_amount: number;
     udhar_amount: number;
     created_by_name?: string;
+    created_by_email?: string;
     created_by_role?: UserRole;
     admin_slot?: 1 | 2 | null;
     counter_name?: string;
@@ -1151,6 +1202,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const adminInfo = getActiveAdminInfo();
     const createdByName = saleData.created_by_name || adminInfo.name;
+    const createdByEmail = saleData.created_by_email || adminInfo.email;
     const createdByRole = saleData.created_by_role || adminInfo.role;
     const adminSlot = saleData.admin_slot !== undefined ? saleData.admin_slot : adminInfo.slot;
     const counterName = saleData.counter_name || adminInfo.counter;
@@ -1180,6 +1232,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       created_at: new Date().toISOString(),
       items: saleItems,
       created_by_name: createdByName,
+      created_by_email: createdByEmail,
       created_by_role: createdByRole,
       admin_slot: adminSlot,
       counter_name: counterName
@@ -1300,6 +1353,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           udhar_amount: newSale.udhar_amount,
           sale_date: newSale.sale_date,
           created_by_name: newSale.created_by_name,
+          created_by_email: newSale.created_by_email,
           created_by_role: newSale.created_by_role,
           admin_slot: newSale.admin_slot,
           counter_name: newSale.counter_name
@@ -1325,6 +1379,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const itemsSummary = saleData.items.map(it => `${it.product_name} (${it.quantity} ${it.unit})`).join(', ');
     logAdminActivity({
       admin_name: createdByName,
+      admin_email: createdByEmail,
       admin_role: createdByRole,
       admin_slot: adminSlot,
       counter_name: counterName,
@@ -1457,6 +1512,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const admin = getActiveAdminInfo();
     logAdminActivity({
       admin_name: admin.name,
+      admin_email: admin.email,
       admin_role: admin.role,
       admin_slot: admin.slot,
       counter_name: admin.counter,
@@ -1547,6 +1603,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const cust = customers.find(c => c.id === customerId);
     logAdminActivity({
       admin_name: admin.name,
+      admin_email: admin.email,
       admin_role: admin.role,
       admin_slot: admin.slot,
       counter_name: admin.counter,
@@ -1579,6 +1636,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const admin = getActiveAdminInfo();
     logAdminActivity({
       admin_name: admin.name,
+      admin_email: admin.email,
       admin_role: admin.role,
       admin_slot: admin.slot,
       counter_name: admin.counter,
@@ -1706,6 +1764,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const admin = getActiveAdminInfo();
     logAdminActivity({
       admin_name: admin.name,
+      admin_email: admin.email,
       admin_role: admin.role,
       admin_slot: admin.slot,
       counter_name: admin.counter,
@@ -1812,6 +1871,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const admin = getActiveAdminInfo();
     logAdminActivity({
       admin_name: admin.name,
+      admin_email: admin.email,
       admin_role: admin.role,
       admin_slot: admin.slot,
       counter_name: admin.counter,

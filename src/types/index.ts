@@ -67,6 +67,7 @@ export interface Sale {
   created_at: string;
   items: SaleItem[];
   created_by_name?: string;
+  created_by_email?: string;
   created_by_role?: UserRole;
   admin_slot?: 1 | 2 | null;
   counter_name?: string;
@@ -280,6 +281,7 @@ export type AdminActionType =
 export interface AdminActivity {
   id: string;
   admin_name: string;
+  admin_email?: string;
   admin_role: UserRole;
   admin_slot?: 1 | 2 | null;
   counter_name: string;

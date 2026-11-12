@@ -98,26 +98,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Helper to determine role, admin slot, and redirect destination based on email/profile
   const detectRoleAndSlot = (email: string) => {
     const cleanEmail = email.trim().toLowerCase();
-    if (cleanEmail === 'admin2@yogeshwaridairy.com' || cleanEmail.includes('admin2')) {
+
+    // 1. Second Admin: Nikhil Sakhare (Counter 2 - Inventory & Stock)
+    if (
+      cleanEmail === 'nikhilsakhare9896@gmail.com' ||
+      cleanEmail.includes('nikhilsakhare') ||
+      cleanEmail === 'admin2@yogeshwaridairy.com' ||
+      cleanEmail.includes('admin2')
+    ) {
       return {
         role: 'Admin' as UserRole,
         slot: 2 as 1 | 2,
         redirectView: 'inventory' as const,
-        fullName: 'Store Administrator 2 (Inventory & Stock)'
+        fullName: 'निखिल सखारे (प्रशासक २ - काऊंटर २ साठा)'
       };
-    } else if (cleanEmail === 'admin1@yogeshwaridairy.com' || cleanEmail === 'admin@yogeshwaridairy.com' || cleanEmail.includes('admin')) {
+    } 
+    // 2. First Admin: Nilesh Sakhare (Counter 1 - POS Billing)
+    else if (
+      cleanEmail === 'nilusakhare2003@gmail.com' ||
+      cleanEmail.includes('nilusakhare') ||
+      cleanEmail === 'admin1@yogeshwaridairy.com' ||
+      cleanEmail === 'admin@yogeshwaridairy.com' ||
+      cleanEmail.includes('admin')
+    ) {
       return {
         role: 'Admin' as UserRole,
         slot: 1 as 1 | 2,
         redirectView: 'pos' as const,
-        fullName: 'Store Administrator 1 (Counter Billing)'
+        fullName: 'निलेश सखारे (प्रशासक १ - काऊंटर १ बिलिंग)'
       };
-    } else {
+    } 
+    // 3. Shop Owner: Yogeshwari Dairy Owner (yogeshwaridairy9896@gmail.com)
+    else {
       return {
         role: 'Owner' as UserRole,
         slot: null,
         redirectView: 'dashboard' as const,
-        fullName: 'Yogeshwari Dairy Owner'
+        fullName: 'योगेश्वरी डेअरी मालक (Shop Owner)'
       };
     }
   };
@@ -288,10 +305,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // 2. Offline Emergency / Local Shop Counter Auth for 1 Owner and 2 Admins
     if (
+      cleanEmail === 'yogeshwaridairy9896@gmail.com' ||
+      cleanEmail === 'nilusakhare2003@gmail.com' ||
+      cleanEmail === 'nikhilsakhare9896@gmail.com' ||
       cleanEmail === 'owner@yogeshwaridairy.com' || 
       cleanEmail === 'admin1@yogeshwaridairy.com' ||
       cleanEmail === 'admin2@yogeshwaridairy.com' ||
       cleanEmail === 'admin@yogeshwaridairy.com' ||
+      cleanEmail.includes('nilu') ||
+      cleanEmail.includes('nikhil') ||
+      cleanEmail.includes('yogeshwari') ||
       cleanEmail.includes('owner') ||
       cleanEmail.includes('admin') ||
       cleanEmail.includes('umesh')

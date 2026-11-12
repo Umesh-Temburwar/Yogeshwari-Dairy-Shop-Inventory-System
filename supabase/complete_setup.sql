@@ -1082,6 +1082,189 @@ GRANT SELECT ON public.v_owner_admin_counter_summary TO postgres, anon, authenti
 GRANT SELECT ON public.v_owner_recent_admin_activities TO postgres, anon, authenticated, service_role;
 
 -- ============================================================================
+-- PHASE 14: DEDICATED GMAIL PROFILES & INVENTORY AUDIT TRACKING FOR SHOP OWNER
+-- ============================================================================
+-- 1. Extend sales and audit tables with email columns
+ALTER TABLE public.sales
+ADD COLUMN IF NOT EXISTS created_by_email VARCHAR(255);
+
+ALTER TABLE public.admin_audit_logs
+ADD COLUMN IF NOT EXISTS admin_email VARCHAR(255);
+
+CREATE INDEX IF NOT EXISTS idx_sales_created_by_email ON public.sales (created_by_email);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_email ON public.admin_audit_logs (admin_email);
+
+-- 2. Safely Deactivate old dummy placeholder emails
+UPDATE public.profiles
+SET is_active = FALSE
+WHERE email NOT IN (
+    'yogeshwaridairy9896@gmail.com',
+    'nilusakhare2003@gmail.com',
+    'nikhilsakhare9896@gmail.com'
+);
+
+-- 3. Upsert the 3 Official Authorized Accounts
+-- A. 👑 Shop Owner: yogeshwaridairy9896@gmail.com -> dashboard
+INSERT INTO public.profiles (
+    id, email, full_name, role, admin_slot, default_redirect_view, is_active
+)
+VALUES (
+    '10000000-0000-0000-0000-000000000001'::UUID,
+    'yogeshwaridairy9896@gmail.com',
+    'योगेश्वरी डेअरी मालक (Shop Owner)',
+    'Owner',
+    NULL,
+    'dashboard',
+    TRUE
+)
+ON CONFLICT (email) DO UPDATE SET
+    full_name = EXCLUDED.full_name,
+    role = EXCLUDED.role,
+    admin_slot = EXCLUDED.admin_slot,
+    default_redirect_view = EXCLUDED.default_redirect_view,
+    is_active = TRUE,
+    updated_at = NOW();
+
+-- B. 🛡️ Admin 1: nilusakhare2003@gmail.com -> pos (Nilesh Sakhare - Counter 1)
+INSERT INTO public.profiles (
+    id, email, full_name, role, admin_slot, default_redirect_view, is_active
+)
+VALUES (
+    '10000000-0000-0000-0000-000000000002'::UUID,
+    'nilusakhare2003@gmail.com',
+    'निलेश सखारे (प्रशासक १ - काऊंटर १)',
+    'Admin',
+    1,
+    'pos',
+    TRUE
+)
+ON CONFLICT (email) DO UPDATE SET
+    full_name = EXCLUDED.full_name,
+    role = EXCLUDED.role,
+    admin_slot = EXCLUDED.admin_slot,
+    default_redirect_view = EXCLUDED.default_redirect_view,
+    is_active = TRUE,
+    updated_at = NOW();
+
+-- C. 🛡️ Admin 2: nikhilsakhare9896@gmail.com -> inventory (Nikhil Sakhare - Counter 2)
+INSERT INTO public.profiles (
+    id, email, full_name, role, admin_slot, default_redirect_view, is_active
+)
+VALUES (
+    '10000000-0000-0000-0000-000000000003'::UUID,
+    'nikhilsakhare9896@gmail.com',
+    'निखिल सखारे (प्रशासक २ - काऊंटर २)',
+    'Admin',
+    2,
+    'inventory',
+    TRUE
+)
+ON CONFLICT (email) DO UPDATE SET
+    full_name = EXCLUDED.full_name,
+    role = EXCLUDED.role,
+    admin_slot = EXCLUDED.admin_slot,
+    default_redirect_view = EXCLUDED.default_redirect_view,
+    is_active = TRUE,
+    updated_at = NOW();
+
+-- 4. Analytical View: Shop Owner Dedicated Inventory Changes & Updates Ledger
+CREATE OR REPLACE VIEW public.v_owner_admin_inventory_changes AS
+SELECT 
+    log.id,
+    log.created_at AS change_time,
+    COALESCE(log.admin_email, '') AS admin_email,
+    log.admin_name,
+    log.admin_role,
+    log.admin_slot,
+    log.counter_name,
+    log.action_type,
+    log.title AS inventory_action_title,
+    log.details AS change_details,
+    log.amount,
+    log.reference_id,
+    log.reference_table
+FROM public.admin_audit_logs log
+WHERE log.action_type IN (
+    'PRODUCT_ADDED', 
+    'PRODUCT_UPDATED', 
+    'STOCK_INWARD', 
+    'DAMAGE_RECORDED', 
+    'CUSTOMER_RETURN', 
+    'SUPPLIER_RETURN'
+)
+ORDER BY log.created_at DESC;
+
+-- 5. Analytical View: Shop Owner Dedicated Counter Sales Breakdown View
+CREATE OR REPLACE VIEW public.v_owner_admin_counter_sales_details AS
+SELECT 
+    s.id,
+    s.invoice_no,
+    s.sale_date,
+    s.created_at,
+    COALESCE(s.created_by_email, '') AS admin_email,
+    COALESCE(s.created_by_name, 'Admin') AS admin_name,
+    COALESCE(s.admin_slot, 1) AS admin_slot,
+    COALESCE(s.counter_name, 'काऊंटर १ - मुख्य बिलिंग') AS counter_name,
+    s.customer_name,
+    s.customer_phone,
+    s.payment_mode,
+    s.net_amount,
+    s.cash_amount,
+    s.online_amount,
+    s.udhar_amount,
+    (
+        SELECT string_agg(si.product_name || ' (' || si.quantity || ' ' || si.unit || ')', ', ')
+        FROM public.sale_items si
+        WHERE si.sale_id = s.id
+    ) AS items_summary
+FROM public.sales s
+WHERE s.status = 'COMPLETED'
+ORDER BY s.created_at DESC;
+
+-- 6. Helper Function: Role & Redirection by Gmail
+CREATE OR REPLACE FUNCTION public.get_user_role_and_redirect(p_email TEXT)
+RETURNS TABLE (
+    user_role VARCHAR,
+    admin_slot INTEGER,
+    redirect_view VARCHAR,
+    display_name VARCHAR
+) AS $$
+DECLARE
+    clean_email TEXT := LOWER(TRIM(p_email));
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.role::VARCHAR AS user_role,
+        p.admin_slot,
+        p.default_redirect_view::VARCHAR AS redirect_view,
+        p.full_name::VARCHAR AS display_name
+    FROM public.profiles p
+    WHERE LOWER(TRIM(p.email)) = clean_email
+      AND p.is_active = TRUE
+    LIMIT 1;
+
+    IF FOUND THEN
+        RETURN;
+    END IF;
+
+    IF clean_email = 'nikhilsakhare9896@gmail.com' OR clean_email LIKE '%nikhil%' THEN
+        RETURN QUERY SELECT 'Admin'::VARCHAR, 2, 'inventory'::VARCHAR, 'निखिल सखारे (प्रशासक २ - काऊंटर २)'::VARCHAR;
+    ELSIF clean_email = 'nilusakhare2003@gmail.com' OR clean_email LIKE '%nilu%' OR clean_email LIKE '%admin%' THEN
+        RETURN QUERY SELECT 'Admin'::VARCHAR, 1, 'pos'::VARCHAR, 'निलेश सखारे (प्रशासक १ - काऊंटर १)'::VARCHAR;
+    ELSE
+        RETURN QUERY SELECT 'Owner'::VARCHAR, NULL::INTEGER, 'dashboard'::VARCHAR, 'योगेश्वरी डेअरी मालक (Shop Owner)'::VARCHAR;
+    END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY INVOKER;
+
+-- 7. Grant Permissions to API Roles
+GRANT ALL ON TABLE public.admin_audit_logs TO postgres, anon, authenticated, service_role;
+GRANT ALL ON TABLE public.profiles TO postgres, anon, authenticated, service_role;
+GRANT SELECT ON public.v_owner_admin_inventory_changes TO postgres, anon, authenticated, service_role;
+GRANT SELECT ON public.v_owner_admin_counter_sales_details TO postgres, anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.get_user_role_and_redirect(TEXT) TO anon, authenticated;
+
+-- ============================================================================
 -- SETUP COMPLETE
 -- ============================================================================
 -- To verify everything is working, run:

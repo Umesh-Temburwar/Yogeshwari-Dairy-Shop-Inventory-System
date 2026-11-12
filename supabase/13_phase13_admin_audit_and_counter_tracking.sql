@@ -167,3 +167,4 @@ ON public.admin_audit_logs FOR DELETE USING (true);
 GRANT ALL ON TABLE public.admin_audit_logs TO postgres, anon, authenticated, service_role;
 GRANT SELECT ON public.v_owner_admin_counter_summary TO postgres, anon, authenticated, service_role;
 GRANT SELECT ON public.v_owner_recent_admin_activities TO postgres, anon, authenticated, service_role;
+

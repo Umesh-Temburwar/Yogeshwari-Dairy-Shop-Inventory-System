@@ -38,37 +38,41 @@ import { useAuth } from '../../context/AuthContext';
 export const BillingCounter: React.FC = () => {
   const { products, batches, createSale, setActiveView } = useStore();
   const { t, language } = useLanguage();
-  const { role, adminSlot } = useAuth();
+  const { role, adminSlot, user } = useAuth();
 
   const activeOperator = useMemo(() => {
     const isMr = language === 'mr';
     const isHi = language === 'hi';
+    const email = (user?.email || '').toLowerCase().trim();
 
-    if (role === 'Owner') {
-      return {
-        role: 'Owner' as const,
-        slot: null,
-        name: isMr ? 'दुकान मालक (उमेश)' : isHi ? 'दुकान मालिक (उमेश)' : 'Shop Owner (Umesh)',
-        counter: isMr ? 'मुख्य मालक काऊंटर' : isHi ? 'मुख्य मालिक काउंटर' : 'Owner Master Counter'
-      };
-    }
-
-    if (adminSlot === 2) {
+    if (email === 'nikhilsakhare9896@gmail.com' || adminSlot === 2) {
       return {
         role: 'Admin' as const,
         slot: 2 as const,
-        name: isMr ? 'प्रशासक २ (राहुल - साठा)' : isHi ? 'प्रशासक २ (राहुल - स्टॉक)' : 'Admin 2 (Rahul)',
+        email: 'nikhilsakhare9896@gmail.com',
+        name: isMr ? 'निखिल सखारे (प्रशासक २)' : isHi ? 'निखिल सखारे (प्रशासक २)' : 'Nikhil Sakhare (Admin 2)',
         counter: isMr ? 'काऊंटर २ - दुग्ध व साठा' : isHi ? 'काउंटर २ - दुग्ध & स्टॉक' : 'Counter 2 - Dairy & Stock'
       };
     }
 
+    if (email === 'nilusakhare2003@gmail.com' || adminSlot === 1) {
+      return {
+        role: 'Admin' as const,
+        slot: 1 as const,
+        email: 'nilusakhare2003@gmail.com',
+        name: isMr ? 'निलेश सखारे (प्रशासक १)' : isHi ? 'निलेश सखारे (प्रशासक १)' : 'Nilesh Sakhare (Admin 1)',
+        counter: isMr ? 'काऊंटर १ - मुख्य बिलिंग' : isHi ? 'काउंटर १ - मुख्य बिलिंग' : 'Counter 1 - Main Billing'
+      };
+    }
+
     return {
-      role: 'Admin' as const,
-      slot: 1 as const,
-      name: isMr ? 'प्रशासक १ (निलेश - काऊंटर)' : isHi ? 'प्रशासक १ (निलेश - काउंटर)' : 'Admin 1 (Nilesh)',
-      counter: isMr ? 'काऊंटर १ - मुख्य बिलिंग' : isHi ? 'काउंटर १ - मुख्य बिलिंग' : 'Counter 1 - Main Billing'
+      role: 'Owner' as const,
+      slot: null,
+      email: 'yogeshwaridairy9896@gmail.com',
+      name: isMr ? 'योगेश्वरी डेअरी मालक' : isHi ? 'योगेश्वरी डेयरी मालिक' : 'Yogeshwari Dairy Owner',
+      counter: isMr ? 'मुख्य मालक काऊंटर' : isHi ? 'मुख्य मालिक काउंटर' : 'Owner Master Counter'
     };
-  }, [role, adminSlot, language]);
+  }, [role, adminSlot, user?.email, language]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -263,6 +267,7 @@ export const BillingCounter: React.FC = () => {
       online_amount: onlineAmount,
       udhar_amount: udharAmount,
       created_by_name: activeOperator.name,
+      created_by_email: activeOperator.email,
       created_by_role: activeOperator.role,
       admin_slot: activeOperator.slot,
       counter_name: activeOperator.counter,
@@ -392,14 +397,15 @@ export const BillingCounter: React.FC = () => {
           <span className="font-semibold text-slate-600 dark:text-[#8FA69C]">
             {language === 'mr' ? 'ऑपरेटर:' : language === 'hi' ? 'ऑपरेटर:' : 'Billing Operator:'}
           </span>
-          <span className={`font-bold px-2.5 py-0.5 rounded-lg shadow-2xs ${
+          <span className={`inline-flex items-center gap-1.5 font-bold px-2.5 py-0.5 rounded-lg shadow-2xs ${
             activeOperator.slot === 1 
               ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200 dark:border-blue-900/40' 
               : activeOperator.slot === 2 
               ? 'bg-teal-100 text-teal-800 dark:bg-teal-950/70 dark:text-teal-300 border border-teal-200 dark:border-teal-900/40' 
               : 'bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40'
           }`}>
-            👤 {activeOperator.name}
+            <span>👤 {activeOperator.name}</span>
+            <span className="text-[10px] font-normal opacity-80 hidden sm:inline">({activeOperator.email})</span>
           </span>
         </div>
       </div>

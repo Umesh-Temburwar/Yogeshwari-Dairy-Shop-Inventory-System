@@ -1579,52 +1579,53 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
 
     // 3. If Udhar is involved and customer phone/name matches or new customer
-    let udharCustomerUuid = generateUUID();
-    let isNewCustomer = false;
-    let udharCustomerPayload: any = null;
-
     if (saleData.udhar_amount > 0) {
-      setCustomers(prev => {
-        const existing = prev.find(c => 
-          (saleData.customer_phone && c.phone === saleData.customer_phone) || 
-          c.name.toLowerCase() === saleData.customer_name.toLowerCase()
-        );
-        if (existing) {
-          udharCustomerUuid = existing.id;
-          const updatedCredit = existing.total_credit + saleData.udhar_amount;
-          const updatedBalance = existing.current_balance + saleData.udhar_amount;
-          udharCustomerPayload = {
-            id: existing.id,
-            total_credit: updatedCredit,
-            current_balance: updatedBalance,
-            last_transaction_date: todayFormatted
-          };
-          return prev.map(c => c.id === existing.id ? { ...c, total_credit: updatedCredit, current_balance: updatedBalance, last_transaction_date: todayFormatted, status: 'Active' } : c);
-        } else {
-          isNewCustomer = true;
-          const newCust: UdharCustomer = {
-            id: udharCustomerUuid,
-            name: saleData.customer_name,
-            phone: saleData.customer_phone || 'N/A',
-            total_credit: saleData.udhar_amount,
-            total_paid: 0,
-            current_balance: saleData.udhar_amount,
-            status: 'Active',
-            last_transaction_date: todayFormatted,
-            created_at: new Date().toISOString()
-          };
-          udharCustomerPayload = newCust;
-          return [newCust, ...prev];
-        }
-      });
+      const cleanCustomerName = (saleData.customer_name || 'Counter Customer').trim();
+      const cleanCustomerPhone = saleData.customer_phone?.trim() || '';
+
+      const existingCust = customers.find(c => 
+        (cleanCustomerPhone && c.phone && c.phone !== 'N/A' && c.phone === cleanCustomerPhone) || 
+        c.name.trim().toLowerCase() === cleanCustomerName.toLowerCase()
+      );
+
+      const targetCustId = existingCust ? existingCust.id : generateUUID();
+      const isNewCustomer = !existingCust;
+      let updatedCustRecord: UdharCustomer;
+
+      if (existingCust) {
+        const newCredit = Number((existingCust.total_credit + saleData.udhar_amount).toFixed(2));
+        const newBalance = Number((existingCust.current_balance + saleData.udhar_amount).toFixed(2));
+        updatedCustRecord = {
+          ...existingCust,
+          phone: (existingCust.phone && existingCust.phone !== 'N/A') ? existingCust.phone : (cleanCustomerPhone || 'N/A'),
+          total_credit: newCredit,
+          current_balance: newBalance,
+          last_transaction_date: todayFormatted,
+          status: 'Active'
+        };
+        setCustomers(prev => prev.map(c => c.id === existingCust.id ? updatedCustRecord : c));
+      } else {
+        updatedCustRecord = {
+          id: targetCustId,
+          name: cleanCustomerName,
+          phone: cleanCustomerPhone || 'N/A',
+          total_credit: saleData.udhar_amount,
+          total_paid: 0,
+          current_balance: saleData.udhar_amount,
+          status: 'Active',
+          last_transaction_date: todayFormatted,
+          created_at: new Date().toISOString()
+        };
+        setCustomers(prev => [updatedCustRecord, ...prev]);
+      }
 
       const newTx: UdharTransaction = {
         id: generateUUID(),
-        customer_id: udharCustomerUuid,
+        customer_id: targetCustId,
         type: 'Credit_Given',
         amount: saleData.udhar_amount,
         payment_mode: 'Cash',
-        notes: `Bill #${invoiceNo}`,
+        notes: `पावती #${invoiceNo} (उधार विक्री)`,
         transaction_date: todayFormatted,
         created_at: new Date().toISOString()
       };
@@ -1633,18 +1634,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (supabase) {
         (async () => {
           try {
-            if (isNewCustomer && udharCustomerPayload) {
-              await supabase.from('udhar_customers').insert([udharCustomerPayload]);
-            } else if (udharCustomerPayload) {
+            if (isNewCustomer) {
+              await supabase.from('udhar_customers').insert([{
+                id: updatedCustRecord.id,
+                name: updatedCustRecord.name,
+                phone: updatedCustRecord.phone,
+                total_credit: updatedCustRecord.total_credit,
+                total_paid: updatedCustRecord.total_paid,
+                current_balance: updatedCustRecord.current_balance,
+                status: updatedCustRecord.status,
+                last_transaction_date: updatedCustRecord.last_transaction_date,
+                created_at: updatedCustRecord.created_at
+              }]);
+            } else {
               await supabase.from('udhar_customers').update({
-                total_credit: udharCustomerPayload.total_credit,
-                current_balance: udharCustomerPayload.current_balance,
+                total_credit: updatedCustRecord.total_credit,
+                current_balance: updatedCustRecord.current_balance,
+                phone: updatedCustRecord.phone,
+                status: 'Active',
                 last_transaction_date: todayFormatted
-              }).eq('id', udharCustomerPayload.id);
+              }).eq('id', targetCustId);
             }
             await supabase.from('udhar_transactions').insert([newTx]);
+            broadcastMutation('udhar', 'credit');
           } catch (e) {
-            console.warn('Udhar async sync notice:', e);
+            console.error('Udhar async sync notice:', e);
           }
         })();
       }

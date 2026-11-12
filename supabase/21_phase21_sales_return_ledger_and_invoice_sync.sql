@@ -282,3 +282,4 @@ LIMIT 10;
 SELECT conname, confdeltype 
 FROM pg_constraint 
 WHERE conname IN ('sale_items_sale_id_fkey', 'product_returns_sale_id_fkey');
+

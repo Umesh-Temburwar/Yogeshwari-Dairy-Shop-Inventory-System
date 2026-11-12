@@ -12,7 +12,7 @@ import {
   INITIAL_EXPENSES, INITIAL_BATCHES 
 } from '../lib/mockInitialData';
 import { getShelfLifeDays, getSuggestedExpiryDate, generateBatchNumber, computeExpiryStatus } from '../lib/shelfLifeUtils';
-import { supabase, getSupabaseConfig } from '../lib/supabase';
+import { supabase, getSupabaseConfig, generateUUID } from '../lib/supabase';
 import { startOfDay, startOfWeek, startOfMonth, startOfYear, isWithinInterval, parseISO } from 'date-fns';
 
 export type AppView = 
@@ -438,127 +438,234 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('yd_expenses', JSON.stringify(expenses));
   }, [expenses]);
 
-  // Check Supabase connection on mount
-  useEffect(() => {
-    const checkConn = async () => {
-      const config = getSupabaseConfig();
-      if (config.url && config.key && supabase) {
-        try {
-          const res = await supabase.from('products').select('id').limit(1);
-          if (!res.error) {
-            setIsSupabaseConnected(true);
-          } else {
-            setIsSupabaseConnected(false);
-          }
-        } catch {
-          setIsSupabaseConnected(false);
-        }
-      }
-    };
-    checkConn();
+  // Central Realtime Multi-Device Broadcast helper
+  const broadcastMutation = useCallback((entity: string, action: string) => {
+    if (supabase) {
+      try {
+        const channel = supabase.channel('dairy-shop-live-sync');
+        channel.send({
+          type: 'broadcast',
+          event: 'STORE_MUTATION',
+          payload: { entity, action, timestamp: Date.now() }
+        }).then(() => {}, () => {});
+      } catch {}
+    }
   }, []);
 
-  const syncWithSupabase = async () => {
+  // Centralized Supabase Sync: Single Source of Truth for all devices
+  const syncWithSupabase = useCallback(async () => {
     if (!supabase) return;
     setIsSyncing(true);
     try {
-      // Fetch products
-      const { data: pData } = await supabase.from('products').select('*');
-      if (pData && pData.length > 0) {
+      // 1. Fetch products
+      const { data: pData, error: pErr } = await supabase
+        .from('products')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (!pErr && pData && pData.length > 0) {
         setProducts(pData);
+      } else if (!pErr && (!pData || pData.length === 0)) {
+        // Safe one-time migration: If central DB is empty, migrate any existing local items
+        try {
+          const localSaved = localStorage.getItem('yd_products');
+          if (localSaved) {
+            const localProds: Product[] = JSON.parse(localSaved);
+            if (Array.isArray(localProds) && localProds.length > 0) {
+              const prodsToUpload = localProds.map(lp => {
+                const newId = (lp.id && !lp.id.startsWith('prod-')) ? lp.id : generateUUID();
+                return {
+                  id: newId,
+                  name: lp.name,
+                  hindi_name: lp.hindi_name || null,
+                  marathi_name: lp.marathi_name || null,
+                  category: lp.category,
+                  unit: lp.unit,
+                  purchase_price: lp.purchase_price,
+                  selling_price: lp.selling_price,
+                  stock_quantity: lp.stock_quantity,
+                  min_stock_alert: lp.min_stock_alert || 10,
+                  shelf_life_days: 2,
+                  has_expiry: true,
+                  is_active: lp.is_active ?? true
+                };
+              });
+              await supabase.from('products').insert(prodsToUpload);
+              setProducts(prodsToUpload as any);
+            }
+          }
+        } catch (migErr) {
+          console.warn('Local migration skipped:', migErr);
+        }
       }
-      // Fetch batches
-      const { data: bData } = await supabase.from('batches').select('*').order('expiry_date', { ascending: true });
-      if (bData && bData.length > 0) {
-        setBatches(bData);
+
+      // 2. Fetch batches
+      const { data: bData, error: bErr } = await supabase
+        .from('batches')
+        .select('*, products(name)')
+        .order('expiry_date', { ascending: true });
+
+      if (!bErr && bData) {
+        const enrichedBatches = bData.map((b: any) => ({
+          ...b,
+          product_name: b.product_name || b.products?.name || ''
+        }));
+        setBatches(enrichedBatches);
       }
-      // Fetch sales
-      const { data: sData } = await supabase.from('sales').select('*, items:sale_items(*)').order('created_at', { ascending: false });
-      if (sData && sData.length > 0) {
+
+      // 3. Fetch sales & sale items
+      const { data: sData, error: sErr } = await supabase
+        .from('sales')
+        .select('*, items:sale_items(*)')
+        .order('created_at', { ascending: false });
+      if (!sErr && sData) {
         setSales(sData);
       }
-      // Fetch purchases
-      const { data: purData } = await supabase.from('purchases').select('*').order('created_at', { ascending: false });
-      if (purData && purData.length > 0) {
+
+      // 4. Fetch purchases
+      const { data: purData, error: purErr } = await supabase
+        .from('purchases')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!purErr && purData) {
         setPurchases(purData);
       }
-      // Fetch damages
-      const { data: dData } = await supabase.from('damage_records').select('*').order('created_at', { ascending: false });
-      if (dData && dData.length > 0) {
+
+      // 5. Fetch damages
+      const { data: dData, error: dErr } = await supabase
+        .from('damage_records')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!dErr && dData) {
         setDamages(dData);
       }
-      // Fetch expenses
-      const { data: expData } = await supabase.from('expenses').select('*').order('created_at', { ascending: false });
-      if (expData && expData.length > 0) {
+
+      // 6. Fetch expenses
+      const { data: expData, error: expErr } = await supabase
+        .from('expenses')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!expErr && expData) {
         setExpenses(expData);
       }
-      // Fetch customers
-      const { data: custData } = await supabase.from('udhar_customers').select('*');
-      if (custData && custData.length > 0) {
+
+      // 7. Fetch customers
+      const { data: custData, error: custErr } = await supabase
+        .from('udhar_customers')
+        .select('*')
+        .order('name', { ascending: true });
+      if (!custErr && custData) {
         setCustomers(custData);
       }
-      // Fetch customer returns
-      const { data: retData } = await supabase.from('product_returns').select('*').order('created_at', { ascending: false });
-      if (retData && retData.length > 0) {
+
+      // 8. Fetch customer returns
+      const { data: retData, error: retErr } = await supabase
+        .from('product_returns')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!retErr && retData) {
         setReturns(retData);
       }
-      // Fetch supplier returns
-      const { data: supRetData } = await supabase.from('supplier_returns').select('*').order('created_at', { ascending: false });
-      if (supRetData && supRetData.length > 0) {
+
+      // 9. Fetch supplier returns
+      const { data: supRetData, error: supRetErr } = await supabase
+        .from('supplier_returns')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!supRetErr && supRetData) {
         setSupplierReturns(supRetData);
       }
-      // Fetch udhar transactions
-      const { data: utData } = await supabase.from('udhar_transactions').select('*').order('created_at', { ascending: false });
-      if (utData && utData.length > 0) {
+
+      // 10. Fetch udhar transactions
+      const { data: utData, error: utErr } = await supabase
+        .from('udhar_transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!utErr && utData) {
         setUdharTransactions(utData);
       }
-      // Fetch admin audit logs
-      const { data: auditData } = await supabase.from('admin_audit_logs').select('*').order('created_at', { ascending: false }).limit(200);
-      if (auditData && auditData.length > 0) {
+
+      // 11. Fetch admin audit logs
+      const { data: auditData, error: auditErr } = await supabase
+        .from('admin_audit_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (!auditErr && auditData) {
         setAdminActivities(auditData);
       }
+
       setIsSupabaseConnected(true);
     } catch (err) {
-      console.error('Supabase sync error:', err);
+      console.error('Supabase central sync error:', err);
     } finally {
       setIsSyncing(false);
     }
-  };
+  }, []);
+
+  // Multi-Device Realtime Synchronization via Supabase WebSocket
+  useEffect(() => {
+    if (!supabase) return;
+
+    // 1. Join realtime channel
+    const syncChannel = supabase.channel('dairy-shop-live-sync', {
+      config: {
+        broadcast: { self: false }
+      }
+    });
+
+    // Handle peer broadcasts when Device 1 or Device 2 performs an action
+    syncChannel.on('broadcast', { event: 'STORE_MUTATION' }, (msg) => {
+      console.log('📡 Realtime update received from peer terminal:', msg);
+      syncWithSupabase();
+    });
+
+    // Handle direct Postgres logical replication changes
+    const tablesToWatch = [
+      'products', 'batches', 'sales', 'sale_items', 'purchases', 
+      'damage_records', 'udhar_customers', 'udhar_transactions', 
+      'expenses', 'product_returns', 'supplier_returns', 'admin_audit_logs'
+    ];
+
+    tablesToWatch.forEach((tbl) => {
+      syncChannel.on(
+        'postgres_changes', 
+        { event: '*', schema: 'public', table: tbl }, 
+        () => {
+          syncWithSupabase();
+        }
+      );
+    });
+
+    syncChannel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        setIsSupabaseConnected(true);
+      }
+    });
+
+    // 2. Refetch on tab focus or visibility change (e.g., unlocking phone or switching windows)
+    const handleFocusOrVisible = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        syncWithSupabase();
+      }
+    };
+    window.addEventListener('focus', handleFocusOrVisible);
+    document.addEventListener('visibilitychange', handleFocusOrVisible);
+
+    // Initial database pull on mount
+    syncWithSupabase();
+
+    return () => {
+      window.removeEventListener('focus', handleFocusOrVisible);
+      document.removeEventListener('visibilitychange', handleFocusOrVisible);
+      syncChannel.unsubscribe();
+    };
+  }, [syncWithSupabase]);
 
   const refreshData = async () => {
     setIsSyncing(true);
     try {
-      if (supabase && isSupabaseConnected) {
-        await syncWithSupabase();
-      } else {
-        // Reload fresh state from localStorage
-        try {
-          const p = localStorage.getItem('yd_products');
-          if (p) setProducts(JSON.parse(p));
-          const b = localStorage.getItem('yd_batches');
-          if (b) setBatches(JSON.parse(b));
-          const s = localStorage.getItem('yd_sales');
-          if (s) setSales(JSON.parse(s));
-          const pu = localStorage.getItem('yd_purchases');
-          if (pu) setPurchases(JSON.parse(pu));
-          const d = localStorage.getItem('yd_damages');
-          if (d) setDamages(JSON.parse(d));
-          const c = localStorage.getItem('yd_customers');
-          if (c) setCustomers(JSON.parse(c));
-          const ut = localStorage.getItem('yd_udhar_transactions');
-          if (ut) setUdharTransactions(JSON.parse(ut));
-          const ex = localStorage.getItem('yd_expenses');
-          if (ex) setExpenses(JSON.parse(ex));
-          const ret = localStorage.getItem('yd_returns');
-          if (ret) setReturns(JSON.parse(ret));
-          const sRet = localStorage.getItem('yd_supplier_returns');
-          if (sRet) setSupplierReturns(JSON.parse(sRet));
-          const acts = localStorage.getItem('yd_admin_activities');
-          if (acts) setAdminActivities(JSON.parse(acts));
-        } catch {
-          // ignore parsing error
-        }
-      }
+      await syncWithSupabase();
     } finally {
       setIsSyncing(false);
     }
@@ -781,52 +888,56 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const logAdminActivity = useCallback(async (activityData: Omit<AdminActivity, 'id' | 'created_at'>): Promise<AdminActivity> => {
     const newActivity: AdminActivity = {
       ...activityData,
-      id: 'act-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+      id: generateUUID(),
       created_at: new Date().toISOString()
     };
 
     setAdminActivities(prev => [newActivity, ...prev]);
 
-    if (supabase && isSupabaseConnected) {
+    if (supabase) {
       try {
         await supabase.from('admin_audit_logs').insert([{
+          id: newActivity.id,
           admin_name: newActivity.admin_name,
-          admin_email: newActivity.admin_email,
+          admin_email: newActivity.admin_email || null,
           admin_role: newActivity.admin_role,
-          admin_slot: newActivity.admin_slot,
+          admin_slot: newActivity.admin_slot || null,
           counter_name: newActivity.counter_name,
           action_type: newActivity.action_type,
           title: newActivity.title,
           details: newActivity.details,
           amount: newActivity.amount || 0,
-          reference_id: newActivity.reference_id,
-          reference_table: newActivity.reference_table,
+          reference_id: newActivity.reference_id || null,
+          reference_table: newActivity.reference_table || null,
           created_at: newActivity.created_at
         }]);
+        broadcastMutation('audit', 'log');
       } catch (err) {
         console.warn('Failed to sync admin audit log to Supabase', err);
       }
     }
 
     return newActivity;
-  }, [isSupabaseConnected]);
+  }, [broadcastMutation]);
 
   // Actions
   const addProduct = async (productData: Omit<Product, 'id' | 'created_at'>): Promise<Product> => {
+    const productId = generateUUID();
     const newProduct: Product = {
       ...productData,
-      id: 'prod-' + Date.now(),
+      id: productId,
       created_at: new Date().toISOString()
     };
 
     setProducts(prev => [newProduct, ...prev]);
 
     // If initial stock is provided, auto-create its initial batch with variety shelf life
+    let initialBatch: ProductBatch | null = null;
     if (newProduct.stock_quantity > 0) {
       const todayFormatted = new Date().toISOString().split('T')[0];
       const shelfDays = getShelfLifeDays(newProduct.category, newProduct.name);
-      const initialBatch: ProductBatch = {
-        id: 'bat-' + Date.now(),
+      initialBatch = {
+        id: generateUUID(),
         product_id: newProduct.id,
         product_name: newProduct.name,
         batch_no: generateBatchNumber(newProduct.name, todayFormatted),
@@ -838,12 +949,47 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         notes: 'Initial stock on product creation',
         created_at: new Date().toISOString()
       };
-      setBatches(prev => [initialBatch, ...prev]);
+      setBatches(prev => [initialBatch!, ...prev]);
     }
 
-    if (supabase && isSupabaseConnected) {
+    if (supabase) {
       try {
-        await supabase.from('products').insert([newProduct]);
+        const { error: pErr } = await supabase.from('products').insert([{
+          id: newProduct.id,
+          name: newProduct.name,
+          hindi_name: newProduct.hindi_name || null,
+          marathi_name: newProduct.marathi_name || null,
+          category: newProduct.category,
+          unit: newProduct.unit,
+          purchase_price: newProduct.purchase_price,
+          selling_price: newProduct.selling_price,
+          stock_quantity: newProduct.stock_quantity,
+          min_stock_alert: newProduct.min_stock_alert || 10,
+          shelf_life_days: 2,
+          has_expiry: true,
+          barcode: newProduct.barcode || null,
+          is_active: newProduct.is_active ?? true
+        }]);
+
+        if (pErr) {
+          console.error('Failed to sync new product to Supabase:', pErr);
+        } else if (initialBatch) {
+          const { error: bErr } = await supabase.from('batches').insert([{
+            id: initialBatch.id,
+            product_id: initialBatch.product_id,
+            batch_no: initialBatch.batch_no,
+            mfg_date: initialBatch.mfg_date,
+            expiry_date: initialBatch.expiry_date,
+            qty_received: initialBatch.qty_received,
+            qty_remaining: initialBatch.qty_remaining,
+            purchase_price: initialBatch.purchase_price,
+            selling_price: newProduct.selling_price,
+            notes: initialBatch.notes,
+            status: 'ACTIVE'
+          }]);
+          if (bErr) console.warn('Failed to sync initial batch to Supabase:', bErr);
+        }
+        broadcastMutation('products', 'insert');
       } catch (e) {
         console.error('Failed to sync new product to Supabase', e);
       }
@@ -870,9 +1016,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateProduct = async (id: string, updates: Partial<Product>) => {
     const existingProd = products.find(p => p.id === id);
     setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p));
-    if (supabase && isSupabaseConnected) {
+    if (supabase) {
       try {
-        await supabase.from('products').update(updates).eq('id', id);
+        await supabase.from('products').update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        }).eq('id', id);
+        broadcastMutation('products', 'update');
       } catch (e) {
         console.error('Failed to update product in Supabase', e);
       }
@@ -898,9 +1048,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const deleteProduct = async (id: string) => {
     setProducts(prev => prev.filter(p => p.id !== id));
-    if (supabase && isSupabaseConnected) {
+    setBatches(prev => prev.filter(b => b.product_id !== id));
+    if (supabase) {
       try {
         await supabase.from('products').delete().eq('id', id);
+        broadcastMutation('products', 'delete');
       } catch (e) {
         console.error('Failed to delete product in Supabase', e);
       }
@@ -922,15 +1074,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const prod = products.find(p => p.id === id);
     if (!prod) return;
 
+    const newStockQty = Math.max(0, Number((prod.stock_quantity + qtyDelta).toFixed(2)));
+
+    let createdBatch: ProductBatch | null = null;
+    let updatedBatchId: string | null = null;
+    let updatedBatchQtyRemaining: number | null = null;
+
     if (qtyDelta > 0) {
       if (batchInfo?.batch_id) {
         // Add quantity to an existing previous batch
+        updatedBatchId = batchInfo.batch_id;
         setBatches(prev => prev.map(b => {
           if (b.id === batchInfo.batch_id) {
+            updatedBatchQtyRemaining = Number((b.qty_remaining + qtyDelta).toFixed(2));
             return {
               ...b,
               qty_received: Number((b.qty_received + qtyDelta).toFixed(2)),
-              qty_remaining: Number((b.qty_remaining + qtyDelta).toFixed(2)),
+              qty_remaining: updatedBatchQtyRemaining,
               notes: reason || b.notes
             };
           }
@@ -943,8 +1103,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const batchNo = batchInfo?.batch_no || generateBatchNumber(prod.name, todayFormatted);
         const expiryDate = batchInfo?.expiry_date || getSuggestedExpiryDate(batchInfo?.mfg_date || todayFormatted, shelfDays);
 
-        const newBatch: ProductBatch = {
-          id: 'bat-' + Date.now(),
+        createdBatch = {
+          id: generateUUID(),
           product_id: id,
           product_name: prod.name,
           batch_no: batchNo,
@@ -957,11 +1117,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           notes: reason || 'Stock In adjustment',
           created_at: new Date().toISOString()
         };
-        setBatches(prev => [newBatch, ...prev]);
+        setBatches(prev => [createdBatch!, ...prev]);
       }
     } else if (qtyDelta < 0) {
       // Stock Out: FEFO deduction from earliest expiring batch
       let remainingDeduct = Math.abs(qtyDelta);
+      const batchesToUpdateInDb: Array<{ id: string; qty_remaining: number }> = [];
+
       setBatches(prev => {
         const prodBatches = prev
           .filter(b => b.product_id === id && b.qty_remaining > 0)
@@ -972,35 +1134,72 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (prodBatches.some(pb => pb.id === b.id)) {
             const deduct = Math.min(b.qty_remaining, remainingDeduct);
             remainingDeduct -= deduct;
+            const newRemaining = Number((b.qty_remaining - deduct).toFixed(2));
+            batchesToUpdateInDb.push({ id: b.id, qty_remaining: newRemaining });
             return {
               ...b,
-              qty_remaining: Number((b.qty_remaining - deduct).toFixed(2))
+              qty_remaining: newRemaining
             };
           }
           return b;
         });
       });
+
+      if (supabase && batchesToUpdateInDb.length > 0) {
+        for (const bu of batchesToUpdateInDb) {
+          await supabase.from('batches').update({
+            qty_remaining: bu.qty_remaining,
+            updated_at: new Date().toISOString()
+          }).eq('id', bu.id);
+        }
+      }
     }
 
     setProducts(prev => prev.map(p => {
       if (p.id === id) {
-        const newQty = Math.max(0, Number((p.stock_quantity + qtyDelta).toFixed(2)));
-        return { ...p, stock_quantity: newQty };
+        return { ...p, stock_quantity: newStockQty };
       }
       return p;
     }));
 
-    if (supabase && isSupabaseConnected) {
-      const prodToSync = products.find(p => p.id === id);
-      if (prodToSync) {
-        const newQty = Math.max(0, Number((prodToSync.stock_quantity + qtyDelta).toFixed(2)));
-        await supabase.from('products').update({ stock_quantity: newQty }).eq('id', id);
+    if (supabase) {
+      try {
+        await supabase.from('products').update({ 
+          stock_quantity: newStockQty,
+          updated_at: new Date().toISOString()
+        }).eq('id', id);
+
+        if (createdBatch) {
+          await supabase.from('batches').insert([{
+            id: createdBatch.id,
+            product_id: createdBatch.product_id,
+            batch_no: createdBatch.batch_no,
+            mfg_date: createdBatch.mfg_date,
+            expiry_date: createdBatch.expiry_date,
+            qty_received: createdBatch.qty_received,
+            qty_remaining: createdBatch.qty_remaining,
+            purchase_price: createdBatch.purchase_price,
+            selling_price: prod.selling_price || 0,
+            supplier_name: createdBatch.supplier_name || null,
+            notes: createdBatch.notes,
+            status: 'ACTIVE'
+          }]);
+        } else if (updatedBatchId && updatedBatchQtyRemaining !== null) {
+          await supabase.from('batches').update({
+            qty_remaining: updatedBatchQtyRemaining,
+            updated_at: new Date().toISOString()
+          }).eq('id', updatedBatchId);
+        }
+
+        broadcastMutation('stock', 'adjust');
+      } catch (err) {
+        console.error('Failed to sync adjustStock to Supabase:', err);
       }
     }
 
     const admin = getActiveAdminInfo();
     const oldQty = prod.stock_quantity;
-    const finalQty = Math.max(0, Number((prod.stock_quantity + qtyDelta).toFixed(2)));
+    const finalQty = newStockQty;
     logAdminActivity({
       admin_name: admin.name,
       admin_email: admin.email,
@@ -1034,8 +1233,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     let totalQtyAdded = 0;
     const newBatchesToAppend: ProductBatch[] = [];
+    const existingBatchesToUpdate: Array<{ id: string; qty_received: number; qty_remaining: number }> = [];
 
-    entries.forEach((entry, idx) => {
+    entries.forEach((entry) => {
       const qty = entry.quantity;
       if (qty <= 0) return;
       totalQtyAdded += qty;
@@ -1044,10 +1244,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Increment existing batch
         setBatches(prev => prev.map(b => {
           if (b.id === entry.batch_id) {
+            const newRec = Number((b.qty_received + qty).toFixed(2));
+            const newRem = Number((b.qty_remaining + qty).toFixed(2));
+            existingBatchesToUpdate.push({ id: b.id, qty_received: newRec, qty_remaining: newRem });
             return {
               ...b,
-              qty_received: Number((b.qty_received + qty).toFixed(2)),
-              qty_remaining: Number((b.qty_remaining + qty).toFixed(2))
+              qty_received: newRec,
+              qty_remaining: newRem
             };
           }
           return b;
@@ -1061,7 +1264,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const batchNo = entry.batch_no || generateBatchNumber(prod.name, mfg);
 
         newBatchesToAppend.push({
-          id: `bat-${Date.now()}-${idx}`,
+          id: generateUUID(),
           product_id: prod.id,
           product_name: prod.name,
           batch_no: batchNo,
@@ -1081,21 +1284,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setBatches(prev => [...newBatchesToAppend, ...prev]);
     }
 
+    const finalProductStock = Number((prod.stock_quantity + totalQtyAdded).toFixed(2));
     setProducts(prev => prev.map(p => {
       if (p.id === productId) {
         return {
           ...p,
-          stock_quantity: Number((p.stock_quantity + totalQtyAdded).toFixed(2))
+          stock_quantity: finalProductStock
         };
       }
       return p;
     }));
 
-    if (supabase && isSupabaseConnected) {
+    if (supabase) {
       try {
         if (newBatchesToAppend.length > 0) {
           await supabase.from('batches').insert(newBatchesToAppend.map(b => ({
-            id: b.id.startsWith('bat-') ? undefined : b.id,
+            id: b.id,
             product_id: b.product_id,
             batch_no: b.batch_no,
             mfg_date: b.mfg_date,
@@ -1103,16 +1307,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             qty_received: b.qty_received,
             qty_remaining: b.qty_remaining,
             purchase_price: b.purchase_price,
-            selling_price: b.selling_price || prod.selling_price || 0,
-            supplier_name: b.supplier_name,
+            selling_price: prod.selling_price || 0,
+            supplier_name: b.supplier_name || null,
             notes: b.notes,
             status: 'ACTIVE'
           })));
         }
+        for (const eb of existingBatchesToUpdate) {
+          await supabase.from('batches').update({
+            qty_received: eb.qty_received,
+            qty_remaining: eb.qty_remaining,
+            updated_at: new Date().toISOString()
+          }).eq('id', eb.id);
+        }
         await supabase.from('products').update({
-          stock_quantity: Number((prod.stock_quantity + totalQtyAdded).toFixed(2)),
+          stock_quantity: finalProductStock,
           updated_at: new Date().toISOString()
         }).eq('id', productId);
+
+        broadcastMutation('stock', 'inward');
       } catch (err) {
         console.warn('Supabase batch inward sync error:', err);
       }
@@ -1136,28 +1349,78 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const addBatch = async (batchData: Omit<ProductBatch, 'id' | 'created_at'>): Promise<ProductBatch> => {
     const newBatch: ProductBatch = {
       ...batchData,
-      id: 'bat-' + Date.now(),
+      id: generateUUID(),
       created_at: new Date().toISOString()
     };
     setBatches(prev => [newBatch, ...prev]);
+
+    let finalProdStock = 0;
     setProducts(prev => prev.map(p => {
       if (p.id === batchData.product_id) {
+        finalProdStock = Number((p.stock_quantity + batchData.qty_remaining).toFixed(2));
         return {
           ...p,
-          stock_quantity: Number((p.stock_quantity + batchData.qty_remaining).toFixed(2))
+          stock_quantity: finalProdStock
         };
       }
       return p;
     }));
+
+    if (supabase) {
+      try {
+        await supabase.from('batches').insert([{
+          id: newBatch.id,
+          product_id: newBatch.product_id,
+          batch_no: newBatch.batch_no,
+          mfg_date: newBatch.mfg_date,
+          expiry_date: newBatch.expiry_date,
+          qty_received: newBatch.qty_received,
+          qty_remaining: newBatch.qty_remaining,
+          purchase_price: newBatch.purchase_price,
+          selling_price: 0,
+          supplier_name: newBatch.supplier_name || null,
+          notes: newBatch.notes,
+          status: 'ACTIVE'
+        }]);
+        if (finalProdStock > 0) {
+          await supabase.from('products').update({
+            stock_quantity: finalProdStock,
+            updated_at: new Date().toISOString()
+          }).eq('id', batchData.product_id);
+        }
+        broadcastMutation('batches', 'add');
+      } catch (e) {
+        console.error('Supabase addBatch error:', e);
+      }
+    }
     return newBatch;
   };
 
   const updateBatch = async (id: string, updates: Partial<ProductBatch>) => {
     setBatches(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
+    if (supabase) {
+      try {
+        await supabase.from('batches').update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        }).eq('id', id);
+        broadcastMutation('batches', 'update');
+      } catch (e) {
+        console.error('Supabase updateBatch error:', e);
+      }
+    }
   };
 
   const deleteBatch = async (id: string) => {
     setBatches(prev => prev.filter(b => b.id !== id));
+    if (supabase) {
+      try {
+        await supabase.from('batches').delete().eq('id', id);
+        broadcastMutation('batches', 'delete');
+      } catch (e) {
+        console.error('Supabase deleteBatch error:', e);
+      }
+    }
   };
 
   const createSale = async (saleData: {
@@ -1188,7 +1451,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       total_price: number;
     }>;
   }): Promise<Sale> => {
-    const saleId = 'sale-' + Date.now();
+    const saleId = generateUUID();
     const invoiceNo = `YD-${new Date().getFullYear()}-${String(sales.length + 1).padStart(4, '0')}`;
     const todayFormatted = new Date().toISOString().split('T')[0];
 
@@ -1199,8 +1462,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const adminSlot = saleData.admin_slot !== undefined ? saleData.admin_slot : adminInfo.slot;
     const counterName = saleData.counter_name || adminInfo.counter;
 
-    const saleItems = saleData.items.map((item, idx) => ({
-      id: `si-${Date.now()}-${idx}`,
+    const saleItems = saleData.items.map((item) => ({
+      id: generateUUID(),
       sale_id: saleId,
       ...item
     }));
@@ -1230,13 +1493,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       counter_name: counterName
     };
 
-    // Deduct stock for sold items using FEFO across active batches
+    // 1. Deduct stock for sold items using FEFO across active batches
+    const batchDeductionsToSync: Array<{ id: string; qty_remaining: number }> = [];
+
     setBatches(prev => {
       let updatedBatches = [...prev];
       saleData.items.forEach(soldItem => {
         let remainingNeeded = soldItem.quantity;
-        // 1. Filter out expired batches (Business Rule 4) and zero-stock batches
-        // 2. Sort by earliest expiry date first (FEFO)
         const candidateBatches = updatedBatches
           .filter(b => b.product_id === soldItem.product_id && b.qty_remaining > 0 && computeExpiryStatus(b.expiry_date).status !== 'EXPIRED')
           .sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime());
@@ -1245,12 +1508,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (remainingNeeded <= 0) break;
           const takeQty = Math.min(candidate.qty_remaining, remainingNeeded);
           remainingNeeded -= takeQty;
+          const newQtyRemaining = Number((candidate.qty_remaining - takeQty).toFixed(2));
+
+          batchDeductionsToSync.push({ id: candidate.id, qty_remaining: newQtyRemaining });
 
           updatedBatches = updatedBatches.map(b => {
             if (b.id === candidate.id) {
               return {
                 ...b,
-                qty_remaining: Number((b.qty_remaining - takeQty).toFixed(2))
+                qty_remaining: newQtyRemaining
               };
             }
             return b;
@@ -1260,19 +1526,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return updatedBatches;
     });
 
-    // Deduct stock for sold items on aggregate product
+    // 2. Deduct stock for sold items on aggregate product
+    const productDeductionsToSync: Array<{ id: string; newStock: number }> = [];
+
     setProducts(prev => {
       return prev.map(prod => {
         const soldItem = saleData.items.find(i => i.product_id === prod.id);
         if (soldItem) {
           const updatedStock = Math.max(0, Number((prod.stock_quantity - soldItem.quantity).toFixed(2)));
+          productDeductionsToSync.push({ id: prod.id, newStock: updatedStock });
           return { ...prod, stock_quantity: updatedStock };
         }
         return prod;
       });
     });
 
-    // If Udhar is involved and customer phone/name matches or new customer
+    // 3. If Udhar is involved and customer phone/name matches or new customer
+    let udharCustomerUuid = generateUUID();
+    let isNewCustomer = false;
+    let udharCustomerPayload: any = null;
+
     if (saleData.udhar_amount > 0) {
       setCustomers(prev => {
         const existing = prev.find(c => 
@@ -1280,24 +1553,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           c.name.toLowerCase() === saleData.customer_name.toLowerCase()
         );
         if (existing) {
-          return prev.map(c => {
-            if (c.id === existing.id) {
-              const updatedCredit = c.total_credit + saleData.udhar_amount;
-              const updatedBalance = c.current_balance + saleData.udhar_amount;
-              return {
-                ...c,
-                total_credit: updatedCredit,
-                current_balance: updatedBalance,
-                status: 'Active',
-                last_transaction_date: todayFormatted
-              };
-            }
-            return c;
-          });
+          udharCustomerUuid = existing.id;
+          const updatedCredit = existing.total_credit + saleData.udhar_amount;
+          const updatedBalance = existing.current_balance + saleData.udhar_amount;
+          udharCustomerPayload = {
+            id: existing.id,
+            total_credit: updatedCredit,
+            current_balance: updatedBalance,
+            last_transaction_date: todayFormatted
+          };
+          return prev.map(c => c.id === existing.id ? { ...c, total_credit: updatedCredit, current_balance: updatedBalance, last_transaction_date: todayFormatted, status: 'Active' } : c);
         } else {
-          // create new customer
+          isNewCustomer = true;
           const newCust: UdharCustomer = {
-            id: 'cust-' + Date.now(),
+            id: udharCustomerUuid,
             name: saleData.customer_name,
             phone: saleData.customer_phone || 'N/A',
             total_credit: saleData.udhar_amount,
@@ -1307,14 +1576,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             last_transaction_date: todayFormatted,
             created_at: new Date().toISOString()
           };
+          udharCustomerPayload = newCust;
           return [newCust, ...prev];
         }
       });
 
-      // record udhar transaction
       const newTx: UdharTransaction = {
-        id: 'ut-' + Date.now(),
-        customer_id: saleData.customer_name,
+        id: generateUUID(),
+        customer_id: udharCustomerUuid,
         type: 'Credit_Given',
         amount: saleData.udhar_amount,
         payment_mode: 'Cash',
@@ -1323,19 +1592,41 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         created_at: new Date().toISOString()
       };
       setUdharTransactions(prev => [newTx, ...prev]);
+
+      if (supabase) {
+        (async () => {
+          try {
+            if (isNewCustomer && udharCustomerPayload) {
+              await supabase.from('udhar_customers').insert([udharCustomerPayload]);
+            } else if (udharCustomerPayload) {
+              await supabase.from('udhar_customers').update({
+                total_credit: udharCustomerPayload.total_credit,
+                current_balance: udharCustomerPayload.current_balance,
+                last_transaction_date: todayFormatted
+              }).eq('id', udharCustomerPayload.id);
+            }
+            await supabase.from('udhar_transactions').insert([newTx]);
+          } catch (e) {
+            console.warn('Udhar async sync notice:', e);
+          }
+        })();
+      }
     }
 
     setSales(prev => [newSale, ...prev]);
     setCurrentReceipt(newSale);
 
-    // Sync to Supabase in background if connected
-    if (supabase && isSupabaseConnected) {
+    // 4. Centralized Supabase Persistence (Single Source of Truth)
+    if (supabase) {
       try {
-        const { error } = await supabase.from('sales').insert([{
+        const { error: saleErr } = await supabase.from('sales').insert([{
           id: newSale.id,
           invoice_no: newSale.invoice_no,
           customer_name: newSale.customer_name,
-          customer_phone: newSale.customer_phone,
+          customer_phone: newSale.customer_phone || null,
+          customer_gender: newSale.customer_gender || null,
+          customer_age_group: newSale.customer_age_group || null,
+          customer_age: newSale.customer_age || null,
           total_amount: newSale.total_amount,
           discount: newSale.discount,
           net_amount: newSale.net_amount,
@@ -1350,7 +1641,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           admin_slot: newSale.admin_slot,
           counter_name: newSale.counter_name
         }]);
-        if (!error) {
+
+        if (!saleErr) {
+          // Insert line items
           await supabase.from('sale_items').insert(saleItems.map(si => ({
             id: si.id,
             sale_id: newSale.id,
@@ -1362,6 +1655,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             purchase_cost: si.purchase_cost,
             total_price: si.total_price
           })));
+
+          // Synchronize stock deduction directly in Central Database
+          for (const item of saleData.items) {
+            const currentProd = products.find(p => p.id === item.product_id);
+            if (currentProd) {
+              const updatedStock = Math.max(0, Number((currentProd.stock_quantity - item.quantity).toFixed(2)));
+              await supabase.from('products').update({
+                stock_quantity: updatedStock,
+                updated_at: new Date().toISOString()
+              }).eq('id', item.product_id);
+            }
+          }
+
+          // Synchronize batch deductions directly in Central Database
+          for (const bd of batchDeductionsToSync) {
+            await supabase.from('batches').update({
+              qty_remaining: bd.qty_remaining,
+              updated_at: new Date().toISOString()
+            }).eq('id', bd.id);
+          }
+
+          // Broadcast to Device 2
+          broadcastMutation('sales', 'create');
+        } else {
+          console.error('Error saving sale to Supabase:', saleErr);
         }
       } catch (err) {
         console.error('Error saving sale to Supabase:', err);
@@ -1393,9 +1711,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const batchNo = purchaseData.batch_no || generateBatchNumber(purchaseData.product_name, purchaseData.purchase_date || todayFormatted);
     const expiryDate = purchaseData.expiry_date || getSuggestedExpiryDate(purchaseData.purchase_date || todayFormatted, shelfDays);
 
+    const purchaseId = generateUUID();
+    const batchId = generateUUID();
+
     const newPur: Purchase = {
       ...purchaseData,
-      id: 'pur-' + Date.now(),
+      id: purchaseId,
       batch_no: batchNo,
       expiry_date: expiryDate,
       created_at: new Date().toISOString()
@@ -1403,7 +1724,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Auto-create batch with variety-specific shelf life
     const newBatch: ProductBatch = {
-      id: 'bat-' + Date.now(),
+      id: batchId,
       product_id: purchaseData.product_id,
       product_name: purchaseData.product_name,
       batch_no: batchNo,
@@ -1412,19 +1733,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       qty_received: purchaseData.quantity,
       qty_remaining: purchaseData.quantity,
       purchase_price: purchaseData.purchase_price,
-      supplier_name: purchaseData.supplier_name,
+      supplier_name: purchaseData.supplier_name || 'Standard Dairy Supplier',
       notes: purchaseData.notes,
       created_at: new Date().toISOString()
     };
     setBatches(prev => [newBatch, ...prev]);
 
     // Auto-increase product stock
+    let finalProdStock = 0;
     setProducts(prev => {
       return prev.map(p => {
         if (p.id === purchaseData.product_id) {
+          finalProdStock = Number((p.stock_quantity + purchaseData.quantity).toFixed(2));
           return {
             ...p,
-            stock_quantity: Number((p.stock_quantity + purchaseData.quantity).toFixed(2)),
+            stock_quantity: finalProdStock,
             purchase_price: purchaseData.purchase_price || p.purchase_price
           };
         }
@@ -1434,9 +1757,49 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setPurchases(prev => [newPur, ...prev]);
 
-    if (supabase && isSupabaseConnected) {
+    if (supabase) {
       try {
-        await supabase.from('purchases').insert([newPur]);
+        await supabase.from('purchases').insert([{
+          id: newPur.id,
+          product_id: newPur.product_id,
+          product_name: newPur.product_name,
+          supplier_name: newPur.supplier_name || 'Standard Dairy Supplier',
+          quantity: newPur.quantity,
+          unit: newPur.unit,
+          purchase_price: newPur.purchase_price,
+          total_amount: newPur.total_amount,
+          payment_mode: newPur.payment_mode || 'Cash',
+          purchase_date: newPur.purchase_date,
+          invoice_number: newPur.invoice_number || null,
+          batch_no: newPur.batch_no || null,
+          expiry_date: newPur.expiry_date || null,
+          notes: newPur.notes || null
+        }]);
+
+        await supabase.from('batches').insert([{
+          id: newBatch.id,
+          product_id: newBatch.product_id,
+          batch_no: newBatch.batch_no,
+          mfg_date: newBatch.mfg_date,
+          expiry_date: newBatch.expiry_date,
+          qty_received: newBatch.qty_received,
+          qty_remaining: newBatch.qty_remaining,
+          purchase_price: newBatch.purchase_price,
+          selling_price: targetProd?.selling_price || 0,
+          supplier_name: newBatch.supplier_name,
+          notes: newBatch.notes,
+          status: 'ACTIVE'
+        }]);
+
+        if (finalProdStock > 0) {
+          await supabase.from('products').update({
+            stock_quantity: finalProdStock,
+            purchase_price: purchaseData.purchase_price,
+            updated_at: new Date().toISOString()
+          }).eq('id', purchaseData.product_id);
+        }
+
+        broadcastMutation('purchases', 'create');
       } catch (err) {
         console.error('Failed to sync purchase to Supabase', err);
       }
@@ -1444,11 +1807,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const recordDamage = async (damageData: Omit<DamageRecord, 'id' | 'created_at'>) => {
+    const damageId = generateUUID();
     const newDmg: DamageRecord = {
       ...damageData,
-      id: 'dmg-' + Date.now(),
+      id: damageId,
       created_at: new Date().toISOString()
     };
+
+    const batchesToUpdateInDb: Array<{ id: string; qty_remaining: number }> = [];
 
     // Deduct from batches: if an expired batch exists for this product, deduct from it first!
     setBatches(prev => {
@@ -1469,9 +1835,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (prodBatches.some(pb => pb.id === b.id)) {
           const deduct = Math.min(b.qty_remaining, remainingDeduct);
           remainingDeduct -= deduct;
+          const newQty = Number((b.qty_remaining - deduct).toFixed(2));
+          batchesToUpdateInDb.push({ id: b.id, qty_remaining: newQty });
           return {
             ...b,
-            qty_remaining: Number((b.qty_remaining - deduct).toFixed(2))
+            qty_remaining: newQty
           };
         }
         return b;
@@ -1479,12 +1847,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
 
     // Deduct stock
+    let finalProdStock = 0;
     setProducts(prev => {
       return prev.map(p => {
         if (p.id === damageData.product_id) {
+          finalProdStock = Math.max(0, Number((p.stock_quantity - damageData.quantity).toFixed(2)));
           return {
             ...p,
-            stock_quantity: Math.max(0, Number((p.stock_quantity - damageData.quantity).toFixed(2)))
+            stock_quantity: finalProdStock
           };
         }
         return p;
@@ -1493,9 +1863,33 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setDamages(prev => [newDmg, ...prev]);
 
-    if (supabase && isSupabaseConnected) {
+    if (supabase) {
       try {
-        await supabase.from('damage_records').insert([newDmg]);
+        await supabase.from('damage_records').insert([{
+          id: newDmg.id,
+          product_id: newDmg.product_id,
+          product_name: newDmg.product_name,
+          quantity: newDmg.quantity,
+          unit: newDmg.unit,
+          estimated_loss_amount: newDmg.estimated_loss_amount || 0,
+          reason: newDmg.reason,
+          damage_date: newDmg.damage_date,
+          notes: newDmg.notes || null
+        }]);
+
+        await supabase.from('products').update({
+          stock_quantity: finalProdStock,
+          updated_at: new Date().toISOString()
+        }).eq('id', damageData.product_id);
+
+        for (const bd of batchesToUpdateInDb) {
+          await supabase.from('batches').update({
+            qty_remaining: bd.qty_remaining,
+            updated_at: new Date().toISOString()
+          }).eq('id', bd.id);
+        }
+
+        broadcastMutation('damages', 'record');
       } catch (err) {
         console.error('Failed to sync damage to Supabase', err);
       }
@@ -1525,7 +1919,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }): Promise<UdharCustomer> => {
     const newCust: UdharCustomer = {
       ...custData,
-      id: 'cust-' + Date.now(),
+      id: generateUUID(),
       total_credit: 0,
       total_paid: 0,
       current_balance: 0,
@@ -1536,9 +1930,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setCustomers(prev => [newCust, ...prev]);
 
-    if (supabase && isSupabaseConnected) {
+    if (supabase) {
       try {
         await supabase.from('udhar_customers').insert([newCust]);
+        broadcastMutation('customers', 'add');
       } catch (err) {
         console.error('Failed to sync udhar customer to Supabase', err);
       }
@@ -1554,24 +1949,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     notes?: string
   ) => {
     const todayFormatted = new Date().toISOString().split('T')[0];
+    let updatedCustomer: UdharCustomer | undefined;
 
     setCustomers(prev => prev.map(c => {
       if (c.id === customerId) {
         const newPaid = c.total_paid + amount;
         const newBalance = Math.max(0, c.current_balance - amount);
-        return {
+        updatedCustomer = {
           ...c,
           total_paid: newPaid,
           current_balance: newBalance,
           status: newBalance <= 0 ? 'Cleared' : 'Active',
           last_transaction_date: todayFormatted
         };
+        return updatedCustomer;
       }
       return c;
     }));
 
     const newTx: UdharTransaction = {
-      id: 'ut-' + Date.now(),
+      id: generateUUID(),
       customer_id: customerId,
       type: 'Payment_Received',
       amount,
@@ -1583,9 +1980,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setUdharTransactions(prev => [newTx, ...prev]);
 
-    if (supabase && isSupabaseConnected) {
+    if (supabase) {
       try {
+        if (updatedCustomer) {
+          await supabase.from('udhar_customers').update({
+            total_paid: updatedCustomer.total_paid,
+            current_balance: updatedCustomer.current_balance,
+            status: updatedCustomer.status,
+            last_transaction_date: todayFormatted
+          }).eq('id', customerId);
+        }
         await supabase.from('udhar_transactions').insert([newTx]);
+        broadcastMutation('udhar', 'payment');
       } catch (err) {
         console.error('Failed to sync udhar payment to Supabase', err);
       }
@@ -1611,15 +2017,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const addExpense = async (expenseData: Omit<Expense, 'id' | 'created_at'>) => {
     const newExp: Expense = {
       ...expenseData,
-      id: 'exp-' + Date.now(),
+      id: generateUUID(),
       created_at: new Date().toISOString()
     };
 
     setExpenses(prev => [newExp, ...prev]);
 
-    if (supabase && isSupabaseConnected) {
+    if (supabase) {
       try {
-        await supabase.from('expenses').insert([newExp]);
+        await supabase.from('expenses').insert([{
+          id: newExp.id,
+          title: newExp.title,
+          category: newExp.category,
+          amount: newExp.amount,
+          payment_mode: newExp.payment_mode || 'Cash',
+          expense_date: newExp.expense_date,
+          is_capital_investment: newExp.is_capital_investment || false,
+          notes: newExp.notes || null
+        }]);
+        broadcastMutation('expenses', 'add');
       } catch (err) {
         console.error('Failed to sync expense to Supabase', err);
       }
@@ -1642,9 +2058,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const deleteExpense = async (id: string) => {
     setExpenses(prev => prev.filter(e => e.id !== id));
-    if (supabase && isSupabaseConnected) {
+    if (supabase) {
       try {
         await supabase.from('expenses').delete().eq('id', id);
+        broadcastMutation('expenses', 'delete');
       } catch (err) {
         console.error('Failed to delete expense in Supabase', err);
       }
@@ -1656,9 +2073,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const returnCountToday = returns.filter(r => r.return_date === todayFormatted).length + 1;
     const returnNo = `RET-${todayFormatted.replace(/-/g, '')}-${String(returnCountToday).padStart(3, '0')}`;
     
+    const returnId = generateUUID();
     const newReturn: ProductReturn = {
       ...returnData,
-      id: 'ret-' + Date.now(),
+      id: returnId,
       return_no: returnNo,
       created_at: new Date().toISOString()
     };
@@ -1667,34 +2085,53 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // 1. If condition is 'Resellable', add stock back to products & active batch
     if (newReturn.condition === 'Resellable') {
+      let finalRestockedStock = 0;
       setProducts(prev => prev.map(p => {
         if (p.id === newReturn.product_id) {
+          finalRestockedStock = Math.round((p.stock_quantity + newReturn.quantity) * 100) / 100;
           return {
             ...p,
-            stock_quantity: Math.round((p.stock_quantity + newReturn.quantity) * 100) / 100
+            stock_quantity: finalRestockedStock
           };
         }
         return p;
       }));
 
       // Restock the earliest batch for this product
+      let targetBatchId: string | null = null;
+      let updatedBatchQty = 0;
       setBatches(prev => {
         let restocked = false;
         return prev.map(b => {
           if (!restocked && b.product_id === newReturn.product_id) {
             restocked = true;
+            targetBatchId = b.id;
+            updatedBatchQty = Math.round((b.qty_remaining + newReturn.quantity) * 100) / 100;
             return {
               ...b,
-              qty_remaining: Math.round((b.qty_remaining + newReturn.quantity) * 100) / 100
+              qty_remaining: updatedBatchQty
             };
           }
           return b;
         });
       });
+
+      if (supabase) {
+        try {
+          if (targetBatchId) {
+            await supabase.from('batches').update({ qty_remaining: updatedBatchQty }).eq('id', targetBatchId);
+          }
+          if (finalRestockedStock > 0) {
+            await supabase.from('products').update({ stock_quantity: finalRestockedStock }).eq('id', newReturn.product_id);
+          }
+        } catch (err) {
+          console.error('Failed to sync restocked inventory in Supabase:', err);
+        }
+      }
     } else {
       // 2. If 'Damaged_Waste', automatically record in Damages
       const autoDamage: DamageRecord = {
-        id: 'dmg-' + Date.now(),
+        id: generateUUID(),
         product_id: newReturn.product_id,
         product_name: newReturn.product_name,
         quantity: newReturn.quantity,
@@ -1706,6 +2143,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         created_at: new Date().toISOString()
       };
       setDamages(prev => [autoDamage, ...prev]);
+
+      if (supabase) {
+        try {
+          await supabase.from('damage_records').insert([{
+            id: autoDamage.id,
+            product_id: autoDamage.product_id,
+            product_name: autoDamage.product_name,
+            quantity: autoDamage.quantity,
+            unit: autoDamage.unit,
+            estimated_loss_amount: autoDamage.estimated_loss_amount || 0,
+            reason: autoDamage.reason,
+            damage_date: autoDamage.damage_date,
+            notes: autoDamage.notes
+          }]);
+        } catch (err) {
+          console.error('Failed to insert damage record into Supabase:', err);
+        }
+      }
     }
 
     // 3. If refund mode is 'Udhar_Credit' and customer is identified, credit their account
@@ -1731,23 +2186,54 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       if (matchedCust) {
         const udharTx: UdharTransaction = {
-          id: 'utx-' + Date.now(),
+          id: generateUUID(),
           customer_id: matchedCust.id,
           type: 'Payment_Received',
           amount: newReturn.refund_amount,
-          balance_after: Math.max(0, matchedCust.current_balance - newReturn.refund_amount),
+          payment_mode: 'Cash',
           notes: `माल परतावा जमा (Return ${returnNo}): ${newReturn.product_name}`,
           transaction_date: newReturn.return_date,
           created_at: new Date().toISOString()
         };
         setUdharTransactions(prev => [udharTx, ...prev]);
+
+        if (supabase) {
+          try {
+            await supabase.from('udhar_transactions').insert([udharTx]);
+            await supabase.from('udhar_customers').update({
+              current_balance: Math.max(0, matchedCust.current_balance - newReturn.refund_amount),
+              last_transaction_date: newReturn.return_date
+            }).eq('id', matchedCust.id);
+          } catch (err) {
+            console.error('Failed to update udhar customer return in Supabase:', err);
+          }
+        }
       }
     }
 
-    // Sync to Supabase if available
-    if (supabase && isSupabaseConnected) {
+    // Sync to Supabase
+    if (supabase) {
       try {
-        await supabase.from('product_returns').insert([newReturn]);
+        await supabase.from('product_returns').insert([{
+          id: newReturn.id,
+          return_no: newReturn.return_no,
+          sale_id: newReturn.sale_id || null,
+          invoice_no: newReturn.invoice_no || null,
+          product_id: newReturn.product_id,
+          product_name: newReturn.product_name,
+          quantity: newReturn.quantity,
+          unit: newReturn.unit,
+          unit_price: newReturn.unit_price || 0,
+          refund_amount: newReturn.refund_amount,
+          refund_mode: newReturn.refund_mode,
+          reason: newReturn.reason,
+          condition: newReturn.condition,
+          customer_name: newReturn.customer_name || null,
+          customer_phone: newReturn.customer_phone || null,
+          notes: newReturn.notes || null,
+          return_date: newReturn.return_date
+        }]);
+        broadcastMutation('returns', 'create');
       } catch (err) {
         console.error('Failed to sync return to Supabase', err);
       }
@@ -1773,9 +2259,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const deleteReturn = async (id: string) => {
     setReturns(prev => prev.filter(r => r.id !== id));
-    if (supabase && isSupabaseConnected) {
+    if (supabase) {
       try {
         await supabase.from('product_returns').delete().eq('id', id);
+        broadcastMutation('returns', 'delete');
       } catch (err) {
         console.error('Failed to delete return from Supabase', err);
       }
@@ -1785,9 +2272,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Supplier Returns (खरेदी व सप्लायर परतावा - खराब/एक्सपायर माल परत करणे)
   const createSupplierReturn = async (returnData: Omit<SupplierReturn, 'id' | 'return_no' | 'created_at'>): Promise<SupplierReturn> => {
     const returnNo = `VRET-${new Date().getFullYear()}-${String(supplierReturns.length + 1).padStart(4, '0')}`;
+    const returnId = generateUUID();
     const newReturn: SupplierReturn = {
       ...returnData,
-      id: 'vret-' + Date.now(),
+      id: returnId,
       return_no: returnNo,
       created_at: new Date().toISOString()
     };
@@ -1795,28 +2283,32 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setSupplierReturns(prev => [newReturn, ...prev]);
 
     // 1. Defective / expired goods returned to supplier: deduct from product stock
+    let updatedProductStock = 0;
     setProducts(prev => prev.map(p => {
       if (p.id === returnData.product_id) {
-        // If replacement is already received immediately, stock stays maintained
         if (returnData.refund_status === 'Replacement_Received') {
           return p;
         }
+        updatedProductStock = Math.max(0, Number((p.stock_quantity - returnData.quantity).toFixed(2)));
         return {
           ...p,
-          stock_quantity: Math.max(0, Number((p.stock_quantity - returnData.quantity).toFixed(2)))
+          stock_quantity: updatedProductStock
         };
       }
       return p;
     }));
 
     // 2. Batch stock deduction
+    let replBatch: ProductBatch | null = null;
+    const batchUpdatesToSync: Array<{ id: string; qty_remaining: number }> = [];
+
     setBatches(prev => {
       if (returnData.refund_status === 'Replacement_Received') {
         const todayFormatted = new Date().toISOString().split('T')[0];
         const targetProd = products.find(p => p.id === returnData.product_id);
         const shelfDays = targetProd ? getShelfLifeDays(targetProd.category, targetProd.name) : 3;
-        const replBatch: ProductBatch = {
-          id: 'bat-repl-' + Date.now(),
+        replBatch = {
+          id: generateUUID(),
           product_id: returnData.product_id,
           product_name: returnData.product_name,
           batch_no: `REPL-${Date.now().toString().slice(-4)}`,
@@ -1829,7 +2321,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           notes: `Replacement received for supplier return ${returnNo}`,
           created_at: new Date().toISOString()
         };
-        return [replBatch, ...prev];
+        return [replBatch!, ...prev];
       }
 
       let remainingToDeduct = returnData.quantity;
@@ -1842,19 +2334,71 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (isTarget) {
           const deductAmt = Math.min(b.qty_remaining, remainingToDeduct);
           remainingToDeduct -= deductAmt;
+          const newQty = Number((b.qty_remaining - deductAmt).toFixed(2));
+          batchUpdatesToSync.push({ id: b.id, qty_remaining: newQty });
           return {
             ...b,
-            qty_remaining: Number((b.qty_remaining - deductAmt).toFixed(2))
+            qty_remaining: newQty
           };
         }
         return b;
       });
     });
 
-    // 3. Supabase sync if connected
-    if (supabase && isSupabaseConnected) {
+    // 3. Centralized Supabase sync
+    if (supabase) {
       try {
-        await supabase.from('supplier_returns').insert([newReturn]);
+        await supabase.from('supplier_returns').insert([{
+          id: newReturn.id,
+          return_no: newReturn.return_no,
+          supplier_name: newReturn.supplier_name,
+          product_id: newReturn.product_id,
+          product_name: newReturn.product_name,
+          batch_no: newReturn.batch_no || null,
+          purchase_id: newReturn.purchase_id || null,
+          quantity: newReturn.quantity,
+          unit: newReturn.unit,
+          purchase_price: newReturn.purchase_price,
+          total_refund_amount: newReturn.total_refund_amount,
+          reason: newReturn.reason,
+          refund_status: newReturn.refund_status,
+          refund_mode: newReturn.refund_mode || null,
+          return_date: newReturn.return_date,
+          notes: newReturn.notes || null
+        }]);
+
+        if (returnData.refund_status !== 'Replacement_Received' && updatedProductStock > 0) {
+          await supabase.from('products').update({
+            stock_quantity: updatedProductStock,
+            updated_at: new Date().toISOString()
+          }).eq('id', returnData.product_id);
+        }
+
+        if (replBatch) {
+          await supabase.from('batches').insert([{
+            id: replBatch.id,
+            product_id: replBatch.product_id,
+            batch_no: replBatch.batch_no,
+            mfg_date: replBatch.mfg_date,
+            expiry_date: replBatch.expiry_date,
+            qty_received: replBatch.qty_received,
+            qty_remaining: replBatch.qty_remaining,
+            purchase_price: replBatch.purchase_price,
+            selling_price: 0,
+            supplier_name: replBatch.supplier_name,
+            notes: replBatch.notes,
+            status: 'ACTIVE'
+          }]);
+        }
+
+        for (const bu of batchUpdatesToSync) {
+          await supabase.from('batches').update({
+            qty_remaining: bu.qty_remaining,
+            updated_at: new Date().toISOString()
+          }).eq('id', bu.id);
+        }
+
+        broadcastMutation('supplier_returns', 'create');
       } catch (err) {
         console.error('Failed to sync supplier return to Supabase', err);
       }

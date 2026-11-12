@@ -1,4 +1,5 @@
 import { ProductCategory, ExpiryStatus } from '../types';
+export type { ExpiryStatus };
 import { format, addDays, parseISO, differenceInCalendarDays } from 'date-fns';
 
 /**
@@ -48,7 +49,7 @@ export const getShelfLifeDays = (category: ProductCategory, productName: string 
     return 20;
   }
   // 11. Pure Ghee (180 days / 6 months)
-  if (lower.includes('ghee') || lower.includes('toop') || category === 'Ghee') {
+  if (lower.includes('ghee') || lower.includes('toop')) {
     return 180;
   }
   // 12. Eggs (21 days)

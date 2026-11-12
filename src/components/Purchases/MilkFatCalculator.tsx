@@ -13,7 +13,7 @@ export const MilkFatCalculator: React.FC<MilkFatCalculatorProps> = ({
   onClose, 
   onApplyRate 
 }) => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   const [milkType, setMilkType] = useState<'buffalo' | 'cow'>('buffalo');
   const [liters, setLiters] = useState<string>('50');

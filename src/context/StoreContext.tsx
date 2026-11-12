@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { 
-  Product, Sale, Purchase, DamageRecord, UdharCustomer, 
+  Product, Sale, SaleItem, Purchase, DamageRecord, UdharCustomer, 
   UdharTransaction, Expense, TimeRangeFilter, PaymentMode,
   CustomerGender, CustomerAgeGroup, ProductBatch, ExpiryStatus,
-  ProductReturn, SupplierReturn, SupplierReturnReason, SupplierRefundStatus,
+  ProductReturn, RefundMode, ReturnReason, ReturnCondition,
+  SupplierReturn, SupplierReturnReason, SupplierRefundStatus,
   UserRole, AdminActivity, AdminActionType
 } from '../types';
 import { 
@@ -2610,28 +2611,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // 2. Batch stock deduction
     let replBatch: ProductBatch | null = null;
+    if (returnData.refund_status === 'Replacement_Received') {
+      const todayFormatted = new Date().toISOString().split('T')[0];
+      const targetProd = products.find(p => p.id === returnData.product_id);
+      const shelfDays = targetProd ? getShelfLifeDays(targetProd.category, targetProd.name) : 3;
+      replBatch = {
+        id: generateUUID(),
+        product_id: returnData.product_id,
+        product_name: returnData.product_name,
+        batch_no: `REPL-${Date.now().toString().slice(-4)}`,
+        mfg_date: todayFormatted,
+        expiry_date: getSuggestedExpiryDate(todayFormatted, shelfDays),
+        qty_received: returnData.quantity,
+        qty_remaining: returnData.quantity,
+        purchase_price: returnData.purchase_price,
+        supplier_name: returnData.supplier_name,
+        notes: `Replacement received for supplier return ${returnNo}`,
+        created_at: new Date().toISOString()
+      };
+    }
+
     const batchUpdatesToSync: Array<{ id: string; qty_remaining: number }> = [];
 
     setBatches(prev => {
-      if (returnData.refund_status === 'Replacement_Received') {
-        const todayFormatted = new Date().toISOString().split('T')[0];
-        const targetProd = products.find(p => p.id === returnData.product_id);
-        const shelfDays = targetProd ? getShelfLifeDays(targetProd.category, targetProd.name) : 3;
-        replBatch = {
-          id: generateUUID(),
-          product_id: returnData.product_id,
-          product_name: returnData.product_name,
-          batch_no: `REPL-${Date.now().toString().slice(-4)}`,
-          mfg_date: todayFormatted,
-          expiry_date: getSuggestedExpiryDate(todayFormatted, shelfDays),
-          qty_received: returnData.quantity,
-          qty_remaining: returnData.quantity,
-          purchase_price: returnData.purchase_price,
-          supplier_name: returnData.supplier_name,
-          notes: `Replacement received for supplier return ${returnNo}`,
-          created_at: new Date().toISOString()
-        };
-        return [replBatch!, ...prev];
+      if (replBatch) {
+        return [replBatch, ...prev];
       }
 
       let remainingToDeduct = returnData.quantity;
@@ -2685,18 +2689,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
 
         if (replBatch) {
+          const batchToInsert: ProductBatch = replBatch;
           await supabase.from('batches').insert([{
-            id: replBatch.id,
-            product_id: replBatch.product_id,
-            batch_no: replBatch.batch_no,
-            mfg_date: replBatch.mfg_date,
-            expiry_date: replBatch.expiry_date,
-            qty_received: replBatch.qty_received,
-            qty_remaining: replBatch.qty_remaining,
-            purchase_price: replBatch.purchase_price,
+            id: batchToInsert.id,
+            product_id: batchToInsert.product_id,
+            batch_no: batchToInsert.batch_no,
+            mfg_date: batchToInsert.mfg_date,
+            expiry_date: batchToInsert.expiry_date,
+            qty_received: batchToInsert.qty_received,
+            qty_remaining: batchToInsert.qty_remaining,
+            purchase_price: batchToInsert.purchase_price,
             selling_price: 0,
-            supplier_name: replBatch.supplier_name,
-            notes: replBatch.notes,
+            supplier_name: batchToInsert.supplier_name,
+            notes: batchToInsert.notes,
             status: 'ACTIVE'
           }]);
         }

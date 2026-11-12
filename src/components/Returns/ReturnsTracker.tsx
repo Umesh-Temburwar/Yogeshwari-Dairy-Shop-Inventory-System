@@ -139,8 +139,9 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
           `${r.quantity} ${r.unit}`,
           r.reason,
           r.refund_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
-          r.refund_mode === 'UPI' ? 'UPI' :
-          r.refund_mode === 'Credit_Note' ? (isMr ? 'क्रेडिट नोट' : isHi ? 'क्रेडिट नोट' : 'Credit Note') :
+          (r.refund_mode as string) === 'Online_UPI' || (r.refund_mode as string) === 'UPI' ? 'Online UPI' :
+          (r.refund_mode as string) === 'Udhar_Credit' ? (isMr ? 'उधार जमा' : isHi ? 'उधार क्रेडिट' : 'Udhar Credit') :
+          (r.refund_mode as string) === 'Credit_Note' ? (isMr ? 'क्रेडिट नोट' : isHi ? 'क्रेडिट नोट' : 'Credit Note') :
           r.refund_mode === 'Replacement' ? (isMr ? 'माल बदलून' : isHi ? 'बदलाव' : 'Replacement') : r.refund_mode,
           `₹${r.refund_amount.toLocaleString('en-IN')}`
         ]) : [

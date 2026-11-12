@@ -41,6 +41,7 @@ export interface SaleItem {
   unit_price: number;
   purchase_cost: number;
   total_price: number;
+  subtotal?: number;
 }
 
 export type PaymentMode = 'Cash' | 'Online_UPI' | 'Split' | 'Udhar';
@@ -78,6 +79,7 @@ export type ExpiryStatus =
   | 'EXPIRING_TODAY'
   | 'EXPIRING_TOMORROW'
   | 'EXPIRING_IN_3_DAYS'
+  | 'EXPIRING_IN_7_DAYS'
   | 'FRESH';
 
 export interface ProductBatch {
@@ -90,6 +92,8 @@ export interface ProductBatch {
   qty_received: number;
   qty_remaining: number;
   purchase_price: number;
+  selling_price?: number;
+  product?: Product;
   supplier_name?: string;
   notes?: string;
   created_at: string;
@@ -118,6 +122,7 @@ export type DamageReason =
   | 'Theli Phat Gayi (Leaked)' 
   | 'Expiry Date Over' 
   | 'Handling Spoilage' 
+  | 'Customer Return Defective'
   | 'Other';
 
 export interface DamageRecord {
@@ -174,7 +179,7 @@ export interface Expense {
   title: string;
   category: ExpenseCategory;
   amount: number;
-  payment_mode: 'Cash' | 'Online_UPI' | 'Bank_Transfer';
+  payment_mode: 'Cash' | 'Online_UPI' | 'Bank_Transfer' | 'Udhar';
   expense_date: string; // YYYY-MM-DD
   is_capital_investment: boolean;
   notes?: string;
@@ -268,12 +273,15 @@ export interface SupplierReturn {
 // 2 Admins & Counter Activity Tracking
 export type AdminActionType = 
   | 'SALE_CREATED'
+  | 'SALE_DELETED'
   | 'PRODUCT_ADDED'
   | 'PRODUCT_UPDATED'
   | 'STOCK_INWARD'
   | 'EXPENSE_ADDED'
   | 'DAMAGE_RECORDED'
   | 'CUSTOMER_RETURN'
+  | 'CUSTOMER_FULL_RETURN'
+  | 'CUSTOMER_PARTIAL_RETURN'
   | 'SUPPLIER_RETURN'
   | 'UDHAR_PAYMENT'
   | 'UDHAR_GIVEN';

@@ -311,9 +311,9 @@ export const TRANSLATIONS: Translations = {
     mr: 'पूर्ण'
   },
   nextBill: {
-    en: 'Next Bill',
-    hi: 'अगला बिल',
-    mr: 'पुढील बिल'
+    en: 'New Bill (F2)',
+    hi: 'नया बिल काटें (F2)',
+    mr: 'नवीन बिल फाडा (F2)'
   },
   searchPlaceholder: {
     en: 'Search milk, paneer, curd, ghee...',
@@ -524,11 +524,6 @@ export const TRANSLATIONS: Translations = {
     en: 'Save & Print Invoice',
     hi: 'बिल पूरा करें और प्रिंट निकालें',
     mr: 'बिल पूर्ण करा आणि प्रिंट काढा'
-  },
-  nextBill: {
-    en: 'New Bill (F2)',
-    hi: 'नया बिल काटें (F2)',
-    mr: 'नवीन बिल फाडा (F2)'
   },
   measureInRupees: {
     en: 'Quick Rupees to Quantity',

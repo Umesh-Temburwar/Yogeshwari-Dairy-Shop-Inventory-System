@@ -513,7 +513,7 @@ export const ProductList: React.FC<ProductListProps> = ({
               </p>
               <button
                 type="button"
-                onClick={() => onEditProduct(null)}
+                onClick={onOpenAddProduct}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm"
               >
                 <Plus className="w-4 h-4" />

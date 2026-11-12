@@ -478,7 +478,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                             >
                               <span className="font-bold">{it.product_name}</span>
                               <span className="text-slate-500 dark:text-slate-400 font-medium">({it.quantity} {it.unit})</span>
-                              <span className="font-bold text-emerald-700 dark:text-emerald-400">₹{it.subtotal}</span>
+                              <span className="font-bold text-emerald-700 dark:text-emerald-400">₹{it.subtotal ?? it.total_price}</span>
                             </span>
                           ))
                         ) : (

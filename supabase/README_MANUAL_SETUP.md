@@ -30,6 +30,7 @@
 | **Phase 17** | [`17_phase17_consolidated_master_update.sql`](./17_phase17_consolidated_master_update.sql) | **एकात्मिक मास्टर सिंक व रिअल-टाइम** | संपूर्ण सेंट्रल डेटाबेस अपडेट, Realtime WebSocket रेप्लिकेशन व सिक्युरिटी सुधारणा |
 | **Phase 18** | [`18_phase18_central_sales_and_net_profit_fix.sql`](./18_phase18_central_sales_and_net_profit_fix.sql) | **सेंट्रल विक्री, नफा व काऊंटर सिंक फिक्स** | Collision-free इन्व्हॉइस, Realtime सेल्स ब्रॉडकास्ट, आणि Today Net Profit अचूक गणना |
 | **Phase 19** | [`19_phase19_rename_owner_nikhil_and_admin_nilesh.sql`](./19_phase19_rename_owner_nikhil_and_admin_nilesh.sql) | **युझर नावे मानकीकरण (Nikhil Sakhare & Nilesh Sakhare)** | मालकाचे नाव `Nikhil Sakhare` आणि ॲडमिनचे नाव `Nilesh Sakhare` डेटाबेस, ऑडिट लॉग, सेल्स व व्ह्यूजमध्ये अद्ययावत |
+| **Phase 20** | [`20_phase20_customer_returns_and_refunds_sync.sql`](./20_phase20_customer_returns_and_refunds_sync.sql) | **ग्राहक माल परतावा, संपूर्ण व आंशिक बिल वजावट सिंक** | संपूर्ण परतावा (पावती हटवणे व परतावा वहीत नोंद), आंशिक परतावा (शिल्लक माल पावतीत ठेवून बिल अपडेट), रिअल-टाइम सिंक व अहवाल व्ह्यू |
 
 ---
 

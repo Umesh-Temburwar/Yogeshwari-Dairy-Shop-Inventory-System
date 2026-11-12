@@ -147,7 +147,27 @@ interface StoreContextType {
 
   // Product Returns (Customer)
   createReturn: (returnData: Omit<ProductReturn, 'id' | 'return_no' | 'created_at'>) => Promise<ProductReturn>;
+  processSaleReturn: (payload: {
+    sale_id?: string;
+    invoice_no?: string;
+    customer_name?: string;
+    customer_phone?: string;
+    refund_mode: RefundMode;
+    reason: ReturnReason;
+    condition: ReturnCondition;
+    notes?: string;
+    return_date?: string;
+    items: Array<{
+      product_id: string;
+      product_name: string;
+      quantity: number;
+      unit: string;
+      unit_price: number;
+      refund_amount: number;
+    }>;
+  }) => Promise<ProductReturn[]>;
   deleteReturn: (id: string) => Promise<void>;
+  deleteSale: (saleId: string) => Promise<void>;
 
   // Supplier Returns (खरेदी व सप्लायर परतावा - खराब/एक्सपायर माल परत करणे)
   createSupplierReturn: (returnData: Omit<SupplierReturn, 'id' | 'return_no' | 'created_at'>) => Promise<SupplierReturn>;
@@ -2092,174 +2112,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const createReturn = async (returnData: Omit<ProductReturn, 'id' | 'return_no' | 'created_at'>): Promise<ProductReturn> => {
-    const todayFormatted = new Date().toISOString().split('T')[0];
-    const returnCountToday = returns.filter(r => r.return_date === todayFormatted).length + 1;
-    const returnNo = `RET-${todayFormatted.replace(/-/g, '')}-${String(returnCountToday).padStart(3, '0')}`;
-    
-    const returnId = generateUUID();
-    const newReturn: ProductReturn = {
-      ...returnData,
-      id: returnId,
-      return_no: returnNo,
-      created_at: new Date().toISOString()
-    };
+  // Delete Sale Completely (e.g. Full Return or Admin Cancellation)
+  const deleteSale = async (saleId: string): Promise<void> => {
+    const target = sales.find(s => s.id === saleId);
+    if (!target) return;
 
-    setReturns(prev => [newReturn, ...prev]);
+    setSales(prev => prev.filter(s => s.id !== saleId));
 
-    // 1. If condition is 'Resellable', add stock back to products & active batch
-    if (newReturn.condition === 'Resellable') {
-      let finalRestockedStock = 0;
-      setProducts(prev => prev.map(p => {
-        if (p.id === newReturn.product_id) {
-          finalRestockedStock = Math.round((p.stock_quantity + newReturn.quantity) * 100) / 100;
-          return {
-            ...p,
-            stock_quantity: finalRestockedStock
-          };
-        }
-        return p;
-      }));
-
-      // Restock the earliest batch for this product
-      let targetBatchId: string | null = null;
-      let updatedBatchQty = 0;
-      setBatches(prev => {
-        let restocked = false;
-        return prev.map(b => {
-          if (!restocked && b.product_id === newReturn.product_id) {
-            restocked = true;
-            targetBatchId = b.id;
-            updatedBatchQty = Math.round((b.qty_remaining + newReturn.quantity) * 100) / 100;
-            return {
-              ...b,
-              qty_remaining: updatedBatchQty
-            };
-          }
-          return b;
-        });
-      });
-
-      if (supabase) {
-        try {
-          if (targetBatchId) {
-            await supabase.from('batches').update({ qty_remaining: updatedBatchQty }).eq('id', targetBatchId);
-          }
-          if (finalRestockedStock > 0) {
-            await supabase.from('products').update({ stock_quantity: finalRestockedStock }).eq('id', newReturn.product_id);
-          }
-        } catch (err) {
-          console.error('Failed to sync restocked inventory in Supabase:', err);
-        }
-      }
-    } else {
-      // 2. If 'Damaged_Waste', automatically record in Damages
-      const autoDamage: DamageRecord = {
-        id: generateUUID(),
-        product_id: newReturn.product_id,
-        product_name: newReturn.product_name,
-        quantity: newReturn.quantity,
-        unit: newReturn.unit,
-        estimated_loss_amount: newReturn.refund_amount,
-        reason: 'Other',
-        damage_date: newReturn.return_date,
-        notes: `Customer Return: ${newReturn.reason}${newReturn.notes ? ' - ' + newReturn.notes : ''} (Batch: RETURN-WASTE)`,
-        created_at: new Date().toISOString()
-      };
-      setDamages(prev => [autoDamage, ...prev]);
-
-      if (supabase) {
-        try {
-          await supabase.from('damage_records').insert([{
-            id: autoDamage.id,
-            product_id: autoDamage.product_id,
-            product_name: autoDamage.product_name,
-            quantity: autoDamage.quantity,
-            unit: autoDamage.unit,
-            estimated_loss_amount: autoDamage.estimated_loss_amount || 0,
-            reason: autoDamage.reason,
-            damage_date: autoDamage.damage_date,
-            notes: autoDamage.notes
-          }]);
-        } catch (err) {
-          console.error('Failed to insert damage record into Supabase:', err);
-        }
-      }
-    }
-
-    // 3. If refund mode is 'Udhar_Credit' and customer is identified, credit their account
-    if (newReturn.refund_mode === 'Udhar_Credit' && (newReturn.customer_name || newReturn.customer_phone)) {
-      setCustomers(prev => prev.map(c => {
-        const match = (newReturn.customer_phone && c.phone === newReturn.customer_phone) || 
-                      (newReturn.customer_name && c.name.toLowerCase() === newReturn.customer_name.toLowerCase());
-        if (match) {
-          const newBalance = Math.max(0, Math.round((c.current_balance - newReturn.refund_amount) * 100) / 100);
-          return {
-            ...c,
-            current_balance: newBalance,
-            last_transaction_date: newReturn.return_date
-          };
-        }
-        return c;
-      }));
-
-      const matchedCust = customers.find(c => 
-        (newReturn.customer_phone && c.phone === newReturn.customer_phone) || 
-        (newReturn.customer_name && c.name.toLowerCase() === newReturn.customer_name.toLowerCase())
-      );
-
-      if (matchedCust) {
-        const udharTx: UdharTransaction = {
-          id: generateUUID(),
-          customer_id: matchedCust.id,
-          type: 'Payment_Received',
-          amount: newReturn.refund_amount,
-          payment_mode: 'Cash',
-          notes: `माल परतावा जमा (Return ${returnNo}): ${newReturn.product_name}`,
-          transaction_date: newReturn.return_date,
-          created_at: new Date().toISOString()
-        };
-        setUdharTransactions(prev => [udharTx, ...prev]);
-
-        if (supabase) {
-          try {
-            await supabase.from('udhar_transactions').insert([udharTx]);
-            await supabase.from('udhar_customers').update({
-              current_balance: Math.max(0, matchedCust.current_balance - newReturn.refund_amount),
-              last_transaction_date: newReturn.return_date
-            }).eq('id', matchedCust.id);
-          } catch (err) {
-            console.error('Failed to update udhar customer return in Supabase:', err);
-          }
-        }
-      }
-    }
-
-    // Sync to Supabase
     if (supabase) {
       try {
-        await supabase.from('product_returns').insert([{
-          id: newReturn.id,
-          return_no: newReturn.return_no,
-          sale_id: newReturn.sale_id || null,
-          invoice_no: newReturn.invoice_no || null,
-          product_id: newReturn.product_id,
-          product_name: newReturn.product_name,
-          quantity: newReturn.quantity,
-          unit: newReturn.unit,
-          unit_price: newReturn.unit_price || 0,
-          refund_amount: newReturn.refund_amount,
-          refund_mode: newReturn.refund_mode,
-          reason: newReturn.reason,
-          condition: newReturn.condition,
-          customer_name: newReturn.customer_name || null,
-          customer_phone: newReturn.customer_phone || null,
-          notes: newReturn.notes || null,
-          return_date: newReturn.return_date
-        }]);
-        broadcastMutation('returns', 'create');
+        await supabase.from('sale_items').delete().eq('sale_id', saleId);
+        await supabase.from('sales').delete().eq('id', saleId);
+        broadcastMutation('sales', 'delete');
       } catch (err) {
-        console.error('Failed to sync return to Supabase', err);
+        console.error('Failed to delete sale from Supabase:', err);
       }
     }
 
@@ -2270,15 +2136,435 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_role: admin.role,
       admin_slot: admin.slot,
       counter_name: admin.counter,
-      action_type: 'CUSTOMER_RETURN',
-      title: `ग्राहक माल परतावा: ${newReturn.product_name}`,
-      details: `प्रमाण: ${newReturn.quantity} ${newReturn.unit} | परतावा: ₹${newReturn.refund_amount} (${newReturn.refund_mode}) | कारण: ${newReturn.reason}`,
-      amount: newReturn.refund_amount,
-      reference_id: returnNo,
-      reference_table: 'product_returns'
+      action_type: 'SALE_DELETED',
+      title: `पावती हटवली: #${target.invoice_no}`,
+      details: `ग्राहक: ${target.customer_name} | रक्कम: ₹${target.net_amount}`,
+      amount: target.net_amount,
+      reference_id: target.invoice_no,
+      reference_table: 'sales'
+    });
+  };
+
+  // Comprehensive Customer Return (Full Return with Sale Deletion OR Partial Return with Sale Cut & Item Updates)
+  const processSaleReturn = async (payload: {
+    sale_id?: string;
+    invoice_no?: string;
+    customer_name?: string;
+    customer_phone?: string;
+    refund_mode: RefundMode;
+    reason: ReturnReason;
+    condition: ReturnCondition;
+    notes?: string;
+    return_date?: string;
+    items: Array<{
+      product_id: string;
+      product_name: string;
+      quantity: number;
+      unit: string;
+      unit_price: number;
+      refund_amount: number;
+    }>;
+  }): Promise<ProductReturn[]> => {
+    const validItems = payload.items.filter(i => i.quantity > 0);
+    if (validItems.length === 0) {
+      throw new Error('किमान एका वस्तूचे परतावा प्रमाण निवडा (Please specify return quantity for at least one item)');
+    }
+
+    const todayFormatted = payload.return_date || new Date().toISOString().split('T')[0];
+    const todayCompact = todayFormatted.replace(/-/g, '');
+    const adminInfo = getActiveAdminInfo();
+
+    // 1. Locate Target Sale (by sale_id or invoice_no)
+    const targetSale = sales.find(s => 
+      (payload.sale_id && s.id === payload.sale_id) || 
+      (payload.invoice_no && s.invoice_no.trim().toLowerCase() === payload.invoice_no.trim().toLowerCase())
+    );
+
+    const invoiceNo = targetSale?.invoice_no || payload.invoice_no;
+    const customerName = payload.customer_name || targetSale?.customer_name || 'थेट ग्राहक';
+    const customerPhone = payload.customer_phone || targetSale?.customer_phone || '';
+    const totalRefundAmount = Number(validItems.reduce((acc, i) => acc + i.refund_amount, 0).toFixed(2));
+
+    // 2. Assess if this is Full Return (all items returned) vs Partial Return (some items kept)
+    let isFullReturn = false;
+    let remainingItems: SaleItem[] = [];
+    let updatedTotalAmount = 0;
+    let updatedDiscount = 0;
+    let updatedNetAmount = 0;
+    let updatedCash = 0;
+    let updatedOnline = 0;
+    let updatedUdhar = 0;
+
+    const returnQtyMap = new Map<string, number>();
+    validItems.forEach(i => {
+      returnQtyMap.set(i.product_id, (returnQtyMap.get(i.product_id) || 0) + i.quantity);
     });
 
-    return newReturn;
+    if (targetSale) {
+      let allItemsReturned = true;
+
+      targetSale.items.forEach(saleItem => {
+        const retQty = returnQtyMap.get(saleItem.product_id) || 0;
+        const remQty = Math.max(0, Number((saleItem.quantity - retQty).toFixed(2)));
+        if (remQty > 0) {
+          allItemsReturned = false;
+          remainingItems.push({
+            ...saleItem,
+            quantity: remQty,
+            total_price: Number((remQty * saleItem.unit_price).toFixed(2))
+          });
+        }
+      });
+
+      isFullReturn = allItemsReturned || remainingItems.length === 0;
+
+      if (!isFullReturn) {
+        updatedTotalAmount = Number(remainingItems.reduce((acc, i) => acc + i.total_price, 0).toFixed(2));
+        updatedDiscount = Math.min(targetSale.discount, updatedTotalAmount);
+        updatedNetAmount = Math.max(0, Number((updatedTotalAmount - updatedDiscount).toFixed(2)));
+
+        // Proportionately adjust payment breakdown
+        if (targetSale.payment_mode === 'Cash') {
+          updatedCash = updatedNetAmount;
+        } else if (targetSale.payment_mode === 'Online_UPI') {
+          updatedOnline = updatedNetAmount;
+        } else if (targetSale.payment_mode === 'Udhar') {
+          updatedUdhar = updatedNetAmount;
+        } else {
+          // Split
+          const refundDiff = Math.max(0, targetSale.net_amount - updatedNetAmount);
+          if (targetSale.cash_amount >= refundDiff) {
+            updatedCash = targetSale.cash_amount - refundDiff;
+            updatedOnline = targetSale.online_amount;
+          } else {
+            updatedCash = 0;
+            updatedOnline = Math.max(0, targetSale.online_amount - (refundDiff - targetSale.cash_amount));
+          }
+        }
+      }
+    }
+
+    const returnTypeStr = targetSale ? (isFullReturn ? 'Full' : 'Partial') : 'Direct';
+
+    // 3. Generate ProductReturn records for each returned item
+    const createdReturns: ProductReturn[] = [];
+    let todayReturnCount = returns.filter(r => r.return_date === todayFormatted).length;
+
+    for (const item of validItems) {
+      todayReturnCount += 1;
+      const returnNo = `RET-${todayCompact}-${String(todayReturnCount).padStart(3, '0')}`;
+      const newReturn: ProductReturn = {
+        id: generateUUID(),
+        return_no: returnNo,
+        sale_id: targetSale?.id,
+        invoice_no: invoiceNo,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        quantity: item.quantity,
+        unit: item.unit,
+        unit_price: item.unit_price,
+        refund_amount: item.refund_amount,
+        refund_mode: payload.refund_mode,
+        reason: payload.reason,
+        condition: payload.condition,
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        notes: payload.notes ? `[${returnTypeStr} Return] ${payload.notes}` : `[${returnTypeStr} Return]`,
+        return_date: todayFormatted,
+        created_at: new Date().toISOString()
+      };
+      createdReturns.push(newReturn);
+    }
+
+    setReturns(prev => [...createdReturns, ...prev]);
+
+    // 4. Stock Handling: Restock (Resellable) or Record in Damages (Damaged_Waste)
+    for (const retItem of validItems) {
+      if (payload.condition === 'Resellable') {
+        let finalStock = 0;
+        setProducts(prev => prev.map(p => {
+          if (p.id === retItem.product_id) {
+            finalStock = Number((p.stock_quantity + retItem.quantity).toFixed(2));
+            return { ...p, stock_quantity: finalStock };
+          }
+          return p;
+        }));
+
+        let batchIdToUpdate: string | null = null;
+        let batchNewQty = 0;
+        setBatches(prev => {
+          let updated = false;
+          return prev.map(b => {
+            if (!updated && b.product_id === retItem.product_id) {
+              updated = true;
+              batchIdToUpdate = b.id;
+              batchNewQty = Number((b.qty_remaining + retItem.quantity).toFixed(2));
+              return { ...b, qty_remaining: batchNewQty };
+            }
+            return b;
+          });
+        });
+
+        if (supabase) {
+          (async () => {
+            try {
+              if (finalStock > 0) {
+                await supabase.from('products').update({ stock_quantity: finalStock }).eq('id', retItem.product_id);
+              }
+              if (batchIdToUpdate) {
+                await supabase.from('batches').update({ qty_remaining: batchNewQty }).eq('id', batchIdToUpdate);
+              }
+            } catch (e) {
+              console.warn('Restock sync notice:', e);
+            }
+          })();
+        }
+      } else {
+        // Damaged Waste: record loss in damages table
+        const autoDamage: DamageRecord = {
+          id: generateUUID(),
+          product_id: retItem.product_id,
+          product_name: retItem.product_name,
+          quantity: retItem.quantity,
+          unit: retItem.unit,
+          estimated_loss_amount: retItem.refund_amount,
+          reason: 'Customer Return Defective',
+          damage_date: todayFormatted,
+          notes: `Customer Return #${createdReturns[0]?.return_no} (${invoiceNo || 'No Invoice'}): ${payload.reason}`,
+          created_at: new Date().toISOString()
+        };
+        setDamages(prev => [autoDamage, ...prev]);
+
+        if (supabase) {
+          (async () => {
+            try {
+              await supabase.from('damage_records').insert([autoDamage]);
+            } catch (e) {
+              console.warn('Damage sync notice:', e);
+            }
+          })();
+        }
+      }
+    }
+
+    // 5. Udhar Customer Balance Adjustment (if Udhar sale or Udhar refund mode)
+    const isUdharAdjustment = payload.refund_mode === 'Udhar_Credit' || (targetSale && targetSale.payment_mode === 'Udhar');
+    if (isUdharAdjustment && (customerName || customerPhone)) {
+      setCustomers(prev => prev.map(c => {
+        const matches = (customerPhone && c.phone === customerPhone) || (customerName && c.name.toLowerCase() === customerName.toLowerCase());
+        if (matches) {
+          const updatedBal = Math.max(0, Number((c.current_balance - totalRefundAmount).toFixed(2)));
+          return {
+            ...c,
+            current_balance: updatedBal,
+            last_transaction_date: todayFormatted
+          };
+        }
+        return c;
+      }));
+
+      const matchedCust = customers.find(c => 
+        (customerPhone && c.phone === customerPhone) || 
+        (customerName && c.name.toLowerCase() === customerName.toLowerCase())
+      );
+
+      if (matchedCust) {
+        const udharTx: UdharTransaction = {
+          id: generateUUID(),
+          customer_id: matchedCust.id,
+          type: 'Payment_Received',
+          amount: totalRefundAmount,
+          payment_mode: 'Cash',
+          notes: `माल परतावा उधारी वजावट (${createdReturns[0]?.return_no}): ${invoiceNo ? 'पावती #' + invoiceNo : ''}`,
+          transaction_date: todayFormatted,
+          created_at: new Date().toISOString()
+        };
+        setUdharTransactions(prev => [udharTx, ...prev]);
+
+        if (supabase) {
+          (async () => {
+            try {
+              await supabase.from('udhar_transactions').insert([udharTx]);
+              await supabase.from('udhar_customers').update({
+                current_balance: Math.max(0, matchedCust.current_balance - totalRefundAmount),
+                last_transaction_date: todayFormatted
+              }).eq('id', matchedCust.id);
+            } catch (e) {
+              console.warn('Udhar return sync notice:', e);
+            }
+          })();
+        }
+      }
+    }
+
+    // 6. Handle Original Sale: Full Return (Delete Sale) vs Partial Return (Cut/Update Sale)
+    if (targetSale) {
+      if (isFullReturn) {
+        // FULL RETURN: Delete sale completely from sales state and database!
+        setSales(prev => prev.filter(s => s.id !== targetSale.id));
+
+        if (supabase) {
+          (async () => {
+            try {
+              await supabase.from('sale_items').delete().eq('sale_id', targetSale.id);
+              await supabase.from('sales').delete().eq('id', targetSale.id);
+              broadcastMutation('sales', 'delete');
+            } catch (e) {
+              console.error('Failed to delete full returned sale in Supabase:', e);
+            }
+          })();
+        }
+
+        logAdminActivity({
+          admin_name: adminInfo.name,
+          admin_email: adminInfo.email,
+          admin_role: adminInfo.role,
+          admin_slot: adminInfo.slot,
+          counter_name: adminInfo.counter,
+          action_type: 'CUSTOMER_FULL_RETURN',
+          title: `ग्राहक संपूर्ण पावती परतावा: #${targetSale.invoice_no}`,
+          details: `ग्राहक: ${customerName} | सर्व वस्तू परत | मूळ पावती हटवली | एकूण परतावा: ₹${totalRefundAmount} (${payload.refund_mode})`,
+          amount: totalRefundAmount,
+          reference_id: targetSale.invoice_no,
+          reference_table: 'product_returns'
+        });
+      } else {
+        // PARTIAL RETURN: Update sale with remaining items and reduced totals!
+        const updatedSale: Sale = {
+          ...targetSale,
+          items: remainingItems,
+          total_amount: updatedTotalAmount,
+          discount: updatedDiscount,
+          net_amount: updatedNetAmount,
+          cash_amount: updatedCash,
+          online_amount: updatedOnline,
+          udhar_amount: updatedUdhar,
+        };
+
+        setSales(prev => prev.map(s => s.id === targetSale.id ? updatedSale : s));
+
+        if (supabase) {
+          (async () => {
+            try {
+              await supabase.from('sales').update({
+                total_amount: updatedTotalAmount,
+                discount: updatedDiscount,
+                net_amount: updatedNetAmount,
+                cash_amount: updatedCash,
+                online_amount: updatedOnline,
+                udhar_amount: updatedUdhar,
+              }).eq('id', targetSale.id);
+
+              // Delete items that were completely returned
+              const remainingProductIds = remainingItems.map(i => i.product_id);
+              const itemsToDelete = targetSale.items.filter(i => !remainingProductIds.includes(i.product_id));
+              for (const delItem of itemsToDelete) {
+                await supabase.from('sale_items').delete().eq('sale_id', targetSale.id).eq('product_id', delItem.product_id);
+              }
+
+              // Update quantity and total of remaining items
+              for (const remItem of remainingItems) {
+                await supabase.from('sale_items').update({
+                  quantity: remItem.quantity,
+                  total_price: remItem.total_price
+                }).eq('id', remItem.id);
+              }
+
+              broadcastMutation('sales', 'update');
+            } catch (e) {
+              console.error('Failed to update partially returned sale in Supabase:', e);
+            }
+          })();
+        }
+
+        logAdminActivity({
+          admin_name: adminInfo.name,
+          admin_email: adminInfo.email,
+          admin_role: adminInfo.role,
+          admin_slot: adminInfo.slot,
+          counter_name: adminInfo.counter,
+          action_type: 'CUSTOMER_PARTIAL_RETURN',
+          title: `ग्राहक आंशिक पावती परतावा: #${targetSale.invoice_no}`,
+          details: `ग्राहक: ${customerName} | परतावा: ₹${totalRefundAmount} | सुधारित पावती रक्कम: ₹${updatedNetAmount} (${remainingItems.length} वस्तू शिल्लक)`,
+          amount: totalRefundAmount,
+          reference_id: targetSale.invoice_no,
+          reference_table: 'sales'
+        });
+      }
+    } else {
+      // Standalone return without invoice
+      logAdminActivity({
+        admin_name: adminInfo.name,
+        admin_email: adminInfo.email,
+        admin_role: adminInfo.role,
+        admin_slot: adminInfo.slot,
+        counter_name: adminInfo.counter,
+        action_type: 'CUSTOMER_RETURN',
+        title: `ग्राहक थेट परतावा (${createdReturns.length} वस्तू)`,
+        details: `एकूण परतावा रक्कम: ₹${totalRefundAmount} (${payload.refund_mode}) | कारण: ${payload.reason}`,
+        amount: totalRefundAmount,
+        reference_id: createdReturns[0]?.return_no,
+        reference_table: 'product_returns'
+      });
+    }
+
+    // 7. Sync product_returns to Supabase
+    if (supabase) {
+      try {
+        const insertRows = createdReturns.map(r => ({
+          id: r.id,
+          return_no: r.return_no,
+          sale_id: r.sale_id || null,
+          invoice_no: r.invoice_no || null,
+          product_id: r.product_id,
+          product_name: r.product_name,
+          quantity: r.quantity,
+          unit: r.unit,
+          unit_price: r.unit_price,
+          refund_amount: r.refund_amount,
+          refund_mode: r.refund_mode,
+          reason: r.reason,
+          condition: r.condition,
+          customer_name: r.customer_name || null,
+          customer_phone: r.customer_phone || null,
+          notes: r.notes || null,
+          return_date: r.return_date,
+          admin_name: adminInfo.name,
+          admin_email: adminInfo.email,
+          counter_name: adminInfo.counter
+        }));
+        await supabase.from('product_returns').insert(insertRows);
+        broadcastMutation('returns', 'create');
+      } catch (err) {
+        console.error('Failed to sync returns to Supabase:', err);
+      }
+    }
+
+    return createdReturns;
+  };
+
+  // Legacy wrapper for single-item return
+  const createReturn = async (returnData: Omit<ProductReturn, 'id' | 'return_no' | 'created_at'>): Promise<ProductReturn> => {
+    const res = await processSaleReturn({
+      sale_id: returnData.sale_id,
+      invoice_no: returnData.invoice_no,
+      customer_name: returnData.customer_name,
+      customer_phone: returnData.customer_phone,
+      refund_mode: returnData.refund_mode,
+      reason: returnData.reason,
+      condition: returnData.condition,
+      notes: returnData.notes,
+      return_date: returnData.return_date,
+      items: [{
+        product_id: returnData.product_id,
+        product_name: returnData.product_name,
+        quantity: returnData.quantity,
+        unit: returnData.unit,
+        unit_price: returnData.unit_price,
+        refund_amount: returnData.refund_amount
+      }]
+    });
+    return res[0];
   };
 
   const deleteReturn = async (id: string) => {
@@ -2563,7 +2849,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addExpense,
       deleteExpense,
       createReturn,
+      processSaleReturn,
       deleteReturn,
+      deleteSale,
       createSupplierReturn,
       updateSupplierRefundStatus,
       deleteSupplierReturn,

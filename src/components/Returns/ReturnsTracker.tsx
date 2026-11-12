@@ -538,8 +538,22 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                     {displayedCustomerReturns.map(r => (
                       <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-[#182621] transition">
                         <td className="p-3.5 font-mono font-bold text-purple-600 dark:text-purple-400">
-                          {r.return_no}
-                          {r.invoice_no && <span className="block text-[10px] text-slate-400 font-sans">{r.invoice_no}</span>}
+                          <span className="block">{r.return_no}</span>
+                          {r.invoice_no && (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 font-sans mt-0.5">
+                              🧾 #{r.invoice_no}
+                            </span>
+                          )}
+                          {r.notes?.includes('[Full Return]') && (
+                            <span className="block text-[9px] font-black text-amber-700 dark:text-amber-400 bg-amber-100/70 dark:bg-amber-950/40 px-1.5 py-0.5 rounded mt-0.5 w-fit">
+                              👑 {language === 'mr' ? 'संपूर्ण पावती' : 'पूर्ण बिल'}
+                            </span>
+                          )}
+                          {r.notes?.includes('[Partial Return]') && (
+                            <span className="block text-[9px] font-black text-blue-700 dark:text-blue-400 bg-blue-100/70 dark:bg-blue-950/40 px-1.5 py-0.5 rounded mt-0.5 w-fit">
+                              ✂️ {language === 'mr' ? 'आंशिक पावती' : 'आंशिक बिल'}
+                            </span>
+                          )}
                         </td>
                         <td className="p-3.5 text-slate-600 dark:text-slate-300 whitespace-nowrap">{r.return_date}</td>
                         <td className="p-3.5 font-bold text-slate-800 dark:text-white">

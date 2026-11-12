@@ -45,7 +45,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
   onClose,
   onInvoiceConfirmed
 }) => {
-  const { products, addStockEntries, createPurchase } = useStore();
+  const { products, addStockEntries, createPurchase, addPurchase } = useStore();
   const { language } = useLanguage();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);

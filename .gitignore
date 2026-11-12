@@ -18,6 +18,10 @@ dist/
 !.env.example
 # Editor directories and files
 .vscode/*
+.kiro
+.grok
+.cursor
+.agents
 !.vscode/extensions.json
 .idea
 .DS_Store

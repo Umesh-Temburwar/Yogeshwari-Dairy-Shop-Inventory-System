@@ -39,11 +39,6 @@ export const OwnerAdminCounterWidget: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSaleDetail, setSelectedSaleDetail] = useState<Sale | null>(null);
 
-  // If logged in user is not the Owner, don't show this master control widget
-  if (role !== 'Owner') {
-    return null;
-  }
-
   // Calculate Metrics for Admin 1 (Nilesh Sakhare - nilusakhare2003@gmail.com - Counter 1)
   const admin1Sales = useMemo(() => {
     return sales.filter(s => 
@@ -180,6 +175,11 @@ export const OwnerAdminCounterWidget: React.FC = () => {
         return { label: isMr ? 'नोंद' : isHi ? 'प्रविष्टि' : 'Log', bg: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700' };
     }
   };
+
+  // If logged in user is not the Owner, don't show this master control widget
+  if (role !== 'Owner') {
+    return null;
+  }
 
   return (
     <div className="bg-white dark:bg-[#131F1B] rounded-2xl border-2 border-amber-400/80 dark:border-amber-500/40 shadow-md p-5 sm:p-6 space-y-6 transition-all">

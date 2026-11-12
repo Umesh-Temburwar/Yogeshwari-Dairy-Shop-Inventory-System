@@ -184,8 +184,10 @@ export type UserRole = 'Owner' | 'Admin';
 export interface UserProfile {
   id: string;
   role: UserRole;
+  adminSlot?: 1 | 2 | null;
   displayName: string;
   email: string;
+  defaultRedirectView?: 'dashboard' | 'pos' | 'inventory';
 }
 
 // Product / Sales Return Management

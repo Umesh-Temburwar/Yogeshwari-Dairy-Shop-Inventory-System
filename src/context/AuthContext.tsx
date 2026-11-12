@@ -14,7 +14,9 @@ interface AuthContextType {
   isLoading: boolean;
   isGuest: boolean; // Always false; guest mode is removed for security
   role: UserRole;   // Strictly 'Owner' or 'Admin'
-  setRole: (role: UserRole) => void;
+  adminSlot: 1 | 2 | null; // 1 for Admin 1 (Counter), 2 for Admin 2 (Inventory), null for Owner
+  setRole: (role: UserRole, slot?: 1 | 2 | null) => void;
+  defaultRedirectView: 'dashboard' | 'pos' | 'inventory';
   isSecurityUnlocked: boolean;
   unlockSecurity: (passcode: string) => Promise<{
     success: boolean;
@@ -23,7 +25,7 @@ interface AuthContextType {
     error?: string;
   }>;
   lockSecurity: () => void;
-  signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithEmail: (email: string, password: string) => Promise<{ error: any; redirectView?: 'dashboard' | 'pos' | 'inventory' }>;
   signUpWithEmail: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   continueAsGuest: () => void;
@@ -33,6 +35,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const ROLE_STORAGE_KEY = 'ydo_active_role';
+const ADMIN_SLOT_STORAGE_KEY = 'ydo_admin_slot';
 const LOCAL_USER_STORAGE_KEY = 'ydo_auth_local_user';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -50,15 +53,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   });
 
+  // Admin slot: 1 for Admin 1 (Billing/Counter), 2 for Admin 2 (Inventory/Stock), null for Owner
+  const [adminSlot, setAdminSlotState] = useState<1 | 2 | null>(() => {
+    try {
+      const saved = localStorage.getItem(ADMIN_SLOT_STORAGE_KEY);
+      return saved === '1' ? 1 : saved === '2' ? 2 : null;
+    } catch {
+      return null;
+    }
+  });
+
   // Second-factor Master Security Passcode verification state
   const [isSecurityUnlocked, setIsSecurityUnlocked] = useState<boolean>(false);
 
-  const setRole = (newRole: UserRole) => {
+  const setRole = (newRole: UserRole, slot: 1 | 2 | null = null) => {
     setRoleState(newRole);
+    setAdminSlotState(newRole === 'Admin' ? (slot || 1) : null);
     try {
       localStorage.setItem(ROLE_STORAGE_KEY, newRole);
+      if (newRole === 'Admin') {
+        localStorage.setItem(ADMIN_SLOT_STORAGE_KEY, String(slot || 1));
+      } else {
+        localStorage.removeItem(ADMIN_SLOT_STORAGE_KEY);
+      }
     } catch {}
   };
+
+  const defaultRedirectView: 'dashboard' | 'pos' | 'inventory' = 
+    role === 'Owner' ? 'dashboard' : (adminSlot === 2 ? 'inventory' : 'pos');
 
   const lockSecurity = () => {
     revokeSessionSecurity();
@@ -71,6 +93,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsSecurityUnlocked(true);
     }
     return res;
+  };
+
+  // Helper to determine role, admin slot, and redirect destination based on email/profile
+  const detectRoleAndSlot = (email: string) => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (cleanEmail === 'admin2@yogeshwaridairy.com' || cleanEmail.includes('admin2')) {
+      return {
+        role: 'Admin' as UserRole,
+        slot: 2 as 1 | 2,
+        redirectView: 'inventory' as const,
+        fullName: 'Store Administrator 2 (Inventory & Stock)'
+      };
+    } else if (cleanEmail === 'admin1@yogeshwaridairy.com' || cleanEmail === 'admin@yogeshwaridairy.com' || cleanEmail.includes('admin')) {
+      return {
+        role: 'Admin' as UserRole,
+        slot: 1 as 1 | 2,
+        redirectView: 'pos' as const,
+        fullName: 'Store Administrator 1 (Counter Billing)'
+      };
+    } else {
+      return {
+        role: 'Owner' as UserRole,
+        slot: null,
+        redirectView: 'dashboard' as const,
+        fullName: 'Yogeshwari Dairy Owner'
+      };
+    }
   };
 
   useEffect(() => {
@@ -174,14 +223,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, [user, isSecurityUnlocked]);
 
-  // Sign In with Email
+  // Sign In with Email with Role-Based Redirection
   const signInWithEmail = async (email: string, password: string) => {
     setIsLoading(true);
     const cleanEmail = email.trim().toLowerCase();
 
-    // Recognized Owner & Admin credentials
-    const isOwnerTarget = cleanEmail.includes('owner') || cleanEmail.includes('umesh') || cleanEmail.includes('yogeshwari');
-    const isAdminTarget = cleanEmail.includes('admin');
+    // Recognized 1 Owner & 2 Admin credentials
+    const { role: assignedRole, slot: assignedSlot, redirectView: initialRedirect, fullName: defaultFullName } = detectRoleAndSlot(cleanEmail);
+    let targetRedirect: 'dashboard' | 'pos' | 'inventory' = initialRedirect;
 
     // 1. Try Supabase Auth
     if (supabase) {
@@ -194,30 +243,67 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (!error && data.user) {
           setUser(data.user);
           setSession(data.session);
-          const assignedRole: UserRole = isOwnerTarget ? 'Owner' : (isAdminTarget ? 'Admin' : 'Owner');
-          setRole(assignedRole);
+
+          // Fetch profile configuration if profiles table exists in Supabase
+          try {
+            const { data: prof } = await supabase
+              .from('profiles')
+              .select('role, admin_slot, default_redirect_view')
+              .eq('email', cleanEmail)
+              .maybeSingle();
+
+            if (prof?.role) {
+              setRole(prof.role as UserRole, prof.admin_slot as 1 | 2 | null);
+            } else {
+              setRole(assignedRole, assignedSlot);
+            }
+
+            if (prof?.default_redirect_view) {
+              targetRedirect = prof.default_redirect_view as 'dashboard' | 'pos' | 'inventory';
+            }
+          } catch {
+            setRole(assignedRole, assignedSlot);
+          }
+
+          // Execute Role-Based Redirection
+          try {
+            localStorage.setItem('yd_active_view', targetRedirect);
+            if (typeof window !== 'undefined') {
+              window.location.hash = `#/${targetRedirect}`;
+            }
+          } catch {}
+
           // Always lock security initially after sign in so Master Passcode popup is triggered
           lockSecurity();
-          return { error: null };
-        } else if (error && !isOwnerTarget && !isAdminTarget) {
+          return { error: null, redirectView: targetRedirect };
+        } else if (error && !cleanEmail.includes('owner') && !cleanEmail.includes('admin') && !cleanEmail.includes('umesh')) {
           return { error };
         }
       } catch (err: any) {
-        if (!isOwnerTarget && !isAdminTarget) {
+        if (!cleanEmail.includes('owner') && !cleanEmail.includes('admin') && !cleanEmail.includes('umesh')) {
           return { error: err };
         }
       }
     }
 
-    // 2. Offline Emergency / Local Shop Counter Auth for Owner or Admin
-    if (isOwnerTarget || isAdminTarget || cleanEmail === 'owner@yogeshwaridairy.com' || cleanEmail === 'admin@yogeshwaridairy.com') {
-      const assignedRole: UserRole = isOwnerTarget ? 'Owner' : 'Admin';
+    // 2. Offline Emergency / Local Shop Counter Auth for 1 Owner and 2 Admins
+    if (
+      cleanEmail === 'owner@yogeshwaridairy.com' || 
+      cleanEmail === 'admin1@yogeshwaridairy.com' ||
+      cleanEmail === 'admin2@yogeshwaridairy.com' ||
+      cleanEmail === 'admin@yogeshwaridairy.com' ||
+      cleanEmail.includes('owner') ||
+      cleanEmail.includes('admin') ||
+      cleanEmail.includes('umesh')
+    ) {
       const localUser: any = {
-        id: `ydo-${assignedRole.toLowerCase()}-counter`,
+        id: `ydo-${assignedRole.toLowerCase()}${assignedSlot ? assignedSlot : ''}-counter`,
         email: cleanEmail,
         user_metadata: {
-          full_name: assignedRole === 'Owner' ? 'Yogeshwari Dairy Owner' : 'Store Administrator',
+          full_name: defaultFullName,
           role: assignedRole,
+          admin_slot: assignedSlot,
+          default_redirect_view: targetRedirect,
         },
         aud: 'authenticated',
         created_at: new Date().toISOString(),
@@ -225,17 +311,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       setUser(localUser);
       setSession(null);
-      setRole(assignedRole);
+      setRole(assignedRole, assignedSlot);
       try {
         localStorage.setItem(LOCAL_USER_STORAGE_KEY, JSON.stringify(localUser));
+        localStorage.setItem('yd_active_view', targetRedirect);
+        if (typeof window !== 'undefined') {
+          window.location.hash = `#/${targetRedirect}`;
+        }
       } catch {}
 
       // Always require Master Passcode immediately after login!
       lockSecurity();
-      return { error: null };
+      return { error: null, redirectView: targetRedirect };
     }
 
-    return { error: { message: 'Invalid credentials. Only verified Owner and Admin profiles are permitted.' } };
+    return { error: { message: 'Invalid credentials. Only verified 1 Owner and 2 Admin profiles are permitted.' } };
   };
 
   // Sign Up with Email (restricted to Owner / Admin roles)
@@ -280,6 +370,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       lockSecurity();
       try {
         localStorage.removeItem(LOCAL_USER_STORAGE_KEY);
+        localStorage.removeItem(ADMIN_SLOT_STORAGE_KEY);
         localStorage.removeItem('yd_auth_guest_mode');
       } catch {}
     } catch (err) {
@@ -315,7 +406,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isLoading,
         isGuest: false, // Permanently false
         role,
+        adminSlot,
         setRole,
+        defaultRedirectView,
         isSecurityUnlocked,
         unlockSecurity,
         lockSecurity,

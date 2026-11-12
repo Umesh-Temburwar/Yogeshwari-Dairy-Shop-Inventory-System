@@ -120,7 +120,7 @@ export const LoginPage: React.FC = () => {
     setFormSuccess(null);
     setIsSubmitting(true);
     try {
-      const { error } = await signInWithEmail(data.email.trim(), data.password);
+      const { error, redirectView } = await signInWithEmail(data.email.trim(), data.password);
       if (error) {
         const msg = error.message || '';
         if (msg.includes('Invalid login credentials') || msg.includes('invalid_grant')) {
@@ -132,6 +132,20 @@ export const LoginPage: React.FC = () => {
         } else {
           setFormError(t('authInvalidCredentials'));
         }
+      } else if (redirectView) {
+        const viewLabel = redirectView === 'dashboard' 
+          ? (language === 'mr' ? 'डॅशबोर्ड' : language === 'hi' ? 'डैशबोर्ड' : 'Dashboard')
+          : redirectView === 'pos'
+          ? (language === 'mr' ? 'काऊंटर बिलिंग' : language === 'hi' ? 'काउंटर बिलिंग' : 'Billing Counter')
+          : (language === 'mr' ? 'इन्व्हेंटरी व साठा' : language === 'hi' ? 'इन्वेंट्री व स्टॉक' : 'Inventory');
+
+        setFormSuccess(
+          language === 'mr'
+            ? `प्रवेश प्रमाणित! ${viewLabel} कडे जात आहे...`
+            : language === 'hi'
+            ? `प्रवेश प्रमाणित! ${viewLabel} की ओर जा रहे हैं...`
+            : `Authorized! Redirecting to ${viewLabel}...`
+        );
       }
     } catch {
       setFormError(t('authNetworkError'));
@@ -642,19 +656,20 @@ export const LoginPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Profile Security Notice & Quick Role Presets (Owner & Admin Only) */}
+                {/* Profile Security Notice & Quick Role Presets (Strictly 1 Owner & 2 Admins) */}
                 <div className="pt-3 border-t border-slate-100 dark:border-[#24352F] space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-[#8FA69C]">
                     <span className="flex items-center gap-1">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>{language === 'mr' ? 'प्रमाणित प्रवेश:' : language === 'hi' ? 'सत्यापित प्रवेश:' : 'Authorized Access:'}</span>
+                      <span>{language === 'mr' ? 'प्रमाणित प्रवेश (३ खाती):' : language === 'hi' ? 'सत्यापित प्रवेश (३ खाते):' : 'Authorized Profiles (3 Users):'}</span>
                     </span>
-                    <span className="text-emerald-700 dark:text-emerald-400 font-extrabold">
-                      👑 Owner & 🛡️ Admin Only
+                    <span className="text-emerald-700 dark:text-emerald-400 font-extrabold text-[10px]">
+                      👑 1 Owner & 🛡️ 2 Admins
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {/* 1. Shop Owner */}
                     <button
                       type="button"
                       onClick={() => {
@@ -664,25 +679,54 @@ export const LoginPage: React.FC = () => {
                           rememberMe: true,
                         });
                       }}
-                      className="p-2 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/70 dark:bg-amber-950/20 text-left hover:bg-amber-100/70 dark:hover:bg-amber-900/30 transition text-xs font-bold text-amber-900 dark:text-amber-300"
+                      className="p-2.5 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/70 dark:bg-amber-950/20 text-left hover:bg-amber-100/70 dark:hover:bg-amber-900/30 transition shadow-2xs group"
                     >
-                      <span className="block text-[10px] text-amber-700 dark:text-amber-400">👑 {language === 'mr' ? 'दुकान मालक' : language === 'hi' ? 'दुकान मालिक' : 'Shop Owner'}</span>
-                      <span className="truncate block font-mono text-[11px]">owner@...</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black text-amber-700 dark:text-amber-400">👑 {language === 'mr' ? 'दुकान मालक' : language === 'hi' ? 'दुकान मालिक' : 'Owner'}</span>
+                        <span className="text-[9px] font-bold text-amber-600/80 dark:text-amber-400/80 bg-amber-100 dark:bg-amber-900/40 px-1 py-0.5 rounded">डॅशबोर्ड</span>
+                      </div>
+                      <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5">owner@...</span>
+                      <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">➡️ {language === 'mr' ? 'कार्यकारी डॅशबोर्ड' : language === 'hi' ? 'डैशबोर्ड' : 'Dashboard'}</span>
                     </button>
 
+                    {/* 2. Admin 1 - POS / Billing Counter */}
                     <button
                       type="button"
                       onClick={() => {
                         resetSignIn({
-                          email: 'admin@yogeshwaridairy.com',
+                          email: 'admin1@yogeshwaridairy.com',
                           password: 'password123',
                           rememberMe: true,
                         });
                       }}
-                      className="p-2 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/70 dark:bg-emerald-950/20 text-left hover:bg-emerald-100/70 dark:hover:bg-emerald-900/30 transition text-xs font-bold text-emerald-900 dark:text-emerald-300"
+                      className="p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/70 dark:bg-emerald-950/20 text-left hover:bg-emerald-100/70 dark:hover:bg-emerald-900/30 transition shadow-2xs group"
                     >
-                      <span className="block text-[10px] text-emerald-700 dark:text-emerald-400">🛡️ {language === 'mr' ? 'प्रशासक' : language === 'hi' ? 'प्रशासक' : 'Admin'}</span>
-                      <span className="truncate block font-mono text-[11px]">admin@...</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400">🛡️ {language === 'mr' ? 'प्रशासक १' : language === 'hi' ? 'प्रशासक १' : 'Admin 1'}</span>
+                        <span className="text-[9px] font-bold text-emerald-600/80 dark:text-emerald-400/80 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded">POS बिलिंग</span>
+                      </div>
+                      <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5">admin1@...</span>
+                      <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">➡️ {language === 'mr' ? 'काऊंटर बिलिंग' : language === 'hi' ? 'काउंटर बिलिंग' : 'POS Counter'}</span>
+                    </button>
+
+                    {/* 3. Admin 2 - Inventory & Stock Management */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetSignIn({
+                          email: 'admin2@yogeshwaridairy.com',
+                          password: 'password123',
+                          rememberMe: true,
+                        });
+                      }}
+                      className="p-2.5 rounded-xl border border-purple-200 dark:border-purple-800/40 bg-purple-50/70 dark:bg-purple-950/20 text-left hover:bg-purple-100/70 dark:hover:bg-purple-900/30 transition shadow-2xs group"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black text-purple-700 dark:text-purple-400">🛡️ {language === 'mr' ? 'प्रशासक २' : language === 'hi' ? 'प्रशासक २' : 'Admin 2'}</span>
+                        <span className="text-[9px] font-bold text-purple-600/80 dark:text-purple-400/80 bg-purple-100 dark:bg-purple-900/40 px-1 py-0.5 rounded">इन्व्हेंटरी</span>
+                      </div>
+                      <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5">admin2@...</span>
+                      <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">➡️ {language === 'mr' ? 'साठा व बॅचेस' : language === 'hi' ? 'स्टॉक व बैच' : 'Inventory'}</span>
                     </button>
                   </div>
                 </div>

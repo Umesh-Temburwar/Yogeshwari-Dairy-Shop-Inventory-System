@@ -1,14 +1,14 @@
 # 🥛 योगेश्वरी डेअरी ERP — Supabase मॅन्युअल सेटअप मार्गदर्शक (Phase-Wise Guide)
 
-या डिरेक्टरीमध्ये Supabase PostgreSQL डेटाबेस मॅन्युअली आणि टप्प्याटप्प्याने (Phase-wise) सेटअप करण्यासाठी **११ स्वतंत्र SQL फाइल्स** तयार केल्या आहेत. 
+या डिरेक्टरीमध्ये Supabase PostgreSQL डेटाबेस मॅन्युअली आणि टप्प्याटप्प्याने (Phase-wise) सेटअप करण्यासाठी **१२ स्वतंत्र SQL फाइल्स** तयार केल्या आहेत. 
 
 प्रत्येक फाइल प्रोजेक्टच्या विशिष्ट फिचर्सनुसार डिझाइन केलेली आहे, जेणेकरून तुम्ही कोणत्याही गोंधळाशिवाय व त्रुटीविना (Error-free) तुमचा संपूर्ण डेटाबेस तयार करू शकाल.
 
 ---
 
-## 📋 सर्व ११ टप्पे व फाइल्सची यादी (Phase-Wise Execution Order)
+## 📋 सर्व १२ टप्पे व फाइल्सची यादी (Phase-Wise Execution Order)
 
-तुम्हाला तुमच्या **Supabase Dashboard -> SQL Editor** मध्ये जाऊन खालील क्रमाने (Phase 1 ते Phase 11) या फाइल्स रन करायच्या आहेत:
+तुम्हाला तुमच्या **Supabase Dashboard -> SQL Editor** मध्ये जाऊन खालील क्रमाने (Phase 1 ते Phase 12) या फाइल्स रन करायच्या आहेत:
 
 | क्र. | फाइलचे नाव (File Name) | टप्प्याचे नाव (Phase Title) | काय तयार होते? (Tables / Functions / Views) |
 |:---:|:---|:---|:---|
@@ -23,6 +23,7 @@
 | **Phase 9** | [`09_phase9_stored_procedures_and_functions.sql`](./09_phase9_stored_procedures_and_functions.sql) | **डेटाबेस फंक्शन्स व स्टोअर प्रोसिजर्स** | `fn_inward_stock_batch`, `fn_fefo_deduct_and_allocate`, `fn_record_damage_loss`, `fn_remove_expired_batches`, `fn_record_udhar_transaction` |
 | **Phase 10** | [`10_phase10_indexes_and_performance.sql`](./10_phase10_indexes_and_performance.sql) | **हाय-स्पीड इंडेक्सिंग (Zero Lag)** | Foreign Keys, तारखा व सर्चसाठी सुपरफास्ट B-Tree व Partial Indexes |
 | **Phase 11** | [`11_phase11_rls_security_and_views.sql`](./11_phase11_rls_security_and_views.sql) | **सुरक्षा (RLS) व अहवाल व्ह्यूज** | RLS सुरक्षितता, API परवानग्या, आणि `v_inventory_valuation`, `v_product_stock`, `v_expiring_batches_alert`, `v_batch_expiry_status`, `v_daily_sales_summary`, `v_supplier_returns_pending` |
+| **Phase 12** | [`12_phase12_owner_admin_roles_and_auth.sql`](./12_phase12_owner_admin_roles_and_auth.sql) | **१ मालक व २ ॲडमिन (Roles & Redirection)** | १ मालक व नेमके २ ॲडमिन निर्बंध (`profiles` टेबल), लॉगिननंतर भूमिकेनुसार स्वयंचलित रिडायरेक्ट (`dashboard`, `pos`, `inventory`) |
 
 ---
 
@@ -40,7 +41,7 @@
 1. संगणकावरील `supabase/01_phase1_extensions_and_catalog.sql` फाइल उघडा आणि संपूर्ण कोड कॉपी करा.
 2. Supabase SQL Editor मध्ये पेस्ट करा आणि **`Run`** (किंवा `Ctrl + Enter`) दाबा.
 3. खाली **`Success. No rows returned`** असा हिरवा मेसेज येईल.
-4. याचप्रमाणे **Phase 2 ते Phase 11** पर्यंतच्या सर्व फाइल्स एकामागोमाग एक रन करा.
+4. याचप्रमाणे **Phase 2 ते Phase 12** पर्यंतच्या सर्व फाइल्स एकामागोमाग एक रन करा.
 
 > 💡 **टीप**: जर तुम्हाला एकाच वेळी सर्व सेटअप करायचे असेल, तर तुम्ही [`complete_setup.sql`](./complete_setup.sql) ही मास्टर फाइल थेट १-क्लिकमध्ये देखील रन करू शकता.
 

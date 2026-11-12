@@ -52,16 +52,32 @@ END $$;
 -- SECTION 2: CORE TABLES DEFINITION
 -- ============================================================================
 
--- 1. PROFILES (Linked with Supabase Auth users)
+-- 1. PROFILES (1 Owner & 2 Admins with Default Redirects)
 CREATE TABLE IF NOT EXISTS public.profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    full_name VARCHAR(150),
-    phone VARCHAR(20),
-    role VARCHAR(50) NOT NULL DEFAULT 'owner' CHECK (role IN ('admin', 'owner')),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    auth_user_id UUID UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    full_name VARCHAR(150) NOT NULL,
+    phone VARCHAR(25),
+    role VARCHAR(50) NOT NULL CHECK (role IN ('Owner', 'Admin')),
+    admin_slot INTEGER CHECK (admin_slot IN (1, 2) OR admin_slot IS NULL),
+    default_redirect_view VARCHAR(50) NOT NULL DEFAULT 'dashboard' CHECK (default_redirect_view IN (
+        'dashboard', 'pos', 'inventory', 'sales', 'reorder', 'expiry', 
+        'purchases', 'damages', 'udhar', 'expenses', 'analytics', 'returns'
+    )),
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Strict Constraints: 1 Owner & Exactly 2 Admins
+CREATE UNIQUE INDEX IF NOT EXISTS idx_single_active_owner 
+ON public.profiles (role) 
+WHERE role = 'Owner' AND is_active = TRUE;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_slots 
+ON public.profiles (role, admin_slot) 
+WHERE role = 'Admin' AND is_active = TRUE;
 
 -- 2. CATEGORIES
 CREATE TABLE IF NOT EXISTS public.categories (
@@ -880,6 +896,23 @@ INSERT INTO public.units (id, name, short_code) VALUES
 ('22222222-2222-2222-2222-222222222205', 'Piece', 'Piece'),
 ('22222222-2222-2222-2222-222222222206', 'Gram', 'Gram')
 ON CONFLICT (name) DO NOTHING;
+
+-- 3. Authorized Profiles (1 Owner & 2 Admins)
+INSERT INTO public.profiles (id, email, full_name, role, admin_slot, default_redirect_view, is_active)
+VALUES
+    ('10000000-0000-0000-0000-000000000001'::UUID, 'owner@yogeshwaridairy.com', 'Yogeshwari Dairy Owner', 'Owner', NULL, 'dashboard', TRUE),
+    ('10000000-0000-0000-0000-000000000002'::UUID, 'admin1@yogeshwaridairy.com', 'Store Administrator 1 (Counter Billing)', 'Admin', 1, 'pos', TRUE),
+    ('10000000-0000-0000-0000-000000000003'::UUID, 'admin2@yogeshwaridairy.com', 'Store Administrator 2 (Inventory & Stock)', 'Admin', 2, 'inventory', TRUE)
+ON CONFLICT (email) DO UPDATE SET
+    full_name = EXCLUDED.full_name,
+    role = EXCLUDED.role,
+    admin_slot = EXCLUDED.admin_slot,
+    default_redirect_view = EXCLUDED.default_redirect_view,
+    is_active = TRUE;
+
+INSERT INTO public.profiles (email, full_name, role, admin_slot, default_redirect_view, is_active)
+VALUES ('admin@yogeshwaridairy.com', 'Store Administrator 1 (Counter Billing)', 'Admin', 1, 'pos', TRUE)
+ON CONFLICT (email) DO NOTHING;
 
 -- ============================================================================
 -- DUMMY DATA REMOVED: Clean Production Setup Ready

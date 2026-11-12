@@ -48,7 +48,28 @@ ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
 ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
--- 2.1 CRITICAL: Drop any legacy CHECK constraints on profiles (specifically profiles_role_check)
+-- 2.1 CRITICAL: Drop foreign key constraint on 'id' referencing auth.users (profiles_id_fkey)
+-- This allows inserting ERP profiles without requiring pre-existing auth.users rows,
+-- while auth_user_id cleanly links profiles to auth.users when Supabase Auth is used.
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_id_fkey;
+
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (
+        SELECT c.conname
+        FROM pg_constraint c
+        JOIN pg_attribute a ON a.attnum = ANY(c.conkey) AND a.attrelid = c.conrelid
+        WHERE c.conrelid = 'public.profiles'::regclass
+          AND c.contype = 'f'
+          AND a.attname = 'id'
+    ) LOOP
+        EXECUTE 'ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS ' || quote_ident(r.conname);
+    END LOOP;
+END $$;
+
+-- 2.2 CRITICAL: Drop any legacy CHECK constraints on profiles (specifically profiles_role_check)
 -- that reject 'Owner' or restrict legacy roles:
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_admin_slot_check;
@@ -164,7 +185,49 @@ CREATE UNIQUE INDEX idx_admin_slots
 ON public.profiles (role, admin_slot) 
 WHERE role = 'Admin' AND is_active = TRUE;
 
--- 5. Pre-seed the 1 Owner and 1 Authorized Admin (Nilesh Sakhare)
+-- 5. Pre-seed auth.users (if available) & public.profiles for Owner & Admin
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+DO $$
+DECLARE
+    owner_uid UUID := '10000000-0000-0000-0000-000000000001'::UUID;
+    admin1_uid UUID := '10000000-0000-0000-0000-000000000002'::UUID;
+    encrypted_pw TEXT := crypt('password123', gen_salt('bf', 10));
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'auth' AND table_name = 'users') THEN
+        -- Seed Owner if not exists
+        IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'yogeshwaridairy9896@gmail.com' OR id = owner_uid) THEN
+            INSERT INTO auth.users (
+                id, instance_id, email, encrypted_password, email_confirmed_at,
+                raw_app_meta_data, raw_user_meta_data, aud, role, created_at, updated_at
+            ) VALUES (
+                owner_uid, '00000000-0000-0000-0000-000000000000'::UUID,
+                'yogeshwaridairy9896@gmail.com', encrypted_pw, NOW(),
+                '{"provider":"email","providers":["email"]}'::jsonb,
+                '{"full_name":"योगेश्वरी डेअरी मालक (Shop Owner)","role":"Owner","default_redirect_view":"dashboard"}'::jsonb,
+                'authenticated', 'authenticated', NOW(), NOW()
+            );
+        END IF;
+
+        -- Seed Admin 1 if not exists
+        IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = 'nilusakhare2003@gmail.com' OR id = admin1_uid) THEN
+            INSERT INTO auth.users (
+                id, instance_id, email, encrypted_password, email_confirmed_at,
+                raw_app_meta_data, raw_user_meta_data, aud, role, created_at, updated_at
+            ) VALUES (
+                admin1_uid, '00000000-0000-0000-0000-000000000000'::UUID,
+                'nilusakhare2003@gmail.com', encrypted_pw, NOW(),
+                '{"provider":"email","providers":["email"]}'::jsonb,
+                '{"full_name":"निलेश सखारे (प्रशासक - काऊंटर १ बिलिंग)","role":"Admin","admin_slot":1,"default_redirect_view":"pos"}'::jsonb,
+                'authenticated', 'authenticated', NOW(), NOW()
+            );
+        END IF;
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL;
+END $$;
+
 -- A. 👑 Shop Owner: yogeshwaridairy9896@gmail.com -> dashboard
 INSERT INTO public.profiles (
     id, email, full_name, role, admin_slot, default_redirect_view, is_active

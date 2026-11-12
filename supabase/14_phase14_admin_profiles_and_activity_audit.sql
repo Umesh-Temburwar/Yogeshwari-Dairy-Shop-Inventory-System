@@ -53,6 +53,25 @@ ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
 CREATE INDEX IF NOT EXISTS idx_sales_created_by_email ON public.sales (created_by_email);
 CREATE INDEX IF NOT EXISTS idx_admin_audit_email ON public.admin_audit_logs (admin_email);
 
+-- Drop foreign key constraint on 'id' referencing auth.users if present
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_id_fkey;
+
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (
+        SELECT c.conname
+        FROM pg_constraint c
+        JOIN pg_attribute a ON a.attnum = ANY(c.conkey) AND a.attrelid = c.conrelid
+        WHERE c.conrelid = 'public.profiles'::regclass
+          AND c.contype = 'f'
+          AND a.attname = 'id'
+    ) LOOP
+        EXECUTE 'ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS ' || quote_ident(r.conname);
+    END LOOP;
+END $$;
+
 -- Drop any legacy check constraints on profiles that restrict 'role'
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_admin_slot_check;

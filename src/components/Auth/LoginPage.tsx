@@ -179,10 +179,10 @@ export const LoginPage: React.FC = () => {
         } else if (msg.includes('Database error') || msg.includes('finding user')) {
           setFormError(
             language === 'mr'
-              ? 'सर्व्हर डेटाबेस त्रुटी आली. कृपया "Sign In" टॅबमधून थेट लॉगिन करा (पासवर्ड: password123).'
+              ? 'सर्व्हर डेटाबेस त्रुटी आली. कृपया "Sign In" टॅबमधून थेट लॉगिन करा (Owner: 04092026@Nikhil / Admin: 04092026@Nilesh).'
               : language === 'hi'
-              ? 'सर्वर डेटाबेस त्रुटि आई। कृपया "Sign In" टैब से सीधा लॉगिन करें (पासवर्ड: password123)।'
-              : 'Server database error. Please sign in directly from the "Sign In" tab (password: password123).'
+              ? 'सर्वर डेटाबेस त्रुटि आई। कृपया "Sign In" टैब से सीधा लॉगिन करें (Owner: 04092026@Nikhil / Admin: 04092026@Nilesh)।'
+              : 'Server database error. Please sign in directly from the "Sign In" tab (Owner: 04092026@Nikhil / Admin: 04092026@Nilesh).'
           );
         } else {
           setFormError(msg || t('authInvalidCredentials'));
@@ -761,7 +761,7 @@ export const LoginPage: React.FC = () => {
                       onClick={() => {
                         resetSignIn({
                           email: 'yogeshwaridairy9896@gmail.com',
-                          password: 'password123',
+                          password: '04092026@Nikhil',
                           rememberMe: true,
                         });
                       }}
@@ -781,7 +781,7 @@ export const LoginPage: React.FC = () => {
                       onClick={() => {
                         resetSignIn({
                           email: 'nilusakhare2003@gmail.com',
-                          password: 'password123',
+                          password: '04092026@Nilesh',
                           rememberMe: true,
                         });
                       }}
@@ -819,8 +819,8 @@ export const LoginPage: React.FC = () => {
                         resetSignUp({
                           fullName: 'Nikhil Sakhare',
                           email: 'yogeshwaridairy9896@gmail.com',
-                          password: 'password123',
-                          confirmPassword: 'password123'
+                          password: '04092026@Nikhil',
+                          confirmPassword: '04092026@Nikhil'
                         });
                       }}
                       className="p-2 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/70 dark:bg-amber-950/20 text-left hover:bg-amber-100 dark:hover:bg-amber-900/40 transition shadow-2xs"
@@ -834,8 +834,8 @@ export const LoginPage: React.FC = () => {
                         resetSignUp({
                           fullName: 'Nilesh Sakhare',
                           email: 'nilusakhare2003@gmail.com',
-                          password: 'password123',
-                          confirmPassword: 'password123'
+                          password: '04092026@Nilesh',
+                          confirmPassword: '04092026@Nilesh'
                         });
                       }}
                       className="p-2 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/70 dark:bg-emerald-950/20 text-left hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition shadow-2xs"

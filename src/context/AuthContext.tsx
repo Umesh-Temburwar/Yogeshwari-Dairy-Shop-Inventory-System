@@ -79,6 +79,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isSecurityUnlocked, setIsSecurityUnlocked] = useState<boolean>(false);
 
   const setRole = (newRole: UserRole, slot: 1 | 2 | null = null) => {
+    // Access control enforcement: Admin account can ONLY use Admin profile
+    const cleanEmail = user?.email?.trim().toLowerCase() || '';
+    const isAdminAccount = cleanEmail === 'nilusakhare2003@gmail.com' || cleanEmail.includes('nilu');
+
+    if (isAdminAccount && newRole === 'Owner') {
+      console.warn('Security policy: Admin account is strictly restricted to Admin profile only.');
+      return;
+    }
+
     setRoleState(newRole);
     setAdminSlotState(newRole === 'Admin' ? (slot || 1) : null);
     try {
@@ -170,9 +179,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setSession(session);
             setUser(session.user);
             // Default detected role
-            const metaRole = session.user.user_metadata?.role;
-            if (metaRole === 'Admin' || metaRole === 'Owner') {
-              setRole(metaRole);
+            const userEmail = session.user.email?.trim().toLowerCase() || '';
+            const isAdmin = userEmail === 'nilusakhare2003@gmail.com' || userEmail.includes('nilu');
+            if (isAdmin) {
+              setRole('Admin', 1);
+            } else {
+              const metaRole = session.user.user_metadata?.role;
+              if (metaRole === 'Admin' || metaRole === 'Owner') {
+                setRole(metaRole);
+              }
             }
           }
           setIsLoading(false);
@@ -184,9 +199,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setSession(session);
             if (session?.user) {
               setUser(session.user);
-              const metaRole = session.user.user_metadata?.role;
-              if (metaRole === 'Admin' || metaRole === 'Owner') {
-                setRole(metaRole);
+              const userEmail = session.user.email?.trim().toLowerCase() || '';
+              const isAdmin = userEmail === 'nilusakhare2003@gmail.com' || userEmail.includes('nilu');
+              if (isAdmin) {
+                setRole('Admin', 1);
+              } else {
+                const metaRole = session.user.user_metadata?.role;
+                if (metaRole === 'Admin' || metaRole === 'Owner') {
+                  setRole(metaRole);
+                }
               }
             } else {
               // Only reset user if there wasn't a local offline authenticated user

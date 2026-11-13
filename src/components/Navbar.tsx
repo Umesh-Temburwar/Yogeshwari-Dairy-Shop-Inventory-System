@@ -264,50 +264,77 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
 
                   {/* Switch Role: 1 Owner & 1 Admin */}
-                  <div className="p-1 space-y-1">
-                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] px-2 py-0.5">
-                      {language === 'mr' ? 'प्रोफाइल निवडा (२ खाती)' : language === 'hi' ? 'प्रोफ़ाइल चुनें (२ खाते)' : 'Select Profile (2 Users)'}
-                    </p>
-                    {/* Owner */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRole('Owner', null);
-                        setShowProfileMenu(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
-                        role === 'Owner'
-                          ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40'
-                          : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span>👑</span>
-                        <span>{language === 'mr' ? 'दुकान मालक (निखिल सखारे)' : language === 'hi' ? 'दुकान मालिक (निखिल सखारे)' : 'Shop Owner (Nikhil Sakhare)'}</span>
-                      </div>
-                      {role === 'Owner' && <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />}
-                    </button>
+                  {(() => {
+                    const isOwnerUser = 
+                      !user?.email ||
+                      user?.email.toLowerCase() === 'yogeshwaridairy9896@gmail.com' ||
+                      user?.email.toLowerCase().includes('yogeshwari') ||
+                      user?.email.toLowerCase().includes('owner') ||
+                      (user?.user_metadata?.role === 'Owner' && !user?.email.toLowerCase().includes('nilu'));
 
-                    {/* Admin - Nilesh Sakhare (POS Billing) */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRole('Admin', 1);
-                        setShowProfileMenu(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
-                        role === 'Admin'
-                          ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40'
-                          : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span>🛡️</span>
-                        <span>{language === 'mr' ? 'प्रशासक (निलेश सखारे)' : language === 'hi' ? 'प्रशासक (निलेश सखारे)' : 'Admin (Nilesh Sakhare)'}</span>
+                    return (
+                      <div className="p-1 space-y-1">
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] px-2 py-0.5">
+                          {isOwnerUser 
+                            ? (language === 'mr' ? 'प्रोफाइल निवडा (मालक दोन्ही वापरू शकतात)' : language === 'hi' ? 'प्रोफ़ाइल चुनें (मालिक दोनों चुन सकते हैं)' : 'Select Profile (Owner Access to Both)')
+                            : (language === 'mr' ? 'सक्रिय प्रोफाइल (केवळ ॲडमिन)' : language === 'hi' ? 'सक्रिय प्रोफ़ाइल (केवल एडमिन)' : 'Active Profile (Admin Only)')}
+                        </p>
+
+                        {/* Owner Option */}
+                        {isOwnerUser ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRole('Owner', null);
+                              setShowProfileMenu(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                              role === 'Owner'
+                                ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40'
+                                : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span>👑</span>
+                              <span>{language === 'mr' ? 'दुकान मालक (निखिल सखारे)' : language === 'hi' ? 'दुकान मालिक (निखिल सखारे)' : 'Shop Owner (Nikhil Sakhare)'}</span>
+                            </div>
+                            {role === 'Owner' && <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />}
+                          </button>
+                        ) : (
+                          <div
+                            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold opacity-45 bg-slate-50 dark:bg-[#1A2A25]/50 border border-dashed border-slate-200 dark:border-slate-800 cursor-not-allowed text-slate-400 dark:text-slate-500"
+                            title={language === 'mr' ? 'केवळ मालकासाठी राखीव' : language === 'hi' ? 'केवल मालिक हेतु आरक्षित' : 'Restricted to Owner'}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span>👑</span>
+                              <span className="line-through">{language === 'mr' ? 'दुकान मालक (निखिल सखारे)' : language === 'hi' ? 'दुकान मालिक (निखिल सखारे)' : 'Shop Owner (Nikhil Sakhare)'}</span>
+                            </div>
+                            <span className="text-[9px] bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded font-bold text-slate-500">🔒 {language === 'mr' ? 'केवळ मालक' : language === 'hi' ? 'केवल मालिक' : 'Owner Only'}</span>
+                          </div>
+                        )}
+
+                        {/* Admin - Nilesh Sakhare (POS Billing) */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRole('Admin', 1);
+                            setShowProfileMenu(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                            role === 'Admin'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40'
+                              : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span>🛡️</span>
+                            <span>{language === 'mr' ? 'प्रशासक (निलेश सखारे)' : language === 'hi' ? 'प्रशासक (निलेश सखारे)' : 'Admin (Nilesh Sakhare)'}</span>
+                          </div>
+                          {role === 'Admin' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                        </button>
                       </div>
-                      {role === 'Admin' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
-                    </button>
-                  </div>
+                    );
+                  })()}
 
                   <div className="border-t border-slate-100 dark:border-[#24352F] pt-1 space-y-1">
                     <button

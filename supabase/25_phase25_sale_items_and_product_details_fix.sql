@@ -113,3 +113,4 @@ GRANT SELECT ON public.v_owner_admin_counter_sales_details TO postgres, anon, au
 --   5. Adds sale_items to Realtime replication
 --   6. Recreates v_owner_admin_counter_sales_details with products_summary
 -- ─────────────────────────────────────────────────────────────
+

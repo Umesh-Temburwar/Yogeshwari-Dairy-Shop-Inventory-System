@@ -273,6 +273,7 @@ export interface SupplierReturn {
 // 2 Admins & Counter Activity Tracking
 export type AdminActionType = 
   | 'SALE_CREATED'
+  | 'SALE_UPDATED'
   | 'SALE_DELETED'
   | 'PRODUCT_ADDED'
   | 'PRODUCT_UPDATED'

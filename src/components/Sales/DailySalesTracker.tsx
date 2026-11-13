@@ -17,13 +17,20 @@ import {
   ChevronUp, 
   Eye, 
   X,
-  RotateCcw
+  RotateCcw,
+  Edit2,
+  Trash2,
+  Save,
+  Plus,
+  Minus,
+  CheckCircle2
 } from 'lucide-react';
 import { ReturnProductModal } from '../Returns/ReturnProductModal';
 import { useAuth } from '../../context/AuthContext';
+import { CustomerGender, CustomerAgeGroup, PaymentMode, SaleItem } from '../../types';
 
 export const DailySalesTracker: React.FC = () => {
-  const { filteredSales, metrics, setActiveView, returns } = useStore();
+  const { filteredSales, metrics, setActiveView, returns, deleteSale, updateSale } = useStore();
   const { t, language } = useLanguage();
   const { role } = useAuth();
 
@@ -35,6 +42,68 @@ export const DailySalesTracker: React.FC = () => {
   const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
   const [returnTarget, setReturnTarget] = useState<{ productId?: string; invoiceNo?: string; customerName?: string; customerPhone?: string } | null>(null);
   const [selectedSaleForView, setSelectedSaleForView] = useState<Sale | null>(null);
+
+  // Edit Sale Modal State
+  const [editingSale, setEditingSale] = useState<Sale | null>(null);
+  const [editCustomerName, setEditCustomerName] = useState('');
+  const [editCustomerPhone, setEditCustomerPhone] = useState('');
+  const [editCustomerGender, setEditCustomerGender] = useState<CustomerGender>('Male');
+  const [editCustomerAgeGroup, setEditCustomerAgeGroup] = useState<CustomerAgeGroup>('Adults (26-45)');
+  const [editPaymentMode, setEditPaymentMode] = useState<PaymentMode>('Cash');
+  const [editDiscount, setEditDiscount] = useState<number>(0);
+  const [editItems, setEditItems] = useState<SaleItem[]>([]);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  // Delete Confirmation Modal State
+  const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const openEditModal = (sale: Sale) => {
+    setEditingSale(sale);
+    setEditCustomerName(sale.customer_name || '');
+    setEditCustomerPhone(sale.customer_phone || '');
+    setEditCustomerGender(sale.customer_gender || 'Male');
+    setEditCustomerAgeGroup(sale.customer_age_group || 'Adults (26-45)');
+    setEditPaymentMode(sale.payment_mode || 'Cash');
+    setEditDiscount(sale.discount || 0);
+    setEditItems(sale.items ? JSON.parse(JSON.stringify(sale.items)) : []);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingSale) return;
+    setIsSavingEdit(true);
+    try {
+      await updateSale(editingSale.id, {
+        customer_name: editCustomerName,
+        customer_phone: editCustomerPhone,
+        customer_gender: editCustomerGender,
+        customer_age_group: editCustomerAgeGroup,
+        payment_mode: editPaymentMode,
+        discount: Number(editDiscount) || 0,
+        items: editItems
+      });
+      setEditingSale(null);
+    } catch (err) {
+      console.error('Failed to update sale:', err);
+      alert(language === 'mr' ? 'बिल अपडेट करताना त्रुटी आली!' : 'बिल अपडेट करने में त्रुटि!');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!saleToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteSale(saleToDelete.id);
+      setSaleToDelete(null);
+    } catch (err) {
+      console.error('Failed to delete sale:', err);
+      alert(language === 'mr' ? 'बिल डिलीट करताना त्रुटी आली!' : 'बिल डिलीट करने में त्रुटि!');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const paymentModes = [
     { id: 'All', label: language === 'mr' ? 'सर्व पेमेंट' : language === 'hi' ? 'सभी भुगतान' : 'All Modes' },
@@ -509,9 +578,27 @@ export const DailySalesTracker: React.FC = () => {
                         <button
                           onClick={() => setSelectedSaleForView(sale)}
                           className="p-1.5 rounded-lg text-slate-600 dark:text-[#8FA69C] hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-[#1A2A25]"
-                          title="View Bill Details"
+                          title={language === 'mr' ? 'बिल पाहा' : language === 'hi' ? 'बिल देखें' : 'View Bill Details'}
                         >
                           <Eye className="w-4 h-4" />
+                        </button>
+
+                        {/* Edit Bill Button */}
+                        <button
+                          onClick={() => openEditModal(sale)}
+                          className="p-1.5 rounded-lg text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                          title={language === 'mr' ? 'बिल संपादित करा (Edit)' : language === 'hi' ? 'बिल सुधारें (Edit)' : 'Edit Bill'}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+
+                        {/* Delete Bill Button */}
+                        <button
+                          onClick={() => setSaleToDelete(sale)}
+                          className="p-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                          title={language === 'mr' ? 'बिल हटवा (Delete)' : language === 'hi' ? 'बिल हटाएं (Delete)' : 'Delete Bill'}
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
 
                         <button
@@ -754,6 +841,324 @@ export const DailySalesTracker: React.FC = () => {
           prefillCustomerName={returnTarget.customerName}
           prefillCustomerPhone={returnTarget.customerPhone}
         />
+      )}
+
+      {/* EDIT SALE MODAL */}
+      {editingSale && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 border border-slate-200/80 dark:border-[#24352F] my-8 animate-fadeIn">
+            
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Edit2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <span>{language === 'mr' ? 'बिल संपादित करा' : language === 'hi' ? 'बिल सुधारें' : 'Edit Invoice'}</span>
+                </h3>
+                <span className="text-xs font-mono text-slate-500 font-bold">#{editingSale.invoice_no}</span>
+              </div>
+              <button 
+                onClick={() => setEditingSale(null)}
+                className="text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              
+              {/* Customer Name & Phone */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    {language === 'mr' ? 'ग्राहकाचे नाव:' : language === 'hi' ? 'ग्राहक का नाम:' : 'Customer Name:'}
+                  </label>
+                  <input
+                    type="text"
+                    value={editCustomerName}
+                    onChange={(e) => setEditCustomerName(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    {language === 'mr' ? 'मोबाईल नंबर:' : language === 'hi' ? 'मोबाइल नंबर:' : 'Phone Number:'}
+                  </label>
+                  <input
+                    type="tel"
+                    value={editCustomerPhone}
+                    onChange={(e) => setEditCustomerPhone(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Gender & Age Group */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    {language === 'mr' ? 'लिंग:' : language === 'hi' ? 'लिंग:' : 'Gender:'}
+                  </label>
+                  <div className="flex gap-1">
+                    {(['Male', 'Female', 'Other'] as CustomerGender[]).map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setEditCustomerGender(g)}
+                        className={`flex-1 py-1.5 rounded-lg border text-[11px] font-bold transition ${
+                          editCustomerGender === g
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300'
+                            : 'border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
+                        }`}
+                      >
+                        {g === 'Male' ? '👨 पुरुष' : g === 'Female' ? '👩 महिला' : '🧑 इतर'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    {language === 'mr' ? 'वयोगट:' : language === 'hi' ? 'आयु वर्ग:' : 'Age Group:'}
+                  </label>
+                  <select
+                    value={editCustomerAgeGroup}
+                    onChange={(e) => setEditCustomerAgeGroup(e.target.value as CustomerAgeGroup)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Kids (<18)">&lt;18 (Kids)</option>
+                    <option value="Youth (18-25)">18-25 (Youth)</option>
+                    <option value="Adults (26-45)">26-45 (Adults)</option>
+                    <option value="Senior (45+)">45+ (Senior)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Payment Mode & Discount */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    {language === 'mr' ? 'पेमेंट पद्धत:' : language === 'hi' ? 'भुगतान तरीका:' : 'Payment Mode:'}
+                  </label>
+                  <select
+                    value={editPaymentMode}
+                    onChange={(e) => setEditPaymentMode(e.target.value as PaymentMode)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Cash">{language === 'mr' ? 'रोख (Cash)' : language === 'hi' ? 'रोकड़ (Cash)' : 'Cash'}</option>
+                    <option value="Online_UPI">ऑनलाईन UPI (GPay/PhonePe)</option>
+                    <option value="Udhar">{language === 'mr' ? 'उधार खाते (Udhar)' : language === 'hi' ? 'उधार खाता (Udhar)' : 'Udhar (Credit)'}</option>
+                    <option value="Split">{language === 'mr' ? 'विभागून (Split)' : language === 'hi' ? 'विभाजित (Split)' : 'Split Pay'}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    {language === 'mr' ? 'सवलत / सूट (₹):' : language === 'hi' ? 'छूट / डिस्काउंट (₹):' : 'Discount (₹):'}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editDiscount || ''}
+                    placeholder="0"
+                    onChange={(e) => setEditDiscount(parseFloat(e.target.value) || 0)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                  />
+                </div>
+              </div>
+
+              {/* Items in Bill */}
+              <div className="space-y-2 pt-2 border-t border-slate-200/80 dark:border-[#24352F]">
+                <div className="flex items-center justify-between font-bold text-slate-700 dark:text-slate-300">
+                  <span>{language === 'mr' ? 'बिलातील वस्तू (Items):' : language === 'hi' ? 'बिल का सामान (Items):' : 'Bill Items:'}</span>
+                  <span className="text-emerald-700 dark:text-emerald-400">
+                    {editItems.length} {language === 'mr' ? 'वस्तू' : language === 'hi' ? 'सामान' : 'items'}
+                  </span>
+                </div>
+
+                <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+                  {editItems.map((item, idx) => (
+                    <div 
+                      key={idx} 
+                      className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/60 dark:border-[#24352F]"
+                    >
+                      <div className="flex-1 min-w-0 pr-2">
+                        <span className="font-semibold text-slate-900 dark:text-white truncate block">{item.product_name}</span>
+                        <span className="text-[10px] text-slate-500">₹{item.unit_price} / {item.unit}</span>
+                      </div>
+
+                      {/* Quantity Editor Controls */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newQty = Math.max(0.1, Number((item.quantity - 1).toFixed(2)));
+                            setEditItems(prev => prev.map((it, i) => i === idx ? {
+                              ...it,
+                              quantity: newQty,
+                              total_price: Number((newQty * it.unit_price).toFixed(2))
+                            } : it));
+                          }}
+                          className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-700 dark:text-white hover:bg-slate-300"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const q = Math.max(0.01, parseFloat(e.target.value) || 0.01);
+                            setEditItems(prev => prev.map((it, i) => i === idx ? {
+                              ...it,
+                              quantity: q,
+                              total_price: Number((q * it.unit_price).toFixed(2))
+                            } : it));
+                          }}
+                          className="w-14 px-1.5 py-0.5 rounded border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] font-bold text-center text-slate-900 dark:text-white text-xs"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newQty = Number((item.quantity + 1).toFixed(2));
+                            setEditItems(prev => prev.map((it, i) => i === idx ? {
+                              ...it,
+                              quantity: newQty,
+                              total_price: Number((newQty * it.unit_price).toFixed(2))
+                            } : it));
+                          }}
+                          className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-700 dark:text-white hover:bg-slate-300"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+
+                        <span className="w-16 text-right font-black text-emerald-700 dark:text-emerald-400">
+                          ₹{item.total_price}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditItems(prev => prev.filter((_, i) => i !== idx));
+                          }}
+                          className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg ml-1"
+                          title="Remove Item"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Total Calculation Preview */}
+              {(() => {
+                const sub = Number(editItems.reduce((acc, it) => acc + (it.total_price || 0), 0).toFixed(2));
+                const net = Math.max(0, Number((sub - (Number(editDiscount) || 0)).toFixed(2)));
+                return (
+                  <div className="p-3 rounded-2xl bg-slate-100 dark:bg-[#1A2A25] space-y-1 font-bold">
+                    <div className="flex justify-between text-slate-600 dark:text-slate-400 text-xs">
+                      <span>{language === 'mr' ? 'एकूण रक्कम:' : language === 'hi' ? 'कुल राशि:' : 'Subtotal:'}</span>
+                      <span>₹{sub.toFixed(2)}</span>
+                    </div>
+                    {editDiscount > 0 && (
+                      <div className="flex justify-between text-rose-600 text-xs">
+                        <span>{language === 'mr' ? 'सवलत:' : language === 'hi' ? 'छूट:' : 'Discount:'}</span>
+                        <span>-₹{Number(editDiscount).toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-emerald-700 dark:text-emerald-400 text-sm font-black pt-1 border-t border-slate-200 dark:border-[#24352F]">
+                      <span>{language === 'mr' ? 'सुधारित अंतिम देय रक्कम:' : language === 'hi' ? 'सुधारी अंतिम देय राशि:' : 'Updated Net Total:'}</span>
+                      <span className="text-base">₹{net.toFixed(2)}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F]">
+              <button
+                type="button"
+                onClick={() => setEditingSale(null)}
+                disabled={isSavingEdit}
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-700 dark:text-slate-200 font-bold text-xs active:scale-95 transition"
+              >
+                {language === 'mr' ? 'रद्द करा' : language === 'hi' ? 'रद्द करें' : 'Cancel'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={isSavingEdit || editItems.length === 0}
+                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-black text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isSavingEdit ? (language === 'mr' ? 'जतन करत आहे...' : 'सहेज रहे हैं...') : (language === 'mr' ? 'बदल जतन करा (Save Changes)' : language === 'hi' ? 'बदलाव सहेजें (Save Changes)' : 'Save Changes')}</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {saleToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-rose-200 dark:border-rose-900/60 animate-fadeIn">
+            
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                  {language === 'mr' ? 'बिल नक्की हटवायचे आहे का?' : language === 'hi' ? 'क्या वाकई यह बिल हटाना चाहते हैं?' : 'Delete Invoice Confirmation'}
+                </h3>
+                <span className="text-xs font-mono text-rose-600 dark:text-rose-400 font-bold">#{saleToDelete.invoice_no}</span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200/60 dark:border-rose-900/40 text-xs text-rose-950 dark:text-rose-200 space-y-1">
+              <div><strong>{language === 'mr' ? 'ग्राहक:' : language === 'hi' ? 'ग्राहक:' : 'Customer:'}</strong> {saleToDelete.customer_name}</div>
+              <div><strong>{language === 'mr' ? 'रक्कम:' : language === 'hi' ? 'रकम:' : 'Amount:'}</strong> ₹{saleToDelete.net_amount} ({saleToDelete.payment_mode})</div>
+              <div><strong>{language === 'mr' ? 'तारीख:' : language === 'hi' ? 'तारीख:' : 'Date:'}</strong> {saleToDelete.sale_date}</div>
+              <p className="text-[11px] text-rose-700 dark:text-rose-400 pt-1 border-t border-rose-200/50 dark:border-rose-900/40 font-medium">
+                {language === 'mr' 
+                  ? '⚠️ हे बिल लेजर, दैनंदिन विक्री व Supabase क्लाऊडवरून कायमचे हटवले जाईल.' 
+                  : language === 'hi' 
+                  ? '⚠️ यह बिल लेजर, दैनिक बिक्री और Supabase क्लाउड से हमेशा के लिए हट जाएगा।' 
+                  : '⚠️ This bill will be permanently deleted from sales ledger and Supabase.'}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setSaleToDelete(null)}
+                disabled={isDeleting}
+                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-700 dark:text-slate-200 font-bold text-xs active:scale-95 transition"
+              >
+                {language === 'mr' ? 'रद्द करा' : language === 'hi' ? 'रद्द करें' : 'Cancel'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 active:scale-95 transition"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>{isDeleting ? (language === 'mr' ? 'हटवत आहे...' : 'हटा रहे हैं...') : (language === 'mr' ? 'होय, बिल हटवा' : language === 'hi' ? 'हाँ, बिल हटाएं' : 'Yes, Delete Bill')}</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
       )}
 
     </div>

@@ -36,6 +36,7 @@
 | **Phase 23** | [`23_phase23_fix_agegroup_filter_mismatch.sql`](./23_phase23_fix_agegroup_filter_mismatch.sql) | **वयोगट फिल्टर मिसमॅच फिक्स** | जुन्या 'Kids/Teens (<18)' व 'Seniors (45+)' डेटा → 'Kids (<18)' व 'Senior (45+)' मध्ये सुधारणा; CHECK constraint अपडेट; ॲनालिटिक्स व्ह्यूज पुन्हा तयार |
 | **Phase 24** | [`24_phase24_kpi_cards_demographic_filter.sql`](./24_phase24_kpi_cards_demographic_filter.sql) | **KPI कार्ड्स डेमोग्राफिक फिल्टर** | Gender व Age Group फिल्टरनुसार Total Sales, Cash Inflow, Online UPI, Credit Given KPI कार्ड्स अपडेट; `v_sales_kpi_by_demographics` व्ह्यू; composite index |
 | **Phase 25** | [`25_phase25_sale_items_and_product_details_fix.sql`](./25_phase25_sale_items_and_product_details_fix.sql) | **बिलातील वस्तू व इनव्हॉइस लेजर तपशील फिक्स** | `sale_items` टेबलसाठी RLS, UUID, ON DELETE SET NULL, Realtime पब्लिकेशन आणि बिलातील वस्तू दर्शवणारा `v_owner_admin_counter_sales_details` व्ह्यू |
+| **Phase 26** | [`26_phase26_invoices_ledger_edit_delete_support.sql`](./26_phase26_invoices_ledger_edit_delete_support.sql) | **इनव्हॉइस लेजर बिल संपादन (Edit) व डिलीट (Delete) सपोर्ट** | बिलांचे संपादन आणि डिलीट करण्यासाठी RLS, `ON DELETE CASCADE`, `SALE_UPDATED` ऑडिट लॉग ट्रिगर आणि Realtime ब्राॅडकास्ट |
 
 ---
 

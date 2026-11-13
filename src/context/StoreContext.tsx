@@ -169,6 +169,15 @@ interface StoreContextType {
   }) => Promise<ProductReturn[]>;
   deleteReturn: (id: string) => Promise<void>;
   deleteSale: (saleId: string) => Promise<void>;
+  updateSale: (saleId: string, updates: {
+    customer_name?: string;
+    customer_phone?: string;
+    customer_gender?: CustomerGender;
+    customer_age_group?: CustomerAgeGroup;
+    payment_mode?: PaymentMode;
+    discount?: number;
+    items?: SaleItem[];
+  }) => Promise<void>;
 
   // Supplier Returns (खरेदी व सप्लायर परतावा - खराब/एक्सपायर माल परत करणे)
   createSupplierReturn: (returnData: Omit<SupplierReturn, 'id' | 'return_no' | 'created_at'>) => Promise<SupplierReturn>;
@@ -2133,6 +2142,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const target = sales.find(s => s.id === saleId);
     if (!target) return;
 
+    // 1. If sale was Udhar, reverse from udhar_customers balance if applicable
+    if (target.payment_mode === 'Udhar' && target.udhar_amount > 0) {
+      setCustomers(prev => prev.map(c => {
+        if (c.name.trim().toLowerCase() === target.customer_name.trim().toLowerCase() || (target.customer_phone && c.phone === target.customer_phone)) {
+          const newCredit = Math.max(0, Number((c.total_credit - target.udhar_amount).toFixed(2)));
+          const newBalance = Math.max(0, Number((c.current_balance - target.udhar_amount).toFixed(2)));
+          return {
+            ...c,
+            total_credit: newCredit,
+            current_balance: newBalance
+          };
+        }
+        return c;
+      }));
+    }
+
+    // 2. Remove locally
     setSales(prev => prev.filter(s => s.id !== saleId));
 
     if (supabase) {
@@ -2156,6 +2182,117 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       title: `पावती हटवली: #${target.invoice_no}`,
       details: `ग्राहक: ${target.customer_name} | रक्कम: ₹${target.net_amount}`,
       amount: target.net_amount,
+      reference_id: target.invoice_no,
+      reference_table: 'sales'
+    });
+  };
+
+  // Edit / Update Sale (Customer Name, Phone, Gender, Age Group, Payment Mode, Discount, Items)
+  const updateSale = async (
+    saleId: string, 
+    updates: {
+      customer_name?: string;
+      customer_phone?: string;
+      customer_gender?: CustomerGender;
+      customer_age_group?: CustomerAgeGroup;
+      payment_mode?: PaymentMode;
+      discount?: number;
+      items?: SaleItem[];
+    }
+  ): Promise<void> => {
+    const target = sales.find(s => s.id === saleId);
+    if (!target) return;
+
+    const newCustomerName = updates.customer_name !== undefined ? updates.customer_name.trim() : target.customer_name;
+    const newCustomerPhone = updates.customer_phone !== undefined ? updates.customer_phone.trim() : target.customer_phone;
+    const newCustomerGender = updates.customer_gender !== undefined ? updates.customer_gender : target.customer_gender;
+    const newCustomerAgeGroup = updates.customer_age_group !== undefined ? updates.customer_age_group : target.customer_age_group;
+    const newPaymentMode = updates.payment_mode !== undefined ? updates.payment_mode : target.payment_mode;
+    const newDiscount = updates.discount !== undefined ? updates.discount : target.discount;
+    const newItems = updates.items !== undefined ? updates.items : (target.items || []);
+
+    const newTotalAmount = Number(newItems.reduce((sum, item) => sum + (item.total_price || (item.quantity * item.unit_price)), 0).toFixed(2));
+    const newNetAmount = Math.max(0, Number((newTotalAmount - newDiscount).toFixed(2)));
+
+    let newCashAmount = 0;
+    let newOnlineAmount = 0;
+    let newUdharAmount = 0;
+    if (newPaymentMode === 'Cash') newCashAmount = newNetAmount;
+    else if (newPaymentMode === 'Online_UPI') newOnlineAmount = newNetAmount;
+    else if (newPaymentMode === 'Udhar') newUdharAmount = newNetAmount;
+    else if (newPaymentMode === 'Split') {
+      newCashAmount = target.cash_amount || Number((newNetAmount / 2).toFixed(2));
+      newOnlineAmount = Math.max(0, Number((newNetAmount - newCashAmount).toFixed(2)));
+    }
+
+    const updatedSale: Sale = {
+      ...target,
+      customer_name: newCustomerName,
+      customer_phone: newCustomerPhone,
+      customer_gender: newCustomerGender,
+      customer_age_group: newCustomerAgeGroup,
+      payment_mode: newPaymentMode,
+      total_amount: newTotalAmount,
+      discount: newDiscount,
+      net_amount: newNetAmount,
+      cash_amount: newCashAmount,
+      online_amount: newOnlineAmount,
+      udhar_amount: newUdharAmount,
+      items: newItems
+    };
+
+    setSales(prev => prev.map(s => s.id === saleId ? updatedSale : s));
+
+    if (supabase) {
+      try {
+        await supabase.from('sales').update({
+          customer_name: newCustomerName,
+          customer_phone: newCustomerPhone || null,
+          customer_gender: newCustomerGender || null,
+          customer_age_group: newCustomerAgeGroup || null,
+          payment_mode: newPaymentMode,
+          total_amount: newTotalAmount,
+          discount: newDiscount,
+          net_amount: newNetAmount,
+          cash_amount: newCashAmount,
+          online_amount: newOnlineAmount,
+          udhar_amount: newUdharAmount
+        }).eq('id', saleId);
+
+        if (updates.items) {
+          await supabase.from('sale_items').delete().eq('sale_id', saleId);
+          if (newItems.length > 0) {
+            await supabase.from('sale_items').insert(newItems.map(si => ({
+              id: si.id && si.id.length === 36 ? si.id : generateUUID(),
+              sale_id: saleId,
+              product_id: (si.product_id && si.product_id.length === 36 && !si.product_id.startsWith('item-') && !si.product_id.startsWith('prod-')) ? si.product_id : null,
+              product_name: si.product_name,
+              quantity: si.quantity,
+              unit: si.unit,
+              unit_price: si.unit_price,
+              purchase_cost: si.purchase_cost || 0,
+              total_price: si.total_price
+            })));
+          }
+        }
+
+        broadcastMutation('sales', 'update');
+      } catch (err) {
+        console.error('Failed to update sale in Supabase:', err);
+      }
+    }
+
+    const admin = getActiveAdminInfo();
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_email: admin.email,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'SALE_UPDATED',
+      title: `पावती सुधारणा: #${target.invoice_no}`,
+      details: `ग्राहक: ${newCustomerName} | रक्कम: ₹${newNetAmount} | पेमेंट: ${newPaymentMode}`,
+      amount: newNetAmount,
       reference_id: target.invoice_no,
       reference_table: 'sales'
     });
@@ -2880,6 +3017,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       processSaleReturn,
       deleteReturn,
       deleteSale,
+      updateSale,
       createSupplierReturn,
       updateSupplierRefundStatus,
       deleteSupplierReturn,

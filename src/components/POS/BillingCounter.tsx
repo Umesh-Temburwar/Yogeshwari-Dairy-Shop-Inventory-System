@@ -886,6 +886,69 @@ export const BillingCounter: React.FC = () => {
             </div>
           )}
 
+          {/* Customer Gender & Age Group — shown for ALL payment modes */}
+          <div className="bg-slate-50/80 dark:bg-[#1A2A25]/60 p-3 rounded-xl border border-slate-200 dark:border-[#24352F] space-y-2.5">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] uppercase tracking-wide block">
+              {language === 'mr' ? 'ग्राहक माहिती (ऐच्छिक)' : language === 'hi' ? 'ग्राहक जानकारी (वैकल्पिक)' : 'Customer Info (Optional)'}
+            </span>
+
+            {/* Gender Selector */}
+            <div>
+              <label className="text-[11px] font-semibold text-slate-600 dark:text-[#8FA69C] block mb-1.5">
+                {language === 'mr' ? 'लिंग:' : language === 'hi' ? 'लिंग:' : 'Gender:'}
+              </label>
+              <div className="flex gap-1.5">
+                {([
+                  { value: 'Male',   emoji: '👨', labelMr: 'पुरुष',  labelHi: 'पुरुष',  labelEn: 'Male'   },
+                  { value: 'Female', emoji: '👩', labelMr: 'महिला',  labelHi: 'महिला',  labelEn: 'Female' },
+                  { value: 'Other',  emoji: '🧑', labelMr: 'इतर',    labelHi: 'अन्य',   labelEn: 'Other'  },
+                ] as { value: CustomerGender; emoji: string; labelMr: string; labelHi: string; labelEn: string }[]).map((g) => (
+                  <button
+                    key={g.value}
+                    type="button"
+                    onClick={() => setCustomerGender(g.value)}
+                    className={`flex-1 py-1 rounded-lg border text-[11px] font-bold transition-all flex items-center justify-center gap-1 ${
+                      customerGender === g.value
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 shadow-xs'
+                        : 'border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-500 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#223630]'
+                    }`}
+                  >
+                    <span>{g.emoji}</span>
+                    <span>{language === 'mr' ? g.labelMr : language === 'hi' ? g.labelHi : g.labelEn}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Age Group Selector */}
+            <div>
+              <label className="text-[11px] font-semibold text-slate-600 dark:text-[#8FA69C] block mb-1.5">
+                {language === 'mr' ? 'वयोगट:' : language === 'hi' ? 'आयु वर्ग:' : 'Age Group:'}
+              </label>
+              <div className="grid grid-cols-4 gap-1">
+                {([
+                  { value: 'Kids (<18)',      labelMr: '<18',      labelHi: '<18',      labelEn: '<18'    },
+                  { value: 'Youth (18-25)',   labelMr: '18-25',    labelHi: '18-25',    labelEn: '18-25'  },
+                  { value: 'Adults (26-45)',  labelMr: '26-45',    labelHi: '26-45',    labelEn: '26-45'  },
+                  { value: 'Senior (45+)',    labelMr: '45+',      labelHi: '45+',      labelEn: '45+'    },
+                ] as { value: CustomerAgeGroup; labelMr: string; labelHi: string; labelEn: string }[]).map((ag) => (
+                  <button
+                    key={ag.value}
+                    type="button"
+                    onClick={() => setCustomerAgeGroup(ag.value)}
+                    className={`py-1 rounded-lg border text-[11px] font-bold transition-all text-center ${
+                      customerAgeGroup === ag.value
+                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 shadow-xs'
+                        : 'border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-500 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#223630]'
+                    }`}
+                  >
+                    {language === 'mr' ? ag.labelMr : language === 'hi' ? ag.labelHi : ag.labelEn}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* Big Complete Sale / Checkout Button */}

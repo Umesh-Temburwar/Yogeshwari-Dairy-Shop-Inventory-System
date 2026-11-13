@@ -2410,7 +2410,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const newReturn: ProductReturn = {
         id: generateUUID(),
         return_no: returnNo,
-        sale_id: targetSale?.id,
+        sale_id: isFullReturn ? undefined : targetSale?.id,
         invoice_no: invoiceNo,
         product_id: item.product_id,
         product_name: item.product_name,
@@ -2421,8 +2421,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         refund_mode: payload.refund_mode,
         reason: payload.reason,
         condition: payload.condition,
+        return_type: returnTypeStr,
         customer_name: customerName,
         customer_phone: customerPhone,
+        admin_name: adminInfo.name,
+        admin_email: adminInfo.email,
+        counter_name: adminInfo.counter,
         notes: payload.notes ? `[${returnTypeStr} Return] ${payload.notes}` : `[${returnTypeStr} Return]`,
         return_date: todayFormatted,
         created_at: new Date().toISOString()
@@ -2435,11 +2439,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // 4. Stock Handling: Restock (Resellable) or Record in Damages (Damaged_Waste)
     for (const retItem of validItems) {
       if (payload.condition === 'Resellable') {
-        let finalStock = 0;
+        const targetProd = products.find(p => p.id === retItem.product_id || p.name.toLowerCase() === retItem.product_name.toLowerCase());
+        const validProdId = targetProd ? targetProd.id : retItem.product_id;
+        const finalStock = targetProd ? Number((targetProd.stock_quantity + retItem.quantity).toFixed(2)) : 0;
+
         setProducts(prev => prev.map(p => {
-          if (p.id === retItem.product_id) {
-            finalStock = Number((p.stock_quantity + retItem.quantity).toFixed(2));
-            return { ...p, stock_quantity: finalStock };
+          if (p.id === validProdId) {
+            return { ...p, stock_quantity: Number((p.stock_quantity + retItem.quantity).toFixed(2)) };
           }
           return p;
         }));
@@ -2449,7 +2455,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setBatches(prev => {
           let updated = false;
           return prev.map(b => {
-            if (!updated && b.product_id === retItem.product_id) {
+            if (!updated && (b.product_id === validProdId || b.product_name === retItem.product_name)) {
               updated = true;
               batchIdToUpdate = b.id;
               batchNewQty = Number((b.qty_remaining + retItem.quantity).toFixed(2));
@@ -2462,8 +2468,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (supabase) {
           (async () => {
             try {
-              if (finalStock > 0) {
-                await supabase.from('products').update({ stock_quantity: finalStock }).eq('id', retItem.product_id);
+              if (finalStock > 0 && validProdId && validProdId.length === 36) {
+                await supabase.from('products').update({ stock_quantity: finalStock }).eq('id', validProdId);
+                broadcastMutation('products', 'update');
               }
               if (batchIdToUpdate) {
                 await supabase.from('batches').update({ qty_remaining: batchNewQty }).eq('id', batchIdToUpdate);
@@ -2675,9 +2682,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const insertRows = createdReturns.map(r => ({
           id: r.id,
           return_no: r.return_no,
-          sale_id: r.sale_id || null,
+          sale_id: (isFullReturn || !r.sale_id || r.sale_id.length !== 36) ? null : r.sale_id,
           invoice_no: r.invoice_no || null,
-          product_id: r.product_id,
+          product_id: (r.product_id && r.product_id.length === 36 && !r.product_id.startsWith('item-') && !r.product_id.startsWith('prod-')) ? r.product_id : null,
           product_name: r.product_name,
           quantity: r.quantity,
           unit: r.unit,
@@ -2686,6 +2693,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           refund_mode: r.refund_mode,
           reason: r.reason,
           condition: r.condition,
+          return_type: returnTypeStr,
           customer_name: r.customer_name || null,
           customer_phone: r.customer_phone || null,
           notes: r.notes || null,

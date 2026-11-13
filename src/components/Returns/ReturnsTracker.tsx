@@ -545,14 +545,19 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                               🧾 #{r.invoice_no}
                             </span>
                           )}
-                          {r.notes?.includes('[Full Return]') && (
+                          {(r.return_type === 'Full' || r.notes?.includes('[Full Return]')) && (
                             <span className="block text-[9px] font-black text-amber-700 dark:text-amber-400 bg-amber-100/70 dark:bg-amber-950/40 px-1.5 py-0.5 rounded mt-0.5 w-fit">
-                              👑 {language === 'mr' ? 'संपूर्ण पावती' : 'पूर्ण बिल'}
+                              ⚡ {language === 'mr' ? 'संपूर्ण बिल वापसी' : 'पूर्ण बिल वापसी'}
                             </span>
                           )}
-                          {r.notes?.includes('[Partial Return]') && (
+                          {(r.return_type === 'Partial' || r.notes?.includes('[Partial Return]')) && (
                             <span className="block text-[9px] font-black text-blue-700 dark:text-blue-400 bg-blue-100/70 dark:bg-blue-950/40 px-1.5 py-0.5 rounded mt-0.5 w-fit">
-                              ✂️ {language === 'mr' ? 'आंशिक पावती' : 'आंशिक बिल'}
+                              ✂️ {language === 'mr' ? 'आंशिक बिल वापसी' : 'आंशिक बिल वापसी'}
+                            </span>
+                          )}
+                          {(r.return_type === 'Direct' || r.notes?.includes('[Direct Return]')) && (
+                            <span className="block text-[9px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-100/70 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded mt-0.5 w-fit">
+                              📦 {language === 'mr' ? 'थेट परतावा' : 'सीधी वापसी'}
                             </span>
                           )}
                         </td>

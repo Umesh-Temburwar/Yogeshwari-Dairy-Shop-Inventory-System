@@ -226,8 +226,12 @@ export interface ProductReturn {
   refund_mode: RefundMode;
   reason: ReturnReason;
   condition: ReturnCondition; // 'Resellable' (restocked) or 'Damaged_Waste' (waste/damage record)
+  return_type?: 'Full' | 'Partial' | 'Direct';
   customer_name?: string;
   customer_phone?: string;
+  admin_name?: string;
+  admin_email?: string;
+  counter_name?: string;
   notes?: string;
   return_date: string; // YYYY-MM-DD
   created_at: string;

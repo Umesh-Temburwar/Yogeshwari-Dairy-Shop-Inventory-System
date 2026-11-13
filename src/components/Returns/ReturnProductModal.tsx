@@ -11,19 +11,17 @@ import {
   Download,
   Search, 
   PackageCheck, 
-  Trash2, 
   Wallet, 
   Smartphone, 
   BookOpen, 
-  Repeat,
   Eye,
   Receipt,
-  Check,
-  ChevronDown,
   Layers,
-  ArrowRight,
   Sparkles,
-  Info
+  Info,
+  Check,
+  Percent,
+  Scissors
 } from 'lucide-react';
 import { printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 
@@ -49,6 +47,9 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
 
   // Return Mode: 'invoice' (Return from Customer Bill) vs 'direct' (Return without Bill)
   const [returnMode, setReturnMode] = useState<'invoice' | 'direct'>(prefillInvoiceNo || sales.length > 0 ? 'invoice' : 'direct');
+
+  // INVOICE RETURN CHOICE: 'full' (100% Full Return of entire bill) vs 'partial' (Selective items return)
+  const [invoiceReturnChoice, setInvoiceReturnChoice] = useState<'full' | 'partial'>('full');
 
   // 1. INVOICE-LINKED RETURN STATE
   const [invoiceSearch, setInvoiceSearch] = useState(prefillInvoiceNo || '');
@@ -92,15 +93,25 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
     setCustomerPhone(sale.customer_phone || '');
     if (sale.payment_mode === 'Udhar') {
       setRefundMode('Udhar_Credit');
+    } else if (sale.payment_mode === 'Online_UPI') {
+      setRefundMode('Online_UPI');
     } else {
       setRefundMode('Cash');
     }
 
-    // Default return qty to 0 for each item, or prefill target product
+    // Default return qty: if targetProductId specified, set selective mode; else default to 100% full return
     const initQtys: Record<string, number> = {};
-    sale.items?.forEach(i => {
-      initQtys[i.product_id] = (targetProductId && i.product_id === targetProductId) ? Math.min(1, i.quantity) : 0;
-    });
+    if (targetProductId) {
+      setInvoiceReturnChoice('partial');
+      sale.items?.forEach(i => {
+        initQtys[i.product_id] = (i.product_id === targetProductId) ? i.quantity : 0;
+      });
+    } else {
+      setInvoiceReturnChoice('full');
+      sale.items?.forEach(i => {
+        initQtys[i.product_id] = i.quantity;
+      });
+    }
     setItemReturnQtys(initQtys);
     setErrorMessage(null);
   }, []);
@@ -136,19 +147,10 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
     ).slice(0, 10);
   }, [sales, invoiceSearch]);
 
-  // Helper: Set return quantity for an item
-  const setItemQty = (productId: string, val: number, maxQty: number) => {
-    const num = isNaN(val) ? 0 : val;
-    const clamped = Math.max(0, Math.min(Number(num.toFixed(2)), maxQty));
-    setItemReturnQtys(prev => ({
-      ...prev,
-      [productId]: clamped
-    }));
-  };
-
-  // Helper: Return All Items (100% Full Return)
-  const handleReturnAll = () => {
+  // Switch to Full Return (100% All Items)
+  const setFullReturnMode = () => {
     if (!selectedSale || !selectedSale.items) return;
+    setInvoiceReturnChoice('full');
     const allQtys: Record<string, number> = {};
     selectedSale.items.forEach(i => {
       allQtys[i.product_id] = i.quantity;
@@ -156,14 +158,42 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
     setItemReturnQtys(allQtys);
   };
 
-  // Helper: Clear All Return Quantities
-  const handleClearAll = () => {
+  // Switch to Partial / Selective Item Return
+  const setPartialReturnMode = () => {
     if (!selectedSale || !selectedSale.items) return;
-    const cleared: Record<string, number> = {};
-    selectedSale.items.forEach(i => {
-      cleared[i.product_id] = 0;
+    setInvoiceReturnChoice('partial');
+    // If all items were full, keep them or let user deselect
+  };
+
+  // Helper: Set return quantity for an item
+  const setItemQty = (productId: string, val: number, maxQty: number) => {
+    const num = isNaN(val) ? 0 : val;
+    const clamped = Math.max(0, Math.min(Number(num.toFixed(2)), maxQty));
+    
+    setItemReturnQtys(prev => {
+      const next = { ...prev, [productId]: clamped };
+      // Check if not all items are 100%
+      if (selectedSale?.items) {
+        const isStillAllFull = selectedSale.items.every(i => (next[i.product_id] || 0) >= i.quantity);
+        if (!isStillAllFull && invoiceReturnChoice === 'full') {
+          setInvoiceReturnChoice('partial');
+        } else if (isStillAllFull && invoiceReturnChoice === 'partial') {
+          // If user manually set all to max
+          setInvoiceReturnChoice('full');
+        }
+      }
+      return next;
     });
-    setItemReturnQtys(cleared);
+  };
+
+  // Toggle Item selection in Partial mode
+  const toggleItemSelection = (productId: string, maxQty: number) => {
+    const currentQty = itemReturnQtys[productId] || 0;
+    if (currentQty > 0) {
+      setItemQty(productId, 0, maxQty);
+    } else {
+      setItemQty(productId, maxQty, maxQty);
+    }
   };
 
   // Calculate return items and refund totals for selected sale
@@ -209,11 +239,13 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
     });
 
     const isFull = anyReturning && allFull;
-    const remSale = Math.max(0, Number((selectedSale.net_amount - refundSum).toFixed(2)));
+    // Cap refund sum at original net amount
+    const cappedRefund = Math.min(refundSum, selectedSale.net_amount);
+    const remSale = Math.max(0, Number((selectedSale.net_amount - cappedRefund).toFixed(2)));
 
     return {
       returnItemsList: list,
-      totalRefund: Number(refundSum.toFixed(2)),
+      totalRefund: Number(cappedRefund.toFixed(2)),
       isFullReturn: isFull,
       anyItemReturning: anyReturning,
       remainingSaleAmount: remSale
@@ -336,10 +368,10 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
 
     const returnTypeLabel = 
       completedSummary.returnType === 'Full' 
-        ? (isMr ? 'संपूर्ण पावती परतावा (Full Return)' : 'पूर्ण बिल वापसी')
+        ? (isMr ? 'संपूर्ण बिल परतावा (100% Full Return)' : isHi ? 'पूर्ण बिल वापसी (100% Full Return)' : 'Full Bill Return')
         : completedSummary.returnType === 'Partial'
-        ? (isMr ? 'आंशिक पावती परतावा (Partial Return)' : 'आंशिक बिल वापसी')
-        : (isMr ? 'थेट परतावा (Direct Return)' : 'सीधी वापसी');
+        ? (isMr ? 'आंशिक / निवडक माल परतावा (Partial Return)' : isHi ? 'आंशिक सामान वापसी (Partial Return)' : 'Partial Return')
+        : (isMr ? 'थेट परतावा (Direct Return)' : isHi ? 'सीधी वापसी (Direct Return)' : 'Direct Return');
 
     return {
       title: isMr 
@@ -348,7 +380,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
         ? `ग्राहक सामान वापसी रसीद (${completedSummary.returnNo})` 
         : `Customer Return Voucher (${completedSummary.returnNo})`,
       subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
-      periodText: `${isMr ? ' व्हाउचर क्र.' : 'वाउचर सं.'}: ${completedSummary.returnNo} | ${isMr ? 'तारीख' : 'दिनांक'}: ${completedSummary.returnDate} | ${returnTypeLabel}`,
+      periodText: `${isMr ? 'व्हाउचर क्र.' : 'वाउचर सं.'}: ${completedSummary.returnNo} | ${isMr ? 'तारीख' : 'दिनांक'}: ${completedSummary.returnDate} | ${returnTypeLabel}`,
       language,
       kpis: [
         { label: isMr ? 'एकूण परतावा रक्कम' : 'कुल रिफंड राशि', value: `₹${completedSummary.totalRefund.toFixed(2)}`, color: 'emerald' },
@@ -385,7 +417,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
           `₹${completedSummary.totalRefund.toFixed(2)}`
         ]
       },
-      notes: `${isMr ? 'ग्राहक नाव' : 'ग्राहक नाम'}: ${completedSummary.customerName} | ${isMr ? 'फोन' : 'फोन'}: ${completedSummary.customerPhone || '—'} | ${completedSummary.invoiceNo ? `${isMr ? 'मूळ पावती' : 'मूल बिल'}: #${completedSummary.invoiceNo}` : ''} | ${completedSummary.returnType === 'Full' ? (isMr ? 'पावती विक्री यादीतून कायमची हटवली' : 'बिल बिक्री सूची से हटाया गया') : completedSummary.returnType === 'Partial' ? `${isMr ? 'सुधारित पावती शिल्लक' : 'संशोधित बिल शेष'}: ₹${completedSummary.remainingSaleAmount?.toFixed(2)}` : ''}`
+      notes: `${isMr ? 'ग्राहक नाव' : 'ग्राहक नाम'}: ${completedSummary.customerName} | ${isMr ? 'फोन' : 'फोन'}: ${completedSummary.customerPhone || '—'} | ${completedSummary.invoiceNo ? `${isMr ? 'मूळ पावती' : 'मूल बिल'}: #${completedSummary.invoiceNo}` : ''} | ${completedSummary.returnType === 'Full' ? (isMr ? 'पावती विक्री यादीतून कायमची रद्द झाली' : 'बिल बिक्री सूची से रद्द किया गया') : completedSummary.returnType === 'Partial' ? `${isMr ? 'सुधारित पावती शिल्लक' : 'संशोधित बिल शेष'}: ₹${completedSummary.remainingSaleAmount?.toFixed(2)}` : ''}`
     };
   };
 
@@ -409,7 +441,9 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto animate-fadeIn">
       <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-[#24352F] my-auto space-y-4 max-h-[92vh] flex flex-col overflow-hidden">
         
-        {/* SUCCESS CONFIRMATION MODAL STATE */}
+        {/* ============================================================== */}
+        {/* SUCCESS CONFIRMATION MODAL STATE                               */}
+        {/* ============================================================== */}
         {completedSummary ? (
           <div className="overflow-y-auto space-y-4 py-2 pr-1">
             <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-inner">
@@ -426,28 +460,33 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
             </div>
 
             {/* Status Highlight Banner */}
-            <div className={`p-3.5 rounded-2xl border text-xs space-y-1 ${
+            <div className={`p-4 rounded-2xl border text-xs space-y-1.5 ${
               completedSummary.returnType === 'Full'
                 ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200'
                 : completedSummary.returnType === 'Partial'
                 ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-800 text-blue-900 dark:text-blue-200'
                 : 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
             }`}>
-              <div className="font-extrabold flex items-center gap-1.5 text-sm">
-                {completedSummary.returnType === 'Full' && '👑 संपूर्ण पावती परतावा (100% Full Return)'}
-                {completedSummary.returnType === 'Partial' && '✂️ आंशिक पावती परतावा (Partial Return)'}
-                {completedSummary.returnType === 'Direct' && '📦 थेट परतावा (Direct Item Return)'}
+              <div className="font-extrabold flex items-center justify-between text-sm">
+                <span>
+                  {completedSummary.returnType === 'Full' && '⚡ संपूर्ण बिल वापसी (100% Full Return)'}
+                  {completedSummary.returnType === 'Partial' && '✂️ आंशिक / निवडक माल परतावा (Partial Return)'}
+                  {completedSummary.returnType === 'Direct' && '📦 थेट परतावा (Direct Item Return)'}
+                </span>
+                <span className="text-base font-black text-emerald-600 dark:text-emerald-400">
+                  ₹{completedSummary.totalRefund.toFixed(2)}
+                </span>
               </div>
-              <p className="text-[11px] opacity-90">
+              <p className="text-[11px] leading-relaxed opacity-90">
                 {completedSummary.returnType === 'Full' && (
                   isMr 
-                    ? `पावती #${completedSummary.invoiceNo} मधील सर्व वस्तू परत झाल्यामुळे ही पावती विक्री यादीतून कायमची हटवली गेली आहे आणि सर्व परतावा Return & Refund मध्ये सेव्ह झाला आहे.`
-                    : `बिल #${completedSummary.invoiceNo} के सभी सामान वापस होने से यह बिल बिक्री सूची से हटा दिया गया है और वापसी Return & Refund में दर्ज की गई है।`
+                    ? `पावती #${completedSummary.invoiceNo} मधील सर्वच्या सर्व वस्तू परत झाल्यामुळे ही पावती विक्री यादीतून कायमची रद्द झाली आहे आणि सर्व परतावा Return & Refund मध्ये सुरक्षित नोंदवला गेला आहे.`
+                    : `बिल #${completedSummary.invoiceNo} का संपूर्ण सामान वापस हो गया है। यह बिल बिक्री सूची से रद्द कर दिया गया है और संपूर्ण वापसी Return & Refund में दर्ज की गई है।`
                 )}
                 {completedSummary.returnType === 'Partial' && (
                   isMr 
-                    ? `पावती #${completedSummary.invoiceNo} मधील शिल्लक माल पावतीमध्ये राहिला असून, पावतीची सुधारित रक्कम आता ₹${completedSummary.remainingSaleAmount?.toFixed(2)} झाली आहे. परत केलेल्या वस्तू Return & Refund मध्ये सेव्ह झाल्या आहेत.`
-                    : `बिल #${completedSummary.invoiceNo} का बाकी सामान बिल में रहा है, और बिल की संशोधित राशि अब ₹${completedSummary.remainingSaleAmount?.toFixed(2)} हो गई है।`
+                    ? `पावती #${completedSummary.invoiceNo} मधील फक्त निवडक वस्तू परत घेतल्या आहेत. शिल्लक मालाची सुधारित पावती रक्कम ₹${completedSummary.remainingSaleAmount?.toFixed(2)} विक्री यादीमध्ये चालू राहील आणि परत केलेल्या वस्तूंचा हिशोब Return & Refund मध्ये सेव्ह झाला आहे.`
+                    : `बिल #${completedSummary.invoiceNo} में से कुछ सामान वापस लिया गया है। शेष सामान का संशोधित बिल ₹${completedSummary.remainingSaleAmount?.toFixed(2)} बिक्री सूची में सुरक्षित है और वापसी Return & Refund में दर्ज हुई है।`
                 )}
                 {completedSummary.returnType === 'Direct' && (
                   isMr ? 'थेट परतावा नोंदवला गेला असून रक्कम ग्राहकाला अदा करण्यात आली आहे.' : 'सीधी वापसी दर्ज कर राशि ग्राहक को वापस की गई।'
@@ -504,7 +543,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 className="py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs"
               >
                 <Printer className="w-4 h-4" />
-                <span>{isMr ? 'प्रिंट' : 'प्रिंट'}</span>
+                <span>{isMr ? 'प्रिंट पावती' : 'प्रिंट रसीद'}</span>
               </button>
               <button
                 type="button"
@@ -533,20 +572,22 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
             </button>
           </div>
         ) : (
-          /* MAIN RETURN ENTRY FORM */
+          /* ============================================================== */
+          /* MAIN RETURN ENTRY FORM                                         */
+          /* ============================================================== */
           <>
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#24352F] shrink-0">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-xs">
                   <RotateCcw className="w-5 h-5" />
                 </div>
                 <div>
                   <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-[#E7F0EC]">
-                    {isMr ? 'ग्राहक माल परतावा (Customer Return & Refund)' : isHi ? 'ग्राहक सामान वापसी (Customer Return)' : 'Customer Sales Return & Refund'}
+                    {isMr ? 'ग्राहक माल परतावा (Customer Returns & Refund)' : isHi ? 'ग्राहक सामान वापसी (Customer Returns & Refund)' : 'Customer Sales Return & Refund'}
                   </h2>
                   <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                    {isMr ? 'ग्राहकाने खरेदी केलेला माल परत घेणे व पावती अपडेट करणे' : 'ग्राहक द्वारा खरीदा गया सामान वापस लेना व बिल अपडेट करना'}
+                    {isMr ? '१००% संपूर्ण बिल परतावा किंवा काही निवडक वस्तू परत घेणे' : '100% पूरा बिल वापसी अथवा कुछ चुनिंदा सामान की वापसी'}
                   </p>
                 </div>
               </div>
@@ -567,7 +608,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
               </div>
             )}
 
-            {/* Return Mode Switcher Tabs */}
+            {/* Top Source Switcher: From Bill (Primary) vs Direct Return (Secondary) */}
             <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-[#1A2A25] rounded-2xl shrink-0">
               <button
                 type="button"
@@ -579,7 +620,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 }`}
               >
                 <Receipt className="w-3.5 h-3.5" />
-                <span>{isMr ? 'पावतीवरून परतावा' : isHi ? 'बिल से वापसी' : 'From Bill / Invoice'}</span>
+                <span>{isMr ? 'पावती / बिलावरून परतावा' : isHi ? 'बिल / रसीद से वापसी' : 'From Bill / Invoice'}</span>
               </button>
               <button
                 type="button"
@@ -597,17 +638,17 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
 
             {/* Scrollable Form Body */}
             <form onSubmit={handleSubmit} className="overflow-y-auto space-y-4 pr-1 flex-1">
-              
+
               {/* ============================================================== */}
-              {/* FLOW 1: INVOICE-LINKED RETURN (RECOMMENDED & PRIMARY)          */}
+              {/* FLOW 1: INVOICE-LINKED RETURN                                  */}
               {/* ============================================================== */}
               {returnMode === 'invoice' && (
-                <div className="space-y-3.5">
+                <div className="space-y-4">
                   
-                  {/* Step 1A: Search or Change Bill */}
+                  {/* Step 1: Search or Pick Bill */}
                   <div className="space-y-1.5">
                     <label className="block text-xs font-bold text-slate-700 dark:text-[#E7F0EC]">
-                      {isMr ? '१. ग्राहकाची पावती / बिल शोधा किंवा निवडा:' : '१. ग्राहक का बिल / रसीद खोजें या चुनें:'}
+                      {isMr ? '१. ग्राहकाचे विक्री बिल / पावती निवडा:' : '१. ग्राहक का बिक्री बिल / रसीद चुनें:'}
                     </label>
                     <div className="relative">
                       <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
@@ -625,7 +666,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                       />
                     </div>
 
-                    {/* Dropdown list of matching sales when search is active or no sale selected */}
+                    {/* Dropdown list of matching sales */}
                     {(!selectedSale || invoiceSearch !== selectedSale.invoice_no) && matchingSales.length > 0 && (
                       <div className="border border-slate-200 dark:border-[#24352F] rounded-2xl bg-white dark:bg-[#1A2A25] p-1.5 max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-[#24352F] shadow-lg">
                         <div className="p-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -657,92 +698,214 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                     )}
                   </div>
 
-                  {/* Step 1B: Selected Bill Details & Items List */}
+                  {/* Step 2: Selected Bill Details & The Two Core Return Options */}
                   {selectedSale && (
-                    <div className="space-y-3">
+                    <div className="space-y-3.5">
                       
-                      {/* Active Bill Header Card */}
-                      <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50/50 dark:from-purple-950/30 dark:to-indigo-950/20 rounded-2xl border border-purple-200 dark:border-purple-800/40 text-xs space-y-1.5">
+                      {/* Active Bill Summary Card */}
+                      <div className="p-3 bg-slate-50 dark:bg-[#1A2A25] rounded-2xl border border-slate-200 dark:border-[#24352F] text-xs space-y-1.5 shadow-xs">
                         <div className="flex justify-between items-center">
-                          <span className="font-mono font-black text-purple-700 dark:text-purple-300 text-sm">
-                            #{selectedSale.invoice_no}
-                          </span>
-                          <span className="font-black text-emerald-700 dark:text-emerald-400 text-sm">
-                            ₹{selectedSale.net_amount}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-black text-purple-700 dark:text-purple-400 text-sm">
+                              #{selectedSale.invoice_no}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300">
+                              {selectedSale.payment_mode}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] text-slate-400 block">{isMr ? 'मूळ बिल रक्कम' : 'मूल बिल राशि'}</span>
+                            <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                              ₹{selectedSale.net_amount}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-600 dark:text-slate-300">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-200/60 dark:border-[#24352F]">
                           <span>👤 <b>{selectedSale.customer_name}</b> {selectedSale.customer_phone ? `(${selectedSale.customer_phone})` : ''}</span>
                           <span>📅 {selectedSale.sale_date}</span>
-                          <span>💳 {selectedSale.payment_mode}</span>
+                          <span>📦 {selectedSale.items?.length || 0} {isMr ? 'उत्पादने' : 'उत्पाद'}</span>
                           <span>📍 {selectedSale.counter_name || 'काऊंटर १'}</span>
                         </div>
                       </div>
 
-                      {/* Items Return Table */}
+                      {/* ======================================================= */}
+                      {/* STEP 2: CHOOSE RETURN WORKFLOW (THE 2 USER MODES)        */}
+                      {/* ======================================================= */}
+                      <div className="space-y-2">
+                        <label className="block text-xs font-black text-slate-800 dark:text-[#E7F0EC] uppercase tracking-wide">
+                          {isMr ? '२. परतावा प्रकार निवडा (Return Mode):' : '२. वापसी प्रकार चुनें (Return Mode):'}
+                        </label>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {/* Option 1: 100% Full Bill Return */}
+                          <button
+                            type="button"
+                            onClick={setFullReturnMode}
+                            className={`p-3.5 rounded-2xl border text-left transition-all relative flex flex-col justify-between ${
+                              invoiceReturnChoice === 'full'
+                                ? 'bg-amber-500/10 dark:bg-amber-950/40 border-amber-500 shadow-md ring-2 ring-amber-500/30'
+                                : 'bg-slate-50 dark:bg-[#1A2A25] border-slate-200 dark:border-[#24352F] hover:border-slate-300 dark:hover:border-slate-600'
+                            }`}
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="inline-flex items-center gap-1.5 font-black text-xs text-amber-600 dark:text-amber-400">
+                                  <span>⚡</span>
+                                  <span>{isMr ? 'संपूर्ण बिल वापसी' : 'संपूर्ण बिल वापसी'}</span>
+                                </span>
+                                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
+                                  invoiceReturnChoice === 'full' 
+                                    ? 'bg-amber-500 text-white font-bold' 
+                                    : 'border border-slate-300 dark:border-slate-600'
+                                }`}>
+                                  {invoiceReturnChoice === 'full' && <Check className="w-3 h-3 stroke-[3]" />}
+                                </span>
+                              </div>
+                              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
+                                100% Full Return
+                              </h4>
+                              <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] leading-snug">
+                                {isMr 
+                                  ? 'ग्राहकाने घेतलेले सर्व सामान परत आणले आहे. हे बिल विक्रीतून रद्द होऊन संपूर्ण रिफंड मिळेल.' 
+                                  : 'ग्राहक ने खरीदा हुआ सारा सामान वापस कर दिया। यह बिल बिक्री से रद्द होकर पूरा रिफंड मिलेगा।'}
+                              </p>
+                            </div>
+
+                            <div className="mt-2.5 pt-2 border-t border-amber-200 dark:border-amber-900/50 flex items-center justify-between text-xs">
+                              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                                {isMr ? '१००% रिफंड रक्कम:' : '100% रिफंड राशि:'}
+                              </span>
+                              <span className="font-black text-emerald-600 dark:text-emerald-400">
+                                ₹{selectedSale.net_amount.toFixed(2)}
+                              </span>
+                            </div>
+                          </button>
+
+                          {/* Option 2: Partial / Selective Item Return */}
+                          <button
+                            type="button"
+                            onClick={setPartialReturnMode}
+                            className={`p-3.5 rounded-2xl border text-left transition-all relative flex flex-col justify-between ${
+                              invoiceReturnChoice === 'partial'
+                                ? 'bg-blue-500/10 dark:bg-blue-950/40 border-blue-500 shadow-md ring-2 ring-blue-500/30'
+                                : 'bg-slate-50 dark:bg-[#1A2A25] border-slate-200 dark:border-[#24352F] hover:border-slate-300 dark:hover:border-slate-600'
+                            }`}
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="inline-flex items-center gap-1.5 font-black text-xs text-blue-600 dark:text-blue-400">
+                                  <Scissors className="w-3.5 h-3.5" />
+                                  <span>{isMr ? 'निवडक / आंशिक वापसी' : 'चुनिंदा / आंशिक वापसी'}</span>
+                                </span>
+                                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
+                                  invoiceReturnChoice === 'partial' 
+                                    ? 'bg-blue-500 text-white font-bold' 
+                                    : 'border border-slate-300 dark:border-slate-600'
+                                }`}>
+                                  {invoiceReturnChoice === 'partial' && <Check className="w-3 h-3 stroke-[3]" />}
+                                </span>
+                              </div>
+                              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
+                                Selective / Partial Return
+                              </h4>
+                              <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] leading-snug">
+                                {isMr 
+                                  ? 'ग्राहकाने अनेक वस्तूंमधून फक्त काही वस्तू किंवा कमी प्रमाण परत आणले आहे. शिल्लक बिल चालू राहील.' 
+                                  : 'ग्राहक ने कई सामानों में से कुछ सामान या कम मात्रा वापस की है। बाकी का बिल जारी रहेगा।'}
+                              </p>
+                            </div>
+
+                            <div className="mt-2.5 pt-2 border-t border-blue-200 dark:border-blue-900/50 flex items-center justify-between text-xs">
+                              <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400">
+                                {isMr ? 'निवडलेल्या वस्तूंचा रिफंड:' : 'चुने गए सामान का रिफंड:'}
+                              </span>
+                              <span className="font-black text-emerald-600 dark:text-emerald-400">
+                                ₹{totalRefund.toFixed(2)}
+                              </span>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Items Return Table / Checklist */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5">
                             <PackageCheck className="w-4 h-4 text-purple-600" />
-                            <span>{isMr ? '२. बिलातील वस्तू व परत प्रमाण निवडा:' : '२. बिल का सामान व वापसी मात्रा चुनें:'}</span>
+                            <span>
+                              {invoiceReturnChoice === 'full' 
+                                ? (isMr ? '३. बिलातील सर्व वस्तू (सर्व परत होत आहेत):' : '३. बिल के सभी सामान (सभी वापस हो रहे हैं):')
+                                : (isMr ? '३. ज्या वस्तू परत करायच्या आहेत त्या निवडा व प्रमाण ठरवा:' : '३. जो सामान वापस करना है उसे चुनें व मात्रा तय करें:')}
+                            </span>
                           </span>
 
-                          <div className="flex items-center gap-1.5">
+                          {invoiceReturnChoice === 'partial' && (
                             <button
                               type="button"
-                              onClick={handleReturnAll}
+                              onClick={setFullReturnMode}
                               className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-purple-100 hover:bg-purple-200 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 transition"
                             >
-                              ⚡ {isMr ? 'सर्व माल परत' : 'सभी सामान वापस'}
+                              ⚡ {isMr ? 'सर्व निवडा' : 'सभी चुनें'}
                             </button>
-                            <button
-                              type="button"
-                              onClick={handleClearAll}
-                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-600 dark:text-slate-400 transition"
-                            >
-                              {isMr ? 'रद्द' : 'रद्द'}
-                            </button>
-                          </div>
+                          )}
                         </div>
 
                         {/* Item Cards */}
-                        <div className="space-y-2 max-h-56 overflow-y-auto pr-0.5">
+                        <div className="space-y-2 max-h-60 overflow-y-auto pr-0.5">
                           {selectedSale.items?.map(item => {
                             const currentRetQty = itemReturnQtys[item.product_id] || 0;
                             const isFullyReturned = currentRetQty >= item.quantity;
                             const isPartial = currentRetQty > 0 && currentRetQty < item.quantity;
+                            const isNotReturned = currentRetQty === 0;
                             const itemRefund = Number((currentRetQty * item.unit_price).toFixed(2));
+                            const remainingQty = Math.max(0, Number((item.quantity - currentRetQty).toFixed(2)));
 
                             return (
                               <div 
                                 key={item.id}
                                 className={`p-3 rounded-2xl border transition-all space-y-2 ${
                                   currentRetQty > 0
-                                    ? 'bg-purple-50/50 dark:bg-purple-950/20 border-purple-300 dark:border-purple-800'
-                                    : 'bg-slate-50/70 dark:bg-[#1A2A25]/50 border-slate-200 dark:border-[#24352F]'
+                                    ? 'bg-purple-50/60 dark:bg-purple-950/20 border-purple-300 dark:border-purple-800'
+                                    : 'bg-slate-50/70 dark:bg-[#1A2A25]/40 border-slate-200 dark:border-[#24352F] opacity-75'
                                 }`}
                               >
                                 <div className="flex items-start justify-between gap-2">
-                                  <div>
-                                    <h4 className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
-                                      <span>{item.product_name}</span>
-                                      {isFullyReturned && (
-                                        <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                                          १००% परतावा
-                                        </span>
-                                      )}
-                                      {isPartial && (
-                                        <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
-                                          आंशिक ({currentRetQty}/{item.quantity})
-                                        </span>
-                                      )}
-                                    </h4>
-                                    <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                                      {isMr ? 'खरेदी प्रमाण:' : 'खरीद मात्रा:'} <b>{item.quantity} {item.unit}</b> &bull; {isMr ? 'दर:' : 'दर:'} <b>₹{item.unit_price}</b>
-                                    </p>
+                                  <div className="flex items-start gap-2.5">
+                                    {invoiceReturnChoice === 'partial' && (
+                                      <input
+                                        type="checkbox"
+                                        checked={currentRetQty > 0}
+                                        onChange={() => toggleItemSelection(item.product_id, item.quantity)}
+                                        className="mt-0.5 rounded text-purple-600 focus:ring-purple-500 cursor-pointer w-4 h-4"
+                                      />
+                                    )}
+
+                                    <div>
+                                      <h4 className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+                                        <span>{item.product_name}</span>
+                                        {isFullyReturned && (
+                                          <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                                            १००% परतावा
+                                          </span>
+                                        )}
+                                        {isPartial && (
+                                          <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                                            आंशिक ({currentRetQty}/{item.quantity})
+                                          </span>
+                                        )}
+                                        {isNotReturned && (
+                                          <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                                            परत नाही
+                                          </span>
+                                        )}
+                                      </h4>
+                                      <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
+                                        {isMr ? 'खरेदी मात्रा:' : 'खरीद मात्रा:'} <b>{item.quantity} {item.unit}</b> &bull; {isMr ? 'दर:' : 'दर:'} <b>₹{item.unit_price}</b>
+                                      </p>
+                                    </div>
                                   </div>
 
-                                  <div className="text-right">
+                                  <div className="text-right shrink-0">
                                     <span className="text-[10px] text-slate-400 block">{isMr ? 'परतावा रक्कम:' : 'वापसी राशि:'}</span>
                                     <span className={`text-xs font-black ${currentRetQty > 0 ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400'}`}>
                                       ₹{itemRefund.toFixed(2)}
@@ -750,10 +913,15 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                                   </div>
                                 </div>
 
-                                {/* Quantity Control Buttons */}
+                                {/* Quantity Control Buttons (Enabled in Partial mode, or visible in full) */}
                                 <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-[#24352F]">
                                   <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
-                                    {isMr ? 'परत प्रमाण (Qty to Return):' : 'वापसी मात्रा:'}
+                                    {isMr ? 'परत प्रमाण:' : 'वापसी मात्रा:'} <span className="text-purple-600 dark:text-purple-400 font-extrabold">{currentRetQty} {item.unit}</span>
+                                    {remainingQty > 0 && (
+                                      <span className="text-slate-400 font-normal ml-1">
+                                        ({isMr ? 'शिल्लक' : 'शेष'}: {remainingQty} {item.unit})
+                                      </span>
+                                    )}
                                   </span>
 
                                   <div className="flex items-center gap-1.5">
@@ -761,7 +929,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                                       type="button"
                                       onClick={() => setItemQty(item.product_id, currentRetQty - 1, item.quantity)}
                                       disabled={currentRetQty <= 0}
-                                      className="w-7 h-7 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] text-slate-700 dark:text-white font-bold flex items-center justify-center disabled:opacity-30"
+                                      className="w-7 h-7 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] text-slate-700 dark:text-white font-bold flex items-center justify-center disabled:opacity-30 hover:bg-slate-100 transition active:scale-95"
                                     >
                                       -
                                     </button>
@@ -781,7 +949,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                                       type="button"
                                       onClick={() => setItemQty(item.product_id, currentRetQty + 1, item.quantity)}
                                       disabled={currentRetQty >= item.quantity}
-                                      className="w-7 h-7 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] text-slate-700 dark:text-white font-bold flex items-center justify-center disabled:opacity-30"
+                                      className="w-7 h-7 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] text-slate-700 dark:text-white font-bold flex items-center justify-center disabled:opacity-30 hover:bg-slate-100 transition active:scale-95"
                                     >
                                       +
                                     </button>
@@ -789,7 +957,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                                     <button
                                       type="button"
                                       onClick={() => setItemQty(item.product_id, item.quantity, item.quantity)}
-                                      className="px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-200 hover:bg-purple-100 dark:bg-[#24352F] dark:hover:bg-purple-950 text-slate-700 dark:text-slate-200"
+                                      className="px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-200 hover:bg-purple-100 dark:bg-[#24352F] dark:hover:bg-purple-950 text-slate-700 dark:text-slate-200 transition"
                                     >
                                       Full
                                     </button>
@@ -801,31 +969,49 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                         </div>
                       </div>
 
-                      {/* DYNAMIC RETURN TYPE STATUS BANNER */}
+                      {/* LIVE FINANCIAL IMPACT BANNER */}
                       {anyItemReturning && (
-                        <div className={`p-3.5 rounded-2xl border text-xs space-y-1.5 transition-all ${
+                        <div className={`p-4 rounded-2xl border text-xs space-y-2 transition-all ${
                           isFullReturn
-                            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-200'
-                            : 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-800 text-blue-950 dark:text-blue-200'
+                            ? 'bg-amber-500/10 dark:bg-amber-950/30 border-amber-400 dark:border-amber-800 text-amber-950 dark:text-amber-200'
+                            : 'bg-blue-500/10 dark:bg-blue-950/30 border-blue-400 dark:border-blue-800 text-blue-950 dark:text-blue-200'
                         }`}>
                           <div className="flex items-center justify-between font-black text-sm">
                             <span className="flex items-center gap-1.5">
-                              {isFullReturn ? '👑 संपूर्ण पावती परतावा (100% Full Return)' : '✂️ आंशिक पावती परतावा (Partial Return)'}
+                              {isFullReturn ? '⚡ 100% संपूर्ण बिल वापसी (Full Return)' : '✂️ आंशिक बिल वापसी (Partial Return)'}
                             </span>
-                            <span className="text-base font-black text-emerald-700 dark:text-emerald-400">
-                              ₹{totalRefund.toFixed(2)}
+                            <span className="text-base font-black text-emerald-600 dark:text-emerald-400">
+                              रिफंड: ₹{totalRefund.toFixed(2)}
                             </span>
+                          </div>
+
+                          {/* Dynamic comparison table */}
+                          <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-white/70 dark:bg-[#131F1B]/70 border border-slate-200/50 dark:border-slate-800 text-center">
+                            <div>
+                              <div className="text-[10px] text-slate-400 font-bold uppercase">{isMr ? 'मूळ बिल' : 'मूल बिल'}</div>
+                              <div className="text-xs font-black text-slate-700 dark:text-slate-200">₹{selectedSale.net_amount.toFixed(2)}</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-rose-500 font-bold uppercase">{isMr ? 'परतावा रिफंड' : 'वापसी रिफंड'}</div>
+                              <div className="text-xs font-black text-rose-600 dark:text-rose-400">-₹{totalRefund.toFixed(2)}</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-purple-600 dark:text-purple-400 font-bold uppercase">{isMr ? 'नवीन पावती बाकी' : 'नया बिल शेष'}</div>
+                              <div className="text-xs font-black text-purple-700 dark:text-purple-300">
+                                ₹{isFullReturn ? '0.00 (रद्द)' : remainingSaleAmount.toFixed(2)}
+                              </div>
+                            </div>
                           </div>
 
                           <p className="text-[11px] leading-relaxed">
                             {isFullReturn ? (
                               isMr
-                                ? `या बिलातील सर्व वस्तू परत होत आहेत. त्यामुळे ही मूळ पावती विक्री (Sales) यादीतून कायमची हटवली जाईल आणि सर्व तपशील Return & Refund व्यवस्थापनात सेव्ह केले जातील.`
-                                : `इस बिल के सभी सामान वापस हो रहे हैं। अतः यह बिल बिक्री सूची से स्थायी रूप से हटा दिया जाएगा और सभी विवरण Return & Refund में सहेजे जाएंगे।`
+                                ? `📢 या बिलातील सर्व वस्तू परत होत आहेत. त्यामुळे ही मूळ पावती विक्री (Sales Ledger) मधून कायमची रद्द होईल आणि सर्व तपशील Returns & Refund व्यवस्थापनात सुरक्षित सेव्ह राहतील.`
+                                : `📢 इस बिल के सभी सामान वापस हो रहे हैं। यह मूल बिल बिक्री सूची से स्थायी रूप से रद्द हो जाएगा और सभी विवरण Returns & Refund में सुरक्षित सहेजे जाएंगे।`
                             ) : (
                               isMr
-                                ? `काही वस्तू परत केल्या जात आहेत. परत न केलेल्या वस्तूंचे बिल अपडेट केले जाईल (नवीन पावती शिल्लक: ₹${remainingSaleAmount.toFixed(2)}) आणि परत केलेला माल Return & Refund व्यवस्थापनात नोंदवला जाईल.`
-                                : `कुछ सामान वापस किया जा रहा है। बाकी सामान का बिल अपडेट हो जाएगा (नया बिल शेष: ₹${remainingSaleAmount.toFixed(2)}) और वापसी Return & Refund में दर्ज होगी।`
+                                ? `📢 पावतीमधील शिल्लक वस्तूंचे बिल ₹${remainingSaleAmount.toFixed(2)} रकमेसह विक्रीमध्ये अद्ययावत राहील. परत केलेला माल Return Ledger मध्ये नोंदवला जाईल.`
+                                : `📢 बिल का शेष सामान ₹${remainingSaleAmount.toFixed(2)} की संशोधित राशि के साथ बिक्री में सुरक्षित रहेगा। वापस किया गया सामान Return Ledger में दर्ज होगा।`
                             )}
                           </p>
                         </div>
@@ -896,7 +1082,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 {/* 1. Condition Selector */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-[#E7F0EC] mb-1.5">
-                    {isMr ? '३. परत घेतलेल्या मालाची स्थिती (Condition):' : '३. वापस लिए गए सामान की स्थिति:'}
+                    {isMr ? '४. परत घेतलेल्या मालाची स्थिती (Condition):' : '४. वापस लिए गए सामान की स्थिति:'}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -936,7 +1122,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 {/* 2. Refund Mode Selector */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-[#E7F0EC] mb-1.5">
-                    {isMr ? '४. परतावा पद्धत (Refund Mode):' : '४. रिफंड माध्यम:'}
+                    {isMr ? '५. परतावा पद्धत (Refund Mode):' : '५. रिफंड माध्यम:'}
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
@@ -969,7 +1155,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-[#E7F0EC] mb-1">
-                      {isMr ? '५. परतावा कारण (Reason):' : '५. वापसी कारण:'}
+                      {isMr ? '६. परतावा कारण (Reason):' : '६. वापसी कारण:'}
                     </label>
                     <select
                       value={reason}
@@ -1034,19 +1220,33 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting || (returnMode === 'invoice' ? (!anyItemReturning || totalRefund <= 0) : directRefundAmount <= 0)}
-                  className={`w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition active:scale-95 shadow-md ${
+                  className={`w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition active:scale-95 shadow-md ${
                     isSubmitting || (returnMode === 'invoice' ? (!anyItemReturning || totalRefund <= 0) : directRefundAmount <= 0)
                       ? 'bg-slate-200 dark:bg-[#1A2A25] text-slate-400 cursor-not-allowed'
-                      : 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/25'
+                      : invoiceReturnChoice === 'full'
+                      ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-600/30'
+                      : 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-600/30'
                   }`}
                 >
                   <RotateCcw className={`w-4 h-4 ${isSubmitting ? 'animate-spin' : ''}`} />
                   <span>
-                    {isSubmitting
-                      ? (isMr ? 'परतावा प्रक्रिया सुरू आहे...' : 'वापसी प्रक्रिया जारी है...')
-                      : (isMr 
-                          ? `ग्राहक परतावा निश्चित करा (रिफंड: ₹${returnMode === 'invoice' ? totalRefund.toFixed(2) : directRefundAmount.toFixed(2)})`
-                          : `ग्राहक वापसी दर्ज करें (रिफंड: ₹${returnMode === 'invoice' ? totalRefund.toFixed(2) : directRefundAmount.toFixed(2)})`)}
+                    {isSubmitting ? (
+                      isMr ? 'परतावा प्रक्रिया सुरू आहे...' : 'वापसी प्रक्रिया जारी है...'
+                    ) : returnMode === 'invoice' ? (
+                      isFullReturn ? (
+                        isMr 
+                          ? `⚡ संपूर्ण बिल रद्द करून परतावा निश्चित करा (रिफंड: ₹${totalRefund.toFixed(2)})`
+                          : `⚡ संपूर्ण बिल रद्द करके वापसी दर्ज करें (रिफंड: ₹${totalRefund.toFixed(2)})`
+                      ) : (
+                        isMr 
+                          ? `✂️ आंशिक परतावा नोंदवून बिल अपडेट करा (रिफंड: ₹${totalRefund.toFixed(2)})`
+                          : `✂️ आंशिक वापसी दर्ज कर बिल अपडेट करें (रिफंड: ₹${totalRefund.toFixed(2)})`
+                      )
+                    ) : (
+                      isMr 
+                        ? `थेट परतावा निश्चित करा (रिफंड: ₹${directRefundAmount.toFixed(2)})`
+                        : `सीधी वापसी दर्ज करें (रिफंड: ₹${directRefundAmount.toFixed(2)})`
+                    )}
                   </span>
                 </button>
               </div>

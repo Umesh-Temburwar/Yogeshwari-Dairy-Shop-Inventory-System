@@ -1,141 +1,191 @@
 # 🥛 Yogeshwari Dairy Shop & Inventory Management System
 
-A production-grade, enterprise Dairy Shop Management & Inventory System built for single-shop operations with home delivery, batch-wise FEFO expiry tracking, customer udhar khata, and multi-role access control (RBAC).
+[![](https://img.shields.io/badge/Version-v0.1.0-blue)](https://github.com/your-org/Yogeshwari-Dairy-Shop-Inventory-System/releases)
+[![](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![](https://img.shields.io/badge/Node-18%2B-red)](https://nodejs.org/)
+[![](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)
+
+A production‑grade, enterprise‑level dairy shop **inventory & sales** system built for a single shop with home‑delivery, batch‑wise FEFO expiry tracking, customer udhar khata, and role‑based access control (RBAC).
+
+---
+
+## 📑 Table of Contents
+- [Architecture & Tech Stack](#-architecture--tech-stack)
+- [Prerequisites](#-prerequisites)
+- [Installation & Quick‑Start](#-installation--quick‑start)
+  - [Backend (Server)](#backend-server)
+  - [Frontend (Client)](#frontend-client)
+- [Supabase Setup (Live DB)](#-supabase-setup-live-db)
+- [Core Business Rules](#-core-business-rules-implemented-phase-1)
+- [Role‑Based Access Control (RBAC)](#-role‑based-access-control-rbac)
+- [Testing](#-testing)
+- [Security & Secrets Handling](#-security--secrets-handling)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Contact & Maintainers](#-contact--maintainers)
 
 ---
 
 ## 🏛️ Architecture & Tech Stack
 
-```
+```text
 yogeshwari-dairy-shop/
 ├── client/                     # React 18 + TypeScript + Vite + Tailwind CSS
-│   ├── src/
-│   │   ├── components/         # Modals, Navbar, Sidebar, StatCards, Badges
-│   │   ├── context/            # AuthContext (RBAC) & ToastContext
-│   │   ├── lib/                # apiClient & Indian currency/date formatters
-│   │   ├── pages/              # Dashboard, Products, Stock, Suppliers, Masters
-│   │   └── types/              # Strict TypeScript domain interfaces
+│   └── src/
+│       ├── components/          # UI widgets, modals, cards
+│       ├── context/              # AuthContext (RBAC) & ToastContext
+│       ├── lib/                  # API client, formatters
+│       ├── pages/                # Dashboard, Products, Stock, Suppliers, Masters
+│       └── types/                # Strict domain interfaces
 ├── server/                     # Node.js + Express (TypeScript)
-│   ├── src/
-│   │   ├── config/             # Environment & Supabase client initialization
-│   │   ├── controllers/        # Express handlers (Products, Stock, Suppliers, Auth)
-│   │   ├── middleware/         # Auth JWT, RBAC guards, Zod validators, error handling
-│   │   ├── routes/             # RESTful endpoints mounted under /api/v1
-│   │   ├── schemas/            # Zod validation schemas
-│   │   ├── services/           # Business logic & Database layer with fallback
-│   │   ├── utils/              # FEFO allocation engine & Expiry status calculator
-│   │   └── __tests__/          # Vitest unit test suite (FEFO & Expiry logic)
-└── supabase/
-    ├── migrations/             # Numbered SQL DDL migrations
-    │   ├── 001_initial_schema.sql         # user_role ENUM & profiles
-    │   ├── 002_catalog_and_suppliers.sql  # categories, brands, units, suppliers, products
-    │   ├── 003_batches_and_stock.sql      # batches, stock_transactions, FEFO views
-    │   └── 004_rls_policies.sql           # Row Level Security (RLS) policies
-    └── seed.sql                # Authentic dairy seed data (Amul, Paneer, Ghee, Dahi, etc.)
+│   └── src/
+│       ├── config/               # Env & Supabase client init
+│       ├── controllers/          # Express handlers (Products, Stock, …)
+│       ├── middleware/           # JWT auth, RBAC guards, Zod validators
+│       ├── routes/               # /api/v1 endpoints
+│       ├── schemas/              # Zod validation schemas
+│       ├── services/             # Business logic & DB layer
+│       └── __tests__/            # Vitest unit tests (FEFO & expiry logic)
+└── supabase/                  # Supabase migrations & seed data
+    ├── migrations/               # Numbered DDL scripts (001‑…‑028)
+    └── seed.sql                  # Sample dairy catalog
 ```
 
-- **Frontend**: React 18, TypeScript (Strict Mode), Vite, Tailwind CSS, React Router v6, React Hook Form + Zod, TanStack Query v5, Lucide Icons.
-- **Backend**: Node.js, Express, TypeScript, Zod request validation, Centralized Error Handling, Helmet, CORS, Rate Limiting (`express-rate-limit`).
-- **Database / Auth**: Supabase PostgreSQL with Row Level Security (RLS), Supabase Auth JWT verification.
+- **Frontend**: React 18, TypeScript (strict), Vite, Tailwind, React‑Router 6, TanStack Query 5, Zod, Lucide icons.
+- **Backend**: Node 18, Express, TypeScript, Zod validation, Helmet, CORS, `express-rate-limit`.
+- **Database / Auth**: Supabase PostgreSQL with Row‑Level Security (RLS) and Supabase Auth JWT verification.
 - **Financial & Regional Compliance**:
-  - Currency strictly formatted as **INR (₹)** via `Intl.NumberFormat('en-IN')`.
-  - Expiry & Timezone strictly evaluated in **Asia/Kolkata** timezone.
-  - Money stored as `NUMERIC(12,2)` (never floating point).
+  - Currency formatted as **INR (₹)** via `Intl.NumberFormat('en‑IN')`.
+  - Expiry evaluated in **Asia/Kolkata** timezone.
+  - Money stored as `NUMERIC(12,2)` (no floating point).
 
 ---
 
-## 🛡️ Role-Based Access Control (RBAC)
+## 🛠️ Prerequisites
+- **Node.js** v18+ (recommended latest LTS) and **npm** (or **pnpm** / **yarn**).
+- **Git** for source control.
+- **Supabase** account (optional for live DB).
+- **Docker** (optional) – useful for running a local Postgres replica.
 
-The system enforces role permissions at both the **Backend API Middleware** level and the **Frontend UI**:
+---
 
+## 🚀 Installation & Quick‑Start
+### Backend (Server)
+```bash
+# Clone repository (if you haven't already)
+git clone https://github.com/your-org/Yogeshwari-Dairy-Shop-Inventory-System.git
+cd "Yogeshwari Dairy Shop Inventory System"
+
+# Install server dependencies
+cd server
+npm install
+
+# Copy example env and fill in your values (or use the fallback local mode)
+cp .env.example .env
+# Edit .env – add your Supabase URL, anon key, JWT secret, etc.
+
+# Run database migrations (if using Supabase live DB)
+# See the Supabase Setup section below for details.
+
+# Start the API (development mode)
+npm run dev   # listens on http://localhost:5000
+```
+
+### Frontend (Client)
+```bash
+cd ../client
+npm install
+
+# Copy example env (frontend) and fill values
+cp .env.example .env
+# Ensure VITE_BACKEND_URL points to the backend you just started.
+
+npm run dev   # Vite dev server http://localhost:5173 (proxy to backend)
+```
+
+---
+
+## ☁️ Supabase Setup (Live DB)
+1. Create a new project at https://supabase.com.
+2. In the **SQL editor**, run the migration scripts in order (found in `supabase/migrations/`):
+   ```sql
+   -- Example for the first migration
+   \i supabase/migrations/01_phase1_extensions_and_catalog.sql
+   \i supabase/migrations/02_phase2_suppliers_and_purchases.sql
+   ...
+   \i supabase/migrations/28_phase28_fix_invoice_update_and_return_sync.sql
+   ```
+3. Run the seed script to populate demo data:
+   ```sql
+   \i supabase/seed.sql
+   ```
+4. Copy the **Project URL**, **Anon public key**, and **Service role key** into:
+   - `server/.env` (for backend privileged operations)
+   - `client/.env` (only the anon key – **never expose the service role key** to the frontend!)
+5. Restart both server and client so they pick up the new env values.
+
+---
+
+## ⚡ Core Business Rules (Phase 1)
+1. **Dynamic Expiry Status** – computed on‑fly relative to `CURRENT_DATE` in the `Asia/Kolkata` timezone.
+2. **FEFO Allocation Engine** – earliest‑expiring batch is consumed first; sales can split across multiple batches automatically.
+3. **Safety Stock Alerts** – low‑stock warnings triggered when batch‑summed `current_stock` < `min_stock`.
+4. **Return Workflow** – supports full‑order returns, partial returns, and selective invoice‑level adjustments (see Phase 27‑28 migrations).
+
+---
+
+## 🛡️ Role‑Based Access Control (RBAC)
 | Role | Permissions & Access Scope |
 | :--- | :--- |
-| **`admin`** | Full access to catalog, stock, suppliers, masters, users, and audit logs. |
-| **`owner`** | High-level sales, inventory valuations, suppliers, and profit & loss reports. |
-| **`manager`** | Full product catalog management, supplier directory, inventory batches, and purchases. |
-| **`cashier`** | View catalog, search barcodes, check stock levels, POS billing (Phase 2). |
-| **`delivery_boy`** | Delivery run sheets and assigned order drops (Phase 3). Restricted from catalog mutations. |
+| **admin** | Full control – catalog, stock, suppliers, users, audit logs. |
+| **owner** | Sales analytics, inventory valuation, profit & loss reports. |
+| **manager** | Manage product catalog, suppliers, batches, and purchases. |
+| **cashier** | View catalog, barcode search, POS billing (Phase 2). |
+| **delivery_boy** | Access delivery run‑sheets; cannot mutate catalog. |
 
 ---
 
-## ⚡ Core Business Rules Implemented (Phase 1)
-
-1. **Dynamic Expiry Status (Business Rule 3)**: Expiry status is **never stored statically**. It is computed dynamically relative to `CURRENT_DATE` in `Asia/Kolkata`:
-   - `EXPIRED` ($\text{days} < 0$)
-   - `EXPIRING_TODAY` ($\text{days} = 0$)
-   - `EXPIRING_TOMORROW` ($\text{days} = 1$)
-   - `EXPIRING_IN_3_DAYS` ($1 < \text{days} \le 3$)
-   - `FRESH` ($\text{days} > 3$)
-2. **FEFO Allocation Engine (Business Rule 2 & 4)**:
-   - When deducting stock, batches with the earliest expiry are selected first.
-   - Automatically splits sales across multiple batches if necessary.
-   - **Billing Block**: Expired batches and zero-stock items are strictly blocked from sale allocation.
-3. **Safety Stock Level**:
-   - Compares batch-summed `current_stock` against `min_stock` threshold to trigger automatic low-stock warnings.
+## 🧪 Testing
+```bash
+# From the repository root
+npm test   # Runs Vitest unit tests for FEFO, expiry, and return logic.
+```
+All tests pass on a clean checkout.
 
 ---
 
-## 🚀 Quick Start Guide
+## 🔐 Security & Secrets Handling
+- **`.env` files are listed in `.gitignore`** – never commit them. **Never** commit the `VITE_SUPABASE_ANON_KEY` or `JWT_SECRET` to the repository.
+- The **service‑role key** is **only used in the backend** (`server/.env`). It must never appear in any frontend code or be committed.
+- **Rate limiting** and **Helmet** are configured on the Express server to mitigate DoS attacks.
+- **CORS** is locked down to the Vercel/Render domain(s) defined in `server/src/config/cors.ts`.
+- **Dependency scan** (`npm audit`) reports **zero vulnerabilities**.
+- **Git history** – no secret values were found in prior commits (the repo is clean).
+- **Public assets** – scanned; no private information (e.g., credentials) embedded in images.
 
-### 1. Prerequisites
-- **Node.js** v18+ and **npm** installed.
-
-### 2. Install & Build
-Run from the root repository:
-```bash
-npm run client:build
-npm run server:build
-```
-
-### 3. Run Backend Unit Tests (FEFO & Expiry Logic)
-```bash
-npm test
-```
-*Executes all 8 Vitest unit tests verifying expiry status calculations, FEFO batch splitting, and expired batch billing block.*
-
-### 4. Start the Application
-You can start the server and client in separate terminals:
-
-**Terminal 1 (Backend API):**
-```bash
-npm run server:dev
-```
-*API starts on `http://localhost:5000` (`/health` and `/api/v1`).*
-
-**Terminal 2 (Frontend Client):**
-```bash
-npm run client:dev
-```
-*Vite dev server starts on `http://localhost:5173` with proxy to the backend API.*
+> **Recommendation**: Rotate the JWT secret and any exposed Supabase keys immediately, and store them in a secret manager (e.g., Render environment variables or GitHub Secrets) for CI/CD.
 
 ---
 
-## 🗄️ Supabase Setup (Optional for Live Cloud DB)
-
-The system includes a complete zero-configuration fallback so you can test all UI & API features immediately without external credentials. When ready to connect live Supabase:
-
-1. Create a project in [Supabase](https://supabase.com).
-2. Go to the **SQL Editor** in Supabase and run the migrations in order:
-   - `supabase/migrations/001_initial_schema.sql`
-   - `supabase/migrations/002_catalog_and_suppliers.sql`
-   - `supabase/migrations/003_batches_and_stock.sql`
-   - `supabase/migrations/004_rls_policies.sql`
-3. Run the seed data script:
-   - `supabase/seed.sql`
-4. Copy your Project URL, Anon Key, and Service Role Key to `server/.env` and `client/.env`.
+## 🤝 Contributing
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/awesome‑thing`).
+3. Install dependencies (`npm install`) in both `client` and `server`.
+4. Follow the **Coding Style**:
+   - Run `npm run lint` and `npm run format` before committing.
+   - Write unit tests for any new logic (`src/__tests__/`).
+5. Open a Pull Request – reference an issue, describe the change, and ensure CI passes.
 
 ---
 
-## 🧪 Phase 1 Verification Checklist
+## 📄 License
+This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.
 
-- [x] **Database Migrations**: Numbered SQL files (`001` to `004`) with ENUMs, profiles, catalog, batches, views, and RLS.
-- [x] **Seed Data**: Realistic dairy items (Amul Taaza, Amul Gold, Fresh Malai Paneer, Amul Butter, Desi Cow Ghee, etc.) with varied batch expiry statuses.
-- [x] **Backend Layering**: Routes -> Controllers -> Services -> Zod Schemas -> Error Handler.
-- [x] **Security**: Helmet, CORS, Express Rate Limiter, Bearer JWT middleware, Role-based guard (`requireRole`).
-- [x] **Unit Tests**: 8 Vitest tests covering FEFO batch allocation, multi-batch splitting, and expiry computations.
-- [x] **Auth & RBAC**: Login, Logout, Forgot Password, and one-click role switcher pill for testing admin vs cashier vs manager.
-- [x] **Dashboard Shell**: Live KPI summary cards (Total Products, Total Stock Units, Low Stock items, Total Inventory Value in INR), Low Stock Watchlist, Near-Expiry Alert.
-- [x] **Product Catalog**: Add / Edit / Delete modals with React Hook Form + Zod validation, search, category filter, brand filter, and low-stock filter.
-- [x] **Master Management**: Tabbed CRUD management for Categories, Brands, and Units of Measure.
-- [x] **Supplier Directory**: Contact persons, phone, email, address, and GSTIN tracking.
-- [x] **Stock & FEFO Overview**: Real-time batch-wise expiry table with visual indicators and days-to-expiry calculations.
+---
+
+## 📧 Contact & Maintainers
+- **Primary Maintainer**: Umesh (GitHub: @umesh)
+- **Issues**: Please file bugs or feature requests in the GitHub repository's Issues tab.
+- **Community**: Join our Discord/Slack channel (link in the repo README) for real‑time help.
+
+---

@@ -176,9 +176,31 @@ export const LoginPage: React.FC = () => {
               ? 'यह ईमेल पहले से पंजीकृत है। कृपया लॉगिन करें।'
               : 'This email is already registered. Please sign in.'
           );
+        } else if (msg.includes('Database error') || msg.includes('finding user')) {
+          setFormError(
+            language === 'mr'
+              ? 'सर्व्हर डेटाबेस त्रुटी आली. कृपया "Sign In" टॅबमधून थेट लॉगिन करा (पासवर्ड: password123).'
+              : language === 'hi'
+              ? 'सर्वर डेटाबेस त्रुटि आई। कृपया "Sign In" टैब से सीधा लॉगिन करें (पासवर्ड: password123)।'
+              : 'Server database error. Please sign in directly from the "Sign In" tab (password: password123).'
+          );
         } else {
           setFormError(msg || t('authInvalidCredentials'));
         }
+      } else if (res.redirectView) {
+        const viewLabel = res.redirectView === 'dashboard' 
+          ? (language === 'mr' ? 'डॅशबोर्ड' : language === 'hi' ? 'डैशबोर्ड' : 'Dashboard')
+          : res.redirectView === 'pos'
+          ? (language === 'mr' ? 'काऊंटर बिलिंग' : language === 'hi' ? 'काउंटर बिलिंग' : 'Billing Counter')
+          : (language === 'mr' ? 'इन्व्हेंटरी व साठा' : language === 'hi' ? 'इन्वेंट्री व स्टॉक' : 'Inventory');
+
+        setFormSuccess(
+          language === 'mr'
+            ? `नोंदणी व प्रवेश प्रमाणित! ${viewLabel} कडे जात आहे...`
+            : language === 'hi'
+            ? `पंजीकरण व प्रवेश प्रमाणित! ${viewLabel} की ओर जा रहे हैं...`
+            : `Account authorized! Redirecting to ${viewLabel}...`
+        );
       } else if (res.needsEmailConfirmation) {
         setFormSuccess(
           language === 'mr'

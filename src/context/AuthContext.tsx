@@ -310,6 +310,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             };
           }
 
+          const isDbError = error.message?.toLowerCase().includes('database error') || error.message?.toLowerCase().includes('finding user');
           const isNetworkError = error.message?.toLowerCase().includes('failed to fetch') || error.message?.toLowerCase().includes('network');
           const isOfficial = 
             cleanEmail === 'yogeshwaridairy9896@gmail.com' ||
@@ -317,7 +318,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             cleanEmail.includes('nilu') ||
             cleanEmail.includes('yogeshwari');
 
-          if (!isOfficial || !isNetworkError) {
+          // If official shop account and there's a network issue or database error, proceed to fallback!
+          if (isOfficial && (isNetworkError || isDbError)) {
+            console.warn('Falling back to local authorized session due to auth issue:', error.message);
+          } else {
             return { error };
           }
         }
@@ -389,6 +393,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const targetRedirect = detected.redirectView;
       const finalName = fullName?.trim() || detected.fullName;
 
+      const isOfficial = 
+        cleanEmail === 'yogeshwaridairy9896@gmail.com' ||
+        cleanEmail === 'nilusakhare2003@gmail.com' ||
+        cleanEmail.includes('nilu') ||
+        cleanEmail.includes('yogeshwari');
+
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
@@ -402,7 +412,49 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        const isDbError = error.message?.toLowerCase().includes('database error') || error.message?.toLowerCase().includes('finding user');
+        const isNetworkError = error.message?.toLowerCase().includes('failed to fetch') || error.message?.toLowerCase().includes('network');
+
+        // If official account and there is a database/network error, activate local authorized account immediately!
+        if (isOfficial && (isDbError || isNetworkError)) {
+          console.warn('Supabase auth signup server error, activating authorized account locally:', error.message);
+          const localUser: any = {
+            id: `ydo-${assignedRole.toLowerCase()}${assignedSlot ? assignedSlot : ''}-counter`,
+            email: cleanEmail,
+            user_metadata: {
+              full_name: finalName,
+              role: assignedRole,
+              admin_slot: assignedSlot,
+              default_redirect_view: targetRedirect,
+            },
+            aud: 'authenticated',
+            created_at: new Date().toISOString(),
+          };
+
+          setUser(localUser);
+          setSession(null);
+          setRole(assignedRole, assignedSlot);
+          try {
+            localStorage.setItem(LOCAL_USER_STORAGE_KEY, JSON.stringify(localUser));
+            localStorage.setItem('yd_active_view', targetRedirect);
+            if (typeof window !== 'undefined') {
+              window.location.hash = `#/${targetRedirect}`;
+            }
+          } catch {}
+
+          lockSecurity();
+          return {
+            error: null,
+            user: localUser,
+            session: null,
+            needsEmailConfirmation: false,
+            redirectView: targetRedirect
+          };
+        }
+
+        throw error;
+      }
 
       // Upsert profile in public.profiles table
       if (data.user) {

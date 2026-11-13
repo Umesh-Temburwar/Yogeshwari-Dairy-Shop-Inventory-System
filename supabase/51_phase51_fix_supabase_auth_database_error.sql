@@ -4,15 +4,17 @@
 -- File: supabase/51_phase51_fix_supabase_auth_database_error.sql
 -- ============================================================================
 -- Description:
--- Fixes the Supabase GoTrue Auth error: "Database error finding user" (HTTP 500):
--- 1. Cleans NULL string columns in auth.users (GoTrue sqlx fails when tokens are NULL).
--- 2. Populates missing records in auth.identities for email auth.
--- 3. Hardens the public.handle_new_user() trigger with EXCEPTION handling so it
+-- Fixes the Supabase GoTrue Auth error: "Database error finding user" (HTTP 500)
+-- and eliminates the "users_phone_key duplicate key" constraint violation:
+-- 1. Resets phone = NULL for empty strings (users_phone_key is UNIQUE; multiple NULLs allowed, but '' violates unique constraint).
+-- 2. Cleans NULL string token columns in auth.users (GoTrue sqlx fails when tokens are NULL).
+-- 3. Populates missing records in auth.identities for email auth.
+-- 4. Hardens the public.handle_new_user() trigger with EXCEPTION handling so it
 --    NEVER aborts a user registration transaction.
--- 4. Pre-confirms and ensures valid bcrypt hashes for the 2 authorized shop users:
+-- 5. Pre-confirms and ensures valid bcrypt hashes for the 2 authorized shop users:
 --    - 👑 Shop Owner: yogeshwaridairy9896@gmail.com (Password: password123)
 --    - 🛡️ Admin 1: nilusakhare2003@gmail.com (Password: password123)
--- 5. Synchronizes public.profiles with valid auth_user_id links.
+-- 6. Synchronizes public.profiles with valid auth_user_id links.
 --
 -- Instructions:
 -- 1. Open Supabase Dashboard -> SQL Editor -> New Query.
@@ -22,9 +24,19 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ----------------------------------------------------------------------------
--- STEP 1: FIX NULL STRING COLUMNS IN auth.users
+-- STEP 1: RESET PHONE TO NULL FOR EMPTY STRINGS TO SATISFY users_phone_key
+-- auth.users has a UNIQUE constraint on phone (users_phone_key).
+-- In PostgreSQL, multiple NULLs are allowed in UNIQUE constraints, but '' creates duplicate key errors!
+-- ----------------------------------------------------------------------------
+UPDATE auth.users
+SET phone = NULL
+WHERE phone = '';
+
+-- ----------------------------------------------------------------------------
+-- STEP 2: FIX NULL STRING TOKEN COLUMNS IN auth.users
 -- GoTrue uses Go's sqlx driver which crashes with "converting NULL to string is unsupported"
 -- when token fields are NULL instead of empty strings ('').
+-- NOTE: phone is intentionally EXCLUDED because it must remain NULL when not set.
 -- ----------------------------------------------------------------------------
 UPDATE auth.users
 SET 
@@ -32,7 +44,6 @@ SET
     recovery_token = COALESCE(recovery_token, ''),
     email_change_token_new = COALESCE(email_change_token_new, ''),
     email_change = COALESCE(email_change, ''),
-    phone = COALESCE(phone, ''),
     phone_change = COALESCE(phone_change, ''),
     phone_change_token = COALESCE(phone_change_token, ''),
     email_change_token_current = COALESCE(email_change_token_current, ''),
@@ -41,14 +52,13 @@ WHERE confirmation_token IS NULL
    OR recovery_token IS NULL
    OR email_change_token_new IS NULL
    OR email_change IS NULL
-   OR phone IS NULL
    OR phone_change IS NULL
    OR phone_change_token IS NULL
    OR email_change_token_current IS NULL
    OR reauthentication_token IS NULL;
 
 -- ----------------------------------------------------------------------------
--- STEP 2: ENSURE auth.identities HAS MATCHING EMAIL IDENTITIES
+-- STEP 3: ENSURE auth.identities HAS MATCHING EMAIL IDENTITIES
 -- GoTrue joins auth.users with auth.identities; missing identities cause "Database error finding user"
 -- ----------------------------------------------------------------------------
 DO $$
@@ -88,7 +98,7 @@ EXCEPTION
 END $$;
 
 -- ----------------------------------------------------------------------------
--- STEP 3: BULLETPROOF handle_new_user() TRIGGER FUNCTION
+-- STEP 4: BULLETPROOF handle_new_user() TRIGGER FUNCTION
 -- Sets search_path to include public, extensions, pg_catalog.
 -- Adds EXCEPTION WHEN OTHERS block so trigger NEVER crashes an auth transaction.
 -- ----------------------------------------------------------------------------
@@ -187,8 +197,8 @@ AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ----------------------------------------------------------------------------
--- STEP 4: REPAIR & PRE-CONFIRM AUTHORIZED OWNER & ADMIN USERS
--- Ensure valid password (password123), confirmed email, and correct metadata
+-- STEP 5: REPAIR & PRE-CONFIRM AUTHORIZED OWNER & ADMIN USERS
+-- Ensure valid password (password123), confirmed email, phone=NULL, and correct metadata
 -- ----------------------------------------------------------------------------
 DO $$
 DECLARE
@@ -225,7 +235,7 @@ BEGIN
             'yogeshwaridairy9896@gmail.com',
             encrypted_pw,
             NOW(),
-            '', '', '', '', '', '', '', '', '',
+            '', '', '', '', NULL, '', '', '', '',
             '{"provider":"email","providers":["email"]}'::jsonb,
             '{"full_name":"योगेश्वरी डेअरी मालक (Shop Owner)","role":"Owner","default_redirect_view":"dashboard"}'::jsonb,
             'authenticated',
@@ -242,7 +252,7 @@ BEGIN
             recovery_token = '',
             email_change_token_new = '',
             email_change = '',
-            phone = '',
+            phone = NULL,
             phone_change = '',
             phone_change_token = '',
             email_change_token_current = '',
@@ -284,7 +294,7 @@ BEGIN
             'nilusakhare2003@gmail.com',
             encrypted_pw,
             NOW(),
-            '', '', '', '', '', '', '', '', '',
+            '', '', '', '', NULL, '', '', '', '',
             '{"provider":"email","providers":["email"]}'::jsonb,
             '{"full_name":"निलेश सखारे (प्रशासक १)","role":"Admin","admin_slot":1,"default_redirect_view":"pos"}'::jsonb,
             'authenticated',
@@ -301,7 +311,7 @@ BEGIN
             recovery_token = '',
             email_change_token_new = '',
             email_change = '',
-            phone = '',
+            phone = NULL,
             phone_change = '',
             phone_change_token = '',
             email_change_token_current = '',
@@ -344,7 +354,7 @@ BEGIN
 END $$;
 
 -- ----------------------------------------------------------------------------
--- STEP 5: SYNC public.profiles TABLE WITH VALID auth_user_id
+-- STEP 6: SYNC public.profiles TABLE WITH VALID auth_user_id
 -- ----------------------------------------------------------------------------
 INSERT INTO public.profiles (
     id, email, full_name, role, admin_slot, default_redirect_view, is_active

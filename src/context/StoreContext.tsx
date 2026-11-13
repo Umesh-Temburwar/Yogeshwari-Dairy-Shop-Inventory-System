@@ -2258,6 +2258,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           online_amount: newOnlineAmount,
           udhar_amount: newUdharAmount
         }).eq('id', saleId);
+        // Ensure changes are persisted before broadcasting
+        await broadcastMutation('sales', 'update');
+        // Refresh local state from Supabase to avoid stale data
+        await syncWithSupabase();
 
         if (updates.items) {
           await supabase.from('sale_items').delete().eq('sale_id', saleId);
@@ -2605,44 +2609,51 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setSales(prev => prev.map(s => s.id === targetSale.id ? updatedSale : s));
 
         if (supabase) {
-          (async () => {
-            try {
-              await supabase.from('sales').update({
-                total_amount: updatedTotalAmount,
-                discount: updatedDiscount,
-                net_amount: updatedNetAmount,
-                cash_amount: updatedCash,
-                online_amount: updatedOnline,
-                udhar_amount: updatedUdhar,
-              }).eq('id', targetSale.id);
+          try {
+            await supabase.from('sales').update({
+              total_amount: updatedTotalAmount,
+              discount: updatedDiscount,
+              net_amount: updatedNetAmount,
+              cash_amount: updatedCash,
+              online_amount: updatedOnline,
+              udhar_amount: updatedUdhar,
+            }).eq('id', targetSale.id);
 
-              // Delete items that were completely returned
-              const remainingProductIds = remainingItems.map(i => i.product_id);
-              const itemsToDelete = targetSale.items.filter(i => !remainingProductIds.includes(i.product_id));
-              for (const delItem of itemsToDelete) {
-                await supabase.from('sale_items').delete().eq('sale_id', targetSale.id).eq('product_id', delItem.product_id);
-              }
-
-              // Update quantity and total of remaining items
-              for (const remItem of remainingItems) {
-                const { error: updErr } = await supabase.from('sale_items').update({
-                  quantity: remItem.quantity,
-                  total_price: remItem.total_price
-                }).eq('sale_id', targetSale.id).eq('product_id', remItem.product_id);
-
-                if (updErr && remItem.id) {
-                  await supabase.from('sale_items').update({
-                    quantity: remItem.quantity,
-                    total_price: remItem.total_price
-                  }).eq('id', remItem.id);
-                }
-              }
-
-              broadcastMutation('sales', 'update');
-            } catch (e) {
-              console.error('Failed to update partially returned sale in Supabase:', e);
+            // Delete items that were completely returned
+            const remainingProductIds = remainingItems.map(i => i.product_id);
+            const itemsToDelete = targetSale.items.filter(i => !remainingProductIds.includes(i.product_id));
+            for (const delItem of itemsToDelete) {
+              await supabase.from('sale_items')
+                .delete()
+                .eq('sale_id', targetSale.id)
+                .eq('product_id', delItem.product_id);
             }
-          })();
+
+            // Update quantity and total of remaining items
+            for (const remItem of remainingItems) {
+              const { error: updErr } = await supabase.from('sale_items')
+                .update({
+                  quantity: remItem.quantity,
+                  total_price: remItem.total_price,
+                })
+                .eq('sale_id', targetSale.id)
+                .eq('product_id', remItem.product_id);
+
+              if (updErr && remItem.id) {
+                await supabase.from('sale_items')
+                  .update({
+                    quantity: remItem.quantity,
+                    total_price: remItem.total_price,
+                  })
+                  .eq('id', remItem.id);
+              }
+            }
+
+            await broadcastMutation('sales', 'update');
+            await syncWithSupabase();
+          } catch (e) {
+            console.error('Failed to update partially returned sale in Supabase:', e);
+          }
         }
 
         logAdminActivity({

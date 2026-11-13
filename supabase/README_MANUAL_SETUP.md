@@ -35,6 +35,7 @@
 | **Phase 22** | [`22_phase22_customer_gender_agegroup_sales_analytics.sql`](./22_phase22_customer_gender_agegroup_sales_analytics.sql) | **ग्राहक लिंग व वयोगट विक्री विश्लेषण** | POS बिलिंगमध्ये Gender (पुरुष/महिला/इतर) व Age Group (<18, 18-25, 26-45, 45+) फील्ड्स; `v_sales_customer_demographics` व `v_daily_gender_revenue` ॲनालिटिक्स व्ह्यूज; udhar_customers address/notes कॉलम; Realtime सक्षम |
 | **Phase 23** | [`23_phase23_fix_agegroup_filter_mismatch.sql`](./23_phase23_fix_agegroup_filter_mismatch.sql) | **वयोगट फिल्टर मिसमॅच फिक्स** | जुन्या 'Kids/Teens (<18)' व 'Seniors (45+)' डेटा → 'Kids (<18)' व 'Senior (45+)' मध्ये सुधारणा; CHECK constraint अपडेट; ॲनालिटिक्स व्ह्यूज पुन्हा तयार |
 | **Phase 24** | [`24_phase24_kpi_cards_demographic_filter.sql`](./24_phase24_kpi_cards_demographic_filter.sql) | **KPI कार्ड्स डेमोग्राफिक फिल्टर** | Gender व Age Group फिल्टरनुसार Total Sales, Cash Inflow, Online UPI, Credit Given KPI कार्ड्स अपडेट; `v_sales_kpi_by_demographics` व्ह्यू; composite index |
+| **Phase 25** | [`25_phase25_sale_items_and_product_details_fix.sql`](./25_phase25_sale_items_and_product_details_fix.sql) | **बिलातील वस्तू व इनव्हॉइस लेजर तपशील फिक्स** | `sale_items` टेबलसाठी RLS, UUID, ON DELETE SET NULL, Realtime पब्लिकेशन आणि बिलातील वस्तू दर्शवणारा `v_owner_admin_counter_sales_details` व्ह्यू |
 
 ---
 

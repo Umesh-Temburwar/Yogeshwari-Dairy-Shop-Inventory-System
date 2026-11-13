@@ -98,3 +98,4 @@ END $$;
 --   3. Ensures cash_amount, online_amount, udhar_amount
 --      columns exist on sales table for Split payment breakdown
 -- ─────────────────────────────────────────────────────────────
+

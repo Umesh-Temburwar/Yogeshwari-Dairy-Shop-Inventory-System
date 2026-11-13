@@ -454,6 +454,22 @@ export const DailySalesTracker: React.FC = () => {
                           </span>
                         )}
                       </div>
+
+                      {/* Purchased Products Preview on Row */}
+                      {sale.items && sale.items.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                          {sale.items.map((it, idx) => (
+                            <span 
+                              key={idx} 
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/40"
+                            >
+                              <span>📦</span>
+                              <span>{it.product_name}</span>
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold">({it.quantity} {it.unit})</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Financial details & Action Buttons */}
@@ -598,12 +614,18 @@ export const DailySalesTracker: React.FC = () => {
               </div>
 
               <div className="border-t border-b border-slate-200 dark:border-[#24352F] py-1.5 space-y-1">
-                {selectedSaleForView.items?.map((it, i) => (
-                  <div key={i} className="flex justify-between text-[11px] text-slate-800 dark:text-[#E7F0EC]">
-                    <span className="truncate max-w-[150px]">{it.product_name}</span>
-                    <span>{it.quantity} {it.unit} &times; ₹{it.unit_price} = ₹{it.total_price}</span>
+                {selectedSaleForView.items && selectedSaleForView.items.length > 0 ? (
+                  selectedSaleForView.items.map((it, i) => (
+                    <div key={i} className="flex justify-between text-[11px] text-slate-800 dark:text-[#E7F0EC]">
+                      <span className="truncate max-w-[150px] font-semibold">{it.product_name}</span>
+                      <span className="font-mono">{it.quantity} {it.unit} &times; ₹{it.unit_price} = ₹{it.total_price}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-[11px] text-slate-500 py-1">
+                    {language === 'mr' ? 'दुग्ध उत्पादने (दूध/पनीर/तूप)' : language === 'hi' ? 'डेरी उत्पाद (दूध/पनीर/घी)' : 'Dairy Products'} &bull; ₹{selectedSaleForView.net_amount}
                   </div>
-                ))}
+                )}
               </div>
 
               {/* Return Deductions on receipt if any */}

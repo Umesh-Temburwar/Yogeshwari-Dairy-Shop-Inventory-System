@@ -1499,10 +1499,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const entropy = Math.floor(100 + Math.random() * 900);
     const invoiceNo = `YD-${dateCompact}-${counterTag}-${seqStr}-${entropy}`;
 
-    const saleItems = saleData.items.map((item) => ({
+    const saleItems: SaleItem[] = saleData.items.map((item) => ({
+      ...item,
       id: generateUUID(),
       sale_id: saleId,
-      ...item
+      product_id: item.product_id || generateUUID()
     }));
 
     const newSale: Sale = {
@@ -1702,12 +1703,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           const { error: itemsErr } = await supabase.from('sale_items').insert(saleItems.map(si => ({
             id: si.id,
             sale_id: newSale.id,
-            product_id: si.product_id,
+            product_id: (si.product_id && si.product_id.length === 36 && !si.product_id.startsWith('item-') && !si.product_id.startsWith('prod-')) ? si.product_id : null,
             product_name: si.product_name,
             quantity: si.quantity,
             unit: si.unit,
             unit_price: si.unit_price,
-            purchase_cost: si.purchase_cost,
+            purchase_cost: si.purchase_cost || 0,
             total_price: si.total_price
           })));
 

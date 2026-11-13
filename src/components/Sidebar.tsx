@@ -254,13 +254,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-ink-3 font-medium">{language === 'mr' ? 'नफा' : 'Net Profit'}</span>
               <span className="tabular-nums font-semibold text-ok">
-                ₹{metrics.todayNetProfit.toLocaleString('en-IN')}
+                ₹{(metrics.netProfit ?? 0).toLocaleString('en-IN')}
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px]">
               <span className="text-ink-3 font-medium">{language === 'mr' ? 'उधारी बाकी' : 'Udhar Due'}</span>
               <span className="tabular-nums font-semibold text-warn">
-                ₹{metrics.totalOutstandingUdhar.toLocaleString('en-IN')}
+                ₹{(metrics.totalOutstandingUdhar ?? 0).toLocaleString('en-IN')}
               </span>
             </div>
           </div>

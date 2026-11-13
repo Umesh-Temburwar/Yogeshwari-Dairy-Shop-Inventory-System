@@ -741,62 +741,6 @@ export const LoginPage: React.FC = () => {
                     </button>
                   </div>
                 )}
-
-                {/* Profile Security Notice & Quick Role Presets (Strictly 1 Owner & 1 Admin) */}
-                <div className="pt-3 border-t border-slate-100 dark:border-[#24352F] space-y-2">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-[#8FA69C]">
-                    <span className="flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>{language === 'mr' ? 'प्रमाणित प्रवेश (२ खाती):' : language === 'hi' ? 'सत्यापित प्रवेश (२ खाते):' : 'Authorized Profiles (2 Users):'}</span>
-                    </span>
-                    <span className="text-emerald-700 dark:text-emerald-400 font-extrabold text-[10px]">
-                      👑 1 Owner & 🛡️ 1 Admin
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {/* 1. Shop Owner */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetSignIn({
-                          email: 'yogeshwaridairy9896@gmail.com',
-                          password: '04092026@Nikhil',
-                          rememberMe: true,
-                        });
-                      }}
-                      className="p-2.5 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/70 dark:bg-amber-950/20 text-left hover:bg-amber-100/70 dark:hover:bg-amber-900/30 transition shadow-2xs group"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-amber-700 dark:text-amber-400">👑 {language === 'mr' ? 'निखिल सखारे (मालक)' : language === 'hi' ? 'निखिल सखारे (मालिक)' : 'Nikhil Sakhare (Owner)'}</span>
-                        <span className="text-[9px] font-bold text-amber-600/80 dark:text-amber-400/80 bg-amber-100 dark:bg-amber-900/40 px-1 py-0.5 rounded">डॅशबोर्ड</span>
-                      </div>
-                      <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 font-bold">yogeshwaridairy...</span>
-                      <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">➡️ {language === 'mr' ? 'मालक डॅशबोर्ड' : language === 'hi' ? 'मालिक डैशबोर्ड' : 'Dashboard'}</span>
-                    </button>
-
-                    {/* 2. Admin - POS / Billing Counter (Nilesh Sakhare) */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetSignIn({
-                          email: 'nilusakhare2003@gmail.com',
-                          password: '04092026@Nilesh',
-                          rememberMe: true,
-                        });
-                      }}
-                      className="p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/70 dark:bg-emerald-950/20 text-left hover:bg-emerald-100/70 dark:hover:bg-emerald-900/30 transition shadow-2xs group"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400">🛡️ {language === 'mr' ? 'निलेश सखारे' : language === 'hi' ? 'निलेश सखारे' : 'Nilesh Sakhare'}</span>
-                        <span className="text-[9px] font-bold text-emerald-600/80 dark:text-emerald-400/80 bg-emerald-100 dark:bg-emerald-900/40 px-1 py-0.5 rounded">काऊंटर १</span>
-                      </div>
-                      <span className="truncate block font-mono text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 font-bold">nilusakhare2003...</span>
-                      <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">➡️ {language === 'mr' ? 'काऊंटर १ बिलिंग' : language === 'hi' ? 'काउंटर १ बिलिंग' : 'POS Billing'}</span>
-                    </button>
-                  </div>
-                </div>
-
               </div>
             )}
 
@@ -805,47 +749,6 @@ export const LoginPage: React.FC = () => {
             {/* ============================================== */}
             {mode === 'signup' && (
               <form onSubmit={handleSignUpSubmit(onSignUp)} className="space-y-3.5" noValidate>
-                
-                {/* Quick 1-Click Role Fill Presets for Sign Up */}
-                <div className="space-y-1.5 pb-1">
-                  <span className="text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span>{language === 'mr' ? 'नोंदणीसाठी खाते निवडा (१-क्लिक):' : language === 'hi' ? 'पंजीकरण हेतु खाता चुनें (१-क्लिक):' : 'Select Account to Register:'}</span>
-                  </span>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetSignUp({
-                          fullName: 'Nikhil Sakhare',
-                          email: 'yogeshwaridairy9896@gmail.com',
-                          password: '04092026@Nikhil',
-                          confirmPassword: '04092026@Nikhil'
-                        });
-                      }}
-                      className="p-2 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/70 dark:bg-amber-950/20 text-left hover:bg-amber-100 dark:hover:bg-amber-900/40 transition shadow-2xs"
-                    >
-                      <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 block truncate">👑 {language === 'mr' ? 'निखिल सखारे (मालक)' : language === 'hi' ? 'निखिल सखारे (मालिक)' : 'Nikhil Sakhare (Owner)'}</span>
-                      <span className="text-[9px] text-slate-500 dark:text-slate-400 truncate block font-mono">yogeshwari...</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetSignUp({
-                          fullName: 'Nilesh Sakhare',
-                          email: 'nilusakhare2003@gmail.com',
-                          password: '04092026@Nilesh',
-                          confirmPassword: '04092026@Nilesh'
-                        });
-                      }}
-                      className="p-2 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/70 dark:bg-emerald-950/20 text-left hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition shadow-2xs"
-                    >
-                      <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 block truncate">🛡️ {language === 'mr' ? 'निलेश सखारे' : language === 'hi' ? 'निलेश सखारे' : 'Nilesh Sakhare'}</span>
-                      <span className="text-[9px] text-slate-500 dark:text-slate-400 truncate block font-mono">nilusakhare...</span>
-                    </button>
-                  </div>
-                </div>
-
                 {/* Full Name Field */}
                 <div>
                   <label

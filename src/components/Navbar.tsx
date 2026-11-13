@@ -1,24 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ydoLogo from '../assets/YDO_logo.jpg';
 import { useLanguage, Language } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { useStore } from '../context/StoreContext';
 import { 
-  Clock, 
   Sun, 
   Moon, 
   Menu, 
   PanelLeftClose, 
   PanelLeft, 
   LogOut, 
-  User, 
   Lock, 
   ChevronDown, 
   CheckCircle2, 
   ShieldCheck, 
   Globe,
-  RotateCw
+  Settings
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -29,37 +26,16 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
+  onOpenSettings,
   isSidebarCollapsed,
   onToggleSidebarCollapse,
   onOpenMobileSidebar,
 }) => {
   const { language, setLanguage, t } = useLanguage();
   const { resolvedTheme, toggleTheme } = useTheme();
-  const { user, role, adminSlot, setRole, lockSecurity, signOut } = useAuth();
-  const { refreshData, isSyncing } = useStore();
+  const { user, role, setRole, lockSecurity, signOut } = useAuth();
 
-  const [currentTime, setCurrentTime] = useState<string>('');
-  const [currentDate, setCurrentDate] = useState<string>('');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showRefreshedToast, setShowRefreshedToast] = useState(false);
-
-  const handleManualRefresh = async () => {
-    await refreshData();
-    setShowRefreshedToast(true);
-    setTimeout(() => setShowRefreshedToast(false), 2000);
-  };
-
-  useEffect(() => {
-    const updateDateTime = () => {
-      const now = new Date();
-      const locale = language === 'mr' ? 'mr-IN' : language === 'hi' ? 'hi-IN' : 'en-IN';
-      setCurrentTime(now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-      setCurrentDate(now.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' }));
-    };
-    updateDateTime();
-    const interval = setInterval(updateDateTime, 1000);
-    return () => clearInterval(interval);
-  }, [language]);
 
   const languagesList: Array<{ code: Language; label: string }> = [
     { code: 'mr', label: 'मराठी' },
@@ -124,87 +100,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Center / Right Controls: Trilingual Selector, Live Clock, 1-Click Theme, User Profile */}
+        {/* Right Controls: 1-Click Lock & User Profile/Settings */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           
-          {/* TRILINGUAL LANGUAGE SELECTOR */}
-          {/* Desktop/Tablet Segmented Pill */}
-          <div className="hidden sm:flex items-center bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl border border-slate-200/80 dark:border-[#24352F] h-9">
-            {languagesList.map((lang) => {
-              const isActive = language === lang.code;
-              return (
-                <button
-                  key={lang.code}
-                  type="button"
-                  onClick={() => setLanguage(lang.code)}
-                  className={`px-2.5 sm:px-3 h-7 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${
-                    isActive
-                      ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-xs font-extrabold ring-1 ring-slate-200/50 dark:ring-[#24352F]'
-                      : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-[#E7F0EC]'
-                  }`}
-                  title={`Switch to ${lang.label}`}
-                >
-                  <span>{lang.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Mobile 1-Tap Language Cycle Button */}
-          <button
-            type="button"
-            onClick={() => {
-              const next: Language = language === 'mr' ? 'hi' : language === 'hi' ? 'en' : 'mr';
-              setLanguage(next);
-            }}
-            className="sm:hidden h-9 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-emerald-800 dark:text-emerald-400 border border-slate-200 dark:border-[#24352F] font-black text-xs flex items-center gap-1 active:scale-95 transition"
-            title="भाषा बदला (Tap to switch language)"
-          >
-            <Globe className="w-3.5 h-3.5" />
-            <span>{language === 'mr' ? 'मराठी' : language === 'hi' ? 'हिंदी' : 'EN'}</span>
-          </button>
-
-          {/* Live Clock & Date Badge (Hidden below xl) */}
-          <div className="hidden xl:flex items-center gap-2 px-3 h-9 rounded-xl bg-slate-100/80 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] text-xs">
-            <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span className="font-mono font-bold tabular-nums text-slate-800 dark:text-[#E7F0EC]">
-              {currentTime}
-            </span>
-            <span className="text-slate-300 dark:text-slate-600">&bull;</span>
-            <span className="text-[11px] font-medium text-slate-500 dark:text-[#8FA69C] whitespace-nowrap">
-              {currentDate}
-            </span>
-          </div>
-
-          {/* 1-TAP REFRESH BUTTON (Syncs data, updates views) */}
-          <button
-            type="button"
-            onClick={handleManualRefresh}
-            disabled={isSyncing}
-            className="h-9 px-2 sm:px-2.5 rounded-xl flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 font-bold text-xs transition-all active:scale-95 shadow-2xs disabled:opacity-60"
-            title={language === 'mr' ? 'माहिती रिफ्रेश करा (Refresh Data)' : language === 'hi' ? 'डेटा रिफ्रेश करें (Refresh)' : 'Refresh Data'}
-          >
-            <RotateCw className={`w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span className="hidden md:inline">
-              {language === 'mr' ? 'रिफ्रेश' : language === 'hi' ? 'रिफ्रेश' : 'Refresh'}
-            </span>
-          </button>
-
-          {/* 1-CLICK THEME TOGGLE (Sun <-> Moon, No annoying overlapping popup) */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="h-9 w-9 rounded-xl flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-700 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] transition-all active:scale-95 shadow-2xs"
-            title={resolvedTheme === 'dark' ? 'Click to switch to Light Mode' : 'Click to switch to Dark Mode'}
-            aria-label="Toggle theme"
-          >
-            {resolvedTheme === 'dark' ? (
-              <Sun className="w-4 h-4 text-amber-400 hover:rotate-45 transition-transform" />
-            ) : (
-              <Moon className="w-4 h-4 text-slate-700 dark:text-amber-300 hover:-rotate-12 transition-transform" />
-            )}
-          </button>
-
           {/* 1-CLICK LOCK COUNTER BUTTON */}
           <button
             type="button"
@@ -224,7 +122,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               onClick={() => setShowProfileMenu(prev => !prev)}
               className="h-9 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] text-xs font-bold transition-all shadow-2xs group"
-              title="Profile & Role Settings"
+              title="Profile & Settings"
             >
               <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 ${
                 role === 'Owner' 
@@ -239,31 +137,32 @@ export const Navbar: React.FC<NavbarProps> = ({
                     ? (language === 'mr' ? 'मालक' : language === 'hi' ? 'मालिक' : 'Owner')
                     : (language === 'mr' ? 'प्रशासक' : language === 'hi' ? 'प्रशासक' : 'Admin')}
                 </span>
-                <span className="text-[9px] text-slate-500 dark:text-[#8FA69C] leading-none mt-0.5 truncate max-w-[65px] sm:max-w-[90px]">
+                <span className="text-[9px] text-slate-500 dark:text-[#8FA69C] leading-none mt-0.5 truncate max-w-[70px] sm:max-w-[100px]">
                   {user?.email?.split('@')[0] || 'Yogeshwari'}
                 </span>
               </div>
-              <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Dropdown Menu */}
+            {/* Dropdown Menu (Includes Profiles, Settings: Language & Theme, Lock & Logout) */}
             {showProfileMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-                <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] shadow-2xl p-2 z-50 animate-fadeIn space-y-1">
-                  <div className="px-3 py-2 border-b border-slate-100 dark:border-[#24352F]">
-                    <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] shadow-2xl p-2.5 z-50 animate-fadeIn space-y-2.5">
+                  {/* Verified Account Header */}
+                  <div className="px-3 py-2 bg-slate-50 dark:bg-[#1A2A25] rounded-xl border border-slate-100 dark:border-[#24352F]/70">
+                    <div className="flex items-center gap-1.5 mb-1">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <p className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] uppercase tracking-wider">
+                      <p className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C] uppercase tracking-wider">
                         {language === 'mr' ? 'प्रमाणित खाते (Verified)' : language === 'hi' ? 'सत्यापित खाता' : 'Verified Account'}
                       </p>
                     </div>
-                    <p className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
+                    <p className="text-xs font-black text-slate-900 dark:text-white truncate">
                       {user?.email || 'yogeshwaridairy9896@gmail.com'}
                     </p>
                   </div>
 
-                  {/* Switch Role: 1 Owner & 1 Admin */}
+                  {/* Profile Selection: Owner can choose both; Admin ONLY sees Admin profile */}
                   {(() => {
                     const isOwnerUser = 
                       !user?.email ||
@@ -273,22 +172,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                       (user?.user_metadata?.role === 'Owner' && !user?.email.toLowerCase().includes('nilu'));
 
                     return (
-                      <div className="p-1 space-y-1">
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] px-2 py-0.5">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] px-1">
                           {isOwnerUser 
                             ? (language === 'mr' ? 'प्रोफाइल निवडा (मालक दोन्ही वापरू शकतात)' : language === 'hi' ? 'प्रोफ़ाइल चुनें (मालिक दोनों चुन सकते हैं)' : 'Select Profile (Owner Access to Both)')
                             : (language === 'mr' ? 'सक्रिय प्रोफाइल (केवळ ॲडमिन)' : language === 'hi' ? 'सक्रिय प्रोफ़ाइल (केवल एडमिन)' : 'Active Profile (Admin Only)')}
                         </p>
 
-                        {/* Owner Option */}
-                        {isOwnerUser ? (
+                        {/* Owner Option: ONLY rendered if isOwnerUser is true */}
+                        {isOwnerUser && (
                           <button
                             type="button"
                             onClick={() => {
                               setRole('Owner', null);
                               setShowProfileMenu(false);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition ${
                               role === 'Owner'
                                 ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40'
                                 : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
@@ -300,27 +199,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                             </div>
                             {role === 'Owner' && <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />}
                           </button>
-                        ) : (
-                          <div
-                            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold opacity-45 bg-slate-50 dark:bg-[#1A2A25]/50 border border-dashed border-slate-200 dark:border-slate-800 cursor-not-allowed text-slate-400 dark:text-slate-500"
-                            title={language === 'mr' ? 'केवळ मालकासाठी राखीव' : language === 'hi' ? 'केवल मालिक हेतु आरक्षित' : 'Restricted to Owner'}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span>👑</span>
-                              <span className="line-through">{language === 'mr' ? 'दुकान मालक (निखिल सखारे)' : language === 'hi' ? 'दुकान मालिक (निखिल सखारे)' : 'Shop Owner (Nikhil Sakhare)'}</span>
-                            </div>
-                            <span className="text-[9px] bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded font-bold text-slate-500">🔒 {language === 'mr' ? 'केवळ मालक' : language === 'hi' ? 'केवल मालिक' : 'Owner Only'}</span>
-                          </div>
                         )}
 
-                        {/* Admin - Nilesh Sakhare (POS Billing) */}
+                        {/* Admin Option: Rendered for both */}
                         <button
                           type="button"
                           onClick={() => {
                             setRole('Admin', 1);
                             setShowProfileMenu(false);
                           }}
-                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition ${
                             role === 'Admin'
                               ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40'
                               : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
@@ -336,14 +224,92 @@ export const Navbar: React.FC<NavbarProps> = ({
                     );
                   })()}
 
-                  <div className="border-t border-slate-100 dark:border-[#24352F] pt-1 space-y-1">
+                  {/* SETTINGS SECTION: Language & Theme Controls */}
+                  <div className="border-t border-slate-100 dark:border-[#24352F] pt-2 space-y-2">
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] px-1 flex items-center gap-1">
+                      <Settings className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                      <span>{language === 'mr' ? 'सेटिंग्ज (Settings)' : language === 'hi' ? 'सेटिंग्स (Settings)' : 'Settings'}</span>
+                    </p>
+
+                    {/* Language Switcher */}
+                    <div className="px-1">
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-[#E7F0EC] mb-1.5">
+                        <span className="flex items-center gap-1.5 text-[11px]">
+                          <Globe className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          <span>{language === 'mr' ? 'भाषा निवडा' : language === 'hi' ? 'भाषा चुनें' : 'Language'}</span>
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl border border-slate-200/80 dark:border-[#24352F]">
+                        {languagesList.map((lang) => {
+                          const isActive = language === lang.code;
+                          return (
+                            <button
+                              key={lang.code}
+                              type="button"
+                              onClick={() => setLanguage(lang.code)}
+                              className={`py-1 px-1 rounded-lg text-xs font-bold transition-all text-center ${
+                                isActive
+                                  ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-xs ring-1 ring-slate-200/60 dark:ring-[#24352F] font-extrabold'
+                                  : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-[#E7F0EC]'
+                              }`}
+                            >
+                              {lang.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Theme Toggle (Dark / Light) */}
+                    <div className="px-1">
+                      <button
+                        type="button"
+                        onClick={toggleTheme}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border border-slate-200/80 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC] transition"
+                      >
+                        <span className="flex items-center gap-2">
+                          {resolvedTheme === 'dark' ? (
+                            <Sun className="w-4 h-4 text-amber-400" />
+                          ) : (
+                            <Moon className="w-4 h-4 text-indigo-500" />
+                          )}
+                          <span>{language === 'mr' ? 'थीम (Dark / Light)' : language === 'hi' ? 'थीम (Dark / Light)' : 'Theme Mode'}</span>
+                        </span>
+                        <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] text-emerald-700 dark:text-emerald-400">
+                          {resolvedTheme === 'dark'
+                            ? (language === 'mr' ? 'डार्क 🌙' : language === 'hi' ? 'डार्क 🌙' : 'Dark 🌙')
+                            : (language === 'mr' ? 'लाइट ☀️' : language === 'hi' ? 'लाइट ☀️' : 'Light ☀️')}
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* App System Settings Modal Trigger */}
+                    {onOpenSettings && (
+                      <div className="px-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowProfileMenu(false);
+                            onOpenSettings();
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition"
+                        >
+                          <Settings className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                          <span>{language === 'mr' ? 'सर्वसाधारण सेटिंग्ज' : language === 'hi' ? 'सिस्टम सेटिंग्स' : 'System Settings'}</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions: Lock & Sign Out */}
+                  <div className="border-t border-slate-100 dark:border-[#24352F] pt-2 space-y-1">
                     <button
                       type="button"
                       onClick={() => {
                         setShowProfileMenu(false);
                         lockSecurity();
                       }}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition"
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition"
                     >
                       <Lock className="w-3.5 h-3.5" />
                       <span>{language === 'mr' ? 'काउंटर त्वरित लॉक करा' : language === 'hi' ? 'काउंटर तुरंत लॉक करें' : 'Lock Counter Screen'}</span>
@@ -355,7 +321,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setShowProfileMenu(false);
                         signOut();
                       }}
-                      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       <span>{language === 'mr' ? 'बाहेर पडा' : language === 'hi' ? 'साइन आउट करें' : 'Sign Out'}</span>
@@ -369,14 +335,6 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
       </div>
-
-      {/* Floating Refresh Confirmation Toast */}
-      {showRefreshedToast && (
-        <div className="fixed top-18 right-4 z-50 bg-emerald-700 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 border border-emerald-500/50 backdrop-blur-md">
-          <CheckCircle2 className="w-4 h-4 text-emerald-200 shrink-0" />
-          <span>{language === 'mr' ? 'माहिती यशस्वीरित्या रिफ्रेश झाली!' : language === 'hi' ? 'डेटा सफलतापूर्वक रिफ्रेश हुआ!' : 'Data Refreshed Successfully!'}</span>
-        </div>
-      )}
     </header>
   );
 };

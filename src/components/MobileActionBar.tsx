@@ -6,12 +6,11 @@ import {
   ShoppingCart, 
   Package, 
   BookOpen, 
-  Menu,
-  AlertCircle
+  Menu
 } from 'lucide-react';
 
 interface MobileActionBarProps {
-  onOpenAddProduct: () => void;
+  onOpenAddProduct?: () => void;
   onOpenMobileSidebar: () => void;
 }
 
@@ -64,9 +63,9 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   return (
     <nav 
       aria-label="Mobile Navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 dark:bg-[#0F1A17]/95 backdrop-blur-xl border-t border-slate-200 dark:border-[#24352F] shadow-[0_-4px_20px_rgba(0,0,0,0.06)] pb-[calc(env(safe-area-inset-bottom,0px)+0.35rem)] pt-1.5 transition-colors"
+      className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 dark:bg-[#0F1A17]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-[#24352F] shadow-[0_-4px_24px_rgba(0,0,0,0.08)] pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)] pt-1 transition-colors"
     >
-      <div className="max-w-md mx-auto px-2 flex items-center justify-around">
+      <div className="max-w-md mx-auto grid grid-cols-5 items-end h-[56px] px-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeView === tab.id;
@@ -78,20 +77,22 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveView('pos')}
-                className="relative -top-3 flex flex-col items-center group focus:outline-none"
+                className="flex flex-col items-center justify-end h-full relative -top-3 group focus:outline-none select-none active:scale-95 transition-transform"
+                title={tab.label}
               >
-                <div className={`w-13 h-13 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-150 active:scale-95 ${
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-150 ${
                   isActive
-                    ? 'bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-emerald-600/30 ring-4 ring-white dark:ring-[#0F1A17]'
-                    : 'bg-emerald-600 text-white shadow-emerald-600/25 ring-2 ring-white dark:ring-[#0F1A17] hover:bg-emerald-500'
+                    ? 'bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-emerald-600/35 ring-4 ring-white dark:ring-[#0F1A17]'
+                    : 'bg-emerald-600 text-white shadow-emerald-600/25 ring-3 ring-white dark:ring-[#0F1A17] hover:bg-emerald-500'
                 }`}>
-                  <Icon className="w-6 h-6" />
+                  <Icon className="w-6 h-6 shrink-0" />
                 </div>
-                <span className={`text-[10px] font-black mt-1 ${
-                  isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-[#8FA69C]'
+                <span className={`text-[10px] font-black mt-1 leading-none tracking-tight ${
+                  isActive ? 'text-emerald-700 dark:text-emerald-400 font-black' : 'text-slate-600 dark:text-[#8FA69C]'
                 }`}>
                   {tab.label}
                 </span>
+                <span className="w-1.5 h-1 mt-0.5 rounded-full bg-emerald-600 dark:bg-emerald-400 opacity-0" />
               </button>
             );
           }
@@ -107,26 +108,28 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
                   setActiveView(tab.id as AppView);
                 }
               }}
-              className={`flex-1 py-1 px-1 flex flex-col items-center justify-center relative transition-all active:scale-95 focus:outline-none ${
+              className={`flex flex-col items-center justify-end h-full py-1 relative select-none transition-all active:scale-95 focus:outline-none ${
                 isActive
-                  ? 'text-emerald-700 dark:text-emerald-400 font-extrabold'
-                  : 'text-slate-500 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white font-medium'
+                  ? 'text-emerald-700 dark:text-emerald-400'
+                  : 'text-slate-500 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <div className="relative">
-                <Icon className={`w-5 h-5 transition-transform ${isActive ? 'scale-110' : ''}`} />
+              <div className="relative flex items-center justify-center w-7 h-6">
+                <Icon className={`w-5 h-5 transition-transform duration-150 ${isActive ? 'scale-110 stroke-[2.25]' : 'stroke-[1.75]'}`} />
                 {tab.badgeCount !== undefined && tab.badgeCount > 0 && (
-                  <span className={`absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-black flex items-center justify-center shadow-xs ${tab.badgeColor}`}>
-                    {tab.badgeCount}
+                  <span className={`absolute -top-1 -right-2 min-w-[15px] h-3.5 px-1 rounded-full text-[8.5px] font-black flex items-center justify-center shadow-xs pointer-events-none ${tab.badgeColor}`}>
+                    {tab.badgeCount > 99 ? '99+' : tab.badgeCount}
                   </span>
                 )}
               </div>
-              <span className="text-[10px] mt-1 leading-none truncate max-w-[56px]">
+              <span className={`text-[10px] mt-1 leading-none tracking-tight truncate max-w-[58px] ${
+                isActive ? 'font-black' : 'font-semibold'
+              }`}>
                 {tab.label}
               </span>
-              {isActive && (
-                <span className="w-1 h-1 rounded-full bg-emerald-600 dark:bg-emerald-400 mt-1" />
-              )}
+              <span className={`w-1.5 h-1 mt-0.5 rounded-full bg-emerald-600 dark:bg-emerald-400 transition-opacity duration-150 ${
+                isActive ? 'opacity-100' : 'opacity-0'
+              }`} />
             </button>
           );
         })}

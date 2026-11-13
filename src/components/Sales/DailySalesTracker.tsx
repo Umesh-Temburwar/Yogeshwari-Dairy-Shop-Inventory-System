@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
@@ -74,6 +74,21 @@ export const DailySalesTracker: React.FC = () => {
     return matchesSearch && matchesMode && matchesGender && matchesAgeGroup && matchesAdmin;
   });
 
+  // Compute filter-aware KPIs from the locally filtered list
+  const filteredKpis = useMemo(() => {
+    const totalRevenue = filtered.reduce((sum, s) => sum + s.net_amount, 0);
+    const cashInflow = filtered
+      .filter(s => s.payment_mode === 'Cash' || s.payment_mode === 'Split')
+      .reduce((sum, s) => sum + (s.payment_mode === 'Cash' ? s.net_amount : (s.cash_amount || 0)), 0);
+    const onlineInflow = filtered
+      .filter(s => s.payment_mode === 'Online_UPI' || s.payment_mode === 'Split')
+      .reduce((sum, s) => sum + (s.payment_mode === 'Online_UPI' ? s.net_amount : (s.online_amount || 0)), 0);
+    const udharGiven = filtered
+      .filter(s => s.payment_mode === 'Udhar')
+      .reduce((sum, s) => sum + s.net_amount, 0);
+    return { totalRevenue, cashInflow, onlineInflow, udharGiven, billCount: filtered.length };
+  }, [filtered]);
+
   const toggleExpand = (id: string) => {
     setExpandedSaleId(prev => prev === id ? null : id);
   };
@@ -88,10 +103,10 @@ export const DailySalesTracker: React.FC = () => {
       periodText: isMr ? 'निवडलेला कालावधी हिशोब' : isHi ? 'चुनी गई अवधि का हिसाब' : 'Selected Period Sales & Collections',
       language,
       kpis: [
-        { label: isMr ? 'एकूण विक्री' : isHi ? 'कुल बिक्री' : 'Total Sales', value: `₹${(metrics.totalSalesRevenue || 0).toLocaleString('en-IN')}`, color: 'emerald' },
-        { label: isMr ? 'रोख जमा' : isHi ? 'रोकड़ जमा' : 'Cash Inflow', value: `₹${(metrics.cashCollected || 0).toLocaleString('en-IN')}`, color: 'blue' },
-        { label: isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI', value: `₹${(metrics.onlineCollected || 0).toLocaleString('en-IN')}`, color: 'purple' },
-        { label: isMr ? 'उधारी दिली' : isHi ? 'उधारी दी' : 'Credit Given', value: `₹${(metrics.udharGiven || 0).toLocaleString('en-IN')}`, color: 'amber' }
+        { label: isMr ? 'एकूण विक्री' : isHi ? 'कुल बिक्री' : 'Total Sales', value: `₹${(filteredKpis.totalRevenue || 0).toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: isMr ? 'रोख जमा' : isHi ? 'रोकड़ जमा' : 'Cash Inflow', value: `₹${(filteredKpis.cashInflow || 0).toLocaleString('en-IN')}`, color: 'blue' },
+        { label: isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI', value: `₹${(filteredKpis.onlineInflow || 0).toLocaleString('en-IN')}`, color: 'purple' },
+        { label: isMr ? 'उधारी दिली' : isHi ? 'उधारी दी' : 'Credit Given', value: `₹${(filteredKpis.udharGiven || 0).toLocaleString('en-IN')}`, color: 'amber' }
       ],
       table: {
         headers: isMr 
@@ -211,10 +226,10 @@ export const DailySalesTracker: React.FC = () => {
             {t('totalSales')}
           </span>
           <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
-            ₹{metrics.totalSalesRevenue.toLocaleString('en-IN')}
+            ₹{filteredKpis.totalRevenue.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {filtered.length} {language === 'mr' ? 'बिले फाडली' : language === 'hi' ? 'बिल काटे गए' : 'invoices billed'}
+            {filteredKpis.billCount} {language === 'mr' ? 'बिले फाडली' : language === 'hi' ? 'बिल काटे गए' : 'invoices billed'}
           </span>
         </div>
 
@@ -224,7 +239,7 @@ export const DailySalesTracker: React.FC = () => {
             <span>{t('cashCollected')}</span>
           </div>
           <span className="text-2xl font-black text-blue-900 dark:text-blue-200 mt-1 block">
-            ₹{metrics.cashCollected.toLocaleString('en-IN')}
+            ₹{filteredKpis.cashInflow.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
             {language === 'mr' ? 'गल्ल्यातील रोख रक्कम' : language === 'hi' ? 'रोकड़ गल्ला कलेक्शन' : 'Cash Drawer Inflow'}
@@ -237,7 +252,7 @@ export const DailySalesTracker: React.FC = () => {
             <span>{t('onlineCollected')}</span>
           </div>
           <span className="text-2xl font-black text-purple-900 dark:text-purple-200 mt-1 block">
-            ₹{metrics.onlineCollected.toLocaleString('en-IN')}
+            ₹{filteredKpis.onlineInflow.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">
             PhonePe, GPay, Paytm
@@ -250,7 +265,7 @@ export const DailySalesTracker: React.FC = () => {
             <span>{language === 'mr' ? 'उधार माल दिला (Credit)' : language === 'hi' ? 'उधार दिया (Credit)' : 'Credit Given'}</span>
           </div>
           <span className="text-2xl font-black text-orange-900 dark:text-amber-200 mt-1 block">
-            ₹{metrics.udharGiven.toLocaleString('en-IN')}
+            ₹{filteredKpis.udharGiven.toLocaleString('en-IN')}
           </span>
           <span className="text-[11px] text-orange-600 dark:text-amber-400 font-medium">
             {language === 'mr' ? 'खात्यावर नोंदवलेली उधारी' : language === 'hi' ? 'खाते में दर्ज उधारी' : 'Recorded in Khata'}

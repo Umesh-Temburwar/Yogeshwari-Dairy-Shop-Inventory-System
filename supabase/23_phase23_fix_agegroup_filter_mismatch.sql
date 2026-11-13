@@ -87,3 +87,4 @@ GRANT SELECT ON public.v_daily_gender_revenue        TO authenticated;
 --   2. Updates CHECK constraint with corrected values
 --   3. Recreates analytics views for consistent data
 -- ─────────────────────────────────────────────────────────────
+

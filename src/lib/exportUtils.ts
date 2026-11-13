@@ -233,6 +233,41 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
           font-size: 11px;
           line-height: 1.45;
           padding: 10px;
+          position: relative;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        /* Centered Watermark Logo - Fixed across all pages in Print & PDF */
+        .watermark-container {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 360px;
+          height: 360px;
+          max-width: 65vw;
+          max-height: 65vh;
+          opacity: 0.08;
+          pointer-events: none;
+          z-index: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          user-select: none;
+          -webkit-user-select: none;
+        }
+        .watermark-container img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          filter: grayscale(10%);
+        }
+
+        /* Report Main Content - Sits cleanly above the watermark */
+        .report-content-body {
+          position: relative;
+          z-index: 1;
         }
 
         /* Header */
@@ -243,6 +278,8 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
+          position: relative;
+          z-index: 1;
         }
         .brand-title {
           font-size: 20px;
@@ -287,26 +324,26 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
           padding: 8px 12px;
           border-radius: 8px;
           border: 1px solid #e2e8f0;
-          background: #f8fafc;
+          background: rgba(248, 250, 252, 0.85);
         }
         .kpi-card.emerald {
-          background: #f0fdf4;
+          background: rgba(240, 253, 244, 0.85);
           border-color: #bbf7d0;
         }
         .kpi-card.blue {
-          background: #eff6ff;
+          background: rgba(239, 246, 255, 0.85);
           border-color: #bfdbfe;
         }
         .kpi-card.purple {
-          background: #faf5ff;
+          background: rgba(250, 245, 255, 0.85);
           border-color: #e9d5ff;
         }
         .kpi-card.rose {
-          background: #fff1f2;
+          background: rgba(255, 241, 242, 0.85);
           border-color: #fecdd3;
         }
         .kpi-card.amber {
-          background: #fffbeb;
+          background: rgba(255, 251, 235, 0.85);
           border-color: #fde68a;
         }
         .kpi-label {
@@ -337,7 +374,7 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
           margin-bottom: 8px;
         }
         .report-table th {
-          background: #f1f5f9;
+          background: rgba(241, 245, 249, 0.92);
           color: #1e293b;
           font-weight: 700;
           padding: 6px 8px;
@@ -352,10 +389,10 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
           color: #334155;
         }
         .report-table tr.even-row {
-          background: #f8fafc;
+          background: rgba(248, 250, 252, 0.65);
         }
         .report-table tr.summary-row {
-          background: #e2e8f0;
+          background: rgba(226, 232, 240, 0.88);
           font-weight: 800;
           border-top: 2px solid #94a3b8;
           color: #0f172a;
@@ -366,13 +403,15 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
 
         /* Notes & Footer */
         .report-notes {
-          background: #f8fafc;
+          background: rgba(248, 250, 252, 0.85);
           border: 1px dashed #cbd5e1;
           padding: 8px 12px;
           border-radius: 6px;
           font-size: 10px;
           color: #475569;
           margin-top: 12px;
+          position: relative;
+          z-index: 1;
         }
         .report-footer {
           margin-top: 24px;
@@ -383,6 +422,8 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
           align-items: flex-end;
           font-size: 9px;
           color: #64748b;
+          position: relative;
+          z-index: 1;
         }
         .signature-box {
           text-align: center;
@@ -395,9 +436,30 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
         @media print {
           body {
             padding: 0;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           .no-print {
             display: none !important;
+          }
+          .watermark-container {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            opacity: 0.08 !important;
+            z-index: 0 !important;
+            display: flex !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .watermark-container img {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .report-content-body {
+            position: relative !important;
+            z-index: 1 !important;
           }
         }
       </style>
@@ -425,42 +487,50 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
         </div>
       </div>
 
-      <!-- Header -->
-      <div class="report-header">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <img src="${YDO_LOGO_BASE64}" alt="Logo" style="width: 52px; height: 52px; border-radius: 12px; object-fit: contain; border: 1.5px solid #059669; background: #ffffff; padding: 2px;" />
-          <div>
-            <div class="brand-title">${strings.brandTitle}</div>
-            <div class="brand-subtitle">${subtitle || strings.defaultSubtitle}</div>
-            <div class="report-title-badge">${title}</div>
-            ${periodText ? `<div style="font-size: 10px; color: #047857; font-weight: 700; margin-top: 4px;">${strings.periodLabel} ${periodText}</div>` : ''}
-          </div>
-        </div>
-        <div class="meta-box">
-          <div>${strings.dateLabel} <strong>${dateFormatted}</strong></div>
-          <div>${strings.timeLabel} <strong>${timeFormatted}</strong></div>
-          <div>${strings.authorLabel} <strong>${author || strings.defaultAuthor}</strong></div>
-          <div style="margin-top: 4px; font-size: 9px; color: #059669; font-weight: 700;">${strings.auditBadge}</div>
-        </div>
+      <!-- Centered Watermark Logo (Appears on every page of PDF & Print) -->
+      <div class="watermark-container" aria-hidden="true">
+        <img src="${YDO_LOGO_BASE64}" alt="Watermark" />
       </div>
 
-      <!-- KPIs -->
-      ${kpiHtml}
-
-      <!-- Tables Content -->
-      ${tablesHtml}
-
-      <!-- Optional Notes -->
-      ${notes ? `<div class="report-notes"><strong>${strings.notesLabel}</strong> ${notes}</div>` : ''}
-
-      <!-- Footer & Signatures -->
-      <div class="report-footer">
-        <div>
-          <div>${strings.footerNotice}</div>
-          <div>${strings.slogan}</div>
+      <!-- Report Content Wrapper (Sits safely above watermark) -->
+      <div class="report-content-body">
+        <!-- Header -->
+        <div class="report-header">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="${YDO_LOGO_BASE64}" alt="Logo" style="width: 52px; height: 52px; border-radius: 12px; object-fit: contain; border: 1.5px solid #059669; background: #ffffff; padding: 2px;" />
+            <div>
+              <div class="brand-title">${strings.brandTitle}</div>
+              <div class="brand-subtitle">${subtitle || strings.defaultSubtitle}</div>
+              <div class="report-title-badge">${title}</div>
+              ${periodText ? `<div style="font-size: 10px; color: #047857; font-weight: 700; margin-top: 4px;">${strings.periodLabel} ${periodText}</div>` : ''}
+            </div>
+          </div>
+          <div class="meta-box">
+            <div>${strings.dateLabel} <strong>${dateFormatted}</strong></div>
+            <div>${strings.timeLabel} <strong>${timeFormatted}</strong></div>
+            <div>${strings.authorLabel} <strong>${author || strings.defaultAuthor}</strong></div>
+            <div style="margin-top: 4px; font-size: 9px; color: #059669; font-weight: 700;">${strings.auditBadge}</div>
+          </div>
         </div>
-        <div class="signature-box">
-          ${strings.signatory}
+
+        <!-- KPIs -->
+        ${kpiHtml}
+
+        <!-- Tables Content -->
+        ${tablesHtml}
+
+        <!-- Optional Notes -->
+        ${notes ? `<div class="report-notes"><strong>${strings.notesLabel}</strong> ${notes}</div>` : ''}
+
+        <!-- Footer & Signatures -->
+        <div class="report-footer">
+          <div>
+            <div>${strings.footerNotice}</div>
+            <div>${strings.slogan}</div>
+          </div>
+          <div class="signature-box">
+            ${strings.signatory}
+          </div>
         </div>
       </div>
 

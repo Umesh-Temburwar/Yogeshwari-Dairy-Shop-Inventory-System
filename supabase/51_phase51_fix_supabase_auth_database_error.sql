@@ -5,15 +5,15 @@
 -- ============================================================================
 -- Description:
 -- Fixes the Supabase GoTrue Auth error: "Database error finding user" (HTTP 500)
--- and eliminates the "users_phone_key duplicate key" constraint violation:
+-- and eliminates all constraint / type casting errors:
 -- 1. Resets phone = NULL for empty strings (users_phone_key is UNIQUE; multiple NULLs allowed, but '' violates unique constraint).
 -- 2. Cleans NULL string token columns in auth.users (GoTrue sqlx fails when tokens are NULL).
--- 3. Populates missing records in auth.identities for email auth.
--- 4. Hardens the public.handle_new_user() trigger with EXCEPTION handling so it
+-- 3. Hardens the public.handle_new_user() trigger with EXCEPTION handling so it
 --    NEVER aborts a user registration transaction.
--- 5. Pre-confirms and ensures valid bcrypt hashes for the 2 authorized shop users:
+-- 4. Pre-confirms and ensures valid bcrypt hashes for the 2 authorized shop users:
 --    - 👑 Shop Owner: yogeshwaridairy9896@gmail.com (Password: password123)
 --    - 🛡️ Admin 1: nilusakhare2003@gmail.com (Password: password123)
+-- 5. Populates missing records in auth.identities using UUID for id & user_id.
 -- 6. Synchronizes public.profiles with valid auth_user_id links.
 --
 -- Instructions:
@@ -58,47 +58,7 @@ WHERE confirmation_token IS NULL
    OR reauthentication_token IS NULL;
 
 -- ----------------------------------------------------------------------------
--- STEP 3: ENSURE auth.identities HAS MATCHING EMAIL IDENTITIES
--- GoTrue joins auth.users with auth.identities; missing identities cause "Database error finding user"
--- ----------------------------------------------------------------------------
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'auth' AND table_name = 'identities') THEN
-        INSERT INTO auth.identities (
-            id,
-            user_id,
-            identity_data,
-            provider,
-            provider_id,
-            last_sign_in_at,
-            created_at,
-            updated_at
-        )
-        SELECT 
-            u.id::text,
-            u.id,
-            jsonb_build_object('sub', u.id::text, 'email', LOWER(TRIM(u.email))),
-            'email',
-            u.id::text,
-            NOW(),
-            NOW(),
-            NOW()
-        FROM auth.users u
-        WHERE NOT EXISTS (
-            SELECT 1 FROM auth.identities i WHERE i.user_id = u.id
-        )
-        ON CONFLICT (provider, provider_id) DO UPDATE SET
-            user_id = EXCLUDED.user_id,
-            identity_data = EXCLUDED.identity_data,
-            updated_at = NOW();
-    END IF;
-EXCEPTION
-    WHEN OTHERS THEN
-        RAISE NOTICE 'auth.identities sync notice: %', SQLERRM;
-END $$;
-
--- ----------------------------------------------------------------------------
--- STEP 4: BULLETPROOF handle_new_user() TRIGGER FUNCTION
+-- STEP 3: BULLETPROOF handle_new_user() TRIGGER FUNCTION
 -- Sets search_path to include public, extensions, pg_catalog.
 -- Adds EXCEPTION WHEN OTHERS block so trigger NEVER crashes an auth transaction.
 -- ----------------------------------------------------------------------------
@@ -197,7 +157,7 @@ AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ----------------------------------------------------------------------------
--- STEP 5: REPAIR & PRE-CONFIRM AUTHORIZED OWNER & ADMIN USERS
+-- STEP 4: REPAIR & PRE-CONFIRM AUTHORIZED OWNER & ADMIN USERS
 -- Ensure valid password (password123), confirmed email, phone=NULL, and correct metadata
 -- ----------------------------------------------------------------------------
 DO $$
@@ -324,33 +284,44 @@ BEGIN
         WHERE LOWER(TRIM(email)) = 'nilusakhare2003@gmail.com';
     END IF;
 
-    -- Ensure matching identities exist
-    INSERT INTO auth.identities (
-        id,
-        user_id,
-        identity_data,
-        provider,
-        provider_id,
-        last_sign_in_at,
-        created_at,
-        updated_at
-    )
-    SELECT 
-        u.id::text,
-        u.id,
-        jsonb_build_object('sub', u.id::text, 'email', LOWER(TRIM(u.email))),
-        'email',
-        u.id::text,
-        NOW(),
-        NOW(),
-        NOW()
-    FROM auth.users u
-    WHERE LOWER(TRIM(u.email)) IN ('yogeshwaridairy9896@gmail.com', 'nilusakhare2003@gmail.com')
-      AND NOT EXISTS (
-          SELECT 1 FROM auth.identities i WHERE i.user_id = u.id
-      )
-    ON CONFLICT (provider, provider_id) DO NOTHING;
+END $$;
 
+-- ----------------------------------------------------------------------------
+-- STEP 5: ENSURE auth.identities HAS MATCHING EMAIL IDENTITIES
+-- Column id and user_id are UUID types; provider_id is text.
+-- ----------------------------------------------------------------------------
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'auth' AND table_name = 'identities') THEN
+        INSERT INTO auth.identities (
+            id,
+            user_id,
+            identity_data,
+            provider,
+            provider_id,
+            last_sign_in_at,
+            created_at,
+            updated_at
+        )
+        SELECT 
+            u.id, -- UUID
+            u.id, -- UUID
+            jsonb_build_object('sub', u.id::text, 'email', LOWER(TRIM(u.email))),
+            'email',
+            u.id::text, -- text
+            NOW(),
+            NOW(),
+            NOW()
+        FROM auth.users u
+        WHERE LOWER(TRIM(u.email)) IN ('yogeshwaridairy9896@gmail.com', 'nilusakhare2003@gmail.com')
+          AND NOT EXISTS (
+              SELECT 1 FROM auth.identities i WHERE i.user_id = u.id
+          )
+        ON CONFLICT DO NOTHING;
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'auth.identities sync notice: %', SQLERRM;
 END $$;
 
 -- ----------------------------------------------------------------------------

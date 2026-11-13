@@ -30,3 +30,8 @@ dist/
 *.njsproj
 *.sln
 *.sw?
+# AI Coding Tool Configurations
+.agents/
+.cursor/
+.grok/
+.kiro/

@@ -16,13 +16,16 @@ import {
   TrendingUp, 
   Sparkles,
   ShieldAlert,
-  X
+  X,
+  Smartphone,
+  Download
 } from 'lucide-react';
 
 interface SidebarProps {
   isCollapsed: boolean;
   isMobileOpen: boolean;
   onCloseMobile: () => void;
+  onOpenAppDownload?: () => void;
 }
 
 interface NavItem {
@@ -38,6 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
   isMobileOpen,
   onCloseMobile,
+  onOpenAppDownload,
 }) => {
   const { activeView, setActiveView, metrics, products } = useStore();
   const { t, language } = useLanguage();
@@ -253,6 +257,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {renderSection('main', 'navSectionMain')}
           {renderSection('inventory', 'navSectionInventory')}
           {renderSection('accounts', 'navSectionAccounts')}
+          {onOpenAppDownload && (
+            <div className="pt-3 px-1">
+              <button
+                type="button"
+                onClick={() => {
+                  onCloseMobile();
+                  onOpenAppDownload();
+                }}
+                className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl border border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/80 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-300 font-extrabold text-xs transition shadow-2xs ${isCollapsed ? "justify-center" : "justify-between"}`}
+                title={language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल करा' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल करें' : 'Install Mobile App'}
+              >
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  {!isCollapsed && (
+                    <span className="truncate">
+                      {language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल' : 'Install App'}
+                    </span>
+                  )}
+                </div>
+                {!isCollapsed && (
+                  <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Pinned "Daily Business Summary" Card at Bottom */}

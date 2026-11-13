@@ -24,6 +24,7 @@ import { ReturnProductModal } from './components/Returns/ReturnProductModal';
 import { AddProductModal } from './components/Inventory/AddProductModal';
 import { SupabaseConfigModal } from './components/Settings/SupabaseConfigModal';
 import { MasterSecurityModal } from './components/Auth/MasterSecurityModal';
+import { AppDownloadModal } from './components/Common/AppDownloadModal';
 import { RotateCw } from 'lucide-react';
 import { Product } from './types';
 
@@ -35,6 +36,26 @@ const MainContent: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [returnPrefill, setReturnPrefill] = useState<{ productId?: string; invoiceNo?: string; customerName?: string; customerPhone?: string }>({});
+  const [isAppDownloadOpen, setIsAppDownloadOpen] = useState(false);
+
+  // Automatically trigger Mobile Application Download popup after website login
+  useEffect(() => {
+    // Check if running in standalone mode (already installed PWA)
+    const isStandalone = 
+      typeof window !== 'undefined' && 
+      (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true);
+
+    const alreadyShown = sessionStorage.getItem('ydo_app_download_prompt_shown');
+
+    if (!isStandalone && !alreadyShown) {
+      const timer = setTimeout(() => {
+        setIsAppDownloadOpen(true);
+        sessionStorage.setItem('ydo_app_download_prompt_shown', 'true');
+      }, 1200);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Sidebar states: Collapsible on desktop (264px <-> 72px) and Drawer on mobile
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -67,7 +88,7 @@ const MainContent: React.FC = () => {
 
   // Handle hardware / browser Back button when modals or mobile drawers are open
   useEffect(() => {
-    const isAnyModalOpen = isAddProductOpen || isSettingsOpen || isReturnModalOpen || isMobileSidebarOpen;
+    const isAnyModalOpen = isAddProductOpen || isSettingsOpen || isReturnModalOpen || isMobileSidebarOpen || isAppDownloadOpen;
     if (isAnyModalOpen) {
       window.history.pushState({ modalOpen: true }, '');
       const handleModalPop = () => {
@@ -75,13 +96,14 @@ const MainContent: React.FC = () => {
         if (isAddProductOpen) { setIsAddProductOpen(false); setProductToEdit(null); }
         if (isSettingsOpen) setIsSettingsOpen(false);
         if (isReturnModalOpen) setIsReturnModalOpen(false);
+        if (isAppDownloadOpen) setIsAppDownloadOpen(false);
       };
       window.addEventListener('popstate', handleModalPop, { once: true });
       return () => {
         window.removeEventListener('popstate', handleModalPop);
       };
     }
-  }, [isAddProductOpen, isSettingsOpen, isReturnModalOpen, isMobileSidebarOpen]);
+  }, [isAddProductOpen, isSettingsOpen, isReturnModalOpen, isMobileSidebarOpen, isAppDownloadOpen]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const mainEl = e.currentTarget;
@@ -121,6 +143,7 @@ const MainContent: React.FC = () => {
       {/* Top Header (Fixed 64px, nothing clipped or overflowing) */}
       <Navbar 
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenAppDownload={() => setIsAppDownloadOpen(true)}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebarCollapse={() => setIsSidebarCollapsed(prev => !prev)}
         onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
@@ -133,6 +156,7 @@ const MainContent: React.FC = () => {
           isCollapsed={isSidebarCollapsed}
           isMobileOpen={isMobileSidebarOpen}
           onCloseMobile={() => setIsMobileSidebarOpen(false)}
+          onOpenAppDownload={() => setIsAppDownloadOpen(true)}
         />
 
         {/* Main Content Area - pb-24 on mobile prevents bottom nav overlap */}
@@ -233,6 +257,12 @@ const MainContent: React.FC = () => {
           prefillCustomerPhone={returnPrefill.customerPhone}
         />
       )}
+
+      {/* Mobile Application Download & PWA Install Popup */}
+      <AppDownloadModal 
+        isOpen={isAppDownloadOpen}
+        onClose={() => setIsAppDownloadOpen(false)}
+      />
     </div>
   );
 };

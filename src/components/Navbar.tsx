@@ -14,11 +14,13 @@ import {
   ChevronDown, 
   CheckCircle2, 
   ShieldCheck, 
-  Globe
+  Globe,
+  Smartphone
 } from 'lucide-react';
 
 interface NavbarProps {
   onOpenSettings?: () => void;
+  onOpenAppDownload?: () => void;
   isSidebarCollapsed: boolean;
   onToggleSidebarCollapse: () => void;
   onOpenMobileSidebar: () => void;
@@ -26,6 +28,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ 
   onOpenSettings,
+  onOpenAppDownload,
   isSidebarCollapsed,
   onToggleSidebarCollapse,
   onOpenMobileSidebar,
@@ -290,6 +293,28 @@ export const Navbar: React.FC<NavbarProps> = ({
                         </span>
                       </button>
                     </div>
+
+                    {/* Quick Trigger: Install Mobile App Modal */}
+                    {onOpenAppDownload && (
+                      <div className="px-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowProfileMenu(false);
+                            onOpenAppDownload();
+                          }}
+                          className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-300/80 dark:border-emerald-800/60 text-xs font-bold text-emerald-900 dark:text-emerald-300 transition shadow-2xs"
+                        >
+                          <span className="flex items-center gap-2">
+                            <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <span>{language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल करा' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल करें' : 'Install Mobile App'}</span>
+                          </span>
+                          <span className="text-[10px] font-black bg-emerald-600 text-white px-1.5 py-0.5 rounded-md">
+                            APP
+                          </span>
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions: Lock & Sign Out */}

@@ -87,10 +87,10 @@ export const ProfitReport: React.FC = () => {
     };
 
     const ageGroupStats: Record<string, { count: number; revenue: number; qty: number }> = {
-      'Kids/Teens (<18)': { count: 0, revenue: 0, qty: 0 },
+      'Kids (<18)': { count: 0, revenue: 0, qty: 0 },
       'Youth (18-25)': { count: 0, revenue: 0, qty: 0 },
       'Adults (26-45)': { count: 0, revenue: 0, qty: 0 },
-      'Seniors (45+)': { count: 0, revenue: 0, qty: 0 }
+      'Senior (45+)': { count: 0, revenue: 0, qty: 0 }
     };
 
     // Product-level demographic affinities
@@ -138,10 +138,10 @@ export const ProfitReport: React.FC = () => {
               Other: { qty: 0, revenue: 0 }
             },
             byAge: {
-              'Kids/Teens (<18)': { qty: 0, revenue: 0 },
+              'Kids (<18)': { qty: 0, revenue: 0 },
               'Youth (18-25)': { qty: 0, revenue: 0 },
               'Adults (26-45)': { qty: 0, revenue: 0 },
-              'Seniors (45+)': { qty: 0, revenue: 0 }
+              'Senior (45+)': { qty: 0, revenue: 0 }
             }
           };
         }
@@ -179,12 +179,12 @@ export const ProfitReport: React.FC = () => {
       return qB - qA;
     }).find(p => (p.byAge['Youth (18-25)']?.qty || 0) > 0);
 
-    // Top Product for Seniors (45+)
+    // Top Product for Senior (45+)
     const seniorsTopProduct = [...productAffinityList].sort((a, b) => {
-      const qA = a.byAge['Seniors (45+)']?.qty || 0;
-      const qB = b.byAge['Seniors (45+)']?.qty || 0;
+      const qA = a.byAge['Senior (45+)']?.qty || 0;
+      const qB = b.byAge['Senior (45+)']?.qty || 0;
       return qB - qA;
-    }).find(p => (p.byAge['Seniors (45+)']?.qty || 0) > 0);
+    }).find(p => (p.byAge['Senior (45+)']?.qty || 0) > 0);
 
     return {
       totalSalesCount,
@@ -655,7 +655,7 @@ export const ProfitReport: React.FC = () => {
               {demographicStats.seniorsTopProduct?.productName || 'Desi Cow Milk / Pure Ghee'}
             </div>
             <div className="text-xs text-teal-700 dark:text-teal-400 font-bold">
-              {demographicStats.seniorsTopProduct ? `${demographicStats.seniorsTopProduct.byAge['Seniors (45+)']?.qty || 0} ${demographicStats.seniorsTopProduct.unit} (₹${demographicStats.seniorsTopProduct.byAge['Seniors (45+)']?.revenue || 0})` : 'Pure Health Focus'}
+              {demographicStats.seniorsTopProduct ? `${demographicStats.seniorsTopProduct.byAge['Senior (45+)']?.qty || 0} ${demographicStats.seniorsTopProduct.unit} (₹${demographicStats.seniorsTopProduct.byAge['Senior (45+)']?.revenue || 0})` : 'Pure Health Focus'}
             </div>
             <div className="text-[11px] text-teal-800/80 dark:text-teal-300/80">
               {language === 'mr' ? 'गाईचे दूध व शुद्ध साजूक तूप प्राधान्य' : language === 'hi' ? 'गाय का दूध व शुद्ध देसी घी प्राथमिकता' : 'Cow Milk & Pure Ghee focus'}

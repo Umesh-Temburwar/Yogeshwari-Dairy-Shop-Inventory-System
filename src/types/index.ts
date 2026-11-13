@@ -47,7 +47,7 @@ export interface SaleItem {
 export type PaymentMode = 'Cash' | 'Online_UPI' | 'Split' | 'Udhar';
 
 export type CustomerGender = 'Male' | 'Female' | 'Other';
-export type CustomerAgeGroup = 'Kids/Teens (<18)' | 'Youth (18-25)' | 'Adults (26-45)' | 'Seniors (45+)';
+export type CustomerAgeGroup = 'Kids (<18)' | 'Youth (18-25)' | 'Adults (26-45)' | 'Senior (45+)';
 
 export interface Sale {
   id: string;

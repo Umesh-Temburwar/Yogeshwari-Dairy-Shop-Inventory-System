@@ -799,9 +799,9 @@ export const TRANSLATIONS: Translations = {
     mr: 'इतर'
   },
   ageKids: {
-    en: 'Kids/Teens (<18)',
-    hi: 'बच्चे/किशोर (<18)',
-    mr: 'मुले/किशोर (<१८)'
+    en: 'Kids (<18)',
+    hi: 'बच्चे (<18)',
+    mr: 'मुले (<१८)'
   },
   ageYouth: {
     en: 'Youth (18-25)',
@@ -814,9 +814,9 @@ export const TRANSLATIONS: Translations = {
     mr: 'प्रौढ (२६-४५)'
   },
   ageSeniors: {
-    en: 'Seniors (45+)',
+    en: 'Senior (45+)',
     hi: 'वरिष्ठ (45+)',
-    mr: 'ज्येष्ठ नागरिक (४५+)'
+    mr: 'ज्येष्ठ (४५+)'
   },
   demographicsTitle: {
     en: 'Customer Demographics & Buying Intelligence',

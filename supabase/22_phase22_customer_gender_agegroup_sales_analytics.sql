@@ -229,3 +229,4 @@ END $$;
 --   9. Grants SELECT on new views to authenticated role
 --  10. Adds udhar tables to Realtime publication
 -- ─────────────────────────────────────────────────────────────
+

@@ -53,10 +53,10 @@ export const DailySalesTracker: React.FC = () => {
 
   const ageGroupOptions = [
     { id: 'All', label: language === 'mr' ? 'सर्व वय' : language === 'hi' ? 'सभी आयु' : 'All Ages' },
-    { id: 'Kids/Teens (<18)', label: '<18' },
+    { id: 'Kids (<18)', label: '<18' },
     { id: 'Youth (18-25)', label: '18-25' },
     { id: 'Adults (26-45)', label: '26-45' },
-    { id: 'Seniors (45+)', label: '45+' }
+    { id: 'Senior (45+)', label: '45+' }
   ];
 
   const filtered = filteredSales.filter(sale => {

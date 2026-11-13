@@ -33,6 +33,7 @@
 | **Phase 20** | [`20_phase20_customer_returns_and_refunds_sync.sql`](./20_phase20_customer_returns_and_refunds_sync.sql) | **ग्राहक माल परतावा, संपूर्ण व आंशिक बिल वजावट सिंक** | संपूर्ण परतावा (पावती हटवणे व परतावा वहीत नोंद), आंशिक परतावा (शिल्लक माल पावतीत ठेवून बिल अपडेट), रिअल-टाइम सिंक व अहवाल व्ह्यू |
 | **Phase 21** | [`21_phase21_sales_return_ledger_and_invoice_sync.sql`](./21_phase21_sales_return_ledger_and_invoice_sync.sql) | **दैनिक विक्री व रोकड लेजर रिअल-टाइम परतावा वजावट** | आंशिक परताव्यावर पावती कट, डेली लेजरमध्ये मूळ व सुधारित रक्कम अपडेट, v_daily_sales_and_returns_ledger व्ह्यू व रिअल-टाइम सिंक |
 | **Phase 22** | [`22_phase22_customer_gender_agegroup_sales_analytics.sql`](./22_phase22_customer_gender_agegroup_sales_analytics.sql) | **ग्राहक लिंग व वयोगट विक्री विश्लेषण** | POS बिलिंगमध्ये Gender (पुरुष/महिला/इतर) व Age Group (<18, 18-25, 26-45, 45+) फील्ड्स; `v_sales_customer_demographics` व `v_daily_gender_revenue` ॲनालिटिक्स व्ह्यूज; udhar_customers address/notes कॉलम; Realtime सक्षम |
+| **Phase 23** | [`23_phase23_fix_agegroup_filter_mismatch.sql`](./23_phase23_fix_agegroup_filter_mismatch.sql) | **वयोगट फिल्टर मिसमॅच फिक्स** | जुन्या 'Kids/Teens (<18)' व 'Seniors (45+)' डेटा → 'Kids (<18)' व 'Senior (45+)' मध्ये सुधारणा; CHECK constraint अपडेट; ॲनालिटिक्स व्ह्यूज पुन्हा तयार |
 
 ---
 

@@ -5,27 +5,21 @@ import {
   RotateCcw, 
   Plus, 
   Search, 
-  Filter, 
   Trash2, 
-  FileDown, 
-  Calendar, 
   CheckCircle, 
   AlertTriangle, 
-  Package, 
-  CreditCard,
-  DollarSign,
-  Truck,
-  FileText,
-  Clock,
-  Printer,
-  Download,
-  RefreshCw,
-  BadgeAlert,
-  Eye
+  DollarSign, 
+  Truck, 
+  Clock, 
+  Printer, 
+  Download, 
+  RefreshCw, 
+  Eye 
 } from 'lucide-react';
-import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
+import { printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { SupplierReturnModal } from './SupplierReturnModal';
-import { SupplierReturn, SupplierRefundStatus } from '../../types';
+import { SupplierRefundStatus } from '../../types';
+import { Card, KpiCard, Button, Input, SearchInput, Badge, StatusBadge, SegmentedControl } from '../ui';
 
 interface ReturnsTrackerProps {
   onOpenReturnModal: () => void;
@@ -33,13 +27,11 @@ interface ReturnsTrackerProps {
 
 export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModal }) => {
   const { 
-    returns, 
     filteredReturns, 
     deleteReturn, 
-    supplierReturns,
-    filteredSupplierReturns,
-    updateSupplierRefundStatus,
-    deleteSupplierReturn,
+    filteredSupplierReturns, 
+    updateSupplierRefundStatus, 
+    deleteSupplierReturn, 
     metrics, 
     timeFilter, 
     setTimeFilter 
@@ -155,14 +147,14 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
           `${filteredReturns.length} ${isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'Records'}`,
           '',
           '',
-          `₹${filteredReturns.reduce((acc, r) => acc + r.refund_amount, 0).toLocaleString('en-IN')}`
+          `₹${(metrics.totalRefundAmount || 0).toLocaleString('en-IN')}`
         ]
       },
       notes: isMr 
-        ? 'ग्राहक परतावा अहवाल. पुन्हा विक्रीयोग्य माल साठ्यात पूर्ववत जोडला गेला आहे.'
+        ? 'अधिकृत ग्राहक परतावा लेजर. परतावा पद्धत व पावती तपशील तपासून घ्यावा.'
         : isHi
-        ? 'ग्राहक वापसी रिपोर्ट। पुनर्विक्रय योग्य माल इन्वेंट्री में पुनः जोड़ दिया गया है।'
-        : 'Customer sales returns report. Resellable items have been restocked to inventory.'
+        ? 'अधिकृत ग्राहक वापसी लेजर। रिफंड माध्यम व बिल रसीद सत्यापित करें।'
+        : 'Official customer return audit ledger. Verify returned merchandise condition and counter invoice.'
     };
   };
 
@@ -178,25 +170,25 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
     downloadReportPDF(getCustomerReturnsPayload());
   };
 
-  // Export Supplier Returns to PDF
+  // Export Supplier Returns
   const getSupplierReturnsPayload = () => {
     const isMr = language === 'mr';
     const isHi = language === 'hi';
 
     return {
-      title: isMr ? 'सप्लायर माल परतावा व डेबिट नोट अहवाल' : isHi ? 'सप्लायर माल वापसी व डेबिट नोट रिपोर्ट' : 'Supplier Returns & Debit Notes Report',
+      title: isMr ? 'सप्लायर माल परतावा व डेबिट नोट अहवाल' : isHi ? 'सप्लायर खरीद वापसी व डेबिट नोट रिपोर्ट' : 'Supplier Purchase Returns & Debit Note Audit',
       subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
-      periodText: isMr ? 'कालावधी सप्लायर परतावा हिशोब' : isHi ? 'अवधि सप्लायर वापसी हिसाब' : 'Supplier Returns Ledger',
+      periodText: isMr ? 'कालावधी सप्लायर परतावा व रिफंड हिशोब' : isHi ? 'अवधि सप्लायर वापसी व रिफंड हिसाब' : 'Supplier Returns & Recoveries',
       language,
       kpis: [
-        { label: isMr ? 'एकूण सप्लायर परतावे' : isHi ? 'कुल सप्लायर वापसी' : 'Total Returns', value: `${metrics.totalSupplierReturnsCount || 0} ${isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'Records'}`, color: 'amber' },
-        { label: isMr ? 'एकूण रिफंड दावा' : isHi ? 'कुल रिफंड दावा' : 'Total Refund Claim', value: `₹${(metrics.totalSupplierRefundAmount || 0).toLocaleString('en-IN')}`, color: 'blue' },
-        { label: isMr ? 'रिफंड वसूल / जमा' : isHi ? 'रिफंड प्राप्त' : 'Refund Received', value: `₹${(metrics.totalSupplierRefundReceived || 0).toLocaleString('en-IN')}`, color: 'emerald' },
-        { label: isMr ? 'सप्लायरकडे बाकी' : isHi ? 'सप्लायर से बाकी' : 'Pending Claim', value: `₹${(metrics.pendingSupplierRefundAmount || 0).toLocaleString('en-IN')}`, color: 'rose' }
+        { label: isMr ? 'एकूण सप्लायर परतावे' : isHi ? 'कुल सप्लायर वापसी' : 'Total Vendor Returns', value: `${metrics.totalSupplierReturnsCount || 0} ${isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'Records'}`, color: 'amber' },
+        { label: isMr ? 'एकूण परतावा दावा मूल्य' : isHi ? 'कुल वापसी दावा मूल्य' : 'Total Claim Amount', value: `₹${(metrics.totalSupplierRefundAmount || 0).toLocaleString('en-IN')}`, color: 'rose' },
+        { label: isMr ? 'वसूल / मिळालेला रिफंड' : isHi ? 'प्राप्त रिफंड' : 'Recovered Amount', value: `₹${(metrics.totalSupplierRefundReceived || 0).toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: isMr ? 'सप्लायरकडे येणे बाकी' : isHi ? 'सप्लायर से बाकी' : 'Pending From Supplier', value: `₹${(metrics.pendingSupplierRefundAmount || 0).toLocaleString('en-IN')}`, color: 'amber' }
       ],
       table: {
         headers: isMr 
-          ? ['डेबिट नोट क्र.', 'तारीख', 'सप्लायर नाव', 'उत्पादन', 'नग/प्रमाण', 'कारण', 'रिफंड रक्कम', 'स्थिती']
+          ? ['डेबिट नोट क्र.', 'तारीख', 'सप्लायर नाव', 'उत्पादन', 'प्रमाण', 'कारण', 'रिफंड रक्कम', 'स्थिती']
           : isHi
           ? ['डेबिट नोट क्र.', 'दिनांक', 'सप्लायर नाम', 'उत्पाद', 'मात्रा', 'कारण', 'रिफंड राशि', 'स्थिति']
           : ['Debit Note No.', 'Date', 'Supplier Name', 'Product', 'Quantity', 'Reason', 'Refund Amount', 'Status'],
@@ -251,13 +243,13 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
     <div className="space-y-4 pb-20 sm:pb-6">
       
       {/* Top Header & Tab Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <Card className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-[#E7F0EC] flex items-center gap-2">
-            <RotateCcw className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+          <h1 className="text-lg sm:text-xl font-semibold text-ink tracking-tight flex items-center gap-2">
+            <RotateCcw className="w-5 h-5 text-ink-2" />
             <span>{language === 'mr' ? 'माल परतावा व रिफंड व्यवस्थापन' : language === 'hi' ? 'सामान वापसी व रिफंड प्रबंधन' : 'Return & Refund Management'}</span>
           </h1>
-          <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-0.5">
+          <p className="text-xs text-ink-3 mt-1 font-medium">
             {language === 'mr' 
               ? 'ग्राहकांचा परतावा आणि सप्लायरला खराब/एक्सपायर्ड माल परत पाठवण्याचा संपूर्ण हिशोब' 
               : 'ग्राहकों का रिटर्न और सप्लायर को खराब/एक्सपायर्ड माल लौटाने का पूरा हिसाब'}
@@ -268,210 +260,145 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
         <div className="flex items-center gap-2 flex-wrap">
           {activeTab === 'customer' ? (
             <>
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handleViewCustomerPDF}
-                className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
+                leftIcon={<Eye className="w-4 h-4" />}
                 title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View Customer Returns PDF'}
               >
-                <Eye className="w-4 h-4 text-purple-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-              </button>
+                {language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}
+              </Button>
 
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handlePrintCustomerPDF}
-                className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
+                leftIcon={<Printer className="w-4 h-4" />}
                 title={language === 'mr' ? 'अहवाल प्रिंट करा' : language === 'hi' ? 'रिपोर्ट प्रिंट करें' : 'Print Customer Returns Report'}
               >
-                <Printer className="w-4 h-4 text-purple-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-              </button>
+                {language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}
+              </Button>
 
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handleDownloadCustomerPDF}
-                className="px-3 py-2.5 rounded-2xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-800/60 text-purple-900 dark:text-purple-300 font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
+                leftIcon={<Download className="w-4 h-4" />}
                 title={language === 'mr' ? 'PDF डाउनलोड करा' : language === 'hi' ? 'PDF डाउनलोड करें' : 'Download Customer Returns PDF'}
               >
-                <Download className="w-4 h-4 text-purple-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'परतावा PDF' : language === 'hi' ? 'वापसी PDF' : 'Download PDF'}</span>
-              </button>
+                PDF
+              </Button>
 
-              <button
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={onOpenReturnModal}
-                className="px-4 py-2.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 active:scale-95 shrink-0"
+                leftIcon={<Plus className="w-4 h-4" />}
               >
-                <Plus className="w-4 h-4" />
-                <span>{language === 'mr' ? 'ग्राहक परतावा नोंदवा' : language === 'hi' ? 'ग्राहक वापसी दर्ज करें' : 'Record Customer Return'}</span>
-              </button>
+                {language === 'mr' ? 'ग्राहक परतावा' : language === 'hi' ? 'ग्राहक वापसी' : 'Record Return'}
+              </Button>
             </>
           ) : (
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                type="button"
+            <>
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handleViewSupplierPDF}
-                className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
+                leftIcon={<Eye className="w-4 h-4" />}
                 title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View Supplier Returns PDF'}
               >
-                <Eye className="w-4 h-4 text-amber-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-              </button>
+                {language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}
+              </Button>
 
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handlePrintSupplierPDF}
-                className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
+                leftIcon={<Printer className="w-4 h-4" />}
                 title={language === 'mr' ? 'अहवाल प्रिंट करा' : language === 'hi' ? 'रिपोर्ट प्रिंट करें' : 'Print Supplier Returns Report'}
               >
-                <Printer className="w-4 h-4 text-amber-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-              </button>
+                {language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}
+              </Button>
 
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handleDownloadSupplierPDF}
-                className="px-3 py-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
-                title={language === 'mr' ? 'डेबिट नोट PDF डाउनलोड करा' : language === 'hi' ? 'डेबिट नोट PDF डाउनलोड करें' : 'Download Debit Note PDF'}
+                leftIcon={<Download className="w-4 h-4" />}
+                title={language === 'mr' ? 'डेबिट नोट PDF' : language === 'hi' ? 'डेबिट नोट PDF' : 'Download PDF'}
               >
-                <Download className="w-4 h-4 text-amber-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'डेबिट नोट PDF' : language === 'hi' ? 'डेबिट नोट PDF' : 'Download PDF'}</span>
-              </button>
+                PDF
+              </Button>
 
-              <button
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={() => setIsSupplierModalOpen(true)}
-                className="px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 active:scale-95 shrink-0"
+                leftIcon={<Truck className="w-4 h-4" />}
               >
-                <Truck className="w-4 h-4" />
-                <span>{language === 'mr' ? '+ सप्लायरला माल परत करा' : '+ सप्लायर को माल वापस करें'}</span>
-              </button>
-            </div>
+                {language === 'mr' ? 'सप्लायरला परतावा' : 'सप्लायर वापसी'}
+              </Button>
+            </>
           )}
         </div>
-      </div>
+      </Card>
 
-      {/* Main Tab Navigation: Customer Returns vs Supplier Returns */}
-      <div className="flex border-b border-slate-200 dark:border-[#24352F] gap-2 pt-1">
-        <button
-          type="button"
-          onClick={() => setActiveTab('customer')}
-          className={`pb-3 px-3 text-xs sm:text-sm font-black transition-all flex items-center gap-2 border-b-2 ${
-            activeTab === 'customer'
-              ? 'border-purple-600 text-purple-600 dark:text-purple-400'
-              : 'border-transparent text-slate-500 dark:text-[#8FA69C] hover:text-slate-800'
-          }`}
-        >
-          <RotateCcw className="w-4 h-4" />
-          <span>{language === 'mr' ? '१. ग्राहक माल परतावा (Customer Returns)' : language === 'hi' ? '१. ग्राहक माल वापसी (Customer Returns)' : '1. Customer Returns'}</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300">
-            {metrics.totalReturnsCount}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('supplier')}
-          className={`pb-3 px-3 text-xs sm:text-sm font-black transition-all flex items-center gap-2 border-b-2 ${
-            activeTab === 'supplier'
-              ? 'border-amber-600 text-amber-600 dark:text-amber-400'
-              : 'border-transparent text-slate-500 dark:text-[#8FA69C] hover:text-slate-800'
-          }`}
-        >
-          <Truck className="w-4 h-4" />
-          <span>{language === 'mr' ? '२. सप्लायर / खरेदी परतावा (Supplier Returns)' : language === 'hi' ? '२. सप्लायर / खरीद वापसी (Supplier Returns)' : '2. Supplier Returns'}</span>
-          {metrics.pendingSupplierRefundAmount > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-extrabold animate-pulse">
-              ₹{metrics.pendingSupplierRefundAmount.toFixed(0)} येणे बाकी
-            </span>
-          )}
-        </button>
-      </div>
+      {/* Main Tab Navigation */}
+      <SegmentedControl
+        options={[
+          { value: 'customer', label: `${language === 'mr' ? 'ग्राहक परतावा' : language === 'hi' ? 'ग्राहक वापसी' : 'Customer Returns'} (${metrics.totalReturnsCount})` },
+          { value: 'supplier', label: `${language === 'mr' ? 'सप्लायर परतावा' : language === 'hi' ? 'सप्लायर वापसी' : 'Supplier Returns'} (${metrics.totalSupplierReturnsCount || 0})` },
+        ]}
+        value={activeTab}
+        onChange={(val) => setActiveTab(val as any)}
+      />
 
       {/* ================= TAB 1: CUSTOMER RETURNS ================= */}
       {activeTab === 'customer' && (
         <div className="space-y-4">
-          
           {/* KPI Overview Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-            <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
-              <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
-                <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'एकूण ग्राहक परतावे' : 'कुल ग्राहक वापसी'}
-                </span>
-                <RotateCcw className="w-4 h-4 text-purple-600" />
-              </div>
-              <div className="mt-1.5 flex items-baseline justify-between">
-                <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                  {metrics.totalReturnsCount}
-                </span>
-                <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
-                  ₹{metrics.totalRefundAmount.toFixed(0)}
-                </span>
-              </div>
-            </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <KpiCard
+              label={language === 'mr' ? 'एकूण ग्राहक परतावे' : 'कुल ग्राहक वापसी'}
+              value={String(metrics.totalReturnsCount)}
+              delta={`₹${metrics.totalRefundAmount.toFixed(0)}`}
+              deltaType="danger"
+              icon={<RotateCcw className="w-4 h-4 text-ink-3" />}
+            />
 
-            <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
-              <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
-                <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'आजचा ग्राहक रिफंड' : 'आज का रिफंड'}
-                </span>
-                <DollarSign className="w-4 h-4 text-rose-500" />
-              </div>
-              <div className="mt-1.5 flex items-baseline justify-between">
-                <span className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400">
-                  ₹{metrics.todayRefundAmount.toFixed(0)}
-                </span>
-                <span className="text-[10px] font-semibold text-slate-400">
-                  {language === 'mr' ? 'आज अदा केला' : 'आज दिया'}
-                </span>
-              </div>
-            </div>
+            <KpiCard
+              label={language === 'mr' ? 'आजचा ग्राहक रिफंड' : 'आज का रिफंड'}
+              value={`₹${metrics.todayRefundAmount.toFixed(0)}`}
+              delta={language === 'mr' ? 'आज अदा केला' : 'आज दिया'}
+              deltaType="warn"
+              icon={<DollarSign className="w-4 h-4 text-ink-3" />}
+            />
 
-            <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
-              <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
-                <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'पुन्हा स्टॉकमध्ये' : 'पुनः स्टॉक में'}
-                </span>
-                <CheckCircle className="w-4 h-4 text-emerald-500" />
-              </div>
-              <div className="mt-1.5 flex items-baseline justify-between">
-                <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                  {resellableCount}
-                </span>
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                  ₹{resellableValue.toFixed(0)}
-                </span>
-              </div>
-            </div>
+            <KpiCard
+              label={language === 'mr' ? 'पुन्हा स्टॉकमध्ये' : 'पुनः स्टॉक में'}
+              value={String(resellableCount)}
+              delta={`₹${resellableValue.toFixed(0)}`}
+              deltaType="ok"
+              icon={<CheckCircle className="w-4 h-4 text-ok" />}
+            />
 
-            <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
-              <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
-                <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'खराब / नुकसान' : 'खराब / नुकसान'}
-                </span>
-                <AlertTriangle className="w-4 h-4 text-amber-500" />
-              </div>
-              <div className="mt-1.5 flex items-baseline justify-between">
-                <span className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">
-                  {wasteCount}
-                </span>
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                  ₹{wasteValue.toFixed(0)}
-                </span>
-              </div>
-            </div>
+            <KpiCard
+              label={language === 'mr' ? 'खराब / नुकसान' : 'खराब / नुकसान'}
+              value={String(wasteCount)}
+              delta={`₹${wasteValue.toFixed(0)}`}
+              deltaType="danger"
+              icon={<AlertTriangle className="w-4 h-4 text-danger" />}
+            />
           </div>
 
           {/* Filter Bar */}
-          <div className="bg-white dark:bg-[#131F1B] p-3 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-              <input
-                type="text"
+          <Card className="p-3 flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
+            <div className="flex-1">
+              <SearchInput
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 placeholder={language === 'mr' ? 'उत्पादन, पावती क्र., ग्राहक किंवा बिल शोधा...' : 'उत्पाद, रसीद सं., ग्राहक खोजें...'}
-                className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-semibold text-slate-800 dark:text-[#E7F0EC]"
               />
             </div>
 
@@ -479,7 +406,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
               <select
                 value={conditionFilter}
                 onChange={e => setConditionFilter(e.target.value as any)}
-                className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
+                className="h-10 px-3 rounded-xl bg-surface border border-line text-xs font-medium text-ink shadow-card focus:outline-none focus:ring-2 focus:ring-ink/15"
               >
                 <option value="all">{language === 'mr' ? 'सर्व स्थिती' : 'सभी स्थितियां'}</option>
                 <option value="Resellable">{language === 'mr' ? 'चांगला माल (स्टॉक)' : 'अच्छा माल (स्टॉक)'}</option>
@@ -489,7 +416,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
               <select
                 value={timeFilter}
                 onChange={e => setTimeFilter(e.target.value as any)}
-                className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
+                className="h-10 px-3 rounded-xl bg-surface border border-line text-xs font-medium text-ink shadow-card focus:outline-none focus:ring-2 focus:ring-ink/15"
               >
                 <option value="today">{language === 'mr' ? 'आज' : 'आज'}</option>
                 <option value="week">{language === 'mr' ? 'या आठवड्यात' : 'इस सप्ताह'}</option>
@@ -497,32 +424,33 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                 <option value="all">{language === 'mr' ? 'सर्व' : 'सभी'}</option>
               </select>
             </div>
-          </div>
+          </Card>
 
-          {/* Customer Returns Table / Cards */}
+          {/* Customer Returns Table */}
           {displayedCustomerReturns.length === 0 ? (
-            <div className="bg-white dark:bg-[#131F1B] rounded-3xl p-8 sm:p-12 text-center border border-slate-200 dark:border-[#24352F] shadow-xs space-y-3">
-              <div className="w-14 h-14 rounded-full bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto">
-                <RotateCcw className="w-7 h-7" />
+            <Card className="p-8 sm:p-12 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-surface-2 text-ink-3 flex items-center justify-center mx-auto">
+                <RotateCcw className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white">
+              <h3 className="text-sm font-semibold text-ink">
                 {language === 'mr' ? 'कोणतीही ग्राहक परतावा नोंद आढळली नाही' : 'कोई ग्राहक वापसी प्रविष्टि नहीं मिली'}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-[#8FA69C] max-w-sm mx-auto">
-                {language === 'mr' ? 'ग्राहकाने परत केलेल्या मालाची नोंद करण्यासाठी वरील बटणावर क्लिक करा.' : 'ग्राहक द्वारा वापस किए गए सामान को दर्ज करने के लिए ऊपर दिए गए बटन पर क्लिक करें।'}
+              <p className="text-xs text-ink-3 max-w-sm mx-auto font-medium">
+                {language === 'mr' ? 'ग्राहकाने परत केलेल्या मालाची नोंद करण्यासाठी बटणावर क्लिक करा.' : 'ग्राहक द्वारा वापस किए गए सामान को दर्ज करने के लिए बटन पर क्लिक करें।'}
               </p>
-              <button
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={onOpenReturnModal}
-                className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-xs transition"
               >
                 + {language === 'mr' ? 'ग्राहक परतावा नोंदवा' : 'ग्राहक वापसी दर्ज करें'}
-              </button>
-            </div>
+              </Button>
+            </Card>
           ) : (
-            <div className="space-y-2.5">
-              <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs overflow-hidden">
+            <Card className="overflow-hidden p-0">
+              <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 dark:bg-[#1A2A25] text-slate-500 dark:text-[#8FA69C] font-bold border-b border-slate-200 dark:border-[#24352F]">
+                  <thead className="bg-surface-2/60 text-ink-3 font-medium uppercase tracking-wider text-[11px] border-b border-line">
                     <tr>
                       <th className="p-3.5">{language === 'mr' ? 'परतावा क्र.' : 'रसीद सं.'}</th>
                       <th className="p-3.5">{language === 'mr' ? 'तारीख' : 'दिनांक'}</th>
@@ -535,159 +463,101 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                       <th className="p-3.5 text-right">{language === 'mr' ? 'कृती' : 'कार्रवाई'}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-[#1E2D27]">
+                  <tbody className="divide-y divide-line">
                     {displayedCustomerReturns.map(r => (
-                      <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-[#182621] transition">
-                        <td className="p-3.5 font-mono font-bold text-purple-600 dark:text-purple-400">
-                          <span className="block">{r.return_no}</span>
+                      <tr key={r.id} className="hover:bg-surface-2/50 transition">
+                        <td className="p-3.5 font-mono font-medium text-ink">
+                          <span>{r.return_no}</span>
                           {r.invoice_no && (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 font-sans mt-0.5">
-                              🧾 #{r.invoice_no}
-                            </span>
-                          )}
-                          {(r.return_type === 'Full' || r.notes?.includes('[Full Return]')) && (
-                            <span className="block text-[9px] font-black text-amber-700 dark:text-amber-400 bg-amber-100/70 dark:bg-amber-950/40 px-1.5 py-0.5 rounded mt-0.5 w-fit">
-                              ⚡ {language === 'mr' ? 'संपूर्ण बिल वापसी' : 'पूर्ण बिल वापसी'}
-                            </span>
-                          )}
-                          {(r.return_type === 'Partial' || r.notes?.includes('[Partial Return]')) && (
-                            <span className="block text-[9px] font-black text-blue-700 dark:text-blue-400 bg-blue-100/70 dark:bg-blue-950/40 px-1.5 py-0.5 rounded mt-0.5 w-fit">
-                              ✂️ {language === 'mr' ? 'आंशिक बिल वापसी' : 'आंशिक बिल वापसी'}
-                            </span>
-                          )}
-                          {(r.return_type === 'Direct' || r.notes?.includes('[Direct Return]')) && (
-                            <span className="block text-[9px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-100/70 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded mt-0.5 w-fit">
-                              📦 {language === 'mr' ? 'थेट परतावा' : 'सीधी वापसी'}
+                            <span className="block text-[10px] text-ink-3 font-sans">
+                              #{r.invoice_no}
                             </span>
                           )}
                         </td>
-                        <td className="p-3.5 text-slate-600 dark:text-slate-300 whitespace-nowrap">{r.return_date}</td>
-                        <td className="p-3.5 font-bold text-slate-800 dark:text-white">
+                        <td className="p-3.5 text-ink-2 whitespace-nowrap">{r.return_date}</td>
+                        <td className="p-3.5 font-medium text-ink">
                           {r.product_name}
-                          {r.customer_name && <span className="block text-[10px] text-slate-400 font-normal">{r.customer_name}</span>}
+                          {r.customer_name && <span className="block text-[10px] text-ink-3">{r.customer_name}</span>}
                         </td>
-                        <td className="p-3.5 text-slate-700 dark:text-slate-200 font-semibold">{r.quantity} {r.unit}</td>
-                        <td className="p-3.5 font-black text-slate-900 dark:text-white">₹{r.refund_amount.toFixed(2)}</td>
-                        <td className="p-3.5 text-slate-600 dark:text-slate-300">
-                          <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1A2A25] font-semibold text-[11px]">{r.refund_mode}</span>
+                        <td className="p-3.5 text-ink font-semibold tabular-nums">{r.quantity} {r.unit}</td>
+                        <td className="p-3.5 font-semibold text-danger tabular-nums">₹{r.refund_amount.toFixed(2)}</td>
+                        <td className="p-3.5">
+                          <Badge variant="default" className="text-[10px]">{r.refund_mode}</Badge>
                         </td>
                         <td className="p-3.5">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                            r.condition === 'Resellable'
-                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
-                              : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400'
-                          }`}>
+                          <StatusBadge status={r.condition === 'Resellable' ? 'ok' : 'warn'}>
                             {r.condition === 'Resellable' 
-                              ? (language === 'mr' ? '✅ चांगला (स्टॉक)' : '✅ अच्छा (स्टॉक)')
-                              : (language === 'mr' ? '⚠️ खराब (नुकसान)' : '⚠️ खराब (नुकसान)')}
-                          </span>
+                              ? (language === 'mr' ? 'चांगला' : 'अच्छा')
+                              : (language === 'mr' ? 'खराब' : 'खराब')}
+                          </StatusBadge>
                         </td>
-                        <td className="p-3.5 text-slate-600 dark:text-[#8FA69C] text-[11px] max-w-[150px] truncate" title={r.reason}>{r.reason}</td>
+                        <td className="p-3.5 text-ink-3 text-[11px] max-w-[150px] truncate" title={r.reason}>{r.reason}</td>
                         <td className="p-3.5 text-right">
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleDeleteCustomerReturn(r.id, r.return_no)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
+                            className="h-7 w-7 p-0 text-danger hover:bg-danger/10 ml-auto"
                             title="Delete Return Record"
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
+            </Card>
           )}
-
         </div>
       )}
 
-      {/* ================= TAB 2: SUPPLIER / PURCHASE RETURNS ================= */}
+      {/* ================= TAB 2: SUPPLIER RETURNS ================= */}
       {activeTab === 'supplier' && (
         <div className="space-y-4">
-          
           {/* Supplier Return KPI Overview */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-            <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
-              <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
-                <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'सप्लायर परतावे' : 'सप्लायर वापसी'}
-                </span>
-                <Truck className="w-4 h-4 text-amber-600" />
-              </div>
-              <div className="mt-1.5 flex items-baseline justify-between">
-                <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                  {metrics.totalSupplierReturnsCount || 0}
-                </span>
-                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                  ₹{(metrics.totalSupplierRefundAmount || 0).toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <KpiCard
+              label={language === 'mr' ? 'सप्लायर परतावे' : 'सप्लायर वापसी'}
+              value={String(metrics.totalSupplierReturnsCount || 0)}
+              delta={`₹${(metrics.totalSupplierRefundAmount || 0).toLocaleString('en-IN')}`}
+              deltaType="warn"
+              icon={<Truck className="w-4 h-4 text-ink-3" />}
+            />
 
-            <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
-              <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
-                <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'रिफंड वसूल / जमा' : 'रिफंड प्राप्त'}
-                </span>
-                <DollarSign className="w-4 h-4 text-emerald-500" />
-              </div>
-              <div className="mt-1.5 flex items-baseline justify-between">
-                <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                  ₹{(metrics.totalSupplierRefundReceived || 0).toLocaleString('en-IN')}
-                </span>
-                <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
-                  {language === 'mr' ? 'रोख / बिलात जमा' : 'रोकड़ / बिल में'}
-                </span>
-              </div>
-            </div>
+            <KpiCard
+              label={language === 'mr' ? 'रिफंड वसूल / जमा' : 'रिफंड प्राप्त'}
+              value={`₹${(metrics.totalSupplierRefundReceived || 0).toLocaleString('en-IN')}`}
+              delta={language === 'mr' ? 'जमा' : 'प्राप्त'}
+              deltaType="ok"
+              icon={<DollarSign className="w-4 h-4 text-ok" />}
+            />
 
-            <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
-              <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
-                <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'सप्लायरकडे येणे बाकी' : 'सप्लायर से बाकी'}
-                </span>
-                <Clock className="w-4 h-4 text-rose-500" />
-              </div>
-              <div className="mt-1.5 flex items-baseline justify-between">
-                <span className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400">
-                  ₹{(metrics.pendingSupplierRefundAmount || 0).toLocaleString('en-IN')}
-                </span>
-                <span className="text-[10px] font-semibold text-rose-500">
-                  {language === 'mr' ? 'पुढील बिलात वजा करा' : 'अगले बिल से काटें'}
-                </span>
-              </div>
-            </div>
+            <KpiCard
+              label={language === 'mr' ? 'सप्लायरकडे येणे बाकी' : 'सप्लायर से बाकी'}
+              value={`₹${(metrics.pendingSupplierRefundAmount || 0).toLocaleString('en-IN')}`}
+              delta={language === 'mr' ? 'पुढील बिलात वजा' : 'अगले बिल से काटें'}
+              deltaType="danger"
+              icon={<Clock className="w-4 h-4 text-danger" />}
+            />
 
-            <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
-              <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
-                <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'बदल्यात नवीन माल' : 'बदले में नया माल'}
-                </span>
-                <RefreshCw className="w-4 h-4 text-purple-500" />
-              </div>
-              <div className="mt-1.5 flex items-baseline justify-between">
-                <span className="text-xl sm:text-2xl font-black text-purple-600 dark:text-purple-400">
-                  {metrics.supplierReplacementCount || 0}
-                </span>
-                <span className="text-[10px] font-semibold text-purple-500">
-                  {language === 'mr' ? 'पाकिटे बदलून मिळाली' : 'पैकेट बदले गए'}
-                </span>
-              </div>
-            </div>
+            <KpiCard
+              label={language === 'mr' ? 'बदल्यात नवीन माल' : 'बदले में नया माल'}
+              value={String(metrics.supplierReplacementCount || 0)}
+              delta={language === 'mr' ? 'बदलून मिळाले' : 'बदले गए'}
+              deltaType="neutral"
+              icon={<RefreshCw className="w-4 h-4 text-ink-3" />}
+            />
           </div>
 
           {/* Filter Bar for Supplier Returns */}
-          <div className="bg-white dark:bg-[#131F1B] p-3 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-              <input
-                type="text"
+          <Card className="p-3 flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
+            <div className="flex-1">
+              <SearchInput
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 placeholder={language === 'mr' ? 'सप्लायर, उत्पादन, बॅच किंवा डेबिट नोट शोधा...' : 'सप्लायर, उत्पाद, बैच खोजें...'}
-                className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-semibold text-slate-800 dark:text-[#E7F0EC]"
               />
             </div>
 
@@ -695,19 +565,19 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
               <select
                 value={supplierStatusFilter}
                 onChange={e => setSupplierStatusFilter(e.target.value as any)}
-                className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
+                className="h-10 px-3 rounded-xl bg-surface border border-line text-xs font-medium text-ink shadow-card focus:outline-none focus:ring-2 focus:ring-ink/15"
               >
                 <option value="all">{language === 'mr' ? 'सर्व रिफंड स्थिती' : 'सभी स्थितियां'}</option>
-                <option value="Pending">{language === 'mr' ? '⏳ येणे बाकी (Pending)' : '⏳ बाकी (Pending)'}</option>
-                <option value="Refund_Received">{language === 'mr' ? '✅ रिफंड मिळाला' : '✅ रिफंड प्राप्त'}</option>
-                <option value="Adjusted_In_Next_Bill">{language === 'mr' ? '🧾 बिलात वजावट' : '🧾 बिल में कटौती'}</option>
-                <option value="Replacement_Received">{language === 'mr' ? '🔄 बदलून नवीन माल' : '🔄 बदले में नया माल'}</option>
+                <option value="Pending">{language === 'mr' ? 'येणे बाकी (Pending)' : 'बाकी (Pending)'}</option>
+                <option value="Refund_Received">{language === 'mr' ? 'रिफंड जमा' : 'रिफंड प्राप्त'}</option>
+                <option value="Adjusted_In_Next_Bill">{language === 'mr' ? 'बिलात वजावट' : 'बिल में कटौती'}</option>
+                <option value="Replacement_Received">{language === 'mr' ? 'बदलून नवीन माल' : 'बदले में नया माल'}</option>
               </select>
 
               <select
                 value={timeFilter}
                 onChange={e => setTimeFilter(e.target.value as any)}
-                className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
+                className="h-10 px-3 rounded-xl bg-surface border border-line text-xs font-medium text-ink shadow-card focus:outline-none focus:ring-2 focus:ring-ink/15"
               >
                 <option value="today">{language === 'mr' ? 'आज' : 'आज'}</option>
                 <option value="week">{language === 'mr' ? 'या आठवड्यात' : 'इस सप्ताह'}</option>
@@ -715,34 +585,35 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                 <option value="all">{language === 'mr' ? 'सर्व' : 'सभी'}</option>
               </select>
             </div>
-          </div>
+          </Card>
 
           {/* Supplier Returns List / Table */}
           {displayedSupplierReturns.length === 0 ? (
-            <div className="bg-white dark:bg-[#131F1B] rounded-3xl p-8 sm:p-12 text-center border border-slate-200 dark:border-[#24352F] shadow-xs space-y-3">
-              <div className="w-14 h-14 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto">
-                <Truck className="w-7 h-7" />
+            <Card className="p-8 sm:p-12 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-surface-2 text-ink-3 flex items-center justify-center mx-auto">
+                <Truck className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white">
+              <h3 className="text-sm font-semibold text-ink">
                 {language === 'mr' ? 'कोणतीही सप्लायर परतावा नोंद नाही' : 'कोई सप्लायर वापसी प्रविष्टि नहीं मिली'}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-[#8FA69C] max-w-sm mx-auto">
+              <p className="text-xs text-ink-3 max-w-sm mx-auto font-medium">
                 {language === 'mr' 
-                  ? 'दुकानात आलेला खराब, लिक किंवा एक्सपायर्ड माल सप्लायरला परत पाठवण्यासाठी वरील बटणावर क्लिक करा.' 
-                  : 'दुकान में आया खराब, लीक या एक्सपायर माल सप्लायर को लौटाने के लिए ऊपर दिए गए बटन पर क्लिक करें।'}
+                  ? 'दुकानात आलेला खराब किंवा एक्सपायर्ड माल सप्लायरला परत पाठवण्यासाठी बटणावर क्लिक करा.' 
+                  : 'खराब या एक्सपायर माल सप्लायर को लौटाने के लिए बटन पर क्लिक करें।'}
               </p>
-              <button
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={() => setIsSupplierModalOpen(true)}
-                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition"
               >
                 + {language === 'mr' ? 'सप्लायरला माल परत करा' : 'सप्लायर को माल वापस करें'}
-              </button>
-            </div>
+              </Button>
+            </Card>
           ) : (
-            <div className="space-y-2.5">
-              <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs overflow-hidden">
+            <Card className="overflow-hidden p-0">
+              <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 dark:bg-[#1A2A25] text-slate-500 dark:text-[#8FA69C] font-bold border-b border-slate-200 dark:border-[#24352F]">
+                  <thead className="bg-surface-2/60 text-ink-3 font-medium uppercase tracking-wider text-[11px] border-b border-line">
                     <tr>
                       <th className="p-3.5">{language === 'mr' ? 'डेबिट नोट क्र.' : 'डेबिट नोट सं.'}</th>
                       <th className="p-3.5">{language === 'mr' ? 'तारीख' : 'दिनांक'}</th>
@@ -751,96 +622,81 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                       <th className="p-3.5">{language === 'mr' ? 'प्रमाण' : 'मात्रा'}</th>
                       <th className="p-3.5">{language === 'mr' ? 'रिफंड दावा' : 'रिफंड दावा'}</th>
                       <th className="p-3.5">{language === 'mr' ? 'कारण' : 'कारण'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'रिफंड तोडगा स्थिती' : 'रिफंड स्थिति'}</th>
+                      <th className="p-3.5">{language === 'mr' ? 'स्थिती' : 'स्थिति'}</th>
                       <th className="p-3.5 text-right">{language === 'mr' ? 'कृती' : 'कार्रवाई'}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-[#1E2D27]">
+                  <tbody className="divide-y divide-line">
                     {displayedSupplierReturns.map(r => (
-                      <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-[#182621] transition">
-                        <td className="p-3.5 font-mono font-bold text-amber-600 dark:text-amber-400">
+                      <tr key={r.id} className="hover:bg-surface-2/50 transition">
+                        <td className="p-3.5 font-mono font-medium text-ink">
                           {r.return_no}
-                          {r.batch_no && <span className="block text-[10px] text-slate-400 font-sans">बॅच: {r.batch_no}</span>}
+                          {r.batch_no && <span className="block text-[10px] text-ink-3 font-sans">बॅच: {r.batch_no}</span>}
                         </td>
-                        <td className="p-3.5 text-slate-600 dark:text-slate-300 whitespace-nowrap">{r.return_date}</td>
-                        <td className="p-3.5 font-bold text-slate-800 dark:text-white">
-                          {r.supplier_name}
-                        </td>
-                        <td className="p-3.5 font-bold text-slate-800 dark:text-white">
-                          {r.product_name}
-                        </td>
-                        <td className="p-3.5 text-slate-700 dark:text-slate-200 font-semibold">{r.quantity} {r.unit}</td>
-                        <td className="p-3.5 font-black text-emerald-700 dark:text-emerald-400">
+                        <td className="p-3.5 text-ink-2 whitespace-nowrap">{r.return_date}</td>
+                        <td className="p-3.5 font-medium text-ink">{r.supplier_name}</td>
+                        <td className="p-3.5 font-medium text-ink">{r.product_name}</td>
+                        <td className="p-3.5 text-ink font-semibold tabular-nums">{r.quantity} {r.unit}</td>
+                        <td className="p-3.5 font-semibold text-ok tabular-nums">
                           ₹{r.total_refund_amount.toLocaleString('en-IN')}
-                          <span className="block text-[9px] text-slate-400 font-normal">@ ₹{r.purchase_price}/{r.unit}</span>
+                          <span className="block text-[10px] text-ink-3 font-normal">@ ₹{r.purchase_price}/{r.unit}</span>
                         </td>
-                        <td className="p-3.5 text-slate-600 dark:text-[#8FA69C] text-[11px] max-w-[140px] truncate" title={r.reason}>
+                        <td className="p-3.5 text-ink-3 text-[11px] max-w-[140px] truncate" title={r.reason}>
                           {r.reason}
                         </td>
                         <td className="p-3.5">
                           <div className="space-y-1">
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                              r.refund_status === 'Refund_Received'
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                                : r.refund_status === 'Adjusted_In_Next_Bill'
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
-                                : r.refund_status === 'Replacement_Received'
-                                ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300'
-                                : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 animate-pulse'
-                            }`}>
-                              {r.refund_status === 'Refund_Received' ? '✅ रिफंड जमा' :
-                               r.refund_status === 'Adjusted_In_Next_Bill' ? '🧾 बिलात वजावट' :
-                               r.refund_status === 'Replacement_Received' ? '🔄 बदलून नवीन माल' : '⏳ येणे बाकी (Due)'}
-                            </span>
+                            <StatusBadge status={
+                              r.refund_status === 'Refund_Received' ? 'ok' :
+                              r.refund_status === 'Adjusted_In_Next_Bill' ? 'neutral' :
+                              r.refund_status === 'Replacement_Received' ? 'ok' : 'danger'
+                            }>
+                              {r.refund_status === 'Refund_Received' ? 'रिफंड जमा' :
+                               r.refund_status === 'Adjusted_In_Next_Bill' ? 'बिलात वजावट' :
+                               r.refund_status === 'Replacement_Received' ? 'नवीन माल' : 'येणे बाकी'}
+                            </StatusBadge>
 
                             {/* Quick Action buttons for pending refunds */}
                             {r.refund_status === 'Pending' && (
                               <div className="flex items-center gap-1">
-                                <button
-                                  type="button"
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
                                   onClick={() => updateSupplierRefundStatus(r.id, 'Refund_Received', 'Cash')}
-                                  className="px-1.5 py-0.5 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[9px] font-bold border border-emerald-200"
-                                  title="Mark cash/UPI refund received"
+                                  className="h-5 px-1.5 text-[9px]"
                                 >
                                   + रिफंड
-                                </button>
-                                <button
-                                  type="button"
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
                                   onClick={() => updateSupplierRefundStatus(r.id, 'Adjusted_In_Next_Bill', 'Credit_Deduction')}
-                                  className="px-1.5 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-[9px] font-bold border border-blue-200"
-                                  title="Mark adjusted in bill"
+                                  className="h-5 px-1.5 text-[9px]"
                                 >
-                                  + बिलात वजा
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => updateSupplierRefundStatus(r.id, 'Replacement_Received', 'Replacement')}
-                                  className="px-1.5 py-0.5 rounded bg-purple-50 hover:bg-purple-100 text-purple-700 text-[9px] font-bold border border-purple-200"
-                                  title="Mark replacement received"
-                                >
-                                  + नवीन माल
-                                </button>
+                                  + वजा
+                                </Button>
                               </div>
                             )}
                           </div>
                         </td>
                         <td className="p-3.5 text-right">
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleDeleteSupplierReturn(r.id, r.return_no)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
+                            className="h-7 w-7 p-0 text-danger hover:bg-danger/10 ml-auto"
                             title="Delete Supplier Return Record"
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
+            </Card>
           )}
-
         </div>
       )}
 
@@ -854,3 +710,5 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
     </div>
   );
 };
+
+export default ReturnsTracker;

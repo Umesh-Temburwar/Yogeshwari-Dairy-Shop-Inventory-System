@@ -3,8 +3,8 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product, ProductCategory, ProductUnit } from '../../types';
 import { getShelfLifeNote } from '../../lib/shelfLifeUtils';
-import { X, Save, PackagePlus, Clock, Camera, Sparkles } from 'lucide-react';
-import { ProductPhotoModal } from '../Scanner/ProductPhotoModal';
+import { X, Save, PackagePlus, Clock } from 'lucide-react';
+import { Button, Input } from '../ui';
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -101,31 +101,33 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     : '0';
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border border-transparent dark:border-[#24352F] rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-surface rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-pop border border-line my-auto space-y-4 max-h-[92vh] overflow-y-auto text-ink">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
-              <PackagePlus className="w-5 h-5" />
+        <div className="flex items-center justify-between border-b border-line pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-surface-2 border border-line text-ink flex items-center justify-center">
+              <PackagePlus className="w-4 h-4 text-ink-2" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-[#E7F0EC] text-base">
+              <h3 className="font-semibold text-ink text-base tracking-tight">
                 {productToEdit 
                   ? (language === 'mr' ? 'मालाची माहिती बदला' : language === 'hi' ? 'माल की जानकारी अपडेट करें' : 'Edit Product Details')
                   : (language === 'mr' ? 'दुकानात नवीन माल जोडा' : language === 'hi' ? 'दुकान में नया माल जोड़ें' : 'Add New Dairy Product')}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
+              <p className="text-xs text-ink-3">
                 {language === 'mr' ? 'दूध, पनीर, तूप, खवा, मिठाई किंवा इतर उत्पादने' : language === 'hi' ? 'दूध, पनीर, घी, खोया, मिठाई या अन्य डेरी उत्पाद' : 'Milk, Paneer, Ghee, Sweets or Dairy items'}
               </p>
             </div>
           </div>
           <button 
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
+            className="p-1.5 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 transition"
+            aria-label="Close"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -133,42 +135,39 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           
           {/* Trilingual Names: English, Marathi, Hindi */}
           <div>
-            <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+            <label className="text-xs font-medium text-ink-2 block mb-1.5">
               {language === 'mr' ? 'इंग्रजी नाव' : language === 'hi' ? 'अंग्रेजी नाम' : 'English Name'} *
             </label>
-            <input
+            <Input
               type="text"
               required
               placeholder="e.g. Fresh Buffalo Milk Full Cream"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+              <label className="text-xs font-medium text-ink-2 block mb-1.5">
                 {language === 'mr' ? 'मराठी नाव' : language === 'hi' ? 'मराठी नाम' : 'Marathi Name'}
               </label>
-              <input
+              <Input
                 type="text"
                 placeholder="उदा. ताजे म्हशीचे दूध"
                 value={marathiName}
                 onChange={(e) => setMarathiName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+              <label className="text-xs font-medium text-ink-2 block mb-1.5">
                 {language === 'mr' ? 'हिंदी नाव' : language === 'hi' ? 'हिंदी नाम' : 'Hindi Name'}
               </label>
-              <input
+              <Input
                 type="text"
                 placeholder="उदा. ताज़ा भैंस का दूध"
                 value={hindiName}
                 onChange={(e) => setHindiName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
           </div>
@@ -176,13 +175,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           {/* Category & Unit */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+              <label className="text-xs font-medium text-ink-2 block mb-1.5">
                 {t('categoryCol')} *
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as ProductCategory)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full h-10 px-3 rounded-xl bg-surface border border-line text-xs font-medium text-ink shadow-card focus:outline-none focus:ring-2 focus:ring-ink/15"
               >
                 <option value="Milk">{t('catMilk')} (Milk)</option>
                 <option value="Curd & Chaas">{t('catCurd')} (Curd & Chaas)</option>
@@ -194,13 +193,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+              <label className="text-xs font-medium text-ink-2 block mb-1.5">
                 {t('unitCol')} *
               </label>
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value as ProductUnit)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full h-10 px-3 rounded-xl bg-surface border border-line text-xs font-medium text-ink shadow-card focus:outline-none focus:ring-2 focus:ring-ink/15"
               >
                 <option value="Litre">{language === 'mr' ? 'लिटर (Litre)' : language === 'hi' ? 'लीटर (Litre)' : 'Litre'}</option>
                 <option value="Kg">{language === 'mr' ? 'किलो (Kg)' : language === 'hi' ? 'किलोग्राम (Kg)' : 'Kg'}</option>
@@ -213,41 +212,39 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           </div>
 
           {/* Purchase Price vs Selling Price */}
-          <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-2xl border border-slate-200 dark:border-[#24352F]">
+          <div className="grid grid-cols-2 gap-3 bg-surface-2/60 p-3.5 rounded-xl border border-line">
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+              <label className="text-xs font-medium text-ink-2 block mb-1.5">
                 {language === 'mr' ? `खरेदी दर प्रति ${unit} (₹)` : language === 'hi' ? `खरीद भाव प्रति ${unit} (₹)` : `Purchase Rate per ${unit} (₹)`} *
               </label>
-              <input
+              <Input
                 type="number"
                 step="0.01"
                 required
                 placeholder="58"
                 value={purchasePrice}
                 onChange={(e) => setPurchasePrice(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+              <label className="text-xs font-medium text-ink-2 block mb-1.5">
                 {language === 'mr' ? `विक्री दर प्रति ${unit} (₹)` : language === 'hi' ? `बिक्री भाव प्रति ${unit} (₹)` : `Selling Rate per ${unit} (₹)`} *
               </label>
-              <input
+              <Input
                 type="number"
                 step="0.01"
                 required
                 placeholder="70"
                 value={sellingPrice}
                 onChange={(e) => setSellingPrice(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-emerald-800 dark:text-emerald-400 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
             {/* Live Profit Margin Calculator Indicator */}
-            <div className="col-span-2 flex items-center justify-between text-xs font-semibold pt-1 text-slate-600 dark:text-[#8FA69C] border-t border-slate-200 dark:border-[#24352F]">
-              <span>{language === 'mr' ? `प्रति ${unit} नफा:` : language === 'hi' ? `प्रति ${unit} अनुमानित लाभ:` : `Est Profit per ${unit}:`}</span>
-              <span className={`font-bold ${marginPerUnit >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600'}`}>
+            <div className="col-span-2 flex items-center justify-between text-xs pt-2 border-t border-line text-ink-2">
+              <span className="text-[11px]">{language === 'mr' ? `प्रति ${unit} नफा:` : language === 'hi' ? `प्रति ${unit} अनुमानित लाभ:` : `Est Profit per ${unit}:`}</span>
+              <span className="font-semibold tabular-nums text-ink">
                 ₹{marginPerUnit.toFixed(2)} ({marginPct}% {language === 'mr' ? 'मार्जिन' : language === 'hi' ? 'मार्जिन' : 'Margin'})
               </span>
             </div>
@@ -256,55 +253,55 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           {/* Current Stock & Low Stock Alert Level */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+              <label className="text-xs font-medium text-ink-2 block mb-1.5">
                 {language === 'mr' ? `सध्याचा साठा (${unit} मध्ये)` : language === 'hi' ? `मौजूदा स्टॉक (${unit} में)` : `Current Stock (in ${unit})`}
               </label>
-              <input
+              <Input
                 type="number"
                 step="0.1"
                 value={stockQuantity}
                 onChange={(e) => setStockQuantity(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+              <label className="text-xs font-medium text-ink-2 block mb-1.5">
                 {language === 'mr' ? `कमी साठा मर्यादा (${unit})` : language === 'hi' ? `कम स्टॉक अलर्ट सीमा (${unit})` : `Low Stock Threshold (${unit})`}
               </label>
-              <input
+              <Input
                 type="number"
                 step="0.1"
                 value={minStockAlert}
                 onChange={(e) => setMinStockAlert(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-amber-700 dark:text-amber-400 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
             {!productToEdit && (
-              <div className="col-span-2 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/40 flex items-center gap-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold">
-                <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="col-span-2 p-3 rounded-xl bg-surface-2 border border-line flex items-center gap-2 text-xs text-ink-2">
+                <Clock className="w-4 h-4 text-ink-3 shrink-0" />
                 <span>{getShelfLifeNote(category, name, language)} &bull; {language === 'mr' ? 'आरंभीच्या साठ्याची बॅच आपोआप तयार होईल' : language === 'hi' ? 'आरंभिक स्टॉक का बैच स्वतः बन जाएगा' : 'Initial stock batch auto-created with variety expiry'}</span>
               </div>
             )}
           </div>
 
           {/* Form Actions */}
-          <div className="flex gap-2 pt-3 border-t border-slate-100 dark:border-[#24352F]">
-            <button
+          <div className="flex gap-2.5 pt-3 border-t border-line">
+            <Button
               type="button"
+              variant="secondary"
               onClick={onClose}
-              className="w-1/2 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] font-semibold text-xs text-slate-700 dark:text-[#8FA69C]"
+              className="w-1/2"
             >
               {t('cancel')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="w-1/2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5"
+              variant="primary"
+              leftIcon={<Save className="w-4 h-4" />}
+              className="w-1/2"
             >
-              <Save className="w-4 h-4" />
-              <span>{productToEdit ? (language === 'mr' ? 'माहिती जतन करा' : language === 'hi' ? 'अपडेट सुरक्षित करें' : 'Update Details') : t('save')}</span>
-            </button>
+              {productToEdit ? (language === 'mr' ? 'माहिती जतन करा' : language === 'hi' ? 'अपडेट सुरक्षित करें' : 'Update Details') : t('save')}
+            </Button>
           </div>
 
         </form>

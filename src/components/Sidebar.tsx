@@ -15,12 +15,11 @@ import {
   BookOpen, 
   Fuel, 
   TrendingUp, 
-  Sparkles,
   ShieldAlert,
   X,
   Smartphone,
-  Download
 } from 'lucide-react';
+import { Kbd } from './ui';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -34,7 +33,8 @@ interface NavItem {
   labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: number | string;
-  badgeColor?: string;
+  badgeType?: 'neutral' | 'danger' | 'warn' | 'ok';
+  shortcut?: string;
   section: 'main' | 'inventory' | 'accounts';
 }
 
@@ -56,7 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       : (user?.user_metadata?.full_name || 'Nikhil Sakhare');
 
   const navItems: NavItem[] = [
-    // Section 1: Main / Operations
+    // Main Section
     {
       id: 'dashboard',
       labelKey: 'dashboard',
@@ -67,8 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'pos',
       labelKey: 'quickPos',
       icon: ShoppingCart,
-      badge: 'F2',
-      badgeColor: 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold',
+      shortcut: 'F2',
       section: 'main'
     },
     {
@@ -78,13 +77,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       section: 'main'
     },
 
-    // Section 2: Inventory & Supply
+    // Inventory Section
     {
       id: 'inventory',
       labelKey: 'inventoryNav',
       icon: Package,
       badge: products.length,
-      badgeColor: 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] font-semibold',
+      badgeType: 'neutral',
       section: 'inventory'
     },
     {
@@ -92,13 +91,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       labelKey: 'expiryNav',
       icon: ShieldAlert,
       badge: metrics.expiredBatchesCount > 0 
-        ? `${metrics.expiredBatchesCount} ⚠️` 
+        ? metrics.expiredBatchesCount 
         : metrics.expiringTodayBatchesCount > 0 
-        ? `${metrics.expiringTodayBatchesCount} ${language === 'en' ? 'Today' : 'आज'}` 
+        ? metrics.expiringTodayBatchesCount 
         : undefined,
-      badgeColor: metrics.expiredBatchesCount > 0
-        ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 font-extrabold animate-pulse'
-        : 'bg-orange-100 dark:bg-orange-950/70 text-orange-700 dark:text-orange-300 font-extrabold',
+      badgeType: metrics.expiredBatchesCount > 0 ? 'danger' : 'warn',
       section: 'inventory'
     },
     {
@@ -106,7 +103,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       labelKey: 'stockNeedNav',
       icon: AlertCircle,
       badge: metrics.lowStockCount > 0 ? metrics.lowStockCount : undefined,
-      badgeColor: 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-extrabold',
+      badgeType: 'warn',
       section: 'inventory'
     },
     {
@@ -120,31 +117,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
       labelKey: 'damagesNav',
       icon: PackageX,
       badge: metrics.totalDamagesLoss > 0 ? `₹${metrics.totalDamagesLoss}` : undefined,
-      badgeColor: 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300',
+      badgeType: 'danger',
       section: 'inventory'
     },
     {
       id: 'returns',
       labelKey: 'returnsNav',
       icon: RotateCcw,
-      badge: metrics.pendingSupplierRefundAmount > 0 
-        ? `₹${metrics.pendingSupplierRefundAmount.toFixed(0)} ⏳` 
-        : (metrics.totalReturnsCount + (metrics.totalSupplierReturnsCount || 0)) > 0 
+      badge: (metrics.totalReturnsCount + (metrics.totalSupplierReturnsCount || 0)) > 0 
         ? (metrics.totalReturnsCount + (metrics.totalSupplierReturnsCount || 0)) 
         : undefined,
-      badgeColor: metrics.pendingSupplierRefundAmount > 0 
-        ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 font-extrabold animate-pulse'
-        : 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 font-bold',
+      badgeType: 'neutral',
       section: 'inventory'
     },
 
-    // Section 3: Accounts & Reports
+    // Accounts Section
     {
       id: 'udhar',
       labelKey: 'udharNav',
       icon: BookOpen,
       badge: metrics.totalOutstandingUdhar > 0 ? `₹${metrics.totalOutstandingUdhar.toLocaleString('en-IN')}` : undefined,
-      badgeColor: 'bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300 font-bold',
+      badgeType: 'warn',
       section: 'accounts'
     },
     {
@@ -164,13 +157,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const renderSection = (sectionKey: 'main' | 'inventory' | 'accounts', titleKey: string) => {
     const items = navItems.filter(item => item.section === sectionKey);
     return (
-      <div key={sectionKey} className="space-y-1 mb-3">
+      <div key={sectionKey} className="space-y-0.5 mb-2">
         {!isCollapsed && (
-          <div className="px-3 pt-2 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-[#8FA69C]">
+          <div className="px-3 pt-4 pb-1.5 text-[11px] font-medium tracking-wider uppercase text-ink-3">
             {t(titleKey)}
           </div>
         )}
-        {isCollapsed && <div className="h-px bg-slate-200 dark:bg-[#24352F] my-2 mx-2" />}
+        {isCollapsed && <div className="h-px bg-line/60 my-2 mx-2" />}
 
         {items.map((item) => {
           const Icon = item.icon;
@@ -185,30 +178,39 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onCloseMobile();
               }}
               title={label}
-              className={`w-full flex items-center ${isCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2.5'} rounded-xl text-left transition-all duration-150 group ${
+              className={`w-full flex items-center ${isCollapsed ? 'justify-center h-9 px-0' : 'justify-between h-9 px-3'} rounded-lg text-left transition-all duration-150 select-none ${
                 isActive 
-                  ? 'bg-emerald-600 text-white shadow-xs font-semibold' 
-                  : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25] hover:text-slate-900 dark:hover:text-[#E7F0EC] font-medium'
+                  ? 'bg-surface shadow-card text-ink font-semibold border border-line/40' 
+                  : 'text-ink-2 hover:bg-surface-2 hover:text-ink font-medium'
               }`}
             >
               <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 min-w-0'} flex-1`}>
-                <Icon className={`w-5 h-5 shrink-0 transition-transform group-hover:scale-105 ${
-                  isActive ? 'text-white' : 'text-slate-500 dark:text-[#8FA69C] group-hover:text-emerald-600 dark:group-hover:text-emerald-400'
+                <Icon className={`w-4 h-4 shrink-0 transition-colors ${
+                  isActive ? 'text-ink' : 'text-ink-3'
                 }`} />
                 
                 {!isCollapsed && (
-                  <span className="text-sm truncate leading-tight font-medium">
+                  <span className="text-sm truncate leading-tight">
                     {label}
                   </span>
                 )}
               </div>
 
-              {!isCollapsed && item.badge !== undefined && (
-                <span className={`text-[11px] px-2 py-0.5 rounded-full shrink-0 ml-2 font-medium ${
-                  isActive ? 'bg-white/20 text-white' : item.badgeColor
-                }`}>
-                  {item.badge}
-                </span>
+              {!isCollapsed && (
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  {item.shortcut && <Kbd>{item.shortcut}</Kbd>}
+                  {item.badge !== undefined && (
+                    <span className={`text-[11px] tabular-nums font-medium ${
+                      item.badgeType === 'danger'
+                        ? 'text-danger'
+                        : item.badgeType === 'warn'
+                        ? 'text-warn'
+                        : 'text-ink-3'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
               )}
             </button>
           );
@@ -217,142 +219,111 @@ export const Sidebar: React.FC<SidebarProps> = ({
     );
   };
 
+  const sidebarContent = (
+    <aside
+      className={`h-full flex flex-col justify-between bg-bg border-r border-line p-3 transition-all duration-200 select-none ${
+        isCollapsed ? 'w-[68px]' : 'w-[248px]'
+      }`}
+    >
+      {/* Navigation Links Scrollable Area */}
+      <div className="flex-1 overflow-y-auto no-scrollbar space-y-1">
+        {renderSection('main', 'operationsSection')}
+        {renderSection('inventory', 'inventorySection')}
+        {renderSection('accounts', 'accountsSection')}
+      </div>
+
+      {/* Footer Area */}
+      <div className="pt-3 border-t border-line/60 space-y-2 shrink-0">
+        {!isCollapsed && onOpenAppDownload && (
+          <button
+            type="button"
+            onClick={onOpenAppDownload}
+            className="w-full h-8 px-2.5 rounded-lg bg-surface text-ink hover:bg-surface-2 border border-line/60 text-xs font-medium flex items-center justify-between transition shadow-card"
+          >
+            <span className="flex items-center gap-1.5 truncate">
+              <Smartphone className="w-3.5 h-3.5 text-ink-3" />
+              <span className="truncate">{language === 'mr' ? 'मोबाईल ॲप' : language === 'hi' ? 'मोबाइल ऐप' : 'Mobile App'}</span>
+            </span>
+            <span className="text-[10px] text-ink-3">PWA</span>
+          </button>
+        )}
+
+        {/* Compact Daily Business Summary */}
+        {!isCollapsed && (
+          <div className="p-2.5 rounded-xl bg-surface border border-line/50 shadow-card space-y-1">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-ink-3 font-medium">{language === 'mr' ? 'नफा' : 'Net Profit'}</span>
+              <span className="tabular-nums font-semibold text-ok">
+                ₹{metrics.todayNetProfit.toLocaleString('en-IN')}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-ink-3 font-medium">{language === 'mr' ? 'उधारी बाकी' : 'Udhar Due'}</span>
+              <span className="tabular-nums font-semibold text-warn">
+                ₹{metrics.totalOutstandingUdhar.toLocaleString('en-IN')}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* User Card */}
+        <div className={`flex items-center ${isCollapsed ? 'justify-center p-1' : 'gap-2.5 p-2'} rounded-xl bg-surface-2 border border-line/30`}>
+          <div className="w-7 h-7 rounded-full bg-surface border border-line flex items-center justify-center text-xs shrink-0 shadow-card">
+            {role === 'Owner' ? '👑' : '🛡️'}
+          </div>
+          {!isCollapsed && (
+            <div className="min-w-0 flex-1 truncate">
+              <p className="text-xs font-semibold text-ink leading-tight truncate">
+                {currentUserName}
+              </p>
+              <p className="text-[10px] text-ink-3 leading-tight truncate">
+                {role === 'Owner' ? 'Shop Owner' : 'Admin'}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </aside>
+  );
+
   return (
     <>
-      {/* Mobile Backdrop Overlay */}
+      {/* Desktop Sidebar (Permanent Rail) */}
+      <div className="hidden lg:block h-[calc(100dvh-3.5rem)] sticky top-14 shrink-0 z-20">
+        {sidebarContent}
+      </div>
+
+      {/* Mobile Drawer */}
       {isMobileOpen && (
-        <div 
-          onClick={onCloseMobile}
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden transition-opacity"
-        />
-      )}
-
-      {/* Sidebar Container: w-[264px] or w-[72px] on desktop, fixed drawer on mobile */}
-      <aside 
-        className={`fixed inset-y-0 left-0 z-50 lg:static flex flex-col justify-between bg-white dark:bg-[#0F1A17] border-r border-slate-200 dark:border-[#24352F] shrink-0 h-full overflow-hidden transition-all duration-200 ease-in-out ${
-          isMobileOpen ? 'translate-x-0 w-[264px] shadow-2xl' : '-translate-x-full lg:translate-x-0'
-        } ${isCollapsed ? 'lg:w-[72px]' : 'lg:w-[264px]'}`}
-      >
-        {/* Mobile Header Close Button */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-[#24352F] lg:hidden">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-white p-0.5 shadow-xs border-2 border-emerald-500/40 shrink-0 overflow-hidden flex items-center justify-center">
-              <img 
-                src={ydoLogo} 
-                alt="Logo" 
-                className="w-full h-full rounded-full object-cover scale-105"
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  if (!target.src.endsWith('/YDO_logo.png')) {
-                    target.src = '/YDO_logo.png';
-                  }
-                }}
-              />
-            </div>
-            <span className="font-extrabold text-sm text-slate-900 dark:text-[#E7F0EC] truncate">
-              {t('shopName')}
-            </span>
-          </div>
-          <button 
-            onClick={onCloseMobile}
-            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Scrollable Navigation Groups */}
-        <div className="flex-1 overflow-y-auto p-3 no-scrollbar">
-          {renderSection('main', 'navSectionMain')}
-          {renderSection('inventory', 'navSectionInventory')}
-          {renderSection('accounts', 'navSectionAccounts')}
-          {onOpenAppDownload && (
-            <div className="pt-3 px-1">
-              <button
-                type="button"
-                onClick={() => {
-                  onCloseMobile();
-                  onOpenAppDownload();
-                }}
-                className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl border border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/80 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-300 font-extrabold text-xs transition shadow-2xs ${isCollapsed ? "justify-center" : "justify-between"}`}
-                title={language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल करा' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल करें' : 'Install Mobile App'}
-              >
-                <div className="flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  {!isCollapsed && (
-                    <span className="truncate">
-                      {language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल' : 'Install App'}
-                    </span>
-                  )}
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+            onClick={onCloseMobile} 
+          />
+          <div className="relative w-[260px] max-w-[80vw] h-full bg-bg z-10 shadow-pop flex flex-col">
+            <div className="h-14 px-4 flex items-center justify-between border-b border-line">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-surface p-0.5 shadow-card border border-line flex items-center justify-center shrink-0">
+                  <img src={ydoLogo} alt="Logo" className="w-full h-full rounded-full object-cover" />
                 </div>
-                {!isCollapsed && (
-                  <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                )}
+                <span className="text-sm font-semibold text-ink">{t('shopName')}</span>
+              </div>
+              <button 
+                type="button" 
+                onClick={onCloseMobile}
+                className="w-8 h-8 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 grid place-items-center"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
-          )}
+            <div className="flex-1 overflow-hidden">
+              {sidebarContent}
+            </div>
+          </div>
         </div>
-
-        {/* Pinned "Daily Business Summary" Card at Bottom */}
-        <div className="p-3 border-t border-slate-100 dark:border-[#24352F] mt-auto">
-          {!isCollapsed ? (
-            <div className="p-3 bg-gradient-to-br from-emerald-50 to-teal-50/60 dark:from-[#131F1B] dark:to-[#1A2A25] border border-emerald-200/60 dark:border-[#24352F] rounded-xl shadow-xs">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900 dark:text-emerald-300 mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span className="truncate">{t('dailySummaryTitle')}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs text-slate-600 dark:text-[#8FA69C] mb-1">
-                <span className="truncate">{t('todayNetProfit')}</span>
-                <span className="font-extrabold text-emerald-700 dark:text-emerald-400 tabular-nums shrink-0">
-                  ₹{metrics.netProfit.toLocaleString('en-IN')}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-xs text-slate-600 dark:text-[#8FA69C]">
-                <span className="truncate">{t('totalDueCredit')}</span>
-                <span className="font-extrabold text-amber-700 dark:text-amber-400 tabular-nums shrink-0">
-                  ₹{metrics.totalOutstandingUdhar.toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div 
-              title={`${t('todayNetProfit')} ₹${metrics.netProfit.toLocaleString('en-IN')}`}
-              className="w-10 h-10 mx-auto rounded-xl bg-emerald-50 dark:bg-[#1A2A25] text-emerald-600 dark:text-emerald-400 flex items-center justify-center cursor-pointer border border-emerald-200/60 dark:border-[#24352F]"
-            >
-              <Sparkles className="w-5 h-5" />
-            </div>
-          )}
-        </div>
-
-        {/* Pinned User Profile at the Very Last of Menu */}
-        <div className="p-3 pt-0 pb-3">
-          {!isCollapsed ? (
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-between gap-2 shadow-2xs">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${role === "Owner" ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"}`}>
-                  {role === 'Owner' ? '👑' : '🛡️'}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-black text-slate-900 dark:text-white truncate leading-tight">
-                    {currentUserName}
-                  </p>
-                  <p className="text-[10px] text-slate-500 dark:text-[#8FA69C] truncate leading-tight mt-0.5">
-                    {role === 'Owner' ? 'Shop Owner' : 'Counter 1 (Admin)'}
-                  </p>
-                </div>
-              </div>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 ring-2 ring-emerald-500/20" title="Online" />
-            </div>
-          ) : (
-            <div 
-              title={currentUserName}
-              className={`w-10 h-10 mx-auto rounded-xl flex items-center justify-center text-sm font-black border border-slate-200/80 dark:border-[#24352F] ${role === "Owner" ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"}`}
-            >
-              {role === 'Owner' ? '👑' : '🛡️'}
-            </div>
-          )}
-        </div>
-      </aside>
+      )}
     </>
   );
 };
+
+export default Sidebar;

@@ -8,15 +8,12 @@ import {
   Check,
   Truck,
   CheckCircle2,
-  FileText,
   Download,
-  TrendingUp,
-  Sparkles,
-  RotateCcw,
   Eye
 } from 'lucide-react';
-import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
+import { printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { computeExpiryStatus } from '../../lib/shelfLifeUtils';
+import { Card, KpiCard, Button, Badge, StatusBadge } from '../ui';
 
 export const ReorderNeedsView: React.FC = () => {
   const { products, batches, sales, returns, supplierReturns, metrics, setActiveView } = useStore();
@@ -179,143 +176,142 @@ export const ReorderNeedsView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
 
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-amber-900 via-orange-900 to-amber-950 dark:from-[#3D1E0B] dark:to-[#131F1B] p-6 rounded-3xl text-white shadow-md border border-amber-800/40 dark:border-[#24352F] transition-colors">
+      <Card className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-800/60 dark:bg-amber-950/60 text-xs font-semibold text-amber-200 border border-amber-700/50 dark:border-amber-800/50">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-2 text-ink-2 text-[11px] font-medium border border-line">
+            <AlertTriangle className="w-3.5 h-3.5 text-warn" />
             <span>{t('stockNeedNav')}</span>
           </div>
-          <h2 className="text-2xl font-black tracking-tight text-white">
+          <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-ink">
             {t('reorderTitle')}
           </h2>
-          <p className="text-amber-100/90 dark:text-[#8FA69C] text-xs max-w-xl">
+          <p className="text-xs text-ink-3 max-w-xl font-medium">
             {t('reorderDesc')}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleViewReorderPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            leftIcon={<Eye className="w-4 h-4" />}
             title="View Reorder PDF Sheet"
           >
-            <Eye className="w-4 h-4 text-amber-300" />
-            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-          </button>
+            {language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}
+          </Button>
 
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handlePrintReorderPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs shadow-md transition-all active:scale-95 border border-white/20"
+            leftIcon={<Printer className="w-4 h-4" />}
             title="Print Reorder Sheet"
           >
-            <Printer className="w-4 h-4 text-amber-300" />
-            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-          </button>
+            {language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}
+          </Button>
 
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleDownloadReorderPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            leftIcon={<Download className="w-4 h-4" />}
             title="Download PDF Order Sheet"
           >
-            <Download className="w-4 h-4" />
-            <span>{language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
-          </button>
+            PDF
+          </Button>
 
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={handleCopyWhatsAppList}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            leftIcon={copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           >
-            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            <span>{copied ? t('orderCopied') : t('copyWhatsAppOrder')}</span>
-          </button>
+            {copied ? t('orderCopied') : t('copyWhatsAppOrder')}
+          </Button>
         </div>
-      </div>
+      </Card>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
-          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'एकूण संपलेली उत्पादने' : language === 'hi' ? 'कुल खत्म / कम स्टॉक' : 'Total Low / Out of Stock'}
-          </span>
-          <span className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1 block">
-            {itemsNeedingRestock.length} {language === 'mr' ? 'उत्पादने' : language === 'hi' ? 'आइटम्स' : 'items'}
-          </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-            {itemsNeedingRestock.filter(i => i.isCritical).length} {language === 'mr' ? 'उत्पादने पूर्णपणे संपली आहेत' : language === 'hi' ? 'पूरी तरह शून्य हैं' : 'completely out of stock'}
-          </span>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <KpiCard
+          label={language === 'mr' ? 'एकूण संपलेली उत्पादने' : language === 'hi' ? 'कुल खत्म / कम स्टॉक' : 'Total Low / Out of Stock'}
+          value={`${itemsNeedingRestock.length} ${language === 'mr' ? 'उत्पादने' : language === 'hi' ? 'आइटम्स' : 'items'}`}
+          delta={`${itemsNeedingRestock.filter(i => i.isCritical).length} ${language === 'mr' ? 'शून्य साठा' : 'शून्य स्टॉक'}`}
+          deltaType="danger"
+          icon={<AlertTriangle className="w-4 h-4 text-danger" />}
+        />
 
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
-          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'अंदाजे खरेदी बजेट' : language === 'hi' ? 'अनुमानित खरीद बजट (Total Cost)' : 'Estimated Procurement Budget'}
-          </span>
-          <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
-            ₹{totalEstimatedCost.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-            {language === 'mr' ? 'घाऊक खरेदी दराप्रमाणे अंदाजे रक्कम' : language === 'hi' ? 'थोक खरीद भाव के हिसाब से' : 'Calculated at wholesale purchase rate'}
-          </span>
-        </div>
+        <KpiCard
+          label={language === 'mr' ? 'अंदाजे खरेदी बजेट' : language === 'hi' ? 'अनुमानित खरीद बजट' : 'Estimated Procurement Budget'}
+          value={`₹${totalEstimatedCost.toLocaleString('en-IN')}`}
+          delta={language === 'mr' ? 'घाऊक खरेदी दर' : language === 'hi' ? 'थोक खरीद भाव' : 'Wholesale rate'}
+          deltaType="neutral"
+          icon={<Truck className="w-4 h-4 text-ink-3" />}
+        />
 
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex items-center justify-between transition-colors">
+        <Card className="p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
+            <span className="text-xs font-medium text-ink-3 block">
               {language === 'mr' ? 'खरेदी नोंद' : language === 'hi' ? 'खरीद एंट्री' : 'Record Purchase'}
             </span>
-            <span className="text-xs text-slate-600 dark:text-[#8FA69C] block mt-1">
-              {language === 'mr' ? 'माल येताच थेट साठ्यात नोंदवा' : language === 'hi' ? 'माल आते ही सीधे स्टॉक में जोड़ें' : 'Directly add to stock upon arrival'}
+            <span className="text-xs text-ink-2 block mt-1 font-medium">
+              {language === 'mr' ? 'माल येताच थेट साठ्यात नोंदवा' : language === 'hi' ? 'माल आते ही स्टॉक में जोड़ें' : 'Add to stock upon arrival'}
             </span>
           </div>
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => setActiveView('purchases')}
-            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs"
           >
             + {language === 'mr' ? 'खरेदी नोंदवा' : language === 'hi' ? 'खरीद दर्ज करें' : 'Record Purchase'}
-          </button>
-        </div>
+          </Button>
+        </Card>
       </div>
 
       {/* Pending Supplier Refund Recovery Alert Banner */}
       {metrics.pendingSupplierRefundAmount > 0 && (
-        <div className="bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-amber-500/10 border-2 border-amber-500/40 rounded-2xl p-3.5 flex items-center justify-between gap-3 animate-fadeIn">
+        <Card className="p-3.5 border border-warn/30 bg-warn/5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
-              <Truck className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-warn/15 text-warn flex items-center justify-center shrink-0">
+              <Truck className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                {language === 'mr' ? '💰 सप्लायरकडे अडकलेला रिफंड: ' : '💰 सप्लायर से बाकी रिफंड: '}
-                <span className="text-rose-600 dark:text-rose-400">₹{metrics.pendingSupplierRefundAmount.toLocaleString('en-IN')}</span>
+              <h4 className="text-xs sm:text-sm font-semibold text-ink">
+                {language === 'mr' ? 'सप्लायरकडे अडकलेला रिफंड: ' : 'सप्लायर से बाकी रिफंड: '}
+                <span className="text-danger tabular-nums">₹{metrics.pendingSupplierRefundAmount.toLocaleString('en-IN')}</span>
               </h4>
-              <p className="text-[11px] text-slate-600 dark:text-[#8FA69C]">
+              <p className="text-[11px] text-ink-3 font-medium">
                 {language === 'mr' 
                   ? 'मागील खेपेत खराब/एक्सपायर निघालेल्या मालाचा परतावा येणे बाकी आहे. नवीन खरेदीच्या बिलातून ही रक्कम वजा करून घ्या!' 
                   : 'पिछली खेप में खराब/एक्सपायर निकले माल का रिफंड बाकी है। नए बिल से यह रकम काटकर भुगतान करें!'}
               </p>
             </div>
           </div>
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setActiveView('returns')}
-            className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 shadow-xs transition active:scale-95"
+            className="shrink-0"
           >
             {language === 'mr' ? 'रिफंड हिशोब पहा' : 'रिफंड हिसाब देखें'}
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
 
       {/* Procurement Items Table */}
-      <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs overflow-hidden transition-colors">
-        <div className="p-4 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between">
-          <h3 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
-            <Truck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+      <Card className="overflow-hidden p-0">
+        <div className="p-4 border-b border-line flex items-center justify-between">
+          <h3 className="font-semibold text-ink text-sm flex items-center gap-2">
+            <Truck className="w-4 h-4 text-ink-2" />
             <span>
               {language === 'mr' ? 'आजचे खरेदी मागणी पत्रक' : language === 'hi' ? 'आज का आर्डर मांग पत्र' : "Today's Restock Order Sheet"}
             </span>
           </h3>
-          <span className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
+          <span className="text-xs text-ink-3 font-medium">
             {language === 'mr' ? 'किमान मर्यादेपेक्षा कमी माल' : language === 'hi' ? 'न्यूनतम अलर्ट से कम उत्पाद' : 'Products below minimum alert threshold'}
           </span>
         </div>
@@ -323,7 +319,7 @@ export const ReorderNeedsView: React.FC = () => {
         {itemsNeedingRestock.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] font-bold uppercase">
+              <thead className="bg-surface-2/60 border-b border-line text-ink-3 font-medium uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="px-4 py-3">{t('productNameCol')}</th>
                   <th className="px-3 py-3">{t('categoryCol')}</th>
@@ -335,74 +331,75 @@ export const ReorderNeedsView: React.FC = () => {
                   <th className="px-4 py-3 text-right">{t('actionsCol')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
+              <tbody className="divide-y divide-line">
                 {itemsNeedingRestock.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 dark:hover:bg-[#1A2A25]/60 transition-colors">
+                  <tr key={item.id} className="hover:bg-surface-2/50 transition-colors">
                     <td className="px-4 py-3">
-                      <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+                      <div className="font-medium text-ink flex items-center gap-1.5 flex-wrap">
                         <span>{getDisplayName(item)}</span>
                         {item.isFastMover && (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300">
-                            🔥 {language === 'mr' ? 'जलद खप' : language === 'hi' ? 'तेज़ बिक्री' : 'Fast Mover'}
-                          </span>
+                          <Badge variant="outline" className="text-[10px]">
+                            🔥 {language === 'mr' ? 'जलद खप' : language === 'hi' ? 'तेज़ बिक्री' : 'Fast'}
+                          </Badge>
                         )}
                         {item.hasNearExpiryBatch && (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
-                            ⚠️ {language === 'mr' ? 'बॅच आधी विका' : language === 'hi' ? 'बैच पहले बेचें' : 'Sell batch first'}
-                          </span>
+                          <StatusBadge status="warn" className="text-[10px]">
+                            {language === 'mr' ? 'बॅच आधी विका' : language === 'hi' ? 'बैच पहले बेचें' : 'Sell batch first'}
+                          </StatusBadge>
                         )}
                         {item.totalReturned > 0 && (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300">
+                          <Badge variant="default" className="text-[10px]">
                             ↩️ {item.totalReturned} {item.unit} {language === 'mr' ? 'परत' : 'वापस'}
-                          </span>
+                          </Badge>
                         )}
                         {item.vendorReturnedQty > 0 && (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300" title="सप्लायरकडून खराब/कालबाह्य माल आला होता!">
-                            🚚 {language === 'mr' ? 'सप्लायर डिफेक्ट' : 'सप्लायर डिफेक्ट'} ({item.vendorReturnedQty} {item.unit})
-                          </span>
+                          <StatusBadge status="danger" className="text-[10px]" title="सप्लायरकडून खराब माल आला होता!">
+                            🚚 {item.vendorReturnedQty} {item.unit}
+                          </StatusBadge>
                         )}
                       </div>
                       {getDisplayName(item) !== item.name && (
-                        <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">{item.name}</div>
+                        <div className="text-[11px] text-ink-3">{item.name}</div>
                       )}
                     </td>
 
-                    <td className="px-3 py-3 font-semibold text-slate-600 dark:text-[#8FA69C]">
+                    <td className="px-3 py-3 text-ink-2">
                       {item.category}
                     </td>
 
                     <td className="px-3 py-3 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-black ${item.isCritical ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60' : 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60'
-                        }`}>
+                      <StatusBadge status={item.isCritical ? 'danger' : 'warn'}>
                         {item.stock_quantity} {item.unit}
-                      </span>
+                      </StatusBadge>
                     </td>
 
-                    <td className="px-3 py-3 text-center font-bold text-slate-500 dark:text-[#8FA69C]">
+                    <td className="px-3 py-3 text-center text-ink-3 tabular-nums">
                       {item.min_stock_alert} {item.unit}
                     </td>
 
                     <td className="px-3 py-3 text-center">
-                      <span className="px-3 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-300 font-extrabold text-xs border border-emerald-200 dark:border-emerald-800/60">
+                      <Badge variant="default" className="font-semibold text-ink">
                         +{item.recommendedOrderQty} {item.unit}
-                      </span>
+                      </Badge>
                     </td>
 
-                    <td className="px-3 py-3 text-right font-medium text-slate-600 dark:text-[#8FA69C]">
+                    <td className="px-3 py-3 text-right text-ink-2 tabular-nums">
                       ₹{item.purchase_price}
                     </td>
 
-                    <td className="px-3 py-3 text-right font-black text-slate-900 dark:text-white">
+                    <td className="px-3 py-3 text-right font-medium text-ink tabular-nums">
                       ₹{item.estimatedCost.toLocaleString('en-IN')}
                     </td>
 
                     <td className="px-4 py-3 text-right">
-                      <button
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => setActiveView('purchases')}
-                        className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-2xs"
+                        className="h-7 px-2.5 text-xs"
                       >
-                        + {language === 'mr' ? 'माल खरेदी' : language === 'hi' ? 'माल खरीदें' : 'Buy Stock'}
-                      </button>
+                        + {language === 'mr' ? 'खरेदी' : language === 'hi' ? 'खरीद' : 'Buy'}
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -411,17 +408,19 @@ export const ReorderNeedsView: React.FC = () => {
           </div>
         ) : (
           <div className="p-12 text-center space-y-2">
-            <CheckCircle2 className="w-12 h-12 text-emerald-600 dark:text-emerald-400 mx-auto" />
-            <h4 className="font-bold text-slate-900 dark:text-white text-base">
+            <CheckCircle2 className="w-10 h-10 text-ok mx-auto opacity-70" />
+            <h4 className="font-semibold text-ink text-base">
               {language === 'mr' ? 'दुकानातील कोणताही माल संपलेला नाही!' : language === 'hi' ? 'दुकान का कोई भी माल खत्म नहीं है!' : 'All dairy items are well stocked!'}
             </h4>
-            <p className="text-xs text-slate-500 dark:text-[#8FA69C] max-w-sm mx-auto">
+            <p className="text-xs text-ink-3 max-w-sm mx-auto">
               {language === 'mr' ? 'दूध, पनीर, दही, तूप आणि मिठाई पुरेशा साठ्यात उपलब्ध आहे.' : language === 'hi' ? 'सभी डेरी उत्पाद, दूध, पनीर, दही व घी पर्याप्त स्टॉक में उपलब्ध हैं।' : 'Fresh milk, paneer, curd, ghee, and sweets are available in sufficient quantities.'}
             </p>
           </div>
         )}
-      </div>
+      </Card>
 
     </div>
   );
 };
+
+export default ReorderNeedsView;

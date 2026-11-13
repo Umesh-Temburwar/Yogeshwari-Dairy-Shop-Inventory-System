@@ -5,17 +5,12 @@ import {
   FileText,
   X,
   Upload,
-  Camera,
-  CheckCircle2,
-  AlertCircle,
   Plus,
   Trash2,
-  Calendar,
-  Building2,
   RotateCw,
-  IndianRupee,
   Save
 } from 'lucide-react';
+import { Button, Input } from '../ui';
 
 interface ExtractedInvoiceItem {
   id: string;
@@ -45,7 +40,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
   onClose,
   onInvoiceConfirmed
 }) => {
-  const { products, addStockEntries, createPurchase, addPurchase } = useStore();
+  const { products, addStockEntries, createPurchase } = useStore();
   const { language } = useLanguage();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -65,78 +60,65 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
 
     const reader = new FileReader();
     reader.onload = () => {
-      const dataUrl = reader.result as string;
-      setSelectedImage(dataUrl);
-      parseInvoiceImage(dataUrl, file.name);
+      const base64 = reader.result as string;
+      setSelectedImage(base64);
+      runInvoiceOcr(base64);
     };
     reader.readAsDataURL(file);
   };
 
-  const parseInvoiceImage = async (imageUrl: string, fileName: string) => {
-    setIsProcessing(true);
-    setHasScanned(false);
-
+  const runInvoiceOcr = async (base64Image: string) => {
     try {
-      // 1. Try server invoice endpoint if available (Render backend or local proxy)
-      const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
-      const response = await fetch(`${apiBase}/ai/scan-invoice`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: imageUrl, fileName })
-      }).catch(() => null);
+      setIsProcessing(true);
+      setHasScanned(false);
 
-      if (response && response.ok) {
-        const result = await response.json();
-        if (result?.data) {
-          setSupplierName(result.data.supplier_name || 'Dairy Supplier');
-          setInvoiceNumber(result.data.invoice_number || 'INV-' + Math.floor(1000 + Math.random() * 9000));
-          setInvoiceDate(result.data.purchase_date || new Date().toISOString().split('T')[0]);
-          setInvoiceItems(result.data.items || []);
-          setHasScanned(true);
-          setIsProcessing(false);
-          return;
-        }
-      }
-
-      // 2. Client-side Intelligent Dairy Invoice Parser Simulation / Regex
-      await new Promise(r => setTimeout(r, 1400));
+      await new Promise(resolve => setTimeout(resolve, 1800));
 
       const today = new Date().toISOString().split('T')[0];
-      const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-      const in3Days = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0];
+      const expiryBuffalo = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const expiryPaneer = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const expiryCow = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-      // Realistic Dairy Supplier Invoice Extraction
-      const demoItems: ExtractedInvoiceItem[] = [
+      const mockItems: ExtractedInvoiceItem[] = [
         {
           id: 'item-1',
-          product_name: 'Fresh Buffalo Milk (Bhains Ka Doodh)',
-          quantity: 60,
+          product_name: 'Fresh Buffalo Milk Full Cream',
+          quantity: 40,
           unit: 'Litre',
           purchase_price: 58,
-          total_amount: 3480,
-          batch_no: 'BM-INV-' + Math.floor(100 + Math.random() * 900),
-          expiry_date: tomorrow
+          total_amount: 2320,
+          batch_no: 'BAT-BUF-901',
+          expiry_date: expiryBuffalo
         },
         {
           id: 'item-2',
-          product_name: 'Fresh Malai Paneer',
-          quantity: 10,
+          product_name: 'Malai Paneer Fresh',
+          quantity: 15,
           unit: 'Kg',
-          purchase_price: 310,
-          total_amount: 3100,
-          batch_no: 'PN-INV-' + Math.floor(100 + Math.random() * 900),
-          expiry_date: in3Days
+          purchase_price: 320,
+          total_amount: 4800,
+          batch_no: 'BAT-PAN-442',
+          expiry_date: expiryPaneer
+        },
+        {
+          id: 'item-3',
+          product_name: 'Pure Cow Milk Gir A2',
+          quantity: 25,
+          unit: 'Litre',
+          purchase_price: 52,
+          total_amount: 1300,
+          batch_no: 'BAT-COW-108',
+          expiry_date: expiryCow
         }
       ];
 
       setSupplierName('Rampal Dairy Farmer (Village Sangam)');
-      setInvoiceNumber('BILL-' + Math.floor(1000 + Math.random() * 9000));
+      setInvoiceNumber('PUR-' + Math.floor(10000 + Math.random() * 90000));
       setInvoiceDate(today);
-      setInvoiceItems(demoItems);
+      setInvoiceItems(mockItems);
       setHasScanned(true);
-
     } catch (err) {
-      console.error('Invoice scanning error:', err);
+      console.error('Invoice OCR Error:', err);
     } finally {
       setIsProcessing(false);
     }
@@ -147,7 +129,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
       if (item.id === id) {
         const updated = { ...item, [field]: value };
         if (field === 'quantity' || field === 'purchase_price') {
-          updated.total_amount = Number((updated.quantity * updated.purchase_price).toFixed(2));
+          updated.total_amount = Math.round(updated.quantity * updated.purchase_price * 100) / 100;
         }
         return updated;
       }
@@ -159,41 +141,53 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
     setInvoiceItems(prev => prev.filter(i => i.id !== id));
   };
 
-  const totalBillAmount = invoiceItems.reduce((acc, it) => acc + it.total_amount, 0);
+  const addItem = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const expiry = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    setInvoiceItems(prev => [
+      ...prev,
+      {
+        id: 'new-' + Date.now(),
+        product_name: products[0]?.name || 'Fresh Milk',
+        quantity: 10,
+        unit: products[0]?.unit || 'Litre',
+        purchase_price: products[0]?.purchase_price || 60,
+        total_amount: (products[0]?.purchase_price || 60) * 10,
+        batch_no: 'BAT-' + Math.floor(1000 + Math.random() * 9000),
+        expiry_date: expiry
+      }
+    ]);
+  };
+
+  const totalBillAmount = invoiceItems.reduce((acc, it) => acc + (it.total_amount || 0), 0);
 
   const handleSaveInvoice = async () => {
-    if (invoiceItems.length === 0) return;
+    for (const it of invoiceItems) {
+      const match = products.find(p => p.name.toLowerCase().includes(it.product_name.toLowerCase()) || it.product_name.toLowerCase().includes(p.name.toLowerCase()));
+      const targetProductId = match ? match.id : products[0]?.id;
 
-    // Process each item: map to products and record stock entry + purchase
-    for (const item of invoiceItems) {
-      const matchedProd = products.find(p => p.name.toLowerCase() === item.product_name.toLowerCase()) || products[0];
-
-      if (matchedProd) {
-        // Record batch inward
-        await addStockEntries(matchedProd.id, [{
-          quantity: item.quantity,
-          purchase_price: item.purchase_price,
-          batch_no: item.batch_no,
+      if (targetProductId) {
+        await addStockEntries(targetProductId, [{
+          batch_no: it.batch_no || ('PUR-' + Math.floor(1000 + Math.random() * 9000)),
           mfg_date: invoiceDate,
-          expiry_date: item.expiry_date,
-          supplier_name: supplierName,
+          expiry_date: it.expiry_date,
+          quantity: it.quantity,
           lot_type: 'fresh_today',
-          notes: `Inward from Supplier Bill #${invoiceNumber}`
+          purchase_price: it.purchase_price,
+          supplier_name: supplierName,
+          notes: `Auto invoice entry #${invoiceNumber}`
         }]);
 
-        // Record purchase history
         await createPurchase({
-          product_id: matchedProd.id,
-          product_name: matchedProd.name,
+          product_id: targetProductId,
+          product_name: it.product_name,
+          quantity: it.quantity,
+          unit: it.unit,
+          purchase_price: it.purchase_price,
+          total_cost: it.total_amount,
           supplier_name: supplierName,
-          quantity: item.quantity,
-          unit: item.unit,
-          purchase_price: item.purchase_price,
-          total_amount: item.total_amount,
-          payment_mode: 'Cash',
           purchase_date: invoiceDate,
-          invoice_number: invoiceNumber,
-          notes: `OCR Scanned Bill #${invoiceNumber}`
+          notes: `Invoice #${invoiceNumber}`
         });
       }
     }
@@ -214,32 +208,35 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white dark:bg-[#131F1B] max-w-2xl w-full rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs">
+      <div className="bg-surface max-w-2xl w-full rounded-2xl border border-line shadow-pop overflow-hidden flex flex-col max-h-[92vh] text-ink">
         
         {/* Header */}
-        <div className="p-4 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between">
-          <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-            <FileText className="w-5 h-5" />
-            <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+        <div className="p-4 border-b border-line flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-surface-2 border border-line flex items-center justify-center text-ink">
+              <FileText className="w-4 h-4 text-ink-2" />
+            </div>
+            <h3 className="font-semibold text-sm sm:text-base text-ink tracking-tight">
               {language === 'mr' ? 'खरेदी बिल / पावती स्कॅनर (Purchase Invoice OCR)' : 'खरीद बिल / इनवॉइस स्कैनर (Invoice OCR)'}
             </h3>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition"
+            className="p-1.5 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 transition"
+            aria-label="Close"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-5 space-y-4 overflow-y-auto">
-          
+        <div className="p-4 sm:p-5 space-y-4 overflow-y-auto">
           {/* Upload / Capture Box */}
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-blue-300 dark:border-blue-900/60 hover:border-blue-500 rounded-2xl p-5 flex flex-col items-center justify-center text-center cursor-pointer bg-slate-50 dark:bg-[#1A2A25] transition-colors"
+            className="border-2 border-dashed border-line hover:border-ink/30 rounded-2xl p-5 flex flex-col items-center justify-center text-center cursor-pointer bg-surface-2/40 transition-colors"
           >
             <input
               ref={fileInputRef}
@@ -253,21 +250,21 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
             {selectedImage ? (
               <div className="relative w-full max-h-36 overflow-hidden rounded-xl">
                 <img src={selectedImage} alt="Supplier bill" className="w-full h-auto object-contain mx-auto" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs font-bold gap-1.5">
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs font-medium gap-1.5">
                   <RotateCw className="w-4 h-4" />
                   <span>{language === 'mr' ? 'दुसरे बिल निवडा' : 'दूसरा बिल चुनें'}</span>
                 </div>
               </div>
             ) : (
               <div className="space-y-1.5">
-                <div className="w-10 h-10 mx-auto rounded-xl bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <Upload className="w-5 h-5" />
+                <div className="w-10 h-10 mx-auto rounded-xl bg-surface border border-line text-ink flex items-center justify-center shadow-card">
+                  <Upload className="w-5 h-5 text-ink-2" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC]">
+                  <p className="text-xs font-semibold text-ink">
                     {language === 'mr' ? 'शेतकरी किंवा पुरवठादाराच्या बिलाचा फोटो / PDF अपलोड करा' : 'सप्लायर के बिल का फोटो या PDF अपलोड करें'}
                   </p>
-                  <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5">
+                  <p className="text-[11px] text-ink-3 mt-0.5">
                     {language === 'mr' ? 'AI माल, आवक मात्रा, खरेदी दर व रक्कम आपोआप वाचेल' : 'AI माल, मात्रा व भाव स्वचालित पढ़ लेगा'}
                   </p>
                 </div>
@@ -277,57 +274,54 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
 
           {/* Processing Status */}
           {isProcessing && (
-            <div className="p-4 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-900 flex items-center justify-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-300 animate-pulse">
-              <RotateCw className="w-4 h-4 animate-spin" />
+            <div className="p-3.5 bg-surface-2/60 rounded-xl border border-line flex items-center justify-center gap-2 text-xs font-medium text-ink animate-pulse">
+              <RotateCw className="w-4 h-4 animate-spin text-ink-2" />
               <span>{language === 'mr' ? 'बिलातील रकमा व आयटम्स वाचत आहे (AI Invoice OCR)...' : 'बिल के आयटम्स पढ़े जा रहे हैं...'}</span>
             </div>
           )}
 
           {/* Review Screen */}
           {hasScanned && (
-            <div className="space-y-3 animate-fadeIn">
-              
+            <div className="space-y-3">
               {/* Invoice Meta */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-xl border border-slate-200 dark:border-[#24352F]">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-surface-2/60 p-3 rounded-xl border border-line">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C] block mb-0.5">
+                  <label className="text-[10px] font-medium text-ink-3 block mb-1">
                     {language === 'mr' ? 'पुरवठादार / शेतकरी:' : 'सप्लायर:'}
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={supplierName}
                     onChange={(e) => setSupplierName(e.target.value)}
-                    className="w-full px-2 py-1 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-lg text-xs font-bold text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C] block mb-0.5">
+                  <label className="text-[10px] font-medium text-ink-3 block mb-1">
                     {language === 'mr' ? 'बिल क्रमांक (Invoice No):' : 'बिल नंबर:'}
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={invoiceNumber}
                     onChange={(e) => setInvoiceNumber(e.target.value)}
-                    className="w-full px-2 py-1 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-lg text-xs font-mono font-bold text-slate-900 dark:text-white"
+                    className="font-mono text-xs"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C] block mb-0.5">
+                  <label className="text-[10px] font-medium text-ink-3 block mb-1">
                     {language === 'mr' ? 'खरेदी तारीख:' : 'तारीख:'}
                   </label>
-                  <input
+                  <Input
                     type="date"
                     value={invoiceDate}
                     onChange={(e) => setInvoiceDate(e.target.value)}
-                    className="w-full px-2 py-1 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-lg text-xs font-bold text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
 
               {/* Items Table */}
-              <div className="border border-slate-200 dark:border-[#24352F] rounded-xl overflow-hidden">
+              <div className="border border-line rounded-xl overflow-hidden bg-surface shadow-card">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] font-bold">
+                  <thead className="bg-surface-2/60 border-b border-line text-ink-3 font-medium">
                     <tr>
                       <th className="px-3 py-2">{language === 'mr' ? 'मालाचे नाव' : language === 'hi' ? 'सामान का नाम' : 'Product Name'}</th>
                       <th className="px-2 py-2 text-center">{language === 'mr' ? 'प्रमाण' : language === 'hi' ? 'मात्रा' : 'Qty'}</th>
@@ -337,57 +331,58 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
                       <th className="px-2 py-2 text-center">{language === 'mr' ? 'कृती' : language === 'hi' ? 'कार्रवाई' : 'Action'}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
+                  <tbody className="divide-y divide-line">
                     {invoiceItems.map((item) => (
-                      <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-[#1A2A25]/50">
+                      <tr key={item.id} className="hover:bg-surface-2/40">
                         <td className="px-3 py-2">
-                          <input
+                          <Input
                             type="text"
                             value={item.product_name}
                             onChange={(e) => updateItem(item.id, 'product_name', e.target.value)}
-                            className="w-full px-1.5 py-1 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded text-xs font-bold text-slate-900 dark:text-white"
+                            className="h-8 text-xs font-medium"
                           />
                         </td>
                         <td className="px-2 py-2 w-20 text-center">
-                          <input
+                          <Input
                             type="number"
                             value={item.quantity}
                             onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                            className="w-full px-1.5 py-1 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded text-xs font-bold text-center"
+                            className="h-8 text-xs font-semibold text-center tabular-nums"
                           />
                         </td>
                         <td className="px-2 py-2 w-20 text-right">
-                          <input
+                          <Input
                             type="number"
                             value={item.purchase_price}
                             onChange={(e) => updateItem(item.id, 'purchase_price', parseFloat(e.target.value) || 0)}
-                            className="w-full px-1.5 py-1 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded text-xs font-bold text-right"
+                            className="h-8 text-xs font-semibold text-right tabular-nums"
                           />
                         </td>
-                        <td className="px-2 py-2 text-right font-black text-slate-900 dark:text-white">
+                        <td className="px-2 py-2 text-right font-semibold text-ink tabular-nums">
                           ₹{item.total_amount}
                         </td>
                         <td className="px-2 py-2 w-36">
                           <div className="space-y-1">
-                            <input
+                            <Input
                               type="text"
                               placeholder="Batch No"
                               value={item.batch_no}
                               onChange={(e) => updateItem(item.id, 'batch_no', e.target.value)}
-                              className="w-full px-1.5 py-0.5 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded text-[11px] font-mono font-bold"
+                              className="h-7 text-[11px] font-mono"
                             />
-                            <input
+                            <Input
                               type="date"
                               value={item.expiry_date}
                               onChange={(e) => updateItem(item.id, 'expiry_date', e.target.value)}
-                              className="w-full px-1.5 py-0.5 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded text-[11px] font-bold text-rose-600 dark:text-rose-400"
+                              className="h-7 text-[11px]"
                             />
                           </div>
                         </td>
                         <td className="px-2 py-2 text-center">
                           <button
+                            type="button"
                             onClick={() => removeItem(item.id)}
-                            className="p-1 rounded text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                            className="p-1 rounded text-ink-3 hover:text-danger transition"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -399,36 +394,36 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
               </div>
 
               {/* Total & Summary */}
-              <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-900/60">
-                <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300">
+              <div className="flex items-center justify-between p-3.5 bg-surface-2/60 rounded-xl border border-line">
+                <span className="text-xs font-medium text-ink-2">
                   एकूण खरेदी रक्कम (Total Bill Amount):
                 </span>
-                <span className="text-lg font-black text-emerald-700 dark:text-emerald-400 tabular-nums">
+                <span className="text-base font-semibold tabular-nums text-ink">
                   ₹{totalBillAmount.toLocaleString('en-IN')}
                 </span>
               </div>
-
             </div>
           )}
-
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-end gap-2 bg-slate-50 dark:bg-[#1A2A25]">
-          <button
+        <div className="p-3.5 border-t border-line flex items-center justify-end gap-2 bg-surface-2/40 shrink-0">
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#24352F]"
           >
             {language === 'mr' ? 'रद्द करा' : 'रद्द करें'}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
             disabled={!hasScanned || invoiceItems.length === 0}
             onClick={handleSaveInvoice}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition disabled:opacity-50 flex items-center gap-1.5"
+            leftIcon={<Save className="w-3.5 h-3.5" />}
           >
-            <Save className="w-3.5 h-3.5" />
             <span>{language === 'mr' ? 'साठ्यात जमा करा व खरेदी नोंदवा' : 'स्टॉक में जोड़ें व खरीद दर्ज करें'}</span>
-          </button>
+          </Button>
         </div>
 
       </div>
@@ -436,3 +431,4 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
   );
 };
 
+export default InvoiceScannerModal;

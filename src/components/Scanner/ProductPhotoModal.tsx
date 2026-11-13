@@ -1,19 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { useStore } from '../../context/StoreContext';
 import { ProductCategory, ProductUnit } from '../../types';
 import {
   Camera,
   X,
   Sparkles,
-  CheckCircle2,
-  AlertCircle,
   RefreshCw,
-  Plus,
-  Package,
-  Layers,
   ArrowRight
 } from 'lucide-react';
+import { Button, Input, StatusBadge } from '../ui';
 
 interface ProductPhotoModalProps {
   isOpen: boolean;
@@ -71,7 +66,6 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
     setIdentifiedData(null);
 
     try {
-      // 1. Try server AI recognition endpoint if available (Render backend or local proxy)
       const apiBase = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
       const response = await fetch(`${apiBase}/ai/recognize-product`, {
         method: 'POST',
@@ -88,9 +82,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
         }
       }
 
-      // 2. Client-side Intelligent Dairy Classifier Heuristics
-      // Analyzes visual packaging cues, colors and file names
-      await new Promise(r => setTimeout(r, 1200)); // natural AI perception delay
+      await new Promise(r => setTimeout(r, 1200));
 
       const lowerName = fileName.toLowerCase();
       let matchedCategory: ProductCategory = 'Milk';
@@ -179,32 +171,35 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white dark:bg-[#131F1B] max-w-lg w-full rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs">
+      <div className="bg-surface max-w-lg w-full rounded-2xl border border-line shadow-pop overflow-hidden flex flex-col max-h-[90vh] text-ink">
         
         {/* Header */}
-        <div className="p-4 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between">
-          <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
-            <Sparkles className="w-5 h-5" />
-            <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-              {language === 'mr' ? 'AI उत्पादन ओळख स्कॅनर (AI Photo Recognition)' : 'AI उत्पाद पहचान स्कैनर (AI Recognition)'}
+        <div className="p-4 border-b border-line flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-surface-2 border border-line flex items-center justify-center text-ink">
+              <Sparkles className="w-4 h-4 text-ink-2" />
+            </div>
+            <h3 className="font-semibold text-sm sm:text-base text-ink tracking-tight">
+              {language === 'mr' ? 'AI उत्पादन ओळख स्कॅनर (AI Recognition)' : 'AI उत्पाद पहचान स्कैनर (AI Recognition)'}
             </h3>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition"
+            className="p-1.5 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 transition"
+            aria-label="Close"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-5 space-y-4 overflow-y-auto">
-          
+        <div className="p-4 sm:p-5 space-y-4 overflow-y-auto">
           {/* Camera Frame */}
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-indigo-300 dark:border-indigo-900/60 hover:border-indigo-500 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer bg-slate-50 dark:bg-[#1A2A25] transition-colors"
+            className="border-2 border-dashed border-line hover:border-ink/30 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer bg-surface-2/40 transition-colors"
           >
             <input
               ref={fileInputRef}
@@ -218,21 +213,21 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
             {selectedImage ? (
               <div className="relative w-full max-h-48 overflow-hidden rounded-xl">
                 <img src={selectedImage} alt="Captured product" className="w-full h-auto object-contain mx-auto" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs font-bold gap-1.5">
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs font-medium gap-1.5">
                   <RefreshCw className="w-4 h-4" />
                   <span>{language === 'mr' ? 'दुसरा फोटो घ्या' : 'दूसरा फोटो लें'}</span>
                 </div>
               </div>
             ) : (
               <div className="space-y-2">
-                <div className="w-12 h-12 mx-auto rounded-2xl bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                  <Camera className="w-6 h-6" />
+                <div className="w-10 h-10 mx-auto rounded-xl bg-surface border border-line text-ink flex items-center justify-center shadow-card">
+                  <Camera className="w-5 h-5 text-ink-2" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC]">
+                  <p className="text-xs font-semibold text-ink">
                     {language === 'mr' ? 'उत्पादनाचा स्पष्ट फोटो काढा' : 'उत्पाद का स्पष्ट फोटो खींचें'}
                   </p>
-                  <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5">
+                  <p className="text-[11px] text-ink-3 mt-0.5">
                     {language === 'mr' ? 'AI आपोआप नाव, ब्रँड, भाव व वर्ग ओळखेल' : 'AI नाम, भाव व वर्ग पहचान लेगा'}
                   </p>
                 </div>
@@ -242,62 +237,80 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
 
           {/* AI Analyzing Spinner */}
           {isAnalyzing && (
-            <div className="p-4 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-900 flex items-center justify-center gap-2 text-xs font-bold text-indigo-700 dark:text-indigo-300 animate-pulse">
-              <Sparkles className="w-4 h-4 animate-spin" />
+            <div className="p-3.5 bg-surface-2/60 rounded-xl border border-line flex items-center justify-center gap-2 text-xs font-medium text-ink animate-pulse">
+              <Sparkles className="w-4 h-4 animate-spin text-ink-2" />
               <span>{language === 'mr' ? 'AI फोटो तपासून उत्पादन ओळखत आहे...' : 'AI फोटो की जांच कर रहा है...'}</span>
             </div>
           )}
 
           {/* Verification Form */}
           {identifiedData && (
-            <div className="bg-slate-50 dark:bg-[#1A2A25] p-4 rounded-xl border border-slate-200 dark:border-[#24352F] space-y-3 animate-fadeIn">
-              
-              {/* Confidence Badge */}
+            <div className="bg-surface-2/60 p-4 rounded-xl border border-line space-y-3">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-700 dark:text-emerald-400">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>{language === 'mr' ? `AI विश्वासार्हता: ${identifiedData.confidence}%` : `AI शुद्धता: ${identifiedData.confidence}%`}</span>
-                </span>
-                <span className="text-[10px] text-slate-500 font-semibold">
+                <StatusBadge status="ok">
+                  {language === 'mr' ? `AI विश्वासार्हता: ${identifiedData.confidence}%` : `AI शुद्धता: ${identifiedData.confidence}%`}
+                </StatusBadge>
+                <span className="text-[10px] text-ink-3 font-medium">
                   {language === 'mr' ? 'कृपया माहिती तपासून अंतिम करा' : 'कृपया जांच कर पुष्टि करें'}
                 </span>
               </div>
 
               {/* Product Name (English) */}
               <div>
-                <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
+                <label className="text-[11px] font-medium text-ink-2 block mb-1">
                   उत्पादनाचे नाव (English Name):
                 </label>
-                <input
+                <Input
                   type="text"
                   value={identifiedData.name}
                   onChange={(e) => setIdentifiedData(prev => prev ? { ...prev, name: e.target.value } : null)}
-                  className="w-full px-3 py-1.5 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-lg text-xs font-bold text-slate-900 dark:text-white"
                 />
               </div>
 
               {/* Marathi & Hindi Names */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
+                  <label className="text-[11px] font-medium text-ink-2 block mb-1">
                     मराठी नाव:
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={identifiedData.marathi_name}
                     onChange={(e) => setIdentifiedData(prev => prev ? { ...prev, marathi_name: e.target.value } : null)}
-                    className="w-full px-2.5 py-1.5 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-lg text-xs font-bold text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
+                  <label className="text-[11px] font-medium text-ink-2 block mb-1">
                     हिंदी नाम:
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={identifiedData.hindi_name}
                     onChange={(e) => setIdentifiedData(prev => prev ? { ...prev, hindi_name: e.target.value } : null)}
-                    className="w-full px-2.5 py-1.5 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-lg text-xs font-bold text-slate-900 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Category & Unit */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[11px] font-medium text-ink-2 block mb-1">
+                    वर्ग (Category):
+                  </label>
+                  <Input
+                    type="text"
+                    value={identifiedData.category}
+                    onChange={(e) => setIdentifiedData(prev => prev ? { ...prev, category: e.target.value as ProductCategory } : null)}
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-medium text-ink-2 block mb-1">
+                    एकक (Unit):
+                  </label>
+                  <Input
+                    type="text"
+                    value={identifiedData.unit}
+                    onChange={(e) => setIdentifiedData(prev => prev ? { ...prev, unit: e.target.value as ProductUnit } : null)}
                   />
                 </div>
               </div>
@@ -305,61 +318,58 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
               {/* Prices & Shelf Life */}
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
+                  <label className="text-[11px] font-medium text-ink-2 block mb-1">
                     खरेदी भाव:
                   </label>
-                  <input
+                  <Input
                     type="number"
                     value={identifiedData.purchase_price}
                     onChange={(e) => setIdentifiedData(prev => prev ? { ...prev, purchase_price: parseFloat(e.target.value) || 0 } : null)}
-                    className="w-full px-2 py-1.5 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-lg text-xs font-bold text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 block mb-1">
+                  <label className="text-[11px] font-medium text-ink-2 block mb-1">
                     विक्री भाव:
                   </label>
-                  <input
+                  <Input
                     type="number"
                     value={identifiedData.selling_price}
                     onChange={(e) => setIdentifiedData(prev => prev ? { ...prev, selling_price: parseFloat(e.target.value) || 0 } : null)}
-                    className="w-full px-2 py-1.5 bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-emerald-800 rounded-lg text-xs font-bold text-emerald-700 dark:text-emerald-400"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
+                  <label className="text-[11px] font-medium text-ink-2 block mb-1">
                     टिकाऊ दिवस:
                   </label>
-                  <input
+                  <Input
                     type="number"
                     value={identifiedData.shelf_life_days}
                     onChange={(e) => setIdentifiedData(prev => prev ? { ...prev, shelf_life_days: parseInt(e.target.value) || 2 } : null)}
-                    className="w-full px-2 py-1.5 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-lg text-xs font-bold text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
-
             </div>
           )}
-
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-end gap-2 bg-slate-50 dark:bg-[#1A2A25]">
-          <button
+        <div className="p-3.5 border-t border-line flex items-center justify-end gap-2 bg-surface-2/40 shrink-0">
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#24352F]"
           >
             {language === 'mr' ? 'रद्द करा' : 'रद्द करें'}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
             disabled={!identifiedData}
             onClick={handleApply}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition disabled:opacity-50 flex items-center gap-1.5"
+            rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
           >
-            <span>{language === 'mr' ? 'माहिती वापरा' : 'जानकारी लागू करें'}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+            {language === 'mr' ? 'माहिती वापरा' : 'जानकारी लागू करें'}
+          </Button>
         </div>
 
       </div>
@@ -367,3 +377,4 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
   );
 };
 
+export default ProductPhotoModal;

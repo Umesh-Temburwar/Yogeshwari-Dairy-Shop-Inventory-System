@@ -4,17 +4,13 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product } from '../../types';
 import {
-  Camera,
   X,
   Barcode,
   Search,
   CheckCircle2,
-  AlertCircle,
-  PlusCircle,
-  PackagePlus,
-  RefreshCw,
-  Flashlight
+  AlertCircle
 } from 'lucide-react';
+import { Button, Input, StatusBadge, Badge } from '../ui';
 
 interface BarcodeScannerModalProps {
   isOpen: boolean;
@@ -64,59 +60,68 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     try {
       setIsScanning(true);
       setCameraError(null);
+
       const codeReader = new BrowserMultiFormatReader();
       codeReaderRef.current = codeReader;
 
-      const videoElement = videoRef.current;
-      if (!videoElement) return;
+      const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices();
+      
+      let selectedDeviceId: string | undefined = undefined;
+      const backCamera = videoInputDevices.find(device => 
+        device.label.toLowerCase().includes('back') || 
+        device.label.toLowerCase().includes('rear') ||
+        device.label.toLowerCase().includes('environment')
+      );
 
-      // Decode from video stream
-      await codeReader.decodeFromVideoDevice(
-        undefined, // default camera
-        videoElement,
-        (result, error) => {
-          if (result) {
-            const text = result.getText();
-            handleBarcodeDetected(text);
+      if (backCamera) {
+        selectedDeviceId = backCamera.deviceId;
+      } else if (videoInputDevices.length > 0) {
+        selectedDeviceId = videoInputDevices[0].deviceId;
+      }
+
+      if (videoRef.current) {
+        await codeReader.decodeFromVideoDevice(
+          selectedDeviceId,
+          videoRef.current,
+          (result, err) => {
+            if (result) {
+              const text = result.getText();
+              handleBarcodeDetected(text);
+            }
           }
-        }
-      );
+        );
+      }
     } catch (err: any) {
-      console.error('Camera access error:', err);
-      setCameraError(
-        err?.message?.includes('Permission') 
-          ? (language === 'mr' ? 'कॅमेरा परवानगी नाकारली गेली. कृपया ब्राऊझर सेटिंग्जमध्ये कॅमेरा सुरू करा.' : 'कैमरा अनुमति अस्वीकृत। कृपया ब्राउज़र में कैमरा एक्सेस दें।')
-          : (language === 'mr' ? 'कॅमेरा सुरू करता आला नाही. कृपया बारकोड हाताने टाका.' : 'कैमरा शुरू नहीं हो सका। कृपया बारकोड मैन्युअली दर्ज करें।')
-      );
+      console.error('Camera Init Error:', err);
+      setCameraError(language === 'mr' ? 'कॅमेरा सुरू करताना त्रुटी आली. कृपया ब्राऊझर परवानगी तपासा किंवा मॅन्युअल इनपुट वापरा.' : 'कैमरा शुरू करने में त्रुटि। कृपया अनुमति जांचें या मैनुअल दर्ज करें।');
       setIsScanning(false);
     }
   };
 
   const stopCamera = () => {
-    try {
-      if (codeReaderRef.current) {
-        // ZXing Browser stops tracks through reader reset
-        const stream = videoRef.current?.srcObject as MediaStream;
-        if (stream) {
-          stream.getTracks().forEach(track => track.stop());
-        }
+    if (codeReaderRef.current) {
+      try {
+        (codeReaderRef.current as any).reset();
+      } catch (e) {
+        console.error(e);
       }
-    } catch (e) {}
+      codeReaderRef.current = null;
+    }
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
     setIsScanning(false);
   };
 
   const handleBarcodeDetected = (code: string) => {
     setScannedCode(code);
-    if (onBarcodeScanned) {
-      onBarcodeScanned(code);
-    }
 
-    // Lookup in local product list
-    const found = products.find(p => p.barcode === code);
+    const found = products.find(p => p.id === code || (p as any).barcode === code);
     if (found) {
       setMatchedProduct(found);
-      if (onProductSelected) {
-        // If automatic callback requested
+      if (mode === 'pos' && onProductSelected) {
         // onProductSelected(found);
       }
     } else {
@@ -140,27 +145,31 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white dark:bg-[#131F1B] max-w-lg w-full rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs">
+      <div className="bg-surface max-w-lg w-full rounded-2xl border border-line shadow-pop overflow-hidden flex flex-col max-h-[90vh] text-ink">
         
         {/* Header */}
-        <div className="p-4 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between">
-          <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-            <Barcode className="w-5 h-5" />
-            <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+        <div className="p-4 border-b border-line flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-surface-2 border border-line flex items-center justify-center text-ink">
+              <Barcode className="w-4 h-4 text-ink-2" />
+            </div>
+            <h3 className="font-semibold text-sm sm:text-base text-ink tracking-tight">
               {language === 'mr' ? 'बारकोड स्कॅनर (Barcode Scanner)' : language === 'hi' ? 'बारकोड स्कैनर (Barcode Scanner)' : 'Live Barcode Scanner'}
             </h3>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition"
+            className="p-1.5 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 transition"
+            aria-label="Close"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Video Viewfinder & Overlay */}
-        <div className="relative bg-black flex-1 min-h-[260px] max-h-[340px] flex items-center justify-center overflow-hidden">
+        <div className="relative bg-black flex-1 min-h-[240px] max-h-[320px] flex items-center justify-center overflow-hidden">
           <video
             ref={videoRef}
             className="w-full h-full object-cover"
@@ -170,10 +179,10 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
           {/* Viewfinder Target Aim Box */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-64 h-36 border-2 border-emerald-400 rounded-xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
-              {/* Animated Red Laser Scan Line */}
-              <div className="absolute left-0 right-0 h-0.5 bg-rose-500 shadow-[0_0_8px_#f43f5e] animate-pulse top-1/2 -translate-y-1/2" />
-              <div className="absolute -top-6 left-0 right-0 text-center text-[10px] font-bold text-white tracking-wider uppercase">
+            <div className="w-60 h-32 border-2 border-white/80 rounded-xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
+              {/* Scan Line */}
+              <div className="absolute left-0 right-0 h-0.5 bg-danger animate-pulse top-1/2 -translate-y-1/2" />
+              <div className="absolute -top-6 left-0 right-0 text-center text-[10px] font-medium text-white/90 tracking-wider uppercase">
                 {language === 'mr' ? 'बारकोड चौकटीत धरा' : 'बारकोड फ्रेम में रखें'}
               </div>
             </div>
@@ -181,94 +190,98 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
           {/* Camera Error / Fallback Message */}
           {cameraError && (
-            <div className="absolute inset-0 bg-slate-900/90 p-6 flex flex-col items-center justify-center text-center text-white space-y-3 z-10">
-              <AlertCircle className="w-10 h-10 text-amber-400" />
-              <p className="text-xs font-semibold max-w-xs">{cameraError}</p>
-              <button
+            <div className="absolute inset-0 bg-surface/95 p-6 flex flex-col items-center justify-center text-center text-ink space-y-3 z-10">
+              <AlertCircle className="w-8 h-8 text-warn" />
+              <p className="text-xs font-medium max-w-xs text-ink-2">{cameraError}</p>
+              <Button
+                size="sm"
+                variant="secondary"
                 onClick={startCamera}
-                className="px-3 py-1.5 rounded-lg bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-500"
               >
                 {language === 'mr' ? 'पुन्हा प्रयत्न करा' : 'पुनः प्रयास करें'}
-              </button>
+              </Button>
             </div>
           )}
         </div>
 
         {/* Manual Barcode Input Fallback */}
-        <div className="p-4 bg-slate-50 dark:bg-[#1A2A25] border-t border-slate-200/80 dark:border-[#24352F]">
+        <div className="p-3.5 bg-surface-2/60 border-t border-line shrink-0">
           <form onSubmit={handleManualSearch} className="flex gap-2">
-            <input
+            <Input
               type="text"
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
-              placeholder={language === 'mr' ? 'किंवा बारकोड नंबर हाताने टाईप करा...' : 'या बारकोड संख्या टाइप करें...'}
-              className="flex-1 px-3 py-2 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder={language === 'mr' ? 'किंवा बारकोड नंबर टाईप करा...' : 'या बारकोड संख्या टाइप करें...'}
+              className="font-mono text-xs"
             />
-            <button
+            <Button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-emerald-600 text-white font-bold text-xs"
+              variant="primary"
+              size="sm"
+              leftIcon={<Search className="w-4 h-4" />}
             >
-              <Search className="w-4 h-4" />
-            </button>
+              {language === 'mr' ? 'शोधा' : 'खोजें'}
+            </Button>
           </form>
         </div>
 
         {/* Result Area */}
         {scannedCode && (
-          <div className="p-4 bg-white dark:bg-[#131F1B] border-t border-slate-200 dark:border-[#24352F] space-y-3 animate-fadeIn">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 dark:text-[#8FA69C]">
+          <div className="p-4 bg-surface border-t border-line space-y-3 shrink-0">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-ink-3">
                 {language === 'mr' ? 'स्कॅन केलेला कोड:' : 'स्कैन किया गया कोड:'}
               </span>
-              <span className="font-mono text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
+              <span className="font-mono text-xs font-semibold text-ink px-2 py-0.5 rounded-md bg-surface-2 border border-line">
                 {scannedCode}
               </span>
             </div>
 
             {matchedProduct ? (
-              <div className="p-3 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between">
+              <div className="p-3 bg-surface-2/60 rounded-xl border border-line flex items-center justify-between">
                 <div>
-                  <div className="flex items-center gap-1.5 text-xs font-extrabold text-emerald-800 dark:text-emerald-300">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>{getProductDisplayName(matchedProduct)}</span>
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-ink">
+                    <StatusBadge status="ok">{getProductDisplayName(matchedProduct)}</StatusBadge>
                   </div>
-                  <div className="text-[11px] text-slate-600 dark:text-[#8FA69C] mt-0.5">
+                  <div className="text-[11px] text-ink-3 mt-0.5 tabular-nums">
                     दर: ₹{matchedProduct.selling_price} / {matchedProduct.unit} | साठा: {matchedProduct.stock_quantity} {matchedProduct.unit}
                   </div>
                 </div>
 
-                <button
+                <Button
+                  size="sm"
+                  variant="primary"
                   onClick={() => {
                     if (onProductSelected) onProductSelected(matchedProduct);
                     onClose();
                   }}
-                  className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs"
                 >
                   {mode === 'pos' 
                     ? (language === 'mr' ? '+ बिलात जोडा' : '+ बिल में जोड़ें')
                     : (language === 'mr' ? 'निवडा' : 'चुनें')}
-                </button>
+                </Button>
               </div>
             ) : (
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-900/60 flex items-center justify-between">
+              <div className="p-3 bg-surface-2/60 rounded-xl border border-line flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-amber-800 dark:text-amber-300 block">
+                  <span className="text-xs font-semibold text-ink block">
                     {language === 'mr' ? 'हे उत्पादन इन्व्हेंटरीमध्ये नाही' : 'यह उत्पाद इन्वेंटरी में नहीं मिला'}
                   </span>
-                  <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
+                  <span className="text-[11px] text-ink-3">
                     {language === 'mr' ? 'तुम्ही या बारकोडसह नवीन उत्पादन तयार करू शकता.' : 'आप इस बारकोड से नया उत्पाद बना सकते हैं।'}
                   </span>
                 </div>
 
-                <button
+                <Button
+                  size="sm"
+                  variant="secondary"
                   onClick={() => {
                     if (onBarcodeScanned) onBarcodeScanned(scannedCode);
                     onClose();
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs"
                 >
                   + {language === 'mr' ? 'नवीन जोडा' : 'नया जोड़ें'}
-                </button>
+                </Button>
               </div>
             )}
           </div>
@@ -279,3 +292,4 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   );
 };
 
+export default BarcodeScannerModal;

@@ -139,8 +139,8 @@ const MainContent: React.FC = () => {
   };
 
   return (
-    <div className="h-dvh w-full flex flex-col overflow-hidden bg-[#f8fafc] dark:bg-[#0B1210] text-[#0f172a] dark:text-[#E7F0EC] transition-colors duration-150 selection:bg-emerald-500 selection:text-white">
-      {/* Top Header (Fixed 64px, nothing clipped or overflowing) */}
+    <div className="h-dvh w-full flex flex-col overflow-hidden bg-bg text-ink transition-colors duration-150 selection:bg-accent selection:text-accent-fg">
+      {/* Top Header (56px) */}
       <Navbar 
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenAppDownload={() => setIsAppDownloadOpen(true)}
@@ -150,8 +150,8 @@ const MainContent: React.FC = () => {
       />
 
       {/* Main Workspace with Sidebar & Content */}
-      <div className="flex-1 flex overflow-hidden max-w-[1440px] w-full mx-auto min-h-0">
-        {/* Sidebar: 264px / 72px rail on desktop, drawer on mobile */}
+      <div className="flex-1 flex overflow-hidden max-w-[1400px] w-full mx-auto min-h-0">
+        {/* Sidebar: 248px / 68px rail on desktop, drawer on mobile */}
         <Sidebar 
           isCollapsed={isSidebarCollapsed}
           isMobileOpen={isMobileSidebarOpen}
@@ -170,7 +170,7 @@ const MainContent: React.FC = () => {
           {(isPulling || (isSyncing && pullY > 0)) && (
             <div 
               style={{ height: `${pullY}px` }} 
-              className="sm:hidden flex items-center justify-center overflow-hidden transition-all duration-150 text-emerald-700 dark:text-emerald-400 font-bold text-xs gap-2 bg-emerald-50/80 dark:bg-emerald-950/30 rounded-xl mb-2"
+              className="sm:hidden flex items-center justify-center overflow-hidden transition-all duration-150 text-ink font-medium text-xs gap-2 bg-surface-2 border border-line rounded-xl mb-2"
             >
               <RotateCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
               <span>{isSyncing ? 'रिफ्रेश होत आहे...' : pullY > 50 ? 'सोडून द्या (रिफ्रेश करा)' : 'खाली ओढा (रिफ्रेश)'}</span>

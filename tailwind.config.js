@@ -8,55 +8,35 @@ export default {
   theme: {
     extend: {
       colors: {
-        theme: {
-          bg: 'var(--bg)',
-          surface: 'var(--surface)',
-          'surface-2': 'var(--surface-2)',
-          border: 'var(--border)',
-          text: 'var(--text)',
-          muted: 'var(--text-muted)',
-          primary: 'var(--primary)',
-          accent: 'var(--accent)',
-          sidebar: 'var(--sidebar)',
+        bg: 'rgb(var(--bg) / <alpha-value>)',
+        surface: 'rgb(var(--surface) / <alpha-value>)',
+        'surface-2': 'rgb(var(--surface-2) / <alpha-value>)',
+        line: 'rgb(var(--border) / <alpha-value>)',
+        ink: {
+          DEFAULT: 'rgb(var(--ink) / <alpha-value>)',
+          2: 'rgb(var(--ink-2) / <alpha-value>)',
+          3: 'rgb(var(--ink-3) / <alpha-value>)',
         },
-        dark: {
-          bg: '#0B1210',
-          sidebar: '#0F1A17',
-          surface: '#131F1B',
-          elevated: '#1A2A25',
-          border: '#24352F',
-          text: '#E7F0EC',
-          muted: '#8FA69C',
+        accent: {
+          DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
+          fg: 'rgb(var(--accent-fg) / <alpha-value>)',
         },
-        dairy: {
-          50: '#f0fdf9',
-          100: '#ccfbef',
-          200: '#9af5df',
-          300: '#5ee7cb',
-          400: '#2cd0b2',
-          500: '#10b981',
-          600: '#0a907b',
-          700: '#0c7364',
-          800: '#0e5b51',
-          900: '#104c44',
-          950: '#042b27',
-        },
-        brand: {
-          blue: '#1e40af',
-          gold: '#d97706',
-          milk: '#f8fafc',
-          cream: '#fef3c7',
-        }
+        ok: 'rgb(var(--ok) / <alpha-value>)',
+        warn: 'rgb(var(--warn) / <alpha-value>)',
+        danger: 'rgb(var(--danger) / <alpha-value>)',
       },
-      fontFamily: {
-        sans: ['Inter', 'Plus Jakarta Sans', 'Noto Sans Devanagari', 'system-ui', 'sans-serif'],
-        devanagari: ['Noto Sans Devanagari', 'Inter', 'sans-serif'],
+      borderRadius: {
+        xl: '12px',
+        '2xl': '16px',
       },
       boxShadow: {
-        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        'card': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
-        'dark-card': '0 4px 20px -2px rgba(0, 0, 0, 0.4)',
-      }
+        card: '0 1px 2px rgb(0 0 0 / .04), 0 0 0 1px rgb(var(--border))',
+        pop: '0 8px 30px rgb(0 0 0 / .08), 0 0 0 1px rgb(var(--border))',
+      },
+      fontFamily: {
+        sans: ['Inter', 'Noto Sans Devanagari', 'system-ui', 'sans-serif'],
+        devanagari: ['Noto Sans Devanagari', 'Inter', 'sans-serif'],
+      },
     },
   },
   plugins: [],

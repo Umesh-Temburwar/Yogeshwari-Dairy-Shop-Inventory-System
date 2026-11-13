@@ -3,31 +3,25 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { computeExpiryStatus, ExpiryStatus } from '../../lib/shelfLifeUtils';
 import { ProductBatch, DamageReason } from '../../types';
-import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
+import { printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import {
   AlertTriangle,
-  Clock,
   CheckCircle2,
   AlertOctagon,
   Trash2,
   Printer,
   Copy,
   Check,
-  Search,
-  Filter,
   ShieldAlert,
   Calendar,
   Layers,
-  IndianRupee,
-  TrendingDown,
-  FileText,
   Download,
-  X,
   Eye
 } from 'lucide-react';
+import { Button, Input, SearchInput, Card, KpiCard, Badge, StatusBadge, Modal } from '../ui';
 
 export const ExpiryDashboard: React.FC = () => {
-  const { batches, products, recordDamage, adjustStock } = useStore();
+  const { batches, products, recordDamage } = useStore();
   const { t, language } = useLanguage();
 
   const [activeTab, setActiveTab] = useState<ExpiryStatus | 'ALL'>('ALL');
@@ -62,7 +56,6 @@ export const ExpiryDashboard: React.FC = () => {
         };
       })
       .sort((a, b) => {
-        // Expired first, then earliest expiry
         if (a.expiryStatus === 'EXPIRED' && b.expiryStatus !== 'EXPIRED') return -1;
         if (a.expiryStatus !== 'EXPIRED' && b.expiryStatus === 'EXPIRED') return 1;
         return a.daysToExpiry - b.daysToExpiry;
@@ -138,7 +131,6 @@ export const ExpiryDashboard: React.FC = () => {
         supplier.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCategory = selectedCategory === 'All' || b.product?.category === selectedCategory;
-
       const matchesTab = activeTab === 'ALL' || b.expiryStatus === activeTab;
 
       return matchesSearch && matchesCategory && matchesTab;
@@ -302,19 +294,19 @@ export const ExpiryDashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
 
       {/* HEADER BANNER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 dark:from-[#1E0F14] dark:via-[#131F1B] dark:to-[#0F1A17] p-6 rounded-3xl text-white shadow-md border border-rose-900/40 dark:border-[#24352F] transition-colors">
+      <Card className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-900/60 dark:bg-rose-950/60 text-xs font-semibold text-rose-200 border border-rose-700/50 dark:border-rose-800/50">
-            <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-2 text-ink-2 text-[11px] font-medium border border-line">
+            <ShieldAlert className="w-3.5 h-3.5 text-danger" />
             <span>{language === 'mr' ? 'FEFO मुदत समाप्ती नियंत्रण प्रणाली' : language === 'hi' ? 'FEFO एक्सपायरी प्रबंधन' : 'FEFO Expiry Control'}</span>
           </div>
-          <h2 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-            <span>{language === 'mr' ? 'मुदत समाप्ती व्यवस्थापन डॅशबोर्ड (Expiry Dashboard)' : language === 'hi' ? 'एक्सपायरी डेट प्रबंधन डैशबोर्ड (Expiry Dashboard)' : 'Expiry Management Dashboard'}</span>
+          <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-ink flex items-center gap-2">
+            <span>{language === 'mr' ? 'मुदत समाप्ती व्यवस्थापन (Expiry Dashboard)' : language === 'hi' ? 'एक्सपायरी डेट प्रबंधन (Expiry Dashboard)' : 'Expiry Management Dashboard'}</span>
           </h2>
-          <p className="text-rose-100/80 dark:text-[#8FA69C] text-xs max-w-xl">
+          <p className="text-xs text-ink-3 max-w-xl font-medium">
             {language === 'mr'
               ? 'बॅचनिहाय एक्सपायरी ट्रॅकिंग, मुदत संपलेला माल तात्काळ ब्लॉक करणे, आणि नुकसान अहवाल'
               : language === 'hi'
@@ -324,126 +316,108 @@ export const ExpiryDashboard: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleViewExpiryPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            leftIcon={<Eye className="w-4 h-4" />}
             title="View Expiry Report PDF"
           >
-            <Eye className="w-4 h-4 text-rose-300" />
-            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-          </button>
+            {language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}
+          </Button>
 
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handlePrintExpiryPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs shadow-md transition-all active:scale-95 border border-white/20"
+            leftIcon={<Printer className="w-4 h-4" />}
             title="Print Expiry Report"
           >
-            <Printer className="w-4 h-4 text-rose-300" />
-            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-          </button>
+            {language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}
+          </Button>
 
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleDownloadExpiryPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            leftIcon={<Download className="w-4 h-4" />}
             title="Download PDF Report"
           >
-            <Download className="w-4 h-4" />
-            <span>{language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
-          </button>
+            PDF
+          </Button>
 
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={handleCopyWhatsAppAlert}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            leftIcon={copiedAlert ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           >
-            {copiedAlert ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            <span>{copiedAlert ? (language === 'mr' ? 'अलर्ट कॉपी झाला!' : 'अलर्ट कॉपी हुआ!') : (language === 'mr' ? 'व्हाट्सॲप रिस्क अलर्ट' : 'व्हाट्सएप अलर्ट')}</span>
-          </button>
+            {copiedAlert ? (language === 'mr' ? 'कॉपी झाला!' : 'कॉपी हुआ!') : (language === 'mr' ? 'व्हाट्सॲप अलर्ट' : 'व्हाट्सएप अलर्ट')}
+          </Button>
         </div>
-      </div>
+      </Card>
 
       {/* 4 KPI SUMMARY CARDS */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {/* Expired Loss Card */}
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-rose-200 dark:border-rose-950/60 shadow-xs transition-colors">
-          <div className="flex items-center justify-between text-rose-600 dark:text-rose-400">
-            <span className="text-xs font-bold uppercase tracking-wider">{language === 'mr' ? 'मुदत संपलेला माल' : 'एक्सपायर्ड माल'}</span>
-            <AlertOctagon className="w-4 h-4" />
-          </div>
-          <span className="text-2xl font-black text-rose-700 dark:text-rose-400 mt-2 block tabular-nums">
-            ₹{kpis.expiredCostLoss.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[11px] font-semibold text-rose-600/80 dark:text-rose-400/80">
-            {kpis.expiredCount} {language === 'mr' ? 'बॅचेस (काउंटरवर विक्री बंद)' : 'बैचेस (बिक्री ब्लॉक है)'}
-          </span>
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <KpiCard
+          label={language === 'mr' ? 'मुदत संपलेला माल' : 'एक्सपायर्ड माल'}
+          value={`₹${kpis.expiredCostLoss.toLocaleString('en-IN')}`}
+          delta={`${kpis.expiredCount} ${language === 'mr' ? 'बॅचेस (विक्री बंद)' : 'बैचेस (ब्लॉक)'}`}
+          deltaType="danger"
+          icon={<AlertOctagon className="w-4 h-4 text-danger" />}
+        />
 
-        {/* Near Expiry at Risk Card */}
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-amber-200 dark:border-amber-950/60 shadow-xs transition-colors">
-          <div className="flex items-center justify-between text-amber-600 dark:text-amber-400">
-            <span className="text-xs font-bold uppercase tracking-wider">{language === 'mr' ? 'धोक्यातील माल (३ दिवस)' : 'जोखिम में (3 दिन)'}</span>
-            <AlertTriangle className="w-4 h-4" />
-          </div>
-          <span className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-2 block tabular-nums">
-            ₹{kpis.nearExpiryRiskTotal.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[11px] font-semibold text-amber-600/80 dark:text-amber-400/80">
-            {kpis.todayCount + kpis.tomorrowCount + kpis.threeDaysCount} {language === 'mr' ? 'बॅचेस आधी विका' : 'बैचेस पहले बेचें'}
-          </span>
-        </div>
+        <KpiCard
+          label={language === 'mr' ? 'धोक्यातील माल (३ दिवस)' : 'जोखिम में (3 दिन)'}
+          value={`₹${kpis.nearExpiryRiskTotal.toLocaleString('en-IN')}`}
+          delta={`${kpis.todayCount + kpis.tomorrowCount + kpis.threeDaysCount} ${language === 'mr' ? 'बॅचेस आधी विका' : 'बैचेस पहले बेचें'}`}
+          deltaType="warn"
+          icon={<AlertTriangle className="w-4 h-4 text-warn" />}
+        />
 
-        {/* Fresh Stock Safe Card */}
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-emerald-200 dark:border-emerald-950/60 shadow-xs transition-colors">
-          <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
-            <span className="text-xs font-bold uppercase tracking-wider">{language === 'mr' ? 'ताजा सुरक्षित माल' : 'ताज़ा सुरक्षित स्टॉक'}</span>
-            <CheckCircle2 className="w-4 h-4" />
-          </div>
-          <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-2 block tabular-nums">
-            {kpis.freshCount} {language === 'mr' ? 'बॅचेस' : 'बैचेस'}
-          </span>
-          <span className="text-[11px] font-semibold text-emerald-600/80 dark:text-emerald-400/80">
-            {language === 'mr' ? '७ दिवसांपेक्षा जास्त मुदत' : '7 दिन से अधिक सुरक्षित'}
-          </span>
-        </div>
+        <KpiCard
+          label={language === 'mr' ? 'ताजा सुरक्षित माल' : 'ताज़ा सुरक्षित स्टॉक'}
+          value={`${kpis.freshCount} ${language === 'mr' ? 'बॅचेस' : 'बैचेस'}`}
+          delta={language === 'mr' ? '७+ दिवस मुदत' : '7+ दिन सुरक्षित'}
+          deltaType="ok"
+          icon={<CheckCircle2 className="w-4 h-4 text-ok" />}
+        />
 
-        {/* Total Monitored Batches */}
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
-          <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
-            <span className="text-xs font-bold uppercase tracking-wider">{language === 'mr' ? 'एकूण सक्रिय बॅचेस' : 'कुल सक्रिय बैचेस'}</span>
-            <Layers className="w-4 h-4" />
-          </div>
-          <span className="text-2xl font-black text-slate-900 dark:text-white mt-2 block tabular-nums">
-            {kpis.totalActiveBatches}
-          </span>
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C]">
-            ₹{kpis.totalStockCost.toLocaleString('en-IN')} {language === 'mr' ? 'एकूण खरेदी मूल्य' : 'कुल खरीद लागत'}
-          </span>
-        </div>
+        <KpiCard
+          label={language === 'mr' ? 'एकूण सक्रिय बॅचेस' : 'कुल सक्रिय बैचेस'}
+          value={String(kpis.totalActiveBatches)}
+          delta={`₹${kpis.totalStockCost.toLocaleString('en-IN')} ${language === 'mr' ? 'खरेदी मूल्य' : 'खरीद लागत'}`}
+          deltaType="neutral"
+          icon={<Layers className="w-4 h-4 text-ink-3" />}
+        />
       </div>
 
       {/* 6 EXPIRY CATEGORY TABS */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
         {[
-          { id: 'ALL', label: language === 'mr' ? 'सर्व बॅचेस' : 'सभी बैचेस', count: enrichedBatches.length, color: 'bg-slate-900 text-white dark:bg-emerald-600' },
-          { id: 'EXPIRED', label: language === 'mr' ? '🔴 मुदत संपली' : '🔴 एक्सपायर्ड', count: kpis.expiredCount, color: 'bg-rose-600 text-white' },
-          { id: 'EXPIRING_TODAY', label: language === 'mr' ? '🟠 आज संपत आहे' : '🟠 आज एक्सपायर', count: kpis.todayCount, color: 'bg-orange-600 text-white' },
-          { id: 'EXPIRING_TOMORROW', label: language === 'mr' ? '🟡 उद्या संपणार' : '🟡 कल एक्सपायर', count: kpis.tomorrowCount, color: 'bg-amber-600 text-white' },
-          { id: 'EXPIRING_IN_3_DAYS', label: language === 'mr' ? '🔵 ३ दिवसात' : '🔵 3 दिन में', count: kpis.threeDaysCount, color: 'bg-blue-600 text-white' },
-          { id: 'EXPIRING_IN_7_DAYS', label: language === 'mr' ? '🟣 ७ दिवसात' : '🟣 7 दिन में', count: kpis.sevenDaysCount, color: 'bg-purple-600 text-white' },
-          { id: 'FRESH', label: language === 'mr' ? '🟢 ताजा माल' : '🟢 ताजा स्टॉक', count: kpis.freshCount, color: 'bg-emerald-600 text-white' }
+          { id: 'ALL', label: language === 'mr' ? 'सर्व बॅचेस' : 'सभी बैचेस', count: enrichedBatches.length, dot: null },
+          { id: 'EXPIRED', label: language === 'mr' ? 'मुदत संपली' : 'एक्सपायर्ड', count: kpis.expiredCount, dot: 'bg-danger' },
+          { id: 'EXPIRING_TODAY', label: language === 'mr' ? 'आज संपत आहे' : 'आज एक्सपायर', count: kpis.todayCount, dot: 'bg-warn' },
+          { id: 'EXPIRING_TOMORROW', label: language === 'mr' ? 'उद्या संपणार' : 'कल एक्सपायर', count: kpis.tomorrowCount, dot: 'bg-warn' },
+          { id: 'EXPIRING_IN_3_DAYS', label: language === 'mr' ? '३ दिवसात' : '3 दिन में', count: kpis.threeDaysCount, dot: 'bg-ok' },
+          { id: 'EXPIRING_IN_7_DAYS', label: language === 'mr' ? '७ दिवसात' : '7 दिन में', count: kpis.sevenDaysCount, dot: 'bg-ok' },
+          { id: 'FRESH', label: language === 'mr' ? 'ताजा माल' : 'ताजा स्टॉक', count: kpis.freshCount, dot: 'bg-ok' }
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${isActive
-                ? `${tab.color} shadow-sm scale-102`
-                : 'bg-white dark:bg-[#131F1B] border border-slate-200/90 dark:border-[#24352F] text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
-                }`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
+                isActive
+                  ? 'bg-accent text-accent-fg font-semibold shadow-card'
+                  : 'bg-surface text-ink-2 hover:text-ink shadow-card'
+              }`}
             >
+              {tab.dot && <span className={`h-1.5 w-1.5 rounded-full ${tab.dot}`} />}
               <span>{tab.label}</span>
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${isActive ? 'bg-white/25 text-white' : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
-                }`}>
+              <span className="text-[10px] tabular-nums px-1.5 py-0.2 rounded bg-surface-2 text-ink-2">
                 {tab.count}
               </span>
             </button>
@@ -452,37 +426,33 @@ export const ExpiryDashboard: React.FC = () => {
       </div>
 
       {/* FILTER BAR: Search & Category */}
-      <div className="flex flex-col sm:flex-row gap-3 bg-white dark:bg-[#131F1B] p-3 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
+      <Card className="p-3.5 flex flex-col sm:flex-row gap-3">
+        <div className="flex-1">
+          <SearchInput
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={language === 'mr' ? 'उत्पादन नाव, बॅच नंबर, पुरवठादार शोधा...' : 'उत्पाद का नाम, बैच नंबर, सप्लायर खोजें...'}
-            className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-400 shrink-0" />
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="h-10 px-3 bg-surface border border-line rounded-xl text-xs font-medium text-ink shadow-card focus:outline-none focus:ring-2 focus:ring-ink/15"
           >
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.label}</option>
             ))}
           </select>
         </div>
-      </div>
+      </Card>
 
       {/* BATCHES TABLE */}
-      <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs overflow-hidden transition-colors">
+      <Card className="overflow-hidden p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] font-bold uppercase">
+            <thead className="bg-surface-2/60 border-b border-line text-ink-3 font-medium uppercase tracking-wider text-[11px]">
               <tr>
                 <th className="px-4 py-3">{t('productNameCol')}</th>
                 <th className="px-3 py-3">{language === 'mr' ? 'बॅच क्र.' : 'बैच सं.'}</th>
@@ -490,12 +460,12 @@ export const ExpiryDashboard: React.FC = () => {
                 <th className="px-3 py-3 text-center">{language === 'mr' ? 'शिल्लक साठा' : 'उपलब्ध स्टॉक'}</th>
                 <th className="px-3 py-3 text-right">{language === 'mr' ? 'खरेदी भाव' : 'खरीद भाव'}</th>
                 <th className="px-3 py-3 text-right">{language === 'mr' ? 'एकूण मूल्य' : 'कुल लागत'}</th>
-                <th className="px-3 py-3">{language === 'mr' ? 'मुदत समाप्ती तारीख' : 'एक्सपायरी तारीख'}</th>
+                <th className="px-3 py-3">{language === 'mr' ? 'मुदत तारीख' : 'एक्सपायरी'}</th>
                 <th className="px-3 py-3 text-center">{language === 'mr' ? 'स्थिती' : 'स्थिति'}</th>
                 <th className="px-4 py-3 text-right">{t('actionsCol')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
+            <tbody className="divide-y divide-line">
               {filteredBatches.length > 0 ? (
                 filteredBatches.map((batch) => {
                   const isExpired = batch.expiryStatus === 'EXPIRED';
@@ -505,61 +475,59 @@ export const ExpiryDashboard: React.FC = () => {
                   return (
                     <tr
                       key={batch.id}
-                      className={`hover:bg-slate-50/80 dark:hover:bg-[#1A2A25]/60 transition-colors ${isExpired ? 'bg-rose-50/40 dark:bg-rose-950/20' : isToday ? 'bg-orange-50/40 dark:bg-orange-950/20' : ''
-                        }`}
+                      className="hover:bg-surface-2/50 transition-colors"
                     >
                       {/* Product Name */}
                       <td className="px-4 py-3">
-                        <div className="font-bold text-slate-900 dark:text-white">
+                        <div className="font-medium text-ink">
                           {getProductDisplayName(batch)}
                         </div>
-                        <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
+                        <span className="text-[11px] text-ink-3">
                           {batch.product?.category || ''}
                         </span>
                       </td>
 
                       {/* Batch No */}
                       <td className="px-3 py-3">
-                        <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F]">
+                        <Badge variant="outline" className="font-mono text-[11px]">
                           {batch.batch_no}
-                        </span>
+                        </Badge>
                       </td>
 
                       {/* Supplier */}
-                      <td className="px-3 py-3 text-slate-600 dark:text-[#8FA69C]">
+                      <td className="px-3 py-3 text-ink-2">
                         {batch.supplier_name || '—'}
                       </td>
 
                       {/* Remaining Qty */}
                       <td className="px-3 py-3 text-center">
-                        <span className="font-bold text-slate-900 dark:text-white text-sm">
+                        <span className="font-semibold text-ink tabular-nums">
                           {batch.qty_remaining}
                         </span>{' '}
-                        <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
+                        <span className="text-[11px] text-ink-3">
                           {batch.product?.unit || ''}
                         </span>
                       </td>
 
                       {/* Purchase Rate */}
-                      <td className="px-3 py-3 text-right text-slate-700 dark:text-[#8FA69C] font-semibold">
+                      <td className="px-3 py-3 text-right text-ink-2 tabular-nums">
                         ₹{batch.purchase_price}
                       </td>
 
                       {/* Total Cost Value */}
-                      <td className="px-3 py-3 text-right font-bold text-slate-900 dark:text-white">
+                      <td className="px-3 py-3 text-right font-medium text-ink tabular-nums">
                         ₹{batch.costValue.toLocaleString('en-IN')}
                       </td>
 
                       {/* Expiry Date */}
                       <td className="px-3 py-3">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                          <span className="font-semibold text-slate-800 dark:text-[#E7F0EC]">
-                            {batch.expiry_date}
-                          </span>
+                        <div className="flex items-center gap-1.5 text-ink font-medium">
+                          <Calendar className="w-3.5 h-3.5 text-ink-3" />
+                          <span>{batch.expiry_date}</span>
                         </div>
-                        <span className={`text-[10px] font-bold block mt-0.5 ${isExpired ? 'text-rose-600 dark:text-rose-400' : isToday ? 'text-orange-600 dark:text-orange-400' : 'text-slate-500'
-                          }`}>
+                        <span className={`text-[10px] block mt-0.5 font-medium ${
+                          isExpired ? 'text-danger' : isToday || isTomorrow ? 'text-warn' : 'text-ink-3'
+                        }`}>
                           {isExpired
                             ? `${Math.abs(batch.daysToExpiry)} ${language === 'mr' ? 'दिवसांपूर्वी संपली' : 'दिन पहले समाप्त'}`
                             : isToday
@@ -572,42 +540,37 @@ export const ExpiryDashboard: React.FC = () => {
 
                       {/* Status Badge */}
                       <td className="px-3 py-3 text-center">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${isExpired
-                          ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900'
-                          : isToday
-                            ? 'bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900'
-                            : isTomorrow
-                              ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900'
-                              : batch.expiryStatus === 'EXPIRING_IN_3_DAYS'
-                                ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900'
-                                : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900'
-                          }`}>
-                          {isExpired ? 'मुदत संपली (Blocked)' : isToday ? 'आज संपत आहे' : isTomorrow ? 'उद्या संपणार' : 'सुरक्षित साठा'}
-                        </span>
+                        <StatusBadge
+                          status={isExpired ? 'danger' : isToday || isTomorrow ? 'warn' : 'ok'}
+                        >
+                          {isExpired ? 'मुदत संपली' : isToday ? 'आज संपत आहे' : isTomorrow ? 'उद्या संपणार' : 'सुरक्षित'}
+                        </StatusBadge>
                       </td>
 
                       {/* Actions */}
                       <td className="px-4 py-3 text-right">
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => openWriteOff(batch)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition-colors"
+                          leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                          className="h-8 px-2 text-danger hover:bg-danger/10 text-xs"
                           title="Record Expired Removal & Loss"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>{language === 'mr' ? 'नुकसान नोंदवा' : 'नुकसान दर्ज करें'}</span>
-                        </button>
+                          <span>{language === 'mr' ? 'नुकसान' : 'नुकसान'}</span>
+                        </Button>
                       </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-slate-500 dark:text-[#8FA69C]">
-                    <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-500 mb-2 opacity-60" />
-                    <p className="font-bold text-sm">
+                  <td colSpan={9} className="px-4 py-12 text-center text-ink-3">
+                    <CheckCircle2 className="w-8 h-8 mx-auto text-ok mb-2 opacity-60" />
+                    <p className="font-semibold text-sm text-ink">
                       {language === 'mr' ? 'निवडलेल्या श्रेणीत कोणतीही मुदत संपलेली बॅच नाही.' : 'चुनी गई श्रेणी में कोई एक्सपायर्ड बैच नहीं है।'}
                     </p>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-ink-3 mt-1">
                       {language === 'mr' ? 'सर्व साठा सुरक्षित व ताजा आहे.' : 'सभी स्टॉक सुरक्षित और ताज़ा है।'}
                     </p>
                   </td>
@@ -616,63 +579,70 @@ export const ExpiryDashboard: React.FC = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {/* WRITE-OFF MODAL DIALOG */}
-      {writeOffBatch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white dark:bg-[#131F1B] max-w-md w-full rounded-2xl border border-slate-200 dark:border-[#24352F] p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#24352F]">
-              <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
-                <AlertOctagon className="w-5 h-5" />
-                <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                  {language === 'mr' ? 'खराब / मुदत संपलेला माल नोंदणी' : 'एक्सपायर्ड माल हटाना व नुकसान दर्ज करें'}
-                </h3>
-              </div>
-              <button
-                onClick={() => setWriteOffBatch(null)}
-                className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-xl border border-slate-200/80 dark:border-[#24352F] space-y-1">
-              <div className="text-xs text-slate-500 dark:text-[#8FA69C]">{language === 'mr' ? 'उत्पादन:' : 'उत्पाद:'}</div>
-              <div className="font-bold text-slate-900 dark:text-white text-sm">
+      <Modal
+        isOpen={!!writeOffBatch}
+        onClose={() => setWriteOffBatch(null)}
+        title={language === 'mr' ? 'खराब / मुदत संपलेला माल नोंदणी' : 'एक्सपायर्ड माल हटाना व नुकसान दर्ज करें'}
+        size="md"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button
+              variant="secondary"
+              onClick={() => setWriteOffBatch(null)}
+            >
+              {language === 'mr' ? 'रद्द करा' : 'रद्द करें'}
+            </Button>
+            <Button
+              variant="danger"
+              disabled={isSubmittingWriteOff || writeOffQty <= 0}
+              isLoading={isSubmittingWriteOff}
+              onClick={handleConfirmWriteOff}
+            >
+              {language === 'mr' ? 'नुकसान नोंदवा आणि साठा कमी करा' : 'नुकसान दर्ज करें'}
+            </Button>
+          </div>
+        }
+      >
+        {writeOffBatch && (
+          <div className="space-y-3.5 text-xs">
+            <div className="bg-surface-2 p-3.5 rounded-xl border border-line space-y-1">
+              <div className="text-xs text-ink-3">{language === 'mr' ? 'उत्पादन:' : 'उत्पाद:'}</div>
+              <div className="font-semibold text-ink text-sm">
                 {getProductDisplayName(writeOffBatch)}
               </div>
-              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#8FA69C] pt-1">
-                <span>बॅच क्र: <span className="font-mono font-bold text-slate-800 dark:text-white">{writeOffBatch.batch_no}</span></span>
-                <span>उपलब्ध: <span className="font-bold text-rose-600">{writeOffBatch.qty_remaining} {writeOffBatch.product?.unit}</span></span>
+              <div className="flex items-center justify-between text-xs text-ink-2 pt-1">
+                <span>बॅच क्र: <span className="font-mono font-medium text-ink">{writeOffBatch.batch_no}</span></span>
+                <span>उपलब्ध: <span className="font-semibold text-danger tabular-nums">{writeOffBatch.qty_remaining} {writeOffBatch.product?.unit}</span></span>
               </div>
             </div>
 
             {/* Removal Quantity */}
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+              <label className="text-xs font-medium text-ink-2 block mb-1.5">
                 {language === 'mr' ? 'काढून टाकायची मात्रा (Quantity to Remove):' : 'हटाने की मात्रा (Quantity):'}
               </label>
-              <input
+              <Input
                 type="number"
                 step="0.1"
                 min="0.1"
                 max={writeOffBatch.qty_remaining}
                 value={writeOffQty}
                 onChange={(e) => setWriteOffQty(parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-[#1A2A25] border border-slate-300 dark:border-[#24352F] rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
               />
             </div>
 
             {/* Reason */}
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+              <label className="text-xs font-medium text-ink-2 block mb-1.5">
                 {language === 'mr' ? 'खराबीचे कारण (Reason):' : 'कारण (Reason):'}
               </label>
               <select
                 value={writeOffReason}
                 onChange={(e) => setWriteOffReason(e.target.value as DamageReason)}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-[#1A2A25] border border-slate-300 dark:border-[#24352F] rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full h-10 px-3 bg-surface border border-line rounded-xl text-xs font-medium text-ink shadow-card focus:outline-none focus:ring-2 focus:ring-ink/15"
               >
                 <option value="Expiry Date Over">Expiry Date Over (मुदत संपली)</option>
                 <option value="Doodh Fat Gya (Curdled)">Doodh Fat Gya (दूध फाटले / Curdled)</option>
@@ -683,51 +653,33 @@ export const ExpiryDashboard: React.FC = () => {
             </div>
 
             {/* Estimated Loss Display */}
-            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-900/60 flex items-center justify-between">
-              <span className="text-xs font-bold text-rose-800 dark:text-rose-300">
-                {language === 'mr' ? 'थेट आर्थिक नुकसान (Loss Amount):' : 'कुल नुकसान राशि:'}
+            <div className="p-3 bg-surface-2 rounded-xl border border-line flex items-center justify-between">
+              <span className="text-xs font-medium text-ink-2">
+                {language === 'mr' ? 'थेट आर्थिक नुकसान:' : 'कुल नुकसान राशि:'}
               </span>
-              <span className="text-base font-black text-rose-700 dark:text-rose-400 tabular-nums">
+              <span className="text-base font-semibold text-danger tabular-nums">
                 ₹{(writeOffQty * writeOffBatch.purchase_price).toFixed(2)}
               </span>
             </div>
 
             {/* Notes */}
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+              <label className="text-xs font-medium text-ink-2 block mb-1.5">
                 {language === 'mr' ? 'तपशील / टीप (Notes):' : 'नोट्स (Notes):'}
               </label>
               <textarea
                 rows={2}
                 value={writeOffNotes}
                 onChange={(e) => setWriteOffNotes(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-[#1A2A25] border border-slate-300 dark:border-[#24352F] rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                className="w-full p-3 bg-surface border border-line rounded-xl text-xs text-ink placeholder:text-ink-3 shadow-card focus:outline-none focus:ring-2 focus:ring-ink/15"
               />
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setWriteOffBatch(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
-              >
-                {language === 'mr' ? 'रद्द करा' : 'रद्द करें'}
-              </button>
-              <button
-                type="button"
-                disabled={isSubmittingWriteOff || writeOffQty <= 0}
-                onClick={handleConfirmWriteOff}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white transition-colors disabled:opacity-50"
-              >
-                {isSubmittingWriteOff ? 'नोंद होत आहे...' : (language === 'mr' ? 'नुकसान नोंदवा आणि साठा कमी करा' : 'नुकसान दर्ज करें')}
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
 
     </div>
   );
 };
 
+export default ExpiryDashboard;

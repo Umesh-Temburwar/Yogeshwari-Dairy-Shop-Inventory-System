@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
-import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
+import { printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import {
   Sparkles,
   Trophy,
@@ -12,11 +12,11 @@ import {
   UserCheck,
   TrendingUp,
   Heart,
-  FileText,
   Download,
   Eye
 } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { Card, KpiCard, Button, Badge, StatusBadge } from '../ui';
 
 export const ProfitReport: React.FC = () => {
   const { filteredSales, metrics } = useStore();
@@ -66,8 +66,8 @@ export const ProfitReport: React.FC = () => {
     return Object.values(map).sort((a, b) => b.revenue - a.revenue);
   }, [filteredSales]);
 
-  const revKey = language === 'mr' ? 'कमाई (Revenue)' : language === 'hi' ? 'कमाई (Revenue)' : 'Revenue';
-  const profKey = language === 'mr' ? 'नफा (Profit)' : language === 'hi' ? 'मुनाफा (Profit)' : 'Profit';
+  const revKey = language === 'mr' ? 'कमाई' : language === 'hi' ? 'कमाई' : 'Revenue';
+  const profKey = language === 'mr' ? 'नफा' : language === 'hi' ? 'मुनाफा' : 'Profit';
 
   const topProductsChartData = productPerformance.slice(0, 6).map(p => ({
     name: p.name.split(' (')[0],
@@ -149,42 +149,36 @@ export const ProfitReport: React.FC = () => {
         const pd = productDemographics[item.product_name];
         pd.totalRevenue += item.total_price;
         pd.totalQty += item.quantity;
-
-        if (!pd.byGender[gender]) pd.byGender[gender] = { qty: 0, revenue: 0 };
-        pd.byGender[gender].qty += item.quantity;
-        pd.byGender[gender].revenue += item.total_price;
-
-        if (!pd.byAge[ageGroup]) pd.byAge[ageGroup] = { qty: 0, revenue: 0 };
-        pd.byAge[ageGroup].qty += item.quantity;
-        pd.byAge[ageGroup].revenue += item.total_price;
+        if (pd.byGender[gender]) {
+          pd.byGender[gender].qty += item.quantity;
+          pd.byGender[gender].revenue += item.total_price;
+        }
+        if (pd.byAge[ageGroup]) {
+          pd.byAge[ageGroup].qty += item.quantity;
+          pd.byAge[ageGroup].revenue += item.total_price;
+        }
       });
     });
 
+    const topAgeGroup = Object.entries(ageGroupStats).reduce((max, [group, data]) => {
+      return data.revenue > max.revenue ? { name: group, revenue: data.revenue, count: data.count } : max;
+    }, { name: 'Adults (26-45)', revenue: 0, count: 0 });
+
+    const topAgePercentage = totalRevenue > 0 ? Math.round((topAgeGroup.revenue / totalRevenue) * 100) : 0;
+
     const productAffinityList = Object.values(productDemographics).sort((a, b) => b.totalRevenue - a.totalRevenue);
 
-    // Compute top Age Group
-    let maxAgeRev = -1;
-    let topAgeName = 'Adults (26-45)';
-    Object.entries(ageGroupStats).forEach(([grp, data]) => {
-      if (data.revenue > maxAgeRev) {
-        maxAgeRev = data.revenue;
-        topAgeName = grp;
-      }
-    });
+    const youthTopProduct = productAffinityList.slice().sort((a, b) => {
+      const aYouth = a.byAge['Youth (18-25)']?.revenue || 0;
+      const bYouth = b.byAge['Youth (18-25)']?.revenue || 0;
+      return bYouth - aYouth;
+    })[0];
 
-    // Top Product for Youth (18-25)
-    const youthTopProduct = [...productAffinityList].sort((a, b) => {
-      const qA = a.byAge['Youth (18-25)']?.qty || 0;
-      const qB = b.byAge['Youth (18-25)']?.qty || 0;
-      return qB - qA;
-    }).find(p => (p.byAge['Youth (18-25)']?.qty || 0) > 0);
-
-    // Top Product for Senior (45+)
-    const seniorsTopProduct = [...productAffinityList].sort((a, b) => {
-      const qA = a.byAge['Senior (45+)']?.qty || 0;
-      const qB = b.byAge['Senior (45+)']?.qty || 0;
-      return qB - qA;
-    }).find(p => (p.byAge['Senior (45+)']?.qty || 0) > 0);
+    const seniorsTopProduct = productAffinityList.slice().sort((a, b) => {
+      const aSenior = a.byAge['Senior (45+)']?.revenue || 0;
+      const bSenior = b.byAge['Senior (45+)']?.revenue || 0;
+      return bSenior - aSenior;
+    })[0];
 
     return {
       totalSalesCount,
@@ -193,9 +187,8 @@ export const ProfitReport: React.FC = () => {
       ageGroupStats,
       productAffinityList,
       topAgeGroup: {
-        name: topAgeName,
-        revenue: maxAgeRev > 0 ? maxAgeRev : 0,
-        percentage: totalRevenue > 0 ? Math.round((Math.max(0, maxAgeRev) / totalRevenue) * 100) : 0
+        ...topAgeGroup,
+        percentage: topAgePercentage
       },
       youthTopProduct,
       seniorsTopProduct
@@ -296,18 +289,18 @@ export const ProfitReport: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
 
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#131F1B] p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
+      <Card className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-amber-500" />
+          <h2 className="text-lg sm:text-xl font-semibold text-ink tracking-tight flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-ink-2" />
             <span>
-              {language === 'mr' ? 'नफा आणि सर्वाधिक खपणारा माल अहवाल' : language === 'hi' ? 'लाभ और सबसे ज्यादा बिकने वाला माल रिपोर्ट' : 'Profit & Loss Statement & Intelligence'}
+              {language === 'mr' ? 'नफा आणि व्यवसाय विश्लेषण अहवाल' : language === 'hi' ? 'लाभ और व्यापार विश्लेषण रिपोर्ट' : 'Profit & Loss Statement & Intelligence'}
             </span>
           </h2>
-          <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
+          <p className="text-xs text-ink-3 font-medium mt-1">
             {language === 'mr'
               ? 'निव्वळ नफा आणि कोणत्या मालातून सर्वाधिक नफा मिळतो याचे संपूर्ण विश्लेषण'
               : language === 'hi'
@@ -317,62 +310,62 @@ export const ProfitReport: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* View PDF Button */}
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleViewPLPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-800 dark:text-white text-xs font-bold transition-all border border-slate-300 dark:border-[#24352F] active:scale-95 shadow-xs"
+            leftIcon={<Eye className="w-4 h-4" />}
             title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View P&L Statement PDF'}
           >
-            <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-          </button>
+            {language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}
+          </Button>
 
-          {/* Print PDF Button */}
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handlePrintPLPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-white text-xs font-bold transition-all border border-transparent dark:border-[#24352F] active:scale-95 shadow-xs"
+            leftIcon={<Printer className="w-4 h-4" />}
             title="Print Official P&L Statement"
           >
-            <Printer className="w-4 h-4 text-emerald-400" />
-            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-          </button>
+            {language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}
+          </Button>
 
-          {/* Download PDF Button */}
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={handleDownloadPLPDF}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
+            leftIcon={<Download className="w-4 h-4" />}
             title="Download Official P&L Statement PDF"
           >
-            <Download className="w-4 h-4" />
-            <span>{language === 'mr' ? 'नफा-तोटा PDF' : language === 'hi' ? 'P&L PDF' : 'Download PDF'}</span>
-          </button>
+            PDF
+          </Button>
         </div>
-      </div>
+      </Card>
 
       {/* Time Filter */}
       <PeriodFilter />
 
       {/* PROFIT & LOSS STATEMENT CARD */}
-      <div className="bg-white dark:bg-[#131F1B] rounded-3xl p-6 border border-slate-200/90 dark:border-[#24352F] shadow-sm space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-4">
+      <Card className="p-5 sm:p-6 space-y-5">
+        <div className="flex items-center justify-between border-b border-line pb-4">
           <div>
-            <h3 className="text-lg font-black text-slate-900 dark:text-white">
+            <h3 className="text-base sm:text-lg font-semibold text-ink">
               {t('plStatement')}
             </h3>
-            <span className="text-xs text-slate-500 dark:text-[#8FA69C]">
+            <span className="text-xs text-ink-3 font-medium">
               {language === 'mr'
                 ? 'फॉर्म्युला: विक्री - खरेदी खर्च - दुकानाचे खर्च - नासाडी नुकसान'
                 : language === 'hi'
-                  ? 'सटीक फॉर्मूला: बिक्री - खरीद लागत - दुकान खर्च - डैमेज नुकसान'
+                  ? 'फॉर्मूला: बिक्री - खरीद लागत - दुकान खर्च - डैमेज नुकसान'
                   : 'Formula: Revenue - Cost of Goods - Operating Expenses - Spoilage'}
             </span>
           </div>
 
           <div className="text-right">
-            <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-              {language === 'mr' ? 'खिशात पडलेला निव्वळ नफा:' : language === 'hi' ? 'शुद्ध जेब में आया मुनाफा:' : 'Net Pocket Profit:'}
+            <span className="text-xs font-medium text-ink-3 block">
+              {language === 'mr' ? 'निव्वळ नफा:' : language === 'hi' ? 'शुद्ध मुनाफा:' : 'Net Profit:'}
             </span>
-            <span className="text-3xl font-black text-emerald-700 dark:text-emerald-400">
+            <span className="text-2xl sm:text-3xl font-semibold tabular-nums text-ink">
               ₹{metrics.netProfit.toLocaleString('en-IN')}
             </span>
           </div>
@@ -380,86 +373,84 @@ export const ProfitReport: React.FC = () => {
 
         {/* Step-by-Step Breakdown Table */}
         <div className="space-y-2 text-xs">
-
-          <div className="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-[#1A2A25] font-bold text-slate-900 dark:text-white">
-            <span className="text-sm">
+          <div className="flex justify-between items-center p-3 rounded-xl bg-surface-2 font-semibold text-ink">
+            <span>
               1. {language === 'mr' ? 'एकूण विक्री महसूल:' : language === 'hi' ? 'कुल बिक्री आय:' : 'Total Sales Revenue:'}
             </span>
-            <span className="text-base text-emerald-700 dark:text-emerald-400">+₹{metrics.totalSalesRevenue.toLocaleString('en-IN')}</span>
+            <span className="tabular-nums font-semibold">+₹{metrics.totalSalesRevenue.toLocaleString('en-IN')}</span>
           </div>
 
-          <div className="flex justify-between items-center px-4 py-2 text-slate-600 dark:text-[#8FA69C]">
-            <span className="pl-4">&bull; {language === 'mr' ? 'रोख जमा:' : language === 'hi' ? 'रोकड़ जमा:' : 'Cash Collected:'}</span>
-            <span className="font-semibold text-slate-900 dark:text-white">₹{metrics.cashCollected.toLocaleString('en-IN')}</span>
+          <div className="flex justify-between items-center px-4 py-1.5 text-ink-3">
+            <span className="pl-3">&bull; {language === 'mr' ? 'रोख जमा:' : language === 'hi' ? 'रोकड़ जमा:' : 'Cash Collected:'}</span>
+            <span className="font-medium text-ink tabular-nums">₹{metrics.cashCollected.toLocaleString('en-IN')}</span>
           </div>
 
-          <div className="flex justify-between items-center px-4 py-2 text-slate-600 dark:text-[#8FA69C]">
-            <span className="pl-4">&bull; {language === 'mr' ? 'ऑनलाईन UPI जमा:' : language === 'hi' ? 'ऑनलाइन UPI जमा:' : 'Online UPI Collected:'}</span>
-            <span className="font-semibold text-slate-900 dark:text-white">₹{metrics.onlineCollected.toLocaleString('en-IN')}</span>
+          <div className="flex justify-between items-center px-4 py-1.5 text-ink-3">
+            <span className="pl-3">&bull; {language === 'mr' ? 'ऑनलाईन UPI जमा:' : language === 'hi' ? 'ऑनलाइन UPI जमा:' : 'Online UPI Collected:'}</span>
+            <span className="font-medium text-ink tabular-nums">₹{metrics.onlineCollected.toLocaleString('en-IN')}</span>
           </div>
 
-          <div className="flex justify-between items-center p-3 rounded-xl bg-rose-50/50 dark:bg-rose-950/20 text-slate-800 dark:text-[#E7F0EC] font-semibold border border-rose-100 dark:border-rose-900/40">
+          <div className="flex justify-between items-center p-3 rounded-xl bg-surface-2 text-ink-2 font-medium">
             <span>2. {language === 'mr' ? 'वजा: विकलेल्या मालाचा मूळ खरेदी खर्च:' : language === 'hi' ? 'घटाएं: बेचे गए माल की मूल खरीद लागत:' : 'Less: Cost of Goods Sold (COGS):'}</span>
-            <span className="font-black text-rose-700 dark:text-rose-400">-₹{metrics.cogs.toLocaleString('en-IN')}</span>
+            <span className="font-semibold text-danger tabular-nums">-₹{metrics.cogs.toLocaleString('en-IN')}</span>
           </div>
 
-          <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-950 dark:text-emerald-300 font-extrabold border border-emerald-200 dark:border-emerald-800/40">
-            <span>= {language === 'mr' ? 'स्थूल नफा:' : language === 'hi' ? 'सकल लाभ:' : 'Gross Profit:'}</span>
-            <span className="text-base text-emerald-700 dark:text-emerald-400">₹{metrics.grossProfit.toLocaleString('en-IN')}</span>
+          <div className="flex justify-between items-center p-3 rounded-xl bg-surface-2 text-ink font-semibold">
+            <span>= {language === 'mr' ? 'स्थूल नफा (Gross Profit):' : language === 'hi' ? 'सकल लाभ (Gross Profit):' : 'Gross Profit:'}</span>
+            <span className="tabular-nums font-semibold">₹{metrics.grossProfit.toLocaleString('en-IN')}</span>
           </div>
 
-          <div className="flex justify-between items-center p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 text-slate-800 dark:text-[#E7F0EC] font-semibold border border-amber-100 dark:border-amber-900/40">
+          <div className="flex justify-between items-center p-3 rounded-xl bg-surface-2 text-ink-2 font-medium">
             <span>3. {language === 'mr' ? 'वजा: दुकानाचे दैनंदिन खर्च:' : language === 'hi' ? 'घटाएं: दुकान के दैनिक संचालन खर्च:' : 'Less: Operating Expenses:'}</span>
-            <span className="font-black text-rose-700 dark:text-rose-400">-₹{metrics.operatingExpenses.toLocaleString('en-IN')}</span>
+            <span className="font-semibold text-danger tabular-nums">-₹{metrics.operatingExpenses.toLocaleString('en-IN')}</span>
           </div>
 
-          <div className="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-[#1A2A25] text-slate-800 dark:text-[#E7F0EC] font-semibold">
+          <div className="flex justify-between items-center p-3 rounded-xl bg-surface-2 text-ink-2 font-medium">
             <span>4. {language === 'mr' ? 'वजा: नासलेला व खराब माल नुकसान:' : language === 'hi' ? 'घटाएं: खराब माल व दूध का नुकसान:' : 'Less: Spoilage & Damaged Goods Loss:'}</span>
-            <span className="font-black text-rose-700 dark:text-rose-400">-₹{metrics.totalDamagesLoss.toLocaleString('en-IN')}</span>
+            <span className="font-semibold text-danger tabular-nums">-₹{metrics.totalDamagesLoss.toLocaleString('en-IN')}</span>
           </div>
 
           {(metrics.totalRefundAmount || 0) > 0 && (
-            <div className="flex justify-between items-center p-3 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 text-slate-800 dark:text-[#E7F0EC] font-semibold border border-purple-100 dark:border-purple-900/40">
+            <div className="flex justify-between items-center p-3 rounded-xl bg-surface-2 text-ink-2 font-medium">
               <span>5. {language === 'mr' ? 'वजा: ग्राहक माल परतावा रिफंड:' : language === 'hi' ? 'घटाएं: ग्राहक सामान वापसी रिफंड:' : 'Less: Customer Returns & Refunds:'}</span>
-              <span className="font-black text-rose-700 dark:text-rose-400">-₹{metrics.totalRefundAmount.toLocaleString('en-IN')}</span>
+              <span className="font-semibold text-danger tabular-nums">-₹{metrics.totalRefundAmount.toLocaleString('en-IN')}</span>
             </div>
           )}
 
           {(metrics.totalSupplierRefundReceived || 0) > 0 && (
-            <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 text-slate-800 dark:text-[#E7F0EC] font-semibold border border-emerald-200 dark:border-emerald-900/40">
+            <div className="flex justify-between items-center p-3 rounded-xl bg-surface-2 text-ink font-medium">
               <span>6. {language === 'mr' ? 'अधिक: सप्लायरकडून मिळालेला परतावा:' : language === 'hi' ? 'जोड़ें: सप्लायर से प्राप्त रिफंड:' : 'Add: Supplier Refunds & Compensations:'}</span>
-              <span className="font-black text-emerald-700 dark:text-emerald-400">+₹{metrics.totalSupplierRefundReceived.toLocaleString('en-IN')}</span>
+              <span className="font-semibold text-ok tabular-nums">+₹{metrics.totalSupplierRefundReceived.toLocaleString('en-IN')}</span>
             </div>
           )}
 
-          <div className="flex justify-between items-baseline p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-extrabold text-sm shadow-md mt-4">
+          <div className="flex justify-between items-baseline p-4 sm:p-5 rounded-2xl bg-accent text-accent-fg font-semibold text-sm shadow-card mt-3">
             <div>
               <span className="text-base block">{t('netPocketProfit')}</span>
-              <span className="text-[11px] text-emerald-100 font-normal">
-                {language === 'mr' ? 'सर्व खर्च, खरेदी आणि नुकसान वजा करून' : language === 'hi' ? 'सभी खर्चे, नुकसान व खरीद लागत निकालने के बाद' : 'After all expenses, wholesale costs, and spoilage'}
+              <span className="text-[11px] opacity-75 font-normal">
+                {language === 'mr' ? 'सर्व खर्च, खरेदी आणि नुकसान वजा करून' : language === 'hi' ? 'सभी खर्चे व नुकसान निकालने के बाद' : 'After all expenses, wholesale costs, and spoilage'}
               </span>
             </div>
-            <span className="text-2xl sm:text-3xl font-black">
+            <span className="text-2xl sm:text-3xl font-semibold tabular-nums">
               ₹{metrics.netProfit.toLocaleString('en-IN')}
             </span>
           </div>
-
         </div>
-      </div>
+      </Card>
 
       {/* TOP SELLING PRODUCTS & BEST SELLERS INSIGHTS */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         {/* Visual Bar Chart */}
-        <div className="bg-white dark:bg-[#131F1B] rounded-3xl p-5 border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
+        <Card className="p-4 sm:p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Trophy className="w-5 h-5 text-amber-500" />
-              <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                {language === 'mr' ? 'सर्वाधिक महसूल देणारी उत्पादने' : language === 'hi' ? 'सर्वाधिक कमाई देने वाले उत्पाद' : 'Highest Revenue Dairy Products'}
+              <Trophy className="w-4 h-4 text-ink-2" />
+              <h3 className="font-semibold text-ink text-sm sm:text-base">
+                {language === 'mr' ? 'सर्वाधिक महसूल देणारी उत्पादने' : language === 'hi' ? 'सर्वाधिक कमाई देने वाले उत्पाद' : 'Highest Revenue Products'}
               </h3>
             </div>
-            <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
+            <p className="text-xs text-ink-3 font-medium">
               Revenue vs Net Profit per dairy item
             </p>
           </div>
@@ -468,227 +459,223 @@ export const ProfitReport: React.FC = () => {
             {topProductsChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={topProductsChartData} margin={{ top: 10, right: 10, left: -15, bottom: 25 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#24352F' : '#f1f5f9'} />
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: isDark ? '#8FA69C' : '#64748b' }} angle={-15} textAnchor="end" />
-                  <YAxis tick={{ fontSize: 10, fill: isDark ? '#8FA69C' : '#64748b' }} tickFormatter={(v) => `₹${v}`} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#262628' : '#E6E3DC'} />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: isDark ? '#b4b1aa' : '#55534e' }} angle={-15} textAnchor="end" />
+                  <YAxis tick={{ fontSize: 10, fill: isDark ? '#b4b1aa' : '#55534e' }} tickFormatter={(v) => `₹${v}`} />
                   <Tooltip
                     formatter={(val: any) => [`₹${Number(val).toLocaleString('en-IN')}`, '']}
                     contentStyle={{
-                      backgroundColor: isDark ? '#131F1B' : '#ffffff',
-                      borderColor: isDark ? '#24352F' : '#e2e8f0',
+                      backgroundColor: isDark ? '#151516' : '#ffffff',
+                      borderColor: isDark ? '#262628' : '#e6e3dc',
                       borderRadius: '12px',
-                      color: isDark ? '#ffffff' : '#0f172a'
+                      color: isDark ? '#f3f1ec' : '#18181a',
+                      boxShadow: '0 8px 30px rgb(0 0 0 / .08)'
                     }}
                   />
-                  <Bar dataKey={revKey} fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={25} />
-                  <Bar dataKey={profKey} fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={25} />
+                  <Bar dataKey={revKey} fill={isDark ? '#F3F1EC' : '#18181A'} radius={[4, 4, 0, 0]} maxBarSize={24} />
+                  <Bar dataKey={profKey} fill={isDark ? '#7D7A73' : '#8A8780'} radius={[4, 4, 0, 0]} maxBarSize={24} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-slate-400 dark:text-[#8FA69C] text-xs">
+              <div className="flex items-center justify-center h-full text-ink-3 text-xs">
                 {language === 'mr' ? 'माहिती उपलब्ध नाही' : language === 'hi' ? 'डेटा उपलब्ध नहीं' : 'No data available'}
               </div>
             )}
           </div>
 
-          <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] flex items-center justify-between border-t border-slate-100 dark:border-[#24352F] pt-2">
+          <div className="text-[11px] text-ink-3 flex items-center justify-between border-t border-line pt-2">
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 bg-emerald-500 rounded" /> {language === 'mr' ? 'एकूण कमाई' : language === 'hi' ? 'कुल कमाई' : 'Total Revenue'}
+              <span className="w-2.5 h-2.5 bg-accent rounded" /> {language === 'mr' ? 'एकूण कमाई' : language === 'hi' ? 'कुल कमाई' : 'Total Revenue'}
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 bg-amber-500 rounded" /> {language === 'mr' ? 'त्यातील निव्वळ नफा' : language === 'hi' ? 'उसमें से शुद्ध मुनाफा' : 'Net Profit'}
+              <span className="w-2.5 h-2.5 bg-ink-3 rounded" /> {language === 'mr' ? 'त्यातील निव्वळ नफा' : language === 'hi' ? 'उसमें से शुद्ध मुनाफा' : 'Net Profit'}
             </span>
           </div>
-        </div>
+        </Card>
 
         {/* Detailed Item Ranking Table */}
-        <div className="bg-white dark:bg-[#131F1B] rounded-3xl p-5 border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
+        <Card className="p-4 sm:p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <ShoppingBag className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              <h3 className="font-bold text-slate-900 dark:text-white text-base">
+              <ShoppingBag className="w-4 h-4 text-ink-2" />
+              <h3 className="font-semibold text-ink text-sm sm:text-base">
                 {language === 'mr' ? 'माल विक्री रँकिंग (Leaderboard)' : language === 'hi' ? 'माल बिक्री रैंकिंग (Leaderboard)' : 'Dairy Sales Leaderboard'}
               </h3>
             </div>
-            <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
+            <p className="text-xs text-ink-3 font-medium">
               {language === 'mr' ? 'रँक १ ते १० कोणता माल जास्त खपला' : language === 'hi' ? 'रैंक 1 से 10 तक कौनसा माल कितना बिका' : 'Rank 1 to 10 best-selling items'}
             </p>
           </div>
 
-          <div className="space-y-2.5 my-3 max-h-72 overflow-y-auto pr-1">
+          <div className="space-y-2 my-3 max-h-72 overflow-y-auto pr-1">
             {productPerformance.map((prod, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-[#24352F] bg-slate-50/60 dark:bg-[#1A2A25] text-xs hover:bg-slate-100/60 dark:hover:bg-[#1F332D] transition-colors"
+                className="flex items-center justify-between p-2.5 rounded-xl border border-line bg-surface-2/60 text-xs hover:bg-surface-2 transition-colors"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${idx === 0 ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-200' :
-                    idx === 1 ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200' :
-                      idx === 2 ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300' : 'bg-white dark:bg-[#131F1B] text-slate-600 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F]'
-                    }`}>
+                  <span className="w-6 h-6 rounded-lg bg-surface border border-line flex items-center justify-center font-semibold text-xs shrink-0 text-ink">
                     #{idx + 1}
                   </span>
                   <div className="truncate">
-                    <span className="font-bold text-slate-900 dark:text-white block truncate">{prod.name}</span>
-                    <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-                      {language === 'mr' ? 'विक्री प्रमाण:' : language === 'hi' ? 'बिक्री मात्रा:' : 'Sold:'} {prod.quantity.toFixed(1)} {prod.unit}
+                    <span className="font-medium text-ink block truncate">{prod.name}</span>
+                    <span className="text-[11px] text-ink-3 font-medium">
+                      {language === 'mr' ? 'विक्री:' : language === 'hi' ? 'बिक्री:' : 'Sold:'} {prod.quantity.toFixed(1)} {prod.unit}
                     </span>
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="font-black text-slate-900 dark:text-white block">
+                  <span className="font-semibold text-ink block tabular-nums">
                     ₹{prod.revenue.toLocaleString('en-IN')}
                   </span>
-                  <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold block">
-                    {language === 'mr' ? 'नफा:' : language === 'hi' ? 'लाभ:' : 'Profit:'} +₹{Math.round(prod.profit).toLocaleString('en-IN')}
+                  <span className="text-[10px] text-ok font-medium block tabular-nums">
+                    +{Math.round(prod.profit).toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="pt-2 border-t border-slate-100 dark:border-[#24352F] text-[11px] text-slate-500 dark:text-[#8FA69C] flex justify-between">
-            <span>{language === 'mr' ? 'एकूण विकलेली उत्पादने:' : language === 'hi' ? 'कुल बिके उत्पाद:' : 'Total Products Sold:'} <b className="text-slate-700 dark:text-white">{productPerformance.length}</b></span>
-            <span className="text-emerald-700 dark:text-emerald-400 font-bold">
-              {language === 'mr' ? 'दूध आणि पनीर सर्वाधिक मागणीत आहेत' : language === 'hi' ? 'दूध & पनीर सबसे अधिक मांग में हैं' : 'Milk & Paneer are in highest demand'}
+          <div className="pt-2 border-t border-line text-[11px] text-ink-3 flex justify-between">
+            <span>{language === 'mr' ? 'एकूण उत्पादने:' : language === 'hi' ? 'कुल उत्पाद:' : 'Total Products:'} <b className="text-ink">{productPerformance.length}</b></span>
+            <span className="font-medium text-ink">
+              {language === 'mr' ? 'दूध आणि पनीर सर्वाधिक मागणीत' : language === 'hi' ? 'दूध & पनीर सबसे अधिक मांग में' : 'Milk & Paneer in highest demand'}
             </span>
           </div>
-        </div>
+        </Card>
 
       </div>
 
       {/* CUSTOMER DEMOGRAPHICS & PRODUCT PREFERENCE INTELLIGENCE */}
-      <div className="bg-white dark:bg-[#131F1B] rounded-3xl p-6 border border-slate-200/90 dark:border-[#24352F] shadow-sm space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-[#24352F] pb-4">
+      <Card className="p-5 sm:p-6 space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-line pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-400">
-              <Users className="w-6 h-6" />
+            <div className="p-2 rounded-xl bg-surface-2 text-ink-2">
+              <Users className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900 dark:text-white">
+              <h3 className="text-base font-semibold text-ink">
                 {t('demographicsTitle')}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
+              <p className="text-xs text-ink-3 font-medium">
                 {t('demographicsSub')}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/40">
-              {demographicStats.totalSalesCount} {language === 'mr' ? 'ग्राहक नोंदी' : language === 'hi' ? 'ग्राहक रिकॉर्ड' : 'Customer Bills'}
-            </span>
-          </div>
+          <Badge variant="default" className="text-xs font-semibold">
+            {demographicStats.totalSalesCount} {language === 'mr' ? 'ग्राहक नोंदी' : language === 'hi' ? 'ग्राहक रिकॉर्ड' : 'Customer Bills'}
+          </Badge>
         </div>
 
         {/* Demographic KPI Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
           {/* Gender Ratio Card */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] space-y-2">
-            <div className="flex justify-between items-center text-xs font-semibold text-slate-500 dark:text-[#8FA69C]">
+          <div className="p-3.5 rounded-xl bg-surface-2 border border-line space-y-2">
+            <div className="flex justify-between items-center text-xs font-medium text-ink-3">
               <span>{t('genderBreakdown')}</span>
-              <UserCheck className="w-4 h-4 text-blue-500" />
+              <UserCheck className="w-4 h-4 text-ink-3" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-black text-slate-900 dark:text-white">
+              <span className="text-lg font-semibold text-ink">
                 👨 {maleShare}%
               </span>
-              <span className="text-xs text-slate-400">|</span>
-              <span className="text-xl font-black text-pink-600 dark:text-pink-400">
+              <span className="text-xs text-ink-3">|</span>
+              <span className="text-lg font-semibold text-ink">
                 👩 {femaleShare}%
               </span>
             </div>
-            <div className="w-full bg-slate-200 dark:bg-[#131F1B] rounded-full h-2 flex overflow-hidden">
-              <div className="bg-blue-500 h-full" style={{ width: `${maleShare}%` }} />
-              <div className="bg-pink-500 h-full" style={{ width: `${femaleShare}%` }} />
-              <div className="bg-purple-500 h-full" style={{ width: `${otherShare}%` }} />
+            <div className="w-full bg-surface rounded-full h-1.5 flex overflow-hidden border border-line">
+              <div className="bg-accent h-full" style={{ width: `${maleShare}%` }} />
+              <div className="bg-ink-3 h-full" style={{ width: `${femaleShare}%` }} />
+              <div className="bg-line h-full" style={{ width: `${otherShare}%` }} />
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] flex justify-between">
+            <div className="text-[11px] text-ink-3 flex justify-between tabular-nums">
               <span>👨 ₹{demographicStats.genderStats['Male']?.revenue.toLocaleString('en-IN') || 0}</span>
               <span>👩 ₹{demographicStats.genderStats['Female']?.revenue.toLocaleString('en-IN') || 0}</span>
             </div>
           </div>
 
           {/* Top Age Segment Card */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] space-y-2">
-            <div className="flex justify-between items-center text-xs font-semibold text-slate-500 dark:text-[#8FA69C]">
+          <div className="p-3.5 rounded-xl bg-surface-2 border border-line space-y-2">
+            <div className="flex justify-between items-center text-xs font-medium text-ink-3">
               <span>{t('topBuyerAge')}</span>
-              <TrendingUp className="w-4 h-4 text-emerald-500" />
+              <TrendingUp className="w-4 h-4 text-ink-3" />
             </div>
-            <div className="text-lg font-black text-slate-900 dark:text-white truncate">
+            <div className="text-base font-semibold text-ink truncate">
               {demographicStats.topAgeGroup.name}
             </div>
-            <div className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
+            <div className="text-xs font-medium text-ink tabular-nums">
               {demographicStats.topAgeGroup.percentage}% {language === 'mr' ? 'एकूण विक्री' : language === 'hi' ? 'कुल बिक्री' : 'of sales'} (₹{demographicStats.topAgeGroup.revenue.toLocaleString('en-IN')})
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
+            <div className="text-[11px] text-ink-3">
               {language === 'mr' ? 'दुधाचे मुख्य घरगुती खरेदीदार' : language === 'hi' ? 'दूध के मुख्य घरेलू खरीदार' : 'Core household buyers'}
             </div>
           </div>
 
           {/* Youth Favorite Card */}
-          <div className="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-900/40 space-y-2">
-            <div className="flex justify-between items-center text-xs font-semibold text-amber-800 dark:text-amber-300">
-              <span>{language === 'mr' ? 'तरुणांची पसंती (Youth 18-25)' : language === 'hi' ? 'युवाओं की पसंद (Youth 18-25)' : 'Youth Favorites (18-25)'}</span>
-              <Sparkles className="w-4 h-4 text-amber-600" />
+          <div className="p-3.5 rounded-xl bg-surface-2 border border-line space-y-2">
+            <div className="flex justify-between items-center text-xs font-medium text-ink-3">
+              <span>{language === 'mr' ? 'तरुणांची पसंती (18-25)' : language === 'hi' ? 'युवाओं की पसंद (18-25)' : 'Youth Favorites (18-25)'}</span>
+              <Sparkles className="w-4 h-4 text-ink-3" />
             </div>
-            <div className="text-sm font-black text-amber-950 dark:text-amber-100 truncate">
-              {demographicStats.youthTopProduct?.productName || 'Kulhad Lassi / Chaas'}
+            <div className="text-base font-semibold text-ink truncate">
+              {demographicStats.youthTopProduct?.productName || 'Lassi / Chaas'}
             </div>
-            <div className="text-xs text-amber-700 dark:text-amber-400 font-bold">
-              {demographicStats.youthTopProduct ? `${demographicStats.youthTopProduct.byAge['Youth (18-25)']?.qty || 0} ${demographicStats.youthTopProduct.unit} (₹${demographicStats.youthTopProduct.byAge['Youth (18-25)']?.revenue || 0})` : 'High Refreshment Demand'}
+            <div className="text-xs font-medium text-ink tabular-nums">
+              {demographicStats.youthTopProduct ? `${demographicStats.youthTopProduct.byAge['Youth (18-25)']?.qty || 0} ${demographicStats.youthTopProduct.unit} (₹${demographicStats.youthTopProduct.byAge['Youth (18-25)']?.revenue || 0})` : 'High Demand'}
             </div>
-            <div className="text-[11px] text-amber-800/80 dark:text-amber-300/80">
-              {language === 'mr' ? 'लस्सी, ताक व मिठाईची जास्त मागणी' : language === 'hi' ? 'लस्सी, छाछ व मिठाई की ज्यादा मांग' : 'Lassi, Chaas & Quick Treats'}
+            <div className="text-[11px] text-ink-3">
+              {language === 'mr' ? 'लस्सी, ताक व मिठाईची जास्त मागणी' : language === 'hi' ? 'लस्सी, छाछ व मिठाई' : 'Lassi, Chaas & Sweets'}
             </div>
           </div>
 
           {/* Seniors Favorite Card */}
-          <div className="p-4 rounded-2xl bg-teal-50/50 dark:bg-teal-950/20 border border-teal-200/70 dark:border-teal-900/40 space-y-2">
-            <div className="flex justify-between items-center text-xs font-semibold text-teal-800 dark:text-teal-300">
-              <span>{language === 'mr' ? 'ज्येष्ठांची पसंती (Seniors 45+)' : language === 'hi' ? 'वरिष्ठ नागरिकों की पसंद (45+)' : 'Seniors Favorites (45+)'}</span>
-              <Heart className="w-4 h-4 text-teal-600" />
+          <div className="p-3.5 rounded-xl bg-surface-2 border border-line space-y-2">
+            <div className="flex justify-between items-center text-xs font-medium text-ink-3">
+              <span>{language === 'mr' ? 'ज्येष्ठांची पसंती (45+)' : language === 'hi' ? 'वरिष्ठ नागरिक (45+)' : 'Seniors Favorites (45+)'}</span>
+              <Heart className="w-4 h-4 text-ink-3" />
             </div>
-            <div className="text-sm font-black text-teal-950 dark:text-teal-100 truncate">
-              {demographicStats.seniorsTopProduct?.productName || 'Desi Cow Milk / Pure Ghee'}
+            <div className="text-base font-semibold text-ink truncate">
+              {demographicStats.seniorsTopProduct?.productName || 'Cow Milk / Ghee'}
             </div>
-            <div className="text-xs text-teal-700 dark:text-teal-400 font-bold">
+            <div className="text-xs font-medium text-ink tabular-nums">
               {demographicStats.seniorsTopProduct ? `${demographicStats.seniorsTopProduct.byAge['Senior (45+)']?.qty || 0} ${demographicStats.seniorsTopProduct.unit} (₹${demographicStats.seniorsTopProduct.byAge['Senior (45+)']?.revenue || 0})` : 'Pure Health Focus'}
             </div>
-            <div className="text-[11px] text-teal-800/80 dark:text-teal-300/80">
-              {language === 'mr' ? 'गाईचे दूध व शुद्ध साजूक तूप प्राधान्य' : language === 'hi' ? 'गाय का दूध व शुद्ध देसी घी प्राथमिकता' : 'Cow Milk & Pure Ghee focus'}
+            <div className="text-[11px] text-ink-3">
+              {language === 'mr' ? 'गाईचे दूध व शुद्ध साजूक तूप' : language === 'hi' ? 'गाय का दूध व शुद्ध घी' : 'Cow Milk & Pure Ghee'}
             </div>
           </div>
 
         </div>
 
-        {/* Detailed "Who Buys What" Product-Level Demographics Breakdown */}
+        {/* Detailed "Who Buys What" Table */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h4 className="font-bold text-slate-900 dark:text-white text-sm">
+              <h4 className="font-semibold text-ink text-sm">
                 {t('whoBuysWhat')}
               </h4>
-              <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
+              <p className="text-xs text-ink-3 font-medium">
                 {t('whoBuysWhatSub')}
               </p>
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-[#24352F]">
+          <div className="overflow-x-auto rounded-xl border border-line">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-100/80 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] uppercase text-[10px] tracking-wider font-bold">
-                  <th className="py-3 px-4">{language === 'mr' ? 'उत्पादन (Product)' : language === 'hi' ? 'उत्पाद (Product)' : 'Product'}</th>
-                  <th className="py-3 px-3 text-right">{language === 'mr' ? 'एकूण विक्री' : language === 'hi' ? 'कुल बिक्री' : 'Total Sales'}</th>
-                  <th className="py-3 px-4">{language === 'mr' ? 'लिंगानुसार वाटा (Gender Ratio)' : language === 'hi' ? 'जेंडर अनुसार (Gender Ratio)' : 'Gender Ratio'}</th>
-                  <th className="py-3 px-4">{language === 'mr' ? 'वय गटानुसार वाटा (Age Demographics)' : language === 'hi' ? 'आयु वर्ग अनुसार (Age Demographics)' : 'Age Breakdown'}</th>
-                  <th className="py-3 px-4">{language === 'mr' ? 'मुख्य ग्राहक गट' : language === 'hi' ? 'मुख्य ग्राहक वर्ग' : 'Primary Buyer Profile'}</th>
+                <tr className="bg-surface-2/60 border-b border-line text-ink-3 uppercase text-[10px] tracking-wider font-medium">
+                  <th className="py-2.5 px-4">{language === 'mr' ? 'उत्पादन' : language === 'hi' ? 'उत्पाद' : 'Product'}</th>
+                  <th className="py-2.5 px-3 text-right">{language === 'mr' ? 'विक्री' : language === 'hi' ? 'बिक्री' : 'Sales'}</th>
+                  <th className="py-2.5 px-4">{language === 'mr' ? 'लिंग वाटा' : language === 'hi' ? 'जेंडर' : 'Gender'}</th>
+                  <th className="py-2.5 px-4">{language === 'mr' ? 'वय गट' : language === 'hi' ? 'आयु वर्ग' : 'Age Breakdown'}</th>
+                  <th className="py-2.5 px-4">{language === 'mr' ? 'मुख्य ग्राहक' : language === 'hi' ? 'मुख्य वर्ग' : 'Primary Buyer'}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-[#24352F] bg-white dark:bg-[#131F1B]">
+              <tbody className="divide-y divide-line">
                 {demographicStats.productAffinityList.map((item, idx) => {
                   const mQty = item.byGender['Male']?.qty || 0;
                   const fQty = item.byGender['Female']?.qty || 0;
@@ -697,7 +684,6 @@ export const ProfitReport: React.FC = () => {
                   const mPercent = Math.round((mQty / totalGQty) * 100);
                   const fPercent = Math.round((fQty / totalGQty) * 100);
 
-                  // Find primary demographic
                   let topGender = mPercent >= fPercent ? (language === 'mr' ? '👨 पुरुष' : language === 'hi' ? '👨 पुरुष' : '👨 Male') : (language === 'mr' ? '👩 महिला' : language === 'hi' ? '👩 महिला' : '👩 Female');
                   let maxAgeGroup = 'Adults (26-45)';
                   let maxAgeVal = -1;
@@ -709,28 +695,28 @@ export const ProfitReport: React.FC = () => {
                   });
 
                   return (
-                    <tr key={idx} className="hover:bg-slate-50/60 dark:hover:bg-[#1A2A25]/60 transition-colors">
-                      <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
+                    <tr key={idx} className="hover:bg-surface-2/50 transition-colors">
+                      <td className="py-2.5 px-4 font-medium text-ink">
                         <div className="truncate max-w-[200px]">{item.productName}</div>
-                        <div className="text-[10px] text-slate-400 font-normal">
+                        <div className="text-[10px] text-ink-3">
                           {item.totalQty.toFixed(1)} {item.unit}
                         </div>
                       </td>
-                      <td className="py-3 px-3 text-right font-black text-slate-900 dark:text-white">
+                      <td className="py-2.5 px-3 text-right font-medium text-ink tabular-nums">
                         ₹{item.totalRevenue.toLocaleString('en-IN')}
                       </td>
-                      <td className="py-3 px-4 min-w-[170px]">
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold mb-1">
-                          <span className="text-blue-600 dark:text-blue-400">👨 {mPercent}%</span>
-                          <span className="text-slate-300">/</span>
-                          <span className="text-pink-600 dark:text-pink-400">👩 {fPercent}%</span>
+                      <td className="py-2.5 px-4 min-w-[170px]">
+                        <div className="flex items-center gap-1.5 text-[11px] font-medium mb-1 text-ink-2 tabular-nums">
+                          <span>👨 {mPercent}%</span>
+                          <span className="text-ink-3">/</span>
+                          <span>👩 {fPercent}%</span>
                         </div>
-                        <div className="w-full bg-slate-200 dark:bg-[#1A2A25] rounded-full h-1.5 flex overflow-hidden">
-                          <div className="bg-blue-500 h-full" style={{ width: `${mPercent}%` }} />
-                          <div className="bg-pink-500 h-full" style={{ width: `${fPercent}%` }} />
+                        <div className="w-full bg-surface-2 rounded-full h-1.5 flex overflow-hidden border border-line">
+                          <div className="bg-accent h-full" style={{ width: `${mPercent}%` }} />
+                          <div className="bg-ink-3 h-full" style={{ width: `${fPercent}%` }} />
                         </div>
                       </td>
-                      <td className="py-3 px-4 min-w-[200px]">
+                      <td className="py-2.5 px-4 min-w-[200px]">
                         <div className="flex flex-wrap gap-1">
                           {Object.entries(item.byAge).map(([grp, data]) => {
                             if (data.qty <= 0) return null;
@@ -738,10 +724,11 @@ export const ProfitReport: React.FC = () => {
                             return (
                               <span
                                 key={grp}
-                                className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${grp === maxAgeGroup
-                                  ? 'bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-700/60 font-bold'
-                                  : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
-                                  }`}
+                                className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                  grp === maxAgeGroup
+                                    ? 'bg-surface shadow-card text-ink border border-line font-semibold'
+                                    : 'bg-surface-2 text-ink-3'
+                                }`}
                               >
                                 {shortLabel}: {data.qty.toFixed(1)} {item.unit}
                               </span>
@@ -749,10 +736,10 @@ export const ProfitReport: React.FC = () => {
                           })}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
+                      <td className="py-2.5 px-4">
+                        <Badge variant="default" className="text-[10px]">
                           {topGender} • {maxAgeGroup.split(' ')[0]}
-                        </span>
+                        </Badge>
                       </td>
                     </tr>
                   );
@@ -761,8 +748,10 @@ export const ProfitReport: React.FC = () => {
             </table>
           </div>
         </div>
-      </div>
+      </Card>
 
     </div>
   );
 };
+
+export default ProfitReport;

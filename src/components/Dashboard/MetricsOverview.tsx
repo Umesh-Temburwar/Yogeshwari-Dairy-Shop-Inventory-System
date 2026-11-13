@@ -9,9 +9,9 @@ import {
   AlertTriangle, 
   BookOpen, 
   PackageX, 
-  ArrowRight,
   Sparkles
 } from 'lucide-react';
+import { KpiCard } from '../ui';
 
 export const MetricsOverview: React.FC = () => {
   const { metrics, setActiveView, timeFilter } = useStore();
@@ -21,131 +21,98 @@ export const MetricsOverview: React.FC = () => {
 
   const cards = [
     {
-      title: `${timeLabel} ${t('totalSales')}`,
-      amount: `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`,
+      label: `${timeLabel} ${t('totalSales')}`,
+      value: `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`,
       subtitle: language === 'mr' ? 'काउंटर व होम डिलिव्हरी विक्री' : language === 'hi' ? 'काउंटर व होम डिलीवरी बिक्री' : 'Counter & delivery sales',
-      icon: TrendingUp,
-      iconBoxClass: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-      action: () => setActiveView('sales'),
-      isProfit: false
+      icon: <TrendingUp className="w-4 h-4" />,
+      onClick: () => setActiveView('sales'),
+      deltaType: 'ok' as const,
     },
     {
-      title: `${timeLabel} ${t('cashCollected')}`,
-      amount: `₹${metrics.cashCollected.toLocaleString('en-IN')}`,
+      label: `${timeLabel} ${t('cashCollected')}`,
+      value: `₹${metrics.cashCollected.toLocaleString('en-IN')}`,
       subtitle: `${((metrics.cashCollected / (metrics.totalSalesRevenue || 1)) * 100).toFixed(0)}% ${language === 'mr' ? 'रोख विक्री वाटा' : language === 'hi' ? 'रोकड़ शेयर' : 'Cash share'}`,
-      icon: Banknote,
-      iconBoxClass: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-      action: () => setActiveView('sales'),
-      isProfit: false
+      icon: <Banknote className="w-4 h-4" />,
+      onClick: () => setActiveView('sales'),
+      deltaType: 'neutral' as const,
     },
     {
-      title: `${timeLabel} ${t('onlineCollected')}`,
-      amount: `₹${metrics.onlineCollected.toLocaleString('en-IN')}`,
+      label: `${timeLabel} ${t('onlineCollected')}`,
+      value: `₹${metrics.onlineCollected.toLocaleString('en-IN')}`,
       subtitle: `${((metrics.onlineCollected / (metrics.totalSalesRevenue || 1)) * 100).toFixed(0)}% ${language === 'mr' ? 'फोनपे, जीपे, स्कॅनर' : language === 'hi' ? 'फोनपे, जीपे, स्कैनर' : 'PhonePe, GPay, QR'}`,
-      icon: Smartphone,
-      iconBoxClass: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
-      action: () => setActiveView('sales'),
-      isProfit: false
+      icon: <Smartphone className="w-4 h-4" />,
+      onClick: () => setActiveView('sales'),
+      deltaType: 'neutral' as const,
     },
     {
-      title: `${timeLabel} ${t('totalPurchases')}`,
-      amount: `₹${metrics.totalPurchasesAmount.toLocaleString('en-IN')}`,
+      label: `${timeLabel} ${t('totalPurchases')}`,
+      value: `₹${metrics.totalPurchasesAmount.toLocaleString('en-IN')}`,
       subtitle: language === 'mr' ? 'दूध, खवा, तूप खरेदी खर्च' : language === 'hi' ? 'दूध, घी, खोया रॉ माल लागत' : 'Milk & raw materials cost',
-      icon: ShoppingBag,
-      iconBoxClass: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400',
-      action: () => setActiveView('purchases'),
-      isProfit: false
+      icon: <ShoppingBag className="w-4 h-4" />,
+      onClick: () => setActiveView('purchases'),
+      deltaType: 'neutral' as const,
     },
     {
-      title: `${timeLabel} ${t('netProfit')}`,
-      amount: `₹${metrics.netProfit.toLocaleString('en-IN')}`,
+      label: `${timeLabel} ${t('netProfit')}`,
+      value: `₹${metrics.netProfit.toLocaleString('en-IN')}`,
       subtitle: `${language === 'mr' ? 'एकूण नफा' : language === 'hi' ? 'सकल लाभ' : 'Gross'} ₹${metrics.grossProfit.toLocaleString('en-IN')} ${language === 'mr' ? 'मधून खर्च वजा' : language === 'hi' ? 'में से खर्च घटाकर' : 'after expenses'}`,
-      icon: Sparkles,
-      iconBoxClass: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-      action: () => setActiveView('analytics'),
-      isProfit: true // Subtle accent ring applied
+      icon: <Sparkles className="w-4 h-4" />,
+      onClick: () => setActiveView('analytics'),
+      deltaType: 'ok' as const,
+      delta: 'नफा',
     },
     {
-      title: t('totalUdharDue'),
-      amount: `₹${metrics.totalOutstandingUdhar.toLocaleString('en-IN')}`,
+      label: t('totalUdharDue'),
+      value: `₹${metrics.totalOutstandingUdhar.toLocaleString('en-IN')}`,
       subtitle: language === 'mr' ? 'ग्राहक व मिठाईवाल्यांकडून बाकी' : language === 'hi' ? 'ग्राहकों व हलवाइयों से बाकी' : 'Customer credit receivable',
-      icon: BookOpen,
-      iconBoxClass: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
-      action: () => setActiveView('udhar'),
-      isProfit: false
+      icon: <BookOpen className="w-4 h-4" />,
+      onClick: () => setActiveView('udhar'),
+      deltaType: 'warn' as const,
+      delta: metrics.totalOutstandingUdhar > 0 ? 'बाकी' : undefined,
     },
     {
-      title: `${timeLabel} ${t('damageLoss')}`,
-      amount: `₹${metrics.totalDamagesLoss.toLocaleString('en-IN')}`,
+      label: `${timeLabel} ${t('damageLoss')}`,
+      value: `₹${metrics.totalDamagesLoss.toLocaleString('en-IN')}`,
       subtitle: language === 'mr' ? 'नासलेले दूध, लिकेज व एक्सपायरी' : language === 'hi' ? 'फटा दूध, पाउच लीकेज नुकसान' : 'Curdled milk & leakage loss',
-      icon: PackageX,
-      iconBoxClass: 'bg-slate-500/15 text-slate-600 dark:text-slate-400',
-      action: () => setActiveView('damages'),
-      isProfit: false
+      icon: <PackageX className="w-4 h-4" />,
+      onClick: () => setActiveView('damages'),
+      deltaType: 'danger' as const,
     },
     {
-      title: t('lowStockAlert'),
-      amount: `${metrics.lowStockCount} ${language === 'mr' ? 'उत्पादने' : language === 'hi' ? 'आइटम्स' : 'items'}`,
+      label: t('lowStockAlert'),
+      value: `${metrics.lowStockCount} ${language === 'mr' ? 'उत्पादने' : language === 'hi' ? 'आइटम्स' : 'items'}`,
       subtitle: (metrics.expiredBatchesCount > 0 || metrics.expiringTodayBatchesCount > 0)
         ? (language === 'mr' 
-            ? `⚠️ ${metrics.expiredBatchesCount} एक्सपायर्ड • ${metrics.expiringTodayBatchesCount} आज मुदत संपणारे` 
+            ? `${metrics.expiredBatchesCount} एक्सपायर्ड • ${metrics.expiringTodayBatchesCount} आज मुदत संपणारे` 
             : language === 'hi' 
-            ? `⚠️ ${metrics.expiredBatchesCount} एक्सपायर • ${metrics.expiringTodayBatchesCount} आज एक्सपायर` 
-            : `⚠️ ${metrics.expiredBatchesCount} expired • ${metrics.expiringTodayBatchesCount} exp. today`)
+            ? `${metrics.expiredBatchesCount} एक्सपायर • ${metrics.expiringTodayBatchesCount} आज एक्सपायर` 
+            : `${metrics.expiredBatchesCount} expired • ${metrics.expiringTodayBatchesCount} exp. today`)
         : metrics.lowStockCount > 0 
-        ? (language === 'mr' ? 'त्वरित मागवण्याची गरज आहे' : language === 'hi' ? 'तुरंत मंगाने की ज़रूरत है' : 'Reorder needed now')
-        : (language === 'mr' ? 'सर्व माल पुरेसा उपलब्ध आहे' : language === 'hi' ? 'सभी माल पर्याप्त मात्रा में है' : 'Stock level is healthy'),
-      icon: AlertTriangle,
-      iconBoxClass: (metrics.expiredBatchesCount > 0) 
-        ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' 
-        : 'bg-orange-500/15 text-orange-600 dark:text-orange-400',
-      action: () => setActiveView('inventory'),
-      isProfit: false
-    }
+        ? (language === 'mr' ? 'त्वरित मागवण्याची गरज' : language === 'hi' ? 'तुरंत मंगाने की ज़रूरत' : 'Reorder needed now')
+        : (language === 'mr' ? 'सर्व माल पुरेसा उपलब्ध' : language === 'hi' ? 'सभी माल पर्याप्त' : 'Stock level healthy'),
+      icon: <AlertTriangle className="w-4 h-4" />,
+      onClick: () => setActiveView(metrics.expiredBatchesCount > 0 ? 'expiry' : 'reorder'),
+      deltaType: metrics.expiredBatchesCount > 0 ? 'danger' : metrics.lowStockCount > 0 ? 'warn' : 'ok',
+      delta: metrics.expiredBatchesCount > 0 ? 'Alert' : undefined,
+    },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-      {cards.map((card, idx) => {
-        const Icon = card.icon;
-        return (
-          <div
-            key={idx}
-            onClick={card.action}
-            className={`p-5 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] shadow-xs hover:shadow-md transition-all duration-150 flex flex-col justify-between h-full cursor-pointer group ${
-              card.isProfit ? 'ring-1 ring-amber-500/30 dark:ring-amber-400/20 shadow-amber-500/5' : ''
-            }`}
-          >
-            {/* Top row: 2-line clamp title + fixed 40px icon box */}
-            <div className="flex items-start justify-between gap-3 mb-2">
-              <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] line-clamp-2 min-w-0 flex-1 leading-snug">
-                {card.title}
-              </span>
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${card.iconBoxClass} group-hover:scale-105 transition-transform`}>
-                <Icon className="w-5 h-5" />
-              </div>
-            </div>
-
-            {/* Big Value: tabular-nums formatted */}
-            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#E7F0EC] tracking-tight tabular-nums my-1">
-              {card.amount}
-            </div>
-
-            {/* Helper Text */}
-            <div className="text-xs text-slate-500 dark:text-[#8FA69C] line-clamp-1 mb-3">
-              {card.subtitle}
-            </div>
-
-            {/* Footer "View Details" link */}
-            <div className="mt-auto pt-3 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between text-xs">
-              <span className="text-slate-400 dark:text-[#8FA69C] font-medium group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                {t('viewDetails')}
-              </span>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-400 dark:text-[#8FA69C] group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
-            </div>
-          </div>
-        );
-      })}
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {cards.map((card, idx) => (
+        <KpiCard
+          key={idx}
+          label={card.label}
+          value={card.value}
+          subtitle={card.subtitle}
+          icon={card.icon}
+          delta={card.delta}
+          deltaType={card.deltaType}
+          onClick={card.onClick}
+        />
+      ))}
     </div>
   );
 };
+
+export default MetricsOverview;

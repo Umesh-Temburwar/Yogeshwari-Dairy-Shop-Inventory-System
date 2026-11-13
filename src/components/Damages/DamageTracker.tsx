@@ -3,20 +3,18 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { DamageReason } from '../../types';
-import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
+import { printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import {
   PackageX,
   Plus,
-  X,
-  FileText,
   Printer,
   Download,
   Truck,
-  RotateCcw,
   Eye
 } from 'lucide-react';
 import { SupplierReturnModal } from '../Returns/SupplierReturnModal';
 import { SupplierReturnReason } from '../../types';
+import { Card, KpiCard, Button, Input, Badge, StatusBadge, Modal } from '../ui';
 
 export const DamageTracker: React.FC = () => {
   const { products, filteredDamages, recordDamage, metrics } = useStore();
@@ -140,16 +138,16 @@ export const DamageTracker: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
 
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#131F1B] p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
+      <Card className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <PackageX className="w-6 h-6 text-rose-600 dark:text-rose-400" />
+          <h2 className="text-lg sm:text-xl font-semibold text-ink tracking-tight flex items-center gap-2">
+            <PackageX className="w-5 h-5 text-danger" />
             <span>{t('damageTitle')}</span>
           </h2>
-          <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
+          <p className="text-xs text-ink-3 font-medium mt-1">
             {language === 'mr'
               ? 'नासलेले दूध, लिकेज, मुदत संपलेली उत्पादने व आर्थिक नुकसानीचा हिशोब'
               : language === 'hi'
@@ -159,95 +157,82 @@ export const DamageTracker: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* View PDF Button */}
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleViewDamagePDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            leftIcon={<Eye className="w-4 h-4" />}
             title="View Spoilage & Loss Report PDF"
           >
-            <Eye className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-          </button>
+            {language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}
+          </Button>
 
-          {/* Print PDF Button */}
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handlePrintDamagePDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            leftIcon={<Printer className="w-4 h-4" />}
             title="Print Spoilage & Loss Report"
           >
-            <Printer className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-          </button>
+            {language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}
+          </Button>
 
-          {/* PDF Report Download Button */}
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleDownloadDamagePDF}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-800/60 text-xs font-bold transition-all active:scale-95"
+            leftIcon={<Download className="w-4 h-4" />}
             title="Download Spoilage & Loss PDF Report"
           >
-            <Download className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-            <span>{language === 'mr' ? 'नुकसान PDF' : language === 'hi' ? 'नुकसान PDF' : 'Damages PDF'}</span>
-          </button>
+            PDF
+          </Button>
 
-          <button
+          <Button
+            variant="danger"
+            size="sm"
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all active:scale-95"
+            leftIcon={<Plus className="w-4 h-4" />}
           >
-            <Plus className="w-4 h-4" />
-            <span>{t('logDamage')}</span>
-          </button>
+            {t('logDamage')}
+          </Button>
         </div>
-      </div>
+      </Card>
 
       {/* Time Filter */}
       <PeriodFilter />
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'एकूण झालेले नुकसान (Financial Loss)' : language === 'hi' ? 'कुल डैमेज नुकसान (Financial Loss)' : 'Total Spoilage Loss'}
-          </span>
-          <span className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1 block">
-            ₹{metrics.totalDamagesLoss.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? 'थेट नफ्यामधून वजा केलेले नुकसान' : language === 'hi' ? 'सीधे लाभ (Net Profit) में से घटाया गया नुकसान' : 'Directly deducted from net profit'}
-          </span>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <KpiCard
+          label={language === 'mr' ? 'झालेले नुकसान' : language === 'hi' ? 'कुल नुकसान' : 'Total Spoilage Loss'}
+          value={`₹${metrics.totalDamagesLoss.toLocaleString('en-IN')}`}
+          delta={language === 'mr' ? 'नफ्यामधून वजा' : language === 'hi' ? 'लाभ में से घटाया' : 'Deducted from profit'}
+          deltaType="danger"
+          icon={<PackageX className="w-4 h-4 text-danger" />}
+        />
 
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'नुकसान घटना (Incidents)' : language === 'hi' ? 'डैमेज घटनाएं (Total Incidents)' : 'Damage Incidents'}
-          </span>
-          <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
-            {filteredDamages.length} {language === 'mr' ? 'वेळा' : language === 'hi' ? 'बार' : 'times'}
-          </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? 'कालावधीतील एकूण नासाडी नोंदी' : language === 'hi' ? 'चुनी गई अवधि में दर्ज कुल खराबी' : 'Total recorded spoilage incidents'}
-          </span>
-        </div>
+        <KpiCard
+          label={language === 'mr' ? 'नुकसान घटना' : language === 'hi' ? 'डैमेज घटनाएं' : 'Damage Incidents'}
+          value={`${filteredDamages.length} ${language === 'mr' ? 'वेळा' : language === 'hi' ? 'बार' : 'times'}`}
+          delta={language === 'mr' ? 'नासाडी नोंदी' : language === 'hi' ? 'खराबी रिकॉर्ड' : 'Recorded incidents'}
+          deltaType="neutral"
+        />
 
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'खरेदीवर नासाडीचे प्रमाण' : language === 'hi' ? 'खरीद पर खराबी का प्रतिशत' : 'Spoilage % on Purchases'}
-          </span>
-          <span className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1 block">
-            {((metrics.totalDamagesLoss / (metrics.totalPurchasesAmount || 1)) * 100).toFixed(1)}%
-          </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? '(1% ते 2% सामान्य मानले जाते)' : language === 'hi' ? '(1% से 2% सामान्य माना जाता है)' : '(1% to 2% is industry normal)'}
-          </span>
-        </div>
+        <KpiCard
+          label={language === 'mr' ? 'खरेदीवर नासाडीचे प्रमाण' : language === 'hi' ? 'खरीद पर खराबी' : 'Spoilage %'}
+          value={`${((metrics.totalDamagesLoss / (metrics.totalPurchasesAmount || 1)) * 100).toFixed(1)}%`}
+          delta={language === 'mr' ? '1% ते 2% सामान्य' : language === 'hi' ? '1% - 2% सामान्य' : '1-2% industry normal'}
+          deltaType="warn"
+        />
       </div>
 
       {/* Damage History Table */}
-      <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between">
-          <h3 className="font-bold text-slate-900 dark:text-white text-sm">
+      <Card className="overflow-hidden p-0">
+        <div className="p-4 border-b border-line flex items-center justify-between">
+          <h3 className="font-semibold text-ink text-sm">
             {language === 'mr' ? 'खराब / नासलेला माल नोंद वही' : language === 'hi' ? 'खराब / डैमेज माल हिस्ट्री' : 'Damages & Spoilage Log'}
           </h3>
-          <span className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
+          <span className="text-xs text-ink-3 font-medium">
             {filteredDamages.length} {language === 'mr' ? 'नोंदी' : language === 'hi' ? 'रिकॉर्ड' : 'records'}
           </span>
         </div>
@@ -255,49 +240,50 @@ export const DamageTracker: React.FC = () => {
         {filteredDamages.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] font-bold uppercase">
+              <thead className="bg-surface-2/60 border-b border-line text-ink-3 font-medium uppercase tracking-wider text-[11px]">
                 <tr>
                   <th className="px-4 py-3">{language === 'mr' ? 'तारीख' : language === 'hi' ? 'दिनांक' : 'Date'}</th>
                   <th className="px-4 py-3">{t('productNameCol')}</th>
                   <th className="px-3 py-3 text-center">{language === 'mr' ? 'खराब प्रमाण' : language === 'hi' ? 'खराब मात्रा' : 'Damaged Qty'}</th>
-                  <th className="px-3 py-3">{language === 'mr' ? 'नासाडीचे कारण' : language === 'hi' ? 'खराबी का कारण' : 'Reason'}</th>
-                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'अंदाजे नुकसान' : language === 'hi' ? 'अनुमानित नुकसान' : 'Est. Loss'}</th>
-                  <th className="px-4 py-3">{language === 'mr' ? 'तपशील / शेरा' : language === 'hi' ? 'विवरण / नोट्स' : 'Notes / Remarks'}</th>
-                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'सप्लायर रिफंड' : 'सप्लायर रिफंड'}</th>
+                  <th className="px-3 py-3">{language === 'mr' ? 'नासाडीचे कारण' : language === 'hi' ? 'कारण' : 'Reason'}</th>
+                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'अंदाजे नुकसान' : language === 'hi' ? 'नुकसान' : 'Est. Loss'}</th>
+                  <th className="px-4 py-3">{language === 'mr' ? 'शेरा' : language === 'hi' ? 'नोट्स' : 'Notes'}</th>
+                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'रिफंड' : 'रिफंड'}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
+              <tbody className="divide-y divide-line">
                 {filteredDamages.map((dmg) => (
-                  <tr key={dmg.id} className="hover:bg-slate-50/80 dark:hover:bg-[#1A2A25]/60 transition-colors">
-                    <td className="px-4 py-3 font-semibold text-slate-700 dark:text-[#8FA69C] whitespace-nowrap">
+                  <tr key={dmg.id} className="hover:bg-surface-2/50 transition-colors">
+                    <td className="px-4 py-3 font-medium text-ink-2 whitespace-nowrap">
                       {dmg.damage_date}
                     </td>
 
                     <td className="px-4 py-3">
-                      <div className="font-bold text-slate-900 dark:text-white">{dmg.product_name}</div>
+                      <div className="font-medium text-ink">{dmg.product_name}</div>
                     </td>
 
-                    <td className="px-3 py-3 text-center font-black text-rose-700 dark:text-rose-400">
+                    <td className="px-3 py-3 text-center font-semibold text-danger tabular-nums">
                       {dmg.quantity} {dmg.unit}
                     </td>
 
                     <td className="px-3 py-3">
-                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-transparent dark:border-amber-800/40">
+                      <StatusBadge status="warn" className="text-[11px]">
                         {dmg.reason}
-                      </span>
+                      </StatusBadge>
                     </td>
 
-                    <td className="px-3 py-3 text-right font-black text-rose-600 dark:text-rose-400">
+                    <td className="px-3 py-3 text-right font-medium text-danger tabular-nums">
                       -₹{dmg.estimated_loss_amount.toLocaleString('en-IN')}
                     </td>
 
-                    <td className="px-4 py-3 text-slate-500 dark:text-[#8FA69C] italic max-w-sm truncate">
+                    <td className="px-4 py-3 text-ink-3 italic max-w-sm truncate">
                       {dmg.notes || '-'}
                     </td>
 
                     <td className="px-3 py-3 text-right">
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => {
                           let mappedReason: SupplierReturnReason = 'Other';
                           if (dmg.reason.includes('Curdled') || dmg.reason.includes('Fat Gya')) {
@@ -317,12 +303,12 @@ export const DamageTracker: React.FC = () => {
                           });
                           setIsSupplierReturnOpen(true);
                         }}
-                        className="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] border border-emerald-200 dark:border-emerald-800/40 transition flex items-center gap-1 active:scale-95 ml-auto whitespace-nowrap shadow-2xs"
+                        className="h-7 px-2 text-ok hover:bg-ok/10 text-xs ml-auto"
                         title="सप्लायरला परत पाठवून रिफंड मागा"
                       >
-                        <Truck className="w-3 h-3 text-emerald-600" />
-                        <span>{language === 'mr' ? 'रिफंड क्लेम' : 'रिफंड क्लेम'}</span>
-                      </button>
+                        <Truck className="w-3 h-3 mr-1" />
+                        <span>{language === 'mr' ? 'रिफंड' : 'रिफंड'}</span>
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -330,132 +316,109 @@ export const DamageTracker: React.FC = () => {
             </table>
           </div>
         ) : (
-          <div className="p-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs">
+          <div className="p-12 text-center text-ink-3 text-xs">
             {language === 'mr' ? 'या कालावधीत कोणताही माल खराब झालेला नाही.' : language === 'hi' ? 'इस अवधि में कोई डैमेज माल दर्ज नहीं है।' : 'No damaged goods recorded for this period.'}
           </div>
         )}
-      </div>
+      </Card>
 
       {/* LOG DAMAGE MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 border border-transparent dark:border-[#24352F]">
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={language === 'mr' ? 'खराब / नासलेला माल नोंदवा' : language === 'hi' ? 'खराब / डैमेज माल दर्ज करें' : 'Record Damaged / Spoiled Stock'}
+        description={language === 'mr' ? 'शिल्लक साठ्यामधून प्रमाण आपोआप कमी होईल' : language === 'hi' ? 'स्टॉक से मात्रा अपने आप घट जाएगी' : 'Quantity will automatically be deducted from inventory'}
+        size="md"
+      >
+        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+          <div>
+            <label className="font-medium text-ink-2 block mb-1.5">
+              {language === 'mr' ? 'कोणता माल खराब झाला?' : language === 'hi' ? 'कौनसा माल खराब हुआ?' : 'Select Damaged Item'} *
+            </label>
+            <select
+              value={selectedProductId}
+              onChange={(e) => setSelectedProductId(e.target.value)}
+              className="w-full h-10 px-3 rounded-xl border border-line bg-surface text-ink text-xs font-medium shadow-card focus:outline-none focus:ring-2 focus:ring-ink/15"
+            >
+              {products.map(p => (
+                <option key={p.id} value={p.id}>
+                  {getProductDisplayName(p)} ({p.name}) - Stock: {p.stock_quantity} {p.unit}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300">
-                  <PackageX className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                    {language === 'mr' ? 'खराब / नासलेला माल नोंदवा' : language === 'hi' ? 'खराब / डैमेज माल दर्ज करें' : 'Record Damaged / Spoiled Stock'}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                    {language === 'mr' ? 'शिल्लक साठ्यामधून प्रमाण आपोआप कमी होईल' : language === 'hi' ? 'स्टॉक से मात्रा अपने आप घट जाएगी' : 'Quantity will automatically be deducted from inventory'}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
-              >
-                <X className="w-5 h-5" />
-              </button>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="font-medium text-ink-2 block mb-1.5">
+                {language === 'mr' ? `खराब प्रमाण (${selectedProduct?.unit}) *` : language === 'hi' ? `खराब मात्रा (${selectedProduct?.unit}) *` : `Qty (${selectedProduct?.unit}) *`}
+              </label>
+              <Input
+                type="number"
+                step="0.1"
+                required
+                placeholder="2.5"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'कोणता माल खराब झाला?' : language === 'hi' ? 'कौनसा माल खराब हुआ?' : 'Select Damaged Item'} *
-                </label>
-                <select
-                  value={selectedProductId}
-                  onChange={(e) => setSelectedProductId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-rose-500 focus:outline-none"
-                >
-                  {products.map(p => (
-                    <option key={p.id} value={p.id}>
-                      {getProductDisplayName(p)} ({p.name}) - Stock: {p.stock_quantity} {p.unit}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                    {language === 'mr' ? `खराब प्रमाण (${selectedProduct?.unit}) *` : language === 'hi' ? `खराब मात्रा (${selectedProduct?.unit}) *` : `Damaged Quantity (${selectedProduct?.unit}) *`}
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    required
-                    placeholder="2.5"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-rose-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                    {language === 'mr' ? 'नासाडीचे कारण *' : language === 'hi' ? 'खराबी का कारण *' : 'Reason for Spoilage *'}
-                  </label>
-                  <select
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value as DamageReason)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500 focus:outline-none"
-                  >
-                    {reasonsList.map(r => (
-                      <option key={r.id} value={r.id}>{r.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Estimated Loss preview */}
-              <div className="bg-rose-50 dark:bg-rose-950/40 p-3 rounded-2xl border border-rose-200 dark:border-rose-900/60 flex justify-between items-center text-xs font-bold text-rose-950 dark:text-rose-300">
-                <span>{language === 'mr' ? 'अंदाजे आर्थिक नुकसान (Loss):' : language === 'hi' ? 'अनुमानित वित्तीय नुकसान:' : 'Estimated Financial Loss:'}</span>
-                <span className="text-base font-black text-rose-700 dark:text-rose-400">
-                  ₹{estimatedLoss.toLocaleString('en-IN')}
-                </span>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'तपशील किंवा शेरा' : language === 'hi' ? 'विस्तार से कारण या नोट्स' : 'Detailed Notes / Remarks'}
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder={language === 'mr' ? 'उदा. दुपारी वीज गेल्यामुळे २.५ लिटर दूध नासले (पनीर/छान्यामध्ये वापरले)' : language === 'hi' ? 'उदा. दोपहर में लाइट जाने के कारण दूध फट गया' : 'e.g. Electricity Bill outage caused 2.5L curdling'}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F]">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="w-1/2 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] font-semibold text-xs text-slate-700 dark:text-[#8FA69C]"
-                >
-                  {t('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  className="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-600/20"
-                >
-                  {t('save')} &amp; {language === 'mr' ? 'साठा वजा करा' : language === 'hi' ? 'स्टॉक घटाएं' : 'Deduct Stock'}
-                </button>
-              </div>
-
-            </form>
-
+            <div>
+              <label className="font-medium text-ink-2 block mb-1.5">
+                {language === 'mr' ? 'नासाडीचे कारण *' : language === 'hi' ? 'खराबी का कारण *' : 'Reason *'}
+              </label>
+              <select
+                value={reason}
+                onChange={(e) => setReason(e.target.value as DamageReason)}
+                className="w-full h-10 px-3 rounded-xl border border-line bg-surface text-ink text-xs font-medium shadow-card focus:outline-none focus:ring-2 focus:ring-ink/15"
+              >
+                {reasonsList.map(r => (
+                  <option key={r.id} value={r.id}>{r.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
-      )}
+
+          {/* Estimated Loss preview */}
+          <div className="bg-surface-2 p-3.5 rounded-xl border border-line flex justify-between items-center text-xs font-medium text-ink">
+            <span>{language === 'mr' ? 'अंदाजे आर्थिक नुकसान (Loss):' : language === 'hi' ? 'अनुमानित वित्तीय नुकसान:' : 'Estimated Financial Loss:'}</span>
+            <span className="text-base font-semibold text-danger tabular-nums">
+              ₹{estimatedLoss.toLocaleString('en-IN')}
+            </span>
+          </div>
+
+          <div>
+            <label className="font-medium text-ink-2 block mb-1.5">
+              {language === 'mr' ? 'तपशील किंवा शेरा' : language === 'hi' ? 'विस्तार से कारण या नोट्स' : 'Detailed Notes / Remarks'}
+            </label>
+            <textarea
+              rows={2}
+              placeholder={language === 'mr' ? 'उदा. दुपारी वीज गेल्यामुळे २.५ लिटर दूध नासले' : language === 'hi' ? 'उदा. दोपहर में लाइट जाने के कारण दूध फट गया' : 'e.g. Electricity outage caused 2.5L curdling'}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full p-3 rounded-xl border border-line bg-surface text-ink placeholder:text-ink-3 text-xs shadow-card focus:outline-none focus:ring-2 focus:ring-ink/15"
+            />
+          </div>
+
+          <div className="flex gap-2 pt-2 border-t border-line">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setIsModalOpen(false)}
+              className="w-1/2"
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              type="submit"
+              variant="danger"
+              className="w-1/2"
+            >
+              {t('save')} &amp; {language === 'mr' ? 'साठा वजा करा' : language === 'hi' ? 'स्टॉक घटाएं' : 'Deduct Stock'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* SUPPLIER RETURN MODAL */}
       {isSupplierReturnOpen && (
@@ -470,3 +433,5 @@ export const DamageTracker: React.FC = () => {
     </div>
   );
 };
+
+export default DamageTracker;

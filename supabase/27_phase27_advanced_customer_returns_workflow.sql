@@ -148,6 +148,10 @@ ON public.product_returns FOR ALL TO anon, authenticated USING (true) WITH CHECK
 -- STEP 5: ANALYTICS & LEDGER VIEWS
 -- ============================================================================
 
+-- Safely drop existing views to allow column schema updates without 42P16 error
+DROP VIEW IF EXISTS public.v_customer_returns_summary CASCADE;
+DROP VIEW IF EXISTS public.v_daily_returns_ledger CASCADE;
+
 -- View 1: Customer Returns Summary (KPI overview & condition breakdown)
 CREATE OR REPLACE VIEW public.v_customer_returns_summary AS
 SELECT 
@@ -234,3 +238,4 @@ SELECT
 FROM information_schema.columns 
 WHERE table_schema = 'public' AND table_name = 'product_returns'
 ORDER BY ordinal_position;
+

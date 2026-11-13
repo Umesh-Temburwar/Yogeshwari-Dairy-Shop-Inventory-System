@@ -19,8 +19,8 @@
     <script>
       (function() {
         try {
-          var theme = localStorage.getItem('dairy_theme') || 'system';
-          var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var theme = localStorage.getItem('dairy_theme') || 'light';
+          var isDark = theme === 'dark';
           if (isDark) {
             document.documentElement.classList.add('dark');
           } else {
@@ -30,7 +30,7 @@
       })();
     </script>
   </head>
-  <body class="bg-[#f8fafc] dark:bg-[#0B1210] text-[#0f172a] dark:text-[#E7F0EC] antialiased selection:bg-emerald-500 selection:text-white transition-colors duration-150">
+  <body class="bg-[#FAFBFB] dark:bg-[#0B1210] text-[#0f172a] dark:text-[#E7F0EC] antialiased selection:bg-emerald-500 selection:text-white transition-colors duration-150">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

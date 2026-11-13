@@ -2,6 +2,7 @@ import React from 'react';
 import ydoLogo from '../assets/YDO_logo.jpg';
 import { useStore, AppView } from '../context/StoreContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -45,6 +46,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { activeView, setActiveView, metrics, products } = useStore();
   const { t, language } = useLanguage();
+  const { user, role } = useAuth();
+
+  const currentUserName = 
+    role === 'Owner' || user?.email?.toLowerCase().includes('yogeshwari')
+      ? 'Nikhil Sakhare'
+      : role === 'Admin' || user?.email?.toLowerCase().includes('nilu')
+      ? 'Nilesh Sakhare'
+      : (user?.user_metadata?.full_name || 'Nikhil Sakhare');
 
   const navItems: NavItem[] = [
     // Section 1: Main / Operations
@@ -311,6 +320,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="w-10 h-10 mx-auto rounded-xl bg-emerald-50 dark:bg-[#1A2A25] text-emerald-600 dark:text-emerald-400 flex items-center justify-center cursor-pointer border border-emerald-200/60 dark:border-[#24352F]"
             >
               <Sparkles className="w-5 h-5" />
+            </div>
+          )}
+        </div>
+
+        {/* Pinned User Profile at the Very Last of Menu */}
+        <div className="p-3 pt-0 pb-3">
+          {!isCollapsed ? (
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-between gap-2 shadow-2xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${role === "Owner" ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"}`}>
+                  {role === 'Owner' ? '👑' : '🛡️'}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-black text-slate-900 dark:text-white truncate leading-tight">
+                    {currentUserName}
+                  </p>
+                  <p className="text-[10px] text-slate-500 dark:text-[#8FA69C] truncate leading-tight mt-0.5">
+                    {role === 'Owner' ? 'Shop Owner' : 'Counter 1 (Admin)'}
+                  </p>
+                </div>
+              </div>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 ring-2 ring-emerald-500/20" title="Online" />
+            </div>
+          ) : (
+            <div 
+              title={currentUserName}
+              className={`w-10 h-10 mx-auto rounded-xl flex items-center justify-center text-sm font-black border border-slate-200/80 dark:border-[#24352F] ${role === "Owner" ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"}`}
+            >
+              {role === 'Owner' ? '👑' : '🛡️'}
             </div>
           )}
         </div>

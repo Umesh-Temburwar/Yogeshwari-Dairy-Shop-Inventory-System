@@ -18,18 +18,17 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     try {
       const stored = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode;
-      if (stored === 'light' || stored === 'dark' || stored === 'system') {
+      if (stored === 'light' || stored === 'dark') {
         return stored;
       }
     } catch {}
-    return 'system';
+    return 'light'; // Default to Light (White & Milky White Dairy Theme)
   });
 
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
     if (typeof window !== 'undefined') {
       if (theme === 'dark') return 'dark';
-      if (theme === 'light') return 'light';
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      return 'light';
     }
     return 'light';
   });

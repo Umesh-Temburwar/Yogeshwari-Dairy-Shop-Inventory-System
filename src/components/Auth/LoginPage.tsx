@@ -473,96 +473,85 @@ export const LoginPage: React.FC = () => {
         </div>
 
         {/* Center Form Card */}
-        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 py-3 my-auto">
+        <div className="flex-1 flex flex-col items-center justify-center px-3.5 sm:px-8 py-3 sm:py-5 my-auto w-full">
           
-          {/* Mobile-Only Compact Brand Header */}
-          <div className="lg:hidden flex items-center gap-3 mb-4 text-center">
-            <div className="w-12 h-12 rounded-full bg-white p-0.5 shadow-md border-2 border-emerald-500/40 shrink-0 overflow-hidden flex items-center justify-center">
-              <img
-                src={ydoLogo}
-                alt="Yogeshwari Dairy Logo"
-                className="w-full h-full rounded-full object-cover scale-105"
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  if (!target.src.endsWith('/YDO_logo.png')) {
-                    target.src = '/YDO_logo.png';
-                  }
-                }}
-              />
-            </div>
-            <div className="text-left">
-              <h2 className="text-base font-black text-slate-900 dark:text-white leading-tight">
-                {t('shopName')}
-              </h2>
-              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                {t('shopSubtitle')}
-              </span>
-            </div>
-          </div>
-
-          {/* Form Card Container */}
+          {/* Form Card Container with Watermark */}
           <div
             id="auth-form-card"
-            className="w-full max-w-[420px] bg-white dark:bg-[#131F1B] rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-[#24352F] shadow-sm transition-all"
+            className="w-full max-w-[420px] bg-white/95 dark:bg-[#131F1B]/95 backdrop-blur-xl rounded-3xl p-5 sm:p-7 border border-slate-200/90 dark:border-[#24352F] shadow-xl transition-all relative overflow-hidden"
           >
-            {/* Header: Title & Subtitle with YDO Logo */}
-            <div className="mb-5 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-white dark:bg-[#1A2A25] p-0.5 border-2 border-emerald-500/40 shadow-xs shrink-0 overflow-hidden flex items-center justify-center">
-                <img
-                  src={ydoLogo}
-                  alt="Yogeshwari Dairy Logo"
-                  className="w-full h-full rounded-full object-cover scale-105"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (!target.src.endsWith('/YDO_logo.png')) {
-                      target.src = '/YDO_logo.png';
-                    }
-                  }}
-                />
-              </div>
-              <div>
-                <h3 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-                  {mode === 'signin' && t('authSignInTitle')}
-                  {mode === 'signup' && t('authSignUpTitle')}
-                  {mode === 'forgot' && t('authForgotTitle')}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-0.5 font-medium">
-                  {mode === 'signin' && t('authSignInSubtitle')}
-                  {mode === 'signup' && t('authSignUpSubtitle')}
-                  {mode === 'forgot' && t('authForgotSubtitle')}
-                </p>
-              </div>
+            {/* Elegant Background Logo Watermark (Centered directly inside login box) */}
+            <div 
+              aria-hidden="true" 
+              className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden z-0"
+            >
+              <img 
+                src={ydoLogo} 
+                alt="" 
+                className="w-64 h-64 sm:w-80 sm:h-80 object-contain rounded-full opacity-[0.05] dark:opacity-[0.07] grayscale contrast-125 filter pointer-events-none" 
+              />
             </div>
 
-            {/* Top Auth Mode Tabs: Sign In vs Register */}
-            {isRegistrationEnabled && (
-              <div className="flex p-1 mb-5 bg-slate-100 dark:bg-[#1A2A25] rounded-2xl border border-slate-200/80 dark:border-[#24352F]">
-                <button
-                  type="button"
-                  onClick={() => switchMode('signin')}
-                  className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                    mode === 'signin'
-                      ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-xs border border-slate-200/60 dark:border-[#24352F]'
-                      : 'text-slate-500 dark:text-[#8FA69C] hover:text-slate-800 dark:hover:text-white'
-                  }`}
-                >
-                  <span>🔑</span>
-                  <span>{language === 'mr' ? 'लॉगिन करा (Sign In)' : language === 'hi' ? 'लॉगिन करें (Sign In)' : 'Sign In'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => switchMode('signup')}
-                  className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                    mode === 'signup'
-                      ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-xs border border-slate-200/60 dark:border-[#24352F]'
-                      : 'text-slate-500 dark:text-[#8FA69C] hover:text-slate-800 dark:hover:text-white'
-                  }`}
-                >
-                  <span>📝</span>
-                  <span>{language === 'mr' ? 'नवीन नोंदणी (Register)' : language === 'hi' ? 'नया पंजीकरण (Register)' : 'Register'}</span>
-                </button>
+            {/* Foreground Content */}
+            <div className="relative z-10">
+
+              {/* Single Professional Brand Crest & Header */}
+              <div className="mb-5 text-center">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto rounded-full bg-white dark:bg-[#1A2A25] p-1 border-2 border-emerald-500/50 ring-4 ring-emerald-500/15 shadow-md shrink-0 overflow-hidden flex items-center justify-center mb-2.5 transition-transform hover:scale-105">
+                  <img
+                    src={ydoLogo}
+                    alt="Yogeshwari Dairy Logo"
+                    className="w-full h-full rounded-full object-cover scale-105"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.src.endsWith('/YDO_logo.png')) {
+                        target.src = '/YDO_logo.png';
+                      }
+                    }}
+                  />
+                </div>
+                <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                  {t('shopName')}
+                </h2>
+                <span className="inline-block px-2 py-0.5 mt-0.5 rounded-full bg-emerald-100/70 dark:bg-emerald-950/60 text-[10px] font-extrabold text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
+                  {t('shopSubtitle')}
+                </span>
+                <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-1 font-medium">
+                  {mode === 'signin' && (language === 'mr' ? 'कृपया खात्यात लॉगिन करा' : language === 'hi' ? 'कृपया खाते में लॉगिन करें' : 'Sign in to continue')}
+                  {mode === 'signup' && (language === 'mr' ? 'नवीन ऑपरेटर नोंदणी' : language === 'hi' ? 'नया ऑपरेटर पंजीकरण' : 'Create new operator account')}
+                  {mode === 'forgot' && (language === 'mr' ? 'पासवर्ड रीसेट करा' : language === 'hi' ? 'पासवर्ड रीसेट करें' : 'Reset your password')}
+                </p>
               </div>
-            )}
+
+              {/* Top Auth Mode Tabs: Sign In vs Register */}
+              {isRegistrationEnabled && (
+                <div className="flex p-1 mb-4 bg-slate-100 dark:bg-[#1A2A25] rounded-2xl border border-slate-200/80 dark:border-[#24352F]">
+                  <button
+                    type="button"
+                    onClick={() => switchMode('signin')}
+                    className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                      mode === 'signin'
+                        ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-xs border border-slate-200/60 dark:border-[#24352F]'
+                        : 'text-slate-500 dark:text-[#8FA69C] hover:text-slate-800 dark:hover:text-white'
+                    }`}
+                  >
+                    <span>🔑</span>
+                    <span>{language === 'mr' ? 'लॉगिन करा' : language === 'hi' ? 'लॉगिन करें' : 'Sign In'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => switchMode('signup')}
+                    className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                      mode === 'signup'
+                        ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-xs border border-slate-200/60 dark:border-[#24352F]'
+                        : 'text-slate-500 dark:text-[#8FA69C] hover:text-slate-800 dark:hover:text-white'
+                    }`}
+                  >
+                    <span>📝</span>
+                    <span>{language === 'mr' ? 'नोंदणी' : language === 'hi' ? 'पंजीकरण' : 'Register'}</span>
+                  </button>
+                </div>
+              )}
 
             {/* Form-Level Error Banner */}
             {formError && (
@@ -1006,6 +995,7 @@ export const LoginPage: React.FC = () => {
               </form>
             )}
 
+            </div>
           </div>
 
         </div>

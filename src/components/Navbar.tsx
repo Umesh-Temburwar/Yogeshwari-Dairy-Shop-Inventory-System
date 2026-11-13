@@ -36,6 +36,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
+  // Active User display name: Nikhil Sakhare (Owner) vs Nilesh Sakhare (Admin)
+  const currentUserName = 
+    role === 'Owner' || user?.email?.toLowerCase().includes('yogeshwari')
+      ? 'Nikhil Sakhare'
+      : role === 'Admin' || user?.email?.toLowerCase().includes('nilu')
+      ? 'Nilesh Sakhare'
+      : (user?.user_metadata?.full_name || 'Nikhil Sakhare');
+
   const languagesList: Array<{ code: Language; label: string }> = [
     { code: 'mr', label: 'मराठी' },
     { code: 'hi', label: 'हिंदी' },
@@ -115,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </span>
           </button>
 
-          {/* OWNER / ADMIN PROFILE BADGE & DROPDOWN */}
+          {/* USER PROFILE BADGE & DROPDOWN */}
           <div className="relative pl-1 sm:pl-1.5 border-l border-slate-200 dark:border-[#24352F]">
             <button
               type="button"
@@ -132,9 +140,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
               <div className="flex flex-col text-left">
                 <span className="text-xs font-black leading-none">
-                  {role === 'Owner' 
-                    ? (language === 'mr' ? 'मालक' : language === 'hi' ? 'मालिक' : 'Owner')
-                    : (language === 'mr' ? 'प्रशासक' : language === 'hi' ? 'प्रशासक' : 'Admin')}
+                  {currentUserName}
                 </span>
                 <span className="text-[9px] text-slate-500 dark:text-[#8FA69C] leading-none mt-0.5 truncate max-w-[70px] sm:max-w-[100px]">
                   {user?.email?.split('@')[0] || 'Yogeshwari'}
@@ -157,6 +163,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </p>
                     </div>
                     <p className="text-xs font-black text-slate-900 dark:text-white truncate">
+                      {currentUserName}
+                    </p>
+                    <p className="text-[10px] text-slate-500 dark:text-[#8FA69C] truncate">
                       {user?.email || 'yogeshwaridairy9896@gmail.com'}
                     </p>
                   </div>
@@ -174,11 +183,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <div className="space-y-1">
                         <p className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] px-1">
                           {isOwnerUser 
-                            ? (language === 'mr' ? 'प्रोफाइल निवडा (मालक दोन्ही वापरू शकतात)' : language === 'hi' ? 'प्रोफ़ाइल चुनें (मालिक दोनों चुन सकते हैं)' : 'Select Profile (Owner Access to Both)')
-                            : (language === 'mr' ? 'सक्रिय प्रोफाइल (केवळ ॲडमिन)' : language === 'hi' ? 'सक्रिय प्रोफ़ाइल (केवल एडमिन)' : 'Active Profile (Admin Only)')}
+                            ? (language === 'mr' ? 'खाते निवडा' : language === 'hi' ? 'खाता चुनें' : 'Select Account')
+                            : (language === 'mr' ? 'सक्रिय खाते' : language === 'hi' ? 'सक्रिय खाता' : 'Active Account')}
                         </p>
 
-                        {/* Owner Option: ONLY rendered if isOwnerUser is true */}
+                        {/* Nikhil Sakhare (Owner) Option: ONLY rendered if isOwnerUser is true */}
                         {isOwnerUser && (
                           <button
                             type="button"
@@ -194,13 +203,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                           >
                             <div className="flex items-center gap-2">
                               <span>👑</span>
-                              <span>{language === 'mr' ? 'दुकान मालक (निखिल सखारे)' : language === 'hi' ? 'दुकान मालिक (निखिल सखारे)' : 'Shop Owner (Nikhil Sakhare)'}</span>
+                              <span className="font-extrabold">Nikhil Sakhare</span>
                             </div>
                             {role === 'Owner' && <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />}
                           </button>
                         )}
 
-                        {/* Admin Option: Rendered for both */}
+                        {/* Nilesh Sakhare (Admin) Option: Rendered for both */}
                         <button
                           type="button"
                           onClick={() => {
@@ -215,7 +224,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         >
                           <div className="flex items-center gap-2">
                             <span>🛡️</span>
-                            <span>{language === 'mr' ? 'प्रशासक (निलेश सखारे)' : language === 'hi' ? 'प्रशासक (निलेश सखारे)' : 'Admin (Nilesh Sakhare)'}</span>
+                            <span className="font-extrabold">Nilesh Sakhare</span>
                           </div>
                           {role === 'Admin' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
                         </button>

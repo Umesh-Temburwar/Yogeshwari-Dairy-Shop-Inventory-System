@@ -73,3 +73,26 @@ Thumbs.db
 *.tmp
 *.bak
 *.old
+
+# ==========================================
+# SQL Database Migrations & Brand SQL Folders
+# ==========================================
+*.sql
+supabase/
+amul/
+balaji/
+beverages/
+britannia/
+cadbury/
+chakote/
+dairy_power/
+diamond/
+gramilk/
+haldiram/
+malkist_biscott/
+moti/
+nestle/
+parle/
+rambandhu/
+suhana/
+temptin/

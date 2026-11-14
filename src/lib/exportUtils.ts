@@ -898,3 +898,51 @@ export const exportToCSV = (filename: string, headers: string[], rows: (string |
   link.click();
   document.body.removeChild(link);
 };
+
+/**
+ * High-level helper: Export Product Catalog to CSV / Excel
+ */
+export const exportProductsToCSV = (products: any[], lang: 'mr' | 'hi' | 'en' = 'mr') => {
+  const isMr = lang === 'mr';
+  const headers = isMr
+    ? ['उत्पादनाचे नाव', 'मराठी नाव', 'प्रवर्ग', 'एकक', 'खरेदी दर', 'विक्री दर', 'उपलब्ध साठा', 'किमान साठा अलर्ट', 'बारकोड']
+    : ['Product Name', 'Regional Name', 'Category', 'Unit', 'Purchase Price', 'Selling Price', 'Current Stock', 'Min Stock Alert', 'Barcode'];
+
+  const rows = products.map(p => [
+    p.name,
+    p.marathi_name || p.hindi_name || '',
+    p.category,
+    p.unit,
+    p.purchase_price,
+    p.selling_price,
+    p.stock_quantity,
+    p.min_stock_alert,
+    p.barcode || ''
+  ]);
+
+  exportToCSV('Yogeshwari_Dairy_Products', headers, rows);
+};
+
+/**
+ * High-level helper: Export Daily Sales Ledger to CSV / Excel
+ */
+export const exportSalesToCSV = (sales: any[], lang: 'mr' | 'hi' | 'en' = 'mr') => {
+  const isMr = lang === 'mr';
+  const headers = isMr
+    ? ['बिल क्र.', 'तारीख व वेळ', 'ग्राहक नाव', 'मोबाईल', 'एकूण रक्कम', 'पेमेंट प्रकार', 'विक्रेता', 'काऊंटर']
+    : ['Invoice No', 'Date & Time', 'Customer Name', 'Mobile', 'Net Amount', 'Payment Mode', 'Operator', 'Counter'];
+
+  const rows = sales.map(s => [
+    s.invoice_no,
+    s.created_at || s.sale_date,
+    s.customer_name || 'Counter Customer',
+    s.customer_phone || '',
+    s.net_amount || s.total_amount,
+    s.payment_mode,
+    s.created_by_name || 'Admin',
+    s.counter_name || 'Counter 1'
+  ]);
+
+  exportToCSV('Yogeshwari_Dairy_Sales_Ledger', headers, rows);
+};
+

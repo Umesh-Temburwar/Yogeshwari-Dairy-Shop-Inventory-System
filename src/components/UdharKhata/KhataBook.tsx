@@ -60,28 +60,33 @@ export const KhataBook: React.FC = () => {
 
   // Send WhatsApp Reminder in active language
   const handleSendWhatsAppReminder = (customer: UdharCustomer) => {
-    const cleanPhone = customer.phone.replace(/[^0-9]/g, '');
+    const cleanPhone = (customer.phone || '').replace(/[^0-9]/g, '');
+    if (!cleanPhone || cleanPhone.length < 10) {
+      alert(language === 'mr' ? 'ग्राहकाचा वैध मोबाईल नंबर उपलब्ध नाही.' : 'Valid mobile number not available.');
+      return;
+    }
     const phoneWithCode = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    const currentDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
     let messageText = '';
     if (language === 'mr') {
-      messageText = `नमस्ते ${customer.name} जी!\n\nयोगेश्वरी डेअरी (Yogeshwari Dairy) कडून आपले खाते बाकी आहे:\n` +
+      messageText = `नमस्ते ${customer.name} जी!\n\nयोगेश्वरी डेअरी (Yogeshwari Dairy) कडून आपले खाते बाकी तपशील (${currentDate}):\n` +
         `📌 *शिल्लक बाकी रक्कम (Balance Due): ₹${customer.current_balance.toLocaleString('en-IN')}*\n\n` +
         `कृपया लवकरात लवकर रक्कम जमा करावी ही नम्र विनंती.\n` +
         `💳 *GooglePay / PhonePe UPI:* Q226038088@ybl\n` +
-        `धन्यवाद!\nयोगेश्वरी डेअरी &उत्पादन`;
+        `धन्यवाद!\nयोगेश्वरी डेअरी & उत्पादने`;
     } else if (language === 'hi') {
-      messageText = `नमस्ते ${customer.name} जी!\n\nयोगेश्वरी डेरी (Yogeshwari Dairy) से आपका हिसाब बाकी है:\n` +
+      messageText = `नमस्ते ${customer.name} जी!\n\nयोगेश्वरी डेरी (Yogeshwari Dairy) से आपका हिसाब विवरण (${currentDate}):\n` +
         `📌 *बकाया राशि (Balance Due): ₹${customer.current_balance.toLocaleString('en-IN')}*\n\n` +
         `कृपया जल्द से जल्द भुगतान करने की कृपा करें।\n` +
         `💳 *UPI आईडी:* Q226038088@ybl\n` +
-        `धन्यवाद!\nयोगेश्वरी डेरी &उत्पादन`;
+        `धन्यवाद!\nयोगेश्वरी डेरी & उत्पाद`;
     } else {
-      messageText = `Hello ${customer.name}!\n\nThis is a friendly payment reminder from Yogeshwari Dairy Farm:\n` +
+      messageText = `Hello ${customer.name}!\n\nThis is a friendly payment reminder from Yogeshwari Dairy Farm (${currentDate}):\n` +
         `📌 *Outstanding Balance: ₹${customer.current_balance.toLocaleString('en-IN')}*\n\n` +
         `Kindly settle the due amount at your earliest convenience.\n` +
         `💳 *UPI ID:* Q226038088@ybl\n` +
-        `Thank you!\nYogeshwari Dairy & Products `;
+        `Thank you!\nYogeshwari Dairy & Products`;
     }
 
     const message = encodeURIComponent(messageText);

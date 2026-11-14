@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
     "build:all": "npm run build && npm run client:build && npm run server:build",
     "client:dev": "npm --prefix client run dev",
     "client:build": "npm --prefix client run build",

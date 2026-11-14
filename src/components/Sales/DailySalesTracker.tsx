@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import nikhilAvatar from '../../assets/nikhil_avatar.png';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
@@ -493,16 +494,26 @@ export const DailySalesTracker: React.FC = () => {
                         )}
 
                         {/* Admin Slot & Counter Badge */}
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                          sale.created_by_role === 'Owner' || (sale.admin_slot === null && (sale.created_by_name?.includes('मालक') || sale.created_by_name?.toLowerCase().includes('nikhil')))
-                            ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border-amber-200 dark:border-amber-800/40'
-                            : 'bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800/40'
-                        }`}>
-                          📍 {sale.counter_name || (sale.created_by_role === 'Owner' ? 'मुख्य मालक काऊंटर' : 'काऊंटर १')} • 👤 {sale.created_by_name || (sale.created_by_role === 'Owner' ? (language === 'mr' ? 'निखिल सखारे' : 'Nikhil Sakhare') : (language === 'mr' ? 'निलेश सखारे' : 'Nilesh Sakhare'))}
-                          {sale.created_by_email && (
-                            <span className="text-[10px] font-normal opacity-75 hidden sm:inline">({sale.created_by_email})</span>
-                          )}
-                        </span>
+                        {(() => {
+                          const isOwnerSale = sale.created_by_role === 'Owner' || (sale.admin_slot === null && (sale.created_by_name?.includes('मालक') || sale.created_by_name?.toLowerCase().includes('nikhil')));
+                          return (
+                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                              isOwnerSale
+                                ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border-amber-200 dark:border-amber-800/40'
+                                : 'bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800/40'
+                            }`}>
+                              {isOwnerSale ? (
+                                <img src={nikhilAvatar} alt="" className="w-3.5 h-3.5 rounded-full object-cover border border-amber-400 shrink-0" />
+                              ) : (
+                                <span>👤</span>
+                              )}
+                              <span>📍 {sale.counter_name || (isOwnerSale ? 'मुख्य मालक काऊंटर' : 'काऊंटर १')} • {sale.created_by_name || (isOwnerSale ? (language === 'mr' ? 'निखिल सखारे' : 'Nikhil Sakhare') : (language === 'mr' ? 'निलेश सखारे' : 'Nilesh Sakhare'))}</span>
+                              {sale.created_by_email && (
+                                <span className="text-[10px] font-normal opacity-75 hidden sm:inline">({sale.created_by_email})</span>
+                              )}
+                            </span>
+                          );
+                        })()}
                       </div>
 
                       <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-[#8FA69C] font-medium">

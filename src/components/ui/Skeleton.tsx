@@ -56,3 +56,4 @@ export const ViewFallbackSkeleton: React.FC = () => {
     </div>
   );
 };
+

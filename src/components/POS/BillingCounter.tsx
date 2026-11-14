@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useDeferredValue } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import nikhilAvatar from '../../assets/nikhil_avatar.png';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product, ProductBatch, PaymentMode, SaleItem, CustomerGender, CustomerAgeGroup } from '../../types';
@@ -553,7 +554,12 @@ export const BillingCounter: React.FC = () => {
               ? 'bg-teal-100 text-teal-800 dark:bg-teal-950/70 dark:text-teal-300 border border-teal-200 dark:border-teal-900/40' 
               : 'bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40'
           }`}>
-            <span>👤 {activeOperator.name}</span>
+            {activeOperator.role === 'Owner' || activeOperator.email === 'yogeshwaridairy9896@gmail.com' ? (
+              <img src={nikhilAvatar} alt="" className="w-4 h-4 rounded-full object-cover border border-amber-400 shrink-0" />
+            ) : (
+              <span>👤</span>
+            )}
+            <span>{activeOperator.name}</span>
             <span className="text-[10px] font-normal opacity-80 hidden sm:inline">({activeOperator.email})</span>
           </span>
         </div>

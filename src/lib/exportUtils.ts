@@ -1,9 +1,11 @@
 /**
  * YOGESHWARI DAIRY SHOP - COMPREHENSIVE PDF & CSV EXPORT UTILITY
  * Supports 100% Devanagari (Marathi/Hindi) font fidelity, High-Resolution A4 Layout,
- * Professional Dairy ERP Header, KPI Summary Cards, and Print-to-PDF generation.
+ * Professional Dairy ERP Header, KPI Summary Cards, Authentic .pdf Binary Generation, and Print Slips.
  */
 
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 import { YDO_LOGO_BASE64 } from '../assets/logoBase64';
 
 export interface KPIItem {
@@ -37,30 +39,9 @@ export interface PDFReportOptions {
 }
 
 /**
- * Convenience alias for Viewing / Previewing Report in In-App Modal
+ * Returns complete styled HTML document markup for report preview, print, and PDF rasterization
  */
-export const viewReportPDF = (options: PDFReportOptions) => {
-  return exportReportToPDF({ ...options, mode: 'view' });
-};
-
-/**
- * Convenience alias for Printing Report / Slip
- */
-export const printReport = (options: PDFReportOptions) => {
-  return exportReportToPDF({ ...options, mode: 'print' });
-};
-
-/**
- * Convenience alias for Downloading PDF / Report File
- */
-export const downloadReportPDF = (options: PDFReportOptions) => {
-  return exportReportToPDF({ ...options, mode: 'download' });
-};
-
-/**
- * Universal PDF Generator for all Dairy Inventory modules
- */
-export const exportReportToPDF = (options: PDFReportOptions) => {
+export const getReportHTMLMarkup = (options: PDFReportOptions): string => {
   const {
     title,
     subtitle,
@@ -169,7 +150,7 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
   ` : '';
 
   // Tables HTML
-  const tablesHtml = tables.map((tbl, tblIdx) => {
+  const tablesHtml = tables.map((tbl) => {
     const { headers, rows, alignments = [], summaryRow } = tbl.data;
     return `
       ${tbl.heading ? `<h3 class="table-heading">${tbl.heading}</h3>` : ''}
@@ -177,18 +158,18 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
         <thead>
           <tr>
             ${headers.map((h, i) => {
-      const align = alignments[i] || 'left';
-      return `<th class="text-${align}">${h}</th>`;
-    }).join('')}
+              const align = alignments[i] || 'left';
+              return `<th class="text-${align}">${h}</th>`;
+            }).join('')}
           </tr>
         </thead>
         <tbody>
           ${rows.map((row, rIdx) => `
             <tr class="${rIdx % 2 === 1 ? 'even-row' : ''}">
               ${row.map((cell, cIdx) => {
-      const align = alignments[cIdx] || 'left';
-      return `<td class="text-${align}">${cell !== null && cell !== undefined ? cell : '—'}</td>`;
-    }).join('')}
+                const align = alignments[cIdx] || 'left';
+                return `<td class="text-${align}">${cell !== null && cell !== undefined ? cell : '—'}</td>`;
+              }).join('')}
             </tr>
           `).join('')}
         </tbody>
@@ -196,9 +177,9 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
           <tfoot>
             <tr class="summary-row">
               ${summaryRow.map((cell, cIdx) => {
-      const align = alignments[cIdx] || 'left';
-      return `<td class="text-${align}"><strong>${cell !== null && cell !== undefined ? cell : ''}</strong></td>`;
-    }).join('')}
+                const align = alignments[cIdx] || 'left';
+                return `<td class="text-${align}"><strong>${cell !== null && cell !== undefined ? cell : ''}</strong></td>`;
+              }).join('')}
             </tr>
           </tfoot>
         ` : ''}
@@ -206,8 +187,8 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
     `;
   }).join('<div style="height: 16px;"></div>');
 
-  // Complete HTML Print Document with Devanagari / Latin Fonts
-  const htmlContent = `
+  // Complete HTML Print & PDF Document
+  return `
     <!DOCTYPE html>
     <html lang="${lang}">
     <head>
@@ -219,7 +200,7 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
       <style>
         @page {
           size: A4 ${orientation};
-          margin: 12mm 15mm 15mm 15mm;
+          margin: 10mm 12mm 12mm 12mm;
         }
         * {
           box-sizing: border-box;
@@ -232,7 +213,7 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
           background: #ffffff;
           font-size: 11px;
           line-height: 1.45;
-          padding: 10px;
+          padding: 12px;
           position: relative;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
@@ -466,7 +447,7 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
     </head>
     <body>
       <!-- Top Action Bar (Hidden during Print / PDF generation) -->
-      <div class="no-print" style="position: sticky; top: 0; z-index: 9999; background: #064e3b; color: #ffffff; padding: 10px 18px; margin: -10px -10px 14px -10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-family: sans-serif; flex-wrap: wrap; gap: 8px;">
+      <div class="no-print" style="position: sticky; top: 0; z-index: 9999; background: #064e3b; color: #ffffff; padding: 10px 18px; margin: -12px -12px 14px -12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-family: sans-serif; flex-wrap: wrap; gap: 8px;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 18px;">📄</span>
           <div>
@@ -478,10 +459,10 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
           <button onclick="window.print()" style="background: #10b981; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
             <span>${strings.printBtn}</span>
           </button>
-          <button onclick="downloadReportHTML()" style="background: #2563eb; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+          <button onclick="downloadReportAsPDF()" style="background: #2563eb; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
             <span>${strings.downloadBtn}</span>
           </button>
-          <button onclick="window.close()" style="background: #334155; color: #ffffff; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer;">
+          <button onclick="window.parent && window.parent !== window ? window.parent.postMessage({ type: 'YD_CLOSE_MODAL' }, '*') : window.close()" style="background: #334155; color: #ffffff; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer;">
             ${strings.closeBtn}
           </button>
         </div>
@@ -543,15 +524,13 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
             console.error('Print trigger error', e);
           }
         }
-        function downloadReportHTML() {
+        function downloadReportAsPDF() {
           try {
-            const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html;charset=utf-8' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = '${title.replace(/[^a-zA-Z0-9_\u0900-\u097F]/g, '_')}_${new Date().toISOString().split('T')[0]}.html';
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => a.remove(), 100);
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({ type: 'YD_DOWNLOAD_PDF' }, '*');
+            } else {
+              window.print();
+            }
           } catch(e) {
             window.print();
           }
@@ -561,32 +540,160 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
     </body>
     </html>
   `;
+};
 
-  // Create Blob URL for rock-solid cross-browser rendering
-  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-  const blobUrl = URL.createObjectURL(blob);
-  const cleanFilename = `${title.replace(/[^a-zA-Z0-9_\u0900-\u097F]/g, '_')}_${new Date().toISOString().split('T')[0]}.html`;
+/**
+ * Generates an authentic .pdf binary document from options with 100% Devanagari font fidelity
+ * and automatically triggers download strictly ending with .pdf extension
+ */
+export const generateAndDownloadPDF = async (
+  options: PDFReportOptions, 
+  customElement?: HTMLElement | null
+): Promise<void> => {
+  const { title, orientation = 'portrait' } = options;
 
-  // If mode === 'download', trigger direct file download
-  if (options.mode === 'download') {
+  // Build clean, safe filename ending strictly with .pdf
+  const safeTitle = (title || 'Dairy_Report')
+    .trim()
+    .replace(/[\/\\?%*:|"<>]/g, '_')
+    .replace(/\s+/g, '_');
+  const dateStr = new Date().toISOString().split('T')[0];
+  const cleanPdfFilename = safeTitle.toLowerCase().endsWith('.pdf') 
+    ? `${safeTitle.slice(0, -4)}_${dateStr}.pdf` 
+    : `${safeTitle}_${dateStr}.pdf`;
+
+  let elementToCapture: HTMLElement | null = customElement || null;
+  let temporaryContainer: HTMLElement | null = null;
+
+  try {
+    if (!elementToCapture) {
+      // Build offscreen container to render full styled HTML
+      temporaryContainer = document.createElement('div');
+      temporaryContainer.id = 'yd-pdf-capture-container';
+      temporaryContainer.style.position = 'fixed';
+      temporaryContainer.style.left = '-15000px';
+      temporaryContainer.style.top = '0';
+      temporaryContainer.style.width = orientation === 'landscape' ? '1120px' : '794px';
+      temporaryContainer.style.background = '#ffffff';
+      temporaryContainer.style.color = '#0f172a';
+      temporaryContainer.style.zIndex = '-9999';
+      temporaryContainer.style.padding = '12px';
+
+      const fullHtml = getReportHTMLMarkup(options);
+      temporaryContainer.innerHTML = fullHtml;
+
+      // Remove top action bar and preview buttons
+      temporaryContainer.querySelectorAll('.no-print').forEach(el => el.remove());
+
+      document.body.appendChild(temporaryContainer);
+      elementToCapture = temporaryContainer;
+
+      // Wait a tick for fonts and layout
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+
+    // High resolution retina canvas rasterization (Scale 2 = 300 DPI print clarity)
+    const canvas = await html2canvas(elementToCapture, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      backgroundColor: '#ffffff'
+    });
+
+    const pdf = new jsPDF({
+      orientation,
+      unit: 'mm',
+      format: 'a4',
+      compress: true
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const pxPageHeight = Math.floor((canvas.width * pageHeight) / pageWidth);
+
+    let renderedHeight = 0;
+    let pageIndex = 0;
+
+    // Slice canvas cleanly across A4 pages without awkward clipping
+    while (renderedHeight < canvas.height) {
+      if (pageIndex > 0) {
+        pdf.addPage();
+      }
+      const sliceHeight = Math.min(pxPageHeight, canvas.height - renderedHeight);
+      const sliceCanvas = document.createElement('canvas');
+      sliceCanvas.width = canvas.width;
+      sliceCanvas.height = sliceHeight;
+      const ctx = sliceCanvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+        ctx.drawImage(
+          canvas,
+          0, renderedHeight, canvas.width, sliceHeight,
+          0, 0, canvas.width, sliceHeight
+        );
+        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
+        const sliceMmHeight = (sliceHeight * imgWidth) / canvas.width;
+        pdf.addImage(sliceData, 'JPEG', 0, 0, imgWidth, sliceMmHeight, undefined, 'FAST');
+      }
+      renderedHeight += sliceHeight;
+      pageIndex++;
+    }
+
+    // 1. Direct save as authentic .pdf binary via jsPDF
+    pdf.save(cleanPdfFilename);
+
+    // 2. Blob download fallback for Capacitor WebView & mobile browsers
     try {
-      const downloadLink = document.createElement('a');
-      downloadLink.href = blobUrl;
-      downloadLink.download = cleanFilename;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      setTimeout(() => downloadLink.remove(), 200);
-    } catch (err) {
-      console.warn('Direct file download warning:', err);
+      const pdfBlob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = cleanPdfFilename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        a.remove();
+        URL.revokeObjectURL(blobUrl);
+      }, 1000);
+    } catch {
+      // Ignored if handled
+    }
+  } catch (err) {
+    console.error('PDF generation error, falling back to print dialog:', err);
+    window.print();
+  } finally {
+    if (temporaryContainer && temporaryContainer.parentNode) {
+      temporaryContainer.parentNode.removeChild(temporaryContainer);
     }
   }
+};
 
-  // If mode === 'print', try opening dedicated print tab first
+/**
+ * Universal PDF Generator & Handler for all Dairy Inventory modules
+ */
+export const exportReportToPDF = (options: PDFReportOptions) => {
+  // If download mode requested, generate and download authentic .pdf immediately
+  if (options.mode === 'download') {
+    generateAndDownloadPDF(options);
+    return;
+  }
+
+  const htmlContent = getReportHTMLMarkup(options);
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+  const blobUrl = URL.createObjectURL(blob);
+
+  // If print mode requested, try opening dedicated print window
   if (options.mode === 'print') {
     let printWindow: Window | null = null;
     try {
       printWindow = window.open(blobUrl, '_blank');
-    } catch (err) {
+    } catch {
       printWindow = null;
     }
 
@@ -596,9 +703,16 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
     }
   }
 
-  // If mode === 'view' or print popup was blocked or mobile, render full in-app preview & print modal
+  // If mode === 'view' or print popup was blocked, render full in-app preview modal
   const existingModal = document.getElementById('yd-report-modal');
   if (existingModal) existingModal.remove();
+
+  const lang: 'mr' | 'hi' | 'en' = options.language || (typeof window !== 'undefined' ? (localStorage.getItem('dairy_language') as 'mr' | 'hi' | 'en') : 'mr') || 'mr';
+  const strings = {
+    mr: { printBtn: '🖨️ प्रिंट', downloadBtn: '📥 डाउनलोड PDF', closeBtn: '✕ बंद करा', previewBadge: 'योगेश्वरी डेअरी अधिकृत PDF पूर्वदृश्य', downloading: '⏳ PDF तयार होत आहे...', downloaded: '✓ PDF डाऊनलोड झाले!' },
+    hi: { printBtn: '🖨️ प्रिंट', downloadBtn: '📥 डाउनलोड PDF', closeBtn: '✕ बंद करें', previewBadge: 'योगेश्वरी डेरी अधिकृत PDF पूर्वावलोकन', downloading: '⏳ PDF तैयार हो रहा है...', downloaded: '✓ PDF डाउनलोड हुआ!' },
+    en: { printBtn: '🖨️ Print', downloadBtn: '📥 Download PDF', closeBtn: '✕ Close', previewBadge: 'Official Dairy PDF Report Preview', downloading: '⏳ Generating PDF...', downloaded: '✓ PDF Downloaded!' }
+  }[lang];
 
   const modalContainer = document.createElement('div');
   modalContainer.id = 'yd-report-modal';
@@ -638,7 +752,7 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
     <div style="display: flex; align-items: center; gap: 8px;">
       <span style="font-size: 18px;">📄</span>
       <div>
-        <div style="font-weight: 800; font-size: 13px; color: #ecfdf5;">${title}</div>
+        <div style="font-weight: 800; font-size: 13px; color: #ecfdf5;">${options.title}</div>
         <div style="font-size: 10px; color: #a7f3d0;">${strings.previewBadge}</div>
       </div>
     </div>
@@ -668,12 +782,13 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
   document.body.appendChild(modalContainer);
 
   const printBtn = modalContainer.querySelector('#yd-modal-print-btn');
-  const downloadBtn = modalContainer.querySelector('#yd-modal-download-btn');
+  const downloadBtn = modalContainer.querySelector('#yd-modal-download-btn') as HTMLButtonElement | null;
   const closeBtn = modalContainer.querySelector('#yd-modal-close-btn');
 
   const removeModal = () => {
     modalContainer.remove();
     document.removeEventListener('keydown', handleKeyEsc);
+    window.removeEventListener('message', handleWindowMessage);
   };
 
   const handleKeyEsc = (e: KeyboardEvent) => {
@@ -686,31 +801,71 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
     if (e.target === modalContainer) removeModal();
   });
 
+  // Handle postMessages from inside iframe
+  const handleWindowMessage = (e: MessageEvent) => {
+    if (e.data?.type === 'YD_DOWNLOAD_PDF') {
+      downloadBtn?.click();
+    } else if (e.data?.type === 'YD_CLOSE_MODAL') {
+      removeModal();
+    }
+  };
+  window.addEventListener('message', handleWindowMessage);
+
   printBtn?.addEventListener('click', () => {
     try {
       iframe.contentWindow?.focus();
       iframe.contentWindow?.print();
-    } catch (e) {
+    } catch {
       window.print();
     }
   });
 
-  downloadBtn?.addEventListener('click', () => {
+  downloadBtn?.addEventListener('click', async () => {
     try {
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = cleanFilename;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => a.remove(), 200);
-    } catch (e) {
+      const originalText = downloadBtn.innerHTML;
+      downloadBtn.innerHTML = `<span>${strings.downloading}</span>`;
+      downloadBtn.disabled = true;
+
+      // Capture iframe body or fall back to offscreen container
+      const targetElement = iframe.contentDocument?.body || null;
+      await generateAndDownloadPDF(options, targetElement);
+
+      downloadBtn.innerHTML = `<span>${strings.downloaded}</span>`;
+      setTimeout(() => {
+        downloadBtn.innerHTML = originalText;
+        downloadBtn.disabled = false;
+      }, 2000);
+    } catch (err) {
+      console.error('Download PDF error:', err);
       iframe.contentWindow?.print();
+      if (downloadBtn) downloadBtn.disabled = false;
     }
   });
 
   closeBtn?.addEventListener('click', () => {
     removeModal();
   });
+};
+
+/**
+ * Convenience alias for Viewing / Previewing Report in In-App Modal
+ */
+export const viewReportPDF = (options: PDFReportOptions) => {
+  return exportReportToPDF({ ...options, mode: 'view' });
+};
+
+/**
+ * Convenience alias for Printing Report / Slip
+ */
+export const printReport = (options: PDFReportOptions) => {
+  return exportReportToPDF({ ...options, mode: 'print' });
+};
+
+/**
+ * Universal Download Function: Automatically creates and downloads an authentic .pdf file
+ */
+export const downloadReportPDF = (options: PDFReportOptions) => {
+  return generateAndDownloadPDF(options);
 };
 
 /**

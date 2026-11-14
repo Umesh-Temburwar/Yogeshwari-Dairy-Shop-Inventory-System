@@ -134,3 +134,4 @@ export const toastVariants: Variants = {
   animate: { opacity: 1, y: 0, scale: 1, transition: transitionFast },
   exit: { opacity: 0, y: -12, scale: 0.96, transition: { duration: 0.12 } }
 };
+

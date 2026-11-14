@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ydoLogo from '../assets/YDO_logo.jpg';
+import nikhilAvatar from '../assets/nikhil_avatar.png';
 import { useLanguage, Language } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -121,13 +122,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="h-9 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] text-xs font-bold transition-all shadow-2xs group"
               title="Profile & Settings"
             >
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 ${
-                role === 'Owner' 
-                  ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300' 
-                  : 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
-              }`}>
-                {role === 'Owner' ? '👑' : '🛡️'}
-              </div>
+              {role === 'Owner' ? (
+                <img 
+                  src={nikhilAvatar} 
+                  alt="Nikhil Sakhare" 
+                  className="w-6 h-6 rounded-full object-cover border border-amber-400 shrink-0 shadow-xs" 
+                />
+              ) : (
+                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                  🛡️
+                </div>
+              )}
               <div className="flex flex-col text-left">
                 <span className="text-xs font-black leading-none">
                   {currentUserName}
@@ -239,19 +244,32 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {/* 3. PROFILE NAME & ACCOUNT PLACED AT THE LAST */}
                   <div className="border-t border-slate-100 dark:border-[#24352F] pt-2 space-y-2">
                     {/* Active User Name & Email Badge */}
-                    <div className="px-3 py-2 bg-slate-50 dark:bg-[#1A2A25] rounded-xl border border-slate-100 dark:border-[#24352F]/70">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                        <p className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C] uppercase tracking-wider">
-                          {language === 'mr' ? 'सक्रिय प्रोफाइल (Profile)' : language === 'hi' ? 'सक्रिय प्रोफ़ाइल' : 'Active Profile'}
+                    <div className="px-3 py-2 bg-slate-50 dark:bg-[#1A2A25] rounded-xl border border-slate-100 dark:border-[#24352F]/70 flex items-center gap-2.5">
+                      {role === 'Owner' ? (
+                        <img 
+                          src={nikhilAvatar} 
+                          alt="Nikhil Sakhare" 
+                          className="w-9 h-9 rounded-full object-cover border-2 border-amber-400 shrink-0 shadow-xs" 
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 shrink-0 border border-emerald-500/30">
+                          🛡️
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          <p className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C] uppercase tracking-wider">
+                            {language === 'mr' ? 'सक्रिय प्रोफाइल (Profile)' : language === 'hi' ? 'सक्रिय प्रोफ़ाइल' : 'Active Profile'}
+                          </p>
+                        </div>
+                        <p className="text-xs font-black text-slate-900 dark:text-white truncate">
+                          {currentUserName}
+                        </p>
+                        <p className="text-[10px] text-slate-500 dark:text-[#8FA69C] truncate">
+                          {user?.email || 'yogeshwaridairy9896@gmail.com'}
                         </p>
                       </div>
-                      <p className="text-xs font-black text-slate-900 dark:text-white truncate">
-                        {currentUserName}
-                      </p>
-                      <p className="text-[10px] text-slate-500 dark:text-[#8FA69C] truncate">
-                        {user?.email || 'yogeshwaridairy9896@gmail.com'}
-                      </p>
                     </div>
 
                     {/* Profile Selection (Nikhil Sakhare / Nilesh Sakhare) */}
@@ -286,8 +304,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                               }`}
                             >
                               <div className="flex items-center gap-2">
-                                <span>👑</span>
-                                <span className="font-extrabold">Nikhil Sakhare</span>
+                                <img 
+                                  src={nikhilAvatar} 
+                                  alt="Nikhil Sakhare" 
+                                  className="w-5 h-5 rounded-full object-cover border border-amber-400 shrink-0" 
+                                />
+                                <span className="font-extrabold">Nikhil Sakhare (Owner)</span>
                               </div>
                               {role === 'Owner' && <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />}
                             </button>

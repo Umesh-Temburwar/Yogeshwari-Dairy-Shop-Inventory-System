@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { drawerLeftVariants, overlayVariants } from '../lib/motion';
 import ydoLogo from '../assets/YDO_logo.jpg';
+import nikhilAvatar from '../assets/nikhil_avatar.png';
 import { useStore, AppView } from '../context/StoreContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -319,9 +320,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {!isActuallyCollapsed ? (
             <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-between gap-2 shadow-2xs">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${role === "Owner" ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"}`}>
-                  {role === 'Owner' ? '👑' : '🛡️'}
-                </div>
+                {role === 'Owner' ? (
+                  <img 
+                    src={nikhilAvatar} 
+                    alt="Nikhil Sakhare" 
+                    className="w-8 h-8 rounded-full object-cover border-2 border-amber-400 shrink-0 shadow-xs" 
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-500/30">
+                    🛡️
+                  </div>
+                )}
                 <div className="min-w-0">
                   <p className="text-xs font-black text-slate-900 dark:text-white truncate leading-tight">
                     {currentUserName}
@@ -334,12 +343,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 ring-2 ring-emerald-500/20" title="Online" />
             </div>
           ) : (
-            <div 
-              title={currentUserName}
-              className={`w-10 h-10 mx-auto rounded-xl flex items-center justify-center text-sm font-black border border-slate-200/80 dark:border-[#24352F] ${role === "Owner" ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"}`}
-            >
-              {role === 'Owner' ? '👑' : '🛡️'}
-            </div>
+            role === 'Owner' ? (
+              <img 
+                src={nikhilAvatar} 
+                alt="Nikhil Sakhare" 
+                title={currentUserName}
+                className="w-10 h-10 mx-auto rounded-xl object-cover border-2 border-amber-400 shadow-xs cursor-pointer" 
+              />
+            ) : (
+              <div 
+                title={currentUserName}
+                className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center text-sm font-black border border-slate-200/80 dark:border-[#24352F] bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+              >
+                🛡️
+              </div>
+            )
           )}
         </div>
       </>

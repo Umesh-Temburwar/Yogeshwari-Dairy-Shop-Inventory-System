@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import nikhilAvatar from '../../assets/nikhil_avatar.png';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -292,8 +293,15 @@ export const OwnerAdminCounterWidget: React.FC = () => {
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-[#24352F]">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
-            <ShieldCheck className="w-6 h-6" />
+          <div className="relative shrink-0">
+            <img 
+              src={nikhilAvatar} 
+              alt="Nikhil Sakhare" 
+              className="w-14 h-14 rounded-2xl object-cover border-2 border-amber-400 shadow-md shadow-amber-500/20" 
+            />
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] shadow-xs">
+              👑
+            </div>
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -535,12 +543,17 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                   <div key={sale.id} className="p-3.5 hover:bg-white dark:hover:bg-[#131F1B] transition-colors space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${
                           isOwner 
                             ? 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border-amber-300' 
                             : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300'
                         }`}>
-                          👤 {adminName}
+                          {isOwner ? (
+                            <img src={nikhilAvatar} alt="" className="w-3.5 h-3.5 rounded-full object-cover border border-amber-400 shrink-0" />
+                          ) : (
+                            <span>👤</span>
+                          )}
+                          {adminName}
                         </span>
                         <span className="text-[10px] text-slate-500 dark:text-[#8FA69C] font-semibold">
                           ({adminEmail})
@@ -635,13 +648,23 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5">
                         {/* Admin Badge */}
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
-                          act.admin_slot === 1 || act.admin_email === 'nilusakhare2003@gmail.com'
-                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border-blue-300/80 dark:border-blue-800/60'
-                            : 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300/80 dark:border-amber-800/60'
-                        }`}>
-                          👤 {act.admin_name}
-                        </span>
+                        {(() => {
+                          const isOwnerAct = act.admin_role === 'Owner' || act.admin_email === 'yogeshwaridairy9896@gmail.com' || (act.admin_slot !== 1 && act.admin_email !== 'nilusakhare2003@gmail.com');
+                          return (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                              !isOwnerAct
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border-blue-300/80 dark:border-blue-800/60'
+                                : 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300/80 dark:border-amber-800/60'
+                            }`}>
+                              {isOwnerAct ? (
+                                <img src={nikhilAvatar} alt="" className="w-3.5 h-3.5 rounded-full object-cover border border-amber-400 shrink-0" />
+                              ) : (
+                                <span>👤</span>
+                              )}
+                              {act.admin_name}
+                            </span>
+                          );
+                        })()}
 
                         {/* Admin Email */}
                         {act.admin_email && (

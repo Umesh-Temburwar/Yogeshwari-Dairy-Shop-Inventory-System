@@ -100,3 +100,57 @@ export const formatSaleTime = (
 ): string => {
   return formatSaleDateTime(createdAt).timeFormatted;
 };
+
+/**
+ * Calculates human-friendly relative time (e.g. "५ मिनिटांपूर्वी" / "5 mins ago")
+ * with full Marathi, Hindi and English localization.
+ */
+export const formatTimeAgo = (
+  dateInput?: string | Date | null,
+  lang: 'mr' | 'hi' | 'en' = 'mr'
+): string => {
+  if (!dateInput) return '';
+
+  const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  if (isNaN(date.getTime())) return '';
+
+  const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
+
+  if (diffSec < 45) {
+    return lang === 'mr' ? 'आत्ताच' : lang === 'hi' ? 'अभी-अभी' : 'Just now';
+  }
+
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) {
+    return lang === 'mr'
+      ? `${diffMin} मिनिटांपूर्वी`
+      : lang === 'hi'
+      ? `${diffMin} मिनट पहले`
+      : `${diffMin}m ago`;
+  }
+
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) {
+    return lang === 'mr'
+      ? `${diffHours} तासांपूर्वी`
+      : lang === 'hi'
+      ? `${diffHours} घंटे पहले`
+      : `${diffHours}h ago`;
+  }
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) {
+    return lang === 'mr' ? 'काल' : lang === 'hi' ? 'कल' : 'Yesterday';
+  }
+
+  if (diffDays < 7) {
+    return lang === 'mr'
+      ? `${diffDays} दिवसांपूर्वी`
+      : lang === 'hi'
+      ? `${diffDays} दिन पहले`
+      : `${diffDays}d ago`;
+  }
+
+  return formatSaleDateTime(date.toISOString()).dateFormatted;
+};
+

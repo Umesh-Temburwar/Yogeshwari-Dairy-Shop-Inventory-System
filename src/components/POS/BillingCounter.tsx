@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useDeferredValue } from 'react';
 import nikhilAvatar from '../../assets/nikhil_avatar.png';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useDebounce } from '../../hooks/useDebounce';
 import { Product, ProductBatch, PaymentMode, SaleItem, CustomerGender, CustomerAgeGroup } from '../../types';
 import { computeExpiryStatus } from '../../lib/shelfLifeUtils';
 import { 
@@ -198,7 +199,8 @@ export const BillingCounter: React.FC = () => {
   }, [role, adminSlot, user?.email, language]);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const deferredSearchQuery = useDeferredValue(searchQuery);
+  const debouncedSearchQuery = useDebounce(searchQuery, 120);
+  const deferredSearchQuery = useDeferredValue(debouncedSearchQuery);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   
   // Mobile responsive tab (Products vs Cart/Checkout)

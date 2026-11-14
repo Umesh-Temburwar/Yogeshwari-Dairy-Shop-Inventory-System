@@ -23,7 +23,11 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
-  Tag
+  Tag,
+  Video,
+  SwitchCamera,
+  Flashlight,
+  RefreshCw
 } from 'lucide-react';
 
 interface BarcodeStockInModalProps {
@@ -46,9 +50,14 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   // Scanner state
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
+  const scannerControlsRef = useRef<any>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [barcodeInput, setBarcodeInput] = useState('');
   const [isScanningCamera, setIsScanningCamera] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
+  const [hasTorch, setHasTorch] = useState(false);
+  const [torchEnabled, setTorchEnabled] = useState(false);
 
   // Matched / Selected Product
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -113,31 +122,81 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     setIsRegistering(false);
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      resetAll();
-      setBatchNo(generateBatchNumber());
-      startCamera();
-    } else {
-      stopCamera();
+  const stopCamera = () => {
+    try {
+      if (scannerControlsRef.current) {
+        scannerControlsRef.current.stop();
+        scannerControlsRef.current = null;
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    } catch (e) {
+      console.warn('stopCamera error:', e);
     }
-    return () => {
-      stopCamera();
-    };
-  }, [isOpen]);
+    setIsScanningCamera(false);
+    setTorchEnabled(false);
+  };
 
   const startCamera = async () => {
+    stopCamera();
+    setIsScanningCamera(false);
+    setCameraError(null);
+
+    // Wait a brief tick for DOM to attach video ref if needed
+    let videoElement = videoRef.current;
+    if (!videoElement) {
+      await new Promise(r => setTimeout(r, 150));
+      videoElement = videoRef.current;
+    }
+
+    if (!videoElement) {
+      setCameraError(
+        language === 'mr'
+          ? 'कॅमेरा लोड झाला नाही. खालील बटण दाबून कॅमेरा सुरू करा.'
+          : 'कैमरा लोड नहीं हुआ। नीचे दिए बटन से कैमरा शुरू करें।'
+      );
+      return;
+    }
+
     try {
-      setIsScanningCamera(true);
-      setCameraError(null);
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: facingMode },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+      } catch (firstErr) {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+      }
+
+      streamRef.current = stream;
+      videoElement.srcObject = stream;
+      videoElement.setAttribute('playsinline', 'true');
+      videoElement.setAttribute('autoplay', 'true');
+      videoElement.muted = true;
+      await videoElement.play().catch(() => {});
+
+      const track = stream.getVideoTracks()[0];
+      const capabilities: any = track?.getCapabilities ? track.getCapabilities() : {};
+      setHasTorch(Boolean(capabilities?.torch));
+
       const codeReader = new BrowserMultiFormatReader();
       codeReaderRef.current = codeReader;
 
-      const videoElement = videoRef.current;
-      if (!videoElement) return;
-
-      await codeReader.decodeFromVideoDevice(
-        undefined,
+      const controls = await codeReader.decodeFromStream(
+        stream,
         videoElement,
         (result) => {
           if (result) {
@@ -146,25 +205,57 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
           }
         }
       );
+
+      scannerControlsRef.current = controls;
+      setIsScanningCamera(true);
     } catch (err: any) {
+      console.error('Camera access error:', err);
+      const isPermissionDenied = err?.name === 'NotAllowedError' || err?.message?.includes('Permission');
       setCameraError(
-        language === 'mr'
-          ? 'कॅमेरा सुरू करता आला नाही. बारकोड खाली टाईप करा.'
-          : 'कैमरा शुरू नहीं हो सका। कृपया बारकोड नीचे दर्ज करें।'
+        isPermissionDenied
+          ? (language === 'mr'
+              ? 'कॅमेरा परवानगी नाकारली गेली. कृपया ब्राऊझर पत्त्याजवळ (Address bar) कुलूपावर क्लिक करून कॅमेरा सुरू करा.'
+              : 'कैमरा अनुमति अस्वीकृत। कृपया ब्राउज़र में कैमरा एक्सेस दें।')
+          : (language === 'mr'
+              ? 'कॅमेरा सुरू करता आला नाही. कृपया "कॅमेरा सुरू करा" बटण दाबा किंवा बारकोड टाईप करा.'
+              : 'कैमरा शुरू नहीं हो सका। कृपया "कैमरा शुरू करें" बटन दबाएं।')
       );
       setIsScanningCamera(false);
     }
   };
 
-  const stopCamera = () => {
+  const toggleTorch = async () => {
     try {
-      const stream = videoRef.current?.srcObject as MediaStream;
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
+      const next = !torchEnabled;
+      if (scannerControlsRef.current?.switchTorch) {
+        await scannerControlsRef.current.switchTorch(next);
+        setTorchEnabled(next);
+      } else if (streamRef.current) {
+        const track = streamRef.current.getVideoTracks()[0];
+        await track.applyConstraints({
+          advanced: [{ torch: next } as any]
+        });
+        setTorchEnabled(next);
       }
-    } catch (e) {}
-    setIsScanningCamera(false);
+    } catch (e) {
+      console.warn('Torch toggle error:', e);
+    }
   };
+
+  const toggleFacingMode = () => {
+    setFacingMode(prev => (prev === 'environment' ? 'user' : 'environment'));
+  };
+
+  useEffect(() => {
+    if (isOpen && step === 'scan') {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+    return () => {
+      stopCamera();
+    };
+  }, [isOpen, step, facingMode]);
 
   const handleBarcodeDetected = (code: string) => {
     const clean = code.trim();
@@ -439,15 +530,60 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                   muted
                 />
                 {/* Aiming Reticle */}
-                <div className="absolute inset-x-12 inset-y-8 border-2 border-emerald-400 rounded-xl pointer-events-none animate-pulse flex items-center justify-center">
-                  <div className="w-full h-0.5 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                {isScanningCamera && (
+                  <div className="absolute inset-x-12 inset-y-8 border-2 border-emerald-400 rounded-xl pointer-events-none animate-pulse flex items-center justify-center">
+                    <div className="w-full h-0.5 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                  </div>
+                )}
+
+                {/* Floating Viewfinder Controls */}
+                <div className="absolute top-3 right-3 flex items-center gap-2 z-20">
+                  {hasTorch && isScanningCamera && (
+                    <button
+                      type="button"
+                      onClick={toggleTorch}
+                      className={`p-2 rounded-xl backdrop-blur-md border text-xs font-bold transition flex items-center gap-1 shadow-lg ${
+                        torchEnabled 
+                          ? 'bg-amber-400 text-slate-900 border-amber-300' 
+                          : 'bg-black/60 text-white border-white/20 hover:bg-black/80'
+                      }`}
+                      title="टॉर्च / Flashlight"
+                    >
+                      <Flashlight className="w-4 h-4" />
+                    </button>
+                  )}
+
+                  {isScanningCamera && (
+                    <button
+                      type="button"
+                      onClick={toggleFacingMode}
+                      className="p-2 rounded-xl bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 text-xs font-bold transition flex items-center gap-1 shadow-lg"
+                      title={facingMode === 'environment' ? 'समोरचा कॅमेरा (Front)' : 'मागील कॅमेरा (Back)'}
+                    >
+                      <SwitchCamera className="w-4 h-4" />
+                      <span className="text-[10px] hidden sm:inline">
+                        {facingMode === 'environment' ? 'Back' : 'Front'}
+                      </span>
+                    </button>
+                  )}
                 </div>
+
                 {!isScanningCamera && (
-                  <div className="absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center p-4 text-center">
-                    <Camera className="w-10 h-10 text-slate-400 mb-2" />
-                    <p className="text-sm text-slate-300">
-                      {cameraError || (language === 'mr' ? 'कॅमेरा लोड होत आहे...' : 'कैमरा लोड हो रहा है...')}
+                  <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10 animate-fadeIn">
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-1">
+                      <Camera className="w-7 h-7" />
+                    </div>
+                    <p className="text-xs text-slate-300 max-w-xs">
+                      {cameraError || (language === 'mr' ? 'कॅमेरा सुरू करण्यासाठी खालील बटण दाबा.' : 'कैमरा शुरू करने के लिए नीचे दिए बटन को दबाएं।')}
                     </p>
+                    <button
+                      type="button"
+                      onClick={startCamera}
+                      className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-900/40 flex items-center gap-2 active:scale-95 transition"
+                    >
+                      <Video className="w-4 h-4" />
+                      <span>{language === 'mr' ? '🎥 कॅमेरा सुरू करा (Enable Camera)' : '🎥 कैमरा शुरू करें (Enable Camera)'}</span>
+                    </button>
                   </div>
                 )}
               </div>

@@ -34,6 +34,7 @@ import {
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import confetti from 'canvas-confetti';
+import { playSuccessChime, playBeepSound } from '../../utils/audioUtils';
 import { useAuth } from '../../context/AuthContext';
 import { formatSaleDateTime, formatSaleDate, formatSaleTime } from '../../lib/dateUtils';
 
@@ -407,6 +408,7 @@ export const BillingCounter: React.FC = () => {
 
     setLastCompletedSale(sale);
     setIsSuccessModalOpen(true);
+    playSuccessChime();
     confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
 
     // Reset Form
@@ -1370,9 +1372,11 @@ export const BillingCounter: React.FC = () => {
         onClose={() => setShowBarcodeScanner(false)}
         mode="pos"
         onProductSelected={(prod) => {
+          playBeepSound();
           addToCart(prod, 1);
         }}
         onBarcodeScanned={(code) => {
+          playBeepSound();
           setSearchQuery(code);
         }}
       />

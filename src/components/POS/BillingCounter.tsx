@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useDeferredValue } from 'react';
+import React, { useState, useMemo, useCallback, useDeferredValue, useEffect } from 'react';
 import nikhilAvatar from '../../assets/nikhil_avatar.png';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';

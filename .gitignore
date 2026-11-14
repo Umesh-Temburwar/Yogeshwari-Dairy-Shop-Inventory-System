@@ -73,6 +73,7 @@ Thumbs.db
 *.tmp
 *.bak
 *.old
+scratch/
 
 # ==========================================
 # SQL Database Migrations & Brand SQL Folders

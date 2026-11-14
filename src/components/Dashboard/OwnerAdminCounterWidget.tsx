@@ -27,6 +27,7 @@ import {
   ArrowUpDown,
   Tag
 } from 'lucide-react';
+import { formatSaleDate, formatSaleTime } from '../../lib/dateUtils';
 
 export const OwnerAdminCounterWidget: React.FC = () => {
   const { sales, adminActivities, purchases, damages, refreshData, isSyncing } = useStore();
@@ -563,7 +564,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                           📍 {counter}
                         </span>
                         <span className="text-[10px] text-slate-400 dark:text-[#8FA69C]">
-                          {sale.sale_date} • {new Date(sale.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                          📅 {formatSaleDate(sale.created_at, sale.sale_date)} • ⏰ {formatSaleTime(sale.created_at) || '12:00 PM'}
                         </span>
                       </div>
 

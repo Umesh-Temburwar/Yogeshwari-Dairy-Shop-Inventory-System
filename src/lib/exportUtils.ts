@@ -36,6 +36,7 @@ export interface PDFReportOptions {
   orientation?: 'portrait' | 'landscape';
   mode?: 'print' | 'download' | 'view';
   language?: 'mr' | 'hi' | 'en';
+  createdAt?: string; // Bill / Report creation timestamp
 }
 
 /**
@@ -124,14 +125,17 @@ export const getReportHTMLMarkup = (options: PDFReportOptions): string => {
     }
   }[lang];
 
-  const now = new Date();
-  const dateFormatted = now.toLocaleDateString(strings.locale, {
+  // Use bill creation date & time if provided (e.g. for authentic invoices/receipts)
+  const targetDate = options.createdAt ? new Date(options.createdAt) : new Date();
+  const validDate = isNaN(targetDate.getTime()) ? new Date() : targetDate;
+
+  const dateFormatted = validDate.toLocaleDateString(strings.locale, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
-  const timeFormatted = now.toLocaleTimeString(strings.locale, {
+  const timeFormatted = validDate.toLocaleTimeString(strings.locale, {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true

@@ -24,8 +24,11 @@ import {
   Save,
   Plus,
   Minus,
-  CheckCircle2
+  CheckCircle2,
+  Calendar,
+  Clock
 } from 'lucide-react';
+import { formatSaleDateTime, formatSaleDate, formatSaleTime } from '../../lib/dateUtils';
 import { ReturnProductModal } from '../Returns/ReturnProductModal';
 import { useAuth } from '../../context/AuthContext';
 import { CustomerGender, CustomerAgeGroup, PaymentMode, SaleItem } from '../../types';
@@ -180,17 +183,18 @@ export const DailySalesTracker: React.FC = () => {
       ],
       table: {
         headers: isMr 
-          ? ['बिल क्र.', 'तारीख', 'काऊंटर व ऑपरेटर', 'ग्राहक नाव', 'पेमेंट', 'वस्तू तपशील', 'सवलत (₹)', 'एकूण (₹)']
+          ? ['बिल क्र.', 'तारीख व वेळ', 'काऊंटर व ऑपरेटर', 'ग्राहक नाव', 'पेमेंट', 'वस्तू तपशील', 'सवलत (₹)', 'एकूण (₹)']
           : isHi
-          ? ['बिल क्र.', 'दिनांक', 'काउंटर व ऑपरेटर', 'ग्राहक नाम', 'भुगतान', 'सामान विवरण', 'छूट (₹)', 'कुल (₹)']
-          : ['Invoice No.', 'Date', 'Counter & Operator', 'Customer Name', 'Payment', 'Items Sold', 'Discount (₹)', 'Net (₹)'],
+          ? ['बिल क्र.', 'दिनांक व समय', 'काउंटर व ऑपरेटर', 'ग्राहक नाम', 'भुगतान', 'सामान विवरण', 'छूट (₹)', 'कुल (₹)']
+          : ['Invoice No.', 'Date & Time', 'Counter & Operator', 'Customer Name', 'Payment', 'Items Sold', 'Discount (₹)', 'Net (₹)'],
         alignments: ['left', 'center', 'left', 'left', 'center', 'left', 'right', 'right'] as ('left' | 'center' | 'left' | 'left' | 'center' | 'left' | 'right' | 'right')[],
         rows: filtered.length > 0 ? filtered.map(s => {
           const sRets = (returns || []).filter(r => (r.sale_id && r.sale_id === s.id) || (r.invoice_no && r.invoice_no.trim().toLowerCase() === s.invoice_no.trim().toLowerCase()));
           const sRefund = sRets.reduce((acc, r) => acc + r.refund_amount, 0);
+          const { dateTimeFormatted } = formatSaleDateTime(s.created_at, s.sale_date);
           return [
             s.invoice_no + (sRefund > 0 ? ` (परतावा -₹${sRefund})` : ''),
-            s.sale_date,
+            dateTimeFormatted,
             s.counter_name ? `${s.counter_name} (${s.created_by_name || 'Admin'})` : (s.created_by_role === 'Owner' ? 'मुख्य मालक काऊंटर (निखिल सखारे)' : 'काऊंटर १ (निलेश सखारे)'),
             s.customer_name + (s.customer_phone ? ` (${s.customer_phone})` : ''),
             s.payment_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
@@ -233,6 +237,55 @@ export const DailySalesTracker: React.FC = () => {
 
   const handleDownloadSalesPDF = () => {
     downloadReportPDF(getSalesPDFPayload());
+  };
+
+  const getSaleInvoicePayload = (sale: Sale) => {
+    const isMr = language === 'mr';
+    const isHi = language === 'hi';
+    const { dateFormatted, timeFormatted, dateTimeFormatted } = formatSaleDateTime(sale.created_at, sale.sale_date);
+
+    return {
+      title: `${isMr ? 'विक्री पावती' : isHi ? 'बिक्री रसीद' : 'Sales Invoice'} (${sale.invoice_no})`,
+      subtitle: `${isMr ? 'योगेश्वरी डेअरी & उत्पादने' : isHi ? 'योगेश्वरी डेरी & उत्पाद' : 'Yogeshwari Dairy & Products'} | FSSAI: 21524012000341`,
+      periodText: `${isMr ? 'बिल क्र.' : isHi ? 'बिल क्र.' : 'Invoice No.'}: ${sale.invoice_no} | ${isMr ? 'बिल दिनांक व वेळ' : isHi ? 'बिल दिनांक व समय' : 'Bill Date & Time'}: ${dateTimeFormatted}`,
+      createdAt: sale.created_at,
+      language,
+      kpis: [
+        { label: isMr ? 'एकूण निव्वळ रक्कम' : isHi ? 'कुल देय राशि' : 'Net Amount', value: `₹${sale.net_amount.toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: isMr ? 'बिल दिनांक' : isHi ? 'बिल दिनांक' : 'Bill Date', value: dateFormatted, color: 'teal' },
+        { label: isMr ? 'बिल तयार वेळ' : isHi ? 'बिल समय' : 'Bill Time', value: timeFormatted || '—', color: 'purple' },
+        { label: isMr ? 'पेमेंट पद्धत' : isHi ? 'भुगतान माध्यम' : 'Payment Mode', value: sale.payment_mode, color: 'blue' },
+        { label: isMr ? 'काऊंटर' : isHi ? 'काउंटर' : 'Counter', value: sale.counter_name || (sale.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १'), color: 'teal' },
+        { label: isMr ? 'ग्राहक नाव' : isHi ? 'ग्राहक नाम' : 'Customer Name', value: sale.customer_name, color: 'blue' }
+      ],
+      table: {
+        headers: isMr 
+          ? ['अ.क्र.', 'वस्तूचे नाव / तपशील', 'नग/प्रमाण', 'दर (₹)', 'एकूण रक्कम (₹)'] 
+          : isHi 
+          ? ['क्र.', 'सामान का नाम / विवरण', 'मात्रा', 'दर (₹)', 'कुल राशि (₹)'] 
+          : ['Sr.', 'Item Description', 'Qty', 'Rate (₹)', 'Total (₹)'],
+        alignments: ['center', 'left', 'right', 'right', 'right'] as ('center' | 'left' | 'right' | 'right' | 'right')[],
+        rows: sale.items?.map((i, idx) => [
+          idx + 1, 
+          i.product_name, 
+          `${i.quantity} ${i.unit}`, 
+          `₹${i.unit_price}`, 
+          `₹${i.total_price.toLocaleString('en-IN')}`
+        ]) || [],
+        summaryRow: [
+          isMr ? 'एकूण निव्वळ रक्कम' : isHi ? 'कुल देय राशि' : 'Net Total', 
+          `${sale.items?.length || 0} वस्तू`, 
+          '', 
+          sale.discount > 0 ? `${isMr ? 'सवलत' : isHi ? 'छूट' : 'Discount'}: ₹${sale.discount}` : '', 
+          `₹${sale.net_amount.toLocaleString('en-IN')}`
+        ]
+      },
+      notes: isMr 
+        ? 'धन्यवाद! पुन्हा भेट द्या • शुद्धता हीच आमची ओळख | UPI ID: Q226038088@ybl' 
+        : isHi 
+        ? 'धन्यवाद! फिर पधारें • शुद्धता ही हमारी पहचान है | UPI ID: Q226038088@ybl' 
+        : 'Thank you! Visit again • Purity is our identity | UPI ID: Q226038088@ybl'
+    };
   };
 
   return (
@@ -516,8 +569,15 @@ export const DailySalesTracker: React.FC = () => {
                         })()}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
-                        <span>{sale.sale_date}</span>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
+                        {/* Creation Date & Time Badge */}
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md font-mono text-[11px] font-bold bg-slate-100 dark:bg-[#1A2A25] text-slate-800 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F]">
+                          <Calendar className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                          <span>{formatSaleDate(sale.created_at, sale.sale_date)}</span>
+                          <span className="text-slate-300 dark:text-slate-600">|</span>
+                          <Clock className="w-3 h-3 text-amber-500" />
+                          <span>{formatSaleTime(sale.created_at) || '—'}</span>
+                        </span>
                         <span>&bull;</span>
                         <span className="font-semibold text-slate-700 dark:text-[#E7F0EC]">{sale.customer_name}</span>
                         {sale.customer_phone && <span>({sale.customer_phone})</span>}
@@ -697,9 +757,16 @@ export const DailySalesTracker: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-between text-[11px] text-slate-700 dark:text-[#E7F0EC] pt-1">
-                <span>{language === 'mr' ? 'बिल:' : language === 'hi' ? 'बिल:' : 'Bill:'} {selectedSaleForView.invoice_no}</span>
-                <span>{selectedSaleForView.sale_date}</span>
+              <div className="flex justify-between items-center text-[11px] text-slate-700 dark:text-[#E7F0EC] pt-1">
+                <span>{language === 'mr' ? 'बिल:' : language === 'hi' ? 'बिल:' : 'Bill:'} <b className="font-mono text-slate-900 dark:text-white">{selectedSaleForView.invoice_no}</b></span>
+                <span className="font-bold">{formatSaleDate(selectedSaleForView.created_at, selectedSaleForView.sale_date)}</span>
+              </div>
+              <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-[#8FA69C]">
+                <span>{language === 'mr' ? 'काऊंटर:' : language === 'hi' ? 'काउंटर:' : 'Counter:'} {selectedSaleForView.counter_name || (selectedSaleForView.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १')}</span>
+                <span className="inline-flex items-center gap-1 font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                  <Clock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  <span>{formatSaleTime(selectedSaleForView.created_at) || '—'}</span>
+                </span>
               </div>
               <div className="flex justify-between text-[11px] text-slate-700 dark:text-[#E7F0EC]">
                 <span>{t('customerName')}: {selectedSaleForView.customer_name}</span>
@@ -767,19 +834,7 @@ export const DailySalesTracker: React.FC = () => {
                 type="button"
                 onClick={() => {
                   if (selectedSaleForView) {
-                    viewReportPDF({
-                      title: `विक्री बिल / Cash Memo (${selectedSaleForView.invoice_no})`,
-                      periodText: `बिल क्र. ${selectedSaleForView.invoice_no} | तारीख: ${selectedSaleForView.sale_date}`,
-                      kpis: [
-                        { label: 'एकूण रक्कम', value: `₹${selectedSaleForView.net_amount}`, color: 'emerald' },
-                        { label: 'पेमेंट मोड', value: selectedSaleForView.payment_mode, color: 'blue' }
-                      ],
-                      table: {
-                        headers: ['वस्तू', 'नग/प्रमाण', 'दर', 'एकूण'],
-                        rows: selectedSaleForView.items?.map(i => [i.product_name, `${i.quantity} ${i.unit}`, `₹${i.unit_price}`, `₹${i.total_price}`]) || [],
-                        summaryRow: ['एकूण', '', '', `₹${selectedSaleForView.net_amount}`]
-                      }
-                    });
+                    viewReportPDF(getSaleInvoicePayload(selectedSaleForView));
                   }
                 }}
                 className="py-2.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2621] text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center justify-center gap-1 border border-slate-300 dark:border-slate-700 active:scale-95"
@@ -792,19 +847,7 @@ export const DailySalesTracker: React.FC = () => {
                 type="button"
                 onClick={() => {
                   if (selectedSaleForView) {
-                    printReport({
-                      title: `विक्री बिल / Cash Memo (${selectedSaleForView.invoice_no})`,
-                      periodText: `बिल क्र. ${selectedSaleForView.invoice_no} | तारीख: ${selectedSaleForView.sale_date}`,
-                      kpis: [
-                        { label: 'एकूण रक्कम', value: `₹${selectedSaleForView.net_amount}`, color: 'emerald' },
-                        { label: 'पेमेंट मोड', value: selectedSaleForView.payment_mode, color: 'blue' }
-                      ],
-                      table: {
-                        headers: ['वस्तू', 'नग/प्रमाण', 'दर', 'एकूण'],
-                        rows: selectedSaleForView.items?.map(i => [i.product_name, `${i.quantity} ${i.unit}`, `₹${i.unit_price}`, `₹${i.total_price}`]) || [],
-                        summaryRow: ['एकूण', '', '', `₹${selectedSaleForView.net_amount}`]
-                      }
-                    });
+                    printReport(getSaleInvoicePayload(selectedSaleForView));
                   }
                 }}
                 className="py-2.5 px-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95"
@@ -818,17 +861,8 @@ export const DailySalesTracker: React.FC = () => {
                 onClick={() => {
                   if (selectedSaleForView) {
                     downloadReportPDF({
-                      title: `Bill_${selectedSaleForView.invoice_no}`,
-                      periodText: `बिल क्र. ${selectedSaleForView.invoice_no} | तारीख: ${selectedSaleForView.sale_date}`,
-                      kpis: [
-                        { label: 'एकूण रक्कम', value: `₹${selectedSaleForView.net_amount}`, color: 'emerald' },
-                        { label: 'पेमेंट मोड', value: selectedSaleForView.payment_mode, color: 'blue' }
-                      ],
-                      table: {
-                        headers: ['वस्तू', 'नग/प्रमाण', 'दर', 'एकूण'],
-                        rows: selectedSaleForView.items?.map(i => [i.product_name, `${i.quantity} ${i.unit}`, `₹${i.unit_price}`, `₹${i.total_price}`]) || [],
-                        summaryRow: ['एकूण', '', '', `₹${selectedSaleForView.net_amount}`]
-                      }
+                      ...getSaleInvoicePayload(selectedSaleForView),
+                      title: `Bill_${selectedSaleForView.invoice_no}`
                     });
                   }
                 }}
@@ -1137,7 +1171,7 @@ export const DailySalesTracker: React.FC = () => {
             <div className="p-3 rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200/60 dark:border-rose-900/40 text-xs text-rose-950 dark:text-rose-200 space-y-1">
               <div><strong>{language === 'mr' ? 'ग्राहक:' : language === 'hi' ? 'ग्राहक:' : 'Customer:'}</strong> {saleToDelete.customer_name}</div>
               <div><strong>{language === 'mr' ? 'रक्कम:' : language === 'hi' ? 'रकम:' : 'Amount:'}</strong> ₹{saleToDelete.net_amount} ({saleToDelete.payment_mode})</div>
-              <div><strong>{language === 'mr' ? 'तारीख:' : language === 'hi' ? 'तारीख:' : 'Date:'}</strong> {saleToDelete.sale_date}</div>
+              <div><strong>{language === 'mr' ? 'दिनांक व वेळ:' : language === 'hi' ? 'दिनांक व समय:' : 'Date & Time:'}</strong> {formatSaleDateTime(saleToDelete.created_at, saleToDelete.sale_date).dateTimeFormatted}</div>
               <p className="text-[11px] text-rose-700 dark:text-rose-400 pt-1 border-t border-rose-200/50 dark:border-rose-900/40 font-medium">
                 {language === 'mr' 
                   ? '⚠️ हे बिल लेजर, दैनंदिन विक्री व Supabase क्लाऊडवरून कायमचे हटवले जाईल.' 

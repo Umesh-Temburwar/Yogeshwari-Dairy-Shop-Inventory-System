@@ -1839,6 +1839,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           online_amount: newSale.online_amount,
           udhar_amount: newSale.udhar_amount,
           sale_date: newSale.sale_date,
+          created_at: newSale.created_at,
           created_by_name: newSale.created_by_name,
           created_by_email: newSale.created_by_email,
           created_by_role: newSale.created_by_role,

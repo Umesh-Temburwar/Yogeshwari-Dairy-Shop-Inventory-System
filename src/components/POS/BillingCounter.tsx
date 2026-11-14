@@ -35,6 +35,7 @@ import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../../context/AuthContext';
+import { formatSaleDateTime, formatSaleDate, formatSaleTime } from '../../lib/dateUtils';
 
 interface ProductCardProps {
   prod: Product;
@@ -421,11 +422,13 @@ export const BillingCounter: React.FC = () => {
   const getInvoiceReportPayload = (sale: any) => {
     const isMr = language === 'mr';
     const isHi = language === 'hi';
+    const { dateFormatted, timeFormatted, dateTimeFormatted } = formatSaleDateTime(sale.created_at, sale.sale_date);
 
     return {
       title: `${t('shopName')} - ${isMr ? 'अधिकृत विक्री पावती' : isHi ? 'अधिकृत बिक्री रसीद' : 'Cash Memo & Tax Invoice'}`,
       subtitle: `${isMr ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : isHi ? 'ताज़ा दूध, पनीर, दही, शुद्ध देसी घी' : 'Fresh Milk, Dairy & Sweets'} | FSSAI: 21524012000341`,
-      periodText: `${isMr ? 'बिल क्र.' : isHi ? 'बिल क्र.' : 'Invoice No.'}: ${sale.invoice_no} | ${isMr ? 'तारीख' : isHi ? 'दिनांक' : 'Date'}: ${sale.sale_date}`,
+      periodText: `${isMr ? 'बिल क्र.' : isHi ? 'बिल क्र.' : 'Invoice No.'}: ${sale.invoice_no} | ${isMr ? 'बिल तयार दिनांक व वेळ' : isHi ? 'बिल दिनांक व समय' : 'Bill Date & Time'}: ${dateTimeFormatted}`,
+      createdAt: sale.created_at,
       language,
       kpis: [
         { label: isMr ? 'निव्वळ देय रक्कम' : isHi ? 'कुल देय राशि' : 'Net Payable', value: `₹${sale.net_amount.toLocaleString('en-IN')}`, color: 'emerald' },
@@ -437,8 +440,10 @@ export const BillingCounter: React.FC = () => {
                  sale.payment_mode === 'Split' ? (isMr ? 'विभागून' : isHi ? 'विभाजित' : 'Split') : sale.payment_mode, 
           color: 'blue' 
         },
+        { label: isMr ? 'बिल दिनांक' : isHi ? 'बिल दिनांक' : 'Bill Date', value: dateFormatted, color: 'teal' },
+        { label: isMr ? 'बिल तयार वेळ' : isHi ? 'बिल समय' : 'Bill Time', value: timeFormatted || '—', color: 'purple' },
         { label: isMr ? 'काऊंटर' : isHi ? 'काउंटर' : 'Counter', value: sale.counter_name || (sale.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १'), color: 'teal' },
-        { label: isMr ? 'बिलिंग प्रशासक' : isHi ? 'बिलिंग ऑपरेटर' : 'Operator', value: sale.created_by_name || 'Admin 1', color: 'purple' },
+        { label: isMr ? 'बिलिंग ऑपरेटर' : isHi ? 'बिलिंग ऑपरेटर' : 'Operator', value: sale.created_by_name || 'Admin 1', color: 'purple' },
         { label: isMr ? 'ग्राहक नाव' : isHi ? 'ग्राहक नाम' : 'Customer Name', value: sale.customer_name || (isMr ? 'काउंटर ग्राहक' : isHi ? 'काउंटर ग्राहक' : 'Counter Customer'), color: 'blue' }
       ],
       table: {
@@ -1271,9 +1276,16 @@ export const BillingCounter: React.FC = () => {
               <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">FSSAI Lic: 21524012000341 &bull; Mo: 9823XXXXXX</div>
             </div>
 
-            <div className="flex justify-between text-[11px] text-slate-700 dark:text-[#E7F0EC] pt-1">
-              <span>{language === 'mr' ? 'बिल:' : language === 'hi' ? 'बिल:' : 'Bill:'} {lastCompletedSale?.invoice_no}</span>
-              <span>{lastCompletedSale?.sale_date}</span>
+            <div className="flex justify-between items-center text-[11px] text-slate-700 dark:text-[#E7F0EC] pt-1">
+              <span>{language === 'mr' ? 'बिल:' : language === 'hi' ? 'बिल:' : 'Bill:'} <b className="font-mono text-slate-900 dark:text-white">{lastCompletedSale?.invoice_no}</b></span>
+              <span className="font-bold">{formatSaleDate(lastCompletedSale?.created_at, lastCompletedSale?.sale_date)}</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-[#8FA69C]">
+              <span>{language === 'mr' ? 'काऊंटर:' : language === 'hi' ? 'काउंटर:' : 'Counter:'} {lastCompletedSale?.counter_name || (lastCompletedSale?.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १')}</span>
+              <span className="inline-flex items-center gap-1 font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                <Clock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                <span>{formatSaleTime(lastCompletedSale?.created_at) || '—'}</span>
+              </span>
             </div>
             <div className="flex justify-between text-[11px] text-slate-700 dark:text-[#E7F0EC]">
               <span>{t('customerName')}: {lastCompletedSale?.customer_name}</span>

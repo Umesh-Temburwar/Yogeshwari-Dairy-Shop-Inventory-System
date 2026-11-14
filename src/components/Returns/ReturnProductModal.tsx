@@ -24,6 +24,7 @@ import {
   Scissors
 } from 'lucide-react';
 import { printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
+import { formatSaleDateTime, formatSaleDate, formatSaleTime } from '../../lib/dateUtils';
 
 interface ReturnProductModalProps {
   onClose: () => void;
@@ -684,8 +685,13 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                                 <span className="font-mono font-black text-purple-700 dark:text-purple-300">#{sale.invoice_no}</span>
                                 <span className="font-bold text-slate-800 dark:text-white truncate">{sale.customer_name}</span>
                               </div>
-                              <div className="text-[10px] text-slate-400">
-                                📅 {sale.sale_date} &bull; {sale.items?.length || 0} {isMr ? 'वस्तू' : 'सामान'} &bull; 💳 {sale.payment_mode}
+                              <div className="text-[10px] text-slate-400 flex flex-wrap items-center gap-1.5">
+                                <span>📅 {formatSaleDate(sale.created_at, sale.sale_date)}</span>
+                                {sale.created_at && <span>⏰ {formatSaleTime(sale.created_at)}</span>}
+                                <span>&bull;</span>
+                                <span>{sale.items?.length || 0} {isMr ? 'वस्तू' : 'सामान'}</span>
+                                <span>&bull;</span>
+                                <span>💳 {sale.payment_mode}</span>
                               </div>
                             </div>
                             <div className="text-right shrink-0">
@@ -722,7 +728,12 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                         </div>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-200/60 dark:border-[#24352F]">
                           <span>👤 <b>{selectedSale.customer_name}</b> {selectedSale.customer_phone ? `(${selectedSale.customer_phone})` : ''}</span>
-                          <span>📅 {selectedSale.sale_date}</span>
+                          <span>📅 {formatSaleDate(selectedSale.created_at, selectedSale.sale_date)}</span>
+                          {selectedSale.created_at && (
+                            <span className="inline-flex items-center gap-1 font-mono text-emerald-600 dark:text-emerald-400 font-bold">
+                              ⏰ {formatSaleTime(selectedSale.created_at)}
+                            </span>
+                          )}
                           <span>📦 {selectedSale.items?.length || 0} {isMr ? 'उत्पादने' : 'उत्पाद'}</span>
                           <span>📍 {selectedSale.counter_name || 'काऊंटर १'}</span>
                         </div>

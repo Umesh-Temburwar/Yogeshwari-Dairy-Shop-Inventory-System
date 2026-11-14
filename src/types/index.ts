@@ -19,6 +19,7 @@ export interface Product {
   name: string;
   hindi_name?: string;
   marathi_name?: string;
+  brand?: string;
   category: ProductCategory;
   unit: ProductUnit;
   purchase_price: number;

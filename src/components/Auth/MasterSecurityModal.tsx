@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ydoLogo from '../../assets/YDO_logo.jpg';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -43,15 +43,59 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
   const [isBiometricScanning, setIsBiometricScanning] = useState(false);
   const [lockoutRemainingSec, setLockoutRemainingSec] = useState<number>(0);
   const [isShake, setIsShake] = useState(false);
+  const hasAutoTriggeredRef = useRef(false);
 
-  // Focus input automatically & auto-check biometric support for Nilesh
+  const handleBiometricUnlock = async (isAuto = false) => {
+    if (lockoutRemainingSec > 0 || isVerifying || isBiometricScanning) return;
+    setIsBiometricScanning(true);
+    if (!isAuto) setErrorMsg(null);
+
+    try {
+      const res = await authenticateNileshFingerprint();
+      if (res.success) {
+        const granted = await unlockSecurityWithBiometrics();
+        if (granted) {
+          confetti({ particleCount: 70, spread: 80, origin: { y: 0.6 } });
+          setPasscode('');
+        } else {
+          setErrorMsg('सुरक्षा टोकन जारी करता आले नाही. कृपया पासवर्ड वापरा.');
+        }
+      } else if (res.error) {
+        // Suppress error banner on initial automatic trigger if dismissed
+        if (!isAuto) {
+          setErrorMsg(res.error);
+          setIsShake(true);
+          setTimeout(() => setIsShake(false), 500);
+        }
+      }
+    } catch (err: any) {
+      console.error('Biometric error:', err);
+      if (!isAuto) {
+        setErrorMsg('फिंगरप्रिंट स्कॅनमध्ये त्रुटी आली. कृपया पासवर्ड वापरा.');
+      }
+    } finally {
+      setIsBiometricScanning(false);
+    }
+  };
+
+  // Direct Auto-Trigger of Mobile Fingerprint for Nilesh Sakhare
   useEffect(() => {
     if (isOpen) {
       setPasscode('');
       setErrorMsg(null);
       setAttemptsLeft(null);
+
+      if (isNilesh && !hasAutoTriggeredRef.current) {
+        hasAutoTriggeredRef.current = true;
+        const timer = setTimeout(() => {
+          handleBiometricUnlock(true);
+        }, 180);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      hasAutoTriggeredRef.current = false;
     }
-  }, [isOpen]);
+  }, [isOpen, isNilesh]);
 
   // Lockout countdown timer
   useEffect(() => {
@@ -135,34 +179,6 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
     }
   };
 
-  const handleBiometricUnlock = async () => {
-    if (lockoutRemainingSec > 0 || isVerifying || isBiometricScanning) return;
-    setIsBiometricScanning(true);
-    setErrorMsg(null);
-
-    try {
-      const res = await authenticateNileshFingerprint();
-      if (res.success) {
-        const granted = await unlockSecurityWithBiometrics();
-        if (granted) {
-          confetti({ particleCount: 70, spread: 80, origin: { y: 0.6 } });
-          setPasscode('');
-        } else {
-          setErrorMsg('सुरक्षा टोकन जारी करता आले नाही. कृपया पासवर्ड वापरा.');
-        }
-      } else if (res.error) {
-        setErrorMsg(res.error);
-        setIsShake(true);
-        setTimeout(() => setIsShake(false), 500);
-      }
-    } catch (err: any) {
-      console.error('Biometric error:', err);
-      setErrorMsg('फिंगरप्रिंट स्कॅनमध्ये त्रुटी आली. कृपया पासवर्ड वापरा.');
-    } finally {
-      setIsBiometricScanning(false);
-    }
-  };
-
   const formatLockoutTime = (totalSec: number) => {
     const mins = Math.floor(totalSec / 60);
     const secs = totalSec % 60;
@@ -232,62 +248,26 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
         {/* Passcode Form */}
         <form onSubmit={handleVerify} className="mt-5 space-y-4 relative z-10">
           
-          {/* EXCLUSIVE NILESH MOBILE FINGERPRINT SENSOR SECTION */}
+          {/* Direct Nilesh Fingerprint Status & Quick Re-scan Pill */}
           {isNilesh && (
-            <div className="p-4 rounded-2xl bg-gradient-to-b from-blue-50/90 to-emerald-50/70 dark:from-blue-950/40 dark:to-emerald-950/30 border-2 border-blue-400/60 dark:border-blue-500/50 space-y-3 text-center shadow-md animate-fadeIn">
-              <div className="flex items-center justify-center gap-1.5 text-blue-700 dark:text-blue-300 font-black text-xs">
-                <Fingerprint className="w-4 h-4 text-blue-600 dark:text-blue-400 animate-pulse" />
-                <span>
-                  {language === 'mr' 
-                    ? 'निलेश सखारे • थेट मोबाईल फिंगरप्रिंट अनलॉक' 
-                    : language === 'hi' 
-                    ? 'निलेश सखारे • मोबाइल फिंगरप्रिंट अनलॉक' 
-                    : 'Nilesh Sakhare • Mobile Fingerprint Unlock'}
-                </span>
-              </div>
-
-              <p className="text-[11px] text-slate-600 dark:text-[#8FA69C] leading-snug">
-                {language === 'mr'
-                  ? 'खालील बटण दाबून तुमच्या मोबाईलच्या फिंगरप्रिंट सेन्सरला बोट लावा आणि काउंटर लॉक उघडा.'
-                  : language === 'hi'
-                  ? 'नीचे दिए बटन पर टैप करके मोबाइल के फिंगरप्रिंट सेंसर को छुएं और लॉक खोलें।'
-                  : 'Tap the button below and touch your mobile fingerprint sensor to unlock.'}
-              </p>
-
+            <div className="flex items-center justify-center pt-0.5 pb-1">
               <button
                 type="button"
                 disabled={lockoutRemainingSec > 0 || isVerifying || isBiometricScanning}
-                onClick={handleBiometricUnlock}
-                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 text-white font-black text-sm shadow-lg shadow-blue-500/25 active:scale-98 transition-all flex items-center justify-center gap-2.5 border border-blue-400/30 group"
+                onClick={() => handleBiometricUnlock(false)}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-2xs border ${
+                  isBiometricScanning
+                    ? 'bg-blue-100 text-blue-800 border-blue-400 dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-700 animate-pulse'
+                    : 'bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700/60 text-blue-700 dark:text-blue-300 active:scale-95'
+                }`}
               >
-                {isBiometricScanning ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>
-                      {language === 'mr' ? 'मोबाईल फिंगरप्रिंट सेन्सर सक्रिय आहे...' : language === 'hi' ? 'फिंगरप्रिंट सेंसर सक्रिय...' : 'Scanning Mobile Fingerprint...'}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Fingerprint className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="tracking-wide">
-                      {language === 'mr' 
-                        ? '📲 फिंगरप्रिंट स्कॅन करून लॉक उघडा' 
-                        : language === 'hi' 
-                        ? '📲 फिंगरप्रिंट से लॉक खोलें' 
-                        : '📲 Touch Fingerprint to Unlock'}
-                    </span>
-                  </>
-                )}
+                <Fingerprint className={`w-3.5 h-3.5 ${isBiometricScanning ? 'animate-spin text-blue-600 dark:text-blue-400' : 'text-blue-600 dark:text-blue-400 animate-pulse'}`} />
+                <span>
+                  {isBiometricScanning
+                    ? (language === 'mr' ? 'फिंगरप्रिंट सेन्सर सक्रिय...' : language === 'hi' ? 'फिंगरप्रिंट सेंसर सक्रिय...' : 'Scanning Fingerprint...')
+                    : (language === 'mr' ? '📲 पुन्हा फिंगरप्रिंट स्कॅन करा' : language === 'hi' ? '📲 फिर से फिंगरप्रिंट स्कैन करें' : '📲 Scan Fingerprint Again')}
+                </span>
               </button>
-
-              <div className="flex items-center justify-center gap-2 pt-1 text-[10px] text-slate-400 dark:text-slate-500">
-                <span className="h-px bg-slate-200 dark:bg-slate-700 flex-1" />
-                <span>{language === 'mr' ? 'किंवा खालील पासवर्ड वापरा' : language === 'hi' ? 'या नीचे दिया पासवर्ड दर्ज करें' : 'or enter passcode below'}</span>
-                <span className="h-px bg-slate-200 dark:bg-slate-700 flex-1" />
-              </div>
             </div>
           )}
 
@@ -299,14 +279,18 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
 
             <input
               type={showPasscode ? 'text' : 'password'}
-              autoFocus
+              autoFocus={!isNilesh}
               disabled={lockoutRemainingSec > 0 || isVerifying}
               value={passcode}
               onChange={(e) => {
                 setPasscode(e.target.value);
                 setErrorMsg(null);
               }}
-              placeholder={language === 'mr' ? 'मास्टर पासवर्ड टाइप करा' : language === 'hi' ? 'मास्टर पासवर्ड दर्ज करें' : 'Enter 8-digit master passcode'}
+              placeholder={
+                isNilesh
+                  ? (language === 'mr' ? 'किंवा पासवर्ड टाइप करा' : language === 'hi' ? 'या पासवर्ड दर्ज करें' : 'or enter 8-digit passcode')
+                  : (language === 'mr' ? 'मास्टर पासवर्ड टाइप करा' : language === 'hi' ? 'मास्टर पासवर्ड दर्ज करें' : 'Enter 8-digit master passcode')
+              }
               className="w-full pl-10 pr-11 py-3 bg-slate-50 dark:bg-[#1A2A25] border border-slate-300 dark:border-[#24352F] rounded-2xl text-slate-900 dark:text-white text-center font-mono font-black text-lg tracking-[0.25em] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:opacity-50 transition-all shadow-inner"
             />
 

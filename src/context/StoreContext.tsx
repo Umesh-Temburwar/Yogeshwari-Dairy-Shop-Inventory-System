@@ -1117,6 +1117,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (updates.marathi_name && updates.marathi_name !== existingProd.marathi_name) {
         changes.push(`मराठी नाव: ${existingProd.marathi_name} ➔ ${updates.marathi_name}`);
       }
+      if (updates.brand && updates.brand !== existingProd.brand) {
+        changes.push(`ब्रँड: ${existingProd.brand || 'काही नाही'} ➔ ${updates.brand}`);
+      }
       if (updates.barcode !== undefined && updates.barcode !== existingProd.barcode) {
         changes.push(`बारकोड: ${existingProd.barcode || 'काही नाही'} ➔ ${updates.barcode || 'काही नाही'}`);
       }

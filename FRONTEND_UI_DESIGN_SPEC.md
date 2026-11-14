@@ -317,4 +317,29 @@ When pasting this document into **Claude**, here are prompt ideas you can use:
 > *"Review the `BillingCounter.tsx` specifications above. Rearrange the product grid, quick-category pills, and the cart checkout panel so a retail dairy operator can complete a bill with minimal clicks and 100% keyboard shortcut support (F2, F3, F4, Enter)."*
 
 ---
+
+## ⌨️ 6. Universal Keyboard Shortcuts Specification
+
+| Shortcut Key | Scope | Action Triggered | Component Involved |
+| :--- | :--- | :--- | :--- |
+| **`F1`** | Global | Opens Keyboard Shortcuts Guide Modal | `KeyboardShortcutsModal.tsx` |
+| **`F2`** | Global | Instant redirect to POS High-Speed Counter | `BillingCounter.tsx` |
+| **`F3`** | Global | Opens Quick Add Product / Stock Modal | `AddProductModal.tsx` |
+| **`F4`** | Global | Redirects to Udhar Khata (Customer Credit) | `KhataBook.tsx` |
+| **`Esc`** | Global | Dismisses any active popup, drawer or modal | `App.tsx` |
+| **`Enter`** | POS | Confirms and finalizes the active customer bill | `BillingCounter.tsx` |
+
+---
+
+## 🔒 7. Mobile Hardware Biometric Screen Lock Specification
+
+| Feature | Implementation | Notes |
+| :--- | :--- | :--- |
+| **Target User** | Nilesh Sakhare (`nilusakhare2003@gmail.com`) | Exclusively configured for Counter 1 Admin |
+| **Technology** | Web Authentication API (WebAuthn) | `navigator.credentials.create` & `get` with `authenticatorAttachment: 'platform'` |
+| **UI Behavior** | Direct Native Android Screen Lock | No intermediate buttons; automatically raises Google Password Manager sensor prompt |
+| **Owner Fallback** | 8-digit Encrypted Numeric Keypad | Owner (`Nikhil Sakhare`) authenticates via master passcode |
+
+---
+
 *(Generated for Yogeshwari Dairy & Products Shop Inventory System • All Frontend Modules Documented)*

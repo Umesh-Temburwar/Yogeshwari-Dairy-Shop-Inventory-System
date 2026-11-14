@@ -573,16 +573,24 @@ export const ExpiryDashboard: React.FC = () => {
                       {/* Status Badge */}
                       <td className="px-3 py-3 text-center">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${isExpired
-                          ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900'
+                          ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900 animate-pulse'
                           : isToday
-                            ? 'bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900'
+                            ? 'bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900 animate-pulse'
                             : isTomorrow
                               ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900'
                               : batch.expiryStatus === 'EXPIRING_IN_3_DAYS'
                                 ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900'
                                 : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900'
                           }`}>
-                          {isExpired ? 'मुदत संपली (Blocked)' : isToday ? 'आज संपत आहे' : isTomorrow ? 'उद्या संपणार' : 'सुरक्षित साठा'}
+                          {isExpired
+                            ? (language === 'mr' ? 'मुदत संपली (Blocked)' : language === 'hi' ? 'मुदत समाप्त' : 'Expired')
+                            : isToday
+                            ? (language === 'mr' ? 'आज संपत आहे' : language === 'hi' ? 'आज समाप्त' : 'Expiring Today')
+                            : isTomorrow
+                            ? (language === 'mr' ? 'उद्या संपणार' : language === 'hi' ? 'कल समाप्त' : 'Expiring Tomorrow')
+                            : batch.expiryStatus === 'EXPIRING_IN_3_DAYS'
+                            ? (language === 'mr' ? '३ दिवसांत संपणार' : language === 'hi' ? '३ दिनों में समाप्त' : 'In 3 Days')
+                            : (language === 'mr' ? 'सुरक्षित साठा' : language === 'hi' ? 'सुरक्षित स्टॉक' : 'Safe Stock')}
                         </span>
                       </td>
 

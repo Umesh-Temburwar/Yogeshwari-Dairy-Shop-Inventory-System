@@ -966,12 +966,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         broadcastMutation('audit', 'log');
 
         // Opportunistic background auto-purge of expired logs (> 7 days)
-        supabase
-          .from('admin_audit_logs')
-          .delete()
-          .lt('created_at', new Date(sevenDaysAgoMs).toISOString())
-          .then(() => {})
-          .catch(() => {});
+        Promise.resolve(
+          supabase
+            .from('admin_audit_logs')
+            .delete()
+            .lt('created_at', new Date(sevenDaysAgoMs).toISOString())
+        ).catch(() => {});
       } catch (err) {
         console.warn('Failed to sync admin audit log to Supabase', err);
       }

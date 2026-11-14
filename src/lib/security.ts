@@ -126,6 +126,21 @@ export function revokeSessionSecurity(): void {
 }
 
 /**
+ * Issues a valid session token upon verified hardware biometric (fingerprint) authentication.
+ * Dedicated for Nilesh Sakhare mobile fingerprint sensor verification.
+ */
+export async function grantBiometricSecurityUnlock(): Promise<boolean> {
+  try {
+    clearFailedAttempts();
+    const token = await generateSessionToken();
+    sessionStorage.setItem(STORAGE_SESSION_TOKEN, token);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Generates an encrypted session validation token.
  */
 async function generateSessionToken(): Promise<string> {

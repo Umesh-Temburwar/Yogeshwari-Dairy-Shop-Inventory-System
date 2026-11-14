@@ -14,27 +14,37 @@ import {
   CheckCircle2, 
   Loader2, 
   Delete, 
-  Sparkles 
+  Sparkles,
+  Fingerprint
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { isBiometricSupported, authenticateNileshFingerprint } from '../../lib/biometricAuth';
 
 interface MasterSecurityModalProps {
   isOpen: boolean;
 }
 
 export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen }) => {
-  const { role, unlockSecurity, signOut } = useAuth();
+  const { user, role, unlockSecurity, unlockSecurityWithBiometrics, signOut } = useAuth();
   const { language } = useLanguage();
+
+  // Strictly check if active profile is Nilesh Sakhare (Admin)
+  const isNilesh = 
+    role === 'Admin' ||
+    user?.email?.toLowerCase().includes('nilu') ||
+    user?.email?.toLowerCase().includes('nilesh') ||
+    user?.user_metadata?.full_name?.toLowerCase().includes('nilesh');
 
   const [passcode, setPasscode] = useState('');
   const [showPasscode, setShowPasscode] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [attemptsLeft, setAttemptsLeft] = useState<number | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isBiometricScanning, setIsBiometricScanning] = useState(false);
   const [lockoutRemainingSec, setLockoutRemainingSec] = useState<number>(0);
   const [isShake, setIsShake] = useState(false);
 
-  // Focus input automatically
+  // Focus input automatically & auto-check biometric support for Nilesh
   useEffect(() => {
     if (isOpen) {
       setPasscode('');
@@ -125,6 +135,34 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
     }
   };
 
+  const handleBiometricUnlock = async () => {
+    if (lockoutRemainingSec > 0 || isVerifying || isBiometricScanning) return;
+    setIsBiometricScanning(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await authenticateNileshFingerprint();
+      if (res.success) {
+        const granted = await unlockSecurityWithBiometrics();
+        if (granted) {
+          confetti({ particleCount: 70, spread: 80, origin: { y: 0.6 } });
+          setPasscode('');
+        } else {
+          setErrorMsg('सुरक्षा टोकन जारी करता आले नाही. कृपया पासवर्ड वापरा.');
+        }
+      } else if (res.error) {
+        setErrorMsg(res.error);
+        setIsShake(true);
+        setTimeout(() => setIsShake(false), 500);
+      }
+    } catch (err: any) {
+      console.error('Biometric error:', err);
+      setErrorMsg('फिंगरप्रिंट स्कॅनमध्ये त्रुटी आली. कृपया पासवर्ड वापरा.');
+    } finally {
+      setIsBiometricScanning(false);
+    }
+  };
+
   const formatLockoutTime = (totalSec: number) => {
     const mins = Math.floor(totalSec / 60);
     const secs = totalSec % 60;
@@ -193,6 +231,66 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
 
         {/* Passcode Form */}
         <form onSubmit={handleVerify} className="mt-5 space-y-4 relative z-10">
+          
+          {/* EXCLUSIVE NILESH MOBILE FINGERPRINT SENSOR SECTION */}
+          {isNilesh && (
+            <div className="p-4 rounded-2xl bg-gradient-to-b from-blue-50/90 to-emerald-50/70 dark:from-blue-950/40 dark:to-emerald-950/30 border-2 border-blue-400/60 dark:border-blue-500/50 space-y-3 text-center shadow-md animate-fadeIn">
+              <div className="flex items-center justify-center gap-1.5 text-blue-700 dark:text-blue-300 font-black text-xs">
+                <Fingerprint className="w-4 h-4 text-blue-600 dark:text-blue-400 animate-pulse" />
+                <span>
+                  {language === 'mr' 
+                    ? 'निलेश सखारे • थेट मोबाईल फिंगरप्रिंट अनलॉक' 
+                    : language === 'hi' 
+                    ? 'निलेश सखारे • मोबाइल फिंगरप्रिंट अनलॉक' 
+                    : 'Nilesh Sakhare • Mobile Fingerprint Unlock'}
+                </span>
+              </div>
+
+              <p className="text-[11px] text-slate-600 dark:text-[#8FA69C] leading-snug">
+                {language === 'mr'
+                  ? 'खालील बटण दाबून तुमच्या मोबाईलच्या फिंगरप्रिंट सेन्सरला बोट लावा आणि काउंटर लॉक उघडा.'
+                  : language === 'hi'
+                  ? 'नीचे दिए बटन पर टैप करके मोबाइल के फिंगरप्रिंट सेंसर को छुएं और लॉक खोलें।'
+                  : 'Tap the button below and touch your mobile fingerprint sensor to unlock.'}
+              </p>
+
+              <button
+                type="button"
+                disabled={lockoutRemainingSec > 0 || isVerifying || isBiometricScanning}
+                onClick={handleBiometricUnlock}
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 text-white font-black text-sm shadow-lg shadow-blue-500/25 active:scale-98 transition-all flex items-center justify-center gap-2.5 border border-blue-400/30 group"
+              >
+                {isBiometricScanning ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>
+                      {language === 'mr' ? 'मोबाईल फिंगरप्रिंट सेन्सर सक्रिय आहे...' : language === 'hi' ? 'फिंगरप्रिंट सेंसर सक्रिय...' : 'Scanning Mobile Fingerprint...'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Fingerprint className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="tracking-wide">
+                      {language === 'mr' 
+                        ? '📲 फिंगरप्रिंट स्कॅन करून लॉक उघडा' 
+                        : language === 'hi' 
+                        ? '📲 फिंगरप्रिंट से लॉक खोलें' 
+                        : '📲 Touch Fingerprint to Unlock'}
+                    </span>
+                  </>
+                )}
+              </button>
+
+              <div className="flex items-center justify-center gap-2 pt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                <span className="h-px bg-slate-200 dark:bg-slate-700 flex-1" />
+                <span>{language === 'mr' ? 'किंवा खालील पासवर्ड वापरा' : language === 'hi' ? 'या नीचे दिया पासवर्ड दर्ज करें' : 'or enter passcode below'}</span>
+                <span className="h-px bg-slate-200 dark:bg-slate-700 flex-1" />
+              </div>
+            </div>
+          )}
+
           {/* Input field with dots and toggle */}
           <div className="relative">
             <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-600 dark:text-emerald-400">

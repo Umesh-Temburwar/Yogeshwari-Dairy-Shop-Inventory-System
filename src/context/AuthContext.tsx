@@ -5,7 +5,8 @@ import { UserRole } from '../types';
 import { 
   verifyMasterPasscode, 
   isSessionSecurityValid, 
-  revokeSessionSecurity 
+  revokeSessionSecurity,
+  grantBiometricSecurityUnlock
 } from '../lib/security';
 
 interface AuthContextType {
@@ -24,6 +25,7 @@ interface AuthContextType {
     lockedUntil: number | null;
     error?: string;
   }>;
+  unlockSecurityWithBiometrics: () => Promise<boolean>;
   lockSecurity: () => void;
   signInWithEmail: (email: string, password: string) => Promise<{ error: any; redirectView?: 'dashboard' | 'pos' | 'inventory' }>;
   signUpWithEmail: (
@@ -114,6 +116,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsSecurityUnlocked(true);
     }
     return res;
+  };
+
+  const unlockSecurityWithBiometrics = async (): Promise<boolean> => {
+    const granted = await grantBiometricSecurityUnlock();
+    if (granted) {
+      setIsSecurityUnlocked(true);
+      return true;
+    }
+    return false;
   };
 
   // Helper to determine role, admin slot, and redirect destination based on email/profile
@@ -569,6 +580,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         defaultRedirectView,
         isSecurityUnlocked,
         unlockSecurity,
+        unlockSecurityWithBiometrics,
         lockSecurity,
         signInWithEmail,
         signUpWithEmail,

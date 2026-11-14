@@ -470,12 +470,13 @@ export const OwnerAdminCounterWidget: React.FC = () => {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h4 className="font-black text-slate-900 dark:text-white text-sm sm:text-base flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-500" />
-                <span>{isMr ? 'थेट तपासणी नोंदवही (कोणत्या काऊंटरवरून काय विकले व इन्व्हेंटरी बदल):' : isHi ? 'लाइव ऑडिट रजिस्टर (किसने किस काउंटर से क्या बेचा और क्या बदला):' : 'Live Audit Stream (Who sold what from which counter & updates):'}</span>
+                <Clock className="w-4 h-4 text-amber-500 shrink-0" />
+                <span className="hidden sm:inline">{isMr ? 'थेट तपासणी नोंदवही (कोणत्या काऊंटरवरून काय विकले व इन्व्हेंटरी बदल):' : isHi ? 'लाइव ऑडिट रजिस्टर (किसने किस काउंटर से क्या बेचा और क्या बदला):' : 'Live Audit Stream (Who sold what from which counter & updates):'}</span>
+                <span className="sm:hidden">{isMr ? 'थेट तपासणी नोंदवही (Live Audit)' : isHi ? 'लाइव ऑडिट रजिस्टर' : 'Live Audit Stream'}</span>
               </h4>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/60 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/60 flex items-center gap-1 shrink-0">
                 <span>⏱️</span>
-                <span>{isMr ? '७ दिवसांचा डेटा (८ व्या दिवशी आपोआप हटवला जातो)' : isHi ? '७ दिन का डेटा (८वें दिन स्वतः हट जाता है)' : '7-Day Retention (Auto-Purged on Day 8)'}</span>
+                <span>{isMr ? '७ दिवस डेटा' : isHi ? '७ दिन डेटा' : '7-Day Retention'}</span>
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-0.5">
@@ -497,7 +498,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {[
             { id: 'all', label: isMr ? 'सर्व नोंदी (All)' : isHi ? 'सभी प्रविष्टियां (All)' : 'All Records' },
             { id: 'admin1', label: isMr ? '🛡️ निलेश सखारे (काऊंटर १)' : isHi ? '🛡️ निलेश सखारे (काउंटर १)' : 'Nilesh Sakhare (Counter 1)' },

@@ -199,20 +199,20 @@ export const ReorderNeedsView: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleViewReorderPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs shadow-md transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs shadow-md transition-all active:scale-95"
             title="View Reorder PDF Sheet"
           >
             <Eye className="w-4 h-4 text-amber-300" />
-            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
+            <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
           </button>
 
           <button
             onClick={handlePrintReorderPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs shadow-md transition-all active:scale-95 border border-white/20"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs shadow-md transition-all active:scale-95 border border-white/20"
             title="Print Reorder Sheet"
           >
             <Printer className="w-4 h-4 text-amber-300" />
-            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+            <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
           </button>
 
           <button

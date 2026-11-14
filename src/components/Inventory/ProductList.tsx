@@ -318,27 +318,27 @@ export const ProductList: React.FC<ProductListProps> = ({
           {/* View PDF Button */}
           <button
             onClick={handleViewStockPDF}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
             title="View Stock Valuation PDF"
           >
             <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
+            <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
           </button>
 
           {/* Print PDF Button */}
           <button
             onClick={handlePrintStockPDF}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
             title="Print Stock Valuation Report"
           >
             <Printer className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+            <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
           </button>
 
           {/* PDF Download Button */}
           <button
             onClick={handleDownloadStockPDF}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition-all border border-emerald-300 dark:border-emerald-700/60 active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition-all border border-emerald-300 dark:border-emerald-700/60 active:scale-95"
             title="Download Stock Valuation PDF"
           >
             <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -348,10 +348,10 @@ export const ProductList: React.FC<ProductListProps> = ({
           {/* New Product Button */}
           <button
             onClick={() => setShowQuickAdd(!showQuickAdd)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
           >
             <Plus className="w-4 h-4" />
-            <span>{language === 'mr' ? '+ नवीन माल जोडा' : language === 'hi' ? '+ नया माल जोड़ें' : '+ Add New Product'}</span>
+            <span>{language === 'mr' ? 'नवीन माल जोडा' : language === 'hi' ? 'नया माल जोड़ें' : 'Add New Product'}</span>
           </button>
         </div>
       </div>

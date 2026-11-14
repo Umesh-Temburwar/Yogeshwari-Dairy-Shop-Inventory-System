@@ -12,10 +12,12 @@ import {
 interface MobileActionBarProps {
   onOpenAddProduct?: () => void;
   onOpenMobileSidebar: () => void;
+  isMobileSidebarOpen?: boolean;
 }
 
 export const MobileActionBar: React.FC<MobileActionBarProps> = ({ 
-  onOpenMobileSidebar 
+  onOpenMobileSidebar,
+  isMobileSidebarOpen = false,
 }) => {
   const { activeView, setActiveView, metrics } = useStore();
   const { language } = useLanguage();
@@ -63,7 +65,9 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   return (
     <nav 
       aria-label="Mobile Navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 dark:bg-[#0F1A17]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-[#24352F] shadow-[0_-4px_24px_rgba(0,0,0,0.08)] pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)] pt-1 transition-colors"
+      className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 dark:bg-[#0F1A17]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-[#24352F] shadow-[0_-4px_24px_rgba(0,0,0,0.08)] pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)] pt-1 transition-all duration-200 ${
+        isMobileSidebarOpen ? 'opacity-0 pointer-events-none translate-y-full' : 'opacity-100 translate-y-0'
+      }`}
     >
       <div className="max-w-md mx-auto grid grid-cols-5 items-end h-[56px] px-1">
         {tabs.map((tab) => {

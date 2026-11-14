@@ -150,6 +150,7 @@ const MainContent: React.FC = () => {
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebarCollapse={() => setIsSidebarCollapsed(prev => !prev)}
         onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
+        isMobileSidebarOpen={isMobileSidebarOpen}
       />
 
       {/* Main Workspace with Sidebar & Content */}
@@ -238,6 +239,7 @@ const MainContent: React.FC = () => {
           setIsAddProductOpen(true);
         }}
         onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
+        isMobileSidebarOpen={isMobileSidebarOpen}
       />
 
       {/* Modals with Suspense */}

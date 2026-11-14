@@ -24,6 +24,7 @@ interface NavbarProps {
   isSidebarCollapsed: boolean;
   onToggleSidebarCollapse: () => void;
   onOpenMobileSidebar: () => void;
+  isMobileSidebarOpen?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
@@ -32,12 +33,20 @@ export const Navbar: React.FC<NavbarProps> = ({
   isSidebarCollapsed,
   onToggleSidebarCollapse,
   onOpenMobileSidebar,
+  isMobileSidebarOpen = false,
 }) => {
   const { language, setLanguage, t } = useLanguage();
   const { resolvedTheme, toggleTheme } = useTheme();
   const { user, role, setRole, lockSecurity, signOut } = useAuth();
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  // Auto-close profile dropdown when mobile drawer is opened
+  React.useEffect(() => {
+    if (isMobileSidebarOpen) {
+      setShowProfileMenu(false);
+    }
+  }, [isMobileSidebarOpen]);
 
   // Active User display name: Nikhil Sakhare (Owner) vs Nilesh Sakhare (Admin)
   const currentUserName = 
@@ -126,7 +135,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="text-xs font-black leading-none">
                   {currentUserName}
                 </span>
-                <span className="text-[9px] text-slate-500 dark:text-[#8FA69C] leading-none mt-0.5 truncate max-w-[70px] sm:max-w-[100px]">
+                <span className="text-[9px] text-slate-500 dark:text-[#8FA69C] leading-none mt-0.5 truncate max-w-[70px] sm:max-w-[100px] hidden sm:block">
                   {user?.email?.split('@')[0] || 'Yogeshwari'}
                 </span>
               </div>
@@ -137,7 +146,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {showProfileMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-                <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] shadow-2xl p-2.5 z-50 animate-fadeIn space-y-2.5">
+                <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] shadow-2xl p-2.5 z-50 animate-fadeIn space-y-2.5">
                   
                   {/* 1. LANGUAGE & THEME PREFERENCES */}
                   <div className="space-y-2">

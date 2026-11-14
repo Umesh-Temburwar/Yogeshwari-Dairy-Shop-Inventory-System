@@ -314,7 +314,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Pinned User Profile at the Very Last of Menu */}
-        <div className="p-3 pt-0 pb-3">
+        <div className={`p-3 pt-0 ${isMobileDrawer ? 'pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]' : 'pb-3'}`}>
           {!isActuallyCollapsed ? (
             <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-between gap-2 shadow-2xs">
               <div className="flex items-center gap-2.5 min-w-0">
@@ -375,7 +375,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar: w-[264px] or w-[72px] on desktop, fixed drawer on mobile */}
       <aside 
         className={`fixed inset-y-0 left-0 z-50 lg:static flex flex-col justify-between bg-white dark:bg-[#0F1A17] border-r border-slate-200 dark:border-[#24352F] shrink-0 h-full overflow-hidden transition-all duration-200 ease-in-out ${
-          isMobileOpen ? 'translate-x-0 w-[264px] shadow-2xl' : '-translate-x-full lg:translate-x-0'
+          isMobileOpen ? 'translate-x-0 w-[280px] max-w-[85vw] shadow-2xl' : '-translate-x-full lg:translate-x-0'
         } ${isCollapsed ? 'lg:w-[72px]' : 'lg:w-[264px]'}`}
       >
         {renderSidebarInner(isMobileOpen)}

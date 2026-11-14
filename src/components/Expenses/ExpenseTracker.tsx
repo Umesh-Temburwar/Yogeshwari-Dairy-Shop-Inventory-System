@@ -179,20 +179,20 @@ export const ExpenseTracker: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleViewExpensesPDF}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2621] dark:hover:bg-[#24352F] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-all shadow-xs"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2621] dark:hover:bg-[#24352F] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-all shadow-xs"
             title="View Expenses PDF Report"
           >
             <Eye className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
+            <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
           </button>
 
           <button
             onClick={handlePrintExpensesPDF}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2621] dark:hover:bg-[#24352F] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-all shadow-xs"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2621] dark:hover:bg-[#24352F] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-all shadow-xs"
             title="Print Expenses PDF"
           >
             <Printer className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
-            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+            <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
           </button>
 
           <button

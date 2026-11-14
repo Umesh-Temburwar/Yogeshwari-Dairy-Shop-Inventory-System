@@ -82,7 +82,7 @@ const ProductCard = React.memo<ProductCardProps>(({
     >
       <div>
         <div className="flex items-start justify-between gap-1 mb-1">
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] uppercase">
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] uppercase truncate max-w-[85px]">
             {prod.unit}
           </span>
           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 ${
@@ -640,7 +640,7 @@ export const BillingCounter: React.FC = () => {
       </div>
 
       {/* RIGHT COLUMN: Active Cart, Customer Info & Payment Checkout */}
-      <div className={`lg:col-span-5 flex flex-col bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-sm p-4 sm:p-5 justify-between transition-colors ${mobileTab === 'products' ? 'hidden lg:flex' : 'flex'}`}>
+      <div className={`lg:col-span-5 flex flex-col bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-sm p-4 sm:p-5 justify-between transition-colors ${mobileTab === 'products' ? 'hidden lg:flex' : 'flex'} pb-32 sm:pb-5`}>
         <div className="space-y-4">
           
           {/* Header & Clear */}
@@ -735,8 +735,16 @@ export const BillingCounter: React.FC = () => {
                 </div>
               ))
             ) : (
-              <div className="py-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs">
-                {t('cartEmptyMsg')}
+              <div className="py-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs space-y-3">
+                <p>{t('cartEmptyMsg')}</p>
+                <button
+                  type="button"
+                  onClick={() => setMobileTab('products')}
+                  className="lg:hidden inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition active:scale-95"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{language === 'mr' ? 'बिलामध्ये माल जोडा' : language === 'hi' ? 'बिल में सामान जोड़ें' : 'Add Products'}</span>
+                </button>
               </div>
             )}
           </div>

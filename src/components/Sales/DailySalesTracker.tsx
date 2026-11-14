@@ -259,20 +259,20 @@ export const DailySalesTracker: React.FC = () => {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={handleViewSalesPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2621] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-all shadow-xs active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2621] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-all shadow-xs active:scale-95"
             title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View Sales PDF'}
           >
             <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
+            <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
           </button>
 
           <button
             onClick={handlePrintSalesPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
             title={language === 'mr' ? 'अहवाल थेट प्रिंट करा' : language === 'hi' ? 'रिपोर्ट प्रिंट करें' : 'Print Sales Report'}
           >
             <Printer className="w-4 h-4 text-emerald-400" />
-            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+            <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
           </button>
 
           <button

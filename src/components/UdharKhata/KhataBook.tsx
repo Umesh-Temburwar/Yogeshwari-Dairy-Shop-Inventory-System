@@ -268,31 +268,31 @@ export const KhataBook: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           {/* View PDF Button */}
           <button
             onClick={handleViewKhataBookPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
             title="View Udhar Khata Book PDF Report"
           >
             <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
+            <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
           </button>
 
           {/* Print PDF Button */}
           <button
             onClick={handlePrintKhataBookPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
             title="Print Udhar Khata Book Report"
           >
             <Printer className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+            <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
           </button>
 
           {/* Download PDF Button */}
           <button
             onClick={handleDownloadKhataBookPDF}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 text-xs font-bold transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 text-xs font-bold transition-all active:scale-95"
             title="Download Udhar Khata Book PDF Report"
           >
             <Download className="w-4 h-4 text-amber-600 dark:text-amber-400" />
@@ -301,10 +301,10 @@ export const KhataBook: React.FC = () => {
 
           <button
             onClick={() => setIsAddCustModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md shadow-amber-600/20 transition-all active:scale-95"
+            className="flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md shadow-amber-600/20 transition-all active:scale-95 shrink-0"
           >
             <UserPlus className="w-4 h-4" />
-            <span>+ {language === 'mr' ? 'नवीन ग्राहक खाते जोडा' : language === 'hi' ? 'नया खाता खोलें' : 'Add New Customer'}</span>
+            <span>{language === 'mr' ? 'नवीन ग्राहक खाते जोडा' : language === 'hi' ? 'नया खाता खोलें' : 'Add New Customer'}</span>
           </button>
         </div>
       </div>
@@ -441,7 +441,7 @@ export const KhataBook: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-2 border-t border-slate-100 dark:border-[#24352F] flex items-center gap-2">
+              <div className="pt-2 border-t border-slate-100 dark:border-[#24352F] flex flex-wrap items-center gap-1.5 sm:gap-2">
                 {hasBalance && (
                   <button
                     onClick={() => {

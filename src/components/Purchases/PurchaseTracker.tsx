@@ -255,27 +255,27 @@ export const PurchaseTracker: React.FC = () => {
           {/* View PDF Button */}
           <button
             onClick={handleViewPurchasePDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
             title="View Purchases PDF Report"
           >
             <Eye className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-            <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
+            <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
           </button>
 
           {/* Print PDF Button */}
           <button
             onClick={handlePrintPurchasePDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
             title="Print Purchases Report"
           >
             <Printer className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-            <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+            <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
           </button>
 
           {/* PDF Report Download Button */}
           <button
             onClick={handleDownloadPurchasePDF}
-            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-900 dark:text-sky-300 border border-sky-300 dark:border-sky-800/60 text-xs font-bold transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-900 dark:text-sky-300 border border-sky-300 dark:border-sky-800/60 text-xs font-bold transition-all active:scale-95"
             title="Download Purchases PDF Report"
           >
             <Download className="w-4 h-4 text-sky-600 dark:text-sky-400" />
@@ -284,11 +284,11 @@ export const PurchaseTracker: React.FC = () => {
 
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-[#8FA69C] text-xs font-bold transition-all"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-[#8FA69C] text-xs font-bold transition-all"
             title="Export to Excel CSV"
           >
             <Download className="w-4 h-4 text-slate-600 dark:text-[#8FA69C]" />
-            <span>Excel CSV</span>
+            <span className="hidden sm:inline">Excel CSV</span>
           </button>
 
           <button
@@ -296,10 +296,10 @@ export const PurchaseTracker: React.FC = () => {
               if (selectedProduct) setPurchasePrice(selectedProduct.purchase_price.toString());
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-md shadow-sky-600/20 transition-all active:scale-95"
+            className="flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-md shadow-sky-600/20 transition-all active:scale-95 shrink-0"
           >
             <Plus className="w-4 h-4" />
-            <span>+ {language === 'mr' ? 'नवीन खरेदी नोंदवा' : language === 'hi' ? 'नई खरीद दर्ज करें' : 'Record Purchase'}</span>
+            <span>{language === 'mr' ? 'नवीन खरेदी नोंदवा' : language === 'hi' ? 'नई खरीद दर्ज करें' : 'Record Purchase'}</span>
           </button>
         </div>
       </div>

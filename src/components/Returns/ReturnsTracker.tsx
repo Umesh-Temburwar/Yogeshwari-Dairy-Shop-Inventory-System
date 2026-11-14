@@ -351,19 +351,22 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
       </div>
 
       {/* Main Tab Navigation: Customer Returns vs Supplier Returns */}
-      <div className="flex border-b border-slate-200 dark:border-[#24352F] gap-2 pt-1">
+      <div className="flex border-b border-slate-200 dark:border-[#24352F] gap-1.5 sm:gap-2 pt-1 overflow-x-auto no-scrollbar">
         <button
           type="button"
           onClick={() => setActiveTab('customer')}
-          className={`pb-3 px-3 text-xs sm:text-sm font-black transition-all flex items-center gap-2 border-b-2 ${
+          className={`pb-3 px-2 sm:px-3 text-xs sm:text-sm font-black transition-all flex items-center gap-1.5 sm:gap-2 border-b-2 whitespace-nowrap shrink-0 ${
             activeTab === 'customer'
               ? 'border-purple-600 text-purple-600 dark:text-purple-400'
               : 'border-transparent text-slate-500 dark:text-[#8FA69C] hover:text-slate-800'
           }`}
         >
-          <RotateCcw className="w-4 h-4" />
-          <span>{language === 'mr' ? '१. ग्राहक माल परतावा (Customer Returns)' : language === 'hi' ? '१. ग्राहक माल वापसी (Customer Returns)' : '1. Customer Returns'}</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300">
+          <RotateCcw className="w-4 h-4 shrink-0" />
+          <span>
+            {language === 'mr' ? '१. ग्राहक परतावा' : language === 'hi' ? '१. ग्राहक वापसी' : '1. Customer Returns'}
+            <span className="hidden sm:inline"> (Customer Returns)</span>
+          </span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold shrink-0">
             {metrics.totalReturnsCount}
           </span>
         </button>
@@ -371,16 +374,19 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
         <button
           type="button"
           onClick={() => setActiveTab('supplier')}
-          className={`pb-3 px-3 text-xs sm:text-sm font-black transition-all flex items-center gap-2 border-b-2 ${
+          className={`pb-3 px-2 sm:px-3 text-xs sm:text-sm font-black transition-all flex items-center gap-1.5 sm:gap-2 border-b-2 whitespace-nowrap shrink-0 ${
             activeTab === 'supplier'
               ? 'border-amber-600 text-amber-600 dark:text-amber-400'
               : 'border-transparent text-slate-500 dark:text-[#8FA69C] hover:text-slate-800'
           }`}
         >
-          <Truck className="w-4 h-4" />
-          <span>{language === 'mr' ? '२. सप्लायर / खरेदी परतावा (Supplier Returns)' : language === 'hi' ? '२. सप्लायर / खरीद वापसी (Supplier Returns)' : '2. Supplier Returns'}</span>
+          <Truck className="w-4 h-4 shrink-0" />
+          <span>
+            {language === 'mr' ? '२. सप्लायर परतावा' : language === 'hi' ? '२. सप्लायर वापसी' : '2. Supplier Returns'}
+            <span className="hidden sm:inline"> (Supplier Returns)</span>
+          </span>
           {metrics.pendingSupplierRefundAmount > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-extrabold animate-pulse">
+            <span className="px-2 py-0.5 rounded-full text-[10px] bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-extrabold animate-pulse shrink-0">
               ₹{metrics.pendingSupplierRefundAmount.toFixed(0)} येणे बाकी
             </span>
           )}

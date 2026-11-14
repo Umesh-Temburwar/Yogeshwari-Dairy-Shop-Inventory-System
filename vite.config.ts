@@ -5,7 +5,22 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   build: {
-    chunkSizeWarningLimit: 2500,
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) return 'vendor-react';
+            if (id.includes('motion')) return 'vendor-motion';
+            if (id.includes('recharts')) return 'vendor-charts';
+            if (id.includes('@supabase')) return 'vendor-supabase';
+            if (id.includes('jspdf')) return 'vendor-pdf';
+            if (id.includes('tesseract.js')) return 'vendor-ocr';
+            if (id.includes('@zxing')) return 'vendor-scanner';
+          }
+        },
+      },
+    },
   },
   server: {
     host: true, // Expose to local network (0.0.0.0) so mobile devices can connect

@@ -1,4 +1,6 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { drawerLeftVariants, overlayVariants } from '../lib/motion';
 import ydoLogo from '../assets/YDO_logo.jpg';
 import { useStore, AppView } from '../context/StoreContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -185,7 +187,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onCloseMobile();
               }}
               title={label}
-              className={`w-full flex items-center ${isCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2.5'} rounded-xl text-left transition-all duration-150 group ${
+              className={`w-full flex items-center ${isCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2.5'} rounded-xl text-left transition-all duration-150 group tap-press ${
                 isActive 
                   ? 'bg-emerald-600 text-white shadow-xs font-semibold' 
                   : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25] hover:text-slate-900 dark:hover:text-[#E7F0EC] font-medium'
@@ -217,22 +219,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     );
   };
 
-  return (
-    <>
-      {/* Mobile Backdrop Overlay */}
-      {isMobileOpen && (
-        <div 
-          onClick={onCloseMobile}
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden transition-opacity"
-        />
-      )}
-
-      {/* Sidebar Container: w-[264px] or w-[72px] on desktop, fixed drawer on mobile */}
-      <aside 
-        className={`fixed inset-y-0 left-0 z-50 lg:static flex flex-col justify-between bg-white dark:bg-[#0F1A17] border-r border-slate-200 dark:border-[#24352F] shrink-0 h-full overflow-hidden transition-all duration-200 ease-in-out ${
-          isMobileOpen ? 'translate-x-0 w-[264px] shadow-2xl' : '-translate-x-full lg:translate-x-0'
-        } ${isCollapsed ? 'lg:w-[72px]' : 'lg:w-[264px]'}`}
-      >
+  const renderSidebarInner = (isMobileDrawer = false) => {
+    const isActuallyCollapsed = isMobileDrawer ? false : isCollapsed;
+    return (
+      <>
         {/* Mobile Header Close Button */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-[#24352F] lg:hidden">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -255,7 +245,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <button 
             onClick={onCloseMobile}
-            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
+            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2A25] tap-press"
           >
             <X className="w-5 h-5" />
           </button>
@@ -274,18 +264,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onCloseMobile();
                   onOpenAppDownload();
                 }}
-                className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl border border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/80 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-300 font-extrabold text-xs transition shadow-2xs ${isCollapsed ? "justify-center" : "justify-between"}`}
+                className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl border border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/80 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-300 font-extrabold text-xs transition shadow-2xs tap-press ${isActuallyCollapsed ? "justify-center" : "justify-between"}`}
                 title={language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल करा' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल करें' : 'Install Mobile App'}
               >
                 <div className="flex items-center gap-2">
                   <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  {!isCollapsed && (
+                  {!isActuallyCollapsed && (
                     <span className="truncate">
                       {language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल' : 'Install App'}
                     </span>
                   )}
                 </div>
-                {!isCollapsed && (
+                {!isActuallyCollapsed && (
                   <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 )}
               </button>
@@ -295,7 +285,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Pinned "Daily Business Summary" Card at Bottom */}
         <div className="p-3 border-t border-slate-100 dark:border-[#24352F] mt-auto">
-          {!isCollapsed ? (
+          {!isActuallyCollapsed ? (
             <div className="p-3 bg-gradient-to-br from-emerald-50 to-teal-50/60 dark:from-[#131F1B] dark:to-[#1A2A25] border border-emerald-200/60 dark:border-[#24352F] rounded-xl shadow-xs">
               <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900 dark:text-emerald-300 mb-2">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -317,7 +307,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ) : (
             <div 
               title={`${t('todayNetProfit')} ₹${metrics.netProfit.toLocaleString('en-IN')}`}
-              className="w-10 h-10 mx-auto rounded-xl bg-emerald-50 dark:bg-[#1A2A25] text-emerald-600 dark:text-emerald-400 flex items-center justify-center cursor-pointer border border-emerald-200/60 dark:border-[#24352F]"
+              className="w-10 h-10 mx-auto rounded-xl bg-emerald-50 dark:bg-[#1A2A25] text-emerald-600 dark:text-emerald-400 flex items-center justify-center cursor-pointer border border-emerald-200/60 dark:border-[#24352F] tap-press"
             >
               <Sparkles className="w-5 h-5" />
             </div>
@@ -326,7 +316,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Pinned User Profile at the Very Last of Menu */}
         <div className="p-3 pt-0 pb-3">
-          {!isCollapsed ? (
+          {!isActuallyCollapsed ? (
             <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-between gap-2 shadow-2xs">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${role === "Owner" ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"}`}>
@@ -352,7 +342,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
         </div>
+      </>
+    );
+  };
+
+  return (
+    <>
+      {/* Mobile Backdrop Overlay with AnimatePresence */}
+      <AnimatePresence>
+        {isMobileOpen && (
+          <motion.div 
+            variants={overlayVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            onClick={onCloseMobile}
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Desktop Static / Collapsible Sidebar */}
+      <aside 
+        className={`hidden lg:flex flex-col justify-between bg-white dark:bg-[#0F1A17] border-r border-slate-200 dark:border-[#24352F] shrink-0 h-full overflow-hidden transition-[width] duration-200 ease-in-out ${
+          isCollapsed ? 'w-[72px]' : 'w-[264px]'
+        }`}
+      >
+        {renderSidebarInner(false)}
       </aside>
+
+      {/* Mobile Animated Drawer */}
+      <AnimatePresence>
+        {isMobileOpen && (
+          <motion.aside
+            variants={drawerLeftVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="fixed inset-y-0 left-0 z-50 flex flex-col justify-between bg-white dark:bg-[#0F1A17] border-r border-slate-200 dark:border-[#24352F] w-[264px] h-full shadow-2xl overflow-hidden lg:hidden"
+          >
+            {renderSidebarInner(true)}
+          </motion.aside>
+        )}
+      </AnimatePresence>
     </>
   );
 };

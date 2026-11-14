@@ -1,6 +1,7 @@
 import React from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { CountUp } from '../ui/CountUp';
 import { 
   TrendingUp, 
   Banknote, 
@@ -22,7 +23,8 @@ export const MetricsOverview: React.FC = () => {
   const cards = [
     {
       title: `${timeLabel} ${t('totalSales')}`,
-      amount: `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`,
+      numericValue: metrics.totalSalesRevenue,
+      prefix: '₹',
       subtitle: language === 'mr' ? 'काउंटर व होम डिलिव्हरी विक्री' : language === 'hi' ? 'काउंटर व होम डिलीवरी बिक्री' : 'Counter & delivery sales',
       icon: TrendingUp,
       iconBoxClass: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
@@ -31,7 +33,8 @@ export const MetricsOverview: React.FC = () => {
     },
     {
       title: `${timeLabel} ${t('cashCollected')}`,
-      amount: `₹${metrics.cashCollected.toLocaleString('en-IN')}`,
+      numericValue: metrics.cashCollected,
+      prefix: '₹',
       subtitle: `${((metrics.cashCollected / (metrics.totalSalesRevenue || 1)) * 100).toFixed(0)}% ${language === 'mr' ? 'रोख विक्री वाटा' : language === 'hi' ? 'रोकड़ शेयर' : 'Cash share'}`,
       icon: Banknote,
       iconBoxClass: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
@@ -40,7 +43,8 @@ export const MetricsOverview: React.FC = () => {
     },
     {
       title: `${timeLabel} ${t('onlineCollected')}`,
-      amount: `₹${metrics.onlineCollected.toLocaleString('en-IN')}`,
+      numericValue: metrics.onlineCollected,
+      prefix: '₹',
       subtitle: `${((metrics.onlineCollected / (metrics.totalSalesRevenue || 1)) * 100).toFixed(0)}% ${language === 'mr' ? 'फोनपे, जीपे, स्कॅनर' : language === 'hi' ? 'फोनपे, जीपे, स्कैनर' : 'PhonePe, GPay, QR'}`,
       icon: Smartphone,
       iconBoxClass: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
@@ -49,7 +53,8 @@ export const MetricsOverview: React.FC = () => {
     },
     {
       title: `${timeLabel} ${t('totalPurchases')}`,
-      amount: `₹${metrics.totalPurchasesAmount.toLocaleString('en-IN')}`,
+      numericValue: metrics.totalPurchasesAmount,
+      prefix: '₹',
       subtitle: language === 'mr' ? 'दूध, खवा, तूप खरेदी खर्च' : language === 'hi' ? 'दूध, घी, खोया रॉ माल लागत' : 'Milk & raw materials cost',
       icon: ShoppingBag,
       iconBoxClass: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400',
@@ -58,7 +63,8 @@ export const MetricsOverview: React.FC = () => {
     },
     {
       title: `${timeLabel} ${t('netProfit')}`,
-      amount: `₹${metrics.netProfit.toLocaleString('en-IN')}`,
+      numericValue: metrics.netProfit,
+      prefix: '₹',
       subtitle: `${language === 'mr' ? 'एकूण नफा' : language === 'hi' ? 'सकल लाभ' : 'Gross'} ₹${metrics.grossProfit.toLocaleString('en-IN')} ${language === 'mr' ? 'मधून खर्च वजा' : language === 'hi' ? 'में से खर्च घटाकर' : 'after expenses'}`,
       icon: Sparkles,
       iconBoxClass: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
@@ -67,7 +73,8 @@ export const MetricsOverview: React.FC = () => {
     },
     {
       title: t('totalUdharDue'),
-      amount: `₹${metrics.totalOutstandingUdhar.toLocaleString('en-IN')}`,
+      numericValue: metrics.totalOutstandingUdhar,
+      prefix: '₹',
       subtitle: language === 'mr' ? 'ग्राहक व मिठाईवाल्यांकडून बाकी' : language === 'hi' ? 'ग्राहकों व हलवाइयों से बाकी' : 'Customer credit receivable',
       icon: BookOpen,
       iconBoxClass: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
@@ -76,7 +83,8 @@ export const MetricsOverview: React.FC = () => {
     },
     {
       title: `${timeLabel} ${t('damageLoss')}`,
-      amount: `₹${metrics.totalDamagesLoss.toLocaleString('en-IN')}`,
+      numericValue: metrics.totalDamagesLoss,
+      prefix: '₹',
       subtitle: language === 'mr' ? 'नासलेले दूध, लिकेज व एक्सपायरी' : language === 'hi' ? 'फटा दूध, पाउच लीकेज नुकसान' : 'Curdled milk & leakage loss',
       icon: PackageX,
       iconBoxClass: 'bg-slate-500/15 text-slate-600 dark:text-slate-400',
@@ -85,7 +93,8 @@ export const MetricsOverview: React.FC = () => {
     },
     {
       title: t('lowStockAlert'),
-      amount: `${metrics.lowStockCount} ${language === 'mr' ? 'उत्पादने' : language === 'hi' ? 'आइटम्स' : 'items'}`,
+      numericValue: metrics.lowStockCount,
+      suffix: ` ${language === 'mr' ? 'उत्पादने' : language === 'hi' ? 'आइटम्स' : 'items'}`,
       subtitle: (metrics.expiredBatchesCount > 0 || metrics.expiringTodayBatchesCount > 0)
         ? (language === 'mr' 
             ? `⚠️ ${metrics.expiredBatchesCount} एक्सपायर्ड • ${metrics.expiringTodayBatchesCount} आज मुदत संपणारे` 
@@ -112,7 +121,7 @@ export const MetricsOverview: React.FC = () => {
           <div
             key={idx}
             onClick={card.action}
-            className={`p-5 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] shadow-xs hover:shadow-md transition-all duration-150 flex flex-col justify-between h-full cursor-pointer group ${
+            className={`p-5 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] shadow-xs hover:shadow-md transition-all duration-150 flex flex-col justify-between h-full cursor-pointer group tap-press ${
               card.isProfit ? 'ring-1 ring-amber-500/30 dark:ring-amber-400/20 shadow-amber-500/5' : ''
             }`}
           >
@@ -126,9 +135,9 @@ export const MetricsOverview: React.FC = () => {
               </div>
             </div>
 
-            {/* Big Value: tabular-nums formatted */}
+            {/* Big Value: CountUp animation with tabular-nums */}
             <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#E7F0EC] tracking-tight tabular-nums my-1">
-              {card.amount}
+              <CountUp value={card.numericValue} prefix={card.prefix || ''} suffix={card.suffix || ''} duration={600} />
             </div>
 
             {/* Helper Text */}

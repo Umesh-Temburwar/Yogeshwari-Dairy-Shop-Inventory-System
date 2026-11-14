@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { fadeSlideVariants } from './lib/motion';
+import { ViewFallbackSkeleton } from './components/ui/Skeleton';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -9,24 +12,26 @@ import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { MobileActionBar } from './components/MobileActionBar';
 import { DashboardView } from './components/Dashboard/DashboardView';
-import { BillingCounter } from './components/POS/BillingCounter';
-import { ProductList } from './components/Inventory/ProductList';
-import { ReorderNeedsView } from './components/Inventory/ReorderNeedsView';
-import { ExpiryDashboard } from './components/Expiry/ExpiryDashboard';
-import { PurchaseTracker } from './components/Purchases/PurchaseTracker';
-import { DamageTracker } from './components/Damages/DamageTracker';
-import { KhataBook } from './components/UdharKhata/KhataBook';
-import { ExpenseTracker } from './components/Expenses/ExpenseTracker';
-import { ProfitReport } from './components/Analytics/ProfitReport';
-import { DailySalesTracker } from './components/Sales/DailySalesTracker';
-import { ReturnsTracker } from './components/Returns/ReturnsTracker';
-import { ReturnProductModal } from './components/Returns/ReturnProductModal';
 import { AddProductModal } from './components/Inventory/AddProductModal';
-import { SupabaseConfigModal } from './components/Settings/SupabaseConfigModal';
 import { MasterSecurityModal } from './components/Auth/MasterSecurityModal';
 import { AppDownloadModal } from './components/Common/AppDownloadModal';
 import { RotateCw } from 'lucide-react';
 import { Product } from './types';
+
+// Lazy-load secondary heavy view modules for initial bundle optimization
+const BillingCounter = React.lazy(() => import('./components/POS/BillingCounter').then(m => ({ default: m.BillingCounter })));
+const ProductList = React.lazy(() => import('./components/Inventory/ProductList').then(m => ({ default: m.ProductList })));
+const ReorderNeedsView = React.lazy(() => import('./components/Inventory/ReorderNeedsView').then(m => ({ default: m.ReorderNeedsView })));
+const ExpiryDashboard = React.lazy(() => import('./components/Expiry/ExpiryDashboard').then(m => ({ default: m.ExpiryDashboard })));
+const PurchaseTracker = React.lazy(() => import('./components/Purchases/PurchaseTracker').then(m => ({ default: m.PurchaseTracker })));
+const DamageTracker = React.lazy(() => import('./components/Damages/DamageTracker').then(m => ({ default: m.DamageTracker })));
+const KhataBook = React.lazy(() => import('./components/UdharKhata/KhataBook').then(m => ({ default: m.KhataBook })));
+const ExpenseTracker = React.lazy(() => import('./components/Expenses/ExpenseTracker').then(m => ({ default: m.ExpenseTracker })));
+const ProfitReport = React.lazy(() => import('./components/Analytics/ProfitReport').then(m => ({ default: m.ProfitReport })));
+const DailySalesTracker = React.lazy(() => import('./components/Sales/DailySalesTracker').then(m => ({ default: m.DailySalesTracker })));
+const ReturnsTracker = React.lazy(() => import('./components/Returns/ReturnsTracker').then(m => ({ default: m.ReturnsTracker })));
+const ReturnProductModal = React.lazy(() => import('./components/Returns/ReturnProductModal').then(m => ({ default: m.ReturnProductModal })));
+const SupabaseConfigModal = React.lazy(() => import('./components/Settings/SupabaseConfigModal').then(m => ({ default: m.SupabaseConfigModal })));
 
 const MainContent: React.FC = () => {
   const { activeView, setActiveView, refreshData, isSyncing } = useStore();
@@ -176,51 +181,64 @@ const MainContent: React.FC = () => {
               <span>{isSyncing ? 'रिफ्रेश होत आहे...' : pullY > 50 ? 'सोडून द्या (रिफ्रेश करा)' : 'खाली ओढा (रिफ्रेश)'}</span>
             </div>
           )}
-          {activeView === 'dashboard' && (
-            <DashboardView 
-              onOpenAddProduct={() => {
-                setProductToEdit(null);
-                setIsAddProductOpen(true);
-              }}
-            />
-          )}
+          <Suspense fallback={<ViewFallbackSkeleton />}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeView}
+                variants={fadeSlideVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="w-full"
+              >
+                {activeView === 'dashboard' && (
+                  <DashboardView 
+                    onOpenAddProduct={() => {
+                      setProductToEdit(null);
+                      setIsAddProductOpen(true);
+                    }}
+                  />
+                )}
 
-          {activeView === 'pos' && <BillingCounter />}
+                {activeView === 'pos' && <BillingCounter />}
 
-          {activeView === 'sales' && <DailySalesTracker />}
+                {activeView === 'sales' && <DailySalesTracker />}
 
-          {activeView === 'inventory' && (
-            <ProductList 
-              onOpenAddProduct={() => {
-                setProductToEdit(null);
-                setIsAddProductOpen(true);
-              }}
-              onEditProduct={handleEditProduct}
-            />
-          )}
+                {activeView === 'inventory' && (
+                  <ProductList 
+                    onOpenAddProduct={() => {
+                      setProductToEdit(null);
+                      setIsAddProductOpen(true);
+                    }}
+                    onEditProduct={handleEditProduct}
+                  />
+                )}
 
-          {activeView === 'reorder' && <ReorderNeedsView />}
+                {activeView === 'reorder' && <ReorderNeedsView />}
 
-          {activeView === 'expiry' && <ExpiryDashboard />}
+                {activeView === 'expiry' && <ExpiryDashboard />}
 
-          {activeView === 'purchases' && <PurchaseTracker />}
+                {activeView === 'purchases' && <PurchaseTracker />}
 
-          {activeView === 'damages' && <DamageTracker />}
+                {activeView === 'damages' && <DamageTracker />}
 
-          {activeView === 'udhar' && <KhataBook />}
+                {activeView === 'udhar' && <KhataBook />}
 
-          {activeView === 'expenses' && <ExpenseTracker />}
+                {activeView === 'expenses' && <ExpenseTracker />}
 
-          {activeView === 'analytics' && <ProfitReport />}
+                {activeView === 'analytics' && <ProfitReport />}
 
-          {activeView === 'returns' && (
-            <ReturnsTracker 
-              onOpenReturnModal={() => {
-                setReturnPrefill({});
-                setIsReturnModalOpen(true);
-              }} 
-            />
-          )}
+                {activeView === 'returns' && (
+                  <ReturnsTracker 
+                    onOpenReturnModal={() => {
+                      setReturnPrefill({});
+                      setIsReturnModalOpen(true);
+                    }} 
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </Suspense>
         </main>
       </div>
 
@@ -233,7 +251,7 @@ const MainContent: React.FC = () => {
         onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
       />
 
-      {/* Modals */}
+      {/* Modals with Suspense */}
       <AddProductModal 
         isOpen={isAddProductOpen}
         onClose={() => {
@@ -243,20 +261,26 @@ const MainContent: React.FC = () => {
         productToEdit={productToEdit}
       />
 
-      <SupabaseConfigModal 
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
+      <Suspense fallback={null}>
+        {isSettingsOpen && (
+          <SupabaseConfigModal 
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+          />
+        )}
+      </Suspense>
 
-      {isReturnModalOpen && (
-        <ReturnProductModal
-          onClose={() => setIsReturnModalOpen(false)}
-          prefillProductId={returnPrefill.productId}
-          prefillInvoiceNo={returnPrefill.invoiceNo}
-          prefillCustomerName={returnPrefill.customerName}
-          prefillCustomerPhone={returnPrefill.customerPhone}
-        />
-      )}
+      <Suspense fallback={null}>
+        {isReturnModalOpen && (
+          <ReturnProductModal
+            onClose={() => setIsReturnModalOpen(false)}
+            prefillProductId={returnPrefill.productId}
+            prefillInvoiceNo={returnPrefill.invoiceNo}
+            prefillCustomerName={returnPrefill.customerName}
+            prefillCustomerPhone={returnPrefill.customerPhone}
+          />
+        )}
+      </Suspense>
 
       {/* Mobile Application Download & PWA Install Popup */}
       <AppDownloadModal 

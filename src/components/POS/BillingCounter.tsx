@@ -1,8 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useDeferredValue } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { Product, PaymentMode, SaleItem, CustomerGender, CustomerAgeGroup } from '../../types';
+import { Product, ProductBatch, PaymentMode, SaleItem, CustomerGender, CustomerAgeGroup } from '../../types';
 import { computeExpiryStatus } from '../../lib/shelfLifeUtils';
+import { cartItemVariants } from '../../lib/motion';
+import { hapticSuccess, hapticLight } from '../../lib/haptics';
+import { AnimatedModal } from '../ui/AnimatedModal';
 import { 
   Search, 
   ShoppingCart, 
@@ -35,6 +39,136 @@ import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../../context/AuthContext';
 
+interface ProductCardProps {
+  prod: Product;
+  batches: ProductBatch[];
+  displayName: string;
+  language: string;
+  t: (key: string) => string;
+  onAddToCart: (prod: Product, qty?: number) => void;
+  onQuickCalc: (prod: Product) => void;
+}
+
+const ProductCard = React.memo<ProductCardProps>(({
+  prod,
+  batches,
+  displayName,
+  language,
+  t,
+  onAddToCart,
+  onQuickCalc
+}) => {
+  const prodBatches = useMemo(() => batches.filter(b => b.product_id === prod.id && b.qty_remaining > 0), [batches, prod.id]);
+  const validBatches = useMemo(() => prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status !== 'EXPIRED'), [prodBatches]);
+  const availableStock = prodBatches.length > 0 
+    ? validBatches.reduce((sum, b) => sum + b.qty_remaining, 0)
+    : prod.stock_quantity;
+
+  const isOutOfStock = availableStock <= 0;
+  const isLowStock = availableStock <= prod.min_stock_alert && !isOutOfStock;
+  const hasExpiredOnly = prodBatches.length > 0 && validBatches.length === 0;
+  const hasExpiringToday = prodBatches.some(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRING_TODAY');
+  const hasExpiringTomorrow = prodBatches.some(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRING_TOMORROW');
+
+  return (
+    <div
+      onClick={() => {
+        if (!isOutOfStock && !hasExpiredOnly) {
+          onAddToCart(prod, 1);
+        }
+      }}
+      className={`relative bg-white dark:bg-[#131F1B] rounded-2xl p-3.5 border transition-all duration-150 flex flex-col justify-between group tap-press select-none ${
+        isOutOfStock || hasExpiredOnly
+          ? 'border-slate-200 dark:border-[#24352F] opacity-60 bg-slate-50/50 dark:bg-[#16221E]' 
+          : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500 dark:hover:border-emerald-500/60 hover:shadow-md cursor-pointer'
+      }`}
+    >
+      <div>
+        <div className="flex items-start justify-between gap-1 mb-1">
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] uppercase">
+            {prod.unit}
+          </span>
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 ${
+            hasExpiredOnly 
+              ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800' :
+            isOutOfStock ? 'bg-red-100 dark:bg-rose-950/60 text-red-700 dark:text-rose-400' :
+            isLowStock ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
+          }`}>
+            {(isLowStock || hasExpiredOnly) && (
+              <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse-soft shrink-0" />
+            )}
+            <span>
+              {hasExpiredOnly 
+                ? (language === 'mr' ? 'मुदत संपली' : language === 'hi' ? 'एक्सपायर्ड' : 'Expired')
+                : `${availableStock} ${language === 'mr' ? 'शिल्लक' : language === 'hi' ? 'बचे' : 'left'}`}
+            </span>
+          </span>
+        </div>
+
+        <h4 className="font-bold text-slate-900 dark:text-[#E7F0EC] text-sm leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
+          {displayName}
+        </h4>
+        {prod.name !== displayName && (
+          <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium truncate mt-0.5">
+            {prod.name}
+          </p>
+        )}
+
+        {/* Near Expiry Warning Pill for Cashier */}
+        {hasExpiringToday && !hasExpiredOnly && (
+          <div className="mt-1.5 flex items-center gap-1 text-[10px] font-extrabold text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-2 py-0.5 rounded-md border border-orange-200 dark:border-orange-900/50">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse-soft shrink-0" />
+            <Clock className="w-3 h-3 text-orange-600 dark:text-orange-400 shrink-0" />
+            <span>{language === 'mr' ? 'आज संपत आहे (आधी विका)' : language === 'hi' ? 'आज एक्सपायर (पहले बेचें)' : 'Expiring Today (Sell first)'}</span>
+          </div>
+        )}
+        {hasExpiringTomorrow && !hasExpiringToday && !hasExpiredOnly && (
+          <div className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900/50">
+            <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>{language === 'mr' ? 'उद्या एक्सपायर' : language === 'hi' ? 'कल एक्सपायर' : 'Exp. Tomorrow'}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between">
+        <div>
+          <span className="text-xs text-slate-500 dark:text-[#8FA69C]">{language === 'mr' ? 'दर:' : language === 'hi' ? 'भाव:' : 'Rate:'}</span>{' '}
+          <span className="text-base font-extrabold text-slate-900 dark:text-white">
+            ₹{prod.selling_price}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          {/* Quick ₹ Calculator button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onQuickCalc(prod);
+            }}
+            title={t('measureInRupees')}
+            className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40 text-xs tap-press"
+          >
+            <Calculator className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Add to Cart button */}
+          <button
+            disabled={isOutOfStock || hasExpiredOnly}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToCart(prod, 1);
+            }}
+            className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-slate-300 dark:disabled:bg-slate-800 transition-colors tap-press"
+            title={hasExpiredOnly ? 'Expired Batch Blocked' : 'Add 1 Unit'}
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export const BillingCounter: React.FC = () => {
   const { products, batches, createSale, setActiveView } = useStore();
   const { t, language } = useLanguage();
@@ -65,6 +199,7 @@ export const BillingCounter: React.FC = () => {
   }, [role, adminSlot, user?.email, language]);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   
   // Mobile responsive tab (Products vs Cart/Checkout)
@@ -104,26 +239,29 @@ export const BillingCounter: React.FC = () => {
     { id: 'Bakery & Extras', label: t('catBakery') }
   ];
 
-  // Filtered products for selection
+  // Filtered products for selection (fast deferred evaluation)
   const filteredProducts = useMemo(() => {
+    const q = deferredSearchQuery.trim().toLowerCase();
     return products.filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        (p.hindi_name && p.hindi_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (p.marathi_name && p.marathi_name.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesSearch = !q ||
+        p.name.toLowerCase().includes(q) || 
+        (p.hindi_name && p.hindi_name.toLowerCase().includes(q)) ||
+        (p.marathi_name && p.marathi_name.toLowerCase().includes(q)) ||
+        (p.barcode && p.barcode.toLowerCase().includes(q));
       const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
       return matchesSearch && matchesCategory && p.is_active;
     });
-  }, [products, searchQuery, selectedCategory]);
+  }, [products, deferredSearchQuery, selectedCategory]);
 
   // Helper display name
-  const getProductDisplayName = (prod: Product) => {
+  const getProductDisplayName = useCallback((prod: Product) => {
     if (language === 'mr' && prod.marathi_name) return prod.marathi_name;
     if (language === 'hi' && prod.hindi_name) return prod.hindi_name;
     return prod.name;
-  };
+  }, [language]);
 
   // Add item to cart (with FEFO non-expired safety check)
-  const addToCart = (product: Product, quantityToAdd: number = 1) => {
+  const addToCart = useCallback((product: Product, quantityToAdd: number = 1) => {
     const prodBatches = batches.filter(b => b.product_id === product.id && b.qty_remaining > 0);
     const validBatches = prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status !== 'EXPIRED');
     const availableNonExpiredStock = prodBatches.length > 0 
@@ -139,6 +277,7 @@ export const BillingCounter: React.FC = () => {
       return;
     }
 
+    hapticLight();
     const displayName = getProductDisplayName(product);
     setCart(prev => {
       const existing = prev.find(item => item.product_id === product.id);
@@ -161,7 +300,12 @@ export const BillingCounter: React.FC = () => {
         }];
       }
     });
-  };
+  }, [batches, language, getProductDisplayName]);
+
+  const handleQuickCalc = useCallback((product: Product) => {
+    setQuickCalcProduct(product);
+    setCalcRupees('');
+  }, []);
 
   const updateQuantity = (productId: string, newQty: number) => {
     if (newQty <= 0) {
@@ -267,6 +411,7 @@ export const BillingCounter: React.FC = () => {
     setLastCompletedSale(sale);
     setIsSuccessModalOpen(true);
     confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
+    hapticSuccess();
 
     // Reset Form
     clearCart();
@@ -345,28 +490,42 @@ export const BillingCounter: React.FC = () => {
   return (
     <div className="relative">
       {/* Mobile Tab Switcher: Products vs Bill Checkout (Native App Feel) */}
-      <div className="lg:hidden grid grid-cols-2 p-1 bg-slate-200/80 dark:bg-[#1A2A25] rounded-2xl border border-slate-300/60 dark:border-[#24352F] mb-3 sticky top-0 z-20 backdrop-blur-md">
+      <div className="lg:hidden grid grid-cols-2 p-1 bg-slate-200/80 dark:bg-[#1A2A25] rounded-2xl border border-slate-300/60 dark:border-[#24352F] mb-3 sticky top-0 z-20 backdrop-blur-md relative">
         <button
           type="button"
           onClick={() => setMobileTab('products')}
-          className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+          className={`relative z-10 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 tap-press ${
             mobileTab === 'products'
-              ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-sm'
+              ? 'text-emerald-700 dark:text-emerald-400 font-black'
               : 'text-slate-600 dark:text-[#8FA69C]'
           }`}
         >
+          {mobileTab === 'products' && (
+            <motion.div
+              layoutId="pos-mobile-tab-pill"
+              className="absolute inset-0 bg-white dark:bg-[#131F1B] rounded-xl shadow-xs -z-10"
+              transition={{ type: 'spring', damping: 26, stiffness: 340 }}
+            />
+          )}
           <Package className="w-3.5 h-3.5" />
           <span>{language === 'mr' ? '१. माल निवडा' : language === 'hi' ? '१. सामान चुनें' : '1. Products'}</span>
         </button>
         <button
           type="button"
           onClick={() => setMobileTab('cart')}
-          className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+          className={`relative z-10 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 tap-press ${
             mobileTab === 'cart'
-              ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-sm'
+              ? 'text-emerald-700 dark:text-emerald-400 font-black'
               : 'text-slate-600 dark:text-[#8FA69C]'
           }`}
         >
+          {mobileTab === 'cart' && (
+            <motion.div
+              layoutId="pos-mobile-tab-pill"
+              className="absolute inset-0 bg-white dark:bg-[#131F1B] rounded-xl shadow-xs -z-10"
+              transition={{ type: 'spring', damping: 26, stiffness: 340 }}
+            />
+          )}
           <ShoppingCart className="w-3.5 h-3.5" />
           <span>{language === 'mr' ? '२. बिल' : language === 'hi' ? '२. बिल' : '2. Bill'} ({cart.length}) {netTotal > 0 ? `• ₹${netTotal.toFixed(0)}` : ''}</span>
         </button>
@@ -478,107 +637,19 @@ export const BillingCounter: React.FC = () => {
               </p>
             </div>
           ) : (
-            filteredProducts.map((prod) => {
-            const prodBatches = batches.filter(b => b.product_id === prod.id && b.qty_remaining > 0);
-            const validBatches = prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status !== 'EXPIRED');
-            const availableStock = prodBatches.length > 0 
-              ? validBatches.reduce((sum, b) => sum + b.qty_remaining, 0)
-              : prod.stock_quantity;
-
-            const isOutOfStock = availableStock <= 0;
-            const isLowStock = availableStock <= prod.min_stock_alert && !isOutOfStock;
-            const hasExpiredOnly = prodBatches.length > 0 && validBatches.length === 0;
-            const hasExpiringToday = prodBatches.some(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRING_TODAY');
-            const hasExpiringTomorrow = prodBatches.some(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRING_TOMORROW');
-            const displayName = getProductDisplayName(prod);
-
-            return (
-              <div
+            filteredProducts.map((prod) => (
+              <ProductCard
                 key={prod.id}
-                className={`relative bg-white dark:bg-[#131F1B] rounded-xl p-3.5 border transition-all duration-150 flex flex-col justify-between group ${
-                  isOutOfStock || hasExpiredOnly
-                    ? 'border-slate-200 dark:border-[#24352F] opacity-60 bg-slate-50/50 dark:bg-[#16221E]' 
-                    : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500 dark:hover:border-emerald-500/60 hover:shadow-md cursor-pointer'
-                }`}
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-1 mb-1">
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] uppercase">
-                      {prod.unit}
-                    </span>
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                      hasExpiredOnly 
-                        ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800' :
-                      isOutOfStock ? 'bg-red-100 dark:bg-rose-950/60 text-red-700 dark:text-rose-400' :
-                      isLowStock ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
-                    }`}>
-                      {hasExpiredOnly 
-                        ? (language === 'mr' ? 'मुदत संपली' : language === 'hi' ? 'एक्सपायर्ड' : 'Expired')
-                        : `${availableStock} ${language === 'mr' ? 'शिल्लक' : language === 'hi' ? 'बचे' : 'left'}`}
-                    </span>
-                  </div>
-
-                  <h4 className="font-bold text-slate-900 dark:text-[#E7F0EC] text-sm leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
-                    {displayName}
-                  </h4>
-                  {prod.name !== displayName && (
-                    <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium truncate mt-0.5">
-                      {prod.name}
-                    </p>
-                  )}
-
-                  {/* Near Expiry Warning Pill for Cashier */}
-                  {hasExpiringToday && !hasExpiredOnly && (
-                    <div className="mt-1.5 flex items-center gap-1 text-[10px] font-extrabold text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-2 py-0.5 rounded-md border border-orange-200 dark:border-orange-900/50">
-                      <Clock className="w-3 h-3 text-orange-600 dark:text-orange-400 shrink-0" />
-                      <span>{language === 'mr' ? 'आज संपत आहे (आधी विका)' : language === 'hi' ? 'आज एक्सपायर (पहले बेचें)' : 'Expiring Today (Sell first)'}</span>
-                    </div>
-                  )}
-                  {hasExpiringTomorrow && !hasExpiringToday && !hasExpiredOnly && (
-                    <div className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900/50">
-                      <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
-                      <span>{language === 'mr' ? 'उद्या एक्सपायर' : language === 'hi' ? 'कल एक्सपायर' : 'Exp. Tomorrow'}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between">
-                  <div>
-                    <span className="text-xs text-slate-500 dark:text-[#8FA69C]">{language === 'mr' ? 'दर:' : language === 'hi' ? 'भाव:' : 'Rate:'}</span>{' '}
-                    <span className="text-base font-extrabold text-slate-900 dark:text-white">
-                      ₹{prod.selling_price}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    {/* Quick ₹ Calculator button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setQuickCalcProduct(prod);
-                        setCalcRupees('');
-                      }}
-                      title={t('measureInRupees')}
-                      className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40 text-xs"
-                    >
-                      <Calculator className="w-3.5 h-3.5" />
-                    </button>
-
-                    {/* Add to Cart button */}
-                    <button
-                      disabled={isOutOfStock || hasExpiredOnly}
-                      onClick={() => addToCart(prod, 1)}
-                      className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-slate-300 dark:disabled:bg-slate-800 transition-colors"
-                      title={hasExpiredOnly ? 'Expired Batch Blocked' : 'Add 1 Unit'}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
+                prod={prod}
+                batches={batches}
+                displayName={getProductDisplayName(prod)}
+                language={language}
+                t={t}
+                onAddToCart={addToCart}
+                onQuickCalc={handleQuickCalc}
+              />
+            ))
+          )}
         </div>
       </div>
 
@@ -626,57 +697,64 @@ export const BillingCounter: React.FC = () => {
           {/* Cart Item Rows */}
           <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
             {cart.length > 0 ? (
-              cart.map((item) => (
-                <div 
-                  key={item.product_id}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/80 dark:bg-[#1A2A25] border border-slate-200/60 dark:border-[#24352F]"
-                >
-                  <div className="min-w-0 pr-2">
-                    <h5 className="text-xs font-bold text-slate-900 dark:text-[#E7F0EC] truncate">
-                      {item.product_name}
-                    </h5>
-                    <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-                      ₹{item.unit_price} &times; {item.quantity} {item.unit}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 shrink-0">
-                    {/* Qty +/- Controls */}
-                    <div className="flex items-center gap-1 bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] rounded-lg p-0.5">
-                      <button
-                        onClick={() => updateQuantity(item.product_id, item.quantity - 0.5)}
-                        className="p-1 hover:bg-slate-100 dark:hover:bg-[#1A2A25] rounded text-slate-600 dark:text-[#8FA69C]"
-                      >
-                        <Minus className="w-3 h-3" />
-                      </button>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={item.quantity}
-                        onChange={(e) => updateQuantity(item.product_id, parseFloat(e.target.value) || 0)}
-                        className="w-12 text-center text-xs font-bold text-slate-900 dark:text-white bg-transparent focus:outline-none"
-                      />
-                      <button
-                        onClick={() => updateQuantity(item.product_id, item.quantity + 0.5)}
-                        className="p-1 hover:bg-slate-100 dark:hover:bg-[#1A2A25] rounded text-slate-600 dark:text-[#8FA69C]"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </button>
+              <AnimatePresence initial={false}>
+                {cart.map((item) => (
+                  <motion.div 
+                    key={item.product_id}
+                    variants={cartItemVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    layout
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/80 dark:bg-[#1A2A25] border border-slate-200/60 dark:border-[#24352F]"
+                  >
+                    <div className="min-w-0 pr-2">
+                      <h5 className="text-xs font-bold text-slate-900 dark:text-[#E7F0EC] truncate">
+                        {item.product_name}
+                      </h5>
+                      <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
+                        ₹{item.unit_price} &times; {item.quantity} {item.unit}
+                      </div>
                     </div>
 
-                    <span className="text-xs font-black text-slate-900 dark:text-white w-14 text-right">
-                      ₹{item.total_price}
-                    </span>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {/* Qty +/- Controls */}
+                      <div className="flex items-center gap-1 bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] rounded-lg p-0.5">
+                        <button
+                          onClick={() => updateQuantity(item.product_id, item.quantity - 0.5)}
+                          className="p-1 hover:bg-slate-100 dark:hover:bg-[#1A2A25] rounded text-slate-600 dark:text-[#8FA69C] tap-press"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={item.quantity}
+                          onChange={(e) => updateQuantity(item.product_id, parseFloat(e.target.value) || 0)}
+                          className="w-12 text-center text-xs font-bold text-slate-900 dark:text-white bg-transparent focus:outline-none"
+                        />
+                        <button
+                          onClick={() => updateQuantity(item.product_id, item.quantity + 0.5)}
+                          className="p-1 hover:bg-slate-100 dark:hover:bg-[#1A2A25] rounded text-slate-600 dark:text-[#8FA69C] tap-press"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
 
-                    <button
-                      onClick={() => removeFromCart(item.product_id)}
-                      className="text-slate-400 hover:text-rose-600 dark:text-[#8FA69C] dark:hover:text-rose-400 p-1"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))
+                      <span className="text-xs font-black text-slate-900 dark:text-white w-14 text-right tabular-nums">
+                        ₹{item.total_price}
+                      </span>
+
+                      <button
+                        onClick={() => removeFromCart(item.product_id)}
+                        className="text-slate-400 hover:text-rose-600 dark:text-[#8FA69C] dark:hover:text-rose-400 p-1 tap-press"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             ) : (
               <div className="py-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs">
                 {t('cartEmptyMsg')}
@@ -718,7 +796,7 @@ export const BillingCounter: React.FC = () => {
             <label className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC] block mb-2">
               {t('paymentMethod')}
             </label>
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-4 gap-1.5 relative">
               {[
                 { id: 'Cash', label: t('cash'), icon: Banknote, color: 'text-blue-600 dark:text-blue-400' },
                 { id: 'Online_UPI', label: t('onlineUpi'), icon: Smartphone, color: 'text-purple-600 dark:text-purple-400' },
@@ -734,12 +812,19 @@ export const BillingCounter: React.FC = () => {
                       setPaymentMode(m.id as PaymentMode);
                       if (m.id === 'Online_UPI') setShowQrModal(true);
                     }}
-                    className={`p-2 rounded-xl border text-center transition-all ${
+                    className={`relative p-2 rounded-xl border text-center transition-all tap-press ${
                       isSelected
-                        ? 'border-emerald-600 dark:border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 font-bold shadow-xs'
+                        ? 'border-emerald-600 dark:border-emerald-500 text-emerald-900 dark:text-emerald-300 font-bold shadow-xs'
                         : 'border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-50 dark:hover:bg-[#223630]'
                     }`}
                   >
+                    {isSelected && (
+                      <motion.div
+                        layoutId="pos-payment-mode-pill"
+                        className="absolute inset-0 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl -z-10"
+                        transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+                      />
+                    )}
                     <Icon className={`w-4 h-4 mx-auto mb-1 ${m.color}`} />
                     <span className="text-[11px] block leading-tight">{m.label}</span>
                   </button>
@@ -1181,111 +1266,113 @@ export const BillingCounter: React.FC = () => {
       )}
 
       {/* SALE SUCCESS & PRINT RECEIPT MODAL */}
-      {isSuccessModalOpen && lastCompletedSale && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200/80 dark:border-[#24352F]">
-            <div className="text-center space-y-2">
-              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800/40">
-                <CheckCircle2 className="w-7 h-7" />
+      <AnimatedModal
+        isOpen={isSuccessModalOpen && !!lastCompletedSale}
+        onClose={() => setIsSuccessModalOpen(false)}
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-4">
+          <div className="text-center space-y-2">
+            <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800/40 animate-pulse-soft">
+              <CheckCircle2 className="w-7 h-7" />
+            </div>
+            <h3 className="text-xl font-black text-slate-900 dark:text-white">
+              {language === 'mr' ? 'विक्री यशस्वीपणे नोंदवली गेली!' : language === 'hi' ? 'बिक्री सफलतापूर्वक दर्ज हुई!' : 'Sale Recorded Successfully!'}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
+              {language === 'mr' ? 'बिल क्रमांक:' : language === 'hi' ? 'बिल क्रमांक:' : 'Invoice:'} <b className="text-slate-800 dark:text-white">{lastCompletedSale?.invoice_no}</b>
+            </p>
+          </div>
+
+          {/* Printable Thermal Receipt Container */}
+          <div id="printable-receipt" className="bg-slate-50 dark:bg-[#1A2A25] p-4 rounded-xl border border-dashed border-slate-300 dark:border-[#24352F] font-mono text-xs space-y-2">
+            <div className="text-center border-b border-slate-200 dark:border-[#24352F] pb-2">
+              <div className="font-bold text-sm text-slate-900 dark:text-white">{t('shopName')}</div>
+              <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">
+                {language === 'mr' ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : language === 'hi' ? 'ताज़ा दूध, पनीर, दही, शुद्ध देसी घी' : 'Fresh Milk, Paneer, Curd, Pure Ghee'}
               </div>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white">
-                {language === 'mr' ? 'विक्री यशस्वीपणे नोंदवली गेली!' : language === 'hi' ? 'बिक्री सफलतापूर्वक दर्ज हुई!' : 'Sale Recorded Successfully!'}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                {language === 'mr' ? 'बिल क्रमांक:' : language === 'hi' ? 'बिल क्रमांक:' : 'Invoice:'} <b className="text-slate-800 dark:text-white">{lastCompletedSale.invoice_no}</b>
-              </p>
+              <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">FSSAI Lic: 21524012000341 &bull; Mo: 9823XXXXXX</div>
             </div>
 
-            {/* Printable Thermal Receipt Container */}
-            <div id="printable-receipt" className="bg-slate-50 dark:bg-[#1A2A25] p-4 rounded-xl border border-dashed border-slate-300 dark:border-[#24352F] font-mono text-xs space-y-2">
-              <div className="text-center border-b border-slate-200 dark:border-[#24352F] pb-2">
-                <div className="font-bold text-sm text-slate-900 dark:text-white">{t('shopName')}</div>
-                <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">
-                  {language === 'mr' ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : language === 'hi' ? 'ताज़ा दूध, पनीर, दही, शुद्ध देसी घी' : 'Fresh Milk, Paneer, Curd, Pure Ghee'}
+            <div className="flex justify-between text-[11px] text-slate-700 dark:text-[#E7F0EC] pt-1">
+              <span>{language === 'mr' ? 'बिल:' : language === 'hi' ? 'बिल:' : 'Bill:'} {lastCompletedSale?.invoice_no}</span>
+              <span>{lastCompletedSale?.sale_date}</span>
+            </div>
+            <div className="flex justify-between text-[11px] text-slate-700 dark:text-[#E7F0EC]">
+              <span>{t('customerName')}: {lastCompletedSale?.customer_name}</span>
+              {lastCompletedSale?.customer_gender && (
+                <span className="text-[10px] text-slate-500">
+                  {lastCompletedSale.customer_gender === 'Male' ? '👨 ' : lastCompletedSale.customer_gender === 'Female' ? '👩 ' : '🧑 '}
+                  {lastCompletedSale.customer_gender} ({lastCompletedSale.customer_age_group || (lastCompletedSale.customer_age ? `${lastCompletedSale.customer_age}y` : '')})
+                </span>
+              )}
+            </div>
+
+            <div className="border-t border-b border-slate-200 dark:border-[#24352F] py-1.5 space-y-1">
+              {lastCompletedSale?.items?.map((it: any, i: number) => (
+                <div key={i} className="flex justify-between text-[11px] text-slate-800 dark:text-[#E7F0EC]">
+                  <span className="truncate max-w-[170px]">{it.product_name}</span>
+                  <span>{it.quantity} {it.unit} &times; ₹{it.unit_price} = ₹{it.total_price}</span>
                 </div>
-                <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">FSSAI Lic: 21524012000341 &bull; Mo: 9823XXXXXX</div>
-              </div>
+              ))}
+            </div>
 
-              <div className="flex justify-between text-[11px] text-slate-700 dark:text-[#E7F0EC] pt-1">
-                <span>{language === 'mr' ? 'बिल:' : language === 'hi' ? 'बिल:' : 'Bill:'} {lastCompletedSale.invoice_no}</span>
-                <span>{lastCompletedSale.sale_date}</span>
-              </div>
-              <div className="flex justify-between text-[11px] text-slate-700 dark:text-[#E7F0EC]">
-                <span>{t('customerName')}: {lastCompletedSale.customer_name}</span>
-                {lastCompletedSale.customer_gender && (
-                  <span className="text-[10px] text-slate-500">
-                    {lastCompletedSale.customer_gender === 'Male' ? '👨 ' : lastCompletedSale.customer_gender === 'Female' ? '👩 ' : '🧑 '}
-                    {lastCompletedSale.customer_gender} ({lastCompletedSale.customer_age_group || (lastCompletedSale.customer_age ? `${lastCompletedSale.customer_age}y` : '')})
-                  </span>
+            <div className="space-y-0.5 text-right font-bold text-xs pt-1 text-slate-900 dark:text-white">
+              {lastCompletedSale?.discount > 0 && (
+                <div className="text-slate-500 dark:text-[#8FA69C]">{t('discount')} -₹{lastCompletedSale.discount}</div>
+              )}
+              <div className="text-sm text-emerald-700 dark:text-emerald-400">{t('netAmount')} ₹{lastCompletedSale?.net_amount}</div>
+              <div className="text-[10px] font-normal text-slate-500 dark:text-[#8FA69C]">
+                {t('paymentMethod')}: {lastCompletedSale?.payment_mode}
+                {lastCompletedSale?.payment_mode === 'Online_UPI' && (
+                  <span className="block font-mono text-[9px] text-purple-700 dark:text-purple-400 font-bold">UPI ID: Q226038088@ybl</span>
                 )}
-              </div>
-
-              <div className="border-t border-b border-slate-200 dark:border-[#24352F] py-1.5 space-y-1">
-                {lastCompletedSale.items?.map((it: any, i: number) => (
-                  <div key={i} className="flex justify-between text-[11px] text-slate-800 dark:text-[#E7F0EC]">
-                    <span className="truncate max-w-[170px]">{it.product_name}</span>
-                    <span>{it.quantity} {it.unit} &times; ₹{it.unit_price} = ₹{it.total_price}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-0.5 text-right font-bold text-xs pt-1 text-slate-900 dark:text-white">
-                {lastCompletedSale.discount > 0 && (
-                  <div className="text-slate-500 dark:text-[#8FA69C]">{t('discount')} -₹{lastCompletedSale.discount}</div>
-                )}
-                <div className="text-sm text-emerald-700 dark:text-emerald-400">{t('netAmount')} ₹{lastCompletedSale.net_amount}</div>
-                <div className="text-[10px] font-normal text-slate-500 dark:text-[#8FA69C]">
-                  {t('paymentMethod')}: {lastCompletedSale.payment_mode}
-                  {lastCompletedSale.payment_mode === 'Online_UPI' && (
-                    <span className="block font-mono text-[9px] text-purple-700 dark:text-purple-400 font-bold">UPI ID: Q226038088@ybl</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="text-center text-[10px] text-slate-500 dark:text-[#8FA69C] pt-2 border-t border-slate-200 dark:border-[#24352F]">
-                {language === 'mr' ? 'धन्यवाद! पुन्हा भेट द्या &bull; शुद्धता हीच आमची ओळख' : language === 'hi' ? 'धन्यवाद! फिर पधारें &bull; शुद्धता ही हमारी पहचान है' : 'Thank you! Visit again &bull; Purity is our identity'}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => handleViewInvoicePDF(lastCompletedSale)}
-                className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-800 dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-xs border border-slate-300 dark:border-slate-700"
-                title="View Invoice PDF"
-              >
-                <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePrintInvoicePDF(lastCompletedSale)}
-                className="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-xs"
-                title="Print Invoice"
-              >
-                <Printer className="w-4 h-4 text-emerald-400" />
-                <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDownloadInvoicePDF(lastCompletedSale)}
-                className="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95"
-                title="Download Bill as PDF"
-              >
-                <Download className="w-4 h-4" />
-                <span>{language === 'mr' ? 'बिल PDF' : language === 'hi' ? 'बिल PDF' : 'Bill PDF'}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsSuccessModalOpen(false)}
-                className="py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white font-bold text-xs active:scale-95"
-              >
-                {t('nextBill')}
-              </button>
+            <div className="text-center text-[10px] text-slate-500 dark:text-[#8FA69C] pt-2 border-t border-slate-200 dark:border-[#24352F]">
+              {language === 'mr' ? 'धन्यवाद! पुन्हा भेट द्या &bull; शुद्धता हीच आमची ओळख' : language === 'hi' ? 'धन्यवाद! फिर पधारें &bull; शुद्धता ही हमारी पहचान है' : 'Thank you! Visit again &bull; Purity is our identity'}
             </div>
           </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => handleViewInvoicePDF(lastCompletedSale)}
+              className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-800 dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs border border-slate-300 dark:border-slate-700 tap-press"
+              title="View Invoice PDF"
+            >
+              <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePrintInvoicePDF(lastCompletedSale)}
+              className="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs tap-press"
+              title="Print Invoice"
+            >
+              <Printer className="w-4 h-4 text-emerald-400" />
+              <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDownloadInvoicePDF(lastCompletedSale)}
+              className="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs tap-press"
+              title="Download Bill as PDF"
+            >
+              <Download className="w-4 h-4" />
+              <span>{language === 'mr' ? 'बिल PDF' : language === 'hi' ? 'बिल PDF' : 'Bill PDF'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsSuccessModalOpen(false)}
+              className="py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white font-bold text-xs tap-press"
+            >
+              {t('nextBill')}
+            </button>
+          </div>
         </div>
-      )}
+      </AnimatedModal>
 
       {/* Barcode Scanner Camera Modal */}
       <BarcodeScannerModal

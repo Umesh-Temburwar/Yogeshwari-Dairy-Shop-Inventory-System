@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { PeriodFilter } from './PeriodFilter';
 import { MetricsOverview } from './MetricsOverview';
-import { SalesProfitChart } from './SalesProfitChart';
-import { PaymentBreakdownChart } from './PaymentBreakdownChart';
+import { Skeleton } from '../ui/Skeleton';
 import { BestSellersWidget } from './BestSellersWidget';
 import { LowStockAlertsWidget } from './LowStockAlertsWidget';
 import { OwnerAdminCounterWidget } from './OwnerAdminCounterWidget';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { ShoppingCart, PlusCircle, Sparkles } from 'lucide-react';
+
+const SalesProfitChart = React.lazy(() => import('./SalesProfitChart').then(m => ({ default: m.SalesProfitChart })));
+const PaymentBreakdownChart = React.lazy(() => import('./PaymentBreakdownChart').then(m => ({ default: m.PaymentBreakdownChart })));
 
 interface DashboardViewProps {
   onOpenAddProduct: () => void;
@@ -83,10 +85,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddProduct }
       {/* Analytical Visuals: Sales Trend (2/3) & Cash vs Online Distribution (1/3) */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2">
-          <SalesProfitChart />
+          <Suspense fallback={<Skeleton className="h-80 w-full rounded-2xl" />}>
+            <SalesProfitChart />
+          </Suspense>
         </div>
         <div className="xl:col-span-1">
-          <PaymentBreakdownChart />
+          <Suspense fallback={<Skeleton className="h-80 w-full rounded-2xl" />}>
+            <PaymentBreakdownChart />
+          </Suspense>
         </div>
       </div>
 

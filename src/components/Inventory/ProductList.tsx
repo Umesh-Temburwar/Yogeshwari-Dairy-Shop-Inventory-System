@@ -475,21 +475,33 @@ export const ProductList: React.FC<ProductListProps> = ({
           </button>
         </div>
 
-        {/* Category Pills */}
+        {/* Category Pills with Live Product Counts */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                selectedCategory === cat.id
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#223630]'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
+          {categories.map((cat) => {
+            const count = cat.id === 'All' 
+              ? products.length 
+              : products.filter(p => p.category === cat.id).length;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  selectedCategory === cat.id
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#223630]'
+                }`}
+              >
+                <span>{cat.label}</span>
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                  selectedCategory === cat.id 
+                    ? 'bg-emerald-800/60 text-white' 
+                    : 'bg-slate-200 dark:bg-[#24352F] text-slate-600 dark:text-slate-300'
+                }`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

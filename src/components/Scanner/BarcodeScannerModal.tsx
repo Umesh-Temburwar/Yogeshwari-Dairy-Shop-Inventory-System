@@ -4,6 +4,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product } from '../../types';
 import { playBeepSound } from '../../utils/audioUtils';
+import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import {
   Camera,
   X,
@@ -106,24 +107,34 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     setIsScanning(false);
   };
 
-  const handleBarcodeDetected = (code: string) => {
+  const handleBarcodeDetected = async (code: string) => {
     playBeepSound();
-    setScannedCode(code);
+    const clean = code.trim();
+    setScannedCode(clean);
     if (onBarcodeScanned) {
-      onBarcodeScanned(code);
+      onBarcodeScanned(clean);
     }
 
-    // Lookup in local product list
-    const found = products.find(p => p.barcode === code);
+    // 1. Lookup in local product list with candidate variations
+    const candidates = [clean, '0' + clean, clean.replace(/^0+/, '')];
+    const found = products.find(p => p.barcode && candidates.includes(p.barcode.trim()));
     if (found) {
       setMatchedProduct(found);
-      if (onProductSelected) {
-        // If automatic callback requested
-        // onProductSelected(found);
-      }
-    } else {
-      setMatchedProduct(null);
+      return;
     }
+
+    // 2. Lookup in online Supabase catalog (product_barcodes + products)
+    try {
+      const result = await searchProductByBarcodeOnline(clean);
+      if (result.found && result.product) {
+        setMatchedProduct(result.product);
+        return;
+      }
+    } catch (e) {
+      console.warn('Online barcode scanner lookup failed:', e);
+    }
+
+    setMatchedProduct(null);
   };
 
   const handleManualSearch = (e: React.FormEvent) => {

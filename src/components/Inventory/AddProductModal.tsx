@@ -49,8 +49,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       setUnit('Litre');
       setPurchasePrice('');
       setSellingPrice('');
-      setStockQuantity('20');
-      setMinStockAlert('15');
+      setStockQuantity('0');
+      setMinStockAlert('10');
     }
   }, [productToEdit, isOpen]);
 

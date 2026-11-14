@@ -427,46 +427,55 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   });
 
-  // Save to localStorage on state changes
+  // Safe helper to persist to localStorage without crashing on quota exceeded
+  const safeSetItem = (key: string, data: any) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (e) {
+      console.warn(`[LocalStorage] Quota exceeded or error saving ${key}:`, e);
+    }
+  };
+
+  // Save to localStorage on state changes safely
   useEffect(() => {
-    localStorage.setItem('yd_returns', JSON.stringify(returns));
+    safeSetItem('yd_returns', returns);
   }, [returns]);
   useEffect(() => {
-    localStorage.setItem('yd_supplier_returns', JSON.stringify(supplierReturns));
+    safeSetItem('yd_supplier_returns', supplierReturns);
   }, [supplierReturns]);
   useEffect(() => {
-    localStorage.setItem('yd_admin_activities', JSON.stringify(adminActivities));
+    safeSetItem('yd_admin_activities', adminActivities);
   }, [adminActivities]);
   useEffect(() => {
-    localStorage.setItem('yd_products', JSON.stringify(products));
+    safeSetItem('yd_products', products);
   }, [products]);
 
   useEffect(() => {
-    localStorage.setItem('yd_batches', JSON.stringify(batches));
+    safeSetItem('yd_batches', batches);
   }, [batches]);
 
   useEffect(() => {
-    localStorage.setItem('yd_sales', JSON.stringify(sales));
+    safeSetItem('yd_sales', sales);
   }, [sales]);
 
   useEffect(() => {
-    localStorage.setItem('yd_purchases', JSON.stringify(purchases));
+    safeSetItem('yd_purchases', purchases);
   }, [purchases]);
 
   useEffect(() => {
-    localStorage.setItem('yd_damages', JSON.stringify(damages));
+    safeSetItem('yd_damages', damages);
   }, [damages]);
 
   useEffect(() => {
-    localStorage.setItem('yd_customers', JSON.stringify(customers));
+    safeSetItem('yd_customers', customers);
   }, [customers]);
 
   useEffect(() => {
-    localStorage.setItem('yd_udhar_transactions', JSON.stringify(udharTransactions));
+    safeSetItem('yd_udhar_transactions', udharTransactions);
   }, [udharTransactions]);
 
   useEffect(() => {
-    localStorage.setItem('yd_expenses', JSON.stringify(expenses));
+    safeSetItem('yd_expenses', expenses);
   }, [expenses]);
 
   // Central Realtime Multi-Device Broadcast helper

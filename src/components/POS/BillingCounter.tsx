@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
+import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import confetti from 'canvas-confetti';
 import { playSuccessChime, playBeepSound } from '../../utils/audioUtils';
 import { useAuth } from '../../context/AuthContext';
@@ -225,6 +226,41 @@ export const BillingCounter: React.FC = () => {
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [lastCompletedSale, setLastCompletedSale] = useState<any>(null);
+  const [onlineSearchedProduct, setOnlineSearchedProduct] = useState<Product | null>(null);
+  const [isSearchingOnline, setIsSearchingOnline] = useState(false);
+
+  // Live online barcode search from Supabase
+  useEffect(() => {
+    const q = deferredSearchQuery.trim();
+    const isBarcodeLike = /^\d{5,}$/.test(q);
+    if (!isBarcodeLike) {
+      setOnlineSearchedProduct(null);
+      setIsSearchingOnline(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsSearchingOnline(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await searchProductByBarcodeOnline(q);
+        if (!cancelled && res.found && res.product) {
+          setOnlineSearchedProduct(res.product);
+        } else if (!cancelled) {
+          setOnlineSearchedProduct(null);
+        }
+      } catch (e) {
+        if (!cancelled) setOnlineSearchedProduct(null);
+      } finally {
+        if (!cancelled) setIsSearchingOnline(false);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [deferredSearchQuery]);
 
   // Quick Amount to Quantity converter state
   const [quickCalcProduct, setQuickCalcProduct] = useState<Product | null>(null);
@@ -240,19 +276,36 @@ export const BillingCounter: React.FC = () => {
     { id: 'Bakery & Extras', label: t('catBakery') }
   ];
 
-  // Filtered products for selection (fast deferred evaluation)
+  // Filtered products for selection (fast deferred evaluation with barcode normalization)
   const filteredProducts = useMemo(() => {
     const q = deferredSearchQuery.trim().toLowerCase();
-    return products.filter(p => {
+    const isBarcodeQuery = /^\d{5,}$/.test(q);
+
+    const base = products.filter(p => {
+      const barcodeMatches = Boolean(
+        p.barcode && (
+          p.barcode.toLowerCase() === q ||
+          p.barcode.toLowerCase() === ('0' + q) ||
+          p.barcode.toLowerCase().replace(/^0+/, '') === q.replace(/^0+/, '') ||
+          p.barcode.toLowerCase().includes(q)
+        )
+      );
+
       const matchesSearch = !q ||
         p.name.toLowerCase().includes(q) || 
         (p.hindi_name && p.hindi_name.toLowerCase().includes(q)) ||
         (p.marathi_name && p.marathi_name.toLowerCase().includes(q)) ||
-        (p.barcode && p.barcode.toLowerCase().includes(q));
+        barcodeMatches;
       const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
       return matchesSearch && matchesCategory && p.is_active;
     });
-  }, [products, deferredSearchQuery, selectedCategory]);
+
+    if (onlineSearchedProduct && !base.some(p => p.id === onlineSearchedProduct.id)) {
+      return [onlineSearchedProduct, ...base];
+    }
+
+    return base;
+  }, [products, deferredSearchQuery, selectedCategory, onlineSearchedProduct]);
 
   // Helper display name
   const getProductDisplayName = useCallback((prod: Product) => {
@@ -1375,11 +1428,31 @@ export const BillingCounter: React.FC = () => {
         mode="pos"
         onProductSelected={(prod) => {
           playBeepSound();
-          addToCart(prod, 1);
+          if (prod.stock_quantity > 0) {
+            addToCart(prod, 1);
+            setShowBarcodeScanner(false);
+          } else {
+            alert(language === 'mr'
+              ? `हा माल सापडला: "${prod.name}", पण दुकानात शिल्लक साठा ० आहे. कृपया आधी 'बारकोड आवक' (Stock-In) करा.`
+              : `यह उत्पाद मिला: "${prod.name}", लेकिन स्टॉक 0 है। कृपया पहले स्टॉक आवक (Stock-In) करें।`);
+          }
         }}
-        onBarcodeScanned={(code) => {
+        onBarcodeScanned={async (code) => {
           playBeepSound();
           setSearchQuery(code);
+          try {
+            const res = await searchProductByBarcodeOnline(code);
+            if (res.found && res.product) {
+              if (res.product.stock_quantity > 0) {
+                addToCart(res.product, 1);
+                setShowBarcodeScanner(false);
+              } else {
+                alert(language === 'mr'
+                  ? `हा माल सापडला: "${res.product.name}", पण दुकानात शिल्लक साठा ० आहे. कृपया आधी 'बारकोड आवक' (Stock-In) करा.`
+                  : `यह उत्पाद मिला: "${res.product.name}", लेकिन स्टॉक 0 है। कृपया पहले स्टॉक आवक (Stock-In) करें।`);
+              }
+            }
+          } catch (e) {}
         }}
       />
 

@@ -22,14 +22,28 @@ export interface Product {
   brand?: string;
   category: ProductCategory;
   unit: ProductUnit;
+  pack_size?: string;
   purchase_price: number;
   selling_price: number;
   stock_quantity: number;
   min_stock_alert: number;
   barcode?: string;
+  source?: string;
+  source_code?: string;
   is_active: boolean;
   created_at: string;
   updated_at?: string;
+}
+
+export interface ProductBarcode {
+  id: string;
+  product_id: string;
+  barcode: string;
+  barcode_type?: string;
+  is_primary: boolean;
+  source?: string;
+  is_active: boolean;
+  created_at: string;
 }
 
 export interface SaleItem {

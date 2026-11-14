@@ -42,6 +42,8 @@ import {
 } from 'lucide-react';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF, exportProductsToCSV } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
+import { BarcodeStockInModal } from '../Scanner/BarcodeStockInModal';
+import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 
 interface ProductListProps {
   onOpenAddProduct: () => void;
@@ -75,12 +77,49 @@ export const ProductList: React.FC<ProductListProps> = ({
   // Quick Inline Add Bar State
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showBarcodeStockIn, setShowBarcodeStockIn] = useState(false);
+  const [inventoryViewTab, setInventoryViewTab] = useState<'IN_STOCK' | 'CATALOGUE' | 'OUT_OF_STOCK' | 'LOW_STOCK'>('IN_STOCK');
+  const [onlineSearchedProduct, setOnlineSearchedProduct] = useState<Product | null>(null);
+  const [isSearchingOnline, setIsSearchingOnline] = useState(false);
   const [quickName, setQuickName] = useState('');
   const [quickCategory, setQuickCategory] = useState<ProductCategory>('Milk');
   const [quickUnit, setQuickUnit] = useState<ProductUnit>('Litre');
   const [quickBuyPrice, setQuickBuyPrice] = useState('');
   const [quickSellPrice, setQuickSellPrice] = useState('');
-  const [quickStock, setQuickStock] = useState('20');
+  const [quickStock, setQuickStock] = useState('0');
+
+  // Live online barcode search from Supabase database
+  useEffect(() => {
+    const q = searchQuery.trim();
+    const isBarcodeLike = /^\d{5,}$/.test(q);
+    if (!isBarcodeLike) {
+      setOnlineSearchedProduct(null);
+      setIsSearchingOnline(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsSearchingOnline(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await searchProductByBarcodeOnline(q);
+        if (!cancelled && res.found && res.product) {
+          setOnlineSearchedProduct(res.product);
+        } else if (!cancelled) {
+          setOnlineSearchedProduct(null);
+        }
+      } catch (e) {
+        if (!cancelled) setOnlineSearchedProduct(null);
+      } finally {
+        if (!cancelled) setIsSearchingOnline(false);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
 
   const categories = [
     { id: 'All', label: language === 'mr' ? 'सर्व माल' : language === 'hi' ? 'सभी माल' : 'All Products' },
@@ -92,27 +131,64 @@ export const ProductList: React.FC<ProductListProps> = ({
     { id: 'Bakery & Extras', label: t('catBakery') }
   ];
 
-  // Filtered products (Search + Category + Expiry Status)
+  // Filtered products (Search + Category + Expiry Status + Inventory Tab + Online Barcode Result)
   const filteredProducts = useMemo(() => {
-    return products.filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        (p.hindi_name && p.hindi_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (p.marathi_name && p.marathi_name.toLowerCase().includes(searchQuery.toLowerCase()));
+    const q = searchQuery.toLowerCase().trim();
+    const isBarcodeQuery = /^\d{5,}$/.test(q);
+
+    const baseFiltered = products.filter(p => {
+      const barcodeMatches = Boolean(
+        p.barcode && (
+          p.barcode.toLowerCase() === q ||
+          p.barcode.toLowerCase() === ('0' + q) ||
+          p.barcode.toLowerCase().replace(/^0+/, '') === q.replace(/^0+/, '') ||
+          p.barcode.toLowerCase().includes(q)
+        )
+      );
+
+      const matchesSearch = !q || 
+        p.name.toLowerCase().includes(q) || 
+        (p.hindi_name && p.hindi_name.toLowerCase().includes(q)) ||
+        (p.marathi_name && p.marathi_name.toLowerCase().includes(q)) ||
+        (p.brand && p.brand.toLowerCase().includes(q)) ||
+        barcodeMatches;
+
       const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+
+      // If user is searching an exact barcode number, do not hide it even if stock is 0!
+      let matchesTab = true;
+      if (isBarcodeQuery && barcodeMatches) {
+        matchesTab = true;
+      } else if (inventoryViewTab === 'IN_STOCK') {
+        matchesTab = p.stock_quantity > 0;
+      } else if (inventoryViewTab === 'OUT_OF_STOCK') {
+        matchesTab = p.stock_quantity <= 0;
+      } else if (inventoryViewTab === 'LOW_STOCK') {
+        matchesTab = p.stock_quantity > 0 && p.stock_quantity <= p.min_stock_alert;
+      } // 'CATALOGUE' shows all products (including 0 stock)
       
       // Expiry filter
       if (selectedExpiryFilter !== 'ALL') {
         const prodBatches = batches.filter(b => b.product_id === p.id && b.qty_remaining > 0);
         const hasMatchingBatch = prodBatches.some(b => computeExpiryStatus(b.expiry_date).status === selectedExpiryFilter);
-        return matchesSearch && matchesCategory && hasMatchingBatch;
+        return matchesSearch && matchesCategory && matchesTab && hasMatchingBatch;
       }
 
-      return matchesSearch && matchesCategory;
+      return matchesSearch && matchesCategory && matchesTab;
     });
-  }, [products, searchQuery, selectedCategory, selectedExpiryFilter, batches]);
 
-  const lowStockCount = products.filter(p => p.stock_quantity <= p.min_stock_alert && p.stock_quantity > 0).length;
-  const outOfStockCount = products.filter(p => p.stock_quantity <= 0).length;
+    // If an online catalogue product was found and is not already in baseFiltered, prepend it!
+    if (onlineSearchedProduct && !baseFiltered.some(p => p.id === onlineSearchedProduct.id)) {
+      return [onlineSearchedProduct, ...baseFiltered];
+    }
+
+    return baseFiltered;
+  }, [products, searchQuery, selectedCategory, selectedExpiryFilter, batches, inventoryViewTab, onlineSearchedProduct]);
+
+  const inStockCount = useMemo(() => products.filter(p => p.stock_quantity > 0).length, [products]);
+  const lowStockCount = useMemo(() => products.filter(p => p.stock_quantity <= p.min_stock_alert && p.stock_quantity > 0).length, [products]);
+  const outOfStockCount = useMemo(() => products.filter(p => p.stock_quantity <= 0).length, [products]);
+  const totalCatalogueCount = products.length;
 
   const totalStockCostValuation = useMemo(() => {
     return products.reduce((sum, p) => sum + (p.stock_quantity * p.purchase_price), 0);
@@ -254,7 +330,7 @@ export const ProductList: React.FC<ProductListProps> = ({
     setQuickName('');
     setQuickBuyPrice('');
     setQuickSellPrice('');
-    setQuickStock('20');
+    setQuickStock('0');
     setShowQuickAdd(false);
   };
 
@@ -344,6 +420,16 @@ export const ProductList: React.FC<ProductListProps> = ({
           >
             <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>{language === 'mr' ? 'साठा PDF' : language === 'hi' ? 'स्टॉक PDF' : 'Stock PDF'}</span>
+          </button>
+
+          {/* Barcode Stock-In Inward Button */}
+          <button
+            onClick={() => setShowBarcodeStockIn(true)}
+            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/20 active:scale-95"
+            title="Scan & Stock In"
+          >
+            <Barcode className="w-4 h-4" />
+            <span>{language === 'mr' ? 'बारकोड आवक (Stock-In)' : language === 'hi' ? 'बारकोड स्टॉक आवक' : 'Barcode Stock-In'}</span>
           </button>
 
           {/* New Product Button */}
@@ -455,6 +541,77 @@ export const ProductList: React.FC<ProductListProps> = ({
         </div>
       )}
 
+      {/* INVENTORY VS CATALOGUE VIEW TABS (PHASE 8) */}
+      <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 dark:bg-[#1A2A25] rounded-2xl border border-slate-200 dark:border-[#24352F]">
+        <button
+          onClick={() => setInventoryViewTab('IN_STOCK')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+            inventoryViewTab === 'IN_STOCK'
+              ? 'bg-emerald-600 text-white shadow-md'
+              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <Package className="w-4 h-4" />
+          <span>{language === 'mr' ? 'उपलब्ध साठा (Current Inventory)' : language === 'hi' ? 'उपलब्ध स्टॉक (Current)' : 'Current Inventory'}</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+            inventoryViewTab === 'IN_STOCK' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+          }`}>
+            {inStockCount}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setInventoryViewTab('CATALOGUE')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+            inventoryViewTab === 'CATALOGUE'
+              ? 'bg-emerald-600 text-white shadow-md'
+              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <Layers className="w-4 h-4" />
+          <span>{language === 'mr' ? 'सर्व उत्पादन सूची (Product Catalogue)' : language === 'hi' ? 'उत्पाद कैटलॉग (All)' : 'Product Catalogue'}</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+            inventoryViewTab === 'CATALOGUE' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+          }`}>
+            {totalCatalogueCount}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setInventoryViewTab('OUT_OF_STOCK')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+            inventoryViewTab === 'OUT_OF_STOCK'
+              ? 'bg-rose-600 text-white shadow-md'
+              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <MinusCircle className="w-4 h-4" />
+          <span>{language === 'mr' ? 'साठा संपला (Out of Stock)' : language === 'hi' ? 'स्टॉक समाप्त' : 'Out of Stock'}</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+            inventoryViewTab === 'OUT_OF_STOCK' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+          }`}>
+            {outOfStockCount}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setInventoryViewTab('LOW_STOCK')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+            inventoryViewTab === 'LOW_STOCK'
+              ? 'bg-amber-600 text-white shadow-md'
+              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <AlertTriangle className="w-4 h-4" />
+          <span>{language === 'mr' ? 'कमी साठा (Low Stock)' : language === 'hi' ? 'कम स्टॉक' : 'Low Stock'}</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+            inventoryViewTab === 'LOW_STOCK' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+          }`}>
+            {lowStockCount}
+          </span>
+        </button>
+      </div>
+
       {/* SEARCH & FAST CATEGORY FILTER PILLS */}
       <div className="bg-white dark:bg-[#131F1B] p-3 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-2.5 transition-colors">
         <div className="flex gap-2">
@@ -484,6 +641,43 @@ export const ProductList: React.FC<ProductListProps> = ({
             <span className="hidden sm:inline">{language === 'mr' ? 'बारकोड' : 'बारकोड'}</span>
           </button>
         </div>
+
+        {/* Live Barcode Search Feedback Banner */}
+        {searchQuery && /^\d{5,}$/.test(searchQuery.trim()) && (
+          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 rounded-xl flex items-center justify-between gap-2 text-xs animate-fadeIn">
+            <div className="flex items-center gap-2 min-w-0">
+              <Barcode className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <div className="truncate">
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  {language === 'mr' ? 'बारकोड: ' : 'बारकोड: '}
+                  <span className="font-mono text-emerald-700 dark:text-emerald-300 font-bold">{searchQuery.trim()}</span>
+                </span>
+                {isSearchingOnline && (
+                  <span className="ml-2 text-slate-500 italic">
+                    {language === 'mr' ? '(डेटाबेसमध्ये शोधत आहे...)' : '(डेटाबेस में खोज रहे हैं...)'}
+                  </span>
+                )}
+                {!isSearchingOnline && filteredProducts.length > 0 && (
+                  <span className="ml-2 font-bold text-emerald-600 dark:text-emerald-400">
+                    ✓ {filteredProducts[0].name} {filteredProducts[0].stock_quantity > 0 ? `(साठा: ${filteredProducts[0].stock_quantity})` : '(कॅटलॉग साठा: ०)'}
+                  </span>
+                )}
+                {!isSearchingOnline && filteredProducts.length === 0 && (
+                  <span className="ml-2 font-medium text-amber-600 dark:text-amber-400">
+                    {language === 'mr' ? 'हा बारकोड डेटाबेसमध्ये सापडला नाही.' : 'यह बारकोड डेटाबेस में नहीं मिला।'}
+                  </span>
+                )}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowBarcodeStockIn(true)}
+              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shrink-0 shadow-2xs transition active:scale-95 flex items-center gap-1"
+            >
+              <span>{language === 'mr' ? '+ माल आवक' : '+ स्टॉक आवक'}</span>
+            </button>
+          </div>
+        )}
 
         {/* Category Pills with Live Product Counts */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -999,6 +1193,12 @@ export const ProductList: React.FC<ProductListProps> = ({
         onBarcodeScanned={(code) => {
           setSearchQuery(code);
         }}
+      />
+
+      {/* BARCODE STOCK-IN MODAL (PHASE 7) */}
+      <BarcodeStockInModal
+        isOpen={showBarcodeStockIn}
+        onClose={() => setShowBarcodeStockIn(false)}
       />
 
     </div>

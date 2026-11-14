@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 
 export const OwnerAdminCounterWidget: React.FC = () => {
-  const { sales, adminActivities, refreshData, isSyncing } = useStore();
+  const { sales, adminActivities, purchases, damages, refreshData, isSyncing } = useStore();
   const { language } = useLanguage();
   const { role } = useAuth();
 
@@ -65,7 +65,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
     return { count: sales.length, totalSales, cash, online, udhar };
   }, [sales]);
 
-  // Combine and deduplicate activities from adminActivities and sales (strictly within last 7 days)
+  // Combine and deduplicate activities from adminActivities, sales, purchases, damages (strictly within last 7 days)
   const allActivitiesStream = useMemo(() => {
     const sevenDaysAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
@@ -107,9 +107,58 @@ export const OwnerAdminCounterWidget: React.FC = () => {
       }
     });
 
+    // Ensure every purchase from the last 7 days is represented in the inventory stream
+    (purchases || []).forEach(p => {
+      const purTime = new Date(p.created_at).getTime();
+      if (purTime < sevenDaysAgoMs) return;
+
+      const alreadyLogged = list.some(a => a.reference_id === p.id || (a.action_type === 'STOCK_INWARD' && a.title?.includes(p.product_name) && Math.abs(new Date(a.created_at).getTime() - purTime) < 5000));
+      if (!alreadyLogged) {
+        list.push({
+          id: 'gen-pur-' + p.id,
+          admin_name: isMr ? 'निखिल सखारे' : 'Nikhil Sakhare',
+          admin_email: 'yogeshwaridairy9896@gmail.com',
+          admin_role: 'Owner',
+          counter_name: 'मुख्य मालक काऊंटर',
+          action_type: 'STOCK_INWARD',
+          title: `खरेदी साठा आवक: ${p.product_name}`,
+          details: `सप्लायर: ${p.supplier_name || 'Standard Supplier'} | खरेदी प्रमाण: +${p.quantity} ${p.unit} | खरेदी दर: ₹${p.purchase_price} | एकूण खर्च: ₹${p.total_amount} | पेमेंट: ${p.payment_mode || 'Cash'} | बॅच: #${p.batch_no || 'Standard'} | मुदत समाप्ती: ${p.expiry_date || 'N/A'}${p.notes ? ` | टीप: ${p.notes}` : ''}`,
+          amount: p.total_amount,
+          reference_id: p.id,
+          reference_table: 'purchases',
+          created_at: p.created_at
+        });
+      }
+    });
+
+    // Ensure every damage record from the last 7 days is represented in the inventory stream
+    (damages || []).forEach(d => {
+      const dmgTime = new Date(d.created_at).getTime();
+      if (dmgTime < sevenDaysAgoMs) return;
+
+      const alreadyLogged = list.some(a => a.action_type === 'DAMAGE_RECORDED' && a.title?.includes(d.product_name) && Math.abs(new Date(a.created_at).getTime() - dmgTime) < 5000);
+      if (!alreadyLogged) {
+        list.push({
+          id: 'gen-dmg-' + d.id,
+          admin_name: isMr ? 'निलेश सखारे' : 'Nilesh Sakhare',
+          admin_email: 'nilusakhare2003@gmail.com',
+          admin_role: 'Admin',
+          admin_slot: 1,
+          counter_name: 'काऊंटर १ - मुख्य बिलिंग',
+          action_type: 'DAMAGE_RECORDED',
+          title: `खराब माल नोंद: ${d.product_name}`,
+          details: `कारण: ${d.reason} | प्रमाण: -${d.quantity} ${d.unit} | अंदाजे तोटा: ₹${d.estimated_loss_amount}`,
+          amount: d.estimated_loss_amount,
+          reference_id: d.product_id,
+          reference_table: 'damage_records',
+          created_at: d.created_at
+        });
+      }
+    });
+
     // Sort newest first
     return list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [adminActivities, sales, isMr]);
+  }, [adminActivities, sales, purchases, damages, isMr]);
 
   // Filter activities stream by selected filter tab and search query
   const filteredActivities = useMemo(() => {
@@ -169,6 +218,10 @@ export const OwnerAdminCounterWidget: React.FC = () => {
     switch (type) {
       case 'SALE_CREATED':
         return { label: isMr ? 'पावती विक्री' : isHi ? 'बिल बिक्री' : 'Sale', bg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40' };
+      case 'SALE_UPDATED':
+        return { label: isMr ? 'पावती बदल' : isHi ? 'बिल बदलाव' : 'Sale Edit', bg: 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border-amber-200 dark:border-amber-800/40' };
+      case 'SALE_DELETED':
+        return { label: isMr ? 'पावती रद्द' : isHi ? 'बिल रद्द' : 'Sale Void', bg: 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border-rose-200 dark:border-rose-800/40' };
       case 'STOCK_INWARD':
         return { label: isMr ? 'साठा आवक' : isHi ? 'स्टॉक इनवर्ड' : 'Stock In', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-950/70 dark:text-blue-300 border-blue-200 dark:border-blue-800/40' };
       case 'PRODUCT_ADDED':
@@ -182,12 +235,50 @@ export const OwnerAdminCounterWidget: React.FC = () => {
       case 'UDHAR_PAYMENT':
         return { label: isMr ? 'उधारी जमा' : isHi ? 'उधारी जमा' : 'Credit Jama', bg: 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border-amber-200 dark:border-amber-800/40' };
       case 'CUSTOMER_RETURN':
+      case 'CUSTOMER_PARTIAL_RETURN':
+      case 'CUSTOMER_FULL_RETURN':
         return { label: isMr ? 'ग्राहक परतावा' : isHi ? 'ग्राहक वापसी' : 'Cust Return', bg: 'bg-orange-100 text-orange-800 dark:bg-orange-950/70 dark:text-orange-300 border-orange-200 dark:border-orange-800/40' };
       case 'SUPPLIER_RETURN':
         return { label: isMr ? 'सप्लायर परतावा' : isHi ? 'सप्लायर वापसी' : 'Supplier Return', bg: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/70 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/40' };
       default:
         return { label: isMr ? 'नोंद' : isHi ? 'प्रविष्टि' : 'Log', bg: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700' };
     }
+  };
+
+  const renderDetailPill = (part: string, index: number) => {
+    const trimmed = part.trim();
+    if (!trimmed) return null;
+
+    const isIncrease = trimmed.includes('+') || trimmed.includes('आवक') || trimmed.includes('वाढवला');
+    const isDecrease = trimmed.includes('-') || trimmed.includes('घट') || trimmed.includes('कमी') || trimmed.includes('तोटा') || trimmed.includes('खराब') || trimmed.includes('हटवले');
+    const isChangeArrow = trimmed.includes('➔') || trimmed.includes('->');
+    const isMoney = trimmed.includes('₹');
+    const isBatchOrExp = trimmed.includes('बॅच') || trimmed.includes('मुदत') || trimmed.includes('Batch') || trimmed.includes('Expiry');
+    const isSupplier = trimmed.includes('सप्लायर') || trimmed.includes('Supplier');
+
+    let badgeClass = 'bg-slate-100 dark:bg-[#16221E] text-slate-700 dark:text-[#CBD5E1] border-slate-200 dark:border-[#24352F]';
+    if (isChangeArrow) {
+      badgeClass = 'bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-200 border-amber-300/80 dark:border-amber-700/60 font-bold';
+    } else if (isIncrease) {
+      badgeClass = 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-300/80 dark:border-emerald-800/60 font-semibold';
+    } else if (isDecrease) {
+      badgeClass = 'bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border-rose-300/80 dark:border-rose-800/60 font-semibold';
+    } else if (isMoney) {
+      badgeClass = 'bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 border-emerald-300/80 dark:border-emerald-800/50 font-extrabold';
+    } else if (isBatchOrExp) {
+      badgeClass = 'bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-blue-300/80 dark:border-blue-800/60 font-medium';
+    } else if (isSupplier) {
+      badgeClass = 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-300 border-indigo-300/80 dark:border-indigo-800/60 font-medium';
+    }
+
+    return (
+      <span
+        key={index}
+        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] sm:text-xs border ${badgeClass} shadow-2xs leading-tight`}
+      >
+        {trimmed}
+      </span>
+    );
   };
 
   // If logged in user is not the Owner, don't show this master control widget
@@ -575,13 +666,16 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                         </span>
                       </div>
 
-                      <div className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
+                      <div className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm">
                         {act.title}
                       </div>
 
-                      <div className="text-xs text-slate-600 dark:text-[#8FA69C] break-words">
-                        {act.details}
-                      </div>
+                      {/* Rich Structured Details with Color-coded Badges */}
+                      {act.details && (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          {act.details.split('|').map((part, pIdx) => renderDetailPill(part, pIdx))}
+                        </div>
+                      )}
                     </div>
 
                     {act.amount !== undefined && act.amount > 0 && (

@@ -966,12 +966,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         broadcastMutation('audit', 'log');
 
         // Opportunistic background auto-purge of expired logs (> 7 days)
-        Promise.resolve(
-          supabase
-            .from('admin_audit_logs')
-            .delete()
-            .lt('created_at', new Date(sevenDaysAgoMs).toISOString())
-        ).catch(() => {});
+        void (async () => {
+          try {
+            await supabase
+              .from('admin_audit_logs')
+              .delete()
+              .lt('created_at', new Date(sevenDaysAgoMs).toISOString());
+          } catch {
+            // non-blocking background cleanup
+          }
+        })();
       } catch (err) {
         console.warn('Failed to sync admin audit log to Supabase', err);
       }
@@ -1090,9 +1094,38 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     const admin = getActiveAdminInfo();
-    const changes = Object.entries(updates)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join(', ');
+    const changes: string[] = [];
+    if (existingProd) {
+      if (updates.selling_price !== undefined && updates.selling_price !== existingProd.selling_price) {
+        changes.push(`विक्री भाव: ₹${existingProd.selling_price} ➔ ₹${updates.selling_price}`);
+      }
+      if (updates.purchase_price !== undefined && updates.purchase_price !== existingProd.purchase_price) {
+        changes.push(`खरेदी भाव: ₹${existingProd.purchase_price} ➔ ₹${updates.purchase_price}`);
+      }
+      if (updates.stock_quantity !== undefined && updates.stock_quantity !== existingProd.stock_quantity) {
+        changes.push(`साठा: ${existingProd.stock_quantity} ➔ ${updates.stock_quantity} ${existingProd.unit}`);
+      }
+      if (updates.min_stock_alert !== undefined && updates.min_stock_alert !== existingProd.min_stock_alert) {
+        changes.push(`किमान साठा इशारा: ${existingProd.min_stock_alert} ➔ ${updates.min_stock_alert} ${existingProd.unit}`);
+      }
+      if (updates.name && updates.name !== existingProd.name) {
+        changes.push(`नाव: ${existingProd.name} ➔ ${updates.name}`);
+      }
+      if (updates.category && updates.category !== existingProd.category) {
+        changes.push(`प्रवर्ग: ${existingProd.category} ➔ ${updates.category}`);
+      }
+      if (updates.brand && updates.brand !== existingProd.brand) {
+        changes.push(`ब्रँड: ${existingProd.brand} ➔ ${updates.brand}`);
+      }
+      if (updates.barcode !== undefined && updates.barcode !== existingProd.barcode) {
+        changes.push(`बारकोड: ${existingProd.barcode || 'काही नाही'} ➔ ${updates.barcode || 'काही नाही'}`);
+      }
+    }
+
+    const detailsText = changes.length > 0 
+      ? changes.join(' | ') 
+      : Object.entries(updates).map(([k, v]) => `${k}: ${v}`).join(' | ');
+
     logAdminActivity({
       admin_name: admin.name,
       admin_email: admin.email,
@@ -1100,14 +1133,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'PRODUCT_UPDATED',
-      title: `उत्पादन माहिती बदल: ${existingProd?.name || id}`,
-      details: `बदललेले तपशील: ${changes}`,
+      title: `उत्पादन माहिती/दर बदल: ${existingProd?.name || updates.name || id}`,
+      details: detailsText,
+      amount: updates.selling_price,
       reference_id: id,
       reference_table: 'products'
     });
   };
 
   const deleteProduct = async (id: string) => {
+    const prod = products.find(p => p.id === id);
     setProducts(prev => prev.filter(p => p.id !== id));
     setBatches(prev => prev.filter(b => b.product_id !== id));
     if (supabase) {
@@ -1118,6 +1153,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.error('Failed to delete product in Supabase', e);
       }
     }
+
+    const admin = getActiveAdminInfo();
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_email: admin.email,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'PRODUCT_UPDATED',
+      title: `उत्पादन कायमचे हटवले: ${prod?.name || id}`,
+      details: `हटवलेले उत्पादन: ${prod?.name || id} | प्रवर्ग: ${prod?.category || 'इतर'} | शेवटचा साठा: ${prod?.stock_quantity ?? 0} ${prod?.unit || 'Piece'} | विक्री दर: ₹${prod?.selling_price ?? 0}`,
+      reference_id: id,
+      reference_table: 'products'
+    });
   };
 
   const adjustStock = async (
@@ -1261,15 +1310,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const admin = getActiveAdminInfo();
     const oldQty = prod.stock_quantity;
     const finalQty = newStockQty;
+    const isIncrease = qtyDelta > 0;
     logAdminActivity({
       admin_name: admin.name,
       admin_email: admin.email,
       admin_role: admin.role,
       admin_slot: admin.slot,
       counter_name: admin.counter,
-      action_type: 'STOCK_INWARD',
-      title: `इन्व्हेंटरी साठा बदल: ${prod.name}`,
-      details: `बदल: ${qtyDelta > 0 ? '+' : ''}${qtyDelta} ${prod.unit} | कारण: ${reason || 'साठा समायोजन'} | आधी: ${oldQty} -> आता: ${finalQty}`,
+      action_type: isIncrease ? 'STOCK_INWARD' : 'PRODUCT_UPDATED',
+      title: `${isIncrease ? 'साठा आवक/वाढवला (+)' : 'साठा घट/कमी केला (-)'}: ${prod.name}`,
+      details: `बदल: ${isIncrease ? '+' : ''}${qtyDelta} ${prod.unit} | पूर्वीचा साठा: ${oldQty} ${prod.unit} ➔ नवीन साठा: ${finalQty} ${prod.unit} | कारण: ${reason || (isIncrease ? 'साठा आवक/समायोजन' : 'साठा घट/दुरुस्ती')}`,
+      amount: Math.abs(qtyDelta * (prod.selling_price || 0)),
       reference_id: prod.id,
       reference_table: 'products'
     });
@@ -1393,6 +1444,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     const admin = getActiveAdminInfo();
+    const batchSummary = entries.map((e, idx) => 
+      `बॅच ${e.batch_no || idx + 1}: +${e.quantity} ${prod.unit} (मुदत: ${e.expiry_date}${e.supplier_name ? `, सप्लायर: ${e.supplier_name}` : ''}${e.purchase_price ? `, दर: ₹${e.purchase_price}` : ''})`
+    ).join(' | ');
+
     logAdminActivity({
       admin_name: admin.name,
       admin_email: admin.email,
@@ -1400,8 +1455,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'STOCK_INWARD',
-      title: `साठा/बॅच आवक नोंद: ${prod.name}`,
-      details: `वाढलेला साठा: +${totalQtyAdded} ${prod.unit} (${entries.length} बॅच नोंदी)`,
+      title: `इन्व्हेंटरी साठा आवक (+): ${prod.name}`,
+      details: `एकूण वाढ: +${totalQtyAdded} ${prod.unit} | नवीन शिल्लक: ${finalProductStock} ${prod.unit} | ${batchSummary}`,
+      amount: entries.reduce((acc, e) => acc + (e.quantity * (e.purchase_price || prod.purchase_price || 0)), 0),
       reference_id: prod.id,
       reference_table: 'products'
     });
@@ -1454,10 +1510,29 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.error('Supabase addBatch error:', e);
       }
     }
+
+    const admin = getActiveAdminInfo();
+    const targetProd = products.find(p => p.id === batchData.product_id);
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_email: admin.email,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'STOCK_INWARD',
+      title: `नवीन बॅच जोडली (+): ${targetProd?.name || 'उत्पादन'}`,
+      details: `बॅच क्र: #${newBatch.batch_no} | साठा: +${newBatch.qty_remaining} ${targetProd?.unit || 'Piece'} | खरेदी भाव: ₹${newBatch.purchase_price} | मुदत समाप्ती: ${newBatch.expiry_date}${newBatch.supplier_name ? ` | सप्लायर: ${newBatch.supplier_name}` : ''}`,
+      amount: (newBatch.purchase_price || 0) * newBatch.qty_remaining,
+      reference_id: newBatch.id,
+      reference_table: 'batches'
+    });
+
     return newBatch;
   };
 
   const updateBatch = async (id: string, updates: Partial<ProductBatch>) => {
+    const existingBatch = batches.find(b => b.id === id);
+    const targetProd = products.find(p => p.id === existingBatch?.product_id);
     setBatches(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
     if (supabase) {
       try {
@@ -1470,9 +1545,41 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.error('Supabase updateBatch error:', e);
       }
     }
+
+    const admin = getActiveAdminInfo();
+    const changes: string[] = [];
+    if (existingBatch) {
+      if (updates.qty_remaining !== undefined && updates.qty_remaining !== existingBatch.qty_remaining) {
+        changes.push(`शिल्लक साठा: ${existingBatch.qty_remaining} ➔ ${updates.qty_remaining}`);
+      }
+      if (updates.expiry_date !== undefined && updates.expiry_date !== existingBatch.expiry_date) {
+        changes.push(`मुदत समाप्ती: ${existingBatch.expiry_date} ➔ ${updates.expiry_date}`);
+      }
+      if (updates.purchase_price !== undefined && updates.purchase_price !== existingBatch.purchase_price) {
+        changes.push(`खरेदी भाव: ₹${existingBatch.purchase_price} ➔ ₹${updates.purchase_price}`);
+      }
+      if (updates.notes !== undefined && updates.notes !== existingBatch.notes) {
+        changes.push(`टीप: ${updates.notes}`);
+      }
+    }
+
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_email: admin.email,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'PRODUCT_UPDATED',
+      title: `बॅच माहिती बदल: ${targetProd?.name || 'बॅच'} (#${existingBatch?.batch_no || id})`,
+      details: changes.length > 0 ? changes.join(' | ') : 'बॅच माहिती अद्ययावत केली',
+      reference_id: id,
+      reference_table: 'batches'
+    });
   };
 
   const deleteBatch = async (id: string) => {
+    const targetBatch = batches.find(b => b.id === id);
+    const targetProd = products.find(p => p.id === targetBatch?.product_id);
     setBatches(prev => prev.filter(b => b.id !== id));
     if (supabase) {
       try {
@@ -1482,6 +1589,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.error('Supabase deleteBatch error:', e);
       }
     }
+
+    const admin = getActiveAdminInfo();
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_email: admin.email,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'PRODUCT_UPDATED',
+      title: `बॅच हटवली: ${targetProd?.name || 'उत्पादन'} (#${targetBatch?.batch_no || id})`,
+      details: `हटवलेली बॅच: #${targetBatch?.batch_no} | शिल्लक साठा: ${targetBatch?.qty_remaining ?? 0} | मुदत समाप्ती: ${targetBatch?.expiry_date || 'N/A'}`,
+      reference_id: id,
+      reference_table: 'batches'
+    });
   };
 
   const createSale = async (saleData: {
@@ -1896,6 +2017,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.error('Failed to sync purchase to Supabase', err);
       }
     }
+
+    const admin = getActiveAdminInfo();
+    logAdminActivity({
+      admin_name: admin.name,
+      admin_email: admin.email,
+      admin_role: admin.role,
+      admin_slot: admin.slot,
+      counter_name: admin.counter,
+      action_type: 'STOCK_INWARD',
+      title: `खरेदी आवक: ${newPur.product_name}`,
+      details: `सप्लायर: ${newPur.supplier_name || 'Standard Dairy Supplier'} | खरेदी प्रमाण: +${newPur.quantity} ${newPur.unit} | खरेदी भाव: ₹${newPur.purchase_price} | एकूण खर्च: ₹${newPur.total_amount} | पेमेंट: ${newPur.payment_mode || 'Cash'} | बॅच: #${newPur.batch_no || 'Standard'} | मुदत समाप्ती: ${newPur.expiry_date || 'N/A'}${newPur.notes ? ` | टीप: ${newPur.notes}` : ''}`,
+      amount: newPur.total_amount,
+      reference_id: newPur.id,
+      reference_table: 'purchases'
+    });
   };
 
   const recordDamage = async (damageData: Omit<DamageRecord, 'id' | 'created_at'>) => {

@@ -1,6 +1,4 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { drawerLeftVariants, overlayVariants } from '../lib/motion';
 import ydoLogo from '../assets/YDO_logo.jpg';
 import nikhilAvatar from '../assets/nikhil_avatar.png';
 import { useStore, AppView } from '../context/StoreContext';
@@ -188,7 +186,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onCloseMobile();
               }}
               title={label}
-              className={`w-full flex items-center ${isCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2.5'} rounded-xl text-left transition-all duration-150 group tap-press ${
+              className={`w-full flex items-center ${isCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2.5'} rounded-xl text-left transition-all duration-150 group ${
                 isActive 
                   ? 'bg-emerald-600 text-white shadow-xs font-semibold' 
                   : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25] hover:text-slate-900 dark:hover:text-[#E7F0EC] font-medium'
@@ -246,7 +244,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <button 
             onClick={onCloseMobile}
-            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2A25] tap-press"
+            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -265,7 +263,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onCloseMobile();
                   onOpenAppDownload();
                 }}
-                className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl border border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/80 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-300 font-extrabold text-xs transition shadow-2xs tap-press ${isActuallyCollapsed ? "justify-center" : "justify-between"}`}
+                className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl border border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/80 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-300 font-extrabold text-xs transition shadow-2xs ${isActuallyCollapsed ? "justify-center" : "justify-between"}`}
                 title={language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल करा' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल करें' : 'Install Mobile App'}
               >
                 <div className="flex items-center gap-2">
@@ -308,7 +306,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ) : (
             <div 
               title={`${t('todayNetProfit')} ₹${metrics.netProfit.toLocaleString('en-IN')}`}
-              className="w-10 h-10 mx-auto rounded-xl bg-emerald-50 dark:bg-[#1A2A25] text-emerald-600 dark:text-emerald-400 flex items-center justify-center cursor-pointer border border-emerald-200/60 dark:border-[#24352F] tap-press"
+              className="w-10 h-10 mx-auto rounded-xl bg-emerald-50 dark:bg-[#1A2A25] text-emerald-600 dark:text-emerald-400 flex items-center justify-center cursor-pointer border border-emerald-200/60 dark:border-[#24352F]"
             >
               <Sparkles className="w-5 h-5" />
             </div>
@@ -366,43 +364,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      {/* Mobile Backdrop Overlay with AnimatePresence */}
-      <AnimatePresence>
-        {isMobileOpen && (
-          <motion.div 
-            variants={overlayVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            onClick={onCloseMobile}
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden"
-          />
-        )}
-      </AnimatePresence>
+      {/* Mobile Backdrop Overlay */}
+      {isMobileOpen && (
+        <div 
+          onClick={onCloseMobile}
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden transition-opacity"
+        />
+      )}
 
-      {/* Desktop Static / Collapsible Sidebar */}
+      {/* Sidebar: w-[264px] or w-[72px] on desktop, fixed drawer on mobile */}
       <aside 
-        className={`hidden lg:flex flex-col justify-between bg-white dark:bg-[#0F1A17] border-r border-slate-200 dark:border-[#24352F] shrink-0 h-full overflow-hidden transition-[width] duration-200 ease-in-out ${
-          isCollapsed ? 'w-[72px]' : 'w-[264px]'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 lg:static flex flex-col justify-between bg-white dark:bg-[#0F1A17] border-r border-slate-200 dark:border-[#24352F] shrink-0 h-full overflow-hidden transition-all duration-200 ease-in-out ${
+          isMobileOpen ? 'translate-x-0 w-[264px] shadow-2xl' : '-translate-x-full lg:translate-x-0'
+        } ${isCollapsed ? 'lg:w-[72px]' : 'lg:w-[264px]'}`}
       >
-        {renderSidebarInner(false)}
+        {renderSidebarInner(isMobileOpen)}
       </aside>
-
-      {/* Mobile Animated Drawer */}
-      <AnimatePresence>
-        {isMobileOpen && (
-          <motion.aside
-            variants={drawerLeftVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="fixed inset-y-0 left-0 z-50 flex flex-col justify-between bg-white dark:bg-[#0F1A17] border-r border-slate-200 dark:border-[#24352F] w-[264px] h-full shadow-2xl overflow-hidden lg:hidden"
-          >
-            {renderSidebarInner(true)}
-          </motion.aside>
-        )}
-      </AnimatePresence>
     </>
   );
 };

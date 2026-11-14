@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ydoLogo from '../../assets/YDO_logo.jpg';
 import { useLanguage } from '../../context/LanguageContext';
-import { AnimatedModal } from '../ui/AnimatedModal';
 import { 
   Download, 
   Smartphone, 
@@ -73,9 +72,18 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-lg" className="p-0 overflow-hidden">
-      <div className="relative w-full overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity" 
+        onClick={onClose} 
+      />
+
+      {/* Modal / Bottom Sheet Card */}
+      <div className="relative z-10 w-full max-w-lg bg-white dark:bg-[#121F1B] rounded-t-3xl sm:rounded-3xl border border-slate-200 dark:border-[#24352F] shadow-2xl overflow-hidden transition-all max-h-[90vh] flex flex-col">
         
         {/* Top Decorative Header Accent */}
         <div className="h-1.5 w-full bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-400 shrink-0" />
@@ -84,7 +92,7 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-3.5 top-3.5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#253932] transition z-20 tap-press"
+          className="absolute right-3.5 top-3.5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#253932] transition z-20"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
@@ -247,6 +255,6 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
         </div>
 
       </div>
-    </AnimatedModal>
+    </div>
   );
 };

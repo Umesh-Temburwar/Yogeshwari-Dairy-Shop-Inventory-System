@@ -123,21 +123,6 @@
   animation: shimmer-sweep 2s ease-in-out infinite;
 }
 
-/* Touch and button press feedback */
-.tap-press {
-  @apply active:scale-[0.97] transition-transform duration-100 ease-out;
-}
-
-/* Respect user's motion preferences across the app */
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
 /* Thermal receipt printing optimization - MUST ALWAYS PRINT IN LIGHT MODE */
 @media print {
   html, body {

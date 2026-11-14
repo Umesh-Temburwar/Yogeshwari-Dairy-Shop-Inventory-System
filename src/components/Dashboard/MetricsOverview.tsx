@@ -1,7 +1,6 @@
 import React from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { CountUp } from '../ui/CountUp';
 import { 
   TrendingUp, 
   Banknote, 
@@ -121,7 +120,7 @@ export const MetricsOverview: React.FC = () => {
           <div
             key={idx}
             onClick={card.action}
-            className={`p-5 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] shadow-xs hover:shadow-md transition-all duration-150 flex flex-col justify-between h-full cursor-pointer group tap-press ${
+            className={`p-5 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] shadow-xs hover:shadow-md transition-all duration-150 flex flex-col justify-between h-full cursor-pointer group ${
               card.isProfit ? 'ring-1 ring-amber-500/30 dark:ring-amber-400/20 shadow-amber-500/5' : ''
             }`}
           >
@@ -135,9 +134,9 @@ export const MetricsOverview: React.FC = () => {
               </div>
             </div>
 
-            {/* Big Value: CountUp animation with tabular-nums */}
+            {/* Big Value: with tabular-nums */}
             <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#E7F0EC] tracking-tight tabular-nums my-1">
-              <CountUp value={card.numericValue} prefix={card.prefix || ''} suffix={card.suffix || ''} duration={600} />
+              {card.prefix || ''}{typeof card.numericValue === 'number' ? card.numericValue.toLocaleString('en-IN') : card.numericValue}{card.suffix || ''}
             </div>
 
             {/* Helper Text */}

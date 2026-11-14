@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'motion/react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { TimeRangeFilter } from '../../types';
@@ -31,19 +30,12 @@ export const PeriodFilter: React.FC = () => {
             <button
               key={opt.id}
               onClick={() => setTimeFilter(opt.id)}
-              className={`relative z-10 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 tap-press ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${
                 isActive
-                  ? 'text-emerald-700 dark:text-emerald-400 font-bold'
+                  ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 font-bold shadow-xs'
                   : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-[#E7F0EC]'
               }`}
             >
-              {isActive && (
-                <motion.div
-                  layoutId="period-filter-pill"
-                  className="absolute inset-0 bg-white dark:bg-[#131F1B] rounded-lg shadow-xs -z-10"
-                  transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-                />
-              )}
               {t(opt.key)}
             </button>
           );

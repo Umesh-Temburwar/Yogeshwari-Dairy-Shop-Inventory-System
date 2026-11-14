@@ -1,6 +1,4 @@
 import React, { useState, useEffect, Suspense } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { fadeSlideVariants } from './lib/motion';
 import { ViewFallbackSkeleton } from './components/ui/Skeleton';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -182,62 +180,53 @@ const MainContent: React.FC = () => {
             </div>
           )}
           <Suspense fallback={<ViewFallbackSkeleton />}>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeView}
-                variants={fadeSlideVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className="w-full"
-              >
-                {activeView === 'dashboard' && (
-                  <DashboardView 
-                    onOpenAddProduct={() => {
-                      setProductToEdit(null);
-                      setIsAddProductOpen(true);
-                    }}
-                  />
-                )}
+            <div key={activeView} className="w-full">
+              {activeView === 'dashboard' && (
+                <DashboardView 
+                  onOpenAddProduct={() => {
+                    setProductToEdit(null);
+                    setIsAddProductOpen(true);
+                  }}
+                />
+              )}
 
-                {activeView === 'pos' && <BillingCounter />}
+              {activeView === 'pos' && <BillingCounter />}
 
-                {activeView === 'sales' && <DailySalesTracker />}
+              {activeView === 'sales' && <DailySalesTracker />}
 
-                {activeView === 'inventory' && (
-                  <ProductList 
-                    onOpenAddProduct={() => {
-                      setProductToEdit(null);
-                      setIsAddProductOpen(true);
-                    }}
-                    onEditProduct={handleEditProduct}
-                  />
-                )}
+              {activeView === 'inventory' && (
+                <ProductList 
+                  onOpenAddProduct={() => {
+                    setProductToEdit(null);
+                    setIsAddProductOpen(true);
+                  }}
+                  onEditProduct={handleEditProduct}
+                />
+              )}
 
-                {activeView === 'reorder' && <ReorderNeedsView />}
+              {activeView === 'reorder' && <ReorderNeedsView />}
 
-                {activeView === 'expiry' && <ExpiryDashboard />}
+              {activeView === 'expiry' && <ExpiryDashboard />}
 
-                {activeView === 'purchases' && <PurchaseTracker />}
+              {activeView === 'purchases' && <PurchaseTracker />}
 
-                {activeView === 'damages' && <DamageTracker />}
+              {activeView === 'damages' && <DamageTracker />}
 
-                {activeView === 'udhar' && <KhataBook />}
+              {activeView === 'udhar' && <KhataBook />}
 
-                {activeView === 'expenses' && <ExpenseTracker />}
+              {activeView === 'expenses' && <ExpenseTracker />}
 
-                {activeView === 'analytics' && <ProfitReport />}
+              {activeView === 'analytics' && <ProfitReport />}
 
-                {activeView === 'returns' && (
-                  <ReturnsTracker 
-                    onOpenReturnModal={() => {
-                      setReturnPrefill({});
-                      setIsReturnModalOpen(true);
-                    }} 
-                  />
-                )}
-              </motion.div>
-            </AnimatePresence>
+              {activeView === 'returns' && (
+                <ReturnsTracker 
+                  onOpenReturnModal={() => {
+                    setReturnPrefill({});
+                    setIsReturnModalOpen(true);
+                  }} 
+                />
+              )}
+            </div>
           </Suspense>
         </main>
       </div>

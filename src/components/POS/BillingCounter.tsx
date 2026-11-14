@@ -1,13 +1,9 @@
 import React, { useState, useMemo, useCallback, useDeferredValue } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import nikhilAvatar from '../../assets/nikhil_avatar.png';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product, ProductBatch, PaymentMode, SaleItem, CustomerGender, CustomerAgeGroup } from '../../types';
 import { computeExpiryStatus } from '../../lib/shelfLifeUtils';
-import { cartItemVariants } from '../../lib/motion';
-import { hapticSuccess, hapticLight } from '../../lib/haptics';
-import { AnimatedModal } from '../ui/AnimatedModal';
 import { 
   Search, 
   ShoppingCart, 
@@ -78,7 +74,7 @@ const ProductCard = React.memo<ProductCardProps>(({
           onAddToCart(prod, 1);
         }
       }}
-      className={`relative bg-white dark:bg-[#131F1B] rounded-2xl p-3.5 border transition-all duration-150 flex flex-col justify-between group tap-press select-none ${
+      className={`relative bg-white dark:bg-[#131F1B] rounded-2xl p-3.5 border transition-all duration-150 flex flex-col justify-between group select-none ${
         isOutOfStock || hasExpiredOnly
           ? 'border-slate-200 dark:border-[#24352F] opacity-60 bg-slate-50/50 dark:bg-[#16221E]' 
           : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500 dark:hover:border-emerald-500/60 hover:shadow-md cursor-pointer'
@@ -96,7 +92,7 @@ const ProductCard = React.memo<ProductCardProps>(({
             isLowStock ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
           }`}>
             {(isLowStock || hasExpiredOnly) && (
-              <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse-soft shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
             )}
             <span>
               {hasExpiredOnly 
@@ -118,7 +114,7 @@ const ProductCard = React.memo<ProductCardProps>(({
         {/* Near Expiry Warning Pill for Cashier */}
         {hasExpiringToday && !hasExpiredOnly && (
           <div className="mt-1.5 flex items-center gap-1 text-[10px] font-extrabold text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-2 py-0.5 rounded-md border border-orange-200 dark:border-orange-900/50">
-            <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse-soft shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
             <Clock className="w-3 h-3 text-orange-600 dark:text-orange-400 shrink-0" />
             <span>{language === 'mr' ? 'आज संपत आहे (आधी विका)' : language === 'hi' ? 'आज एक्सपायर (पहले बेचें)' : 'Expiring Today (Sell first)'}</span>
           </div>
@@ -147,7 +143,7 @@ const ProductCard = React.memo<ProductCardProps>(({
               onQuickCalc(prod);
             }}
             title={t('measureInRupees')}
-            className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40 text-xs tap-press"
+            className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40 text-xs"
           >
             <Calculator className="w-3.5 h-3.5" />
           </button>
@@ -159,7 +155,7 @@ const ProductCard = React.memo<ProductCardProps>(({
               e.stopPropagation();
               onAddToCart(prod, 1);
             }}
-            className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-slate-300 dark:disabled:bg-slate-800 transition-colors tap-press"
+            className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-slate-300 dark:disabled:bg-slate-800 transition-colors"
             title={hasExpiredOnly ? 'Expired Batch Blocked' : 'Add 1 Unit'}
           >
             <Plus className="w-4 h-4" />
@@ -278,7 +274,6 @@ export const BillingCounter: React.FC = () => {
       return;
     }
 
-    hapticLight();
     const displayName = getProductDisplayName(product);
     setCart(prev => {
       const existing = prev.find(item => item.product_id === product.id);
@@ -412,7 +407,6 @@ export const BillingCounter: React.FC = () => {
     setLastCompletedSale(sale);
     setIsSuccessModalOpen(true);
     confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
-    hapticSuccess();
 
     // Reset Form
     clearCart();
@@ -490,43 +484,29 @@ export const BillingCounter: React.FC = () => {
 
   return (
     <div className="relative">
-      {/* Mobile Tab Switcher: Products vs Bill Checkout (Native App Feel) */}
-      <div className="lg:hidden grid grid-cols-2 p-1 bg-slate-200/80 dark:bg-[#1A2A25] rounded-2xl border border-slate-300/60 dark:border-[#24352F] mb-3 sticky top-0 z-20 backdrop-blur-md relative">
+      {/* Mobile Tab Switcher: Products vs Bill Checkout */}
+      <div className="lg:hidden grid grid-cols-2 p-1 bg-slate-200/80 dark:bg-[#1A2A25] rounded-2xl border border-slate-300/60 dark:border-[#24352F] mb-3 sticky top-0 z-20 backdrop-blur-md">
         <button
           type="button"
           onClick={() => setMobileTab('products')}
-          className={`relative z-10 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 tap-press ${
+          className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
             mobileTab === 'products'
-              ? 'text-emerald-700 dark:text-emerald-400 font-black'
+              ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 font-black shadow-xs'
               : 'text-slate-600 dark:text-[#8FA69C]'
           }`}
         >
-          {mobileTab === 'products' && (
-            <motion.div
-              layoutId="pos-mobile-tab-pill"
-              className="absolute inset-0 bg-white dark:bg-[#131F1B] rounded-xl shadow-xs -z-10"
-              transition={{ type: 'spring', damping: 26, stiffness: 340 }}
-            />
-          )}
           <Package className="w-3.5 h-3.5" />
           <span>{language === 'mr' ? '१. माल निवडा' : language === 'hi' ? '१. सामान चुनें' : '1. Products'}</span>
         </button>
         <button
           type="button"
           onClick={() => setMobileTab('cart')}
-          className={`relative z-10 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 tap-press ${
+          className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
             mobileTab === 'cart'
-              ? 'text-emerald-700 dark:text-emerald-400 font-black'
+              ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 font-black shadow-xs'
               : 'text-slate-600 dark:text-[#8FA69C]'
           }`}
         >
-          {mobileTab === 'cart' && (
-            <motion.div
-              layoutId="pos-mobile-tab-pill"
-              className="absolute inset-0 bg-white dark:bg-[#131F1B] rounded-xl shadow-xs -z-10"
-              transition={{ type: 'spring', damping: 26, stiffness: 340 }}
-            />
-          )}
           <ShoppingCart className="w-3.5 h-3.5" />
           <span>{language === 'mr' ? '२. बिल' : language === 'hi' ? '२. बिल' : '2. Bill'} ({cart.length}) {netTotal > 0 ? `• ₹${netTotal.toFixed(0)}` : ''}</span>
         </button>
@@ -703,64 +683,57 @@ export const BillingCounter: React.FC = () => {
           {/* Cart Item Rows */}
           <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
             {cart.length > 0 ? (
-              <AnimatePresence initial={false}>
-                {cart.map((item) => (
-                  <motion.div 
-                    key={item.product_id}
-                    variants={cartItemVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    layout
-                    className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/80 dark:bg-[#1A2A25] border border-slate-200/60 dark:border-[#24352F]"
-                  >
-                    <div className="min-w-0 pr-2">
-                      <h5 className="text-xs font-bold text-slate-900 dark:text-[#E7F0EC] truncate">
-                        {item.product_name}
-                      </h5>
-                      <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-                        ₹{item.unit_price} &times; {item.quantity} {item.unit}
-                      </div>
+              cart.map((item) => (
+                <div 
+                  key={item.product_id}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/80 dark:bg-[#1A2A25] border border-slate-200/60 dark:border-[#24352F]"
+                >
+                  <div className="min-w-0 pr-2">
+                    <h5 className="text-xs font-bold text-slate-900 dark:text-[#E7F0EC] truncate">
+                      {item.product_name}
+                    </h5>
+                    <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
+                      ₹{item.unit_price} &times; {item.quantity} {item.unit}
                     </div>
+                  </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
-                      {/* Qty +/- Controls */}
-                      <div className="flex items-center gap-1 bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] rounded-lg p-0.5">
-                        <button
-                          onClick={() => updateQuantity(item.product_id, item.quantity - 0.5)}
-                          className="p-1 hover:bg-slate-100 dark:hover:bg-[#1A2A25] rounded text-slate-600 dark:text-[#8FA69C] tap-press"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={item.quantity}
-                          onChange={(e) => updateQuantity(item.product_id, parseFloat(e.target.value) || 0)}
-                          className="w-12 text-center text-xs font-bold text-slate-900 dark:text-white bg-transparent focus:outline-none"
-                        />
-                        <button
-                          onClick={() => updateQuantity(item.product_id, item.quantity + 0.5)}
-                          className="p-1 hover:bg-slate-100 dark:hover:bg-[#1A2A25] rounded text-slate-600 dark:text-[#8FA69C] tap-press"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
-                      </div>
-
-                      <span className="text-xs font-black text-slate-900 dark:text-white w-14 text-right tabular-nums">
-                        ₹{item.total_price}
-                      </span>
-
+                  <div className="flex items-center gap-3 shrink-0">
+                    {/* Qty +/- Controls */}
+                    <div className="flex items-center gap-1 bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] rounded-lg p-0.5">
                       <button
-                        onClick={() => removeFromCart(item.product_id)}
-                        className="text-slate-400 hover:text-rose-600 dark:text-[#8FA69C] dark:hover:text-rose-400 p-1 tap-press"
+                        onClick={() => updateQuantity(item.product_id, item.quantity - 0.5)}
+                        className="p-1 hover:bg-slate-100 dark:hover:bg-[#1A2A25] rounded text-slate-600 dark:text-[#8FA69C]"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={item.quantity}
+                        onChange={(e) => updateQuantity(item.product_id, parseFloat(e.target.value) || 0)}
+                        className="w-12 text-center text-xs font-bold text-slate-900 dark:text-white bg-transparent focus:outline-none"
+                      />
+                      <button
+                        onClick={() => updateQuantity(item.product_id, item.quantity + 0.5)}
+                        className="p-1 hover:bg-slate-100 dark:hover:bg-[#1A2A25] rounded text-slate-600 dark:text-[#8FA69C]"
+                      >
+                        <Plus className="w-3 h-3" />
                       </button>
                     </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+
+                    <span className="text-xs font-black text-slate-900 dark:text-white w-14 text-right tabular-nums">
+                      ₹{item.total_price}
+                    </span>
+
+                    <button
+                      onClick={() => removeFromCart(item.product_id)}
+                      className="text-slate-400 hover:text-rose-600 dark:text-[#8FA69C] dark:hover:text-rose-400 p-1"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))
             ) : (
               <div className="py-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs">
                 {t('cartEmptyMsg')}
@@ -818,19 +791,12 @@ export const BillingCounter: React.FC = () => {
                       setPaymentMode(m.id as PaymentMode);
                       if (m.id === 'Online_UPI') setShowQrModal(true);
                     }}
-                    className={`relative p-2 rounded-xl border text-center transition-all tap-press ${
+                    className={`p-2 rounded-xl border text-center transition-all ${
                       isSelected
-                        ? 'border-emerald-600 dark:border-emerald-500 text-emerald-900 dark:text-emerald-300 font-bold shadow-xs'
+                        ? 'border-emerald-600 dark:border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 font-bold shadow-xs'
                         : 'border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-50 dark:hover:bg-[#223630]'
                     }`}
                   >
-                    {isSelected && (
-                      <motion.div
-                        layoutId="pos-payment-mode-pill"
-                        className="absolute inset-0 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl -z-10"
-                        transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-                      />
-                    )}
                     <Icon className={`w-4 h-4 mx-auto mb-1 ${m.color}`} />
                     <span className="text-[11px] block leading-tight">{m.label}</span>
                   </button>
@@ -1272,14 +1238,11 @@ export const BillingCounter: React.FC = () => {
       )}
 
       {/* SALE SUCCESS & PRINT RECEIPT MODAL */}
-      <AnimatedModal
-        isOpen={isSuccessModalOpen && !!lastCompletedSale}
-        onClose={() => setIsSuccessModalOpen(false)}
-        maxWidth="max-w-md"
-      >
-        <div className="space-y-4">
+      {isSuccessModalOpen && lastCompletedSale && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-[#131F1B] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-[#24352F] space-y-4 max-h-[90vh] overflow-y-auto">
           <div className="text-center space-y-2">
-            <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800/40 animate-pulse-soft">
+            <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800/40">
               <CheckCircle2 className="w-7 h-7" />
             </div>
             <h3 className="text-xl font-black text-slate-900 dark:text-white">
@@ -1345,7 +1308,7 @@ export const BillingCounter: React.FC = () => {
             <button
               type="button"
               onClick={() => handleViewInvoicePDF(lastCompletedSale)}
-              className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-800 dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs border border-slate-300 dark:border-slate-700 tap-press"
+              className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-800 dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs border border-slate-300 dark:border-slate-700"
               title="View Invoice PDF"
             >
               <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -1354,7 +1317,7 @@ export const BillingCounter: React.FC = () => {
             <button
               type="button"
               onClick={() => handlePrintInvoicePDF(lastCompletedSale)}
-              className="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs tap-press"
+              className="py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs"
               title="Print Invoice"
             >
               <Printer className="w-4 h-4 text-emerald-400" />
@@ -1363,7 +1326,7 @@ export const BillingCounter: React.FC = () => {
             <button
               type="button"
               onClick={() => handleDownloadInvoicePDF(lastCompletedSale)}
-              className="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs tap-press"
+              className="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs"
               title="Download Bill as PDF"
             >
               <Download className="w-4 h-4" />
@@ -1372,13 +1335,14 @@ export const BillingCounter: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsSuccessModalOpen(false)}
-              className="py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white font-bold text-xs tap-press"
+              className="py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white font-bold text-xs"
             >
               {t('nextBill')}
             </button>
           </div>
         </div>
-      </AnimatedModal>
+      </div>
+    )}
 
       {/* Barcode Scanner Camera Modal */}
       <BarcodeScannerModal

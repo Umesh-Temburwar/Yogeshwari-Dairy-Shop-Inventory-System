@@ -5,7 +5,6 @@ import { Product, ProductCategory, ProductUnit } from '../../types';
 import { getShelfLifeNote } from '../../lib/shelfLifeUtils';
 import { X, Save, PackagePlus, Clock, Camera, Sparkles } from 'lucide-react';
 import { ProductPhotoModal } from '../Scanner/ProductPhotoModal';
-import { AnimatedModal } from '../ui/AnimatedModal';
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -55,6 +54,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     }
   }, [productToEdit, isOpen]);
 
+  if (!isOpen) return null;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -100,8 +101,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     : '0';
 
   return (
-    <AnimatedModal isOpen={isOpen} onClose={onClose} maxWidth="max-w-lg">
-      <div className="space-y-4">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border border-transparent dark:border-[#24352F] rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
         
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
@@ -122,7 +123,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25] tap-press"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -309,6 +310,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         </form>
 
       </div>
-    </AnimatedModal>
+    </div>
   );
 };

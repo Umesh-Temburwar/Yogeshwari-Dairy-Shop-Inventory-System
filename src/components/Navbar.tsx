@@ -7,7 +7,6 @@ import { useAuth } from '../context/AuthContext';
 import { 
   Sun, 
   Moon, 
-  Menu, 
   PanelLeftClose, 
   PanelLeft, 
   LogOut, 
@@ -60,16 +59,6 @@ export const Navbar: React.FC<NavbarProps> = ({
         
         {/* Left: Sidebar Toggle + Brand Logo & Shop Name */}
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 sm:flex-initial">
-          {/* Mobile Menu Button */}
-          <button
-            type="button"
-            onClick={onOpenMobileSidebar}
-            className="lg:hidden p-2 rounded-xl text-slate-600 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition active:scale-95"
-            aria-label="Toggle mobile menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-
           {/* Desktop Rail Collapse Toggle */}
           <button
             type="button"

@@ -14,6 +14,7 @@ import { AddProductModal } from './components/Inventory/AddProductModal';
 import { MasterSecurityModal } from './components/Auth/MasterSecurityModal';
 import { AppDownloadModal } from './components/Common/AppDownloadModal';
 import { NetworkStatusBanner } from './components/Common/NetworkStatusBanner';
+import { KeyboardShortcutsModal } from './components/Common/KeyboardShortcutsModal';
 import { RotateCw } from 'lucide-react';
 import { Product } from './types';
 
@@ -41,6 +42,7 @@ const MainContent: React.FC = () => {
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [returnPrefill, setReturnPrefill] = useState<{ productId?: string; invoiceNo?: string; customerName?: string; customerPhone?: string }>({});
   const [isAppDownloadOpen, setIsAppDownloadOpen] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
   // Automatically trigger Mobile Application Download popup after website login
   useEffect(() => {
@@ -70,10 +72,13 @@ const MainContent: React.FC = () => {
   const [isPulling, setIsPulling] = useState(false);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
 
-  // Global Keyboard Shortcuts (F2, F3, F4)
+  // Global Keyboard Shortcuts (F1, F2, F3, F4)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'F2') {
+      if (e.key === 'F1') {
+        e.preventDefault();
+        setIsShortcutsOpen((prev) => !prev);
+      } else if (e.key === 'F2') {
         e.preventDefault();
         setActiveView('pos');
       } else if (e.key === 'F3') {
@@ -278,6 +283,12 @@ const MainContent: React.FC = () => {
       <AppDownloadModal 
         isOpen={isAppDownloadOpen}
         onClose={() => setIsAppDownloadOpen(false)}
+      />
+
+      {/* Keyboard Shortcuts Helper Modal (F1) */}
+      <KeyboardShortcutsModal 
+        isOpen={isShortcutsOpen}
+        onClose={() => setIsShortcutsOpen(false)}
       />
     </div>
   );

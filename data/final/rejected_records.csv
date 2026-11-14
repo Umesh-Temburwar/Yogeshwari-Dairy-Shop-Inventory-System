@@ -1,0 +1,7 @@
+id,product_name,barcode,source,rejection_reason
+10a7f886-36a8-42c6-9dc4-3b4b71f13f8e,k,4311211326268,Open Food Facts India,Missing or trivial product name
+25be86c3-a7e8-4f46-b1d7-c7e6872ccdac,H,8000500289495,Open Food Facts India,Missing or trivial product name
+03a4959a-3811-48bb-a9e3-bc3ff7180b7c,P,8902246004984,Open Food Facts India,Missing or trivial product name
+7f01ce5b-3886-4df9-ab5d-f7cf5493ff9d,v,8906013070615,Open Food Facts India,Missing or trivial product name
+ddb1ab53-9844-4fd1-a19c-568cfbbffb46,C,8906031251980,Open Food Facts India,Missing or trivial product name
+f4545aed-dfe2-409e-ab40-3aeaa5e97cb6,O,8908001658584,Open Food Facts India,Missing or trivial product name

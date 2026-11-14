@@ -175,5 +175,35 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
     console.warn('[BarcodeService] RPC lookup fallback error:', err);
   }
 
+  // 4. Fourth attempt: Direct lookup in product_catalogue table
+  try {
+    const { data: catData, error: catErr } = await supabase
+      .from('product_catalogue')
+      .select('*')
+      .in('barcode', candidates)
+      .limit(1);
+
+    if (!catErr && catData && catData.length > 0) {
+      const c = catData[0];
+      const prod: Product = {
+        id: c.id,
+        name: c.product_name,
+        category: (c.category as ProductCategory) || 'Bakery & Extras',
+        unit: (c.quantity_unit as ProductUnit) || 'Piece',
+        purchase_price: Number(c.purchase_price || 0),
+        selling_price: Number(c.selling_price || c.mrp || 0),
+        stock_quantity: 0, // CATALOGUE HAS ZERO STOCK BY DEFINITION
+        min_stock_alert: 5,
+        brand: c.brand || undefined,
+        barcode: c.barcode || clean,
+        is_active: true,
+        created_at: c.created_at || new Date().toISOString()
+      };
+      return { found: true, product: prod, barcode: c.barcode || clean, source: 'catalogue' as any };
+    }
+  } catch (err) {
+    console.warn('[BarcodeService] product_catalogue table lookup error:', err);
+  }
+
   return { found: false, product: null, barcode: clean, source: 'local' };
 }

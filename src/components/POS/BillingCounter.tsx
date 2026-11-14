@@ -281,6 +281,24 @@ export const BillingCounter: React.FC = () => {
     const q = deferredSearchQuery.trim().toLowerCase();
     const isBarcodeQuery = /^\d{5,}$/.test(q);
 
+    // When querying by barcode, prioritize exact barcode resolution
+    if (isBarcodeQuery) {
+      if (onlineSearchedProduct) {
+        return [onlineSearchedProduct];
+      }
+      const localBarcodeMatches = products.filter(p =>
+        p.is_active && p.barcode && (
+          p.barcode.toLowerCase() === q ||
+          p.barcode.toLowerCase() === ('0' + q) ||
+          p.barcode.toLowerCase().replace(/^0+/, '') === q.replace(/^0+/, '') ||
+          p.barcode.toLowerCase().includes(q)
+        )
+      );
+      if (localBarcodeMatches.length > 0) {
+        return localBarcodeMatches;
+      }
+    }
+
     const base = products.filter(p => {
       const barcodeMatches = Boolean(
         p.barcode && (

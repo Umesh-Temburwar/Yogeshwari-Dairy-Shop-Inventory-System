@@ -4,12 +4,13 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { Sale } from '../../types';
-import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
+import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF, exportSalesToCSV } from '../../lib/exportUtils';
 import { 
   ReceiptIndianRupee, 
   Search, 
   Printer, 
   FileText,
+  FileSpreadsheet,
   Download,
   Banknote, 
   Smartphone, 
@@ -326,6 +327,15 @@ export const DailySalesTracker: React.FC = () => {
           >
             <Printer className="w-4 h-4 text-emerald-400" />
             <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+          </button>
+
+          <button
+            onClick={() => exportSalesToCSV(filteredSales, language as any)}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
+            title={language === 'mr' ? 'अहवाल Excel/CSV डाउनलोड करा' : 'Download Sales CSV / Excel'}
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span className="hidden sm:inline">CSV / Excel</span>
           </button>
 
           <button

@@ -27,7 +27,7 @@ import {
   ArrowUpDown,
   Tag
 } from 'lucide-react';
-import { formatSaleDate, formatSaleTime } from '../../lib/dateUtils';
+import { formatSaleDate, formatSaleTime, formatTimeAgo } from '../../lib/dateUtils';
 
 export const OwnerAdminCounterWidget: React.FC = () => {
   const { sales, adminActivities, purchases, damages, refreshData, isSyncing } = useStore();
@@ -563,8 +563,9 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                         <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-[#16221E] text-slate-700 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F]">
                           📍 {counter}
                         </span>
-                        <span className="text-[10px] text-slate-400 dark:text-[#8FA69C]">
-                          📅 {formatSaleDate(sale.created_at, sale.sale_date)} • ⏰ {formatSaleTime(sale.created_at) || '12:00 PM'}
+                        <span className="text-[10px] text-slate-400 dark:text-[#8FA69C] inline-flex items-center gap-1">
+                          <span>📅 {formatSaleDate(sale.created_at, sale.sale_date)} • ⏰ {formatSaleTime(sale.created_at) || '12:00 PM'}</span>
+                          <span className="text-amber-600 dark:text-amber-400 font-bold">({formatTimeAgo(sale.created_at, language)})</span>
                         </span>
                       </div>
 
@@ -685,9 +686,12 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                           {badge.label}
                         </span>
 
-                        {/* Timestamp */}
-                        <span className="text-[10px] font-medium text-slate-400 dark:text-[#8FA69C] ml-auto sm:ml-0">
-                          {formattedDate} • {formattedTime}
+                        {/* Timestamp with Relative Time */}
+                        <span className="text-[10px] font-medium text-slate-400 dark:text-[#8FA69C] ml-auto sm:ml-0 inline-flex items-center gap-1.5">
+                          <span>{formattedDate} • {formattedTime}</span>
+                          <span className="text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800/50">
+                            {formatTimeAgo(act.created_at, language)}
+                          </span>
                         </span>
                       </div>
 

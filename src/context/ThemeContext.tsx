@@ -54,6 +54,12 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       } else {
         root.classList.remove('dark');
       }
+
+      // Sync mobile browser status bar theme color
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', isDark ? '#0B1210' : '#10B981');
+      }
     };
 
     applyTheme();

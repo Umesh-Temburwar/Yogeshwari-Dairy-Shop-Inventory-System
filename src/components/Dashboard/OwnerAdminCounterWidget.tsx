@@ -65,12 +65,21 @@ export const OwnerAdminCounterWidget: React.FC = () => {
     return { count: sales.length, totalSales, cash, online, udhar };
   }, [sales]);
 
-  // Combine and deduplicate activities from adminActivities and sales
+  // Combine and deduplicate activities from adminActivities and sales (strictly within last 7 days)
   const allActivitiesStream = useMemo(() => {
-    const list: AdminActivity[] = [...adminActivities];
+    const sevenDaysAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
-    // Ensure every sale in sales list is also represented in the stream
+    // Filter adminActivities to strictly within last 7 days
+    const list: AdminActivity[] = adminActivities.filter(
+      a => new Date(a.created_at).getTime() >= sevenDaysAgoMs
+    );
+
+    // Ensure every sale in sales list from the last 7 days is also represented in the stream
     sales.forEach(s => {
+      const saleTime = new Date(s.created_at).getTime();
+      // Enforce 7-day retention: auto-exclude any sales older than 7 days from the audit stream
+      if (saleTime < sevenDaysAgoMs) return;
+
       const alreadyLogged = list.some(a => a.reference_id === s.invoice_no);
       if (!alreadyLogged) {
         const itemsText = s.items ? s.items.map(i => `${i.product_name} (${i.quantity} ${i.unit})`).join(', ') : 'मालाची विक्री';
@@ -100,7 +109,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
 
     // Sort newest first
     return list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [adminActivities, sales]);
+  }, [adminActivities, sales, isMr]);
 
   // Filter activities stream by selected filter tab and search query
   const filteredActivities = useMemo(() => {
@@ -134,10 +143,15 @@ export const OwnerAdminCounterWidget: React.FC = () => {
     });
   }, [allActivitiesStream, activeTabFilter, searchQuery]);
 
-  // Granular sales list for the "काऊंटर विक्री तपशील" tab
+  // Granular sales list for the "काऊंटर विक्री तपशील" tab (strictly within last 7 days)
   const itemizedSales = useMemo(() => {
+    const sevenDaysAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
     return sales
       .filter(s => {
+        // Enforce 7-day retention: records older than 7 days are automatically excluded
+        const saleTime = new Date(s.created_at).getTime();
+        if (saleTime < sevenDaysAgoMs) return false;
+
         if (!searchQuery.trim()) return true;
         const q = searchQuery.toLowerCase();
         const matchInv = s.invoice_no.toLowerCase().includes(q);
@@ -355,12 +369,18 @@ export const OwnerAdminCounterWidget: React.FC = () => {
       <div className="space-y-3 pt-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h4 className="font-black text-slate-900 dark:text-white text-sm sm:text-base flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-500" />
-              <span>{isMr ? 'थेट तपासणी नोंदवही (कोणत्या काऊंटरवरून काय विकले व इन्व्हेंटरी बदल):' : isHi ? 'लाइव ऑडिट रजिस्टर (किसने किस काउंटर से क्या बेचा और क्या बदला):' : 'Live Audit Stream (Who sold what from which counter & updates):'}</span>
-            </h4>
-            <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-              {isMr ? 'निलेश सखारे व निखिल सखारे यांनी केलेल्या सर्व विक्री, साठा बदल, इन्व्हेंटरी अपडेट, खर्च व नुकसानीच्या थेट नोंदी.' : isHi ? 'निलेश सखारे और निखिल सखारे द्वारा की गई सभी बिक्री, स्टॉक अपडेट, इन्वेंट्री बदलाव और खर्च का ब्यौरा।' : 'Live ledger of all sales and inventory changes by Nilesh Sakhare and Nikhil Sakhare.'}
+            <div className="flex flex-wrap items-center gap-2">
+              <h4 className="font-black text-slate-900 dark:text-white text-sm sm:text-base flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-500" />
+                <span>{isMr ? 'थेट तपासणी नोंदवही (कोणत्या काऊंटरवरून काय विकले व इन्व्हेंटरी बदल):' : isHi ? 'लाइव ऑडिट रजिस्टर (किसने किस काउंटर से क्या बेचा और क्या बदला):' : 'Live Audit Stream (Who sold what from which counter & updates):'}</span>
+              </h4>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/60 flex items-center gap-1">
+                <span>⏱️</span>
+                <span>{isMr ? '७ दिवसांचा डेटा (८ व्या दिवशी आपोआप हटवला जातो)' : isHi ? '७ दिन का डेटा (८वें दिन स्वतः हट जाता है)' : '7-Day Retention (Auto-Purged on Day 8)'}</span>
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-0.5">
+              {isMr ? 'निलेश सखारे व निखिल सखारे यांनी केलेल्या मागील ७ दिवसांमधील सर्व विक्री, साठा बदल, इन्व्हेंटरी अपडेट, खर्च व नुकसानीच्या थेट नोंदी.' : isHi ? 'निलेश सखारे और निखिल सखारे द्वारा पिछले ७ दिनों में की गई सभी बिक्री, स्टॉक अपडेट, इन्वेंट्री बदलाव और खर्च का ब्यौरा।' : 'Live 7-day activity stream of sales and inventory changes by Nilesh Sakhare and Nikhil Sakhare.'}
             </p>
           </div>
 

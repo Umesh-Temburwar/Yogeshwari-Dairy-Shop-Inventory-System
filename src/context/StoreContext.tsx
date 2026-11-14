@@ -616,12 +616,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setUdharTransactions(utData);
       }
 
-      // 11. Fetch admin audit logs
+      // 11. Purge & Fetch admin audit logs (Strict 7-Day Retention: auto-deleted on 8th day)
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      try {
+        // Automatically purge records older than 7 days from Supabase
+        await supabase
+          .from('admin_audit_logs')
+          .delete()
+          .lt('created_at', sevenDaysAgo);
+      } catch (purgeErr) {
+        console.warn('Auto-purge expired audit logs notice:', purgeErr);
+      }
+
       const { data: auditData, error: auditErr } = await supabase
         .from('admin_audit_logs')
         .select('*')
+        .gte('created_at', sevenDaysAgo)
         .order('created_at', { ascending: false })
-        .limit(200);
+        .limit(500);
+
       if (!auditErr && auditData) {
         setAdminActivities(auditData);
       }
@@ -929,7 +943,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       created_at: new Date().toISOString()
     };
 
-    setAdminActivities(prev => [newActivity, ...prev]);
+    const sevenDaysAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    setAdminActivities(prev => [newActivity, ...prev].filter(a => new Date(a.created_at).getTime() >= sevenDaysAgoMs));
 
     if (supabase) {
       try {
@@ -949,6 +964,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           created_at: newActivity.created_at
         }]);
         broadcastMutation('audit', 'log');
+
+        // Opportunistic background auto-purge of expired logs (> 7 days)
+        supabase
+          .from('admin_audit_logs')
+          .delete()
+          .lt('created_at', new Date(sevenDaysAgoMs).toISOString())
+          .then(() => {})
+          .catch(() => {});
       } catch (err) {
         console.warn('Failed to sync admin audit log to Supabase', err);
       }

@@ -58,16 +58,17 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    const cleanName = name.trim();
+    if (!cleanName) return;
 
-    const pPrice = parseFloat(purchasePrice) || 0;
-    const sPrice = parseFloat(sellingPrice) || 0;
-    const sQty = parseFloat(stockQuantity) || 0;
-    const minAlert = parseFloat(minStockAlert) || 10;
+    const pPrice = Math.max(0, parseFloat(purchasePrice) || 0);
+    const sPrice = Math.max(0, parseFloat(sellingPrice) || 0);
+    const sQty = Math.max(0, parseFloat(stockQuantity) || 0);
+    const minAlert = Math.max(0, parseFloat(minStockAlert) || 10);
 
     if (productToEdit) {
       await updateProduct(productToEdit.id, {
-        name: name.trim(),
+        name: cleanName,
         hindi_name: hindiName.trim() || undefined,
         marathi_name: marathiName.trim() || undefined,
         category,
@@ -79,7 +80,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       });
     } else {
       await addProduct({
-        name: name.trim(),
+        name: cleanName,
         hindi_name: hindiName.trim() || undefined,
         marathi_name: marathiName.trim() || undefined,
         category,

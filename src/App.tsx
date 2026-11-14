@@ -13,6 +13,7 @@ import { DashboardView } from './components/Dashboard/DashboardView';
 import { AddProductModal } from './components/Inventory/AddProductModal';
 import { MasterSecurityModal } from './components/Auth/MasterSecurityModal';
 import { AppDownloadModal } from './components/Common/AppDownloadModal';
+import { NetworkStatusBanner } from './components/Common/NetworkStatusBanner';
 import { RotateCw } from 'lucide-react';
 import { Product } from './types';
 
@@ -288,6 +289,9 @@ const AppRoot: React.FC = () => {
 
   return (
     <>
+      {/* Live offline/online network status alert */}
+      <NetworkStatusBanner />
+
       {/* Silky-smooth opening splash screen with logo & progress */}
       {!isSplashComplete && (
         <SplashScreen

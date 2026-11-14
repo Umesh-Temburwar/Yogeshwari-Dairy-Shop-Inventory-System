@@ -3,6 +3,7 @@ import { BrowserMultiFormatReader } from '@zxing/browser';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product } from '../../types';
+import { playBeepSound } from '../../utils/audioUtils';
 import {
   Camera,
   X,
@@ -106,6 +107,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   };
 
   const handleBarcodeDetected = (code: string) => {
+    playBeepSound();
     setScannedCode(code);
     if (onBarcodeScanned) {
       onBarcodeScanned(code);

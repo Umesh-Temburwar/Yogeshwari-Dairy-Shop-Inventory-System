@@ -227,30 +227,55 @@ export const BillingCounter: React.FC = () => {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [lastCompletedSale, setLastCompletedSale] = useState<any>(null);
   const [onlineSearchedProduct, setOnlineSearchedProduct] = useState<Product | null>(null);
+  const [onlineSearchResults, setOnlineSearchResults] = useState<Product[]>([]);
   const [isSearchingOnline, setIsSearchingOnline] = useState(false);
 
-  // Live online barcode search from Supabase
+  // Live online product & barcode search from Supabase
   useEffect(() => {
     const q = deferredSearchQuery.trim();
-    const isBarcodeLike = /^\d{5,}$/.test(q);
-    if (!isBarcodeLike) {
+    if (!q || q.length < 2) {
       setOnlineSearchedProduct(null);
+      setOnlineSearchResults([]);
       setIsSearchingOnline(false);
       return;
     }
 
+    const isBarcodeLike = /^\d{5,}$/.test(q);
     let cancelled = false;
     setIsSearchingOnline(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await searchProductByBarcodeOnline(q);
-        if (!cancelled && res.found && res.product) {
-          setOnlineSearchedProduct(res.product);
-        } else if (!cancelled) {
-          setOnlineSearchedProduct(null);
+        if (isBarcodeLike) {
+          const res = await searchProductByBarcodeOnline(q);
+          if (!cancelled) {
+            if (res.found && res.product) {
+              setOnlineSearchedProduct(res.product);
+              setOnlineSearchResults([res.product]);
+            } else {
+              setOnlineSearchedProduct(null);
+              setOnlineSearchResults([]);
+            }
+          }
+        } else if (q.length >= 2) {
+          const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .or(`name.ilike.%${q}%,brand.ilike.%${q}%`)
+            .limit(20);
+
+          if (!cancelled) {
+            if (!error && data && data.length > 0) {
+              setOnlineSearchResults(data as Product[]);
+            } else {
+              setOnlineSearchResults([]);
+            }
+          }
         }
       } catch (e) {
-        if (!cancelled) setOnlineSearchedProduct(null);
+        if (!cancelled) {
+          setOnlineSearchedProduct(null);
+          setOnlineSearchResults([]);
+        }
       } finally {
         if (!cancelled) setIsSearchingOnline(false);
       }
@@ -318,12 +343,19 @@ export const BillingCounter: React.FC = () => {
       return matchesSearch && matchesCategory && p.is_active;
     });
 
-    if (onlineSearchedProduct && !base.some(p => p.id === onlineSearchedProduct.id)) {
-      return [onlineSearchedProduct, ...base];
+    let result = base;
+    if (onlineSearchResults && onlineSearchResults.length > 0) {
+      const existingIds = new Set(base.map(p => p.id));
+      const additional = onlineSearchResults.filter(p => !existingIds.has(p.id));
+      if (additional.length > 0) {
+        result = [...additional, ...base];
+      }
+    } else if (onlineSearchedProduct && !base.some(p => p.id === onlineSearchedProduct.id)) {
+      result = [onlineSearchedProduct, ...base];
     }
 
-    return base;
-  }, [products, deferredSearchQuery, selectedCategory, onlineSearchedProduct]);
+    return result;
+  }, [products, deferredSearchQuery, selectedCategory, onlineSearchedProduct, onlineSearchResults]);
 
   // Helper display name
   const getProductDisplayName = useCallback((prod: Product) => {

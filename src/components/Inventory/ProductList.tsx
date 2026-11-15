@@ -191,9 +191,9 @@ export const ProductList: React.FC<ProductListProps> = ({
 
       const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
 
-      // If user is searching an exact barcode number, do not hide it even if stock is 0!
+      // If user is searching (either barcode or name), NEVER hide matching products!
       let matchesTab = true;
-      if (isBarcodeQuery && barcodeMatches) {
+      if (q.length > 0) {
         matchesTab = true;
       } else if (inventoryViewTab === 'IN_STOCK') {
         matchesTab = p.stock_quantity > 0;

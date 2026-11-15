@@ -123,6 +123,26 @@
   animation: shimmer-sweep 2s ease-in-out infinite;
 }
 
+/* Fluid neon laser scan beam animation */
+@keyframes scannerSweep {
+  0% {
+    top: 8%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 90%;
+    opacity: 1;
+  }
+  100% {
+    top: 8%;
+    opacity: 0.8;
+  }
+}
+
+.animate-scanner-sweep {
+  animation: scannerSweep 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 /* Thermal receipt printing optimization - MUST ALWAYS PRINT IN LIGHT MODE */
 @media print {
   html, body {

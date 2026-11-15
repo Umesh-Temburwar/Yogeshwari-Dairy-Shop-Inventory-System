@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
+import {
+  createBarcodeReader,
+  decodeVideoMultiAngle,
+  decodeImageMultiAngle
+} from '../../utils/barcodeScannerEngine';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product, ProductCategory, ProductUnit } from '../../types';
@@ -208,44 +213,42 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       const capabilities: any = track?.getCapabilities ? track.getCapabilities() : {};
       setHasTorch(Boolean(capabilities?.torch));
 
-      // 2. Barcode Scanning Engine: Chrome Native BarcodeDetector + ZXing Fallback
-      if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+      // 2. High-Performance Multi-Angle ZXing Scanning Engine (0°, 180°, 90°, Center Reticle Crop)
+      const codeReader = createBarcodeReader();
+      codeReaderRef.current = codeReader;
+
+      const scanCanvas = document.createElement('canvas');
+      const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
+
+      let isLoopRunning = true;
+      let isDecodingFrame = false;
+
+      const scanInterval = setInterval(() => {
+        if (!isLoopRunning || isDecodingFrame) return;
+        if (!videoElement || videoElement.readyState < 2 || videoElement.videoWidth === 0) return;
+        if (!scanCtx) return;
+
+        isDecodingFrame = true;
         try {
-          const detector = new (window as any).BarcodeDetector({
-            formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code']
-          });
-          let active = true;
-          const scanNativeLoop = async () => {
-            if (!active) return;
-            try {
-              if (videoElement && videoElement.readyState >= 2) {
-                const barcodes = await detector.detect(videoElement);
-                if (barcodes && barcodes.length > 0) {
-                  const rawCode = barcodes[0].rawValue;
-                  if (rawCode) handleBarcodeDetected(rawCode);
-                }
-              }
-            } catch (detErr) {}
-            if (active) requestAnimationFrame(scanNativeLoop);
-          };
-          requestAnimationFrame(scanNativeLoop);
-          scannerControlsRef.current = { stop: () => { active = false; } };
-        } catch (natErr) {
-          const codeReader = new BrowserMultiFormatReader();
-          codeReaderRef.current = codeReader;
-          const controls = codeReader.scan(videoElement, (result) => {
-            if (result) handleBarcodeDetected(result.getText());
-          });
-          scannerControlsRef.current = controls;
+          const detectedText = decodeVideoMultiAngle(videoElement, codeReader, scanCanvas, scanCtx);
+          if (detectedText && isLoopRunning) {
+            isLoopRunning = false;
+            clearInterval(scanInterval);
+            handleBarcodeDetected(detectedText);
+          }
+        } catch (frameErr) {
+          // ignore transient frame capture glitches
+        } finally {
+          isDecodingFrame = false;
         }
-      } else {
-        const codeReader = new BrowserMultiFormatReader();
-        codeReaderRef.current = codeReader;
-        const controls = codeReader.scan(videoElement, (result) => {
-          if (result) handleBarcodeDetected(result.getText());
-        });
-        scannerControlsRef.current = controls;
-      }
+      }, 80);
+
+      scannerControlsRef.current = {
+        stop: () => {
+          isLoopRunning = false;
+          clearInterval(scanInterval);
+        }
+      };
 
       setIsScanningCamera(true);
       setCameraError(null);
@@ -255,11 +258,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       setCameraError(
         isPermissionDenied
           ? (language === 'mr'
-              ? 'कॅमेरा परवानगी नाकारली गेली. कृपया ब्राऊझर पत्त्याजवळ (Address bar) कुलूपावर क्लिक करून कॅमेरा सुरू करा.'
-              : 'कैमरा अनुमति अस्वीकृत। कृपया ब्राउज़र में कैमरा एक्सेस दें।')
+            ? 'कॅमेरा परवानगी नाकारली गेली. कृपया ब्राऊझर पत्त्याजवळ (Address bar) कुलूपावर क्लिक करून कॅमेरा सुरू करा.'
+            : 'कैमरा अनुमति अस्वीकृत। कृपया ब्राउज़र में कैमरा एक्सेस दें।')
           : (language === 'mr'
-              ? 'कॅमेरा सुरू करता आला नाही. कृपया "कॅमेरा सुरू करा" बटण दाबा किंवा बारकोड टाईप करा.'
-              : 'कैमरा शुरू नहीं हो सका। कृपया "कैमरा शुरू करें" बटन दबाएं।')
+            ? 'कॅमेरा सुरू करता आला नाही. कृपया "कॅमेरा सुरू करा" बटण दाबा किंवा बारकोड टाईप करा.'
+            : 'कैमरा शुरू नहीं हो सका। कृपया "कैमरा शुरू करें" बटन दबाएं।')
       );
       setIsScanningCamera(false);
     }
@@ -363,26 +366,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
         img.onerror = reject;
       });
 
-      // 1. Try Native BarcodeDetector
-      if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
-        try {
-          const detector = new (window as any).BarcodeDetector({
-            formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code']
-          });
-          const barcodes = await detector.detect(img);
-          if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
-            handleBarcodeDetected(barcodes[0].rawValue);
-            URL.revokeObjectURL(objectUrl);
-            return;
-          }
-        } catch (detErr) {}
-      }
-
-      // 2. Try ZXing BrowserMultiFormatReader
-      const reader = new BrowserMultiFormatReader();
-      const result = await reader.decodeFromImageElement(img);
-      if (result) {
-        handleBarcodeDetected(result.getText());
+      // Try Multi-Angle ZXing Image Decoder (0°, 180°, 90°, 270°)
+      const reader = createBarcodeReader();
+      const detected = await decodeImageMultiAngle(img, reader);
+      if (detected) {
+        handleBarcodeDetected(detected);
       } else {
         alert(language === 'mr' ? 'फोटोमध्ये बारकोड सापडला नाही. कृपया जवळून स्पष्ट फोटो काढा.' : 'फोटो में बारकोड नहीं मिला। कृपया स्पष्ट फोटो लें।');
       }
@@ -613,10 +601,21 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                   playsInline
                   muted
                 />
-                {/* Aiming Reticle */}
+                {/* Active Scanning Status Badge */}
                 {isScanningCamera && (
-                  <div className="absolute inset-x-12 inset-y-8 border-2 border-emerald-400 rounded-xl pointer-events-none animate-pulse flex items-center justify-center">
-                    <div className="w-full h-0.5 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                  <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-[11px] font-bold backdrop-blur-md shadow-md">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    <span>{language === 'mr' ? 'कॅमेरा सुरू • स्कॅनिंग सक्रिय' : 'कैमरा चालू • स्कैनिंग सक्रिय'}</span>
+                  </div>
+                )}
+
+                {/* Aiming Reticle with Fluid Sweeping Laser Beam */}
+                {isScanningCamera && (
+                  <div className="absolute inset-x-12 inset-y-8 border-2 border-emerald-400/90 rounded-2xl pointer-events-none overflow-hidden relative shadow-[0_0_0_9999px_rgba(0,0,0,0.55)]">
+                    <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#34d399] animate-scanner-sweep" />
+                    <div className="absolute top-2 left-0 right-0 text-center text-[10px] font-bold text-white tracking-wider uppercase bg-emerald-800/90 rounded-md py-0.5 px-2 max-w-fit mx-auto shadow-sm">
+                      {language === 'mr' ? 'बारकोड चौकटीत धरा' : 'बारकोड फ्रेम में रखें'}
+                    </div>
                   </div>
                 )}
 
@@ -626,11 +625,10 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                     <button
                       type="button"
                       onClick={toggleTorch}
-                      className={`p-2 rounded-xl backdrop-blur-md border text-xs font-bold transition flex items-center gap-1 shadow-lg ${
-                        torchEnabled 
-                          ? 'bg-amber-400 text-slate-900 border-amber-300' 
-                          : 'bg-black/60 text-white border-white/20 hover:bg-black/80'
-                      }`}
+                      className={`p-2 rounded-xl backdrop-blur-md border text-xs font-bold transition flex items-center gap-1 shadow-lg ${torchEnabled
+                        ? 'bg-amber-400 text-slate-900 border-amber-300'
+                        : 'bg-black/60 text-white border-white/20 hover:bg-black/80'
+                        }`}
                       title="टॉर्च / Flashlight"
                     >
                       <Flashlight className="w-4 h-4" />

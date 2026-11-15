@@ -676,11 +676,12 @@ export const ProductList: React.FC<ProductListProps> = ({
           <button
             type="button"
             onClick={() => setShowBarcodeScanner(true)}
-            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#20332D] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-white flex items-center gap-1.5 text-xs font-bold shrink-0 transition"
-            title="Scan Barcode"
+            className="px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 text-xs font-black shadow-md shadow-emerald-600/30 active:scale-95 transition-all shrink-0 cursor-pointer"
+            title={language === 'mr' ? 'लाईव्ह बारकोड स्कॅनर सुरू करा' : 'लाइव बारकोड स्कैनर शुरू करें'}
           >
-            <Barcode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'बारकोड' : 'बारकोड'}</span>
+            <Barcode className="w-4 h-4 text-white" />
+            <span>{language === 'mr' ? 'बारकोड स्कॅन' : 'बारकोड स्कैन'}</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping hidden sm:inline-block" />
           </button>
         </div>
 

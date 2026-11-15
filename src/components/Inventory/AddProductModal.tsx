@@ -3,10 +3,16 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product, ProductCategory, ProductUnit } from '../../types';
 import { getShelfLifeNote } from '../../lib/shelfLifeUtils';
-import { X, Save, PackagePlus, Clock, Camera, Sparkles, Barcode } from 'lucide-react';
+import { X, Save, PackagePlus, Clock, Camera, Sparkles, Barcode, Mic, MicOff, Volume2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { ProductPhotoModal } from '../Scanner/ProductPhotoModal';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { translateProductName, translateProductNameSync } from '../../lib/productTranslator';
+import { playBeepSound, playSuccessChime } from '../../utils/audioUtils';
+import { 
+  isSpeechRecognitionSupported, 
+  processVoiceTranscript, 
+  VoiceLanguage 
+} from '../../lib/voiceProductRecognizer';
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -38,6 +44,27 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [isTranslating, setIsTranslating] = useState(false);
   const [autoTranslateEnabled, setAutoTranslateEnabled] = useState(true);
   const isUserTypingRef = useRef(false);
+
+  // Voice recognition states
+  const [isListening, setIsListening] = useState(false);
+  const [voiceLang, setVoiceLang] = useState<VoiceLanguage>(
+    language === 'hi' ? 'hi-IN' : language === 'en' ? 'en-IN' : 'mr-IN'
+  );
+  const [interimTranscript, setInterimTranscript] = useState('');
+  const [voiceFeedback, setVoiceFeedback] = useState<string | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null);
+
+  // Clean up speech recognition on unmount or modal close
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch {}
+      }
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     isUserTypingRef.current = false;
@@ -123,6 +150,132 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       const fallback = translateProductNameSync(name);
       setMarathiName(fallback.marathi);
       setHindiName(fallback.hindi);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  // Start Speech Recognition
+  const startVoiceListening = (selectedLang: VoiceLanguage = voiceLang) => {
+    setVoiceError(null);
+    setInterimTranscript('');
+    setVoiceFeedback(null);
+
+    if (!isSpeechRecognitionSupported()) {
+      setVoiceError(
+        language === 'mr'
+          ? 'तुमच्या ब्राउझरमध्ये व्हॉइस इनपुट उपलब्ध नाही. कृपया Google Chrome किंवा Microsoft Edge वापरा.'
+          : language === 'hi'
+          ? 'आपके ब्राउज़र में वॉयस इनपुट उपलब्ध नहीं है। कृपया Google Chrome या Edge का उपयोग करें।'
+          : 'Voice input is not supported in this browser. Please use Chrome or Edge.'
+      );
+      return;
+    }
+
+    try {
+      const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognitionClass();
+      recognitionRef.current = recognition;
+
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = selectedLang;
+
+      playBeepSound();
+      setIsListening(true);
+
+      let finalAccumulated = '';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalAccumulated += event.results[i][0].transcript;
+          } else {
+            interim += event.results[i][0].transcript;
+          }
+        }
+        setInterimTranscript(interim || finalAccumulated);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.warn('Speech recognition error:', event.error);
+        setIsListening(false);
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          setVoiceError(
+            language === 'mr'
+              ? 'मायक्रोफोन परवानगी नाकारली आहे. कृपया ब्राउझरमध्ये माईक परवानगी Allow करा.'
+              : language === 'hi'
+              ? 'माइक्रोफ़ोन अनुमति अस्वीकृत है। कृपया ब्राउज़र में माइक अनुमति चालू करें।'
+              : 'Microphone permission denied. Please allow microphone access.'
+          );
+        } else if (event.error === 'no-speech') {
+          setVoiceFeedback(
+            language === 'mr' ? 'काही आवाज ऐकू आला नाही. कृपया पुन्हा बोला.' : 'कोई आवाज़ सुनाई नहीं दी। कृपया फिर बोलें।'
+          );
+        } else {
+          setVoiceError(`Voice notice: ${event.error}`);
+        }
+      };
+
+      recognition.onend = async () => {
+        setIsListening(false);
+        const textToProcess = (finalAccumulated || interimTranscript).trim();
+        if (textToProcess) {
+          await handleVoiceResult(textToProcess, selectedLang);
+        }
+      };
+
+      recognition.start();
+    } catch (err: any) {
+      console.error('Failed to start speech recognition:', err);
+      setIsListening(false);
+      setVoiceError(
+        language === 'mr' ? 'माईक सुरू करताना त्रुटी आली.' : 'माइक शुरू करने में समस्या आई।'
+      );
+    }
+  };
+
+  // Stop Speech Recognition
+  const stopVoiceListening = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {}
+    }
+    setIsListening(false);
+  };
+
+  // Process Recognized Voice Transcript using Trained Dairy Intelligence
+  const handleVoiceResult = async (spokenText: string, lang: VoiceLanguage) => {
+    try {
+      setIsTranslating(true);
+      isUserTypingRef.current = true;
+
+      const processed = await processVoiceTranscript(spokenText, lang);
+
+      if (processed.englishName) {
+        setName(processed.englishName);
+        setMarathiName(processed.marathiName);
+        setHindiName(processed.hindiName);
+
+        if (processed.detectedCategory) {
+          setCategory(processed.detectedCategory);
+        }
+        if (processed.detectedUnit) {
+          setUnit(processed.detectedUnit);
+        }
+
+        playSuccessChime();
+        setVoiceFeedback(processed.englishName);
+        setTimeout(() => setVoiceFeedback(null), 4000);
+      }
+    } catch (e: any) {
+      console.warn('Error processing voice product transcript:', e);
     } finally {
       setIsTranslating(false);
     }
@@ -233,14 +386,142 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   </span>
                 </button>
               </div>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Fresh Buffalo Milk 1 Litre, Amul Paneer 200g, Cow Ghee..."
-                value={name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Fresh Buffalo Milk 1 Litre, Amul Paneer 200g, Cow Ghee..."
+                  value={name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  className="w-full pl-3 pr-28 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+
+                <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={isListening ? stopVoiceListening : () => startVoiceListening(voiceLang)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-black transition-all shadow-xs ${
+                      isListening
+                        ? 'bg-rose-600 hover:bg-rose-700 text-white animate-pulse shadow-rose-500/40 ring-2 ring-rose-400'
+                        : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
+                    }`}
+                    title={isListening ? 'माईक थांबवा (Stop)' : 'बोलून नाव टाका (Voice to Text)'}
+                  >
+                    <Mic className={`w-3.5 h-3.5 ${isListening ? 'animate-bounce text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
+                    <span className="text-[11px] font-black">
+                      {isListening 
+                        ? (language === 'mr' ? 'ऐकत आहे...' : 'सुन रहा है...') 
+                        : (language === 'mr' ? '🎤 बोला' : language === 'hi' ? '🎤 बोलें' : '🎤 Voice')}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Live Interactive Voice Recognition Assistant Panel */}
+              {isListening && (
+                <div className="mt-2 p-3 bg-gradient-to-r from-emerald-50 via-teal-50/60 to-emerald-50 dark:from-emerald-950/40 dark:via-[#1A2A25] dark:to-emerald-950/40 border-2 border-emerald-500 rounded-2xl shadow-md space-y-2 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                      </span>
+                      <span className="text-xs font-black text-slate-800 dark:text-white flex items-center gap-1.5">
+                        <Volume2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
+                        <span>{language === 'mr' ? 'माईक चालू आहे... कृपया बोला:' : language === 'hi' ? 'माइक चालू है... कृपया बोलें:' : 'Listening... Speak clearly:'}</span>
+                      </span>
+                    </div>
+
+                    {/* Spoken Language Switcher */}
+                    <div className="flex items-center gap-0.5 bg-white dark:bg-[#131F1B] p-0.5 rounded-lg border border-slate-200 dark:border-[#24352F]">
+                      {(['mr-IN', 'hi-IN', 'en-IN'] as VoiceLanguage[]).map((langCode) => {
+                        const isActive = voiceLang === langCode;
+                        const label = langCode === 'mr-IN' ? 'मराठी' : langCode === 'hi-IN' ? 'हिंदी' : 'English';
+                        return (
+                          <button
+                            key={langCode}
+                            type="button"
+                            onClick={() => {
+                              setVoiceLang(langCode);
+                              stopVoiceListening();
+                              setTimeout(() => startVoiceListening(langCode), 150);
+                            }}
+                            className={`px-2 py-0.5 text-[10px] font-black rounded-md transition ${
+                              isActive 
+                                ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' 
+                                : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Live Speech Recognition Transcription Box */}
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-emerald-800/60 min-h-[40px] flex items-center justify-between gap-2 shadow-2xs">
+                    <p className="text-xs font-bold text-emerald-900 dark:text-emerald-300 truncate">
+                      {interimTranscript 
+                        ? `🎙️ "${interimTranscript}"` 
+                        : (language === 'mr' ? 'काहीही बोला (उदा. "अमुल ताझा ५०० मिली", "म्हशीचे दूध १ लिटर")...' : 'कुछ भी बोलें (उदा. "अमुल ताज़ा 500 मिली", "भैंस का दूध 1 लीटर")...')}
+                    </p>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={stopVoiceListening}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black shadow-xs flex items-center gap-1 active:scale-95"
+                      >
+                        <span>✓</span>
+                        <span>{language === 'mr' ? 'पूर्ण झाले' : language === 'hi' ? 'पूर्ण हुआ' : 'Done'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          stopVoiceListening();
+                          setInterimTranscript('');
+                        }}
+                        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                        title="रद्द करा (Cancel)"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Trained voice suggestions */}
+                  <p className="text-[10px] text-slate-500 dark:text-[#8FA69C] leading-relaxed">
+                    💡 <span className="font-bold">{language === 'mr' ? 'ट्रेन केलेले नमुने:' : language === 'hi' ? 'प्रशिक्षित उदाहरण:' : 'Trained phrases:'}</span>{' '}
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">"म्हशीचे दूध १ लिटर"</span>,{' '}
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">"अमुल ताझा ५०० मिली"</span>,{' '}
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">"ताजे पनीर २०० ग्रॅम"</span>,{' '}
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">"गाय तूप १ किलो"</span>,{' '}
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">"काजू कतली पाव किलो"</span>,{' '}
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">"मसाला ताक"</span>
+                  </p>
+                </div>
+              )}
+
+              {/* Voice Success Toast */}
+              {voiceFeedback && (
+                <div className="mt-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/60 flex items-center justify-between text-xs font-bold text-emerald-900 dark:text-emerald-300 animate-in fade-in">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="truncate">{language === 'mr' ? 'आवाजावरून भरले:' : language === 'hi' ? 'वॉयस से भरा गया:' : 'Recognized:'} <strong>{voiceFeedback}</strong></span>
+                  </div>
+                  <span className="text-[10px] bg-emerald-200/80 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200 px-1.5 py-0.5 rounded font-black shrink-0">
+                    ✓ VOICE AI
+                  </span>
+                </div>
+              )}
+
+              {/* Voice Error Banner */}
+              {voiceError && (
+                <div className="mt-1.5 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-center gap-1.5 text-xs font-bold text-rose-700 dark:text-rose-300 animate-in fade-in">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{voiceError}</span>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">

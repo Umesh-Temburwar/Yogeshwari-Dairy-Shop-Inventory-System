@@ -322,7 +322,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }
 
             if (prof?.default_redirect_view) {
-              targetRedirect = prof.default_redirect_view as 'dashboard' | 'pos' | 'inventory';
+              const cleanView = prof.default_redirect_view.split(':')[0].trim();
+              if (cleanView === 'dashboard' || cleanView === 'pos' || cleanView === 'inventory') {
+                targetRedirect = cleanView;
+              }
             }
           } catch {
             setRole(assignedRole, assignedSlot);

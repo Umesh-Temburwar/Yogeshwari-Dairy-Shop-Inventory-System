@@ -39,7 +39,8 @@ import {
   Printer,
   Download,
   Eye,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Mic
 } from 'lucide-react';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF, exportProductsToCSV } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
@@ -49,6 +50,8 @@ import { ProductImageManagerModal } from '../Admin/ProductImageManagerModal';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { supabase } from '../../lib/supabase';
 import { translateProductName } from '../../lib/productTranslator';
+import { playBeepSound, playSuccessChime } from '../../utils/audioUtils';
+import { isSpeechRecognitionSupported, processVoiceTranscript } from '../../lib/voiceProductRecognizer';
 
 interface ProductListProps {
   onOpenAddProduct: () => void;
@@ -389,6 +392,53 @@ export const ProductList: React.FC<ProductListProps> = ({
     setShowQuickAdd(false);
   };
 
+  // Quick Add Voice-to-Text Recognition
+  const [isQuickVoiceListening, setIsQuickVoiceListening] = useState(false);
+  const quickVoiceRecognitionRef = React.useRef<any>(null);
+
+  const handleQuickVoiceClick = () => {
+    if (isQuickVoiceListening) {
+      if (quickVoiceRecognitionRef.current) {
+        try { quickVoiceRecognitionRef.current.stop(); } catch {}
+      }
+      setIsQuickVoiceListening(false);
+      return;
+    }
+
+    if (!isSpeechRecognitionSupported()) return;
+
+    try {
+      const SpeechClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechClass();
+      quickVoiceRecognitionRef.current = recognition;
+      recognition.lang = language === 'hi' ? 'hi-IN' : language === 'en' ? 'en-IN' : 'mr-IN';
+      recognition.interimResults = false;
+
+      playBeepSound();
+      setIsQuickVoiceListening(true);
+
+      recognition.onresult = async (e: any) => {
+        const text = e.results[0]?.[0]?.transcript || '';
+        if (text.trim()) {
+          const processed = await processVoiceTranscript(text.trim(), recognition.lang);
+          if (processed.englishName) {
+            setQuickName(processed.englishName);
+            if (processed.detectedCategory) setQuickCategory(processed.detectedCategory);
+            if (processed.detectedUnit) setQuickUnit(processed.detectedUnit);
+            playSuccessChime();
+          }
+        }
+      };
+
+      recognition.onerror = () => setIsQuickVoiceListening(false);
+      recognition.onend = () => setIsQuickVoiceListening(false);
+
+      recognition.start();
+    } catch {
+      setIsQuickVoiceListening(false);
+    }
+  };
+
   const { metrics } = useStore();
   const {
     expiredBatchesCount,
@@ -553,14 +603,29 @@ export const ProductList: React.FC<ProductListProps> = ({
               <label className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
                 {language === 'mr' ? 'मालाचे नाव *' : language === 'hi' ? 'माल का नाम *' : 'Product Name *'}
               </label>
-              <input
-                type="text"
-                required
-                placeholder={language === 'mr' ? 'उदा. म्हशीचे दूध / पनीर / तूप' : language === 'hi' ? 'उदा. भैंस का दूध / पनीर / घी' : 'e.g. Buffalo Milk / Paneer / Ghee'}
-                value={quickName}
-                onChange={(e) => setQuickName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-[#24352F] text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  placeholder={language === 'mr' ? 'उदा. म्हशीचे दूध / पनीर / तूप' : language === 'hi' ? 'उदा. भैंस का दूध / पनीर / घी' : 'e.g. Buffalo Milk / Paneer / Ghee'}
+                  value={quickName}
+                  onChange={(e) => setQuickName(e.target.value)}
+                  className="w-full pl-3 pr-20 py-2 rounded-xl bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-[#24352F] text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleQuickVoiceClick}
+                  className={`absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold transition ${
+                    isQuickVoiceListening
+                      ? 'bg-rose-500 text-white animate-pulse'
+                      : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                  }`}
+                  title="बोलून नाव भरा (Voice Input)"
+                >
+                  <Mic className={`w-3 h-3 ${isQuickVoiceListening ? 'animate-bounce' : ''}`} />
+                  <span className="text-[10px] font-black">{isQuickVoiceListening ? 'ऐकत आहे...' : 'बोला'}</span>
+                </button>
+              </div>
             </div>
 
             <div>

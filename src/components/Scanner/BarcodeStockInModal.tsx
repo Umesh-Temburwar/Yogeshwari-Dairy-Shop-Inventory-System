@@ -16,6 +16,11 @@ import { playBeepSound } from '../../utils/audioUtils';
 import { supabase } from '../../lib/supabase';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { translateProductName, translateProductNameSync } from '../../lib/productTranslator';
+import { playSuccessChime } from '../../utils/audioUtils';
+import { 
+  isSpeechRecognitionSupported, 
+  processVoiceTranscript 
+} from '../../lib/voiceProductRecognizer';
 import {
   Camera,
   X,
@@ -37,7 +42,8 @@ import {
   Video,
   SwitchCamera,
   Flashlight,
-  RefreshCw
+  RefreshCw,
+  Mic
 } from 'lucide-react';
 
 interface BarcodeStockInModalProps {
@@ -124,6 +130,55 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       setNewProdMarathiName(instant.marathi);
     } else if (!val.trim()) {
       setNewProdMarathiName('');
+    }
+  };
+
+  // Voice-to-Text Recognition for Barcode Product Registration
+  const [isVoiceListening, setIsVoiceListening] = useState(false);
+  const barcodeRecognitionRef = useRef<any>(null);
+
+  const handleBarcodeVoiceClick = () => {
+    if (isVoiceListening) {
+      if (barcodeRecognitionRef.current) {
+        try { barcodeRecognitionRef.current.stop(); } catch {}
+      }
+      setIsVoiceListening(false);
+      return;
+    }
+
+    if (!isSpeechRecognitionSupported()) return;
+
+    try {
+      const SpeechClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechClass();
+      barcodeRecognitionRef.current = recognition;
+      recognition.lang = language === 'hi' ? 'hi-IN' : language === 'en' ? 'en-IN' : 'mr-IN';
+      recognition.interimResults = false;
+
+      playBeepSound();
+      setIsVoiceListening(true);
+
+      recognition.onresult = async (e: any) => {
+        const text = e.results[0]?.[0]?.transcript || '';
+        if (text.trim()) {
+          const processed = await processVoiceTranscript(text.trim(), recognition.lang);
+          if (processed.englishName) {
+            setNewProdName(processed.englishName);
+            setNewProdMarathiName(processed.marathiName);
+            if (processed.detectedCategory) setNewProdCategory(processed.detectedCategory);
+            if (processed.detectedUnit) setNewProdUnit(processed.detectedUnit);
+            if (processed.packSize) setNewProdPackSize(processed.packSize);
+            playSuccessChime();
+          }
+        }
+      };
+
+      recognition.onerror = () => setIsVoiceListening(false);
+      recognition.onend = () => setIsVoiceListening(false);
+
+      recognition.start();
+    } catch {
+      setIsVoiceListening(false);
     }
   };
 
@@ -1077,17 +1132,37 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {language === 'mr' ? 'उत्पादनाचे नाव (इंग्रजी) *' : 'उत्पाद का नाम (अंग्रेजी) *'}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newProdName}
-                    onChange={(e) => handleNewProdNameChange(e.target.value)}
-                    placeholder="उदा. Amul Taaza Milk 500ml"
-                    className="w-full mt-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      {language === 'mr' ? 'उत्पादनाचे नाव (इंग्रजी) *' : 'उत्पाद का नाम (अंग्रेजी) *'}
+                    </label>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                      🎤 {language === 'mr' ? 'व्हॉइस उपलब्ध' : 'वॉयस उपलब्ध'}
+                    </span>
+                  </div>
+                  <div className="relative mt-1">
+                    <input
+                      type="text"
+                      required
+                      value={newProdName}
+                      onChange={(e) => handleNewProdNameChange(e.target.value)}
+                      placeholder="उदा. Amul Taaza Milk 500ml"
+                      className="w-full pr-24 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleBarcodeVoiceClick}
+                      className={`absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                        isVoiceListening
+                          ? 'bg-rose-500 text-white animate-pulse'
+                          : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                      }`}
+                      title="बोलून नाव भरा (Voice Input)"
+                    >
+                      <Mic className={`w-3.5 h-3.5 ${isVoiceListening ? 'animate-bounce' : ''}`} />
+                      <span>{isVoiceListening ? 'ऐकत आहे...' : 'बोला'}</span>
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <div className="flex items-center justify-between">

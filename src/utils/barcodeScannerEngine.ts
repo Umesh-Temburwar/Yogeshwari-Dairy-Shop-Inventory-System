@@ -1,12 +1,25 @@
 import { BrowserMultiFormatReader, BarcodeFormat } from '@zxing/browser';
 import { DecodeHintType } from '@zxing/library';
 
+// Install console filter to prevent @zxing/library v0.23.0 instanceof TypeScript inheritance bug from flooding console
+if (typeof window !== 'undefined' && !(window as any).__zxing_warn_patched) {
+  (window as any).__zxing_warn_patched = true;
+  const origWarn = console.warn;
+  console.warn = (...args: any[]) => {
+    if (typeof args[0] === 'string' && (args[0].includes('MultiFormatReader') || args[0].includes('non-ReaderException'))) {
+      return;
+    }
+    origWarn.apply(console, args);
+  };
+}
+
 /**
- * Creates standardized ZXing hint map optimized for Indian FMCG & Dairy barcode formats
+ * Creates standardized ZXing hint map optimized for Indian FMCG & Dairy barcode formats.
+ * NOTE: TRY_HARDER is intentionally omitted to avoid ZXing's broken internal DOM canvas rotation
+ * (which throws 'Could not create a Canvas element'). We handle multi-angle rotations ourselves on 2D canvas.
  */
 export function createBarcodeHints(): Map<DecodeHintType, any> {
   const hints = new Map<DecodeHintType, any>();
-  hints.set(DecodeHintType.TRY_HARDER, true);
   hints.set(DecodeHintType.POSSIBLE_FORMATS, [
     BarcodeFormat.EAN_13,
     BarcodeFormat.EAN_8,

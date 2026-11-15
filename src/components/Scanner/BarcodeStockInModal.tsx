@@ -241,7 +241,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
         } finally {
           isDecodingFrame = false;
         }
-      }, 80);
+      }, 140);
 
       scannerControlsRef.current = {
         stop: () => {

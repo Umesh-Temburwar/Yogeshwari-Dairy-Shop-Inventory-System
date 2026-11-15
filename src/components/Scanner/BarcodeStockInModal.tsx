@@ -64,6 +64,8 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [hasTorch, setHasTorch] = useState(false);
   const [torchEnabled, setTorchEnabled] = useState(false);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [diagnosticsLogs, setDiagnosticsLogs] = useState<string[]>([]);
 
   // Matched / Selected Product
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -169,13 +171,37 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       return;
     }
 
+    const diag: string[] = [];
+    const logD = (msg: string) => {
+      console.info(`[CameraDiagnostics:StockIn] ${msg}`);
+      diag.push(msg);
+      setDiagnosticsLogs([...diag]);
+    };
+
     try {
       // Check for WebRTC Secure Context (Mobile Chrome blocks getUserMedia on plain HTTP over LAN IP)
       const isSecure = typeof window !== 'undefined'
         ? (window.isSecureContext ?? (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
         : true;
 
+      logD(`Origin: ${typeof window !== 'undefined' ? window.location.origin : ''} (${isSecure ? 'Secure Context' : 'Insecure Context'})`);
+      logD(`MediaDevices API: ${Boolean(navigator?.mediaDevices)}, getUserMedia: ${Boolean(navigator?.mediaDevices?.getUserMedia)}`);
+
+      if (navigator?.permissions?.query) {
+        navigator.permissions.query({ name: 'camera' as any }).then(p => {
+          logD(`Camera Permission State: ${p.state}`);
+        }).catch(() => {});
+      }
+
+      if (navigator?.mediaDevices?.enumerateDevices) {
+        navigator.mediaDevices.enumerateDevices().then(devs => {
+          const v = devs.filter(d => d.kind === 'videoinput');
+          logD(`Cameras Found: ${v.length} (${v.map(d => d.label || 'camera').join(', ') || 'unlabeled'})`);
+        }).catch(() => {});
+      }
+
       if (!isSecure && (!navigator?.mediaDevices || !navigator?.mediaDevices?.getUserMedia)) {
+        logD('Insecure context without getUserMedia. Falling back to native camera.');
         setCameraError(
           language === 'mr'
             ? 'मोबाईल ब्राऊझर सुरक्षित नसलेल्या (HTTP) वायफाय पत्त्यावर थेट व्हिडिओ कॅमेरा ब्लॉक करतो. आम्ही तुमच्यासाठी थेट मोबाईल कॅमेरा फोटो स्कॅनर उघडत आहोत...'
@@ -323,6 +349,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       setCameraError(null);
     } catch (err: any) {
       console.error('Camera access error:', err);
+      logD(`Camera Error: [${err?.name || 'Error'}] ${err?.message || ''}`);
       const isPermissionDenied = err?.name === 'NotAllowedError' || err?.message?.includes('Permission');
       setCameraError(
         isPermissionDenied
@@ -330,8 +357,8 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
             ? 'कॅमेरा परवानगी नाकारली गेली. कृपया ब्राऊझर पत्त्याजवळ (Address bar) कुलूपावर क्लिक करून कॅमेरा सुरू करा.'
             : 'कैमरा अनुमति अस्वीकृत। कृपया ब्राउज़र में कैमरा एक्सेस दें।')
           : (language === 'mr'
-            ? 'कॅमेरा सुरू करता आला नाही. कृपया "कॅमेरा सुरू करा" बटण दाबा किंवा बारकोड टाईप करा.'
-            : 'कैमरा शुरू नहीं हो सका। कृपया "कैमरा शुरू करें" बटन दबाएं।')
+            ? `कॅमेरा सुरू करता आला नाही (${err?.name || 'Error'}). कृपया "कॅमेरा सुरू करा" बटण दाबा किंवा बारकोड टाईप करा.`
+            : `कैमरा शुरू नहीं हो सका (${err?.name || 'Error'})। कृपया "कैमरा शुरू करें" बटन दबाएं।`)
       );
       setIsScanningCamera(false);
     }
@@ -759,6 +786,24 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                         <p>मोबाईल ब्राउझर (Chrome/Safari) सुरक्षेसाठी <strong>HTTP (10.63.238.67)</strong> वर थेट व्हिडिओ बंद ठेवतो.</p>
                         <p className="font-semibold text-emerald-300">✓ उपाय १: वरील "मोबाईल कॅमेऱ्याने फोटो काढा" बटण वापरा (हे कोणत्याही सेटिंगशिवाय लगेच काम करते).</p>
                         <p className="font-semibold text-sky-300">✓ उपाय २: मोबाईल Chrome मध्ये <code>chrome://flags</code> उघडून <code>unsafely-treat-insecure-origin-as-secure</code> मध्ये <code>http://10.63.238.67:5173</code> टाका आणि Enable करा.</p>
+                      </div>
+                    )}
+
+                    {/* Diagnostics Toggle */}
+                    {diagnosticsLogs.length > 0 && (
+                      <div className="w-full max-w-sm pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setShowDiagnostics(!showDiagnostics)}
+                          className="text-[10px] text-slate-400 hover:text-slate-200 underline"
+                        >
+                          {showDiagnostics ? 'तांत्रिक माहिती लपवा' : '🛠️ तांत्रिक माहिती (Diagnostics)'}
+                        </button>
+                        {showDiagnostics && (
+                          <div className="w-full mt-1 p-2 bg-black/80 border border-slate-800 rounded-lg text-[9px] text-left font-mono text-emerald-400 max-h-24 overflow-y-auto whitespace-pre-wrap select-all">
+                            {diagnosticsLogs.join('\n')}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-11-15T12:32:27.723964Z",
+  "total_products": 46571,
+  "total_barcodes_table": 23320,
+  "products_with_barcode": 44202,
+  "products_with_image": 658,
+  "status_breakdown": {
+    "verified": 211,
+    "pending": 447
+  },
+  "source_breakdown": {
+    "MANUAL": 211,
+    "null": 447
+  },
+  "domain_breakdown": {
+    "images.openfoodfacts.org": 658
+  },
+  "active_stock_with_image": 8,
+  "sample_checked": 30,
+  "sample_accessible": 30,
+  "sample_broken": 0
+}

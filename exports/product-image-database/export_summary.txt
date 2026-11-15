@@ -1,0 +1,58 @@
+================================================================================
+YOGESHWARI DAIRY SHOP ERP - PRODUCT CATALOGUE DATABASE EXPORT AUDIT REPORT
+Generated On: 2026-11-15 17:55:32 UTC
+================================================================================
+
+1. EXPORT RECORD COUNTS & VERIFICATION
+--------------------------------------------------------------------------------
+  * Total Source Records in Database:  46,571
+  * Total Records Exported to CSV:     46,571
+  * Total Records Exported to JSON:    46,571
+  * Total Records Exported to SQL:     46,571
+  * Record Count Integrity Match:      100% (EXACT MATCH - ZERO ROWS LOST)
+
+2. BARCODE INTEGRITY & QUALITY AUDIT
+--------------------------------------------------------------------------------
+  * Records With Valid Barcodes:       44,202 (94.91%)
+  * Unique Barcodes:                   23,320
+  * Duplicate Barcodes In Source:      20,882
+  * Missing / Empty Barcodes:          2,369
+  * Barcodes with Preserved '0' Prefix: 1,376
+  * Missing Product Names:             0 (Zero missing names)
+
+3. PRODUCT IMAGE STATUS AUDIT
+--------------------------------------------------------------------------------
+  * Products With Verified Image URLs: 584
+  * Products Awaiting Image Match:     45,987
+  * Ready for Image Database Match:    YES (Use exported CSV/JSON with barcode search)
+
+4. CATEGORY BREAKDOWN
+--------------------------------------------------------------------------------
+  * Bakery & Extras                   26,602 products
+  * Groceries & FMCG                   7,081 products
+  * Beverages                          2,980 products
+  * Sweets/Mithai                      2,969 products
+  * Milk                               1,914 products
+  * Snacks & Confectionery             1,545 products
+  * Paneer & Butter                    1,358 products
+  * Dairy & Milk Products                936 products
+  * Curd & Chaas                         537 products
+  * Staples & Groceries                  294 products
+  * Personal Care & Cleaning             200 products
+  * Ghee                                 154 products
+  * Groceries                              1 products
+
+5. EXPORTED FILES & DOWNLOAD SIZES
+--------------------------------------------------------------------------------
+  * food_products_46000.csv            7.63 MB (8,003,057 bytes)
+  * food_products_46000.json          40.08 MB (42,025,046 bytes)
+  * food_products_46000.sql           10.73 MB (11,249,234 bytes)
+
+6. DATA SAFETY & INTEGRITY GUARANTEE
+--------------------------------------------------------------------------------
+  [PASS] Read-only export operation.
+  [PASS] Zero database rows modified or deleted.
+  [PASS] Zero stock quantities or pricing affected.
+  [PASS] Leading zeros preserved in TEXT format.
+  [PASS] Unicode (Marathi/Hindi/English) encoded in UTF-8-SIG / UTF-8.
+================================================================================

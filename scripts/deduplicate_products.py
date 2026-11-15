@@ -46,12 +46,13 @@ def run_deduplication():
     unique_products_by_barcode = {}
     unique_products_no_barcode = {}
     
-    # Priority rank: Yogeshwari Dairy (1) > Open Food Facts (2) > IndianFmcg (3) > QuickCommerce (4)
+    # Priority rank: Yogeshwari Dairy (1) > OpenMRP India (2) > Open Food Facts (3) > IndianFmcg (4) > QuickCommerce (5)
     source_priority = {
         'Yogeshwari Dairy Internal Master': 1,
-        'Open Food Facts India': 2,
-        'HuggingFace:IndianFmcg': 3,
-        'QuickCommerceData (Commercial Sample)': 4
+        'OpenMRP India (openmrp-in/openmrp)': 2,
+        'Open Food Facts India': 3,
+        'HuggingFace:IndianFmcg': 4,
+        'QuickCommerceData (Commercial Sample)': 5
     }
 
     # Pass 1: Identify rejected / corrupted rows

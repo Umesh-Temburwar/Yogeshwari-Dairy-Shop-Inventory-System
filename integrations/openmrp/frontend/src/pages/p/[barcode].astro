@@ -1,0 +1,172 @@
+---
+import Base from '../../layouts/Base.astro'
+import { getProduct, rupees, foodTypeLabel } from '../../lib/api'
+import { languageEndonym, fontFamilyFor, isRtl, sortLanguages } from '../../lib/languages'
+import { provenance } from '../../lib/translation'
+import { mrpSourceLabel } from '../../lib/prices'
+
+const { barcode = '' } = Astro.params
+const result = await getProduct(barcode)
+const product = result.product
+const variants = result.variants ?? []
+const translations = result.translations ?? []
+const brandTranslations = result.brand_translations ?? []
+const suggestion = result.off_suggestion
+
+if (!result.found) Astro.response.status = 404
+
+// Per-language view: ?lang=ta picks a translation; otherwise the canonical text.
+const lang = (Astro.url.searchParams.get('lang') ?? '').trim()
+const tr = lang ? translations.find((t) => t.lang === lang) : undefined
+const brandTr = lang ? brandTranslations.find((t) => t.lang === lang) : undefined
+
+const displayName = tr?.name || product?.name || suggestion?.name || `Barcode ${barcode}`
+const description = tr?.description || product?.description || ''
+const ingredients = tr?.ingredients || product?.ingredients || ''
+const brandName = brandTr?.name || result.brand?.name || ''
+const brandDesc = brandTr?.description || result.brand?.description || ''
+
+// Language tabs (Eighth-Schedule order) + active-translation rendering: native script
+// font, RTL direction, and a provenance badge so readers know how trustworthy it is.
+const tabLangs = sortLanguages(translations.map((t) => t.lang))
+const activeFont = tr ? fontFamilyFor(lang) : ''
+const activeDir = tr && isRtl(lang) ? 'rtl' : 'ltr'
+const activeProv = tr ? provenance(tr.source, tr.verified) : null
+
+const pageTitle = result.found ? `${displayName} — OpenMRP` : `Barcode ${barcode} — OpenMRP`
+const pageDesc = result.found
+  ? `${displayName}${brandName ? ` by ${brandName}` : ''}: pack sizes, MRP, ingredients. Free, open product data for India.`
+  : `No product yet for barcode ${barcode}. OpenMRP — free, open product data for India.`
+
+const mrps = variants.map((v) => v.mrp_paise).filter((p) => p > 0)
+const lowestMrp = mrps.length > 0 ? Math.min(...mrps) : 0
+const canonical = `https://openmrp.in/p/${barcode}`
+
+const jsonLd = product
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: displayName,
+      gtin: barcode,
+      ...(brandName ? { brand: { '@type': 'Brand', name: brandName } } : {}),
+      ...(description ? { description } : {}),
+      ...(product.category ? { category: product.category } : {}),
+      ...(lowestMrp > 0
+        ? { offers: { '@type': 'Offer', priceCurrency: 'INR', price: (lowestMrp / 100).toFixed(2) } }
+        : {}),
+    }
+  : undefined
+---
+
+<Base title={pageTitle} description={pageDesc} canonical={canonical} jsonLd={jsonLd}>
+  {
+    result.found && product ? (
+      <article class="card">
+        <p class="barcode">Barcode {barcode}</p>
+        <h1 dir={activeDir} style={activeFont ? `font-family:${activeFont}` : undefined}>{displayName}</h1>
+        {activeProv && (
+          <p class="muted prov">Translation: <span class={`chip ${activeProv.cls}`}>{activeProv.label}</span></p>
+        )}
+        {brandName && <p class="brandline">{brandName}</p>}
+
+        {tabLangs.length > 0 && (
+          <div class="langtabs">
+            <a href={`/p/${barcode}`} class={lang ? '' : 'active'}>Default</a>
+            {tabLangs.map((code) => (
+              <a
+                href={`/p/${barcode}?lang=${code}`}
+                class={lang === code ? 'active' : ''}
+                style={`font-family:${fontFamilyFor(code)}`}
+                lang={code}
+              >
+                {languageEndonym(code)}
+              </a>
+            ))}
+          </div>
+        )}
+
+        <div class="chips">
+          {product.food_type !== 'none' && (
+            <span class={`chip ${product.food_type}`}>{foodTypeLabel(product.food_type)}</span>
+          )}
+          {product.category && <span class="chip">{product.category}</span>}
+        </div>
+
+        {description && (
+          <p class="desc" dir={activeDir} style={activeFont ? `font-family:${activeFont}` : undefined}>
+            {description}
+          </p>
+        )}
+
+        <h2>Pack sizes &amp; MRP</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Pack</th>
+              <th>MRP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {variants.map((v) => (
+              <tr>
+                <td>{v.label || (v.pack_size ? `${v.pack_size} ${v.unit}`.trim() : '—')}</td>
+                {v.mrp_paise > 0 ? (
+                  <td class="mrp">
+                    {rupees(v.mrp_paise)}
+                    {v.mrp_source && <small class="src"> ({mrpSourceLabel(v.mrp_source)})</small>}
+                  </td>
+                ) : (
+                  <td class="unknown">Not yet known</td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {ingredients && (
+          <Fragment>
+            <h2>Ingredients</h2>
+            <p class="desc" dir={activeDir} style={activeFont ? `font-family:${activeFont}` : undefined}>{ingredients}</p>
+          </Fragment>
+        )}
+
+        {brandDesc && (
+          <Fragment>
+            <h2>About {brandName}</h2>
+            <p class="desc">{brandDesc}</p>
+          </Fragment>
+        )}
+
+        <p class="attribution">
+          Data from Open Food Facts (ODbL). MRP is community-sourced — confirm on the pack.
+          <a href={`/contribute?barcode=${barcode}`}>Suggest an edit</a>.
+        </p>
+      </article>
+    ) : result.found && suggestion ? (
+      <article class="card">
+        <p class="barcode">Barcode {barcode}</p>
+        <h1>{suggestion.name}</h1>
+        <p>Found on Open Food Facts — not yet in OpenMRP with an MRP.</p>
+        <p class="attribution">Data from Open Food Facts (ODbL).</p>
+      </article>
+    ) : (
+      <article class="card" style="text-align:center;">
+        <h1>Not found</h1>
+        <p class="empty">
+          No product yet for barcode <strong>{barcode}</strong>.
+        </p>
+      </article>
+    )
+  }
+</Base>
+
+<style>
+  .brandline { color: #555; margin: -6px 0 10px; font-size: 15px; }
+  .prov { margin: -6px 0 8px; }
+  .prov .chip { font-size: 12px; }
+  td.mrp .src { color: #999; font-weight: 400; font-size: 12px; }
+  .desc { color: #333; line-height: 1.55; margin: 8px 0 0; }
+  .langtabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 14px; }
+  .langtabs a { font-size: 12px; padding: 4px 9px; border-radius: 999px; border: 1px solid #e2e2df; color: #555; text-decoration: none; background: #fff; }
+  .langtabs a.active { background: #0a7d3c; border-color: #0a7d3c; color: #fff; }
+</style>

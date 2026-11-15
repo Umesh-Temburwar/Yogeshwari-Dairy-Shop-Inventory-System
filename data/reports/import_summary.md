@@ -4,7 +4,7 @@
 - **Master Catalogue Total**: 22,994 items
 - **Barcode Lookup Enabled**: 21,993 items
 - **Kirana / Non-Barcoded SKUs**: 1,001 items
-- **Deduplicated & Cleaned**: 0 items
+- **Deduplicated & Cleaned**: 21,993 items
 
 ## 2. Core Supabase Architecture Guarantees
 1. **Zero Stock Contamination**: All catalogue imports insert into `product_catalogue` table with `stock_quantity = 0.00` (or completely isolated master table).

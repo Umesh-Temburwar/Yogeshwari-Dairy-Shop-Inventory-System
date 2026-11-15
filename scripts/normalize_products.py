@@ -56,6 +56,38 @@ def normalize_all():
     now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
     all_normalized = []
 
+    # 0. Source 1: OpenMRP (https://github.com/openmrp-in/openmrp)
+    openmrp_path = "data/processed/openmrp_cleaned.csv"
+    if os.path.exists(openmrp_path):
+        mrp_df = pd.read_csv(openmrp_path, dtype=str)
+        print(f"Normalizing OpenMRP India (ODbL): {len(mrp_df):,} records...")
+        for _, r in mrp_df.iterrows():
+            p_name = clean_str(r.get('product_name'))
+            if not p_name:
+                continue
+            all_normalized.append({
+                'id': str(uuid.uuid4()),
+                'barcode': clean_str(r.get('barcode')),
+                'product_name': p_name,
+                'normalized_name': normalize_text_name(p_name),
+                'brand': clean_str(r.get('brand')),
+                'category': clean_str(r.get('category')) or 'Groceries & FMCG',
+                'subcategory': clean_str(r.get('subcategory')), # food_type (veg/non-veg)
+                'quantity_value': float(r.get('quantity_value')) if r.get('quantity_value') and not pd.isna(r.get('quantity_value')) else None,
+                'quantity_unit': clean_str(r.get('quantity_unit')),
+                'package_size': clean_str(r.get('package_size')),
+                'mrp': float(r.get('mrp')) if r.get('mrp') and not pd.isna(r.get('mrp')) else None,
+                'selling_price': float(r.get('selling_price')) if r.get('selling_price') and not pd.isna(r.get('selling_price')) else None,
+                'image_url': clean_str(r.get('image_url')),
+                'description': clean_str(r.get('description')),
+                'ingredients': clean_str(r.get('ingredients')),
+                'source_name': 'OpenMRP India (openmrp-in/openmrp)',
+                'source_product_id': clean_str(r.get('source_product_id')),
+                'source_url': clean_str(r.get('source_url')),
+                'created_at': now_iso,
+                'updated_at': now_iso
+            })
+
     # 1. Open Food Facts
     off_path = "data/processed/openfoodfacts_cleaned.csv"
     if os.path.exists(off_path):

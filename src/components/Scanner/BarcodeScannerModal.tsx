@@ -13,6 +13,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { Product } from '../../types';
 import { playBeepSound } from '../../utils/audioUtils';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
+import { ProductImage } from '../Common/ProductImage';
 import {
   Camera,
   X,
@@ -791,14 +792,22 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
             </div>
 
             {matchedProduct ? (
-              <div className="p-3 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-1.5 text-xs font-extrabold text-emerald-800 dark:text-emerald-300">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>{getProductDisplayName(matchedProduct)}</span>
-                  </div>
-                  <div className="text-[11px] text-slate-600 dark:text-[#8FA69C] mt-0.5">
-                    दर: ₹{matchedProduct.selling_price} / {matchedProduct.unit} | साठा: {matchedProduct.stock_quantity} {matchedProduct.unit}
+              <div className="p-3 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <ProductImage
+                    src={matchedProduct.image_url}
+                    alt={matchedProduct.name}
+                    category={matchedProduct.category}
+                    size="sm"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 text-xs font-extrabold text-emerald-800 dark:text-emerald-300 truncate">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="truncate">{getProductDisplayName(matchedProduct)}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-600 dark:text-[#8FA69C] mt-0.5 truncate">
+                      दर: ₹{matchedProduct.selling_price} / {matchedProduct.unit} | साठा: {matchedProduct.stock_quantity} {matchedProduct.unit}
+                    </div>
                   </div>
                 </div>
 

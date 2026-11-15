@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
+import { ProductImage } from '../Common/ProductImage';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { requestMotionPermission, isMobileDevice } from '../../hooks/useShakeDetector';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
@@ -108,14 +109,24 @@ const ProductCard = React.memo<ProductCardProps>(({
           </span>
         </div>
 
-        <h4 className="font-bold text-slate-900 dark:text-[#E7F0EC] text-sm leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
-          {displayName}
-        </h4>
-        {prod.name !== displayName && (
-          <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium truncate mt-0.5">
-            {prod.name}
-          </p>
-        )}
+        <div className="flex items-start gap-2.5 mb-1.5">
+          <ProductImage 
+            src={prod.image_url} 
+            alt={prod.name} 
+            category={prod.category} 
+            size="sm" 
+          />
+          <div className="flex-1 min-w-0">
+            <h4 className="font-bold text-slate-900 dark:text-[#E7F0EC] text-sm leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400 line-clamp-2">
+              {displayName}
+            </h4>
+            {prod.name !== displayName && (
+              <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium truncate mt-0.5">
+                {prod.name}
+              </p>
+            )}
+          </div>
+        </div>
 
         {/* Near Expiry Warning Pill for Cashier */}
         {hasExpiringToday && !hasExpiredOnly && (

@@ -38,11 +38,14 @@ import {
   FileSpreadsheet,
   Printer,
   Download,
-  Eye
+  Eye,
+  Image as ImageIcon
 } from 'lucide-react';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF, exportProductsToCSV } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { BarcodeStockInModal } from '../Scanner/BarcodeStockInModal';
+import { ProductImage } from '../Common/ProductImage';
+import { ProductImageManagerModal } from '../Admin/ProductImageManagerModal';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { supabase } from '../../lib/supabase';
 
@@ -89,6 +92,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [showBarcodeStockIn, setShowBarcodeStockIn] = useState(false);
+  const [showImageManager, setShowImageManager] = useState(false);
   const [inventoryViewTab, setInventoryViewTab] = useState<'IN_STOCK' | 'CATALOGUE' | 'OUT_OF_STOCK' | 'LOW_STOCK'>('IN_STOCK');
   const [onlineSearchedProduct, setOnlineSearchedProduct] = useState<Product | null>(null);
   const [onlineSearchResults, setOnlineSearchResults] = useState<Product[]>([]);
@@ -480,6 +484,16 @@ export const ProductList: React.FC<ProductListProps> = ({
             <span>{language === 'mr' ? 'बारकोड आवक (Stock-In)' : language === 'hi' ? 'बारकोड स्टॉक आवक' : 'Barcode Stock-In'}</span>
           </button>
 
+          {/* Product Image Database Manager Button */}
+          <button
+            onClick={() => setShowImageManager(true)}
+            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800/50 text-purple-700 dark:text-purple-300 text-xs font-bold transition-all shadow-xs active:scale-95"
+            title="Product Image Database Manager"
+          >
+            <ImageIcon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <span>{language === 'mr' ? 'फोटो डेटाबेस (Images)' : 'फोटो डेटाबेस (Images)'}</span>
+          </button>
+
           {/* New Product Button */}
           <button
             onClick={() => exportProductsToCSV(filteredProducts, language as any)}
@@ -841,15 +855,25 @@ export const ProductList: React.FC<ProductListProps> = ({
                     </span>
                   </div>
 
-                  {/* Title & Price */}
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white leading-snug">
-                    {displayName}
-                  </h3>
-                  {displayName !== prod.name && (
-                    <p className="text-xs text-slate-400 dark:text-[#8FA69C] font-medium truncate mt-0.5">
-                      {prod.name}
-                    </p>
-                  )}
+                  {/* Product Image & Title */}
+                  <div className="flex items-start gap-3 my-1.5">
+                    <ProductImage 
+                      src={prod.image_url} 
+                      alt={prod.name} 
+                      category={prod.category} 
+                      size="md" 
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-black text-slate-900 dark:text-white leading-snug line-clamp-2">
+                        {displayName}
+                      </h3>
+                      {displayName !== prod.name && (
+                        <p className="text-xs text-slate-400 dark:text-[#8FA69C] font-medium truncate mt-0.5">
+                          {prod.name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
                   {/* BATCH & EXPIRY STATUS STRIP */}
                   <div className="mt-2.5 mb-2 flex items-center justify-between gap-1.5 flex-wrap">
@@ -1248,6 +1272,12 @@ export const ProductList: React.FC<ProductListProps> = ({
       <BarcodeStockInModal
         isOpen={showBarcodeStockIn}
         onClose={() => setShowBarcodeStockIn(false)}
+      />
+
+      {/* PRODUCT IMAGE DATABASE INTEGRATION MANAGER */}
+      <ProductImageManagerModal
+        isOpen={showImageManager}
+        onClose={() => setShowImageManager(false)}
       />
 
     </div>

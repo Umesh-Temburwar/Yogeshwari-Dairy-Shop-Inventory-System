@@ -45,7 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile,
   onOpenAppDownload,
 }) => {
-  const { activeView, setActiveView, metrics, products } = useStore();
+  const { activeView, setActiveView, metrics, products, totalCatalogCount } = useStore();
   const { t, language } = useLanguage();
   const { user, role } = useAuth();
 
@@ -84,7 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'inventory',
       labelKey: 'inventoryNav',
       icon: Package,
-      badge: products.length,
+      badge: (totalCatalogCount || products.length).toLocaleString('en-IN'),
       badgeColor: 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] font-semibold',
       section: 'inventory'
     },

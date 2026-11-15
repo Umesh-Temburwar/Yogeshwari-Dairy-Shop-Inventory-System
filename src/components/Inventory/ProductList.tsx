@@ -44,6 +44,7 @@ import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF, expor
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { BarcodeStockInModal } from '../Scanner/BarcodeStockInModal';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
+import { supabase } from '../../lib/supabase';
 
 interface ProductListProps {
   onOpenAddProduct: () => void;
@@ -54,7 +55,16 @@ export const ProductList: React.FC<ProductListProps> = ({
   onOpenAddProduct, 
   onEditProduct 
 }) => {
-  const { products, batches, deleteProduct, adjustStock, addProduct, setActiveView } = useStore();
+  const { 
+    products, 
+    batches, 
+    deleteProduct, 
+    adjustStock, 
+    addProduct, 
+    setActiveView,
+    totalCatalogCount = 31156,
+    totalBarcodesCount = 30789
+  } = useStore();
   const { t, language } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -80,6 +90,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   const [showBarcodeStockIn, setShowBarcodeStockIn] = useState(false);
   const [inventoryViewTab, setInventoryViewTab] = useState<'IN_STOCK' | 'CATALOGUE' | 'OUT_OF_STOCK' | 'LOW_STOCK'>('IN_STOCK');
   const [onlineSearchedProduct, setOnlineSearchedProduct] = useState<Product | null>(null);
+  const [onlineSearchResults, setOnlineSearchResults] = useState<Product[]>([]);
   const [isSearchingOnline, setIsSearchingOnline] = useState(false);
   const [quickName, setQuickName] = useState('');
   const [quickCategory, setQuickCategory] = useState<ProductCategory>('Milk');
@@ -88,28 +99,53 @@ export const ProductList: React.FC<ProductListProps> = ({
   const [quickSellPrice, setQuickSellPrice] = useState('');
   const [quickStock, setQuickStock] = useState('0');
 
-  // Live online barcode search from Supabase database
+  // Live online search from Supabase database (supports both Barcodes and Product Names)
   useEffect(() => {
     const q = searchQuery.trim();
-    const isBarcodeLike = /^\d{5,}$/.test(q);
-    if (!isBarcodeLike) {
+    if (!q || q.length < 2) {
       setOnlineSearchedProduct(null);
+      setOnlineSearchResults([]);
       setIsSearchingOnline(false);
       return;
     }
 
+    const isBarcodeLike = /^\d{5,}$/.test(q);
     let cancelled = false;
     setIsSearchingOnline(true);
+
     const timer = setTimeout(async () => {
       try {
-        const res = await searchProductByBarcodeOnline(q);
-        if (!cancelled && res.found && res.product) {
-          setOnlineSearchedProduct(res.product);
-        } else if (!cancelled) {
-          setOnlineSearchedProduct(null);
+        if (isBarcodeLike) {
+          const res = await searchProductByBarcodeOnline(q);
+          if (!cancelled) {
+            if (res.found && res.product) {
+              setOnlineSearchedProduct(res.product);
+              setOnlineSearchResults([res.product]);
+            } else {
+              setOnlineSearchedProduct(null);
+              setOnlineSearchResults([]);
+            }
+          }
+        } else if (q.length >= 2) {
+          const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .or(`name.ilike.%${q}%,brand.ilike.%${q}%`)
+            .limit(30);
+
+          if (!cancelled) {
+            if (!error && data && data.length > 0) {
+              setOnlineSearchResults(data as Product[]);
+            } else {
+              setOnlineSearchResults([]);
+            }
+          }
         }
       } catch (e) {
-        if (!cancelled) setOnlineSearchedProduct(null);
+        if (!cancelled) {
+          setOnlineSearchedProduct(null);
+          setOnlineSearchResults([]);
+        }
       } finally {
         if (!cancelled) setIsSearchingOnline(false);
       }
@@ -177,18 +213,24 @@ export const ProductList: React.FC<ProductListProps> = ({
       return matchesSearch && matchesCategory && matchesTab;
     });
 
-    // If an online catalogue product was found and is not already in baseFiltered, prepend it!
-    if (onlineSearchedProduct && !baseFiltered.some(p => p.id === onlineSearchedProduct.id)) {
+    // Merge online search results (if user searched for something beyond the 1,000 local items)
+    if (onlineSearchResults && onlineSearchResults.length > 0) {
+      const existingIds = new Set(baseFiltered.map(p => p.id));
+      const additional = onlineSearchResults.filter(p => !existingIds.has(p.id));
+      if (additional.length > 0) {
+        return [...additional, ...baseFiltered];
+      }
+    } else if (onlineSearchedProduct && !baseFiltered.some(p => p.id === onlineSearchedProduct.id)) {
       return [onlineSearchedProduct, ...baseFiltered];
     }
 
     return baseFiltered;
-  }, [products, searchQuery, selectedCategory, selectedExpiryFilter, batches, inventoryViewTab, onlineSearchedProduct]);
+  }, [products, searchQuery, selectedCategory, selectedExpiryFilter, batches, inventoryViewTab, onlineSearchedProduct, onlineSearchResults]);
 
   const inStockCount = useMemo(() => products.filter(p => p.stock_quantity > 0).length, [products]);
   const lowStockCount = useMemo(() => products.filter(p => p.stock_quantity <= p.min_stock_alert && p.stock_quantity > 0).length, [products]);
-  const outOfStockCount = useMemo(() => products.filter(p => p.stock_quantity <= 0).length, [products]);
-  const totalCatalogueCount = products.length;
+  const totalCatalogueCount = Math.max(totalCatalogCount || 0, products.length);
+  const outOfStockCount = Math.max(totalCatalogueCount - inStockCount, products.filter(p => p.stock_quantity <= 0).length);
 
   const totalStockCostValuation = useMemo(() => {
     return products.reduce((sum, p) => sum + (p.stock_quantity * p.purchase_price), 0);
@@ -683,7 +725,7 @@ export const ProductList: React.FC<ProductListProps> = ({
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           {categories.map((cat) => {
             const count = cat.id === 'All' 
-              ? products.length 
+              ? totalCatalogueCount 
               : products.filter(p => p.category === cat.id).length;
             return (
               <button

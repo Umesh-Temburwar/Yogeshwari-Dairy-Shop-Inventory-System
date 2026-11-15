@@ -44,6 +44,8 @@ interface StoreContextType {
   
   // Data State
   products: Product[];
+  totalCatalogCount: number;
+  totalBarcodesCount: number;
   batches: ProductBatch[];
   sales: Sale[];
   purchases: Purchase[];
@@ -353,6 +355,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
   });
 
+  const [totalCatalogCount, setTotalCatalogCount] = useState<number>(31156);
+  const [totalBarcodesCount, setTotalBarcodesCount] = useState<number>(30789);
+
   const [batches, setBatches] = useState<ProductBatch[]>(() => {
     const saved = localStorage.getItem('yd_batches');
     return saved ? JSON.parse(saved) : INITIAL_BATCHES;
@@ -497,11 +502,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!supabase) return;
     setIsSyncing(true);
     try {
-      // 1. Fetch products
-      const { data: pData, error: pErr } = await supabase
+      // 1. Fetch products (prioritizing in-stock shop products first)
+      const { data: pData, error: pErr, count: totalCount } = await supabase
         .from('products')
-        .select('*')
-        .order('name', { ascending: true });
+        .select('*', { count: 'exact' })
+        .order('stock_quantity', { ascending: false })
+        .order('name', { ascending: true })
+        .limit(1000);
+
+      if (totalCount !== null && totalCount !== undefined) {
+        setTotalCatalogCount(totalCount);
+      }
+
+      // Fetch exact count of products with barcodes
+      try {
+        const { count: barcodeCount } = await supabase
+          .from('products')
+          .select('id', { count: 'exact', head: true })
+          .not('barcode', 'is', null)
+          .neq('barcode', '');
+        if (barcodeCount !== null && barcodeCount !== undefined) {
+          setTotalBarcodesCount(barcodeCount);
+        }
+      } catch (bcErr) {
+        console.warn('Barcode count fetch error:', bcErr);
+      }
 
       if (!pErr && pData && pData.length > 0) {
         setProducts(pData);
@@ -3175,6 +3200,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       refreshData,
       resetToSampleData,
       products,
+      totalCatalogCount,
+      totalBarcodesCount,
       batches,
       sales,
       purchases,

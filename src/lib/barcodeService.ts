@@ -79,6 +79,7 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
           shelf_life_days,
           brand,
           barcode,
+          image_url,
           is_active,
           created_at
         )
@@ -104,6 +105,7 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
           shelf_life_days: Number(p.shelf_life_days || 7),
           brand: p.brand || undefined,
           barcode: match.barcode || p.barcode || clean,
+          image_url: p.image_url || undefined,
           is_active: p.is_active ?? true,
           created_at: p.created_at || new Date().toISOString()
         };
@@ -138,6 +140,7 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
         shelf_life_days: Number(p.shelf_life_days || 7),
         brand: p.brand || undefined,
         barcode: p.barcode || clean,
+        image_url: p.image_url || undefined,
         is_active: p.is_active ?? true,
         created_at: p.created_at || new Date().toISOString()
       };
@@ -168,6 +171,7 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
         stock_quantity: Number(row.current_stock || 0),
         min_stock_alert: 5,
         barcode: row.barcode || clean,
+        image_url: row.image_url || undefined,
         is_active: true,
         created_at: new Date().toISOString()
       };
@@ -198,6 +202,7 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
         min_stock_alert: 5,
         brand: c.brand || undefined,
         barcode: c.barcode || clean,
+        image_url: c.image_url || undefined,
         is_active: true,
         created_at: c.created_at || new Date().toISOString()
       };
@@ -238,6 +243,7 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
           shelf_life_days: Number(p.shelf_life_days || 7),
           brand: p.brand || undefined,
           barcode: p.barcode || clean,
+          image_url: p.image_url || undefined,
           is_active: p.is_active ?? true,
           created_at: p.created_at || new Date().toISOString()
         };

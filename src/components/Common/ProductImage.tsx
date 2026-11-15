@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package, Milk, Coffee, Cookie, Sparkles, AlertCircle } from 'lucide-react';
 
 export interface ProductImageProps {
@@ -14,11 +14,13 @@ export interface ProductImageProps {
  * Reusable, High-Performance Product Image Component
  * 
  * Features:
+ * - Reactive state synchronization when src prop updates asynchronously
+ * - Neutral referrerPolicy="no-referrer" to prevent third-party CDN hotlink blocking
  * - Lazy loading and async image decoding
  * - Seamless error fallback on 404, CORS, or broken URLs
  * - Category-aware graceful SVG placeholders
  * - Shimmer placeholder while loading
- * - No layout shift (consistent aspect-ratio)
+ * - No layout shift (consistent aspect-square)
  */
 export const ProductImage: React.FC<ProductImageProps> = ({
   src,
@@ -30,6 +32,12 @@ export const ProductImage: React.FC<ProductImageProps> = ({
 }) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(Boolean(src));
+
+  // Sync state when src changes dynamically (e.g. after Supabase fetch or virtual list scroll)
+  useEffect(() => {
+    setHasError(false);
+    setIsLoading(Boolean(src));
+  }, [src]);
 
   const sizeClasses = {
     xs: 'w-8 h-8 rounded-lg',
@@ -70,7 +78,7 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   if (!src || hasError) {
     return (
       <div
-        className={`flex items-center justify-center shrink-0 border shadow-2xs overflow-hidden transition-all ${sizeClasses} ${fallback.bg} ${className}`}
+        className={`flex items-center justify-center shrink-0 aspect-square border shadow-2xs overflow-hidden transition-all ${sizeClasses} ${fallback.bg} ${className}`}
         title={alt}
       >
         {fallback.icon}
@@ -79,7 +87,7 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   }
 
   return (
-    <div className={`relative shrink-0 overflow-hidden border border-slate-200/70 dark:border-slate-700/60 bg-white dark:bg-slate-900 shadow-2xs flex items-center justify-center ${sizeClasses} ${className}`}>
+    <div className={`relative shrink-0 aspect-square overflow-hidden border border-slate-200/70 dark:border-slate-700/60 bg-white dark:bg-slate-900 shadow-2xs flex items-center justify-center ${sizeClasses} ${className}`}>
       {isLoading && (
         <div className="absolute inset-0 bg-slate-200 dark:bg-slate-800 animate-pulse flex items-center justify-center z-10">
           <Sparkles className="w-3.5 h-3.5 text-slate-400 animate-spin" />
@@ -90,6 +98,8 @@ export const ProductImage: React.FC<ProductImageProps> = ({
         alt={alt}
         loading={loading}
         decoding="async"
+        referrerPolicy="no-referrer"
+        crossOrigin="anonymous"
         onLoad={() => setIsLoading(false)}
         onError={() => {
           setIsLoading(false);

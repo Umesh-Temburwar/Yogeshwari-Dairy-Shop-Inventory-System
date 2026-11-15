@@ -576,6 +576,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .order('name', { ascending: true })
         .limit(1000);
 
+      // Also fetch all products that have verified image_url so images always render in UI
+      let imgData: any[] | null = null;
+      try {
+        const { data: iData } = await supabase
+          .from('products')
+          .select('*')
+          .not('image_url', 'is', null)
+          .neq('image_url', '')
+          .limit(1000);
+        imgData = iData;
+      } catch (iErr) {
+        console.warn('Image products fetch error:', iErr);
+      }
+
       if (totalCount !== null && totalCount !== undefined) {
         setTotalCatalogCount(totalCount);
       }
@@ -595,7 +609,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
 
       if (!pErr && pData && pData.length > 0) {
-        setProducts(pData);
+        let merged = [...pData];
+        if (imgData && imgData.length > 0) {
+          const existingIds = new Set(pData.map(p => p.id));
+          const missingWithImages = imgData.filter(p => !existingIds.has(p.id));
+          if (missingWithImages.length > 0) {
+            merged = [...pData, ...missingWithImages];
+          }
+        }
+        setProducts(merged);
       } else if (!pErr && (!pData || pData.length === 0)) {
         // Safe one-time migration: If central DB is empty, migrate any existing local items
         try {

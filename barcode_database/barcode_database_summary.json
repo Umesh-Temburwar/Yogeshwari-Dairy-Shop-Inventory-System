@@ -1,0 +1,47 @@
+{
+  "project": "Yogeshwari Dairy Shop & Inventory Management System",
+  "total_unique_barcodes": 22397,
+  "dairy_shop_curated_items": 424,
+  "fmcg_packaged_goods_items": 21967,
+  "generated_at": "2026-11-15T16:07:04.175117",
+  "top_brands": {
+    "Generic / Unbranded": 5151,
+    "Amul": 455,
+    "Britannia": 361,
+    "Yogeshwari Dairy": 243,
+    "Parle": 231,
+    "Cadbury": 197,
+    "Haldiram's": 193,
+    "Maggi": 157,
+    "Good Life": 145,
+    "Sunfeast": 133,
+    "Nestlé": 112,
+    "Dabur": 98,
+    "Patanjali": 84,
+    "Del Monte": 75,
+    "Aachi": 74,
+    "Bikaji": 74,
+    "Milky Mist": 72,
+    "India House": 70,
+    "Horlicks": 68,
+    "Kellogg's": 67
+  },
+  "top_categories": {
+    "Groceries & FMCG": 12076,
+    "Beverages": 5416,
+    "Snacks & Confectionery": 2864,
+    "Dairy & Milk Products": 1449,
+    "Bakery & Extras": 294,
+    "Staples & Groceries": 145,
+    "Sweets/Mithai": 54,
+    "Paneer & Butter": 38,
+    "Curd & Chaas": 26,
+    "Ghee": 19,
+    "Milk": 16
+  },
+  "sources": {
+    "OpenMRP India (openmrp-in/openmrp)": 21967,
+    "YOGESHWARI_DAIRY_SHOP": 424,
+    "OPENFOODFACTS": 6
+  }
+}

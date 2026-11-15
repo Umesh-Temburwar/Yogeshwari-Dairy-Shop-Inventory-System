@@ -94,6 +94,16 @@ export function extractCandidateBarcodeFromText(text: string): string | null {
     return indiaMatch[0];
   }
 
+  // 7. Partial fallback for torn/damaged barcodes: Return 6+ consecutive digits
+  // Allows searchProductByBarcodeOnline to find the item via partial barcode substring match
+  if (digitsOnly.length >= 6) {
+    const partialIndia = digitsOnly.match(/890\d{3,10}/);
+    if (partialIndia) return partialIndia[0];
+
+    const trailingChunk = digitsOnly.match(/\d{6,13}/);
+    if (trailingChunk) return trailingChunk[0];
+  }
+
   return null;
 }
 
@@ -153,18 +163,18 @@ export async function performBarcodeOcrFallback(
     const reticleX = Math.round(startX + (visibleW - reticleW) / 2);
     const reticleY = Math.round(startY + (visibleH - reticleH) / 2);
 
-    // Number strip: bottom 45% or full box depending on mode
+    // Number strip: bottom 50% or full box depending on mode
     const textStartY = mode === 'strip'
-      ? reticleY + Math.round(reticleH * 0.50)
+      ? reticleY + Math.round(reticleH * 0.45)
       : reticleY;
     const textH = mode === 'strip'
-      ? Math.round(reticleH * 0.50)
+      ? Math.round(reticleH * 0.55)
       : reticleH;
 
-    // Upscale onto canvas: minimum 800px width with 30px white margins for Tesseract line isolation
-    const destW = 800;
-    const destH = Math.round((800 * textH) / reticleW) || 200;
-    const margin = 30;
+    // Upscale onto canvas: 1000px width with 60px white margins for robust Tesseract line isolation
+    const destW = 1000;
+    const destH = Math.round((1000 * textH) / reticleW) || 240;
+    const margin = 60;
 
     const ocrCanvas = document.createElement('canvas');
     ocrCanvas.width = destW + margin * 2;

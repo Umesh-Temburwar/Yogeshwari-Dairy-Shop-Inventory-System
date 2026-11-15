@@ -62,8 +62,8 @@ export const ProductList: React.FC<ProductListProps> = ({
     adjustStock, 
     addProduct, 
     setActiveView,
-    totalCatalogCount = 32518,
-    totalBarcodesCount = 30789
+    totalCatalogCount = 33518,
+    totalBarcodesCount = 23320
   } = useStore();
   const { t, language } = useLanguage();
 

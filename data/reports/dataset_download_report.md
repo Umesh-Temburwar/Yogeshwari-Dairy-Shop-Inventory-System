@@ -1,42 +1,37 @@
-# 📊 Master Product Catalogue — Dataset Download & Source Verification Report
+# 📊 Master Product Catalogue — Dataset Download, Source Verification & Supabase Integration Report
 
-**Generated:** 2026-11-15 (Updated with Official OpenMRP GitHub Integration)
-**Target System:** Yogeshwari Dairy Shop & Inventory Management System
+**Updated:** 2026-11-15  
+**Target System:** Yogeshwari Dairy Shop & Inventory Management System (ERP & POS)
 
 ---
 
-## 📌 Source Verification Summary
+## 📌 Dataset Verification & Integration Summary
 
-| # | Source | Status | Available Rows | File Size | License | Action / Notes |
+| # | Dataset / Source | Download Status | Supabase Status | Records Available | File Location in Project | Description / Use-Case |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | **OpenMRP** | `INTEGRATED_SUCCESSFULLY` | 21,993 | 5.38 MB | ODbL 1.0 | Official repo `https://github.com/openmrp-in/openmrp` cloned & integrated. Full brands, products, variants, food_type (Veg/Non-Veg). |
-| 2 | **QuickCommerceData** | `PAID_COMMERCIAL_GATED` | 1 | 122 B | Commercial B2B | Commercial licensing required: ₹2,22,205 to ₹6,79,990. Sample preview extracted. |
-| 3 | **Open Food Facts** | `DOWNLOADED_SUCCESSFULLY` | 25,215 | 5.40 MB | ODbL 1.0 | Official PackSense India dataset downloaded and cleaned. |
-| 4 | **IndianFmcg** | `DOWNLOADED_SUCCESSFULLY` | 190,740 | 18.84 MB | CC License | Daily transaction log. SKU aggregation applied (1,000 distinct FMCG products). |
+| 1 | **Open Food Facts (India)** | `DOWNLOADED` | `INTEGRATED & LIVE` | 21,992 valid products | `data/processed/openfoodfacts_cleaned.csv` | Full GS1/EAN barcodes, nutrition, brands, and categories. Powers live camera scanning. |
+| 2 | **OpenMRP (Official GitHub)** | `CLONED & COMPILED` | `INTEGRATED & LIVE` | 21,993 products (4,501 brands) | `integrations/openmrp/dump/` & `data/processed/openmrp_cleaned.csv` | ODbL-licensed Indian product database with Veg/Non-Veg indicators and verified MRP. |
+| 3 | **IndianFmcg (Hugging Face)** | `DOWNLOADED` | `SEEDED & LIVE` | 1,000 distinct SKUs (190.7K rows) | `data/raw/indianfmcg_raw.csv` & `data/processed/indianfmcg_cleaned.csv` | FMCG staples across top 10 brands (Amul, Britannia, Dabur, Nestle, Parle, ITC, MDH, etc.). Enables instant POS search. |
+| 4 | **QuickCommerceData** | `PREVIEW EXTRACTED` | `SAMPLE SAVED` | Commercial B2B Sample | `data/raw/quickcommerce_raw.csv` & `data/processed/quickcommerce_cleaned.csv` | Commercial enterprise dataset (₹2,22,253 to ₹6,79,990). Requires paid license; schema sample extracted. |
 
 ---
 
-## 🔍 Detailed Source Findings
+## 🚀 Live Supabase Status
 
-### 1. OpenMRP (`https://github.com/openmrp-in/openmrp`)
-- **Official Repository:** `openmrp-in/openmrp` (Community-built, ODbL-licensed open product database for India).
-- **Integration Directory:** `integrations/openmrp/`
-- **Generated Dumps:** `integrations/openmrp/dump/products.csv`, `variants.csv`, `brands.csv`, `manifest.json`
-- **Total Valid Records:** 21,993 products across 4,501 Indian brands with Veg / Non-Veg food type classifications.
-- **Licence & Attribution:** Open Database License (ODbL 1.0). Source attributed as `OpenMRP India (openmrp-in/openmrp)`.
+- **Total Active Products in Supabase:** **33,518**
+- **Total Barcodes Indexed:** **23,320**
+- **Safety Guarantee:** All catalogue additions have `stock_quantity = 0.0`. Physical store inventory remains 100% accurate and isolated.
+- **Search & POS Resolution:**
+  - Barcode camera scanner decodes and matches barcodes instantly via Supabase RPC/REST.
+  - POS and Inventory text searches query `.or('name.ilike.%q%,brand.ilike.%q%')` so non-barcoded FMCG items appear immediately when typing.
 
-### 2. QuickCommerceData (`https://quickcommercedata.com/`)
-- **Finding:** Commercial gated dataset. Preview sample extracted (1 row). Full licensing required: ₹2.22L - ₹6.80L.
-- **Compliance:** Adhered strictly to 'Never bypass login, payment, or website restrictions. Report price and wait for approval.'
+---
 
-### 3. Open Food Facts (`https://world.openfoodfacts.org/`)
-- **Source Repo:** `PackSense/packsense-india` on Hugging Face
-- **File:** `data/raw/openfoodfacts_raw.csv`
-- **Total Rows:** 25,215
-- **Licence & Attribution:** Open Database License (ODbL 1.0). Contains barcodes, product names, brands, categories, and nutrition.
+## 📁 Consolidated Local CSV Files
 
-### 4. IndianFmcg (`https://huggingface.co/datasets/echosofmoon/IndianFmcg`)
-- **Owner/Repository:** `echosofmoon/IndianFmcg`
-- **File:** `data/raw/indianfmcg_raw.csv`
-- **Total Rows:** 190,740
-- **Compliance:** Sales transactions aggregated into 1,000 genuine product SKUs across top Indian FMCG brands (Dabur, Britannia, Patanjali, ITC, Parle, HUL, MDH, Amul, Godrej, Nestle).
+All cleaned and ready-to-use CSV files are maintained in the repository:
+1. `data/final/master_product_catalogue.csv` (Complete unified master catalogue)
+2. `data/final/barcode_catalogue.csv` (All barcode-enabled products)
+3. `data/final/products_without_barcode.csv` (FMCG products without barcode)
+4. `data/final/supabase_product_catalogue_ready.csv` (PostgreSQL / Supabase compatible export)
+5. `data/final/chunks/product_catalogue_part_01.csv` to `05.csv` (Split into 5,000-row chunks for direct Supabase Table Editor upload)

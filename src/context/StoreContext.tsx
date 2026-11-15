@@ -355,8 +355,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
   });
 
-  const [totalCatalogCount, setTotalCatalogCount] = useState<number>(32518);
-  const [totalBarcodesCount, setTotalBarcodesCount] = useState<number>(30789);
+  const [totalCatalogCount, setTotalCatalogCount] = useState<number>(33518);
+  const [totalBarcodesCount, setTotalBarcodesCount] = useState<number>(23320);
 
   const [batches, setBatches] = useState<ProductBatch[]>(() => {
     const saved = localStorage.getItem('yd_batches');

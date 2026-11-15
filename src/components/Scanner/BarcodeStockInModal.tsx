@@ -190,23 +190,63 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       videoElement.setAttribute('playsinline', 'true');
       videoElement.setAttribute('autoplay', 'true');
       videoElement.muted = true;
-      await videoElement.play().catch(() => {});
+      await videoElement.play().catch(e => console.warn('Video play warning:', e));
+
+      // Wait briefly for video dimensions so canvas can capture valid frames
+      if (videoElement.videoWidth === 0) {
+        await new Promise<void>(resolve => {
+          const onLoaded = () => {
+            videoElement.removeEventListener('loadedmetadata', onLoaded);
+            resolve();
+          };
+          videoElement.addEventListener('loadedmetadata', onLoaded);
+          setTimeout(resolve, 600);
+        });
+      }
 
       const track = stream.getVideoTracks()[0];
       const capabilities: any = track?.getCapabilities ? track.getCapabilities() : {};
       setHasTorch(Boolean(capabilities?.torch));
 
-      const codeReader = new BrowserMultiFormatReader();
-      codeReaderRef.current = codeReader;
-
-      const controls = codeReader.scan(videoElement, (result, err) => {
-        if (result) {
-          const text = result.getText();
-          handleBarcodeDetected(text);
+      // 2. Barcode Scanning Engine: Chrome Native BarcodeDetector + ZXing Fallback
+      if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+        try {
+          const detector = new (window as any).BarcodeDetector({
+            formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code']
+          });
+          let active = true;
+          const scanNativeLoop = async () => {
+            if (!active) return;
+            try {
+              if (videoElement && videoElement.readyState >= 2) {
+                const barcodes = await detector.detect(videoElement);
+                if (barcodes && barcodes.length > 0) {
+                  const rawCode = barcodes[0].rawValue;
+                  if (rawCode) handleBarcodeDetected(rawCode);
+                }
+              }
+            } catch (detErr) {}
+            if (active) requestAnimationFrame(scanNativeLoop);
+          };
+          requestAnimationFrame(scanNativeLoop);
+          scannerControlsRef.current = { stop: () => { active = false; } };
+        } catch (natErr) {
+          const codeReader = new BrowserMultiFormatReader();
+          codeReaderRef.current = codeReader;
+          const controls = codeReader.scan(videoElement, (result) => {
+            if (result) handleBarcodeDetected(result.getText());
+          });
+          scannerControlsRef.current = controls;
         }
-      });
+      } else {
+        const codeReader = new BrowserMultiFormatReader();
+        codeReaderRef.current = codeReader;
+        const controls = codeReader.scan(videoElement, (result) => {
+          if (result) handleBarcodeDetected(result.getText());
+        });
+        scannerControlsRef.current = controls;
+      }
 
-      scannerControlsRef.current = controls;
       setIsScanningCamera(true);
       setCameraError(null);
     } catch (err: any) {

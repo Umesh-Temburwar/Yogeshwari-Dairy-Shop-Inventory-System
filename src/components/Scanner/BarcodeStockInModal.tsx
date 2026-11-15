@@ -15,6 +15,7 @@ import { Product, ProductCategory, ProductUnit } from '../../types';
 import { playBeepSound } from '../../utils/audioUtils';
 import { supabase } from '../../lib/supabase';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
+import { translateProductName, translateProductNameSync } from '../../lib/productTranslator';
 import {
   Camera,
   X,
@@ -95,6 +96,36 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   const [newProdUnit, setNewProdUnit] = useState<ProductUnit>('Piece');
   const [newProdPackSize, setNewProdPackSize] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
+
+  // Auto-translate English to Marathi for newly registered products
+  useEffect(() => {
+    if (!newProdName.trim() || newProdName.trim().length < 2) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const res = await translateProductName(newProdName);
+        if (!cancelled && res.marathi) {
+          setNewProdMarathiName(res.marathi);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [newProdName]);
+
+  const handleNewProdNameChange = (val: string) => {
+    setNewProdName(val);
+    if (val.trim().length >= 2) {
+      const instant = translateProductNameSync(val);
+      setNewProdMarathiName(instant.marathi);
+    } else if (!val.trim()) {
+      setNewProdMarathiName('');
+    }
+  };
 
   // Stock Inward Form
   const [quantity, setQuantity] = useState<number | ''>('');
@@ -1053,15 +1084,22 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                     type="text"
                     required
                     value={newProdName}
-                    onChange={(e) => setNewProdName(e.target.value)}
+                    onChange={(e) => handleNewProdNameChange(e.target.value)}
                     placeholder="उदा. Amul Taaza Milk 500ml"
                     className="w-full mt-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {language === 'mr' ? 'मराठी नाव' : 'मराठी/हिंदी नाम'}
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      {language === 'mr' ? 'मराठी नाव' : 'मराठी/हिंदी नाम'}
+                    </label>
+                    {newProdMarathiName && (
+                      <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/40">
+                        ✓ ऑटो-मराठी
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="text"
                     value={newProdMarathiName}

@@ -48,6 +48,7 @@ import { ProductImage } from '../Common/ProductImage';
 import { ProductImageManagerModal } from '../Admin/ProductImageManagerModal';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { supabase } from '../../lib/supabase';
+import { translateProductName } from '../../lib/productTranslator';
 
 interface ProductListProps {
   onOpenAddProduct: () => void;
@@ -366,10 +367,12 @@ export const ProductList: React.FC<ProductListProps> = ({
     e.preventDefault();
     if (!quickName.trim()) return;
 
+    const { marathi, hindi } = await translateProductName(quickName.trim());
+
     await addProduct({
       name: quickName.trim(),
-      hindi_name: quickName.trim(),
-      marathi_name: quickName.trim(),
+      hindi_name: hindi || quickName.trim(),
+      marathi_name: marathi || quickName.trim(),
       category: quickCategory,
       unit: quickUnit,
       purchase_price: parseFloat(quickBuyPrice) || 0,

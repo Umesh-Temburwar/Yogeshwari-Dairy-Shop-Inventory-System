@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useStore } from '../../context/StoreContext';
 import { ProductCategory, ProductUnit } from '../../types';
+import { translateProductNameSync } from '../../lib/productTranslator';
 import {
   Camera,
   X,
@@ -271,7 +272,16 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
                 <input
                   type="text"
                   value={identifiedData.name}
-                  onChange={(e) => setIdentifiedData(prev => prev ? { ...prev, name: e.target.value } : null)}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    const sync = translateProductNameSync(newName);
+                    setIdentifiedData(prev => prev ? { 
+                      ...prev, 
+                      name: newName,
+                      marathi_name: sync.marathi || prev.marathi_name,
+                      hindi_name: sync.hindi || prev.hindi_name
+                    } : null);
+                  }}
                   className="w-full px-3 py-1.5 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-lg text-xs font-bold text-slate-900 dark:text-white"
                 />
               </div>

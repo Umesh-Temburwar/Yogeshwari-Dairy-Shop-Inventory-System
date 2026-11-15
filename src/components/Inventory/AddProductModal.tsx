@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product, ProductCategory, ProductUnit } from '../../types';
@@ -6,6 +6,7 @@ import { getShelfLifeNote } from '../../lib/shelfLifeUtils';
 import { X, Save, PackagePlus, Clock, Camera, Sparkles, Barcode } from 'lucide-react';
 import { ProductPhotoModal } from '../Scanner/ProductPhotoModal';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
+import { translateProductName, translateProductNameSync } from '../../lib/productTranslator';
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -33,7 +34,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [barcode, setBarcode] = useState<string>('');
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
+  // Auto-translation states
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [autoTranslateEnabled, setAutoTranslateEnabled] = useState(true);
+  const isUserTypingRef = useRef(false);
+
   useEffect(() => {
+    isUserTypingRef.current = false;
     if (productToEdit) {
       setName(productToEdit.name);
       setHindiName(productToEdit.hindi_name || '');
@@ -58,6 +65,68 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       setBarcode('');
     }
   }, [productToEdit, isOpen]);
+
+  // Debounced translation hook when user types English name
+  useEffect(() => {
+    if (!isUserTypingRef.current || !autoTranslateEnabled || !name.trim() || name.trim().length < 2) {
+      return;
+    }
+
+    let cancelled = false;
+    setIsTranslating(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await translateProductName(name);
+        if (!cancelled) {
+          setMarathiName(res.marathi);
+          setHindiName(res.hindi);
+        }
+      } catch (e) {
+        console.warn('Auto-translate error:', e);
+      } finally {
+        if (!cancelled) setIsTranslating(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [name, autoTranslateEnabled]);
+
+  const handleNameChange = (val: string) => {
+    isUserTypingRef.current = true;
+    setName(val);
+
+    if (autoTranslateEnabled && val.trim().length >= 2) {
+      // 1. Instant zero-latency synchronous dictionary & transliteration preview
+      const instant = translateProductNameSync(val);
+      setMarathiName(instant.marathi);
+      setHindiName(instant.hindi);
+    } else if (!val.trim()) {
+      if (autoTranslateEnabled) {
+        setMarathiName('');
+        setHindiName('');
+      }
+    }
+  };
+
+  const handleManualTranslateTrigger = async () => {
+    if (!name.trim()) return;
+    setIsTranslating(true);
+    try {
+      const res = await translateProductName(name);
+      setMarathiName(res.marathi);
+      setHindiName(res.hindi);
+    } catch (e) {
+      const fallback = translateProductNameSync(name);
+      setMarathiName(fallback.marathi);
+      setHindiName(fallback.hindi);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -139,45 +208,80 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           
-          {/* Trilingual Names: English, Marathi, Hindi */}
-          <div>
-            <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-              {language === 'mr' ? 'इंग्रजी नाव' : language === 'hi' ? 'अंग्रेजी नाम' : 'English Name'} *
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Fresh Buffalo Milk Full Cream"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Trilingual Names: English, Marathi, Hindi with Automatic Translation */}
+          <div className="space-y-2">
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {language === 'mr' ? 'मराठी नाव' : language === 'hi' ? 'मराठी नाम' : 'Marathi Name'}
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] flex items-center gap-1.5">
+                  <span>{language === 'mr' ? 'इंग्रजी नाव (English Name)' : language === 'hi' ? 'अंग्रेजी नाम (English Name)' : 'English Name'} *</span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-normal">
+                    ({language === 'mr' ? 'येथे टाईप करताच मराठी व हिंदी आपोआप भरेल' : language === 'hi' ? 'यहाँ टाइप करते ही मराठी व हिंदी अपने आप भरेगा' : 'Auto-fills Marathi & Hindi'})
+                  </span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleManualTranslateTrigger}
+                  disabled={isTranslating || !name.trim()}
+                  className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 flex items-center gap-1 transition active:scale-95 disabled:opacity-50"
+                  title="मराठी आणि हिंदी नाव आपोआप भरा (Re-translate)"
+                >
+                  <Sparkles className={`w-3.5 h-3.5 ${isTranslating ? 'animate-spin text-amber-500' : 'text-emerald-500'}`} />
+                  <span>
+                    {isTranslating 
+                      ? (language === 'mr' ? 'अनुवाद करत आहे...' : 'अनुवाद कर रहे हैं...') 
+                      : (language === 'mr' ? '✨ पुन्हा भाषांतर करा' : '✨ ऑटो ट्रांसलेट')}
+                  </span>
+                </button>
+              </div>
               <input
                 type="text"
-                placeholder="उदा. ताजे म्हशीचे दूध"
-                value={marathiName}
-                onChange={(e) => setMarathiName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                required
+                placeholder="e.g. Fresh Buffalo Milk 1 Litre, Amul Paneer 200g, Cow Ghee..."
+                value={name}
+                onChange={(e) => handleNameChange(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
-            <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {language === 'mr' ? 'हिंदी नाव' : language === 'hi' ? 'हिंदी नाम' : 'Hindi Name'}
-              </label>
-              <input
-                type="text"
-                placeholder="उदा. ताज़ा भैंस का दूध"
-                value={hindiName}
-                onChange={(e) => setHindiName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C]">
+                    {language === 'mr' ? 'मराठी नाव (Marathi)' : language === 'hi' ? 'मराठी नाम (Marathi)' : 'Marathi Name'}
+                  </label>
+                  {marathiName && (
+                    <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/40">
+                      ✓ ऑटो-मराठी
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  placeholder="उदा. ताजे म्हशीचे दूध १ लिटर"
+                  value={marathiName}
+                  onChange={(e) => setMarathiName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C]">
+                    {language === 'mr' ? 'हिंदी नाव (Hindi)' : language === 'hi' ? 'हिंदी नाम (Hindi)' : 'Hindi Name'}
+                  </label>
+                  {hindiName && (
+                    <span className="text-[10px] font-extrabold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-200 dark:border-teal-800/40">
+                      ✓ ऑटो-हिंदी
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  placeholder="उदा. ताज़ा भैंस का दूध 1 लीटर"
+                  value={hindiName}
+                  onChange={(e) => setHindiName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
             </div>
           </div>
 

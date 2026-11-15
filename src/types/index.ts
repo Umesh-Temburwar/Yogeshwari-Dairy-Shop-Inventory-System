@@ -28,6 +28,11 @@ export interface Product {
   stock_quantity: number;
   min_stock_alert: number;
   barcode?: string;
+  image_url?: string;
+  image_source?: string;
+  image_status?: string;
+  image_fetched_at?: string;
+  image_attribution?: string;
   source?: string;
   source_code?: string;
   is_active: boolean;

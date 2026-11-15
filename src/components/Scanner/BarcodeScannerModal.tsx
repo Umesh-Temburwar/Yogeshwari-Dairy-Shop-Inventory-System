@@ -38,6 +38,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   const { language } = useLanguage();
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
   const scannerControlsRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -51,6 +52,59 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [hasTorch, setHasTorch] = useState(false);
   const [torchEnabled, setTorchEnabled] = useState(false);
+
+  // Handle Photo Barcode Capture (100% works on all Mobile Phones & Insecure Origins!)
+  const handlePhotoCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScanning(true);
+    setCameraError(null);
+
+    try {
+      const imgUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.src = imgUrl;
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = reject;
+      });
+
+      // 1. Try Native BarcodeDetector (fastest on mobile)
+      if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+        try {
+          const detector = new (window as any).BarcodeDetector({
+            formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code']
+          });
+          const barcodes = await detector.detect(img);
+          if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+            handleBarcodeDetected(barcodes[0].rawValue);
+            URL.revokeObjectURL(imgUrl);
+            setIsScanning(false);
+            return;
+          }
+        } catch (e) {}
+      }
+
+      // 2. Fallback to ZXing BrowserMultiFormatReader
+      const codeReader = new BrowserMultiFormatReader();
+      const result = await codeReader.decodeFromImageElement(img);
+      if (result) {
+        handleBarcodeDetected(result.getText());
+      }
+      URL.revokeObjectURL(imgUrl);
+    } catch (err) {
+      console.warn('Photo barcode decode error:', err);
+      setCameraError(
+        language === 'mr'
+          ? 'फोटोमधून बारकोड ओळखता आला नाही. कृपया बारकोड जवळ धरून, स्पष्ट प्रकाशात फोटो काढा किंवा नंबर टाईप करा.'
+          : 'फोटो से बारकोड नहीं मिला। कृपया स्पष्ट प्रकाश में फोटो लें या नंबर टाइप करें।'
+      );
+    } finally {
+      setIsScanning(false);
+      if (e.target) e.target.value = '';
+    }
+  };
 
   // Stop camera tracks cleanly
   const stopCamera = () => {
@@ -387,15 +441,26 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                 </p>
               </div>
 
-              {/* THE BIG ENABLE CAMERA BUTTON */}
-              <button
-                type="button"
-                onClick={startCamera}
-                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-900/40 flex items-center gap-2 active:scale-95 transition"
-              >
-                <Video className="w-4 h-4" />
-                <span>{language === 'mr' ? '🎥 कॅमेरा सुरू करा (Enable Camera)' : '🎥 कैमरा शुरू करें (Enable Camera)'}</span>
-              </button>
+              {/* ACTION BUTTONS (Live Camera OR Direct Mobile Photo Snap) */}
+              <div className="flex flex-col sm:flex-row gap-2.5 w-full max-w-xs">
+                <button
+                  type="button"
+                  onClick={startCamera}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2 active:scale-95 transition"
+                >
+                  <Video className="w-4 h-4" />
+                  <span>{language === 'mr' ? '🎥 लाईव्ह कॅमेरा' : '🎥 लाइव कैमरा'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-xs shadow-lg shadow-amber-900/40 flex items-center justify-center gap-2 active:scale-95 transition"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>{language === 'mr' ? '📸 फोटो काढा (Snap)' : '📸 फोटो खींचें (Snap)'}</span>
+                </button>
+              </div>
             </div>
           )}
 
@@ -410,8 +475,16 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
           )}
         </div>
 
-        {/* Manual Barcode Input Fallback */}
+        {/* Manual Barcode Input Fallback & Photo Capture Trigger */}
         <div className="p-3.5 bg-slate-50 dark:bg-[#1A2A25] border-t border-slate-200/80 dark:border-[#24352F]">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handlePhotoCapture}
+            className="hidden"
+          />
           <form onSubmit={handleManualSearch} className="flex gap-2">
             <input
               type="text"
@@ -421,8 +494,17 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
               className="flex-1 px-3 py-2 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs shrink-0"
+              title="Mobile Camera Snap"
+            >
+              <Camera className="w-4 h-4" />
+              <span className="hidden sm:inline">{language === 'mr' ? 'फोटो' : 'फोटो'}</span>
+            </button>
+            <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs"
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs shrink-0"
             >
               <Search className="w-4 h-4" />
               <span className="hidden sm:inline">{language === 'mr' ? 'शोधा' : 'खोजें'}</span>

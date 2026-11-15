@@ -178,6 +178,7 @@ export const BillingCounter: React.FC = () => {
     batches, 
     createSale, 
     setActiveView,
+    globalScannerRequest,
     isBillingScannerRequested,
     consumeBillingScannerRequest,
     setIsBarcodeScannerOpen
@@ -245,11 +246,11 @@ export const BillingCounter: React.FC = () => {
 
   // Auto-open scanner if triggered globally by shake gesture from any page
   useEffect(() => {
-    if (isBillingScannerRequested) {
+    if (isBillingScannerRequested || globalScannerRequest === 'billing') {
       consumeBillingScannerRequest();
       setShowBarcodeScanner(true);
     }
-  }, [isBillingScannerRequested, consumeBillingScannerRequest]);
+  }, [isBillingScannerRequested, globalScannerRequest, consumeBillingScannerRequest]);
 
   // Keep StoreContext updated with modal open status so global shake knows when camera is active
   useEffect(() => {
@@ -1547,8 +1548,33 @@ export const BillingCounter: React.FC = () => {
         onBarcodeScanned={async (code) => {
           playBeepSound();
           setSearchQuery(code);
+          const clean = code.trim();
+          const candidates = [clean, '0' + clean, clean.replace(/^0+/, '')];
+
+          // 1. Instant local products cache lookup (0ms latency)
+          const localMatch = products.find(p => p.barcode && candidates.includes(p.barcode.trim()));
+          if (localMatch) {
+            if (localMatch.stock_quantity > 0) {
+              addToCart(localMatch, 1);
+              setShowBarcodeScanner(false);
+              return;
+            } else {
+              const confirmBill = confirm(
+                language === 'mr'
+                  ? `हा माल सापडला: "${localMatch.name}", पण सिस्टिममध्ये शिल्लक साठा ० आहे. तरीही बिलात १ नग जोडू का?`
+                  : `यह उत्पाद मिला: "${localMatch.name}", लेकिन सिस्टम में स्टॉक 0 है। क्या बिल में 1 नग जोड़ना है?`
+              );
+              if (confirmBill) {
+                addToCart({ ...localMatch, stock_quantity: 999 }, 1);
+                setShowBarcodeScanner(false);
+              }
+              return;
+            }
+          }
+
+          // 2. Supabase Online Catalogue fallback
           try {
-            const res = await searchProductByBarcodeOnline(code);
+            const res = await searchProductByBarcodeOnline(clean);
             if (res.found && res.product) {
               if (res.product.stock_quantity > 0) {
                 addToCart(res.product, 1);

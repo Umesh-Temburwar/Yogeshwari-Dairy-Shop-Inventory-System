@@ -34,6 +34,9 @@ export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({ isOpen
   });
   const [copiedSql, setCopiedSql] = useState(false);
   const [shakeToScanEnabled, setShakeToScanEnabled] = useLocalStorage<boolean>('ydo_shake_to_scan_enabled', true);
+  const [shakeBillingEnabled, setShakeBillingEnabled] = useLocalStorage<boolean>('ydo_shake_billing_enabled', true);
+  const [shakeStockInEnabled, setShakeStockInEnabled] = useLocalStorage<boolean>('ydo_shake_stock_in_enabled', true);
+  const [shakeStockEditEnabled, setShakeStockEditEnabled] = useLocalStorage<boolean>('ydo_shake_stock_edit_enabled', true);
 
   if (!isOpen) return null;
 
@@ -292,8 +295,8 @@ CREATE TABLE IF NOT EXISTS expenses (
           </p>
         </div>
 
-        {/* Global Shake to Open Billing Scanner Setting */}
-        <div className="bg-slate-50 dark:bg-[#1A2A25] p-3.5 rounded-2xl border border-slate-200 dark:border-[#24352F] space-y-2.5">
+        {/* 3 Global Shake Gestures for 3 Barcode Scanners */}
+        <div className="bg-slate-50 dark:bg-[#1A2A25] p-3.5 rounded-2xl border border-slate-200 dark:border-[#24352F] space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
@@ -301,10 +304,10 @@ CREATE TABLE IF NOT EXISTS expenses (
               </div>
               <div>
                 <h4 className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC]">
-                  ग्लोबल शेक-टू-स्कॅन (Global Shake to Scan)
+                  ग्लोबल शेक-टू-स्कॅन (३ मोशन जेस्चर्स)
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                  कोणत्याही पेजवरून फोन हलवल्यास थेट बिलिंग बारकोड स्कॅनर उघडेल
+                  कोणत्याही पेजवरून १, २ किंवा ३ वेळा फोन हलवून थेट योग्य स्कॅनर उघडा
                 </p>
               </div>
             </div>
@@ -321,14 +324,87 @@ CREATE TABLE IF NOT EXISTS expenses (
                   : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
               }`}
             >
-              {shakeToScanEnabled ? 'चालू (ON)' : 'बंद (OFF)'}
+              {shakeToScanEnabled ? 'मास्टर चालू (ON)' : 'मास्टर बंद (OFF)'}
             </button>
           </div>
+
+          {shakeToScanEnabled && (
+            <div className="space-y-2 pt-1 border-t border-slate-200/50 dark:border-[#24352F]">
+              {/* Gesture 1: Single Shake -> Billing */}
+              <div className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/60 dark:border-[#24352F]">
+                <div>
+                  <span className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC] block">
+                    १ शेक (Single Shake) 👉 बिलिंग स्कॅनर
+                  </span>
+                  <span className="text-[10px] text-slate-500 dark:text-[#8FA69C] block">
+                    Billing Counter Barcode Scanner (Point of Sale)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShakeBillingEnabled(!shakeBillingEnabled)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition ${
+                    shakeBillingEnabled
+                      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                  }`}
+                >
+                  {shakeBillingEnabled ? 'सक्रिय' : 'बंद'}
+                </button>
+              </div>
+
+              {/* Gesture 2: Double Shake -> Stock-In */}
+              <div className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/60 dark:border-[#24352F]">
+                <div>
+                  <span className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC] block">
+                    २ शेक (Double Shake) 👉 नवीन स्टॉक-इन स्कॅनर
+                  </span>
+                  <span className="text-[10px] text-slate-500 dark:text-[#8FA69C] block">
+                    Stock-In Barcode Scanner (माल गोदामात भरणे)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShakeStockInEnabled(!shakeStockInEnabled)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition ${
+                    shakeStockInEnabled
+                      ? 'bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-500/30'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                  }`}
+                >
+                  {shakeStockInEnabled ? 'सक्रिय' : 'बंद'}
+                </button>
+              </div>
+
+              {/* Gesture 3: Triple Shake -> Stock Edit / Lookup */}
+              <div className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/60 dark:border-[#24352F]">
+                <div>
+                  <span className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC] block">
+                    ३ शेक (Triple Shake) 👉 स्टॉक तपासणी व दुरुस्ती
+                  </span>
+                  <span className="text-[10px] text-slate-500 dark:text-[#8FA69C] block">
+                    Stock Edit / Lookup Barcode Scanner (तपशील पाहणे)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShakeStockEditEnabled(!shakeStockEditEnabled)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition ${
+                    shakeStockEditEnabled
+                      ? 'bg-purple-500/15 text-purple-700 dark:text-purple-400 border border-purple-500/30'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                  }`}
+                >
+                  {shakeStockEditEnabled ? 'सक्रिय' : 'बंद'}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] bg-white dark:bg-[#131F1B] p-2 rounded-xl border border-slate-200/60 dark:border-[#24352F] flex items-center justify-between">
             <span>
               {isMobileDevice() 
-                ? '✓ डिव्हाइस मोशन सेन्सर उपलब्ध आहे' 
+                ? '✓ डिव्हाइस 3-Axis मोशन सेन्सर सक्रिय आहे' 
                 : 'ℹ️ डेस्कटॉपवर बंद; मोबाईलवर स्वयंचलित सक्रिय'}
             </span>
             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">

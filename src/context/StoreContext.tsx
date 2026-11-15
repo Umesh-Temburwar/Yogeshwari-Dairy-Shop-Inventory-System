@@ -30,11 +30,16 @@ export type AppView =
   | 'expiry'
   | 'returns';
 
+export type GlobalScannerTarget = 'billing' | 'stock_in' | 'stock_edit' | null;
+
 interface StoreContextType {
   // Navigation & Settings
   activeView: AppView;
   setActiveView: (view: AppView) => void;
-  // Global Shake to Open Billing Barcode Scanner
+  // 3 Global Shake Gestures for 3 Barcode Scanners
+  globalScannerRequest: GlobalScannerTarget;
+  triggerGlobalScanner: (target: 'billing' | 'stock_in' | 'stock_edit') => void;
+  consumeGlobalScannerRequest: (target: 'billing' | 'stock_in' | 'stock_edit') => boolean;
   isBillingScannerRequested: boolean;
   triggerGlobalBillingScanner: () => void;
   consumeBillingScannerRequest: () => boolean;
@@ -312,40 +317,60 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, []);
 
-  // Global Shake-to-Scan in POS Billing Counter state & routing
+  // 3 Global Shake Gestures for 3 Barcode Scanners (Billing, Stock-In, Stock-Edit)
+  const [globalScannerRequest, setGlobalScannerRequest] = useState<GlobalScannerTarget>(null);
   const [isBillingScannerRequested, setIsBillingScannerRequested] = useState<boolean>(false);
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState<boolean>(false);
 
-  const triggerGlobalBillingScanner = useCallback(() => {
-    // If scanner modal is already open, do not reopen/duplicate
+  const triggerGlobalScanner = useCallback((target: 'billing' | 'stock_in' | 'stock_edit') => {
+    // If scanner modal is already open anywhere, do not reopen/duplicate
     if (isBarcodeScannerOpen) return;
 
-    setIsBillingScannerRequested(true);
+    setGlobalScannerRequest(target);
+    if (target === 'billing') {
+      setIsBillingScannerRequested(true);
+    }
+
+    const destinationView: AppView = target === 'billing' ? 'pos' : 'inventory';
     setActiveViewState((currentView) => {
-      if (currentView !== 'pos') {
+      if (currentView !== destinationView) {
         try {
-          localStorage.setItem('yd_active_view', 'pos');
+          localStorage.setItem('yd_active_view', destinationView);
           if (typeof window !== 'undefined') {
-            const targetHash = '#/pos';
+            const targetHash = `#/${destinationView}`;
             if (window.location.hash !== targetHash) {
-              window.history.pushState({ view: 'pos' }, '', targetHash);
+              window.history.pushState({ view: destinationView }, '', targetHash);
             }
           }
         } catch {}
-        return 'pos';
+        return destinationView;
       }
       return currentView;
     });
   }, [isBarcodeScannerOpen]);
 
-  const consumeBillingScannerRequest = useCallback((): boolean => {
-    let requested = false;
-    setIsBillingScannerRequested((prev) => {
-      requested = prev;
-      return false;
+  const consumeGlobalScannerRequest = useCallback((target: 'billing' | 'stock_in' | 'stock_edit'): boolean => {
+    let matched = false;
+    setGlobalScannerRequest((prev) => {
+      if (prev === target) {
+        matched = true;
+        return null;
+      }
+      return prev;
     });
-    return requested;
+    if (target === 'billing') {
+      setIsBillingScannerRequested(false);
+    }
+    return matched;
   }, []);
+
+  const triggerGlobalBillingScanner = useCallback(() => {
+    triggerGlobalScanner('billing');
+  }, [triggerGlobalScanner]);
+
+  const consumeBillingScannerRequest = useCallback((): boolean => {
+    return consumeGlobalScannerRequest('billing');
+  }, [consumeGlobalScannerRequest]);
 
   // Listen for browser Back/Forward (popstate) so website NEVER exits on back gesture
   useEffect(() => {
@@ -3233,6 +3258,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <StoreContext.Provider value={{
       activeView,
       setActiveView,
+      globalScannerRequest,
+      triggerGlobalScanner,
+      consumeGlobalScannerRequest,
       isBillingScannerRequested,
       triggerGlobalBillingScanner,
       consumeBillingScannerRequest,

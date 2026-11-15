@@ -352,11 +352,14 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
         try {
           const ocrRes = await performBarcodeOcrFallback(videoElement);
           if (ocrRes.found && ocrRes.barcode && isLoopRunning) {
-            isLoopRunning = false;
-            clearInterval(scanInterval);
-            clearInterval(autoOcrInterval);
-            clearTimeout(ocrTimer);
-            handleBarcodeDetected(ocrRes.barcode);
+            const check = validateBarcode(ocrRes.barcode);
+            if (check.isValid) {
+              isLoopRunning = false;
+              clearInterval(scanInterval);
+              clearInterval(autoOcrInterval);
+              clearTimeout(ocrTimer);
+              handleBarcodeDetected(ocrRes.barcode);
+            }
           }
         } catch (e) {
           // silent fallback

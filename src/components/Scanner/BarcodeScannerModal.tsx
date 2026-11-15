@@ -274,7 +274,6 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       let isLoopRunning = true;
       let isDecodingFrame = false;
       let isAutoOcrRunning = false;
-      let ocrTimer: any = null;
       const tracker = new BarcodeConfirmationTracker();
 
       // Show OCR fallback button immediately so user can tap it anytime
@@ -289,17 +288,21 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         try {
           const ocrRes = await performBarcodeOcrFallback(videoElement, 'strip');
           if (ocrRes.found && ocrRes.barcode && isLoopRunning) {
-            isLoopRunning = false;
-            clearInterval(scanInterval);
-            clearInterval(autoOcrInterval);
-            handleBarcodeDetected(ocrRes.barcode);
+            // Verify checksum before killing the primary video scanner loop
+            const check = validateBarcode(ocrRes.barcode);
+            if (check.isValid) {
+              isLoopRunning = false;
+              clearInterval(scanInterval);
+              clearInterval(autoOcrInterval);
+              handleBarcodeDetected(ocrRes.barcode);
+            }
           }
         } catch (e) {
           // silent fallback
         } finally {
           isAutoOcrRunning = false;
         }
-      }, 900);
+      }, 1000);
 
       const scanInterval = setInterval(() => {
         if (!isLoopRunning || isDecodingFrame) return;

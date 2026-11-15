@@ -94,14 +94,10 @@ export function extractCandidateBarcodeFromText(text: string): string | null {
     return indiaMatch[0];
   }
 
-  // 7. Partial fallback for torn/damaged barcodes: Return 6+ consecutive digits
-  // Allows searchProductByBarcodeOnline to find the item via partial barcode substring match
-  if (digitsOnly.length >= 6) {
-    const partialIndia = digitsOnly.match(/890\d{3,10}/);
-    if (partialIndia) return partialIndia[0];
-
-    const trailingChunk = digitsOnly.match(/\d{6,13}/);
-    if (trailingChunk) return trailingChunk[0];
+  // 7. Strict GS1 India prefix candidate (at least 890 + 5 digits)
+  const partialIndia = digitsOnly.match(/890\d{5,9}/);
+  if (partialIndia) {
+    return partialIndia[0];
   }
 
   return null;

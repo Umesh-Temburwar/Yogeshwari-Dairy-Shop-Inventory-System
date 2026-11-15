@@ -34,6 +34,12 @@ interface StoreContextType {
   // Navigation & Settings
   activeView: AppView;
   setActiveView: (view: AppView) => void;
+  // Global Shake to Open Billing Barcode Scanner
+  isBillingScannerRequested: boolean;
+  triggerGlobalBillingScanner: () => void;
+  consumeBillingScannerRequest: () => boolean;
+  isBarcodeScannerOpen: boolean;
+  setIsBarcodeScannerOpen: (open: boolean) => void;
   timeFilter: TimeRangeFilter;
   setTimeFilter: (filter: TimeRangeFilter) => void;
   isSupabaseConnected: boolean;
@@ -304,6 +310,41 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {
       // Ignore history errors
     }
+  }, []);
+
+  // Global Shake-to-Scan in POS Billing Counter state & routing
+  const [isBillingScannerRequested, setIsBillingScannerRequested] = useState<boolean>(false);
+  const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState<boolean>(false);
+
+  const triggerGlobalBillingScanner = useCallback(() => {
+    // If scanner modal is already open, do not reopen/duplicate
+    if (isBarcodeScannerOpen) return;
+
+    setIsBillingScannerRequested(true);
+    setActiveViewState((currentView) => {
+      if (currentView !== 'pos') {
+        try {
+          localStorage.setItem('yd_active_view', 'pos');
+          if (typeof window !== 'undefined') {
+            const targetHash = '#/pos';
+            if (window.location.hash !== targetHash) {
+              window.history.pushState({ view: 'pos' }, '', targetHash);
+            }
+          }
+        } catch {}
+        return 'pos';
+      }
+      return currentView;
+    });
+  }, [isBarcodeScannerOpen]);
+
+  const consumeBillingScannerRequest = useCallback((): boolean => {
+    let requested = false;
+    setIsBillingScannerRequested((prev) => {
+      requested = prev;
+      return false;
+    });
+    return requested;
   }, []);
 
   // Listen for browser Back/Forward (popstate) so website NEVER exits on back gesture
@@ -3192,6 +3233,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <StoreContext.Provider value={{
       activeView,
       setActiveView,
+      isBillingScannerRequested,
+      triggerGlobalBillingScanner,
+      consumeBillingScannerRequest,
+      isBarcodeScannerOpen,
+      setIsBarcodeScannerOpen,
       timeFilter,
       setTimeFilter,
       isSupabaseConnected,

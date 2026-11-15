@@ -35,7 +35,7 @@ import {
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
-import { useShakeDetector, isMobileDevice } from '../../hooks/useShakeDetector';
+import { requestMotionPermission, isMobileDevice } from '../../hooks/useShakeDetector';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import confetti from 'canvas-confetti';
 import { playSuccessChime, playBeepSound } from '../../utils/audioUtils';
@@ -173,7 +173,15 @@ const ProductCard = React.memo<ProductCardProps>(({
 });
 
 export const BillingCounter: React.FC = () => {
-  const { products, batches, createSale, setActiveView } = useStore();
+  const { 
+    products, 
+    batches, 
+    createSale, 
+    setActiveView,
+    isBillingScannerRequested,
+    consumeBillingScannerRequest,
+    setIsBarcodeScannerOpen
+  } = useStore();
   const { t, language } = useLanguage();
   const { role, adminSlot, user } = useAuth();
 
@@ -232,25 +240,21 @@ export const BillingCounter: React.FC = () => {
   const [onlineSearchResults, setOnlineSearchResults] = useState<Product[]>([]);
   const [isSearchingOnline, setIsSearchingOnline] = useState(false);
 
-  // Shake-to-Scan integration for Billing Page
+  // Global Shake-to-Scan integration for Billing Page (Preference & Auto-Open Request Consumption)
   const [shakeToScanEnabled, setShakeToScanEnabled] = useLocalStorage<boolean>('ydo_shake_to_scan_enabled', true);
-  const [shakeDetectedToast, setShakeDetectedToast] = useState(false);
 
-  const { isSupported: isMotionSupported, permissionGranted: isMotionPermitted, askPermission: requestMotionPerm } = useShakeDetector({
-    enabled: shakeToScanEnabled && !showBarcodeScanner,
-    threshold: 20,
-    minPeaks: 2,
-    timeWindowMs: 750,
-    cooldownMs: 1800,
-    onShake: () => {
-      // Rule: Never toggle or interrupt if scanner is already open
-      if (!showBarcodeScanner) {
-        setShakeDetectedToast(true);
-        setTimeout(() => setShakeDetectedToast(false), 2400);
-        setShowBarcodeScanner(true);
-      }
+  // Auto-open scanner if triggered globally by shake gesture from any page
+  useEffect(() => {
+    if (isBillingScannerRequested) {
+      consumeBillingScannerRequest();
+      setShowBarcodeScanner(true);
     }
-  });
+  }, [isBillingScannerRequested, consumeBillingScannerRequest]);
+
+  // Keep StoreContext updated with modal open status so global shake knows when camera is active
+  useEffect(() => {
+    setIsBarcodeScannerOpen(showBarcodeScanner);
+  }, [showBarcodeScanner, setIsBarcodeScannerOpen]);
 
   // Live online product & barcode search from Supabase
   useEffect(() => {
@@ -618,14 +622,6 @@ export const BillingCounter: React.FC = () => {
 
   return (
     <div className="relative">
-      {/* Shake Detection Live Toast Banner */}
-      {shakeDetectedToast && (
-        <div className="fixed top-4 inset-x-0 mx-auto max-w-sm z-50 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-slate-950 font-black text-xs shadow-2xl flex items-center justify-center gap-2 animate-bounce border-2 border-white/50 backdrop-blur-md">
-          <Smartphone className="w-4 h-4 animate-spin text-slate-950" />
-          <span>{language === 'mr' ? '📱 फोन हलवला! बारकोड स्कॅनर सुरू होत आहे...' : '📱 फोन शेक डिटेक्ट हुआ! कैमरा स्कैनर खुल रहा है...'}</span>
-        </div>
-      )}
-
       {/* Mobile Tab Switcher: Products vs Bill Checkout */}
       <div className="lg:hidden grid grid-cols-2 p-1 bg-slate-200/80 dark:bg-[#1A2A25] rounded-2xl border border-slate-300/60 dark:border-[#24352F] mb-3 sticky top-0 z-20 backdrop-blur-md">
         <button
@@ -725,13 +721,11 @@ export const BillingCounter: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping hidden sm:inline-block" />
             </button>
 
-            {isMobileDevice() && isMotionSupported && (
+            {isMobileDevice() && (
               <button
                 type="button"
                 onClick={async () => {
-                  if (!isMotionPermitted) {
-                    await requestMotionPerm();
-                  }
+                  await requestMotionPermission();
                   setShakeToScanEnabled(!shakeToScanEnabled);
                 }}
                 className={`px-3 py-2.5 rounded-xl border text-xs font-black flex items-center gap-1.5 transition active:scale-95 shadow-xs shrink-0 cursor-pointer ${
@@ -739,7 +733,7 @@ export const BillingCounter: React.FC = () => {
                     ? 'bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-400'
                     : 'bg-slate-100 dark:bg-[#1A2A25] border-slate-200 dark:border-[#24352F] text-slate-500 dark:text-slate-400'
                 }`}
-                title={language === 'mr' ? 'फोन हलवून स्कॅन (Shake to Scan)' : 'फोन हिलाकर स्कैन (Shake to Scan)'}
+                title={language === 'mr' ? 'फोन हलवून स्कॅन (Global Shake to Scan)' : 'फोन हिलाकर स्कैन (Global Shake to Scan)'}
               >
                 <Smartphone className={`w-4 h-4 ${shakeToScanEnabled ? 'animate-bounce text-amber-500' : ''}`} />
                 <span className="hidden sm:inline">

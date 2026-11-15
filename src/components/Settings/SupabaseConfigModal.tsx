@@ -12,8 +12,11 @@ import {
   RotateCcw,
   ExternalLink,
   ShieldCheck,
-  FileCode
+  FileCode,
+  Smartphone
 } from 'lucide-react';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { isMobileDevice, requestMotionPermission } from '../../hooks/useShakeDetector';
 
 interface SupabaseConfigModalProps {
   isOpen: boolean;
@@ -30,6 +33,7 @@ export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({ isOpen
     testing: false
   });
   const [copiedSql, setCopiedSql] = useState(false);
+  const [shakeToScanEnabled, setShakeToScanEnabled] = useLocalStorage<boolean>('ydo_shake_to_scan_enabled', true);
 
   if (!isOpen) return null;
 
@@ -286,6 +290,51 @@ CREATE TABLE IF NOT EXISTS expenses (
           <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
             इसे Supabase Dashboard में <b className="text-slate-700 dark:text-[#E7F0EC]">SQL Editor</b> में पेस्ट करके "Run" दबाएं।
           </p>
+        </div>
+
+        {/* Global Shake to Open Billing Scanner Setting */}
+        <div className="bg-slate-50 dark:bg-[#1A2A25] p-3.5 rounded-2xl border border-slate-200 dark:border-[#24352F] space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <Smartphone className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC]">
+                  ग्लोबल शेक-टू-स्कॅन (Global Shake to Scan)
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
+                  कोणत्याही पेजवरून फोन हलवल्यास थेट बिलिंग बारकोड स्कॅनर उघडेल
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={async () => {
+                await requestMotionPermission();
+                setShakeToScanEnabled(!shakeToScanEnabled);
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition shadow-xs cursor-pointer ${
+                shakeToScanEnabled
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              {shakeToScanEnabled ? 'चालू (ON)' : 'बंद (OFF)'}
+            </button>
+          </div>
+
+          <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] bg-white dark:bg-[#131F1B] p-2 rounded-xl border border-slate-200/60 dark:border-[#24352F] flex items-center justify-between">
+            <span>
+              {isMobileDevice() 
+                ? '✓ डिव्हाइस मोशन सेन्सर उपलब्ध आहे' 
+                : 'ℹ️ डेस्कटॉपवर बंद; मोबाईलवर स्वयंचलित सक्रिय'}
+            </span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
+              Active
+            </span>
+          </div>
         </div>
 
         {/* Demo Data Reset */}

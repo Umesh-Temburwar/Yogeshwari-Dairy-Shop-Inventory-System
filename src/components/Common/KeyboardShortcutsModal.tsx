@@ -19,6 +19,7 @@ export const KeyboardShortcutsModal: React.FC<Props> = ({ isOpen, onClose }) => 
     { key: 'F2', label: isMr ? 'थेट बिलिंग काऊंटर (POS Billing)' : isHi ? 'बिलिंग काउंटर (POS)' : 'Open Billing Counter (POS)', view: 'POS' },
     { key: 'F3', label: isMr ? 'नवीन उत्पादन / साठा जोडा' : isHi ? 'नया उत्पाद जोड़ें' : 'Add New Product / Stock', view: 'Inventory' },
     { key: 'F4', label: isMr ? 'उधार खातेवही (Udhar Khata)' : isHi ? 'उधार खाता बही' : 'Udhar Khata (Credit Ledger)', view: 'Khata' },
+    { key: '📱 Shake', label: isMr ? 'कुठूनही थेट बिलिंग बारकोड स्कॅनर उघडा' : isHi ? 'किसी भी पेज से सीधे बिलिंग स्कैनर खोलें' : 'Global Shake to Open Billing Barcode Scanner', view: 'Global' },
     { key: 'Esc', label: isMr ? 'कोणतीही विंडो / मॉडेल बंद करा' : isHi ? 'खुली विंडो बंद करें' : 'Close Active Modal / Drawer', view: 'Global' },
     { key: 'Tab', label: isMr ? 'पुढील इनपुट / बटणावर जा' : isHi ? 'अगले इनपुट पर जाएं' : 'Next Input Field Focus', view: 'Form' },
     { key: 'Enter', label: isMr ? 'बिल पूर्ण करा / सबमिट करा' : isHi ? 'बिल सुरक्षित / जमा करें' : 'Confirm & Submit Bill', view: 'POS' }

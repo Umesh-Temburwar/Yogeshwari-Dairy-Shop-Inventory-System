@@ -15,6 +15,7 @@ import { MasterSecurityModal } from './components/Auth/MasterSecurityModal';
 import { AppDownloadModal } from './components/Common/AppDownloadModal';
 import { NetworkStatusBanner } from './components/Common/NetworkStatusBanner';
 import { KeyboardShortcutsModal } from './components/Common/KeyboardShortcutsModal';
+import { GlobalShakeDetector } from './components/Common/GlobalShakeDetector';
 import { RotateCw } from 'lucide-react';
 import { Product } from './types';
 
@@ -149,6 +150,9 @@ const MainContent: React.FC = () => {
 
   return (
     <div className="h-dvh w-full flex flex-col overflow-hidden bg-[#f8fafc] dark:bg-[#0B1210] text-[#0f172a] dark:text-[#E7F0EC] transition-colors duration-150 selection:bg-emerald-500 selection:text-white">
+      {/* Global Root-Level Shake-to-Scan Detector across all pages */}
+      <GlobalShakeDetector />
+
       {/* Top Header (Fixed 64px, nothing clipped or overflowing) */}
       <Navbar 
         onOpenSettings={() => setIsSettingsOpen(true)}

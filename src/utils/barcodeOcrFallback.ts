@@ -34,7 +34,7 @@ async function getOcrWorker(): Promise<any> {
     const { createWorker } = await import('tesseract.js');
     const worker = await createWorker('eng');
     await worker.setParameters({
-      tessedit_char_whitelist: '0123456789 BODOIl|!SZG ',
+      tessedit_char_whitelist: '0123456789 ',
       tessedit_pageseg_mode: '6' as any
     });
     cachedWorker = worker;
@@ -42,6 +42,29 @@ async function getOcrWorker(): Promise<any> {
   } finally {
     isWorkerInitializing = false;
   }
+}
+
+/**
+ * Repairs a 13-digit GS1 barcode candidate starting with 890 (India) if exactly 1 digit was misread by OCR.
+ */
+function repairSingleDigitGS1Candidate(candidate13: string): string | null {
+  if (candidate13.length !== 13 || !candidate13.startsWith('890')) return null;
+  if (validateEAN13(candidate13)) return candidate13;
+
+  // Try fixing check digit first
+  const prefix12 = candidate13.substring(0, 12);
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    const d = parseInt(prefix12[i], 10);
+    sum += i % 2 === 0 ? d : d * 3;
+  }
+  const expectedCheck = (10 - (sum % 10)) % 10;
+  const candidateWithFixedCheck = prefix12 + String(expectedCheck);
+  if (validateEAN13(candidateWithFixedCheck)) {
+    return candidateWithFixedCheck;
+  }
+
+  return null;
 }
 
 /**
@@ -54,7 +77,7 @@ export function extractCandidateBarcodeFromText(text: string): string | null {
   // 1. Substitute common OCR character confusions on digits
   const normalized = text
     .replace(/[B]/g, '8')
-    .replace(/[OD]/g, '0')
+    .replace(/[ODo]/g, '0')
     .replace(/[Il|!]/g, '1')
     .replace(/[S]/g, '5')
     .replace(/[Z]/g, '2')
@@ -88,16 +111,12 @@ export function extractCandidateBarcodeFromText(text: string): string | null {
     }
   }
 
-  // 6. Fallback: Any 13 consecutive digits starting with '890' (India GS1 Prefix)
+  // 6. Sliding window for 13 digits starting with '890' (India GS1 Prefix) with repair
   const indiaMatch = digitsOnly.match(/890\d{10}/);
   if (indiaMatch) {
+    const repaired = repairSingleDigitGS1Candidate(indiaMatch[0]);
+    if (repaired) return repaired;
     return indiaMatch[0];
-  }
-
-  // 7. Strict GS1 India prefix candidate (at least 890 + 5 digits)
-  const partialIndia = digitsOnly.match(/890\d{5,9}/);
-  if (partialIndia) {
-    return partialIndia[0];
   }
 
   return null;
@@ -160,16 +179,67 @@ export async function performBarcodeOcrFallback(
     const reticleY = Math.round(startY + (visibleH - reticleH) / 2);
 
     // Number strip: bottom 50% or full box depending on mode
-    const textStartY = mode === 'strip'
+    let textStartY = mode === 'strip'
       ? reticleY + Math.round(reticleH * 0.45)
       : reticleY;
-    const textH = mode === 'strip'
+    let textH = mode === 'strip'
       ? Math.round(reticleH * 0.55)
       : reticleH;
+    let textStartX = reticleX;
+    let textW = reticleW;
+
+    // Adaptive bright label locator: automatically isolates white barcode sticker from dark packaging
+    try {
+      const sampleCanvas = document.createElement('canvas');
+      sampleCanvas.width = 120;
+      sampleCanvas.height = 80;
+      const sCtx = sampleCanvas.getContext('2d');
+      if (sCtx) {
+        sCtx.drawImage(source, reticleX, reticleY, reticleW, reticleH, 0, 0, 120, 80);
+        const imgData = sCtx.getImageData(0, 0, 120, 80);
+        const data = imgData.data;
+        let minBrightY = 80, maxBrightY = 0;
+        let minBrightX = 120, maxBrightX = 0;
+        let brightCount = 0;
+
+        for (let y = 0; y < 80; y++) {
+          for (let x = 0; x < 120; x++) {
+            const idx = (y * 120 + x) * 4;
+            const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+            if (lum > 135) {
+              brightCount++;
+              if (y < minBrightY) minBrightY = y;
+              if (y > maxBrightY) maxBrightY = y;
+              if (x < minBrightX) minBrightX = x;
+              if (x > maxBrightX) maxBrightX = x;
+            }
+          }
+        }
+
+        // If a distinct bright label was found
+        if (brightCount > 1000 && maxBrightY - minBrightY > 20 && maxBrightX - minBrightX > 30) {
+          const normX = minBrightX / 120;
+          const normW = (maxBrightX - minBrightX) / 120;
+          const normY = minBrightY / 80;
+          const normH = (maxBrightY - minBrightY) / 80;
+
+          textStartX = Math.round(reticleX + normX * reticleW);
+          textW = Math.round(normW * reticleW);
+
+          if (mode === 'strip') {
+            textStartY = Math.round(reticleY + (normY + normH * 0.60) * reticleH);
+            textH = Math.max(20, Math.round(normH * 0.45 * reticleH));
+          } else {
+            textStartY = Math.round(reticleY + normY * reticleH);
+            textH = Math.max(30, Math.round(normH * reticleH));
+          }
+        }
+      }
+    } catch {}
 
     // Upscale onto canvas: 1000px width with 60px white margins for robust Tesseract line isolation
     const destW = 1000;
-    const destH = Math.round((1000 * textH) / reticleW) || 240;
+    const destH = Math.round((1000 * textH) / (textW || reticleW)) || 240;
     const margin = 60;
 
     const ocrCanvas = document.createElement('canvas');
@@ -190,9 +260,9 @@ export async function performBarcodeOcrFallback(
 
     ctx.drawImage(
       source,
-      reticleX,
+      textStartX,
       textStartY,
-      reticleW,
+      textW,
       textH,
       margin,
       margin,

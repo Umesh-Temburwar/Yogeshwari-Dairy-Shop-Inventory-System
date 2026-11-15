@@ -4,6 +4,7 @@ import {
   createBarcodeReader,
   decodeVideoMultiAngle,
   decodeImageMultiAngle,
+  detectWithNativeBarcodeDetector,
   BarcodeConfirmationTracker
 } from '../../utils/barcodeScannerEngine';
 import { performBarcodeOcrFallback } from '../../utils/barcodeOcrFallback';
@@ -305,21 +306,38 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         }
       }, 1000);
 
-      const scanInterval = setInterval(() => {
+      const scanInterval = setInterval(async () => {
         if (!isLoopRunning || isDecodingFrame) return;
         if (!videoElement || videoElement.readyState < 2 || videoElement.videoWidth === 0) return;
-        if (!scanCtx) return;
 
         isDecodingFrame = true;
         try {
-          const rawText = decodeVideoMultiAngle(videoElement, codeReader, scanCanvas, scanCtx);
-          if (rawText && isLoopRunning) {
-            const confirmed = tracker.evaluateCandidate(rawText);
+          // 1. First Priority: Native Android/Chromium BarcodeDetector (Hardware Accelerated ML Kit)
+          // Instantly resolves curved, crinkled, shiny, and rotated retail barcodes (e.g. Parle cookies, pouches)
+          const nativeCode = await detectWithNativeBarcodeDetector(videoElement);
+          if (nativeCode && isLoopRunning) {
+            const confirmed = tracker.evaluateCandidate(nativeCode);
             if (confirmed && isLoopRunning) {
               isLoopRunning = false;
               clearInterval(scanInterval);
               clearInterval(autoOcrInterval);
               handleBarcodeDetected(confirmed.text);
+              return;
+            }
+          }
+
+          // 2. Second Priority: Multi-Angle Computer Vision Decoder (ZXing)
+          if (scanCtx) {
+            const rawText = decodeVideoMultiAngle(videoElement, codeReader, scanCanvas, scanCtx);
+            if (rawText && isLoopRunning) {
+              const confirmed = tracker.evaluateCandidate(rawText);
+              if (confirmed && isLoopRunning) {
+                isLoopRunning = false;
+                clearInterval(scanInterval);
+                clearInterval(autoOcrInterval);
+                handleBarcodeDetected(confirmed.text);
+                return;
+              }
             }
           }
         } catch (frameErr) {
@@ -327,7 +345,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         } finally {
           isDecodingFrame = false;
         }
-      }, 110);
+      }, 90);
 
       scannerControlsRef.current = {
         stop: () => {
@@ -467,8 +485,9 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
   const handleManualSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (manualInput.trim()) {
-      handleBarcodeDetected(manualInput.trim());
+    const clean = manualInput.replace(/[\s\-]/g, '').trim();
+    if (clean) {
+      handleBarcodeDetected(clean);
     }
   };
 
@@ -486,9 +505,18 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         img.onerror = reject;
       });
 
-      // Try Multi-Angle ZXing Image Decoder (0°, 180°, 90°, 270°)
+      // 1. Try Native ML Kit & Multi-Angle ZXing Image Decoder
       const reader = createBarcodeReader();
-      const detected = await decodeImageMultiAngle(img, reader);
+      let detected = await decodeImageMultiAngle(img, reader);
+
+      // 2. If barcode lines not recognized, fallback to AI OCR numbers
+      if (!detected) {
+        const ocrRes = await performBarcodeOcrFallback(img as any, 'full');
+        if (ocrRes.found && ocrRes.barcode) {
+          detected = ocrRes.barcode;
+        }
+      }
+
       if (detected) {
         handleBarcodeDetected(detected);
       } else {

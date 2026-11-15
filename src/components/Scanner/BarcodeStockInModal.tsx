@@ -4,6 +4,7 @@ import {
   createBarcodeReader,
   decodeVideoMultiAngle,
   decodeImageMultiAngle,
+  detectWithNativeBarcodeDetector,
   BarcodeConfirmationTracker
 } from '../../utils/barcodeScannerEngine';
 import { performBarcodeOcrFallback } from '../../utils/barcodeOcrFallback';
@@ -368,22 +369,39 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
         }
       }, 1200);
 
-      const scanInterval = setInterval(() => {
+      const scanInterval = setInterval(async () => {
         if (!isLoopRunning || isDecodingFrame) return;
         if (!videoElement || videoElement.readyState < 2 || videoElement.videoWidth === 0) return;
-        if (!scanCtx) return;
 
         isDecodingFrame = true;
         try {
-          const rawText = decodeVideoMultiAngle(videoElement, codeReader, scanCanvas, scanCtx);
-          if (rawText && isLoopRunning) {
-            const confirmed = tracker.evaluateCandidate(rawText);
+          // 1. Hardware Accelerated Native BarcodeDetector (Google ML Kit on Android)
+          const nativeCode = await detectWithNativeBarcodeDetector(videoElement);
+          if (nativeCode && isLoopRunning) {
+            const confirmed = tracker.evaluateCandidate(nativeCode);
             if (confirmed && isLoopRunning) {
               isLoopRunning = false;
               clearInterval(scanInterval);
               clearInterval(autoOcrInterval);
               clearTimeout(ocrTimer);
               handleBarcodeDetected(confirmed.text);
+              return;
+            }
+          }
+
+          // 2. Multi-Angle Computer Vision Decoder (ZXing)
+          if (scanCtx) {
+            const rawText = decodeVideoMultiAngle(videoElement, codeReader, scanCanvas, scanCtx);
+            if (rawText && isLoopRunning) {
+              const confirmed = tracker.evaluateCandidate(rawText);
+              if (confirmed && isLoopRunning) {
+                isLoopRunning = false;
+                clearInterval(scanInterval);
+                clearInterval(autoOcrInterval);
+                clearTimeout(ocrTimer);
+                handleBarcodeDetected(confirmed.text);
+                return;
+              }
             }
           }
         } catch (frameErr) {
@@ -391,7 +409,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
         } finally {
           isDecodingFrame = false;
         }
-      }, 110);
+      }, 90);
 
       scannerControlsRef.current = {
         stop: () => {

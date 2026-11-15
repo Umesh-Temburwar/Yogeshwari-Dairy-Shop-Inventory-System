@@ -57,6 +57,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
   const scannerControlsRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [barcodeInput, setBarcodeInput] = useState('');
   const [isScanningCamera, setIsScanningCamera] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -177,10 +178,14 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       if (!isSecure && (!navigator?.mediaDevices || !navigator?.mediaDevices?.getUserMedia)) {
         setCameraError(
           language === 'mr'
-            ? 'मोबाईल ब्राऊझर सुरक्षित नसलेल्या (HTTP) वायफाय पत्त्यावर थेट व्हिडिओ कॅमेरा ब्लॉक करतो. कृपया खालील "📷 मोबाईल कॅमेऱ्याने फोटो काढा व स्कॅन करा" बटण वापरा.'
-            : 'मोबाइल ब्राउज़र HTTP पते पर लाइव कैमरा ब्लॉक करता है। कृपया नीचे दिए "📷 फोटो खींचें और स्कैन करें" बटन का उपयोग करें।'
+            ? 'मोबाईल ब्राऊझर सुरक्षित नसलेल्या (HTTP) वायफाय पत्त्यावर थेट व्हिडिओ कॅमेरा ब्लॉक करतो. आम्ही तुमच्यासाठी थेट मोबाईल कॅमेरा फोटो स्कॅनर उघडत आहोत...'
+            : 'मोबाइल ब्राउज़र HTTP पते पर लाइव कैमरा ब्लॉक करता है। आपके लिए सीधे मोबाइल कैमरा फोटो स्कैनर खोला जा रहा है...'
         );
         setIsScanningCamera(false);
+        // Automatically launch native phone camera intent so user is never stuck
+        setTimeout(() => {
+          fileInputRef.current?.click();
+        }, 150);
         return;
       }
 
@@ -188,29 +193,78 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
         throw new Error('Camera API is not supported in this browser environment');
       }
 
-      let stream: MediaStream;
+      let stream: MediaStream | null = null;
+
+      // Tier 1: Ideal rear camera with HD resolution
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: facingMode === 'environment' ? { ideal: 'environment' } : 'user',
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 }
           },
           audio: false
         });
-      } catch (firstErr) {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false
-        });
+      } catch (err1) {
+        // Tier 2: Rear camera without resolution constraints
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: facingMode === 'environment' ? { ideal: 'environment' } : 'user'
+            },
+            audio: false
+          });
+        } catch (err2) {
+          // Tier 3: Search for rear camera in enumerateDevices
+          try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(d => d.kind === 'videoinput');
+            const rearDevice = videoDevices.find(d => {
+              const label = d.label.toLowerCase();
+              return label.includes('back') || label.includes('rear') || label.includes('environment');
+            });
+
+            if (rearDevice) {
+              stream = await navigator.mediaDevices.getUserMedia({
+                video: { deviceId: { exact: rearDevice.deviceId } },
+                audio: false
+              });
+            } else {
+              throw new Error('No explicit rear device found');
+            }
+          } catch (err3) {
+            // Tier 4: Universal fallback
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: true,
+              audio: false
+            });
+          }
+        }
+      }
+
+      if (!stream) {
+        throw new Error('Failed to acquire video stream');
       }
 
       streamRef.current = stream;
       videoElement.srcObject = stream;
       videoElement.setAttribute('playsinline', 'true');
+      videoElement.setAttribute('webkit-playsinline', 'true');
       videoElement.setAttribute('autoplay', 'true');
       videoElement.muted = true;
       await videoElement.play().catch(e => console.warn('Video play warning:', e));
+
+      // Attempt hardware continuous autofocus for mobile rear camera
+      try {
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack && videoTrack.applyConstraints) {
+          await videoTrack.applyConstraints({
+            advanced: [{ focusMode: 'continuous' } as any]
+          });
+        }
+      } catch (focusErr) {
+        // focusMode optional, ignore if unsupported
+      }
 
       // Wait briefly for video dimensions so canvas can capture valid frames
       if (videoElement.videoWidth === 0) {
@@ -679,6 +733,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                         <Camera className="w-4 h-4 text-white" />
                         <span>{language === 'mr' ? '📷 मोबाईल कॅमेऱ्याने फोटो काढा' : '📷 मोबाइल कैमरे से फोटो लें'}</span>
                         <input
+                          ref={fileInputRef}
                           type="file"
                           accept="image/*"
                           capture="environment"

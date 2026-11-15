@@ -99,18 +99,22 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
     try {
       // 1. Request user media stream
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        throw new Error('Camera API is not supported in this browser environment');
+      }
+
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: { ideal: facingMode },
+            facingMode: facingMode === 'environment' ? { ideal: 'environment' } : 'user',
             width: { ideal: 1280 },
             height: { ideal: 720 }
           },
           audio: false
         });
       } catch (firstErr) {
-        // Fallback to any available video stream
+        // Fallback for laptop / desktop webcams without facingMode constraints
         stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: false
@@ -129,24 +133,21 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       const capabilities: any = track?.getCapabilities ? track.getCapabilities() : {};
       setHasTorch(Boolean(capabilities?.torch));
 
-      // 2. Decode from stream using ZXing
+      // 2. Decode from playing video element using robust ZXing scan loop
       const codeReader = new BrowserMultiFormatReader();
       codeReaderRef.current = codeReader;
 
-      const controls = await codeReader.decodeFromStream(
-        stream,
-        videoElement,
-        (result) => {
-          if (result) {
-            const text = result.getText();
-            handleBarcodeDetected(text);
-          }
+      const controls = codeReader.scan(videoElement, (result, err) => {
+        if (result) {
+          const text = result.getText();
+          handleBarcodeDetected(text);
         }
-      );
+      });
 
       scannerControlsRef.current = controls;
       setIsCameraActive(true);
       setIsScanning(false);
+      setCameraError(null);
     } catch (err: any) {
       console.error('Camera access error:', err);
       const isPermissionDenied = err?.name === 'NotAllowedError' || err?.message?.includes('Permission');

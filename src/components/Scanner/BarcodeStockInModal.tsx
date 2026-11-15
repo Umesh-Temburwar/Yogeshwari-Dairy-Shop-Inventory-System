@@ -164,11 +164,15 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     }
 
     try {
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        throw new Error('Camera API is not supported in this browser environment');
+      }
+
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: { ideal: facingMode },
+            facingMode: facingMode === 'environment' ? { ideal: 'environment' } : 'user',
             width: { ideal: 1280 },
             height: { ideal: 720 }
           },
@@ -195,19 +199,16 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       const codeReader = new BrowserMultiFormatReader();
       codeReaderRef.current = codeReader;
 
-      const controls = await codeReader.decodeFromStream(
-        stream,
-        videoElement,
-        (result) => {
-          if (result) {
-            const text = result.getText();
-            handleBarcodeDetected(text);
-          }
+      const controls = codeReader.scan(videoElement, (result, err) => {
+        if (result) {
+          const text = result.getText();
+          handleBarcodeDetected(text);
         }
-      );
+      });
 
       scannerControlsRef.current = controls;
       setIsScanningCamera(true);
+      setCameraError(null);
     } catch (err: any) {
       console.error('Camera access error:', err);
       const isPermissionDenied = err?.name === 'NotAllowedError' || err?.message?.includes('Permission');

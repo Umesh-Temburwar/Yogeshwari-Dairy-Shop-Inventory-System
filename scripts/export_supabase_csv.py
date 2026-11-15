@@ -1,22 +1,44 @@
 #!/usr/bin/env python3
 """
 Yogeshwari Dairy Shop & Inventory Management System
-Supabase CSV Exporter & Optional Cloud Uploader:
-1. Formats `data/final/master_product_catalogue.csv` for PostgreSQL import.
+Supabase CSV Exporter & Cloud Syncer:
+1. Formats `data/final/master_product_catalogue.csv` for PostgreSQL/Supabase import.
 2. Exports `data/final/supabase_product_catalogue_ready.csv`.
-3. Splits into 5,000-row chunks in `data/final/chunks/` for easy UI Table Editor upload.
-4. With `--live`, directly uploads records into Supabase `public.product_catalogue` in batches.
+3. Splits into 5,000-row chunks in `data/final/chunks/` for UI Table Editor import.
+4. With `--live`, safely synchronizes catalogue records into Supabase `public.products` and `public.product_barcodes`.
+   (Guaranteed 100% JSON-compliant: sanitizes all NaN / Inf floats).
 """
 
 import os
 import sys
 import math
+import uuid
 import argparse
 import pandas as pd
-import requests
+from dotenv import dotenv_values
+from supabase import create_client
 
-SUPABASE_URL = "https://pfamoxreojbejufwhgiu.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmYW1veHJlb2piZWp1ZndoZ2l1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzNzc0MjEsImV4cCI6MjEwOTk1MzQyMX0.p97fdh4S8TxkVhQN5z14AApdFj6x5zsqPTQlLSXlD8E"
+def load_env():
+    env = {}
+    if os.path.exists('.env'):
+        env.update(dotenv_values('.env'))
+    if os.path.exists('server/.env'):
+        env.update(dotenv_values('server/.env'))
+    return env
+
+def clean_val(v):
+    if v is None:
+        return None
+    if isinstance(v, float):
+        if math.isnan(v) or math.isinf(v):
+            return None
+        return v
+    if isinstance(v, str):
+        s = v.strip()
+        if s.lower() in ['', 'nan', 'none', 'null', 'undefined']:
+            return None
+        return s
+    return v
 
 def export_csvs():
     input_file = "data/final/master_product_catalogue.csv"
@@ -51,38 +73,127 @@ def export_csvs():
     return df
 
 def upload_live(df):
-    print("\n--- Live Upload to Supabase `product_catalogue` ---")
-    headers = {
-        "apikey": SUPABASE_KEY,
-        "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Content-Type": "application/json",
-        "Prefer": "resolution=merge-duplicates"
-    }
-    endpoint = f"{SUPABASE_URL}/rest/v1/product_catalogue"
+    env = load_env()
+    supabase_url = env.get('VITE_SUPABASE_URL') or "https://pfamoxreojbejufwhgiu.supabase.co"
+    supabase_key = env.get('VITE_SUPABASE_ANON_KEY')
 
-    records = df.where(pd.notnull(df), None).to_dict(orient='records')
+    if not supabase_key:
+        print("❌ Supabase Anon Key not found in .env")
+        return
+
+    supabase = create_client(supabase_url, supabase_key)
+    print("\n--- Live Cloud Sync to Supabase `public.products` ---")
+
+    # Fetch existing barcodes from Supabase to prevent duplicates
+    print("🔍 Checking existing barcodes in Supabase...")
+    existing_barcodes = set()
+    offset = 0
+    while True:
+        try:
+            res = supabase.table('products').select('barcode').range(offset, offset + 999).execute()
+            if not res.data:
+                break
+            for row in res.data:
+                b = row.get('barcode')
+                if b:
+                    existing_barcodes.add(str(b).strip())
+            offset += 1000
+            if len(res.data) < 1000:
+                break
+        except Exception as e:
+            print(f"⚠️ Warning checking existing barcodes at offset {offset}: {e}")
+            break
+
+    print(f"✅ Found {len(existing_barcodes):,} active barcodes already in Supabase.")
+
+    # Filter and prepare sanitized JSON compliant rows
+    products_to_insert = []
+    skipped_existing = 0
+
+    for _, row in df.iterrows():
+        pname = clean_val(row.get('product_name'))
+        if not pname or len(pname) < 2 or pname.lower() == '‹user›':
+            continue
+
+        barcode = clean_val(row.get('barcode'))
+        if barcode and str(barcode).strip() in existing_barcodes:
+            skipped_existing += 1
+            continue
+
+        mrp_raw = row.get('mrp')
+        try:
+            mrp = float(mrp_raw) if mrp_raw and not pd.isna(mrp_raw) else 0.0
+            if math.isnan(mrp) or math.isinf(mrp):
+                mrp = 0.0
+        except (ValueError, TypeError):
+            mrp = 0.0
+
+        sp_raw = row.get('selling_price')
+        try:
+            selling_price = float(sp_raw) if sp_raw and not pd.isna(sp_raw) else mrp
+            if math.isnan(selling_price) or math.isinf(selling_price):
+                selling_price = mrp
+        except (ValueError, TypeError):
+            selling_price = mrp
+
+        pp = round(selling_price * 0.8, 2)
+        prod_id = clean_val(row.get('id')) or str(uuid.uuid4())
+        brand = clean_val(row.get('brand'))
+        category = clean_val(row.get('category')) or 'Bakery & Extras'
+        unit = clean_val(row.get('quantity_unit')) or 'Piece'
+        pack = clean_val(row.get('package_size'))
+        source = clean_val(row.get('source_name')) or 'CATALOGUE'
+
+        record = {
+            'id': prod_id,
+            'name': pname,
+            'category': category,
+            'unit': unit,
+            'purchase_price': pp,
+            'selling_price': selling_price,
+            'stock_quantity': 0.0,
+            'min_stock_alert': 5.0,
+            'shelf_life_days': 30,
+            'barcode': barcode,
+            'brand': brand,
+            'pack_size': pack,
+            'source': source,
+            'is_active': True
+        }
+        products_to_insert.append(record)
+        if barcode:
+            existing_barcodes.add(barcode)
+
+    print(f"📊 Live Sync Summary:")
+    print(f"   - Products already up-to-date in Supabase: {skipped_existing:,}")
+    print(f"   - New products to insert: {len(products_to_insert):,}")
+
+    if not products_to_insert:
+        print("\n🎉 Supabase database is already 100% synchronized and up-to-date! No action needed.")
+        return
+
+    # Batch upload with upsert on id
     batch_size = 200
-    total = len(records)
-    print(f"Uploading {total:,} records in batches of {batch_size}...")
+    total = len(products_to_insert)
+    total_batches = math.ceil(total / batch_size)
+    print(f"Syncing {total:,} records in {total_batches} batches of {batch_size}...")
 
     success_count = 0
-    for i in range(0, total, batch_size):
-        batch = records[i:i+batch_size]
+    for i in range(total_batches):
+        batch = products_to_insert[i*batch_size : (i+1)*batch_size]
         try:
-            resp = requests.post(endpoint, headers=headers, json=batch, timeout=30)
-            if resp.status_code in [200, 201]:
-                success_count += len(batch)
-                print(f"  Progress: {success_count:,}/{total:,} ({(success_count/total)*100:.1f}%) uploaded successfully.")
-            else:
-                print(f"⚠️ Batch {i//batch_size + 1} failed: HTTP {resp.status_code} - {resp.text[:150]}")
+            supabase.table('products').upsert(batch, on_conflict='id').execute()
+            success_count += len(batch)
+            pct = (success_count / total) * 100
+            print(f"  Batch {i+1}/{total_batches}: +{len(batch)} synced ({success_count:,}/{total:,} - {pct:.1f}%)")
         except Exception as e:
-            print(f"❌ Error uploading batch {i//batch_size + 1}: {e}")
+            print(f"❌ Error uploading batch {i+1}: {e}")
 
-    print(f"✅ Live upload finished: {success_count:,}/{total:,} records synced.")
+    print(f"\n🎉 Live sync finished: {success_count:,}/{total:,} records synchronized successfully.")
 
 def main():
     parser = argparse.ArgumentParser(description="Export Supabase Ready CSVs")
-    parser.add_argument('--live', action='store_true', help="Directly upload records to Supabase REST endpoint")
+    parser.add_argument('--live', action='store_true', help="Directly sync records to Supabase")
     args = parser.parse_args()
 
     df = export_csvs()

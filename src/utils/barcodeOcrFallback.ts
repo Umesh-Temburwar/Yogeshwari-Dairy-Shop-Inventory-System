@@ -98,11 +98,42 @@ export function extractCandidateBarcodeFromText(text: string): string | null {
 }
 
 /**
+ * Computes exact visible video viewport when rendered with CSS `object-cover`.
+ * Avoids coordinate mismatch on mobile portrait screens where camera stream is landscape (1280x720).
+ */
+export function getVideoVisibleCoordinates(video: HTMLVideoElement) {
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  const cw = video.clientWidth || 360;
+  const ch = video.clientHeight || 280;
+
+  const videoRatio = vw / vh;
+  const containerRatio = cw / ch;
+
+  let visibleW = vw;
+  let visibleH = vh;
+  let startX = 0;
+  let startY = 0;
+
+  if (videoRatio > containerRatio) {
+    visibleW = vh * containerRatio;
+    startX = (vw - visibleW) / 2;
+  } else {
+    visibleH = vw / containerRatio;
+    startY = (vh - visibleH) / 2;
+  }
+
+  return { startX, startY, visibleW, visibleH };
+}
+
+/**
  * Executes high-accuracy OCR extraction on the bottom numeric strip of a barcode
  * @param source HTMLVideoElement or HTMLCanvasElement
+ * @param mode 'strip' (bottom 45%) | 'full' (entire reticle box)
  */
 export async function performBarcodeOcrFallback(
-  source: HTMLVideoElement | HTMLCanvasElement
+  source: HTMLVideoElement | HTMLCanvasElement,
+  mode: 'strip' | 'full' = 'strip'
 ): Promise<OcrBarcodeResult> {
   try {
     const sw = source instanceof HTMLVideoElement ? source.videoWidth : source.width;
@@ -112,27 +143,40 @@ export async function performBarcodeOcrFallback(
       return { found: false, barcode: null, confidence: 0, rawText: '' };
     }
 
-    // Viewfinder reticle coordinates: matches on-screen green box (65% width, 55% height)
-    const reticleW = Math.round(sw * 0.65);
-    const reticleH = Math.round(sh * 0.55);
-    const reticleX = Math.round((sw - reticleW) / 2);
-    const reticleY = Math.round((sh - reticleH) / 2);
+    const { startX, startY, visibleW, visibleH } = source instanceof HTMLVideoElement
+      ? getVideoVisibleCoordinates(source)
+      : { startX: 0, startY: 0, visibleW: sw, visibleH: sh };
 
-    // Number strip: bottom 40% of the reticle box
-    const textStartY = reticleY + Math.round(reticleH * 0.55);
-    const textH = Math.round(reticleH * 0.45);
+    // Viewfinder reticle coordinates: matches on-screen green box (70% width, 55% height)
+    const reticleW = Math.round(visibleW * 0.70);
+    const reticleH = Math.round(visibleH * 0.55);
+    const reticleX = Math.round(startX + (visibleW - reticleW) / 2);
+    const reticleY = Math.round(startY + (visibleH - reticleH) / 2);
 
-    // Upscale onto canvas: minimum 800px width and 200px height for sharp OCR recognition
+    // Number strip: bottom 45% or full box depending on mode
+    const textStartY = mode === 'strip'
+      ? reticleY + Math.round(reticleH * 0.50)
+      : reticleY;
+    const textH = mode === 'strip'
+      ? Math.round(reticleH * 0.50)
+      : reticleH;
+
+    // Upscale onto canvas: minimum 800px width with 30px white margins for Tesseract line isolation
     const destW = 800;
-    const destH = Math.round((800 * textH) / reticleW) || 220;
+    const destH = Math.round((800 * textH) / reticleW) || 200;
+    const margin = 30;
 
     const ocrCanvas = document.createElement('canvas');
-    ocrCanvas.width = destW;
-    ocrCanvas.height = destH;
+    ocrCanvas.width = destW + margin * 2;
+    ocrCanvas.height = destH + margin * 2;
     const ctx = ocrCanvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) {
       return { found: false, barcode: null, confidence: 0, rawText: '' };
     }
+
+    // Fill stark white background for page segmentation
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, ocrCanvas.width, ocrCanvas.height);
 
     // High quality bicubic resampling
     ctx.imageSmoothingEnabled = true;
@@ -144,17 +188,17 @@ export async function performBarcodeOcrFallback(
       textStartY,
       reticleW,
       textH,
-      0,
-      0,
+      margin,
+      margin,
       destW,
       destH
     );
 
-    // 1. Dynamic Auto-Contrast Stretch (expands grey digits into black on white)
-    applyAutoContrastStretch(ctx, destW, destH);
+    // 1. Dynamic Auto-Contrast Stretch (brings out grey numbers on white/cream packaging)
+    applyAutoContrastStretch(ctx, ocrCanvas.width, ocrCanvas.height);
 
     // 2. Sharpening filter to restore crisp letterforms
-    applySharpenKernel(ctx, destW, destH, 0.7);
+    applySharpenKernel(ctx, ocrCanvas.width, ocrCanvas.height, 0.7);
 
     // Reusable Tesseract worker
     const worker = await getOcrWorker();
@@ -172,6 +216,11 @@ export async function performBarcodeOcrFallback(
         confidence: val.isValid ? 0.98 : 0.80,
         rawText
       };
+    }
+
+    // If strip mode didn't find, try full reticle mode once
+    if (mode === 'strip') {
+      return performBarcodeOcrFallback(source, 'full');
     }
 
     return { found: false, barcode: null, confidence: 0, rawText };

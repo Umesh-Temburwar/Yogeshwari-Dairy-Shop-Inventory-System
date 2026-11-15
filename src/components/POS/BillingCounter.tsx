@@ -1483,9 +1483,15 @@ export const BillingCounter: React.FC = () => {
             addToCart(prod, 1);
             setShowBarcodeScanner(false);
           } else {
-            alert(language === 'mr'
-              ? `हा माल सापडला: "${prod.name}", पण दुकानात शिल्लक साठा ० आहे. कृपया आधी 'बारकोड आवक' (Stock-In) करा.`
-              : `यह उत्पाद मिला: "${prod.name}", लेकिन स्टॉक 0 है। कृपया पहले स्टॉक आवक (Stock-In) करें।`);
+            const confirmBill = confirm(
+              language === 'mr'
+                ? `हा माल सापडला: "${prod.name}", पण सिस्टिममध्ये शिल्लक साठा ० आहे. तरीही बिलात १ नग जोडू का?`
+                : `यह उत्पाद मिला: "${prod.name}", लेकिन सिस्टम में स्टॉक 0 है। क्या बिल में 1 नग जोड़ना है?`
+            );
+            if (confirmBill) {
+              addToCart({ ...prod, stock_quantity: 999 }, 1);
+              setShowBarcodeScanner(false);
+            }
           }
         }}
         onBarcodeScanned={async (code) => {
@@ -1498,9 +1504,15 @@ export const BillingCounter: React.FC = () => {
                 addToCart(res.product, 1);
                 setShowBarcodeScanner(false);
               } else {
-                alert(language === 'mr'
-                  ? `हा माल सापडला: "${res.product.name}", पण दुकानात शिल्लक साठा ० आहे. कृपया आधी 'बारकोड आवक' (Stock-In) करा.`
-                  : `यह उत्पाद मिला: "${res.product.name}", लेकिन स्टॉक 0 है। कृपया पहले स्टॉक आवक (Stock-In) करें।`);
+                const confirmBill = confirm(
+                  language === 'mr'
+                    ? `हा माल सापडला: "${res.product.name}", पण सिस्टिममध्ये शिल्लक साठा ० आहे. तरीही बिलात १ नग जोडू का?`
+                    : `यह उत्पाद मिला: "${res.product.name}", लेकिन सिस्टम में स्टॉक 0 है। क्या बिल में 1 नग जोड़ना है?`
+                );
+                if (confirmBill) {
+                  addToCart({ ...res.product, stock_quantity: 999 }, 1);
+                  setShowBarcodeScanner(false);
+                }
               }
             }
           } catch (e) {}

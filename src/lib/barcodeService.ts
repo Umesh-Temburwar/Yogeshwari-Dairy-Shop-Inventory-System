@@ -213,6 +213,47 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
     console.warn('[BarcodeService] product_catalogue table lookup error:', err);
   }
 
+  // 5. Fifth attempt: Partial match on barcode substring or product name (for torn/damaged labels)
+  if (clean.length >= 4) {
+    try {
+      const { data: partData, error: partErr } = await supabase
+        .from('products')
+        .select('*')
+        .or(`barcode.ilike.%${clean}%,name.ilike.%${clean}%,marathi_name.ilike.%${clean}%`)
+        .limit(1);
+
+      if (!partErr && partData && partData.length > 0) {
+        const p = partData[0];
+        const prod: Product = {
+          id: p.id,
+          name: p.name,
+          hindi_name: p.hindi_name || undefined,
+          marathi_name: p.marathi_name || undefined,
+          category: (p.category as ProductCategory) || 'Bakery & Extras',
+          unit: (p.unit as ProductUnit) || 'Piece',
+          purchase_price: Number(p.purchase_price || 0),
+          selling_price: Number(p.selling_price || 0),
+          stock_quantity: Number(p.stock_quantity || 0),
+          min_stock_alert: Number(p.min_stock_alert || 5),
+          shelf_life_days: Number(p.shelf_life_days || 7),
+          brand: p.brand || undefined,
+          barcode: p.barcode || clean,
+          is_active: p.is_active ?? true,
+          created_at: p.created_at || new Date().toISOString()
+        };
+        return {
+          found: true,
+          product: prod,
+          barcode: p.barcode || clean,
+          source: 'products',
+          validation: validateBarcode(p.barcode || clean)
+        };
+      }
+    } catch (err) {
+      console.warn('[BarcodeService] partial search fallback error:', err);
+    }
+  }
+
   return {
     found: false,
     product: null,

@@ -70,9 +70,18 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [diagnosticsLogs, setDiagnosticsLogs] = useState<string[]>([]);
   const [isOcrRunning, setIsOcrRunning] = useState(false);
-  const [showOcrButton, setShowOcrButton] = useState(false);
+  const [showOcrButton, setShowOcrButton] = useState(true);
+  const [scanTarget, setScanTarget] = useState<'barcode' | 'numbers'>('barcode');
   const [validationResult, setValidationResult] = useState<BarcodeValidationResult | null>(null);
   const [matchedSource, setMatchedSource] = useState<'product_barcodes' | 'products' | 'rpc' | 'local' | 'catalogue' | null>(null);
+
+  // Auto-search when user types complete barcode digits
+  useEffect(() => {
+    const clean = barcodeInput.trim();
+    if ((clean.length === 12 || clean.length === 13) && /^\d+$/.test(clean)) {
+      lookupBarcode(clean);
+    }
+  }, [barcodeInput]);
 
   // Matched / Selected Product
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -436,7 +445,8 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     if (!videoRef.current || isOcrRunning) return;
     setIsOcrRunning(true);
     try {
-      const ocrRes = await performBarcodeOcrFallback(videoRef.current);
+      const mode = scanTarget === 'numbers' ? 'strip' : 'full';
+      const ocrRes = await performBarcodeOcrFallback(videoRef.current, mode);
       if (ocrRes.found && ocrRes.barcode) {
         if (scannerControlsRef.current) {
           scannerControlsRef.current.stop();
@@ -445,8 +455,8 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       } else {
         alert(
           language === 'mr'
-            ? 'बारकोड क्रमांक ओळखता आला नाही. कृपया बारकोड थेट प्रकाशात आणा किंवा हाताने नंबर टाका.'
-            : 'बारकोड संख्या पहचानी नहीं जा सकी। कृपया रोशनी में लाएं या बारकोड संख्या टाइप करें।'
+            ? 'संख्या वाचता आली नाही. कृपया खाली बारकोड नंबर टाईप करा.'
+            : 'संख्या पहचानी नहीं जा सकी। कृपया नीचे बारकोड नंबर टाइप करें।'
         );
       }
     } catch (err) {
@@ -458,7 +468,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
 
   useEffect(() => {
     if (isOpen && step === 'scan') {
-      setShowOcrButton(false);
+      setShowOcrButton(true);
       startCamera();
     } else {
       stopCamera();
@@ -807,18 +817,44 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                   </div>
                 )}
 
-                {/* Aiming Reticle with Fluid Sweeping Laser Beam */}
+                {/* Aiming Reticle: Adapts to Barcode vs Number Mode */}
                 {isScanningCamera && (
-                  <div className="absolute inset-x-12 inset-y-8 border-2 border-emerald-400/90 rounded-2xl pointer-events-none overflow-hidden relative shadow-[0_0_0_9999px_rgba(0,0,0,0.55)]">
-                    <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#34d399] animate-scanner-sweep" />
-                    <div className="absolute top-2 left-0 right-0 text-center text-[10px] font-bold text-white tracking-wider uppercase bg-emerald-800/90 rounded-md py-0.5 px-2 max-w-fit mx-auto shadow-sm">
-                      {language === 'mr' ? 'बारकोड चौकटीत धरा' : 'बारकोड फ्रेम में रखें'}
-                    </div>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    {scanTarget === 'numbers' ? (
+                      <div className="w-72 h-20 border-2 border-amber-400/90 rounded-2xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] overflow-hidden">
+                        <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent shadow-[0_0_12px_#fbbf24] animate-scanner-sweep pointer-events-none" />
+                        <div className="absolute top-1.5 left-0 right-0 text-center text-[10px] font-bold text-slate-950 tracking-wider uppercase bg-amber-400 rounded-md py-0.5 px-2.5 max-w-fit mx-auto shadow-sm">
+                          {language === 'mr' ? '🔢 बारकोड खालील नंबर येथे धरा' : '🔢 बारकोड के नीचे के नंबर यहां रखें'}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-64 h-36 border-2 border-emerald-400/90 rounded-2xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] overflow-hidden">
+                        <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#34d399] animate-scanner-sweep pointer-events-none" />
+                        <div className="absolute top-2 left-0 right-0 text-center text-[10px] font-bold text-white tracking-wider uppercase bg-emerald-800/90 rounded-md py-0.5 px-2.5 max-w-fit mx-auto shadow-sm">
+                          {language === 'mr' ? 'बारकोड चौकटीत धरा' : 'बारकोड फ्रेम में रखें'}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {/* Floating Viewfinder Controls */}
                 <div className="absolute top-3 right-3 flex items-center gap-2 z-20">
+                  {isScanningCamera && (
+                    <button
+                      type="button"
+                      onClick={() => setScanTarget(prev => (prev === 'barcode' ? 'numbers' : 'barcode'))}
+                      className={`px-2.5 py-1.5 rounded-xl backdrop-blur-md border text-xs font-black transition flex items-center gap-1 shadow-lg ${
+                        scanTarget === 'numbers'
+                          ? 'bg-amber-400 text-slate-900 border-amber-300'
+                          : 'bg-black/60 text-white border-white/20 hover:bg-black/80'
+                      }`}
+                      title={scanTarget === 'barcode' ? 'खराब बारकोड नंबर स्कॅन' : 'पट्टे स्कॅन'}
+                    >
+                      <span>{scanTarget === 'numbers' ? '🔢 नंबर' : '條 पट्टे'}</span>
+                    </button>
+                  )}
+
                   {hasTorch && isScanningCamera && (
                     <button
                       type="button"

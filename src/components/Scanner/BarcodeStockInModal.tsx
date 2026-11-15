@@ -731,11 +731,24 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                     className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-base focus:ring-2 focus:ring-emerald-500 outline-none"
                     autoFocus
                   />
+                  <label
+                    title={language === 'mr' ? 'मोबाईल कॅमेऱ्याने फोटो काढून स्कॅन करा' : 'मोबाइल कैमरे से फोटो खींचकर स्कैन करें'}
+                    className="px-4 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white rounded-xl flex items-center justify-center cursor-pointer shadow-md active:scale-95 transition shrink-0"
+                  >
+                    <Camera className="w-5 h-5" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
+                  </label>
                   <button
                     type="button"
                     onClick={() => lookupBarcode(barcodeInput)}
                     disabled={!barcodeInput.trim()}
-                    className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl flex items-center gap-2 disabled:opacity-50 transition-all shadow-md"
+                    className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl flex items-center gap-2 disabled:opacity-50 transition-all shadow-md shrink-0"
                   >
                     <Search className="w-4 h-4" />
                     {language === 'mr' ? 'शोधा' : 'खोजें'}

@@ -495,9 +495,23 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
               placeholder={language === 'mr' ? 'किंवा बारकोड नंबर टाईप करा...' : 'या बारकोड संख्या टाइप करें...'}
               className="flex-1 px-3 py-2 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
+            <label
+              title={language === 'mr' ? 'मोबाईल कॅमेऱ्याने फोटो काढून स्कॅन करा' : 'मोबाइल कैमरे से फोटो खींचकर स्कैन करें'}
+              className="px-3 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition active:scale-95 shadow-xs cursor-pointer shrink-0"
+            >
+              <Camera className="w-4 h-4" />
+              <span>{language === 'mr' ? 'फोटो' : 'फोटो'}</span>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+            </label>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs"
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs shrink-0"
             >
               <Search className="w-4 h-4" />
               <span className="hidden sm:inline">{language === 'mr' ? 'शोधा' : 'खोजें'}</span>

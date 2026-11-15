@@ -103,6 +103,21 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     }
 
     try {
+      // Check for WebRTC Secure Context (Mobile Chrome blocks getUserMedia on plain HTTP over LAN IP)
+      const isSecure = typeof window !== 'undefined'
+        ? (window.isSecureContext ?? (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+        : true;
+
+      if (!isSecure && (!navigator?.mediaDevices || !navigator?.mediaDevices?.getUserMedia)) {
+        setCameraError(
+          language === 'mr'
+            ? 'मोबाईल ब्राऊझर सुरक्षित नसलेल्या (HTTP) वायफाय पत्त्यावर थेट व्हिडिओ कॅमेरा ब्लॉक करतो. कृपया खालील "📷 मोबाईल कॅमेऱ्याने फोटो काढा व स्कॅन करा" बटण वापरा.'
+            : 'मोबाइल ब्राउज़र HTTP पते पर लाइव कैमरा ब्लॉक करता है। कृपया नीचे दिए "📷 फोटो खींचें और स्कैन करें" बटन का उपयोग करें।'
+        );
+        setIsScanning(false);
+        return;
+      }
+
       // 1. Request user media stream
       if (!navigator?.mediaDevices?.getUserMedia) {
         throw new Error('Camera API is not supported in this browser environment');
@@ -423,20 +438,11 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                 </p>
               </div>
 
-              {/* Action Buttons: Enable Live Camera OR Upload Barcode Photo */}
-              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={startCamera}
-                  className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-900/40 flex items-center gap-2 active:scale-95 transition"
-                >
-                  <Video className="w-4 h-4" />
-                  <span>{language === 'mr' ? '🎥 कॅमेरा सुरू करा' : '🎥 कैमरा शुरू करें'}</span>
-                </button>
-
-                <label className="cursor-pointer px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs border border-slate-700 shadow-md flex items-center gap-2 active:scale-95 transition">
-                  <Camera className="w-4 h-4 text-emerald-400" />
-                  <span>{language === 'mr' ? '📷 फोटो निवडा / काढा' : '📷 फोटो खींचें / अपलोड करें'}</span>
+              {/* Action Buttons: Enable Live Camera OR Direct Mobile Camera Photo */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-1 w-full max-w-sm">
+                <label className="w-full sm:w-auto cursor-pointer px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2 active:scale-95 transition">
+                  <Camera className="w-4 h-4 text-white" />
+                  <span>{language === 'mr' ? '📷 मोबाईल कॅमेऱ्याने फोटो काढा' : '📷 मोबाइल कैमरे से फोटो लें'}</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -445,14 +451,24 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                     onChange={handleImageUpload}
                   />
                 </label>
+
+                <button
+                  type="button"
+                  onClick={startCamera}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 shadow-md flex items-center justify-center gap-2 active:scale-95 transition"
+                >
+                  <Video className="w-4 h-4 text-emerald-400" />
+                  <span>{language === 'mr' ? '🎥 पुन्हा प्रयत्न करा' : '🎥 पुनः प्रयास करें'}</span>
+                </button>
               </div>
 
-              {/* Permission Unblock Helper Tip */}
-              {cameraError && cameraError.includes('परवानगी') && (
-                <div className="mt-2 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[11px] text-amber-200 max-w-sm text-left space-y-1">
-                  <p className="font-bold text-amber-300">💡 कॅमेरा कसा सुरू कराल?</p>
-                  <p>१. वर ब्राऊझर पत्त्याजवळ (URL) <strong>🔒 कुलूपावर</strong> क्लिक करा.</p>
-                  <p>२. <strong>Camera</strong> समोर <strong>"Allow"</strong> निवडा आणि पेज रिफ्रेश करा.</p>
+              {/* Mobile HTTP Security Help Box */}
+              {cameraError && (
+                <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[11px] text-amber-200 max-w-sm text-left space-y-1.5 leading-relaxed">
+                  <p className="font-bold text-amber-300">💡 मोबाईलवर कॅमेरा परवानगी का येत नाही?</p>
+                  <p>मोबाईल ब्राउझर (Chrome/Safari) सुरक्षेसाठी <strong>HTTP (10.63.238.67)</strong> वर थेट व्हिडिओ बंद ठेवतो.</p>
+                  <p className="font-semibold text-emerald-300">✓ उपाय १: वरील "मोबाईल कॅमेऱ्याने फोटो काढा" बटण वापरा (हे कोणत्याही सेटिंगशिवाय लगेच काम करते).</p>
+                  <p className="font-semibold text-sky-300">✓ उपाय २: मोबाईल Chrome मध्ये <code>chrome://flags</code> उघडून <code>unsafely-treat-insecure-origin-as-secure</code> मध्ये <code>http://10.63.238.67:5173</code> टाका आणि Enable करा.</p>
                 </div>
               )}
             </div>

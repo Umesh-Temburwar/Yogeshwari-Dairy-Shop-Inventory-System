@@ -173,12 +173,12 @@ const MainContent: React.FC = () => {
           onOpenAppDownload={() => setIsAppDownloadOpen(true)}
         />
 
-        {/* Main Content Area - pb-24 on mobile prevents bottom nav overlap */}
+        {/* Main Content Area - pb-28 on mobile prevents bottom nav & floating POS button overlap */}
         <main 
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          className="flex-1 h-full p-3 sm:p-6 min-w-0 overflow-y-auto pb-24 lg:pb-6 overscroll-y-auto relative"
+          className="flex-1 h-full p-2.5 sm:p-6 min-w-0 overflow-y-auto pb-28 lg:pb-6 overscroll-y-auto relative"
         >
           {/* Mobile Pull-to-Refresh Indicator */}
           {(isPulling || (isSyncing && pullY > 0)) && (

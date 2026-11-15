@@ -263,7 +263,7 @@ export const ProductList: React.FC<ProductListProps> = ({
         { label: isMr ? 'एकूण उत्पादने' : isHi ? 'कुल उत्पाद संख्या' : 'Total SKUs', value: `${products.length}`, color: 'emerald' },
         { label: isMr ? 'खरेदीनुसार साठा मूल्य' : isHi ? 'खरीद भाव अनुसार स्टॉक मूल्य' : 'Cost Valuation', value: `₹${totalStockCostValuation.toLocaleString('en-IN')}`, color: 'blue' },
         { label: isMr ? 'विक्रीनुकसार साठा मूल्य' : isHi ? 'बिक्री भाव अनुसार स्टॉक मूल्य' : 'Retail Valuation', value: `₹${totalStockRetailValuation.toLocaleString('en-IN')}`, color: 'purple' },
-        { label: isMr ? 'कमी साठा उत्पादने' : isHi ? 'कम स्टॉक उत्पाद' : 'Low Stock Items', value: `${lowStockCount + outOfStockCount}`, color: 'rose' }
+        { label: isMr ? 'कमी साठा उत्पादने' : isHi ? 'कम स्टॉक उत्पाद' : 'Low Stock Items', value: `${lowStockCount}`, color: 'rose' }
       ],
       table: {
         headers: isMr 
@@ -386,151 +386,169 @@ export const ProductList: React.FC<ProductListProps> = ({
     setShowQuickAdd(false);
   };
 
+  const { metrics } = useStore();
+  const {
+    expiredBatchesCount,
+    expiringTodayBatchesCount,
+    expiringTomorrowBatchesCount,
+    expiring3DaysBatchesCount,
+    freshBatchesCount,
+    totalActiveBatches
+  } = metrics;
+
+  // Pagination / Lazy-Loading for 46,000+ catalog items (prevents mobile UI freezing)
+  const INITIAL_PAGE_SIZE = 40;
+  const [displayLimit, setDisplayLimit] = useState(INITIAL_PAGE_SIZE);
+
+  // Reset display limit when user filters or searches
+  useEffect(() => {
+    setDisplayLimit(INITIAL_PAGE_SIZE);
+  }, [searchQuery, selectedCategory, selectedExpiryFilter, inventoryViewTab]);
+
+  const visibleProducts = useMemo(() => {
+    return filteredProducts.slice(0, displayLimit);
+  }, [filteredProducts, displayLimit]);
+
+  const hasMore = displayLimit < filteredProducts.length;
+
+  const handleLoadMore = () => {
+    setDisplayLimit((prev) => Math.min(prev + INITIAL_PAGE_SIZE, filteredProducts.length));
+  };
+
+  const statusTabs: Array<{
+    key: 'IN_STOCK' | 'CATALOGUE' | 'OUT_OF_STOCK' | 'LOW_STOCK';
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    count: string;
+    iconColor: string;
+  }> = [
+    {
+      key: 'IN_STOCK',
+      label: language === 'mr' ? 'उपलब्ध साठा' : language === 'hi' ? 'उपलब्ध स्टॉक' : 'Current Inventory',
+      icon: Package,
+      count: inStockCount.toLocaleString('en-IN'),
+      iconColor: 'text-emerald-600 dark:text-emerald-400'
+    },
+    {
+      key: 'CATALOGUE',
+      label: language === 'mr' ? 'सर्व कॅटलॉग' : language === 'hi' ? 'उत्पाद कैटलॉग' : 'Product Catalogue',
+      icon: Layers,
+      count: totalCatalogueCount.toLocaleString('en-IN'),
+      iconColor: 'text-blue-600 dark:text-blue-400'
+    },
+    {
+      key: 'OUT_OF_STOCK',
+      label: language === 'mr' ? 'साठा संपला' : language === 'hi' ? 'स्टॉक समाप्त' : 'Out of Stock',
+      icon: MinusCircle,
+      count: outOfStockCount.toLocaleString('en-IN'),
+      iconColor: 'text-rose-600 dark:text-rose-400'
+    },
+    {
+      key: 'LOW_STOCK',
+      label: language === 'mr' ? 'कमी साठा' : language === 'hi' ? 'कम स्टॉक' : 'Low Stock',
+      icon: AlertTriangle,
+      count: lowStockCount.toLocaleString('en-IN'),
+      iconColor: 'text-amber-600 dark:text-amber-400'
+    }
+  ];
+
+  const expiryFilterOptions: Array<{
+    id: ExpiryStatus | 'ALL';
+    label: string;
+    count?: number;
+  }> = [
+    {
+      id: 'ALL',
+      label: language === 'mr' ? 'सर्व' : language === 'hi' ? 'सभी' : 'All',
+      count: totalActiveBatches
+    },
+    {
+      id: 'EXPIRED',
+      label: language === 'mr' ? '🔴 कालबाह्य' : language === 'hi' ? '🔴 एक्सपायर्ड' : '🔴 Expired',
+      count: expiredBatchesCount
+    },
+    {
+      id: 'EXPIRING_TODAY',
+      label: language === 'mr' ? '🟠 आज' : language === 'hi' ? '🟠 आज' : '🟠 Today',
+      count: expiringTodayBatchesCount
+    },
+    {
+      id: 'EXPIRING_TOMORROW',
+      label: language === 'mr' ? '🟡 उद्या' : language === 'hi' ? '🟡 कल' : '🟡 Tomorrow',
+      count: expiringTomorrowBatchesCount
+    },
+    {
+      id: 'EXPIRING_IN_3_DAYS',
+      label: language === 'mr' ? '🟢 ३ दिवस' : language === 'hi' ? '🟢 3 दिन' : '🟢 3 Days',
+      count: expiring3DaysBatchesCount
+    },
+    {
+      id: 'FRESH',
+      label: language === 'mr' ? '🔵 ताजा' : language === 'hi' ? '🔵 ताज़ा' : '🔵 Fresh',
+      count: freshBatchesCount
+    }
+  ];
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-3 px-1 sm:px-0 pb-32 sm:pb-8 max-w-5xl mx-auto">
       
-      {/* SIMPLE HEADER BAR */}
-      <div className="bg-white dark:bg-[#131F1B] p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 rounded-xl border border-emerald-200 dark:border-emerald-800/40">
-              <Package className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                {language === 'mr' ? 'दुकान माल व साठा (Inventory)' : language === 'hi' ? 'दुकान का माल और स्टॉक (Inventory)' : 'Dairy Stock & Inventory'}
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
-                {language === 'mr' ? 'एकदम सोपे: माल आला की (+) दाबा, माल संपला की (-) दाबा' : language === 'hi' ? 'एकदम सरल: माल आया तो (+) दबाएं, बिका तो (-) दबाएं' : 'Simple: click (+) for Stock In, (-) for Stock Out'}
-              </p>
-            </div>
+      {/* 1. COMPACT PAGE HEADER (ONE ROW) */}
+      <div className="flex items-center justify-between gap-3 bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="p-2 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400 rounded-xl border border-emerald-200 dark:border-emerald-800/40 shrink-0">
+            <Package className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight truncate">
+              {language === 'mr' ? 'दुकान माल व साठा' : language === 'hi' ? 'दुकान का माल और स्टॉक' : 'Dairy Stock & Inventory'}
+            </h1>
+            <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium truncate hidden sm:block">
+              {language === 'mr' ? 'एकदम सोपे: माल आला (+) दाबा, माल संपला (-) दाबा' : language === 'hi' ? 'सरल: माल आया (+) दबाएं, बिका (-) दबाएं' : 'Simple: (+) for Stock In, (-) for Stock Out'}
+            </p>
           </div>
         </div>
 
-        {/* View Toggle & Add Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
-          
-          {/* Card / Table Switcher */}
-          <div className="flex items-center bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl border border-slate-200 dark:border-[#24352F]">
-            <button
-              onClick={() => setViewMode('cards')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                viewMode === 'cards' ? 'bg-white dark:bg-[#131F1B] text-emerald-800 dark:text-emerald-400 shadow-xs border dark:border-[#24352F]' : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>{language === 'mr' ? 'सोपा कार्ड व्ह्यू' : language === 'hi' ? 'सरल कार्ड व्यू' : 'Simple Cards'}</span>
-            </button>
-
-            <button
-              onClick={() => setViewMode('table')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                viewMode === 'table' ? 'bg-white dark:bg-[#131F1B] text-emerald-800 dark:text-emerald-400 shadow-xs border dark:border-[#24352F]' : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <List className="w-3.5 h-3.5" />
-              <span>{language === 'mr' ? 'यादी व्ह्यू' : language === 'hi' ? 'लिस्ट व्यू' : 'Table View'}</span>
-            </button>
-          </div>
-
-          {/* Quick Alert pill */}
-          {(lowStockCount + outOfStockCount) > 0 && (
-            <button
-              onClick={() => setActiveView('reorder')}
-              className="flex items-center gap-1 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 text-xs font-black animate-pulse"
-            >
-              <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-              <span>{lowStockCount + outOfStockCount} {language === 'mr' ? 'माल संपत आला' : language === 'hi' ? 'माल खत्म हो रहा है' : 'items running low'}</span>
-            </button>
-          )}
-
-          {/* View PDF Button */}
-          <button
-            onClick={handleViewStockPDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
-            title="View Stock Valuation PDF"
-          >
-            <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-          </button>
-
-          {/* Print PDF Button */}
-          <button
-            onClick={handlePrintStockPDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
-            title="Print Stock Valuation Report"
-          >
-            <Printer className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-          </button>
-
-          {/* PDF Download Button */}
-          <button
-            onClick={handleDownloadStockPDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition-all border border-emerald-300 dark:border-emerald-700/60 active:scale-95"
-            title="Download Stock Valuation PDF"
-          >
-            <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>{language === 'mr' ? 'साठा PDF' : language === 'hi' ? 'स्टॉक PDF' : 'Stock PDF'}</span>
-          </button>
-
-          {/* Barcode Stock-In Inward Button */}
-          <button
-            onClick={() => setShowBarcodeStockIn(true)}
-            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/20 active:scale-95"
-            title="Scan & Stock In"
-          >
-            <Barcode className="w-4 h-4" />
-            <span>{language === 'mr' ? 'बारकोड आवक (Stock-In)' : language === 'hi' ? 'बारकोड स्टॉक आवक' : 'Barcode Stock-In'}</span>
-          </button>
-
-          {/* Product Image Database Manager Button */}
-          <button
-            onClick={() => setShowImageManager(true)}
-            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800/50 text-purple-700 dark:text-purple-300 text-xs font-bold transition-all shadow-xs active:scale-95"
-            title="Product Image Database Manager"
-          >
-            <ImageIcon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-            <span>{language === 'mr' ? 'फोटो डेटाबेस (Images)' : 'फोटो डेटाबेस (Images)'}</span>
-          </button>
-
-          {/* New Product Button */}
-          <button
-            onClick={() => exportProductsToCSV(filteredProducts, language as any)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-emerald-400 text-xs font-bold transition-all shadow-xs active:scale-95"
-            title={language === 'mr' ? 'सर्व मालाचा अहवाल Excel/CSV डाउनलोड करा' : 'Export Products to CSV/Excel'}
-          >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="hidden sm:inline">CSV / Excel</span>
-          </button>
-
-          <button
-            onClick={() => setShowQuickAdd(!showQuickAdd)}
-            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{language === 'mr' ? 'नवीन माल जोडा' : language === 'hi' ? 'नया माल जोड़ें' : 'Add New Product'}</span>
-          </button>
-        </div>
+        {/* Single + Add Primary Button */}
+        <button
+          type="button"
+          onClick={() => setShowQuickAdd((prev) => !prev)}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs shadow-sm shadow-emerald-600/20 transition-all shrink-0 cursor-pointer"
+        >
+          <Plus className="w-4 h-4" />
+          <span>{language === 'mr' ? '+ नवीन माल' : language === 'hi' ? '+ नया माल' : '+ Add'}</span>
+        </button>
       </div>
 
       {/* QUICK INLINE ADD PRODUCT FORM (Expandable in 1 tap) */}
       {showQuickAdd && (
-        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 dark:from-[#131F1B] dark:to-[#1A2A25] p-4 sm:p-5 rounded-3xl border border-emerald-200 dark:border-[#24352F] shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 dark:from-[#131F1B] dark:to-[#1A2A25] p-3.5 sm:p-5 rounded-2xl border border-emerald-200 dark:border-[#24352F] shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex items-center justify-between mb-3 border-b border-emerald-200 dark:border-[#24352F] pb-2">
-            <h3 className="font-extrabold text-emerald-950 dark:text-emerald-300 text-sm flex items-center gap-2">
+            <h3 className="font-extrabold text-emerald-950 dark:text-emerald-300 text-xs sm:text-sm flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>{language === 'mr' ? 'फक्त १ मिनिटात नवीन माल जोडा' : language === 'hi' ? 'सिर्फ 1 मिनट में नया माल जोड़ें' : 'Add New Product in 1 Minute'}</span>
             </h3>
-            <button onClick={() => setShowQuickAdd(false)} className="text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white">
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button 
+                type="button" 
+                onClick={onOpenAddProduct} 
+                className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 underline hover:text-emerald-800"
+              >
+                {language === 'mr' ? 'पूर्ण फॉर्म →' : language === 'hi' ? 'विस्तृत फॉर्म →' : 'Full Form →'}
+              </button>
+              <button 
+                type="button"
+                onClick={() => setShowQuickAdd(false)} 
+                className="text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          <form onSubmit={handleQuickAddSubmit} className="grid grid-cols-2 sm:grid-cols-6 gap-3 items-end">
+          <form onSubmit={handleQuickAddSubmit} className="grid grid-cols-2 sm:grid-cols-6 gap-2.5 items-end">
             <div className="col-span-2">
               <label className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
-                {language === 'mr' ? 'मालाचे नाव (उदा. मलाई पनीर) *' : language === 'hi' ? 'माल का नाम (उदा. मलाई पनीर) *' : 'Product Name (e.g. Malai Paneer) *'}
+                {language === 'mr' ? 'मालाचे नाव *' : language === 'hi' ? 'माल का नाम *' : 'Product Name *'}
               </label>
               <input
                 type="text"
@@ -544,7 +562,7 @@ export const ProductList: React.FC<ProductListProps> = ({
 
             <div>
               <label className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
-                {language === 'mr' ? 'प्रवर्ग (Category)' : language === 'hi' ? 'केटेगरी' : 'Category'}
+                {language === 'mr' ? 'प्रवर्ग' : language === 'hi' ? 'केटेगरी' : 'Category'}
               </label>
               <select
                 value={quickCategory}
@@ -562,7 +580,7 @@ export const ProductList: React.FC<ProductListProps> = ({
 
             <div>
               <label className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
-                {language === 'mr' ? 'एकक (Unit)' : language === 'hi' ? 'नाप (Unit)' : 'Unit'}
+                {language === 'mr' ? 'एकक' : language === 'hi' ? 'नाप' : 'Unit'}
               </label>
               <select
                 value={quickUnit}
@@ -578,13 +596,13 @@ export const ProductList: React.FC<ProductListProps> = ({
 
             <div>
               <label className="text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
-                {language === 'mr' ? 'विक्री भाव (₹ Rate) *' : language === 'hi' ? 'बिक्री भाव (₹ Rate) *' : 'Selling Price (₹ Rate) *'}
+                {language === 'mr' ? 'विक्री भाव (₹) *' : language === 'hi' ? 'बिक्री भाव (₹) *' : 'Selling Price (₹) *'}
               </label>
               <input
                 type="number"
                 step="0.01"
                 required
-                placeholder={language === 'mr' ? 'उदा. 70' : language === 'hi' ? 'उदा. 70' : 'e.g. 70'}
+                placeholder="70"
                 value={quickSellPrice}
                 onChange={(e) => setQuickSellPrice(e.target.value)}
                 className="w-full px-2.5 py-2 rounded-xl bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-[#24352F] text-xs font-black text-emerald-900 dark:text-emerald-400 focus:outline-none"
@@ -594,7 +612,7 @@ export const ProductList: React.FC<ProductListProps> = ({
             <div className="col-span-2 sm:col-span-1">
               <button
                 type="submit"
-                className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
+                className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
               >
                 {language === 'mr' ? 'जतन करा' : language === 'hi' ? 'जोड़ें' : 'Save'}
               </button>
@@ -603,91 +621,191 @@ export const ProductList: React.FC<ProductListProps> = ({
         </div>
       )}
 
-      {/* INVENTORY VS CATALOGUE VIEW TABS (PHASE 8) */}
-      <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 dark:bg-[#1A2A25] rounded-2xl border border-slate-200 dark:border-[#24352F]">
+      {/* 2. QUICK ACTIONS ROW (ONE HORIZONTALLY SCROLLABLE ROW) */}
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-none snap-x py-0.5 px-0.5 -mx-0.5">
+        
+        {/* Chip 1: Barcode Stock-In (Primary filled green) */}
         <button
-          onClick={() => setInventoryViewTab('IN_STOCK')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-            inventoryViewTab === 'IN_STOCK'
-              ? 'bg-emerald-600 text-white shadow-md'
-              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+          type="button"
+          onClick={() => setShowBarcodeStockIn(true)}
+          className="h-10 shrink-0 snap-start px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+          title="Scan & Stock In"
+        >
+          <Barcode className="w-4 h-4 shrink-0" />
+          <span>{language === 'mr' ? 'बारकोड आवक' : language === 'hi' ? 'बारकोड आवक' : 'Barcode Stock-In'}</span>
+        </button>
+
+        {/* Chip 2: Stock PDF */}
+        <button
+          type="button"
+          onClick={handleDownloadStockPDF}
+          className="h-10 shrink-0 snap-start px-3.5 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] active:scale-95 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#24352F] text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
+          title="Download Stock Valuation PDF"
+        >
+          <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <span>{language === 'mr' ? 'साठा PDF' : language === 'hi' ? 'स्टॉक PDF' : 'Stock PDF'}</span>
+        </button>
+
+        {/* Chip 3: Print */}
+        <button
+          type="button"
+          onClick={handlePrintStockPDF}
+          className="h-10 shrink-0 snap-start px-3.5 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] active:scale-95 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#24352F] text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
+          title="Print Stock Valuation Report"
+        >
+          <Printer className="w-4 h-4 text-slate-500 dark:text-[#8FA69C] shrink-0" />
+          <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+        </button>
+
+        {/* Chip 4: Photo Database (Images) */}
+        <button
+          type="button"
+          onClick={() => setShowImageManager(true)}
+          className="h-10 shrink-0 snap-start px-3.5 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-purple-50/50 dark:hover:bg-purple-950/30 active:scale-95 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#24352F] text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
+          title="Product Image Database Manager"
+        >
+          <ImageIcon className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+          <span>{language === 'mr' ? 'फोटो डेटाबेस' : language === 'hi' ? 'फोटो डेटाबेस' : 'Photo Database'}</span>
+        </button>
+
+        {/* Chip 5: Report/doc icon (CSV / Excel) */}
+        <button
+          type="button"
+          onClick={() => exportProductsToCSV(filteredProducts, language as any)}
+          className="h-10 shrink-0 snap-start px-3.5 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] active:scale-95 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#24352F] text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
+          title={language === 'mr' ? 'सर्व मालाचा अहवाल Excel/CSV डाउनलोड करा' : 'Export Products to CSV/Excel'}
+        >
+          <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <span>CSV / Excel</span>
+        </button>
+
+        {/* Chip 6: Show/Hide Eye (View PDF) */}
+        <button
+          type="button"
+          onClick={handleViewStockPDF}
+          className="h-10 shrink-0 snap-start px-3.5 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] active:scale-95 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#24352F] text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
+          title="View Stock Valuation PDF"
+        >
+          <Eye className="w-4 h-4 text-slate-500 dark:text-[#8FA69C] shrink-0" />
+          <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View PDF'}</span>
+        </button>
+
+      </div>
+
+      {/* 3. VIEW TOGGLE: SEGMENTED CONTROL (FULL WIDTH, 2 EQUAL HALVES) */}
+      <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-[#1A2A25] rounded-xl border border-slate-200/80 dark:border-[#24352F]">
+        <button
+          type="button"
+          onClick={() => setViewMode('cards')}
+          className={`h-9 flex items-center justify-center gap-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
+            viewMode === 'cards'
+              ? 'bg-white dark:bg-[#131F1B] text-emerald-800 dark:text-emerald-400 shadow-xs'
+              : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <Package className="w-4 h-4" />
-          <span>{language === 'mr' ? 'उपलब्ध साठा (Current Inventory)' : language === 'hi' ? 'उपलब्ध स्टॉक (Current)' : 'Current Inventory'}</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-            inventoryViewTab === 'IN_STOCK' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-          }`}>
-            {inStockCount}
-          </span>
+          <LayoutGrid className="w-3.5 h-3.5" />
+          <span>{language === 'mr' ? 'सोपा कार्ड व्ह्यू' : language === 'hi' ? 'सरल कार्ड व्यू' : 'Simple Cards'}</span>
         </button>
 
         <button
-          onClick={() => setInventoryViewTab('CATALOGUE')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-            inventoryViewTab === 'CATALOGUE'
-              ? 'bg-emerald-600 text-white shadow-md'
-              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+          type="button"
+          onClick={() => setViewMode('table')}
+          className={`h-9 flex items-center justify-center gap-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
+            viewMode === 'table'
+              ? 'bg-white dark:bg-[#131F1B] text-emerald-800 dark:text-emerald-400 shadow-xs'
+              : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <Layers className="w-4 h-4" />
-          <span>{language === 'mr' ? 'सर्व उत्पादन सूची (Product Catalogue)' : language === 'hi' ? 'उत्पाद कैटलॉग (All)' : 'Product Catalogue'}</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-            inventoryViewTab === 'CATALOGUE' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-          }`}>
-            {totalCatalogueCount}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setInventoryViewTab('OUT_OF_STOCK')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-            inventoryViewTab === 'OUT_OF_STOCK'
-              ? 'bg-rose-600 text-white shadow-md'
-              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <MinusCircle className="w-4 h-4" />
-          <span>{language === 'mr' ? 'साठा संपला (Out of Stock)' : language === 'hi' ? 'स्टॉक समाप्त' : 'Out of Stock'}</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-            inventoryViewTab === 'OUT_OF_STOCK' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-          }`}>
-            {outOfStockCount}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setInventoryViewTab('LOW_STOCK')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-            inventoryViewTab === 'LOW_STOCK'
-              ? 'bg-amber-600 text-white shadow-md'
-              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          <AlertTriangle className="w-4 h-4" />
-          <span>{language === 'mr' ? 'कमी साठा (Low Stock)' : language === 'hi' ? 'कम स्टॉक' : 'Low Stock'}</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-            inventoryViewTab === 'LOW_STOCK' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-          }`}>
-            {lowStockCount}
-          </span>
+          <List className="w-3.5 h-3.5" />
+          <span>{language === 'mr' ? 'यादी व्ह्यू' : language === 'hi' ? 'लिस्ट व्यू' : 'Table View'}</span>
         </button>
       </div>
 
-      {/* SEARCH & FAST CATEGORY FILTER PILLS */}
-      <div className="bg-white dark:bg-[#131F1B] p-3 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-2.5 transition-colors">
-        <div className="flex gap-2">
+      {/* 4. STATUS TABS: 2x2 EQUAL-SIZE GRID */}
+      <div className="grid grid-cols-2 gap-2">
+        {statusTabs.map((tab) => {
+          const isActive = inventoryViewTab === tab.key;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setInventoryViewTab(tab.key)}
+              className={`p-2.5 rounded-2xl border transition-all text-left flex items-center justify-between gap-2 active:scale-[0.98] cursor-pointer min-w-0 ${
+                isActive
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                  : 'bg-white dark:bg-[#131F1B] text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-[#24352F] hover:bg-slate-50 dark:hover:bg-[#1A2A25]'
+              }`}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : tab.iconColor}`} />
+                <span className="text-xs font-bold truncate leading-tight">{tab.label}</span>
+              </div>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-black shrink-0 ${
+                  isActive
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-slate-300'
+                }`}
+              >
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* STICKY SEARCH & FILTERS HEADER AREA */}
+      <div className="sticky top-0 z-20 bg-[#f8fafc] dark:bg-[#0B1210] pt-1 pb-2 space-y-2 -mx-1 px-1 transition-colors">
+        
+        {/* 5. LOW-STOCK SLIM ALERT STRIP (ONLY IF lowStockCount > 0) */}
+        {lowStockCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setInventoryViewTab('LOW_STOCK')}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 text-xs font-bold transition-all hover:bg-amber-100 dark:hover:bg-amber-900/40 active:scale-[0.99] cursor-pointer shadow-2xs"
+          >
+            <div className="flex items-center gap-2 truncate">
+              <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 animate-pulse" />
+              <span className="truncate">
+                {lowStockCount.toLocaleString('en-IN')}{' '}
+                {language === 'mr'
+                  ? 'उत्पादनाचा साठा कमी आहे (Low Stock)'
+                  : language === 'hi'
+                  ? 'उत्पाद का स्टॉक कम है (Low Stock)'
+                  : 'item running low on stock'}
+              </span>
+            </div>
+            <span className="text-[11px] font-black underline shrink-0 text-amber-700 dark:text-amber-400">
+              {language === 'mr' ? 'पहा →' : language === 'hi' ? 'देखें →' : 'View →'}
+            </span>
+          </button>
+        )}
+
+        {/* 6. SEARCH + SCAN ROW (HEIGHT h-11) */}
+        <div className="flex gap-2 items-center">
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
             <input
               type="text"
-              placeholder={language === 'mr' ? 'दूध, पनीर, दही, तूप शोधा (Search)...' : language === 'hi' ? 'दूध, पनीर, दही, घी खोजें (Search)...' : 'Search milk, paneer, curd, ghee...'}
+              placeholder={
+                language === 'mr'
+                  ? 'दूध, पनीर, दही, तूप शोधा...'
+                  : language === 'hi'
+                  ? 'दूध, पनीर, दही, घी खोजें...'
+                  : 'Search milk, paneer, curd, ghee...'
+              }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full h-11 pl-10 pr-9 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] dark:hover:text-white">
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white cursor-pointer"
+                aria-label="Clear search"
+              >
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -696,18 +814,17 @@ export const ProductList: React.FC<ProductListProps> = ({
           <button
             type="button"
             onClick={() => setShowBarcodeScanner(true)}
-            className="px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 text-xs font-black shadow-md shadow-emerald-600/30 active:scale-95 transition-all shrink-0 cursor-pointer"
+            aria-label={language === 'mr' ? 'बारकोड स्कॅन' : 'बारकोड स्कैन'}
             title={language === 'mr' ? 'लाईव्ह बारकोड स्कॅनर सुरू करा' : 'लाइव बारकोड स्कैनर शुरू करें'}
+            className="w-11 h-11 shrink-0 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white flex items-center justify-center shadow-md shadow-emerald-600/25 transition-all cursor-pointer"
           >
-            <Barcode className="w-4 h-4 text-white" />
-            <span>{language === 'mr' ? 'बारकोड स्कॅन' : 'बारकोड स्कैन'}</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping hidden sm:inline-block" />
+            <Barcode className="w-5 h-5 text-white" />
           </button>
         </div>
 
-        {/* Live Barcode Search Feedback Banner */}
+        {/* Live Barcode Search Feedback Banner (if user typed/scanned a numeric barcode) */}
         {searchQuery && /^\d{5,}$/.test(searchQuery.trim()) && (
-          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 rounded-xl flex items-center justify-between gap-2 text-xs animate-fadeIn">
+          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 rounded-xl flex items-center justify-between gap-2 text-xs animate-fadeIn shadow-2xs">
             <div className="flex items-center gap-2 min-w-0">
               <Barcode className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <div className="truncate">
@@ -717,7 +834,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                 </span>
                 {isSearchingOnline && (
                   <span className="ml-2 text-slate-500 italic">
-                    {language === 'mr' ? '(डेटाबेसमध्ये शोधत आहे...)' : '(डेटाबेस में खोज रहे हैं...)'}
+                    {language === 'mr' ? '(डेटाबेस शोधत आहे...)' : '(डेटाबेस खोज रहे हैं...)'}
                   </span>
                 )}
                 {!isSearchingOnline && filteredProducts.length > 0 && (
@@ -727,7 +844,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                 )}
                 {!isSearchingOnline && filteredProducts.length === 0 && (
                   <span className="ml-2 font-medium text-amber-600 dark:text-amber-400">
-                    {language === 'mr' ? 'हा बारकोड डेटाबेसमध्ये सापडला नाही.' : 'यह बारकोड डेटाबेस में नहीं मिला।'}
+                    {language === 'mr' ? 'हा बारकोड सापडला नाही.' : 'यह बारकोड नहीं मिला।'}
                   </span>
                 )}
               </div>
@@ -735,48 +852,103 @@ export const ProductList: React.FC<ProductListProps> = ({
             <button
               type="button"
               onClick={() => setShowBarcodeStockIn(true)}
-              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shrink-0 shadow-2xs transition active:scale-95 flex items-center gap-1"
+              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shrink-0 shadow-2xs transition active:scale-95 flex items-center gap-1 cursor-pointer"
             >
               <span>{language === 'mr' ? '+ माल आवक' : '+ स्टॉक आवक'}</span>
             </button>
           </div>
         )}
 
-        {/* Category Pills with Live Product Counts */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {/* 7. FILTERS: CATEGORIES & BATCH EXPIRY */}
+        {/* Category Chips in a Single Horizontally Scrollable Row */}
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
           {categories.map((cat) => {
-            const count = cat.id === 'All' 
-              ? totalCatalogueCount 
-              : products.filter(p => p.category === cat.id).length;
+            const count =
+              cat.id === 'All'
+                ? totalCatalogueCount
+                : products.filter((p) => p.category === cat.id).length;
+            const isCatSelected = selectedCategory === cat.id;
             return (
               <button
                 key={cat.id}
+                type="button"
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                  selectedCategory === cat.id
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#223630]'
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 active:scale-95 cursor-pointer ${
+                  isCatSelected
+                    ? 'bg-emerald-600 text-white shadow-2xs'
+                    : 'bg-white dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#223630] border border-slate-200/80 dark:border-[#24352F]'
                 }`}
               >
                 <span>{cat.label}</span>
-                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  selectedCategory === cat.id 
-                    ? 'bg-emerald-800/60 text-white' 
-                    : 'bg-slate-200 dark:bg-[#24352F] text-slate-600 dark:text-slate-300'
-                }`}>
-                  {count}
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                    isCatSelected
+                      ? 'bg-emerald-800/60 text-white'
+                      : 'bg-slate-100 dark:bg-[#24352F] text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  {count.toLocaleString('en-IN')}
                 </span>
               </button>
             );
           })}
         </div>
+
+        {/* Batch Expiry Filters in a Second Compact Scrollable Row */}
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+          <span className="text-[10px] font-extrabold text-slate-400 dark:text-[#8FA69C] shrink-0 uppercase tracking-wider">
+            {language === 'mr' ? 'बॅच:' : language === 'hi' ? 'बैच:' : 'BATCH EXPIRY:'}
+          </span>
+          {expiryFilterOptions.map((opt) => {
+            const isSelected = selectedExpiryFilter === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setSelectedExpiryFilter(opt.id)}
+                className={`px-2.5 py-1 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all flex items-center gap-1 shrink-0 active:scale-95 cursor-pointer ${
+                  isSelected
+                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xs'
+                    : 'bg-white dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#223630] border border-slate-200/80 dark:border-[#24352F]'
+                }`}
+              >
+                <span>{opt.label}</span>
+                {opt.count !== undefined && (
+                  <span
+                    className={`text-[9px] px-1 py-0.2 rounded font-mono ${
+                      isSelected
+                        ? 'bg-white/20 text-white dark:bg-black/20 dark:text-slate-900'
+                        : 'bg-slate-100 dark:bg-black/20 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    {opt.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
       </div>
 
-      {/* DYNAMIC BATCH & EXPIRY ALERT & FILTER BANNER */}
-      <BatchExpiryAlertBanner 
-        selectedStatusFilter={selectedExpiryFilter} 
-        onSelectStatusFilter={setSelectedExpiryFilter} 
-      />
+      {/* Critical Urgent Expired Batches Warning (if any) */}
+      {expiredBatchesCount > 0 && (
+        <div className="p-3 rounded-2xl bg-rose-50/95 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-center justify-between gap-2 shadow-2xs text-rose-950 dark:text-rose-200 animate-pulse">
+          <div className="flex items-center gap-2 min-w-0">
+            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span className="text-xs font-bold truncate">
+              {expiredBatchesCount} {language === 'mr' ? 'बॅच कालबाह्य (विक्री बंद आहे)' : 'बैच एक्सपायर (बिलिंग ब्लॉक)'}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveView('damages')}
+            className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shrink-0 shadow-xs active:scale-95 transition-all cursor-pointer"
+          >
+            {language === 'mr' ? 'खराब नोंदवा' : 'डैमेज दर्ज करें'}
+          </button>
+        </div>
+      )}
 
       {/* VIEW 1: ULTRA-SIMPLE LARGE TOUCH CARDS VIEW (DEFAULT) */}
       {viewMode === 'cards' && (
@@ -800,7 +972,7 @@ export const ProductList: React.FC<ProductListProps> = ({
               </button>
             </div>
           ) : (
-            filteredProducts.map((prod) => {
+            visibleProducts.map((prod) => {
             const isOutOfStock = prod.stock_quantity <= 0;
             const isLowStock = prod.stock_quantity <= prod.min_stock_alert && !isOutOfStock;
             const displayName = getProductDisplayName(prod);
@@ -996,6 +1168,27 @@ export const ProductList: React.FC<ProductListProps> = ({
             );
           })
         )}
+
+        {hasMore && (
+          <div className="col-span-full pt-3 pb-2 flex flex-col items-center gap-2">
+            <button
+              type="button"
+              onClick={handleLoadMore}
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white dark:bg-[#1A2A25] hover:bg-emerald-50 dark:hover:bg-[#24352F] border border-slate-200 dark:border-[#24352F] text-emerald-700 dark:text-emerald-400 font-extrabold text-xs shadow-xs active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>
+                {language === 'mr'
+                  ? `आणखी उत्पादने दाखवा (उर्वरित ${(filteredProducts.length - displayLimit).toLocaleString('en-IN')})`
+                  : language === 'hi'
+                  ? `और उत्पाद दिखाएं (शेष ${(filteredProducts.length - displayLimit).toLocaleString('en-IN')})`
+                  : `Load More (${(filteredProducts.length - displayLimit).toLocaleString('en-IN')} remaining)`}
+              </span>
+            </button>
+            <span className="text-[10px] text-slate-400 dark:text-[#8FA69C]">
+              {visibleProducts.length.toLocaleString('en-IN')} / {filteredProducts.length.toLocaleString('en-IN')} {language === 'mr' ? 'उत्पादने दाखवली' : 'उत्पाद प्रदर्शित'}
+            </span>
+          </div>
+        )}
         </div>
       )}
 
@@ -1024,7 +1217,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                     </td>
                   </tr>
                 ) : (
-                  filteredProducts.map((prod) => {
+                  visibleProducts.map((prod) => {
                   const isOutOfStock = prod.stock_quantity <= 0;
                   const isLowStock = prod.stock_quantity <= prod.min_stock_alert && !isOutOfStock;
                   const displayName = getProductDisplayName(prod);
@@ -1102,6 +1295,27 @@ export const ProductList: React.FC<ProductListProps> = ({
               </tbody>
             </table>
           </div>
+
+          {hasMore && (
+            <div className="pt-3 pb-4 border-t border-slate-100 dark:border-[#24352F] flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={handleLoadMore}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white dark:bg-[#1A2A25] hover:bg-emerald-50 dark:hover:bg-[#24352F] border border-slate-200 dark:border-[#24352F] text-emerald-700 dark:text-emerald-400 font-extrabold text-xs shadow-xs active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>
+                  {language === 'mr'
+                    ? `आणखी उत्पादने दाखवा (उर्वरित ${(filteredProducts.length - displayLimit).toLocaleString('en-IN')})`
+                    : language === 'hi'
+                    ? `और उत्पाद दिखाएं (शेष ${(filteredProducts.length - displayLimit).toLocaleString('en-IN')})`
+                    : `Load More (${(filteredProducts.length - displayLimit).toLocaleString('en-IN')} remaining)`}
+                </span>
+              </button>
+              <span className="text-[10px] text-slate-400 dark:text-[#8FA69C]">
+                {visibleProducts.length.toLocaleString('en-IN')} / {filteredProducts.length.toLocaleString('en-IN')} {language === 'mr' ? 'उत्पादने दाखवली' : 'उत्पाद प्रदर्शित'}
+              </span>
+            </div>
+          )}
         </div>
       )}
 

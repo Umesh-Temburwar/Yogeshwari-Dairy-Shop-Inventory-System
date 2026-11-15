@@ -314,7 +314,6 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
               isLoopRunning = false;
               clearInterval(scanInterval);
               clearInterval(autoOcrInterval);
-              clearTimeout(ocrTimer);
               handleBarcodeDetected(confirmed.text);
             }
           }
@@ -330,7 +329,6 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
           isLoopRunning = false;
           clearInterval(scanInterval);
           clearInterval(autoOcrInterval);
-          clearTimeout(ocrTimer);
         }
       };
 

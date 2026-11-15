@@ -3,8 +3,9 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product, ProductCategory, ProductUnit } from '../../types';
 import { getShelfLifeNote } from '../../lib/shelfLifeUtils';
-import { X, Save, PackagePlus, Clock, Camera, Sparkles } from 'lucide-react';
+import { X, Save, PackagePlus, Clock, Camera, Sparkles, Barcode } from 'lucide-react';
 import { ProductPhotoModal } from '../Scanner/ProductPhotoModal';
+import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -29,6 +30,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [sellingPrice, setSellingPrice] = useState<string>('');
   const [stockQuantity, setStockQuantity] = useState<string>('');
   const [minStockAlert, setMinStockAlert] = useState<string>('15');
+  const [barcode, setBarcode] = useState<string>('');
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
   useEffect(() => {
     if (productToEdit) {
@@ -41,6 +44,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       setSellingPrice(productToEdit.selling_price.toString());
       setStockQuantity(productToEdit.stock_quantity.toString());
       setMinStockAlert(productToEdit.min_stock_alert.toString());
+      setBarcode(productToEdit.barcode || '');
     } else {
       setName('');
       setHindiName('');
@@ -51,6 +55,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       setSellingPrice('');
       setStockQuantity('0');
       setMinStockAlert('10');
+      setBarcode('');
     }
   }, [productToEdit, isOpen]);
 
@@ -76,7 +81,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         purchase_price: pPrice,
         selling_price: sPrice,
         stock_quantity: sQty,
-        min_stock_alert: minAlert
+        min_stock_alert: minAlert,
+        barcode: barcode.trim() || undefined
       });
     } else {
       await addProduct({
@@ -89,6 +95,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         selling_price: sPrice,
         stock_quantity: sQty,
         min_stock_alert: minAlert,
+        barcode: barcode.trim() || undefined,
         is_active: true
       });
     }
@@ -171,6 +178,32 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 onChange={(e) => setHindiName(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
+            </div>
+          </div>
+
+          {/* Barcode Input & Scanner */}
+          <div>
+            <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1 flex items-center gap-1.5">
+              <Barcode className="w-3.5 h-3.5 text-emerald-600" />
+              <span>{language === 'mr' ? 'बारकोड क्रमांक (Barcode / EAN-13 / SKU)' : language === 'hi' ? 'बारकोड संख्या (Barcode)' : 'Barcode / EAN-13'}</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="उदा. 8901030925237"
+                value={barcode}
+                onChange={(e) => setBarcode(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowBarcodeScanner(true)}
+                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold flex items-center gap-1.5 border border-slate-200 dark:border-[#24352F] transition"
+                title="Scan Barcode"
+              >
+                <Barcode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>{language === 'mr' ? 'स्कॅन' : 'स्कैन'}</span>
+              </button>
             </div>
           </div>
 
@@ -311,6 +344,16 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         </form>
 
       </div>
+
+      {/* Barcode Scanner Modal */}
+      <BarcodeScannerModal
+        isOpen={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        onBarcodeScanned={(scanned) => {
+          setBarcode(scanned);
+          setShowBarcodeScanner(false);
+        }}
+      />
     </div>
   );
 };

@@ -1,22 +1,30 @@
 {
-  "timestamp": "2026-11-15T12:32:27.723964Z",
+  "timestamp": "2026-11-15T18:13:21.669478Z",
   "total_products": 46571,
   "total_barcodes_table": 23320,
   "products_with_barcode": 44202,
-  "products_with_image": 658,
+  "products_with_image": 2051,
   "status_breakdown": {
-    "verified": 211,
-    "pending": 447
+    "official_verified": 802,
+    "trusted_database_verified": 491,
+    "pending": 758
   },
   "source_breakdown": {
-    "MANUAL": 211,
-    "null": 447
+    "OFFICIAL_BRAND": 802,
+    "MANUAL": 208,
+    "null": 758,
+    "OpenFoodFacts": 283
   },
   "domain_breakdown": {
-    "images.openfoodfacts.org": 658
+    "www.karachibakery.com": 9,
+    "images.openfoodfacts.org": 1249,
+    "www.bbassets.com": 755,
+    "media-dev.bazaar5.com": 10,
+    "cdn01.pharmeasy.in": 25,
+    "www.temptin.in": 3
   },
-  "active_stock_with_image": 8,
+  "active_stock_with_image": 12,
   "sample_checked": 30,
-  "sample_accessible": 30,
-  "sample_broken": 0
+  "sample_accessible": 27,
+  "sample_broken": 3
 }

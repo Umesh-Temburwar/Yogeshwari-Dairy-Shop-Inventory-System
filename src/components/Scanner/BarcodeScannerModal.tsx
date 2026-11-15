@@ -823,7 +823,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
               <div className="p-3 bg-emerald-50/70 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <ProductImage
-                    src={(matchedProduct as any)?.image_url ?? matchedProduct.image_url}
+                    src={matchedProduct.image_url}
                     alt={matchedProduct.name}
                     category={matchedProduct.category}
                     size="md"

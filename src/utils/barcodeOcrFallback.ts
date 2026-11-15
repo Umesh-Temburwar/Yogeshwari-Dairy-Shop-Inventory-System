@@ -1,15 +1,13 @@
 /**
- * Yogeshwari Dairy Shop ERP - AI OCR Fallback for Damaged / Scratched Barcodes
+ * Yogeshwari Dairy Shop ERP - AI OCR Fallback for Damaged / Blurry Barcodes
  * 
- * When 1D barcode stripes cannot be decoded by optical matrix (due to physical tears,
- * smudged ink, or extreme reflections), this fallback extracts the human-readable numbers
- * printed directly underneath the barcode (GS1 Human Readable Interpretation - HRI).
- * 
- * Dynamically loads Tesseract.js only when triggered to avoid bundle overhead.
+ * Extracts Human-Readable Interpretation (HRI) numbers printed under barcodes
+ * using persistent Tesseract.js worker, multi-scale image enhancement, and
+ * fault-tolerant GS1 Modulo-10 sliding window validation.
  */
 
 import { validateBarcode, validateEAN13, validateUPCA, validateEAN8 } from './barcodeChecksum';
-import { applyGrayscaleAndContrast, applyAdaptiveBinarization } from './imageEnhancement';
+import { applyAutoContrastStretch, applySharpenKernel } from './imageEnhancement';
 
 export interface OcrBarcodeResult {
   found: boolean;
@@ -18,40 +16,79 @@ export interface OcrBarcodeResult {
   rawText: string;
 }
 
+// Reusable worker cache to avoid reloading Tesseract models on every frame
+let cachedWorker: any = null;
+let isWorkerInitializing = false;
+
+async function getOcrWorker(): Promise<any> {
+  if (cachedWorker) return cachedWorker;
+  if (isWorkerInitializing) {
+    while (isWorkerInitializing) {
+      await new Promise(r => setTimeout(r, 100));
+    }
+    if (cachedWorker) return cachedWorker;
+  }
+
+  isWorkerInitializing = true;
+  try {
+    const { createWorker } = await import('tesseract.js');
+    const worker = await createWorker('eng');
+    await worker.setParameters({
+      tessedit_char_whitelist: '0123456789 BODOIl|!SZG ',
+      tessedit_pageseg_mode: '6' as any
+    });
+    cachedWorker = worker;
+    return cachedWorker;
+  } finally {
+    isWorkerInitializing = false;
+  }
+}
+
 /**
- * Extracts candidate barcode number from OCR raw text string
+ * Extracts candidate barcode number from OCR raw text string with character substitution
+ * and sliding window GS1 Modulo-10 checksum verification.
  */
 export function extractCandidateBarcodeFromText(text: string): string | null {
   if (!text) return null;
 
-  // 1. Remove all spaces, hyphens, and non-numeric noise
-  const digitsOnly = text.replace(/[^0-9]/g, '');
+  // 1. Substitute common OCR character confusions on digits
+  const normalized = text
+    .replace(/[B]/g, '8')
+    .replace(/[OD]/g, '0')
+    .replace(/[Il|!]/g, '1')
+    .replace(/[S]/g, '5')
+    .replace(/[Z]/g, '2')
+    .replace(/[G]/g, '6');
 
-  // 2. Check for exact 13-digit sequence (EAN-13)
-  const ean13Matches = digitsOnly.match(/\d{13}/g);
-  if (ean13Matches) {
-    for (const match of ean13Matches) {
-      if (validateEAN13(match)) return match;
+  // 2. Strip all non-digit characters
+  const digitsOnly = normalized.replace(/[^0-9]/g, '');
+  if (digitsOnly.length < 8) return null;
+
+  // 3. Sliding window check for EAN-13 (13 digits)
+  for (let i = 0; i <= digitsOnly.length - 13; i++) {
+    const sub = digitsOnly.substring(i, i + 13);
+    if (validateEAN13(sub)) {
+      return sub;
     }
   }
 
-  // 3. Check for 12-digit sequence (UPC-A)
-  const upcMatches = digitsOnly.match(/\d{12}/g);
-  if (upcMatches) {
-    for (const match of upcMatches) {
-      if (validateUPCA(match)) return match;
+  // 4. Sliding window check for UPC-A (12 digits)
+  for (let i = 0; i <= digitsOnly.length - 12; i++) {
+    const sub = digitsOnly.substring(i, i + 12);
+    if (validateUPCA(sub)) {
+      return sub;
     }
   }
 
-  // 4. Check for 8-digit sequence (EAN-8)
-  const ean8Matches = digitsOnly.match(/\d{8}/g);
-  if (ean8Matches) {
-    for (const match of ean8Matches) {
-      if (validateEAN8(match)) return match;
+  // 5. Sliding window check for EAN-8 (8 digits)
+  for (let i = 0; i <= digitsOnly.length - 8; i++) {
+    const sub = digitsOnly.substring(i, i + 8);
+    if (validateEAN8(sub)) {
+      return sub;
     }
   }
 
-  // 5. Fallback: If 13 digits exist and start with '890' (India GS1 prefix), return it even if 1 bit check digit was noisy
+  // 6. Fallback: Any 13 consecutive digits starting with '890' (India GS1 Prefix)
   const indiaMatch = digitsOnly.match(/890\d{10}/);
   if (indiaMatch) {
     return indiaMatch[0];
@@ -61,7 +98,7 @@ export function extractCandidateBarcodeFromText(text: string): string | null {
 }
 
 /**
- * Executes OCR extraction on a cropped video frame or image
+ * Executes high-accuracy OCR extraction on the bottom numeric strip of a barcode
  * @param source HTMLVideoElement or HTMLCanvasElement
  */
 export async function performBarcodeOcrFallback(
@@ -75,49 +112,55 @@ export async function performBarcodeOcrFallback(
       return { found: false, barcode: null, confidence: 0, rawText: '' };
     }
 
-    // Reticle center region (focus on lower 40% where digits are printed)
-    const cropW = Math.round(sw * 0.70);
-    const cropH = Math.round(sh * 0.50);
-    const cropX = Math.round((sw - cropW) / 2);
-    const cropY = Math.round((sh - cropH) / 2);
+    // Viewfinder reticle coordinates: matches on-screen green box (65% width, 55% height)
+    const reticleW = Math.round(sw * 0.65);
+    const reticleH = Math.round(sh * 0.55);
+    const reticleX = Math.round((sw - reticleW) / 2);
+    const reticleY = Math.round((sh - reticleH) / 2);
 
-    // Create high-contrast canvas for OCR
+    // Number strip: bottom 40% of the reticle box
+    const textStartY = reticleY + Math.round(reticleH * 0.55);
+    const textH = Math.round(reticleH * 0.45);
+
+    // Upscale onto canvas: minimum 800px width and 200px height for sharp OCR recognition
+    const destW = 800;
+    const destH = Math.round((800 * textH) / reticleW) || 220;
+
     const ocrCanvas = document.createElement('canvas');
-    ocrCanvas.width = 640;
-    ocrCanvas.height = 360;
+    ocrCanvas.width = destW;
+    ocrCanvas.height = destH;
     const ctx = ocrCanvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) {
       return { found: false, barcode: null, confidence: 0, rawText: '' };
     }
 
-    // Draw bottom half of barcode area where numbers live
-    const textStartY = cropY + Math.round(cropH * 0.45);
-    const textHeight = Math.round(cropH * 0.55);
+    // High quality bicubic resampling
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     ctx.drawImage(
       source,
-      cropX,
+      reticleX,
       textStartY,
-      cropW,
-      textHeight,
+      reticleW,
+      textH,
       0,
       0,
-      ocrCanvas.width,
-      ocrCanvas.height
+      destW,
+      destH
     );
 
-    // Apply grayscale + contrast + binarization to make digits pitch black on stark white
-    applyGrayscaleAndContrast(ctx, ocrCanvas.width, ocrCanvas.height, 60);
-    applyAdaptiveBinarization(ctx, ocrCanvas.width, ocrCanvas.height);
+    // 1. Dynamic Auto-Contrast Stretch (expands grey digits into black on white)
+    applyAutoContrastStretch(ctx, destW, destH);
 
-    // Dynamic import of Tesseract to avoid heavy initial bundle
-    const Tesseract = await import('tesseract.js');
+    // 2. Sharpening filter to restore crisp letterforms
+    applySharpenKernel(ctx, destW, destH, 0.7);
+
+    // Reusable Tesseract worker
+    const worker = await getOcrWorker();
     const dataUrl = ocrCanvas.toDataURL('image/png');
 
-    const result = await Tesseract.recognize(dataUrl, 'eng', {
-      logger: () => {} // suppress logging
-    });
-
+    const result = await worker.recognize(dataUrl);
     const rawText = result?.data?.text || '';
     const candidate = extractCandidateBarcodeFromText(rawText);
 
@@ -126,14 +169,14 @@ export async function performBarcodeOcrFallback(
       return {
         found: true,
         barcode: candidate,
-        confidence: val.isValid ? 0.95 : 0.75,
+        confidence: val.isValid ? 0.98 : 0.80,
         rawText
       };
     }
 
     return { found: false, barcode: null, confidence: 0, rawText };
   } catch (err) {
-    console.warn('[BarcodeOcrFallback] OCR error:', err);
+    console.warn('[BarcodeOcrFallback] OCR execution error:', err);
     return { found: false, barcode: null, confidence: 0, rawText: '' };
   }
 }

@@ -4,7 +4,9 @@ import {
   applyGrayscaleAndContrast,
   applyAdaptiveBinarization,
   applySharpenKernel,
-  applyBrightnessContrast
+  applyBrightnessContrast,
+  applyAutoContrastStretch,
+  applyBarcodeEdgeEnhancement
 } from './imageEnhancement';
 import { validateBarcode, BarcodeValidationResult } from './barcodeChecksum';
 
@@ -187,6 +189,15 @@ export function decodeVideoMultiAngle(
   ctx.clearRect(0, 0, targetW, targetH);
   ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
   applySharpenKernel(ctx, targetW, targetH, 0.6);
+  try {
+    const res = reader.decodeFromCanvas(canvas);
+    if (res?.getText()) return res.getText();
+  } catch {}
+
+  // PASS 4b: Computer Vision - Horizontal Barcode Edge Derivative (boosts vertical bars on blurred 1D barcodes)
+  ctx.clearRect(0, 0, targetW, targetH);
+  ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
+  applyBarcodeEdgeEnhancement(ctx, targetW, targetH);
   try {
     const res = reader.decodeFromCanvas(canvas);
     if (res?.getText()) return res.getText();

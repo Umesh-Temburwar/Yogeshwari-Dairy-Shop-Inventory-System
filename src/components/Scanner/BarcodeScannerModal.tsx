@@ -264,14 +264,37 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
       let isLoopRunning = true;
       let isDecodingFrame = false;
+      let isAutoOcrRunning = false;
       const tracker = new BarcodeConfirmationTracker();
 
-      // Offer OCR fallback button after 3.5s of scanning without decode
+      // Show OCR fallback button quickly after 1.5s
       const ocrTimer = setTimeout(() => {
         if (isLoopRunning) {
           setShowOcrButton(true);
         }
-      }, 3500);
+      }, 1500);
+
+      // Continuous Auto-OCR loop: Automatically reads human-readable numbers for blurry/worn barcodes!
+      const autoOcrInterval = setInterval(async () => {
+        if (!isLoopRunning || isAutoOcrRunning || isDecodingFrame) return;
+        if (!videoElement || videoElement.readyState < 2 || videoElement.videoWidth === 0) return;
+
+        isAutoOcrRunning = true;
+        try {
+          const ocrRes = await performBarcodeOcrFallback(videoElement);
+          if (ocrRes.found && ocrRes.barcode && isLoopRunning) {
+            isLoopRunning = false;
+            clearInterval(scanInterval);
+            clearInterval(autoOcrInterval);
+            clearTimeout(ocrTimer);
+            handleBarcodeDetected(ocrRes.barcode);
+          }
+        } catch (e) {
+          // silent fallback
+        } finally {
+          isAutoOcrRunning = false;
+        }
+      }, 1200);
 
       const scanInterval = setInterval(() => {
         if (!isLoopRunning || isDecodingFrame) return;
@@ -286,6 +309,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
             if (confirmed && isLoopRunning) {
               isLoopRunning = false;
               clearInterval(scanInterval);
+              clearInterval(autoOcrInterval);
               clearTimeout(ocrTimer);
               handleBarcodeDetected(confirmed.text);
             }
@@ -295,12 +319,13 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         } finally {
           isDecodingFrame = false;
         }
-      }, 120);
+      }, 110);
 
       scannerControlsRef.current = {
         stop: () => {
           isLoopRunning = false;
           clearInterval(scanInterval);
+          clearInterval(autoOcrInterval);
           clearTimeout(ocrTimer);
         }
       };

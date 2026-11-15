@@ -99,3 +99,10 @@ console.log(`\nTotal Tests: ${testCases.length + ocrTests.length}, Passed: ${pas
 if (passed === testCases.length + ocrTests.length) {
   console.log('✅ ALL TESTS PASSED SUCCESSFULLY!');
 }
+
+module.exports = {
+  validateEAN13,
+  validateUPCA,
+  validateEAN8,
+  extractCandidateBarcodeFromText
+};

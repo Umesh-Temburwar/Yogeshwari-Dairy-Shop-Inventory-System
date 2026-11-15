@@ -46,6 +46,7 @@ lerna-debug.log*
 *.local
 .DS_Store
 Thumbs.db
+*.traineddata
 
 # ==========================================
 # Editors and IDEs

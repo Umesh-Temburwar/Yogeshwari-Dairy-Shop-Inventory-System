@@ -13,6 +13,7 @@ import {
   processVoiceTranscript, 
   VoiceLanguage 
 } from '../../lib/voiceProductRecognizer';
+import { VoiceFormAssistant } from './VoiceFormAssistant';
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   onClose, 
   productToEdit 
 }) => {
-  const { addProduct, updateProduct } = useStore();
+  const { addProduct, updateProduct, products } = useStore();
   const { t, language } = useLanguage();
 
   const [name, setName] = useState('');
@@ -39,6 +40,9 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [minStockAlert, setMinStockAlert] = useState<string>('15');
   const [barcode, setBarcode] = useState<string>('');
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+
+  // Conversational AI Voice Assistant State
+  const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
 
   // Auto-translation states
   const [isTranslating, setIsTranslating] = useState(false);
@@ -91,6 +95,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       setMinStockAlert('10');
       setBarcode('');
     }
+    setIsVoiceModeOpen(false);
   }, [productToEdit, isOpen]);
 
   // Debounced translation hook when user types English name
@@ -351,13 +356,63 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               </p>
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setIsVoiceModeOpen(!isVoiceModeOpen)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shadow-xs ${
+                isVoiceModeOpen
+                  ? 'bg-rose-500 text-white shadow-rose-500/30 ring-2 ring-rose-400'
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20 active:scale-95'
+              }`}
+              title="बोलून संपूर्ण फॉर्म भरा (Conversational AI Voice Assistant)"
+            >
+              <Mic className={`w-3.5 h-3.5 ${isVoiceModeOpen ? 'animate-bounce' : ''}`} />
+              <span>{isVoiceModeOpen ? (language === 'mr' ? 'व्हॉइस चालू' : 'वॉयस चालू') : (language === 'mr' ? '🎙️ बोलून भरा' : language === 'hi' ? '🎙️ बोलकर भरें' : '🎙️ Voice Assistant')}</span>
+            </button>
+
+            <button 
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
+
+        {/* Step-by-Step AI Conversational Voice Assistant */}
+        {isVoiceModeOpen && (
+          <VoiceFormAssistant
+            name={name}
+            marathiName={marathiName}
+            hindiName={hindiName}
+            barcode={barcode}
+            category={category}
+            unit={unit}
+            purchasePrice={purchasePrice}
+            sellingPrice={sellingPrice}
+            stockQuantity={stockQuantity}
+            minStockAlert={minStockAlert}
+            existingProducts={products}
+            language={language}
+            setName={setName}
+            setMarathiName={setMarathiName}
+            setHindiName={setHindiName}
+            setBarcode={setBarcode}
+            setCategory={setCategory}
+            setUnit={setUnit}
+            setPurchasePrice={setPurchasePrice}
+            setSellingPrice={setSellingPrice}
+            setStockQuantity={setStockQuantity}
+            setMinStockAlert={setMinStockAlert}
+            onOpenBarcodeScanner={() => setShowBarcodeScanner(true)}
+            onSaveProduct={() => {
+              const syntheticEvent = { preventDefault: () => {} } as any;
+              handleSubmit(syntheticEvent);
+            }}
+            onCloseVoiceMode={() => setIsVoiceModeOpen(false)}
+          />
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           

@@ -1,4 +1,4 @@
-import { ProductCategory, ProductUnit } from '../types';
+import type { ProductCategory, ProductUnit } from '../types';
 import { translateProductNameSync, translateProductName } from './productTranslator';
 
 // Check if browser supports Web Speech API
@@ -34,8 +34,8 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 500ml / Half Litre
   {
     patterns: [
-      /\b(अर्धा\s*लिटर|अर्धा\s*लीटर|आधा\s*लीटर|half\s*litre|half\s*liter|half\s*l)\b/i,
-      /\b(पाचशे\s*मिली|पाच\s*शे\s*मिली|पाँच\s*सौ\s*मिली|पांच\s*सौ\s*मिली|५००\s*मिली|500\s*ml|500ml|500\s*मिली)\b/i
+      /(अर्धा\s*लिटर|अर्धा\s*लीटर|आधा\s*लीटर|half\s*litre|half\s*liter|half\s*l)/i,
+      /(पाचशे\s*मिली|पाच\s*शे\s*मिली|पाँच\s*सौ\s*मिली|पांच\s*सौ\s*मिली|५००\s*मिली|500\s*ml|500ml|500\s*मिली)/i
     ],
     canonical: '500ml',
     unit: 'Pouch'
@@ -43,7 +43,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 1 Litre
   {
     patterns: [
-      /\b(एक\s*लिटर|१\s*लिटर|एक\s*लीटर|1\s*लीटर|one\s*litre|one\s*liter|1\s*litre|1\s*liter|1\s*l|1l)\b/i
+      /(एक\s*लिटर|१\s*लिटर|एक\s*लीटर|1\s*लीटर|one\s*litre|one\s*liter|1\s*litre|1\s*liter|1\s*l|1l)/i
     ],
     canonical: '1L',
     unit: 'Litre'
@@ -51,8 +51,8 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 250ml / Quarter Litre
   {
     patterns: [
-      /\b(पाव\s*लिटर|पाव\s*लीटर|quarter\s*litre|quarter\s*liter)\b/i,
-      /\b(अडीचशे\s*मिली|ढाई\s*सौ\s*मिली|२५०\s*मिली|250\s*ml|250ml|250\s*मिली)\b/i
+      /(पाव\s*लिटर|पाव\s*लीटर|quarter\s*litre|quarter\s*liter)/i,
+      /(अडीचशे\s*मिली|ढाई\s*सौ\s*मिली|२५०\s*मिली|250\s*ml|250ml|250\s*मिली)/i
     ],
     canonical: '250ml',
     unit: 'Pouch'
@@ -60,7 +60,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 2 Litre
   {
     patterns: [
-      /\b(दोन\s*लिटर|२\s*लिटर|दो\s*लीटर|2\s*लीटर|two\s*litre|two\s*liter|2\s*litre|2\s*liter|2\s*l|2l)\b/i
+      /(दोन\s*लिटर|२\s*लिटर|दो\s*लीटर|2\s*लीटर|two\s*litre|two\s*liter|2\s*litre|2\s*liter|2\s*l|2l)/i
     ],
     canonical: '2L',
     unit: 'Litre'
@@ -68,7 +68,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 5 Litre
   {
     patterns: [
-      /\b(पाच\s*लिटर|५\s*लिटर|पाँच\s*लीटर|पांच\s*लीटर|5\s*लीटर|five\s*litre|five\s*liter|5\s*litre|5\s*liter|5\s*l|5l)\b/i
+      /(पाच\s*लिटर|५\s*लिटर|पाँच\s*लीटर|पांच\s*लीटर|5\s*लीटर|five\s*litre|five\s*liter|5\s*litre|5\s*liter|5\s*l|5l)/i
     ],
     canonical: '5L',
     unit: 'Litre'
@@ -76,7 +76,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 200ml
   {
     patterns: [
-      /\b(दोनशे\s*मिली|दो\s*सौ\s*मिली|२००\s*मिली|200\s*ml|200ml|200\s*मिली)\b/i
+      /(दोनशे\s*मिली|दो\s*सौ\s*मिली|२००\s*मिली|200\s*ml|200ml|200\s*मिली)/i
     ],
     canonical: '200ml',
     unit: 'Pouch'
@@ -84,7 +84,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 100ml
   {
     patterns: [
-      /\b(शंभर\s*मिली|सौ\s*मिली|१००\s*मिली|100\s*ml|100ml|100\s*मिली)\b/i
+      /(शंभर\s*मिली|सौ\s*मिली|१००\s*मिली|100\s*ml|100ml|100\s*मिली)/i
     ],
     canonical: '100ml',
     unit: 'Pouch'
@@ -92,7 +92,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 1 kg
   {
     patterns: [
-      /\b(एक\s*किलो|१\s*किलो|एक\s*केजी|1\s*केजी|one\s*kg|one\s*kilo|1\s*kg|1kg|1\s*kilo|1\s*kilogram)\b/i
+      /(एक\s*किलो|१\s*किलो|एक\s*केजी|1\s*केजी|one\s*kg|one\s*kilo|1\s*kg|1kg|1\s*kilo|1\s*kilogram)/i
     ],
     canonical: '1kg',
     unit: 'Kg'
@@ -100,8 +100,8 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 500g / Half Kg
   {
     patterns: [
-      /\b(अर्धा\s*किलो|आधा\s*किलो|half\s*kg|half\s*kilo)\b/i,
-      /\b(पाचशे\s*ग्रॅम|पाचशे\s*ग्राम|पाँच\s*सौ\s*ग्राम|५००\s*ग्रॅम|500\s*g|500g|500\s*gm|500\s*gram|500\s*grams)\b/i
+      /(अर्धा\s*किलो|आधा\s*किलो|half\s*kg|half\s*kilo)/i,
+      /(पाचशे\s*ग्रॅम|पाचशे\s*ग्राम|पाँच\s*सौ\s*ग्राम|५००\s*ग्रॅम|500\s*g|500g|500\s*gm|500\s*gram|500\s*grams)/i
     ],
     canonical: '500g',
     unit: 'Kg'
@@ -109,8 +109,8 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 250g / Quarter Kg
   {
     patterns: [
-      /\b(पाव\s*किलो|quarter\s*kg|quarter\s*kilo)\b/i,
-      /\b(अडीचशे\s*ग्रॅम|ढाई\s*सौ\s*ग्राम|२५०\s*ग्रॅम|250\s*g|250g|250\s*gm|250\s*gram|250\s*grams)\b/i
+      /(पाव\s*किलो|quarter\s*kg|quarter\s*kilo)/i,
+      /(अडीचशे\s*ग्रॅम|ढाई\s*सौ\s*ग्राम|२५०\s*ग्रॅम|250\s*g|250g|250\s*gm|250\s*gram|250\s*grams)/i
     ],
     canonical: '250g',
     unit: 'Kg'
@@ -118,7 +118,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 200g
   {
     patterns: [
-      /\b(दोनशे\s*ग्रॅम|दोनशे\s*ग्राम|दो\s*सौ\s*ग्राम|२००\s*ग्रॅम|200\s*g|200g|200\s*gm|200\s*gram|200\s*grams)\b/i
+      /(दोनशे\s*ग्रॅम|दोनशे\s*ग्राम|दो\s*सौ\s*ग्राम|२००\s*ग्रॅम|200\s*g|200g|200\s*gm|200\s*gram|200\s*grams)/i
     ],
     canonical: '200g',
     unit: 'Packet'
@@ -126,7 +126,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 100g
   {
     patterns: [
-      /\b(शंभर\s*ग्रॅम|शंभर\s*ग्राम|सौ\s*ग्राम|१००\s*ग्रॅम|100\s*g|100g|100\s*gm|100\s*gram|100\s*grams)\b/i
+      /(शंभर\s*ग्रॅम|शंभर\s*ग्राम|सौ\s*ग्राम|१००\s*ग्रॅम|100\s*g|100g|100\s*gm|100\s*gram|100\s*grams)/i
     ],
     canonical: '100g',
     unit: 'Packet'
@@ -134,7 +134,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 2 kg
   {
     patterns: [
-      /\b(दोन\s*किलो|२\s*किलो|दो\s*किलो|2\s*केजी|two\s*kg|2\s*kg|2kg|2\s*kilo)\b/i
+      /(दोन\s*किलो|२\s*किलो|दो\s*किलो|2\s*केजी|two\s*kg|2\s*kg|2kg|2\s*kilo)/i
     ],
     canonical: '2kg',
     unit: 'Kg'
@@ -142,7 +142,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 5 kg
   {
     patterns: [
-      /\b(पाच\s*किलो|५\s*किलो|पाँच\s*किलो|five\s*kg|5\s*kg|5kg|5\s*kilo)\b/i
+      /(पाच\s*किलो|५\s*किलो|पाँच\s*किलो|five\s*kg|5\s*kg|5kg|5\s*kilo)/i
     ],
     canonical: '5kg',
     unit: 'Kg'
@@ -150,7 +150,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 400g
   {
     patterns: [
-      /\b(चारशे\s*ग्रॅम|चार\s*सौ\s*ग्राम|४००\s*ग्रॅम|400\s*g|400g|400\s*gm|400\s*gram|400\s*grams)\b/i
+      /(चारशे\s*ग्रॅम|चार\s*सौ\s*ग्राम|४००\s*ग्रॅम|400\s*g|400g|400\s*gm|400\s*gram|400\s*grams)/i
     ],
     canonical: '400g',
     unit: 'Packet'

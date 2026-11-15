@@ -637,37 +637,37 @@ export const BillingCounter: React.FC = () => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative max-w-7xl mx-auto pb-32 sm:pb-8">
       {/* Mobile Tab Switcher: Products vs Bill Checkout */}
-      <div className="lg:hidden grid grid-cols-2 p-1 bg-slate-200/80 dark:bg-[#1A2A25] rounded-2xl border border-slate-300/60 dark:border-[#24352F] mb-3 sticky top-0 z-20 backdrop-blur-md">
+      <div className="lg:hidden grid grid-cols-2 p-1.5 bg-slate-200/90 dark:bg-[#1A2A25] rounded-2xl border border-slate-300/60 dark:border-[#24352F] mb-3 sticky top-0 z-20 backdrop-blur-md shadow-xs">
         <button
           type="button"
           onClick={() => setMobileTab('products')}
-          className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+          className={`h-11 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
             mobileTab === 'products'
               ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 font-black shadow-xs'
               : 'text-slate-600 dark:text-[#8FA69C]'
           }`}
         >
-          <Package className="w-3.5 h-3.5" />
+          <Package className="w-4 h-4" />
           <span>{language === 'mr' ? '१. माल निवडा' : language === 'hi' ? '१. सामान चुनें' : '1. Products'}</span>
         </button>
         <button
           type="button"
           onClick={() => setMobileTab('cart')}
-          className={`py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+          className={`h-11 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
             mobileTab === 'cart'
               ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 font-black shadow-xs'
               : 'text-slate-600 dark:text-[#8FA69C]'
           }`}
         >
-          <ShoppingCart className="w-3.5 h-3.5" />
+          <ShoppingCart className="w-4 h-4" />
           <span>{language === 'mr' ? '२. बिल' : language === 'hi' ? '२. बिल' : '2. Bill'} ({cart.length}) {netTotal > 0 ? `• ₹${netTotal.toFixed(0)}` : ''}</span>
         </button>
       </div>
 
       {/* Active Counter & Operator Badge Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-slate-50 via-emerald-50/40 to-teal-50/30 dark:from-[#131F1B] dark:via-[#16221E] dark:to-[#1A2A25] border border-slate-200/90 dark:border-[#24352F] text-xs mb-3 shadow-2xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl bg-gradient-to-r from-slate-50 via-emerald-50/40 to-teal-50/30 dark:from-[#131F1B] dark:via-[#16221E] dark:to-[#1A2A25] border border-slate-200/90 dark:border-[#24352F] text-xs mb-3 shadow-2xs">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
           <span className="font-semibold text-slate-600 dark:text-[#8FA69C]">
@@ -699,27 +699,27 @@ export const BillingCounter: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[calc(100vh-8rem)]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 min-h-[calc(100vh-8rem)]">
         
         {/* LEFT COLUMN: Product Catalog & Fast Selection */}
-        <div className={`lg:col-span-7 flex flex-col space-y-4 ${mobileTab === 'cart' ? 'hidden lg:flex' : 'flex'}`}>
+        <div className={`lg:col-span-7 flex flex-col space-y-3 sm:space-y-4 ${mobileTab === 'cart' ? 'hidden lg:flex' : 'flex'}`}>
         
         {/* Search & Category Filter Pills */}
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-3 transition-colors">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-3 transition-colors">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 min-w-0">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
               <input
                 type="text"
                 placeholder={t('searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-medium"
+                className="w-full h-11 pl-9 pr-8 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm font-semibold"
               />
               {searchQuery && (
                 <button 
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white"
+                  className="w-8 h-8 absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -729,11 +729,11 @@ export const BillingCounter: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowBarcodeScanner(true)}
-              className="px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 text-xs font-black shadow-md shadow-emerald-600/30 active:scale-95 transition-all shrink-0 cursor-pointer"
+              className="w-11 sm:w-auto h-11 px-0 sm:px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 text-xs font-black shadow-md shadow-emerald-600/30 active:scale-95 transition-all shrink-0 cursor-pointer"
               title="Camera Barcode Scanner"
             >
-              <Barcode className="w-4 h-4 text-white" />
-              <span>{language === 'mr' ? 'बारकोड स्कॅन' : 'बारकोड स्कैन'}</span>
+              <Barcode className="w-5 h-5 text-white" />
+              <span className="hidden sm:inline">{language === 'mr' ? 'बारकोड स्कॅन' : 'बारकोड स्कैन'}</span>
               <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping hidden sm:inline-block" />
             </button>
 
@@ -744,7 +744,7 @@ export const BillingCounter: React.FC = () => {
                   await requestMotionPermission();
                   setShakeToScanEnabled(!shakeToScanEnabled);
                 }}
-                className={`px-3 py-2.5 rounded-xl border text-xs font-black flex items-center gap-1.5 transition active:scale-95 shadow-xs shrink-0 cursor-pointer ${
+                className={`w-11 sm:w-auto h-11 px-0 sm:px-3 rounded-xl border text-xs font-black flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs shrink-0 cursor-pointer ${
                   shakeToScanEnabled
                     ? 'bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-400'
                     : 'bg-slate-100 dark:bg-[#1A2A25] border-slate-200 dark:border-[#24352F] text-slate-500 dark:text-slate-400'
@@ -755,16 +755,13 @@ export const BillingCounter: React.FC = () => {
                 <span className="hidden sm:inline">
                   {language === 'mr' ? 'शेक स्कॅन' : 'शेक स्कैन'}: {shakeToScanEnabled ? 'चालू' : 'बंद'}
                 </span>
-                <span className="sm:hidden font-bold">
-                  {shakeToScanEnabled ? '📱 ऑन' : '📱 ऑफ'}
-                </span>
               </button>
             )}
 
             <button
               type="button"
               onClick={() => setActiveView('returns')}
-              className="px-3 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800/40 text-purple-700 dark:text-purple-300 flex items-center gap-1.5 text-xs font-bold shrink-0 transition shadow-2xs active:scale-95"
+              className="w-11 sm:w-auto h-11 px-0 sm:px-3 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800/40 text-purple-700 dark:text-purple-300 flex items-center justify-center gap-1.5 text-xs font-bold shrink-0 transition shadow-2xs active:scale-95"
               title="माल परतावा (Customer Returns)"
             >
               <RotateCcw className="w-4 h-4 text-purple-600 dark:text-purple-400" />
@@ -772,12 +769,12 @@ export const BillingCounter: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
             {categories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                className={`h-9 px-3 rounded-xl text-xs font-semibold whitespace-nowrap transition-all min-h-[36px] flex items-center justify-center ${
                   selectedCategory === cat.id
                     ? 'bg-emerald-600 text-white shadow-xs font-bold'
                     : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#223630]'
@@ -1213,7 +1210,7 @@ export const BillingCounter: React.FC = () => {
 
       {/* Floating Bottom Cart Bar on Mobile (Appears when products are selected on phone) */}
       {cart.length > 0 && mobileTab === 'products' && (
-        <div className="lg:hidden fixed bottom-16 left-3 right-3 z-30 animate-fadeIn">
+        <div className="lg:hidden fixed bottom-20 left-3 right-3 z-30 animate-fadeIn">
           <button
             type="button"
             onClick={() => setMobileTab('cart')}

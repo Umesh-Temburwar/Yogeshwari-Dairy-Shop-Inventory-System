@@ -158,16 +158,16 @@ export const ExpenseTracker: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 max-w-5xl mx-auto pb-32 sm:pb-8">
 
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#131F1B] p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-        <div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <Fuel className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-            <span>{t('expensesTitle')}</span>
+      {/* 1. Compact Page Header */}
+      <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
+            <Fuel className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="truncate">{t('expensesTitle')}</span>
           </h2>
-          <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 hidden sm:block truncate">
             {language === 'mr'
               ? 'दुकानाचे भाडे, चिलरचे वीज बिल, गाडी पेट्रोल, शीतकरण दुरुस्ती व नवीन उपकरणांची गुंतवणूक'
               : language === 'hi'
@@ -176,85 +176,86 @@ export const ExpenseTracker: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={handleViewExpensesPDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2621] dark:hover:bg-[#24352F] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-all shadow-xs"
-            title="View Expenses PDF Report"
-          >
-            <Eye className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-          </button>
-
-          <button
-            onClick={handlePrintExpensesPDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2621] dark:hover:bg-[#24352F] text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-all shadow-xs"
-            title="Print Expenses PDF"
-          >
-            <Printer className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-          </button>
-
-          <button
-            onClick={handleDownloadExpensesPDF}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-xs"
-            title="Download Expenses PDF Report"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>{language === 'mr' ? 'डाऊनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
-          </button>
-
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md shadow-amber-600/20 transition-all active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t('addExpense')}</span>
-          </button>
-        </div>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="h-10 px-3.5 sm:px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center gap-1.5 shrink-0 min-h-[40px]"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>{language === 'mr' ? '+ खर्च जोडा' : language === 'hi' ? '+ खर्च जोड़ें' : '+ Add Expense'}</span>
+        </button>
       </div>
 
-      {/* Time Filter */}
+      {/* 2. Quick Actions Row (Horizontally Scrollable) */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x">
+        <button
+          onClick={handleViewExpensesPDF}
+          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
+          title="View Expenses PDF Report"
+        >
+          <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+          <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
+        </button>
+
+        <button
+          onClick={handlePrintExpensesPDF}
+          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
+          title="Print Expenses PDF"
+        >
+          <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+          <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+        </button>
+
+        <button
+          onClick={handleDownloadExpensesPDF}
+          className="h-10 px-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-xs min-h-[40px]"
+          title="Download Expenses PDF Report"
+        >
+          <Download className="w-4 h-4" />
+          <span>{language === 'mr' ? 'डाऊनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
+        </button>
+      </div>
+
+      {/* 3. Time Filter */}
       <PeriodFilter />
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-[#8FA69C]">
-            <Zap className="w-4 h-4 text-amber-500" />
-            <span>{t('operatingExpenses')}</span>
+      {/* 4. Balanced Summary KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
+        <div className="col-span-2 sm:col-span-1 bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] truncate">
+            <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
+            <span className="truncate">{t('operatingExpenses')}</span>
           </div>
-          <span className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-1 block tracking-tight">
             ₹{metrics.operatingExpenses.toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-            {language === 'mr' ? 'भाडे, वीज, पेट्रोल, पॅकिंग व पगार' : language === 'hi' ? 'किराया, बिजली, पेट्रोल, पैकिंग व वेतन' : 'Rent, Electricity Bill, fuel, packaging & salaries'}
+          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 truncate">
+            {language === 'mr' ? 'भाडे, वीज, पेट्रोल, पगार' : language === 'hi' ? 'किराया, बिजली, वेतन' : 'Rent, power, fuel & pay'}
           </span>
         </div>
 
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-[#8FA69C]">
-            <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-            <span>{t('capitalInvestments')}</span>
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] truncate">
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+            <span className="truncate">{t('capitalInvestments')}</span>
           </div>
-          <span className="text-2xl font-black text-purple-700 dark:text-purple-400 mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-purple-700 dark:text-purple-400 mt-1 block tracking-tight">
             ₹{metrics.capitalInvestments.toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-            {language === 'mr' ? 'नवीन डीप फ्रीझर, वजन काटा, फर्निचर' : language === 'hi' ? 'नया डीप फ्रीजर, डिजिटल तराजू, फर्नीचर' : 'New deep chillers, digital scales, fixtures'}
+          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 truncate">
+            {language === 'mr' ? 'डीप फ्रीझर, फर्निचर' : language === 'hi' ? 'डीप फ्रीजर, तराजू' : 'Chillers, scales, fixtures'}
           </span>
         </div>
 
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-[#8FA69C]">
-            <TrendingDown className="w-4 h-4 text-slate-400" />
-            <span>{language === 'mr' ? 'एकूण खर्च व गुंतवणूक' : language === 'hi' ? 'कुल व्यय व निवेश' : 'Total Outflow'}</span>
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] truncate">
+            <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 shrink-0" />
+            <span className="truncate">{language === 'mr' ? 'एकूण खर्च' : language === 'hi' ? 'कुल व्यय' : 'Total Outflow'}</span>
           </div>
-          <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1 block tracking-tight">
             ₹{(metrics.operatingExpenses + metrics.capitalInvestments).toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-            {language === 'mr' ? 'कालावधीतील एकूण बाहेर पडलेली रक्कम' : language === 'hi' ? 'चुनी गई अवधि में कुल भुगतान' : 'Total cash outflow during period'}
+          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 truncate">
+            {language === 'mr' ? 'कालावधीतील एकूण बाहेर पडलेली रक्कम' : language === 'hi' ? 'कुल भुगतान' : 'Total cash outflow'}
           </span>
         </div>
       </div>

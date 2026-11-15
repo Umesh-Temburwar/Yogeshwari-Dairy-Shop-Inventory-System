@@ -302,19 +302,18 @@ export const ExpiryDashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 max-w-5xl mx-auto pb-32 sm:pb-8">
 
-      {/* HEADER BANNER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 dark:from-[#1E0F14] dark:via-[#131F1B] dark:to-[#0F1A17] p-6 rounded-3xl text-white shadow-md border border-rose-900/40 dark:border-[#24352F] transition-colors">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-900/60 dark:bg-rose-950/60 text-xs font-semibold text-rose-200 border border-rose-700/50 dark:border-rose-800/50">
-            <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
-            <span>{language === 'mr' ? 'FEFO मुदत समाप्ती नियंत्रण प्रणाली' : language === 'hi' ? 'FEFO एक्सपायरी प्रबंधन' : 'FEFO Expiry Control'}</span>
-          </div>
-          <h2 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-            <span>{language === 'mr' ? 'मुदत समाप्ती व्यवस्थापन डॅशबोर्ड (Expiry Dashboard)' : language === 'hi' ? 'एक्सपायरी डेट प्रबंधन डैशबोर्ड (Expiry Dashboard)' : 'Expiry Management Dashboard'}</span>
+      {/* 1. Compact Page Header */}
+      <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
+            <ShieldAlert className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500 shrink-0" />
+            <span className="truncate">
+              {language === 'mr' ? 'मुदत समाप्ती डॅशबोर्ड (Expiry)' : language === 'hi' ? 'एक्सपायरी डेट प्रबंधन (Expiry)' : 'Expiry Dashboard'}
+            </span>
           </h2>
-          <p className="text-rose-100/80 dark:text-[#8FA69C] text-xs max-w-xl">
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 hidden sm:block truncate">
             {language === 'mr'
               ? 'बॅचनिहाय एक्सपायरी ट्रॅकिंग, मुदत संपलेला माल तात्काळ ब्लॉक करणे, आणि नुकसान अहवाल'
               : language === 'hi'
@@ -323,99 +322,100 @@ export const ExpiryDashboard: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={handleViewExpiryPDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs shadow-md transition-all active:scale-95"
-            title="View Expiry Report PDF"
-          >
-            <Eye className="w-4 h-4 text-rose-300" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-          </button>
-
-          <button
-            onClick={handlePrintExpiryPDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs shadow-md transition-all active:scale-95 border border-white/20"
-            title="Print Expiry Report"
-          >
-            <Printer className="w-4 h-4 text-rose-300" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-          </button>
-
-          <button
-            onClick={handleDownloadExpiryPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
-            title="Download PDF Report"
-          >
-            <Download className="w-4 h-4" />
-            <span>{language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
-          </button>
-
-          <button
-            onClick={handleCopyWhatsAppAlert}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all active:scale-95"
-          >
-            {copiedAlert ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            <span>{copiedAlert ? (language === 'mr' ? 'अलर्ट कॉपी झाला!' : 'अलर्ट कॉपी हुआ!') : (language === 'mr' ? 'व्हाट्सॲप रिस्क अलर्ट' : 'व्हाट्सएप अलर्ट')}</span>
-          </button>
-        </div>
+        <button
+          onClick={handleCopyWhatsAppAlert}
+          className="h-10 px-3.5 sm:px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center gap-1.5 shrink-0 min-h-[40px]"
+        >
+          {copiedAlert ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          <span>{copiedAlert ? (language === 'mr' ? 'कॉपी झाला!' : 'कॉपी हुआ!') : (language === 'mr' ? 'व्हाट्सॲप रिस्क' : 'व्हाट्सएप रिस्क')}</span>
+        </button>
       </div>
 
-      {/* 4 KPI SUMMARY CARDS */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* 2. Quick Actions Row (Horizontally Scrollable) */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x">
+        <button
+          onClick={handleViewExpiryPDF}
+          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
+          title="View Expiry Report PDF"
+        >
+          <Eye className="w-4 h-4 text-rose-500" />
+          <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
+        </button>
+
+        <button
+          onClick={handlePrintExpiryPDF}
+          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
+          title="Print Expiry Report"
+        >
+          <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+          <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+        </button>
+
+        <button
+          onClick={handleDownloadExpiryPDF}
+          className="h-10 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-xs min-h-[40px]"
+          title="Download PDF Report"
+        >
+          <Download className="w-4 h-4" />
+          <span>{language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
+        </button>
+      </div>
+
+      {/* 3. 4 Equal-Size KPI Summary Cards (2x2 Grid on Mobile) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
         {/* Expired Loss Card */}
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-rose-200 dark:border-rose-950/60 shadow-xs transition-colors">
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-rose-200 dark:border-rose-950/60 shadow-xs transition-colors flex flex-col justify-between">
           <div className="flex items-center justify-between text-rose-600 dark:text-rose-400">
-            <span className="text-xs font-bold uppercase tracking-wider">{language === 'mr' ? 'मुदत संपलेला माल' : 'एक्सपायर्ड माल'}</span>
-            <AlertOctagon className="w-4 h-4" />
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate">{language === 'mr' ? 'मुदत संपलेला माल' : 'एक्सपायर्ड माल'}</span>
+            <AlertOctagon className="w-3.5 h-3.5 shrink-0" />
           </div>
-          <span className="text-2xl font-black text-rose-700 dark:text-rose-400 mt-2 block tabular-nums">
+          <span className="text-xl sm:text-2xl font-black text-rose-700 dark:text-rose-400 mt-1 block tabular-nums tracking-tight">
             ₹{kpis.expiredCostLoss.toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] font-semibold text-rose-600/80 dark:text-rose-400/80">
-            {kpis.expiredCount} {language === 'mr' ? 'बॅचेस (काउंटरवर विक्री बंद)' : 'बैचेस (बिक्री ब्लॉक है)'}
+          <span className="text-[10px] sm:text-[11px] font-semibold text-rose-600/80 dark:text-rose-400/80 truncate">
+            {kpis.expiredCount} {language === 'mr' ? 'बॅचेस (विक्री बंद)' : 'बैचेस (ब्लॉक)'}
           </span>
         </div>
 
         {/* Near Expiry at Risk Card */}
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-amber-200 dark:border-amber-950/60 shadow-xs transition-colors">
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-amber-200 dark:border-amber-950/60 shadow-xs transition-colors flex flex-col justify-between">
           <div className="flex items-center justify-between text-amber-600 dark:text-amber-400">
-            <span className="text-xs font-bold uppercase tracking-wider">{language === 'mr' ? 'धोक्यातील माल (३ दिवस)' : 'जोखिम में (3 दिन)'}</span>
-            <AlertTriangle className="w-4 h-4" />
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate">{language === 'mr' ? 'धोक्यातील माल' : 'जोखिम में'}</span>
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
           </div>
-          <span className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-2 block tabular-nums">
+          <span className="text-xl sm:text-2xl font-black text-amber-700 dark:text-amber-400 mt-1 block tabular-nums tracking-tight">
             ₹{kpis.nearExpiryRiskTotal.toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] font-semibold text-amber-600/80 dark:text-amber-400/80">
+          <span className="text-[10px] sm:text-[11px] font-semibold text-amber-600/80 dark:text-amber-400/80 truncate">
             {kpis.todayCount + kpis.tomorrowCount + kpis.threeDaysCount} {language === 'mr' ? 'बॅचेस आधी विका' : 'बैचेस पहले बेचें'}
           </span>
         </div>
 
         {/* Fresh Stock Safe Card */}
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-emerald-200 dark:border-emerald-950/60 shadow-xs transition-colors">
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-emerald-200 dark:border-emerald-950/60 shadow-xs transition-colors flex flex-col justify-between">
           <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
-            <span className="text-xs font-bold uppercase tracking-wider">{language === 'mr' ? 'ताजा सुरक्षित माल' : 'ताज़ा सुरक्षित स्टॉक'}</span>
-            <CheckCircle2 className="w-4 h-4" />
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate">{language === 'mr' ? 'ताजा माल' : 'ताज़ा स्टॉक'}</span>
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
           </div>
-          <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-2 block tabular-nums">
+          <span className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1 block tabular-nums tracking-tight">
             {kpis.freshCount} {language === 'mr' ? 'बॅचेस' : 'बैचेस'}
           </span>
-          <span className="text-[11px] font-semibold text-emerald-600/80 dark:text-emerald-400/80">
-            {language === 'mr' ? '७ दिवसांपेक्षा जास्त मुदत' : '7 दिन से अधिक सुरक्षित'}
+          <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-600/80 dark:text-emerald-400/80 truncate">
+            {language === 'mr' ? '७ दिवसांपेक्षा जास्त' : '7 दिन से सुरक्षित'}
           </span>
         </div>
 
         {/* Total Monitored Batches */}
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
-            <span className="text-xs font-bold uppercase tracking-wider">{language === 'mr' ? 'एकूण सक्रिय बॅचेस' : 'कुल सक्रिय बैचेस'}</span>
-            <Layers className="w-4 h-4" />
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate">{language === 'mr' ? 'सक्रिय बॅचेस' : 'सक्रिय बैचेस'}</span>
+            <Layers className="w-3.5 h-3.5 shrink-0" />
           </div>
-          <span className="text-2xl font-black text-slate-900 dark:text-white mt-2 block tabular-nums">
+          <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1 block tabular-nums tracking-tight">
             {kpis.totalActiveBatches}
           </span>
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C]">
-            ₹{kpis.totalStockCost.toLocaleString('en-IN')} {language === 'mr' ? 'एकूण खरेदी मूल्य' : 'कुल खरीद लागत'}
+          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C] truncate">
+            ₹{kpis.totalStockCost.toLocaleString('en-IN')} {language === 'mr' ? 'खरेदी मूल्य' : 'लागत'}
           </span>
         </div>
       </div>

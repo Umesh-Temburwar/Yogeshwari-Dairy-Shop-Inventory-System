@@ -255,16 +255,16 @@ export const KhataBook: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 max-w-5xl mx-auto pb-32 sm:pb-8">
 
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#131F1B] p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-        <div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <BookOpen className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-            <span>{t('khataTitle')}</span>
+      {/* 1. Compact Page Header */}
+      <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
+            <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="truncate">{t('khataTitle')}</span>
           </h2>
-          <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 hidden sm:block truncate">
             {language === 'mr'
               ? 'नियमित ग्राहक, मिठाईवाले आणि हॉटेलांचे उधारी व जमा खातेवही'
               : language === 'hi'
@@ -273,88 +273,87 @@ export const KhataBook: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-          {/* View PDF Button */}
-          <button
-            onClick={handleViewKhataBookPDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
-            title="View Udhar Khata Book PDF Report"
-          >
-            <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-          </button>
-
-          {/* Print PDF Button */}
-          <button
-            onClick={handlePrintKhataBookPDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
-            title="Print Udhar Khata Book Report"
-          >
-            <Printer className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-          </button>
-
-          {/* Download PDF Button */}
-          <button
-            onClick={handleDownloadKhataBookPDF}
-            className="flex items-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 text-xs font-bold transition-all active:scale-95"
-            title="Download Udhar Khata Book PDF Report"
-          >
-            <Download className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span>{language === 'mr' ? 'खातेवही PDF' : language === 'hi' ? 'खाता-बही PDF' : 'Khata PDF'}</span>
-          </button>
-
-          <button
-            onClick={() => setIsAddCustModalOpen(true)}
-            className="flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md shadow-amber-600/20 transition-all active:scale-95 shrink-0"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>{language === 'mr' ? 'नवीन ग्राहक खाते जोडा' : language === 'hi' ? 'नया खाता खोलें' : 'Add New Customer'}</span>
-          </button>
-        </div>
+        <button
+          onClick={() => setIsAddCustModalOpen(true)}
+          className="h-10 px-3.5 sm:px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center gap-1.5 shrink-0 min-h-[40px]"
+          title={language === 'mr' ? 'नवीन ग्राहक खाते जोडा' : language === 'hi' ? 'नया खाता खोलें' : 'Add New Customer'}
+        >
+          <UserPlus className="w-4 h-4 stroke-[2.5]" />
+          <span>{language === 'mr' ? '+ नवीन ग्राहक' : language === 'hi' ? '+ नया ग्राहक' : '+ New Customer'}</span>
+        </button>
       </div>
 
-      {/* KPI Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
+      {/* 2. Quick Actions Row (Horizontally Scrollable) */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x">
+        <button
+          onClick={handleViewKhataBookPDF}
+          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
+          title="View Udhar Khata Book PDF Report"
+        >
+          <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+          <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
+        </button>
+
+        <button
+          onClick={handlePrintKhataBookPDF}
+          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
+          title="Print Udhar Khata Book Report"
+        >
+          <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+          <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+        </button>
+
+        <button
+          onClick={handleDownloadKhataBookPDF}
+          className="h-10 px-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-xs min-h-[40px]"
+          title="Download Udhar Khata Book PDF Report"
+        >
+          <Download className="w-4 h-4" />
+          <span>{language === 'mr' ? 'खातेवही PDF' : language === 'hi' ? 'खाता-बही PDF' : 'Download PDF'}</span>
+        </button>
+      </div>
+
+      {/* 3. Balanced Summary KPI Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
+        <div className="col-span-2 sm:col-span-1 bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-amber-200/90 dark:border-amber-900/40 shadow-xs flex flex-col justify-between">
+          <span className="text-[11px] sm:text-xs font-semibold text-amber-800 dark:text-amber-400 block truncate">
             {t('totalUdharDue')}
           </span>
-          <span className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-amber-700 dark:text-amber-400 mt-1 block tracking-tight">
             ₹{metrics.totalOutstandingUdhar.toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {customers.filter(c => c.current_balance > 0).length} {language === 'mr' ? 'ग्राहकांकडून येणे बाकी आहे' : language === 'hi' ? 'ग्राहकों से वसूली बाकी है' : 'customers with dues'}
+          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 truncate">
+            {customers.filter(c => c.current_balance > 0).length} {language === 'mr' ? 'ग्राहकांकडून येणे बाकी' : language === 'hi' ? 'ग्राहकों से बकाया' : 'customers with dues'}
           </span>
         </div>
 
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'एकूण दिलेली उधारी' : language === 'hi' ? 'कुल उधारी दी गई' : 'Total Credit Given'}
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
+          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
+            {language === 'mr' ? 'एकूण उधारी' : language === 'hi' ? 'कुल उधारी' : 'Credit Given'}
           </span>
-          <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white mt-1 block tracking-tight">
             ₹{customers.reduce((acc, c) => acc + c.total_credit, 0).toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? 'सर्व खात्यांमधील एकूण उधारी' : language === 'hi' ? 'सभी खातों में कुल दी गई उधारी' : 'Cumulative credit extended'}
+          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 truncate">
+            {language === 'mr' ? 'एकूण दिलेली' : language === 'hi' ? 'दी गई उधारी' : 'Total extended'}
           </span>
         </div>
 
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'एकूण वसूल झालेली रक्कम' : language === 'hi' ? 'कुल जमा रकम (Recovered)' : 'Total Recovered'}
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
+          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
+            {language === 'mr' ? 'एकूण वसुली' : language === 'hi' ? 'कुल जमा (वसूली)' : 'Total Recovered'}
           </span>
-          <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1 block tracking-tight">
             ₹{customers.reduce((acc, c) => acc + c.total_paid, 0).toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? 'यशस्वीपणे जमा झालेली रक्कम' : language === 'hi' ? 'सफलतापूर्वक वसूल की गई राशि' : 'Successfully received'}
+          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 truncate">
+            {language === 'mr' ? 'जमा झालेली' : language === 'hi' ? 'प्राप्त रकम' : 'Successfully received'}
           </span>
         </div>
       </div>
 
-      {/* Search & Filter Controls */}
-      <div className="flex flex-col sm:flex-row gap-3 bg-white dark:bg-[#131F1B] p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
+      {/* 4. Search & Filter Controls */}
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -362,29 +361,32 @@ export const KhataBook: React.FC = () => {
             placeholder={language === 'mr' ? 'ग्राहकाचे नाव किंवा मोबाईल क्रमांक शोधा...' : language === 'hi' ? 'ग्राहक का नाम या मोबाइल नंबर खोजें...' : 'Search customer by name or phone...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
 
-        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl shrink-0">
+        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl shrink-0 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setFilterStatus('pending')}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold ${filterStatus === 'pending' ? 'bg-amber-600 text-white font-bold' : 'text-slate-600 dark:text-[#8FA69C]'
-              }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap min-h-[36px] flex items-center justify-center ${
+              filterStatus === 'pending' ? 'bg-amber-600 text-white font-bold shadow-xs' : 'text-slate-600 dark:text-[#8FA69C]'
+            }`}
           >
             {t('debtorsOnly')} ({customers.filter(c => c.current_balance > 0).length})
           </button>
           <button
             onClick={() => setFilterStatus('cleared')}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold ${filterStatus === 'cleared' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-600 dark:text-[#8FA69C]'
-              }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap min-h-[36px] flex items-center justify-center ${
+              filterStatus === 'cleared' ? 'bg-emerald-600 text-white font-bold shadow-xs' : 'text-slate-600 dark:text-[#8FA69C]'
+            }`}
           >
             {t('clearedAccounts')} ({customers.filter(c => c.current_balance <= 0).length})
           </button>
           <button
             onClick={() => setFilterStatus('all')}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold ${filterStatus === 'all' ? 'bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white shadow-xs font-bold' : 'text-slate-600 dark:text-[#8FA69C]'
-              }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap min-h-[36px] flex items-center justify-center ${
+              filterStatus === 'all' ? 'bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white shadow-xs font-bold border border-slate-200 dark:border-[#24352F]' : 'text-slate-600 dark:text-[#8FA69C]'
+            }`}
           >
             {t('allAccounts')} ({customers.length})
           </button>

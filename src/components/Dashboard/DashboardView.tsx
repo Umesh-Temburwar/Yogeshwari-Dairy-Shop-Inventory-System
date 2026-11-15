@@ -31,18 +31,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddProduct }
     'Complete tracking of daily sales, cash & online UPI collections, purchases, udhar credit book, and net profit.';
 
   return (
-    <div className="space-y-6 max-w-[1440px] mx-auto">
+    <div className="space-y-4 sm:space-y-6 max-w-[1440px] mx-auto pb-32 sm:pb-8">
       
       {/* Compact Hero Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-950 dark:from-[#064E3B] dark:to-[#0B1210] rounded-2xl p-4 sm:p-6 text-white shadow-sm border border-emerald-700/40 dark:border-[#24352F] relative overflow-hidden transition-colors duration-150">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-950 dark:from-[#064E3B] dark:to-[#0B1210] rounded-2xl p-4 sm:p-6 text-white shadow-sm border border-emerald-700/40 dark:border-[#24352F] relative overflow-hidden transition-colors duration-150">
         
         {/* Left: Heading & Description */}
-        <div className="relative z-10 space-y-1.5 min-w-0 flex-1">
+        <div className="relative z-10 space-y-1 sm:space-y-1.5 min-w-0 flex-1">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-700/50 dark:bg-emerald-950/60 backdrop-blur-xs text-xs font-semibold text-emerald-200 border border-emerald-600/40 dark:border-emerald-800/40">
             <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             <span className="truncate">{t('shopName')} &bull; ERP</span>
           </div>
-          <h1 className="text-lg sm:text-2xl font-black tracking-tight text-white leading-snug">
+          <h1 className="text-base sm:text-2xl font-black tracking-tight text-white leading-snug">
             {heroHeading}
           </h1>
           <p className="text-emerald-100/85 dark:text-[#8FA69C] text-xs max-w-xl line-clamp-2 sm:line-clamp-none">
@@ -54,7 +54,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddProduct }
         <div className="relative z-10 grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 shrink-0 w-full sm:w-auto">
           <button
             onClick={() => setActiveView('pos')}
-            className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 dark:bg-amber-400 dark:hover:bg-amber-300 text-amber-950 font-bold text-xs sm:text-sm shadow-xs transition-all active:scale-95 shrink-0 text-center"
+            className="h-10 sm:h-auto flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 dark:bg-amber-400 dark:hover:bg-amber-300 text-amber-950 font-bold text-xs sm:text-sm shadow-xs transition-all active:scale-95 shrink-0 text-center min-h-[40px]"
           >
             <ShoppingCart className="w-4 h-4 shrink-0" />
             <span className="truncate">{t('openBillingCounter')}</span>
@@ -62,7 +62,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddProduct }
 
           <button
             onClick={onOpenAddProduct}
-            className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm backdrop-blur-xs border border-white/20 transition-all active:scale-95 shrink-0 text-center"
+            className="h-10 sm:h-auto flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm backdrop-blur-xs border border-white/20 transition-all active:scale-95 shrink-0 text-center min-h-[40px]"
           >
             <PlusCircle className="w-4 h-4 text-emerald-300 shrink-0" />
             <span className="truncate">{t('addNewMaal')}</span>
@@ -83,7 +83,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddProduct }
       <OwnerAdminCounterWidget />
 
       {/* Analytical Visuals: Sales Trend (2/3) & Cash vs Online Distribution (1/3) */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
         <div className="xl:col-span-2">
           <Suspense fallback={<Skeleton className="h-80 w-full rounded-2xl" />}>
             <SalesProfitChart />
@@ -97,7 +97,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddProduct }
       </div>
 
       {/* Operational Widgets: Best Sellers & Stock Alert List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-28 sm:pb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <BestSellersWidget />
         <LowStockAlertsWidget />
       </div>

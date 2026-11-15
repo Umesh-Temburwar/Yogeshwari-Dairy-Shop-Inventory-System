@@ -290,18 +290,18 @@ export const DailySalesTracker: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 max-w-5xl mx-auto pb-32 sm:pb-8">
       
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#131F1B] p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
-        <div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <ReceiptIndianRupee className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-            <span>
-              {language === 'mr' ? 'दैनिक विक्री व रोख-ऑनलाईन लेजर (Daily Sales History)' : language === 'hi' ? 'दैनिक बिक्री & रोकड़-ऑनलाइन लेजर (Daily Sales History)' : 'Daily Sales & Cash/Online Ledger'}
+      {/* 1. Compact Page Header */}
+      <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
+            <ReceiptIndianRupee className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="truncate">
+              {language === 'mr' ? 'दैनिक विक्री व लेजर' : language === 'hi' ? 'दैनिक बिक्री व लेजर' : 'Daily Sales Ledger'}
             </span>
           </h2>
-          <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 hidden sm:block truncate">
             {language === 'mr' 
               ? 'किती माल गेला, काय गेला, रोख किती आली आणि ऑनलाईन UPI किती आले याचा हिशोब' 
               : language === 'hi'
@@ -310,124 +310,134 @@ export const DailySalesTracker: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={handleViewSalesPDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2621] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-slate-700 text-xs font-bold transition-all shadow-xs active:scale-95"
-            title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View Sales PDF'}
-          >
-            <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-          </button>
-
-          <button
-            onClick={handlePrintSalesPDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
-            title={language === 'mr' ? 'अहवाल थेट प्रिंट करा' : language === 'hi' ? 'रिपोर्ट प्रिंट करें' : 'Print Sales Report'}
-          >
-            <Printer className="w-4 h-4 text-emerald-400" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-          </button>
-
-          <button
-            onClick={() => exportSalesToCSV(filteredSales, language as any)}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
-            title={language === 'mr' ? 'अहवाल Excel/CSV डाउनलोड करा' : 'Download Sales CSV / Excel'}
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span className="hidden sm:inline">CSV / Excel</span>
-          </button>
-
-          <button
-            onClick={handleDownloadSalesPDF}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
-            title={language === 'mr' ? 'अहवाल PDF फाईल डाउनलोड करा' : language === 'hi' ? 'रिपोर्ट PDF डाउनलोड करें' : 'Download Sales PDF'}
-          >
-            <Download className="w-4 h-4" />
-            <span>{language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
-          </button>
-        </div>
+        <button
+          onClick={() => setActiveView('billing')}
+          className="h-10 px-3.5 sm:px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center gap-1.5 shrink-0 min-h-[40px]"
+          title={language === 'mr' ? 'नवीन बिल बनवा' : language === 'hi' ? 'नया बिल बनाएं' : 'New Bill (POS)'}
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>{language === 'mr' ? '+ नवीन बिल' : language === 'hi' ? '+ नया बिल' : '+ New Bill'}</span>
+        </button>
       </div>
 
-      {/* Time Filter */}
+      {/* 2. Quick Actions Row (Horizontally Scrollable) */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x">
+        <button
+          onClick={handleViewSalesPDF}
+          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
+          title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View Sales PDF'}
+        >
+          <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
+        </button>
+
+        <button
+          onClick={handlePrintSalesPDF}
+          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
+          title={language === 'mr' ? 'अहवाल थेट प्रिंट करा' : language === 'hi' ? 'रिपोर्ट प्रिंट करें' : 'Print Sales Report'}
+        >
+          <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+          <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+        </button>
+
+        <button
+          onClick={() => exportSalesToCSV(filteredSales, language as any)}
+          className="h-10 px-3.5 rounded-xl border border-teal-200 dark:border-teal-800/40 bg-teal-50 dark:bg-teal-950/30 hover:bg-teal-100 dark:hover:bg-teal-900/40 text-teal-800 dark:text-teal-300 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
+          title={language === 'mr' ? 'अहवाल Excel/CSV डाउनलोड करा' : 'Download Sales CSV / Excel'}
+        >
+          <FileSpreadsheet className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+          <span>CSV / Excel</span>
+        </button>
+
+        <button
+          onClick={handleDownloadSalesPDF}
+          className="h-10 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-xs min-h-[40px]"
+          title={language === 'mr' ? 'अहवाल PDF फाईल डाउनलोड करा' : language === 'hi' ? 'रिपोर्ट PDF डाउनलोड करें' : 'Download Sales PDF'}
+        >
+          <Download className="w-4 h-4" />
+          <span>{language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
+        </button>
+      </div>
+
+      {/* 3. Time Filter */}
       <PeriodFilter />
 
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
-          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
+      {/* 4. Equal-Size 2x2 Summary KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex flex-col justify-between">
+          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
             {t('totalSales')}
           </span>
-          <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1 block tracking-tight">
             ₹{filteredKpis.totalRevenue.toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {filteredKpis.billCount} {language === 'mr' ? 'बिले फाडली' : language === 'hi' ? 'बिल काटे गए' : 'invoices billed'}
+          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 truncate">
+            {filteredKpis.billCount} {language === 'mr' ? 'बिले फाडली' : language === 'hi' ? 'बिल काटे गए' : 'invoices'}
           </span>
         </div>
 
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-700 dark:text-blue-400">
-            <Banknote className="w-4 h-4" />
-            <span>{t('cashCollected')}</span>
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex flex-col justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-blue-700 dark:text-blue-400 truncate">
+            <Banknote className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span className="truncate">{t('cashCollected')}</span>
           </div>
-          <span className="text-2xl font-black text-blue-900 dark:text-blue-200 mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-blue-900 dark:text-blue-200 mt-1 block tracking-tight">
             ₹{filteredKpis.cashInflow.toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
-            {language === 'mr' ? 'गल्ल्यातील रोख रक्कम' : language === 'hi' ? 'रोकड़ गल्ला कलेक्शन' : 'Cash Drawer Inflow'}
+          <span className="text-[10px] sm:text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-0.5 truncate">
+            {language === 'mr' ? 'गल्ल्यातील रोख' : language === 'hi' ? 'रोकड़ गल्ला' : 'Cash Inflow'}
           </span>
         </div>
 
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-purple-700 dark:text-purple-400">
-            <Smartphone className="w-4 h-4" />
-            <span>{t('onlineCollected')}</span>
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex flex-col justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-purple-700 dark:text-purple-400 truncate">
+            <Smartphone className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span className="truncate">{t('onlineCollected')}</span>
           </div>
-          <span className="text-2xl font-black text-purple-900 dark:text-purple-200 mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-purple-900 dark:text-purple-200 mt-1 block tracking-tight">
             ₹{filteredKpis.onlineInflow.toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">
-            PhonePe, GPay, Paytm
+          <span className="text-[10px] sm:text-[11px] text-purple-600 dark:text-purple-400 font-medium mt-0.5 truncate">
+            UPI, QR, Cards
           </span>
         </div>
 
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-orange-700 dark:text-amber-400">
-            <BookOpen className="w-4 h-4" />
-            <span>{language === 'mr' ? 'उधार माल दिला (Credit)' : language === 'hi' ? 'उधार दिया (Credit)' : 'Credit Given'}</span>
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex flex-col justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-orange-700 dark:text-amber-400 truncate">
+            <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span className="truncate">{language === 'mr' ? 'उधार माल' : language === 'hi' ? 'उधार दिया' : 'Credit Given'}</span>
           </div>
-          <span className="text-2xl font-black text-orange-900 dark:text-amber-200 mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-orange-900 dark:text-amber-200 mt-1 block tracking-tight">
             ₹{filteredKpis.udharGiven.toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-orange-600 dark:text-amber-400 font-medium">
-            {language === 'mr' ? 'खात्यावर नोंदवलेली उधारी' : language === 'hi' ? 'खाते में दर्ज उधारी' : 'Recorded in Khata'}
+          <span className="text-[10px] sm:text-[11px] text-orange-600 dark:text-amber-400 font-medium mt-0.5 truncate">
+            {language === 'mr' ? 'खात्यावर नोंद' : language === 'hi' ? 'खाते में दर्ज' : 'Recorded in Khata'}
           </span>
         </div>
       </div>
 
-      {/* Search & Mode + Demographic Filters */}
-      <div className="bg-white dark:bg-[#131F1B] p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-3 transition-colors">
-        <div className="flex flex-col sm:flex-row gap-3">
+      {/* 5. Search & Mode + Demographic Filters */}
+      <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-3 transition-colors">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
             <input
               type="text"
-              placeholder={language === 'mr' ? 'बिल क्रमांक, ग्राहक नाव किंवा मोबाईल नंबर शोधा...' : language === 'hi' ? 'बिल नंबर, ग्राहक नाम या फोन नंबर से खोजें...' : 'Search invoice no, customer name or phone...'}
+              placeholder={language === 'mr' ? 'बिल क्र., ग्राहक नाव किंवा फोन शोधा...' : language === 'hi' ? 'बिल नंबर, ग्राहक नाम या फोन से खोजें...' : 'Search invoice, customer or phone...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
-          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl shrink-0 overflow-x-auto">
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl shrink-0 overflow-x-auto no-scrollbar">
             {paymentModes.map((mode) => (
               <button
                 key={mode.id}
                 onClick={() => setSelectedPaymentMode(mode.id)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap min-h-[36px] flex items-center justify-center ${
                   selectedPaymentMode === mode.id
-                    ? 'bg-white dark:bg-[#131F1B] text-emerald-800 dark:text-emerald-400 shadow-xs font-bold border dark:border-[#24352F]'
+                    ? 'bg-white dark:bg-[#131F1B] text-emerald-800 dark:text-emerald-400 shadow-xs font-bold border border-slate-200 dark:border-[#24352F]'
                     : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -438,16 +448,16 @@ export const DailySalesTracker: React.FC = () => {
         </div>
 
         {/* Demographic Filter Chips (Gender & Age Group) */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F]">
-          <span className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] uppercase tracking-wider">
+        <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F] overflow-x-auto no-scrollbar">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] uppercase tracking-wider shrink-0">
             {t('customerGender')}:
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             {genderOptions.map((g) => (
               <button
                 key={g.id}
                 onClick={() => setSelectedGender(g.id)}
-                className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap min-h-[30px] ${
                   selectedGender === g.id
                     ? 'bg-emerald-600 text-white font-bold shadow-xs'
                     : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#223630]'
@@ -458,15 +468,15 @@ export const DailySalesTracker: React.FC = () => {
             ))}
           </div>
 
-          <span className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] uppercase tracking-wider ml-2">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] uppercase tracking-wider ml-2 shrink-0">
             {t('customerAgeGroup')}:
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             {ageGroupOptions.map((ag) => (
               <button
                 key={ag.id}
                 onClick={() => setSelectedAgeGroup(ag.id)}
-                className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap min-h-[30px] ${
                   selectedAgeGroup === ag.id
                     ? 'bg-teal-600 text-white font-bold shadow-xs'
                     : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#223630]'
@@ -480,20 +490,20 @@ export const DailySalesTracker: React.FC = () => {
 
         {/* Admin & Counter Filter (Dedicated for Shop Owner) */}
         {role === 'Owner' && (
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F]">
-            <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
-              👑 {language === 'mr' ? 'प्रशासक व काऊंटर तपशील फिल्टर:' : language === 'hi' ? 'प्रशासक व काउंटर फिल्टर:' : 'Admin & Counter Filter:'}
+          <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F] overflow-x-auto no-scrollbar">
+            <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
+              👑 {language === 'mr' ? 'काऊंटर:' : language === 'hi' ? 'काउंटर:' : 'Counter:'}
             </span>
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-1.5 shrink-0">
               {[
-                { id: 'All', label: language === 'mr' ? 'सर्व नोंदी (All)' : language === 'hi' ? 'सभी रिकॉर्ड (All)' : 'All Counters' },
-                { id: '1', label: language === 'mr' ? '🛡️ निलेश सखारे (काऊंटर १)' : language === 'hi' ? '🛡️ निलेश सखारे (काउंटर १)' : '🛡️ Nilesh Sakhare (Counter 1)' },
-                { id: 'Owner', label: language === 'mr' ? '👑 निखिल सखारे (मालक)' : language === 'hi' ? '👑 निखिल सखारे (मालिक)' : '👑 Nikhil Sakhare (Owner)' },
+                { id: 'All', label: language === 'mr' ? 'सर्व नोंदी' : language === 'hi' ? 'सभी रिकॉर्ड' : 'All' },
+                { id: '1', label: language === 'mr' ? '🛡️ काऊंटर १ (निलेश)' : language === 'hi' ? '🛡️ काउंटर १ (निलेश)' : '🛡️ Counter 1' },
+                { id: 'Owner', label: language === 'mr' ? '👑 मालक (निखिल)' : language === 'hi' ? '👑 मालिक (निखिल)' : '👑 Owner' },
               ].map((adm) => (
                 <button
                   key={adm.id}
                   onClick={() => setSelectedAdminSlot(adm.id)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap min-h-[32px] ${
                     selectedAdminSlot === adm.id
                       ? 'bg-amber-500 text-amber-950 font-black shadow-xs'
                       : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#223630]'

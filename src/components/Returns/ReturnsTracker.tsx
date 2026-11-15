@@ -248,16 +248,16 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
   };
 
   return (
-    <div className="space-y-4 pb-20 sm:pb-6">
+    <div className="space-y-4 max-w-5xl mx-auto pb-32 sm:pb-8">
       
-      {/* Top Header & Tab Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-[#E7F0EC] flex items-center gap-2">
-            <RotateCcw className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-            <span>{language === 'mr' ? 'माल परतावा व रिफंड व्यवस्थापन' : language === 'hi' ? 'सामान वापसी व रिफंड प्रबंधन' : 'Return & Refund Management'}</span>
+      {/* 1. Compact Page Header */}
+      <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-base sm:text-xl font-black text-slate-900 dark:text-[#E7F0EC] flex items-center gap-2 tracking-tight truncate">
+            <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400 shrink-0" />
+            <span className="truncate">{language === 'mr' ? 'माल परतावा व रिफंड' : language === 'hi' ? 'सामान वापसी व रिफंड' : 'Returns & Refunds'}</span>
           </h1>
-          <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-0.5">
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 hidden sm:block truncate">
             {language === 'mr' 
               ? 'ग्राहकांचा परतावा आणि सप्लायरला खराब/एक्सपायर्ड माल परत पाठवण्याचा संपूर्ण हिशोब' 
               : 'ग्राहकों का रिटर्न और सप्लायर को खराब/एक्सपायर्ड माल लौटाने का पूरा हिसाब'}
@@ -265,89 +265,92 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
         </div>
 
         {/* Primary Action Button */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {activeTab === 'customer' ? (
-            <>
-              <button
-                type="button"
-                onClick={handleViewCustomerPDF}
-                className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
-                title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View Customer Returns PDF'}
-              >
-                <Eye className="w-4 h-4 text-purple-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-              </button>
+        {activeTab === 'customer' ? (
+          <button
+            onClick={onOpenReturnModal}
+            className="h-10 px-3.5 sm:px-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 active:scale-95 shrink-0 min-h-[40px]"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>{language === 'mr' ? '+ ग्राहक परतावा' : language === 'hi' ? '+ ग्राहक वापसी' : '+ Return'}</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => setIsSupplierModalOpen(true)}
+            className="h-10 px-3.5 sm:px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 active:scale-95 shrink-0 min-h-[40px]"
+          >
+            <Truck className="w-4 h-4" />
+            <span>{language === 'mr' ? '+ सप्लायर परतावा' : '+ सप्लायर वापसी'}</span>
+          </button>
+        )}
+      </div>
 
-              <button
-                type="button"
-                onClick={handlePrintCustomerPDF}
-                className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
-                title={language === 'mr' ? 'अहवाल प्रिंट करा' : language === 'hi' ? 'रिपोर्ट प्रिंट करें' : 'Print Customer Returns Report'}
-              >
-                <Printer className="w-4 h-4 text-purple-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-              </button>
+      {/* 2. Quick Actions Row (Horizontally Scrollable) */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x">
+        {activeTab === 'customer' ? (
+          <>
+            <button
+              type="button"
+              onClick={handleViewCustomerPDF}
+              className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-2xs shrink-0 snap-start min-h-[40px]"
+              title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View Customer Returns PDF'}
+            >
+              <Eye className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={handleDownloadCustomerPDF}
-                className="px-3 py-2.5 rounded-2xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-800/60 text-purple-900 dark:text-purple-300 font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
-                title={language === 'mr' ? 'PDF डाउनलोड करा' : language === 'hi' ? 'PDF डाउनलोड करें' : 'Download Customer Returns PDF'}
-              >
-                <Download className="w-4 h-4 text-purple-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'परतावा PDF' : language === 'hi' ? 'वापसी PDF' : 'Download PDF'}</span>
-              </button>
+            <button
+              type="button"
+              onClick={handlePrintCustomerPDF}
+              className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-2xs shrink-0 snap-start min-h-[40px]"
+              title={language === 'mr' ? 'अहवाल प्रिंट करा' : language === 'hi' ? 'रिपोर्ट प्रिंट करें' : 'Print Customer Returns Report'}
+            >
+              <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+              <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+            </button>
 
-              <button
-                onClick={onOpenReturnModal}
-                className="px-4 py-2.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 active:scale-95 shrink-0"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{language === 'mr' ? 'ग्राहक परतावा नोंदवा' : language === 'hi' ? 'ग्राहक वापसी दर्ज करें' : 'Record Customer Return'}</span>
-              </button>
-            </>
-          ) : (
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                type="button"
-                onClick={handleViewSupplierPDF}
-                className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
-                title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View Supplier Returns PDF'}
-              >
-                <Eye className="w-4 h-4 text-amber-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-              </button>
+            <button
+              type="button"
+              onClick={handleDownloadCustomerPDF}
+              className="h-10 px-3.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-xs shrink-0 snap-start min-h-[40px]"
+              title={language === 'mr' ? 'PDF डाउनलोड करा' : language === 'hi' ? 'PDF डाउनलोड करें' : 'Download Customer Returns PDF'}
+            >
+              <Download className="w-4 h-4" />
+              <span>{language === 'mr' ? 'परतावा PDF' : language === 'hi' ? 'वापसी PDF' : 'Download PDF'}</span>
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={handleViewSupplierPDF}
+              className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-2xs shrink-0 snap-start min-h-[40px]"
+              title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View Supplier Returns PDF'}
+            >
+              <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={handlePrintSupplierPDF}
-                className="px-3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
-                title={language === 'mr' ? 'अहवाल प्रिंट करा' : language === 'hi' ? 'रिपोर्ट प्रिंट करें' : 'Print Supplier Returns Report'}
-              >
-                <Printer className="w-4 h-4 text-amber-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-              </button>
+            <button
+              type="button"
+              onClick={handlePrintSupplierPDF}
+              className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-2xs shrink-0 snap-start min-h-[40px]"
+              title={language === 'mr' ? 'अहवाल प्रिंट करा' : language === 'hi' ? 'रिपोर्ट प्रिंट करें' : 'Print Supplier Returns Report'}
+            >
+              <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+              <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={handleDownloadSupplierPDF}
-                className="px-3 py-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 font-bold text-xs flex items-center gap-1.5 transition active:scale-95"
-                title={language === 'mr' ? 'डेबिट नोट PDF डाउनलोड करा' : language === 'hi' ? 'डेबिट नोट PDF डाउनलोड करें' : 'Download Debit Note PDF'}
-              >
-                <Download className="w-4 h-4 text-amber-600" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'डेबिट नोट PDF' : language === 'hi' ? 'डेबिट नोट PDF' : 'Download PDF'}</span>
-              </button>
-
-              <button
-                onClick={() => setIsSupplierModalOpen(true)}
-                className="px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 active:scale-95 shrink-0"
-              >
-                <Truck className="w-4 h-4" />
-                <span>{language === 'mr' ? '+ सप्लायरला माल परत करा' : '+ सप्लायर को माल वापस करें'}</span>
-              </button>
-            </div>
-          )}
-        </div>
+            <button
+              type="button"
+              onClick={handleDownloadSupplierPDF}
+              className="h-10 px-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 transition active:scale-95 shadow-xs shrink-0 snap-start min-h-[40px]"
+              title={language === 'mr' ? 'डेबिट नोट PDF डाउनलोड करा' : language === 'hi' ? 'डेबिट नोट PDF डाउनलोड करें' : 'Download Debit Note PDF'}
+            >
+              <Download className="w-4 h-4" />
+              <span>{language === 'mr' ? 'डेबिट नोट PDF' : language === 'hi' ? 'डेबिट नोट PDF' : 'Download PDF'}</span>
+            </button>
+          </>
+        )}
       </div>
 
       {/* Main Tab Navigation: Customer Returns vs Supplier Returns */}

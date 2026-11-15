@@ -296,18 +296,18 @@ export const ProfitReport: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 max-w-5xl mx-auto pb-32 sm:pb-8">
 
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#131F1B] p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-        <div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-amber-500" />
-            <span>
-              {language === 'mr' ? 'नफा आणि सर्वाधिक खपणारा माल अहवाल' : language === 'hi' ? 'लाभ और सबसे ज्यादा बिकने वाला माल रिपोर्ट' : 'Profit & Loss Statement & Intelligence'}
+      {/* 1. Compact Page Header */}
+      <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 shrink-0" />
+            <span className="truncate">
+              {language === 'mr' ? 'नफा व तोटा अहवाल (P&L)' : language === 'hi' ? 'लाभ और हानि रिपोर्ट (P&L)' : 'Profit & Loss Statement'}
             </span>
           </h2>
-          <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 hidden sm:block truncate">
             {language === 'mr'
               ? 'निव्वळ नफा आणि कोणत्या मालातून सर्वाधिक नफा मिळतो याचे संपूर्ण विश्लेषण'
               : language === 'hi'
@@ -316,50 +316,48 @@ export const ProfitReport: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* View PDF Button */}
-          <button
-            onClick={handleViewPLPDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-800 dark:text-white text-xs font-bold transition-all border border-slate-300 dark:border-[#24352F] active:scale-95 shadow-xs"
-            title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View P&L Statement PDF'}
-          >
-            <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-          </button>
-
-          {/* Print PDF Button */}
-          <button
-            onClick={handlePrintPLPDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-white text-xs font-bold transition-all border border-transparent dark:border-[#24352F] active:scale-95 shadow-xs"
-            title="Print Official P&L Statement"
-          >
-            <Printer className="w-4 h-4 text-emerald-400" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-          </button>
-
-          {/* Download PDF Button */}
-          <button
-            onClick={handleDownloadPLPDF}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
-            title="Download Official P&L Statement PDF"
-          >
-            <Download className="w-4 h-4" />
-            <span>{language === 'mr' ? 'नफा-तोटा PDF' : language === 'hi' ? 'P&L PDF' : 'Download PDF'}</span>
-          </button>
-        </div>
+        <button
+          onClick={handleDownloadPLPDF}
+          className="h-10 px-3.5 sm:px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center gap-1.5 shrink-0 min-h-[40px]"
+          title="Download Official P&L Statement PDF"
+        >
+          <Download className="w-4 h-4" />
+          <span>{language === 'mr' ? 'नफा-तोटा PDF' : language === 'hi' ? 'P&L PDF' : 'Download PDF'}</span>
+        </button>
       </div>
 
-      {/* Time Filter */}
+      {/* 2. Quick Actions Row (Horizontally Scrollable) */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x">
+        <button
+          onClick={handleViewPLPDF}
+          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
+          title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View P&L Statement PDF'}
+        >
+          <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
+        </button>
+
+        <button
+          onClick={handlePrintPLPDF}
+          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
+          title="Print Official P&L Statement"
+        >
+          <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+          <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+        </button>
+      </div>
+
+      {/* 3. Time Filter */}
       <PeriodFilter />
 
-      {/* PROFIT & LOSS STATEMENT CARD */}
-      <div className="bg-white dark:bg-[#131F1B] rounded-3xl p-6 border border-slate-200/90 dark:border-[#24352F] shadow-sm space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-4">
+      {/* 4. PROFIT & LOSS STATEMENT CARD */}
+      <div className="bg-white dark:bg-[#131F1B] rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-[#24352F] shadow-sm space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-[#24352F] pb-3 sm:pb-4">
           <div>
-            <h3 className="text-lg font-black text-slate-900 dark:text-white">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
               {t('plStatement')}
             </h3>
-            <span className="text-xs text-slate-500 dark:text-[#8FA69C]">
+            <span className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C]">
               {language === 'mr'
                 ? 'फॉर्म्युला: विक्री - खरेदी खर्च - दुकानाचे खर्च - नासाडी नुकसान'
                 : language === 'hi'
@@ -368,11 +366,11 @@ export const ProfitReport: React.FC = () => {
             </span>
           </div>
 
-          <div className="text-right">
-            <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
+          <div className="text-left sm:text-right pt-1 sm:pt-0">
+            <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
               {language === 'mr' ? 'खिशात पडलेला निव्वळ नफा:' : language === 'hi' ? 'शुद्ध जेब में आया मुनाफा:' : 'Net Pocket Profit:'}
             </span>
-            <span className="text-3xl font-black text-emerald-700 dark:text-emerald-400">
+            <span className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
               ₹{metrics.netProfit.toLocaleString('en-IN')}
             </span>
           </div>

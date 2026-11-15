@@ -140,16 +140,16 @@ export const DamageTracker: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 max-w-5xl mx-auto pb-32 sm:pb-8">
 
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#131F1B] p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-        <div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <PackageX className="w-6 h-6 text-rose-600 dark:text-rose-400" />
-            <span>{t('damageTitle')}</span>
+      {/* 1. Compact Page Header */}
+      <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
+            <PackageX className="w-5 h-5 sm:w-6 sm:h-6 text-rose-600 dark:text-rose-400 shrink-0" />
+            <span className="truncate">{t('damageTitle')}</span>
           </h2>
-          <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 hidden sm:block truncate">
             {language === 'mr'
               ? 'नासलेले दूध, लिकेज, मुदत संपलेली उत्पादने व आर्थिक नुकसानीचा हिशोब'
               : language === 'hi'
@@ -158,85 +158,83 @@ export const DamageTracker: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* View PDF Button */}
-          <button
-            onClick={handleViewDamagePDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
-            title="View Spoilage & Loss Report PDF"
-          >
-            <Eye className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
-          </button>
-
-          {/* Print PDF Button */}
-          <button
-            onClick={handlePrintDamagePDF}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold transition-all border border-slate-200 dark:border-[#24352F] active:scale-95"
-            title="Print Spoilage & Loss Report"
-          >
-            <Printer className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-            <span className="hidden sm:inline">{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-          </button>
-
-          {/* PDF Report Download Button */}
-          <button
-            onClick={handleDownloadDamagePDF}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-800/60 text-xs font-bold transition-all active:scale-95"
-            title="Download Spoilage & Loss PDF Report"
-          >
-            <Download className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-            <span>{language === 'mr' ? 'नुकसान PDF' : language === 'hi' ? 'नुकसान PDF' : 'Damages PDF'}</span>
-          </button>
-
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition-all active:scale-95"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t('logDamage')}</span>
-          </button>
-        </div>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="h-10 px-3.5 sm:px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center gap-1.5 shrink-0 min-h-[40px]"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>{language === 'mr' ? '+ नुकसान नोंदवा' : language === 'hi' ? '+ नुकसान दर्ज करें' : '+ Log Damage'}</span>
+        </button>
       </div>
 
-      {/* Time Filter */}
+      {/* 2. Quick Actions Row (Horizontally Scrollable) */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x">
+        <button
+          onClick={handleViewDamagePDF}
+          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
+          title="View Spoilage & Loss Report PDF"
+        >
+          <Eye className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+          <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
+        </button>
+
+        <button
+          onClick={handlePrintDamagePDF}
+          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
+          title="Print Spoilage & Loss Report"
+        >
+          <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+          <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+        </button>
+
+        <button
+          onClick={handleDownloadDamagePDF}
+          className="h-10 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-xs min-h-[40px]"
+          title="Download Spoilage & Loss PDF Report"
+        >
+          <Download className="w-4 h-4" />
+          <span>{language === 'mr' ? 'नुकसान PDF' : language === 'hi' ? 'नुकसान PDF' : 'Download PDF'}</span>
+        </button>
+      </div>
+
+      {/* 3. Time Filter */}
       <PeriodFilter />
 
-      {/* KPI Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'एकूण झालेले नुकसान (Financial Loss)' : language === 'hi' ? 'कुल डैमेज नुकसान (Financial Loss)' : 'Total Spoilage Loss'}
+      {/* 4. Balanced Summary KPI Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
+        <div className="col-span-2 sm:col-span-1 bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
+          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
+            {language === 'mr' ? 'एकूण नुकसान' : language === 'hi' ? 'कुल नुकसान' : 'Total Loss'}
           </span>
-          <span className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-1 block tracking-tight">
             ₹{metrics.totalDamagesLoss.toLocaleString('en-IN')}
           </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? 'थेट नफ्यामधून वजा केलेले नुकसान' : language === 'hi' ? 'सीधे लाभ (Net Profit) में से घटाया गया नुकसान' : 'Directly deducted from net profit'}
+          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 truncate">
+            {language === 'mr' ? 'नफ्यामधून वजा' : language === 'hi' ? 'मुनाफे से घटाया' : 'Deducted from profit'}
           </span>
         </div>
 
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'नुकसान घटना (Incidents)' : language === 'hi' ? 'डैमेज घटनाएं (Total Incidents)' : 'Damage Incidents'}
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
+          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
+            {language === 'mr' ? 'नुकसान घटना' : language === 'hi' ? 'डैमेज घटनाएं' : 'Incidents'}
           </span>
-          <span className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1 block tracking-tight">
             {filteredDamages.length} {language === 'mr' ? 'वेळा' : language === 'hi' ? 'बार' : 'times'}
           </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? 'कालावधीतील एकूण नासाडी नोंदी' : language === 'hi' ? 'चुनी गई अवधि में दर्ज कुल खराबी' : 'Total recorded spoilage incidents'}
+          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 truncate">
+            {language === 'mr' ? 'एकूण नासाडी नोंदी' : language === 'hi' ? 'कुल खराबी प्रविष्टियां' : 'Logged entries'}
           </span>
         </div>
 
-        <div className="bg-white dark:bg-[#131F1B] p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-          <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-            {language === 'mr' ? 'खरेदीवर नासाडीचे प्रमाण' : language === 'hi' ? 'खरीद पर खराबी का प्रतिशत' : 'Spoilage % on Purchases'}
+        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
+          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
+            {language === 'mr' ? 'नासाडीचे प्रमाण' : language === 'hi' ? 'खराबी प्रतिशत' : 'Spoilage %'}
           </span>
-          <span className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1 block">
+          <span className="text-xl sm:text-2xl font-black text-amber-700 dark:text-amber-400 mt-1 block tracking-tight">
             {((metrics.totalDamagesLoss / (metrics.totalPurchasesAmount || 1)) * 100).toFixed(1)}%
           </span>
-          <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? '(1% ते 2% सामान्य मानले जाते)' : language === 'hi' ? '(1% से 2% सामान्य माना जाता है)' : '(1% to 2% is industry normal)'}
+          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 truncate">
+            {language === 'mr' ? 'खरेदीवर प्रमाण' : language === 'hi' ? 'खरीद पर' : 'on purchases'}
           </span>
         </div>
       </div>

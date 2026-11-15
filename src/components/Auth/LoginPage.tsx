@@ -6,6 +6,11 @@ import * as z from 'zod';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
+import { 
+  isRegistrationAllowedSync, 
+  syncRegistrationSettingFromCloud, 
+  subscribeToRegistrationSetting 
+} from '../../lib/registrationConfig';
 import {
   Milk,
   Lock,
@@ -41,9 +46,31 @@ export const LoginPage: React.FC = () => {
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Env flags (Guest mode strictly disabled for anti-tamper security)
-  const isGuestModeEnabled = false;
-  const isRegistrationEnabled = import.meta.env.VITE_ENABLE_REGISTRATION !== 'false';
+  // Registration toggle state (Controlled dynamically by Shop Owner Nikhil Sakhare)
+  const [isRegistrationEnabled, setIsRegistrationEnabled] = useState<boolean>(() => isRegistrationAllowedSync());
+
+  // Listen to registration toggle changes (real-time & cloud sync)
+  React.useEffect(() => {
+    // 1. Sync from cloud
+    syncRegistrationSettingFromCloud().then((allowed) => {
+      setIsRegistrationEnabled(allowed);
+      if (!allowed && mode === 'signup') {
+        setMode('signin');
+      }
+    });
+
+    // 2. Subscribe to cross-component and storage events
+    const unsubscribe = subscribeToRegistrationSetting((allowed) => {
+      setIsRegistrationEnabled(allowed);
+      if (!allowed && mode === 'signup') {
+        setMode('signin');
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [mode]);
 
   // Zod Schemas based on current mode
   const signInSchema = z.object({
@@ -717,8 +744,8 @@ export const LoginPage: React.FC = () => {
 
                 </form>
 
-                {/* Conditional Registration Link (Env Flag) */}
-                {isRegistrationEnabled && (
+                {/* Conditional Registration Link */}
+                {isRegistrationEnabled ? (
                   <div className="text-center text-xs text-slate-600 dark:text-[#8FA69C] pt-2">
                     <span>{t('authNewOperator')} </span>
                     <button
@@ -728,6 +755,11 @@ export const LoginPage: React.FC = () => {
                     >
                       {t('authRegisterHere')}
                     </button>
+                  </div>
+                ) : (
+                  <div className="text-center text-[11px] text-slate-400 dark:text-[#8FA69C]/80 pt-2 flex items-center justify-center gap-1.5 font-semibold">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>{language === 'mr' ? 'केवळ अधिकृत कर्मचारी लॉगिन (नोंदणी बंद)' : language === 'hi' ? 'केवल अधिकृत कर्मचारी लॉगिन (पंजीकरण बंद)' : 'Authorized Personnel Only'}</span>
                   </div>
                 )}
               </div>

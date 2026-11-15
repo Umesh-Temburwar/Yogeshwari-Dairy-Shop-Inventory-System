@@ -1214,6 +1214,31 @@ export const TRANSLATIONS: Translations = {
     hi: 'यहाँ रजिस्टर करें',
     mr: 'येथे नोंदणी करा'
   },
+  authRegToggleTitle: {
+    en: 'New Operator Registration',
+    hi: 'नया ऑपरेटर पंजीकरण',
+    mr: 'नवीन ऑपरेटर नोंदणी'
+  },
+  authRegToggleDescOn: {
+    en: 'Registration is OPEN (Visible on login page)',
+    hi: 'पंजीकरण चालू है (लॉगिन पेज पर दिखाई देगा)',
+    mr: 'नोंदणी चालू आहे (लॉगिन पेजवर दिसेल)'
+  },
+  authRegToggleDescOff: {
+    en: 'Registration is HIDDEN & LOCKED (Strict security)',
+    hi: 'पंजीकरण छिपा हुआ व सुरक्षित है (लॉगिन पेज से बंद)',
+    mr: 'नोंदणी बंद व सुरक्षित आहे (लॉगिन पेजवरून लपवली आहे)'
+  },
+  authRegDisabledAlert: {
+    en: 'New operator registration is currently disabled by Shop Owner Nikhil Sakhare.',
+    hi: 'नया ऑपरेटर पंजीकरण वर्तमान में दुकान मालिक निखिल सखारे द्वारा बंद किया गया है।',
+    mr: 'नवीन ऑपरेटर नोंदणी सध्या दुकान मालक निखिल सखारे यांच्याद्वारे बंद करण्यात आली आहे.'
+  },
+  authRegOnlyOwnerAllowed: {
+    en: 'Only Shop Owner Nikhil Sakhare can modify this security setting.',
+    hi: 'केवल दुकान मालिक निखिल सखारे ही यह सुरक्षा सेटिंग बदल सकते हैं।',
+    mr: 'फक्त दुकान मालक निखिल सखारे ही सुरक्षा सेटिंग बदलू शकतात.'
+  },
   authAlreadyHaveAccount: {
     en: 'Already have an account?',
     hi: 'पहले से खाता है?',

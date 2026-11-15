@@ -25,9 +25,16 @@ import {
   X,
   ShoppingBag,
   ArrowUpDown,
-  Tag
+  Tag,
+  UserPlus
 } from 'lucide-react';
 import { formatSaleDate, formatSaleTime, formatTimeAgo } from '../../lib/dateUtils';
+import { 
+  isRegistrationAllowedSync, 
+  setRegistrationSetting, 
+  subscribeToRegistrationSetting,
+  syncRegistrationSettingFromCloud
+} from '../../lib/registrationConfig';
 
 export const OwnerAdminCounterWidget: React.FC = () => {
   const { sales, adminActivities, purchases, damages, refreshData, isSyncing } = useStore();
@@ -40,6 +47,28 @@ export const OwnerAdminCounterWidget: React.FC = () => {
   const [activeTabFilter, setActiveTabFilter] = useState<'all' | 'admin1' | 'sales_details' | 'inventory_changes'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSaleDetail, setSelectedSaleDetail] = useState<Sale | null>(null);
+
+  // Registration setting state & sync
+  const [isRegistrationAllowed, setIsRegistrationAllowed] = useState<boolean>(() => isRegistrationAllowedSync());
+  const [isTogglingReg, setIsTogglingReg] = useState(false);
+
+  React.useEffect(() => {
+    syncRegistrationSettingFromCloud().then(setIsRegistrationAllowed);
+    const unsubscribe = subscribeToRegistrationSetting(setIsRegistrationAllowed);
+    return () => unsubscribe();
+  }, []);
+
+  const handleToggleRegistration = async () => {
+    if (role !== 'Owner') return;
+    const nextState = !isRegistrationAllowed;
+    setIsTogglingReg(true);
+    try {
+      await setRegistrationSetting(nextState, 'Owner', 'yogeshwaridairy9896@gmail.com', 'निखिल सखारे (दुकान मालक)');
+      setIsRegistrationAllowed(nextState);
+    } finally {
+      setIsTogglingReg(false);
+    }
+  };
 
   // Calculate Metrics for Admin 1 (Nilesh Sakhare - nilusakhare2003@gmail.com - Counter 1)
   const admin1Sales = useMemo(() => {
@@ -325,7 +354,31 @@ export const OwnerAdminCounterWidget: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {/* New User Registration Security Toggle */}
+          <button
+            type="button"
+            onClick={handleToggleRegistration}
+            disabled={isTogglingReg}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black transition-all shadow-2xs ${
+              isRegistrationAllowed
+                ? 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800/60'
+                : 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-900/60'
+            }`}
+            title={
+              isRegistrationAllowed 
+                ? (isMr ? 'लॉगिन पेजवरून नोंदणी बंद करण्यासाठी दाबा' : 'लॉगिन से पंजीकरण बंद करने के लिए दबाएं')
+                : (isMr ? 'लॉगिन पेजवर नोंदणी सुरू करण्यासाठी दाबा' : 'लॉगिन पर पंजीकरण शुरू करने के लिए दबाएं')
+            }
+          >
+            <span className={`w-2 h-2 rounded-full ${isRegistrationAllowed ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+            <span>
+              {isTogglingReg 
+                ? (isMr ? 'बदलत आहे...' : 'बदल रहा है...') 
+                : (isMr ? `नोंदणी: ${isRegistrationAllowed ? 'चालू (ON) 🟢' : 'बंद (OFF) 🔒'}` : isHi ? `पंजीकरण: ${isRegistrationAllowed ? 'चालू (ON) 🟢' : 'बंद (OFF) 🔒'}` : `Reg: ${isRegistrationAllowed ? 'ON 🟢' : 'OFF 🔒'}`)}
+            </span>
+          </button>
+
           <button
             onClick={() => refreshData()}
             disabled={isSyncing}

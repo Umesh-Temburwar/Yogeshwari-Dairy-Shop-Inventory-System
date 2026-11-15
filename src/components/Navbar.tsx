@@ -15,8 +15,16 @@ import {
   CheckCircle2, 
   ShieldCheck, 
   Globe,
-  Smartphone
+  Smartphone,
+  UserPlus,
+  Loader2
 } from 'lucide-react';
+import { 
+  isRegistrationAllowedSync, 
+  setRegistrationSetting, 
+  subscribeToRegistrationSetting,
+  syncRegistrationSettingFromCloud
+} from '../lib/registrationConfig';
 
 interface NavbarProps {
   onOpenSettings?: () => void;
@@ -40,6 +48,60 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { user, role, setRole, lockSecurity, signOut } = useAuth();
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  // New Operator Registration Control (Shop Owner Nikhil Sakhare)
+  const [isRegistrationAllowed, setIsRegistrationAllowed] = useState<boolean>(() => isRegistrationAllowedSync());
+  const [isUpdatingReg, setIsUpdatingReg] = useState(false);
+  const [regFeedback, setRegFeedback] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    syncRegistrationSettingFromCloud().then(setIsRegistrationAllowed);
+    const unsubscribe = subscribeToRegistrationSetting(setIsRegistrationAllowed);
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const handleToggleRegistration = async () => {
+    if (role !== 'Owner') {
+      setRegFeedback(
+        language === 'mr' 
+          ? 'फक्त मालक (Nikhil Sakhare) हे बदलू शकतात!' 
+          : language === 'hi' 
+          ? 'केवल मालिक (Nikhil Sakhare) यह बदल सकते हैं!' 
+          : 'Only Shop Owner Nikhil Sakhare can modify this!'
+      );
+      setTimeout(() => setRegFeedback(null), 3000);
+      return;
+    }
+
+    const nextState = !isRegistrationAllowed;
+    setIsUpdatingReg(true);
+    try {
+      const res = await setRegistrationSetting(
+        nextState,
+        role,
+        user?.email || 'yogeshwaridairy9896@gmail.com',
+        currentUserName
+      );
+
+      if (res.success) {
+        setIsRegistrationAllowed(nextState);
+        setRegFeedback(
+          nextState 
+            ? (language === 'mr' ? '✓ नोंदणी चालू केली (Login Page वर दिसेल)' : language === 'hi' ? '✓ पंजीकरण चालू किया (लॉगिन पेज पर दिखेगा)' : '✓ Registration Enabled on Login Page')
+            : (language === 'mr' ? '✓ नोंदणी बंद व लपवली (सुरक्षित)' : language === 'hi' ? '✓ पंजीकरण बंद व सुरक्षित (लॉगिन से छिपाया)' : '✓ Registration Disabled & Hidden')
+        );
+      } else {
+        setRegFeedback(res.error || 'त्रुटी आली');
+      }
+    } catch (e: any) {
+      setRegFeedback(e.message || 'त्रुटी आली');
+    } finally {
+      setIsUpdatingReg(false);
+      setTimeout(() => setRegFeedback(null), 3500);
+    }
+  };
 
   // Auto-close profile dropdown when mobile drawer is opened
   React.useEffect(() => {
@@ -239,7 +301,90 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
                   </div>
 
-                  {/* 3. PROFILE NAME & ACCOUNT PLACED AT THE LAST */}
+                  {/* 3. NEW OPERATOR REGISTRATION CONTROL (Shop Owner Nikhil Sakhare Only) */}
+                  <div className="border-t border-slate-100 dark:border-[#24352F] pt-2 px-1">
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <UserPlus className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          <span className="text-xs font-black text-slate-800 dark:text-[#E7F0EC]">
+                            {language === 'mr' ? 'नवीन ऑपरेटर नोंदणी' : language === 'hi' ? 'नया ऑपरेटर पंजीकरण' : 'New User Registration'}
+                          </span>
+                        </div>
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border flex items-center gap-1 ${
+                          isRegistrationAllowed
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300/80 dark:border-emerald-700/60'
+                            : 'bg-rose-50 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border-rose-200 dark:border-rose-900/60'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${isRegistrationAllowed ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                          <span>
+                            {isRegistrationAllowed 
+                              ? (language === 'mr' ? 'चालू (ON)' : language === 'hi' ? 'चालू (ON)' : 'ON') 
+                              : (language === 'mr' ? 'बंद (OFF)' : language === 'hi' ? 'बंद (OFF)' : 'OFF')}
+                          </span>
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] leading-snug">
+                        {isRegistrationAllowed
+                          ? (language === 'mr' ? 'लॉगिन पेजवर नोंदणी सुरू आहे (नवीन ऑपरेटर खाते उघडू शकतात).' : language === 'hi' ? 'लॉगिन पेज पर पंजीकरण खुला है (नया ऑपरेटर खाता बना सकते हैं)।' : 'Registration is OPEN on the login page.')
+                          : (language === 'mr' ? 'लॉगिन पेजवरून नोंदणी लपवली आहे (फक्त अस्तित्वातील खाती लॉगिन करू शकतात).' : language === 'hi' ? 'लॉगिन पेज से पंजीकरण छिपा हुआ है (केवल मौजूदा खाते लॉगिन कर सकते हैं)।' : 'Registration is HIDDEN from the login page (Strict security).')}
+                      </p>
+
+                      {/* Toggle Action */}
+                      {role === 'Owner' ? (
+                        <button
+                          type="button"
+                          disabled={isUpdatingReg}
+                          onClick={handleToggleRegistration}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-black transition-all border shadow-xs ${
+                            isRegistrationAllowed
+                              ? 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/40'
+                              : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
+                          }`}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            {isUpdatingReg ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : isRegistrationAllowed ? (
+                              <Lock className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                            ) : (
+                              <UserPlus className="w-3.5 h-3.5 text-white" />
+                            )}
+                            <span>
+                              {isUpdatingReg 
+                                ? (language === 'mr' ? 'बदलत आहे...' : language === 'hi' ? 'बदल रहा है...' : 'Updating...')
+                                : isRegistrationAllowed
+                                ? (language === 'mr' ? 'नोंदणी बंद करा (लपवा)' : language === 'hi' ? 'पंजीकरण बंद करें (छुपाएं)' : 'Turn OFF & Hide')
+                                : (language === 'mr' ? 'नोंदणी चालू करा (दाखवा)' : language === 'hi' ? 'पंजीकरण चालू करें (दिखाएं)' : 'Turn ON & Enable')}
+                            </span>
+                          </span>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-lg uppercase tracking-wider font-black ${
+                            isRegistrationAllowed ? 'bg-rose-200 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200' : 'bg-emerald-800 text-white'
+                          }`}>
+                            {isRegistrationAllowed ? 'SWITCH OFF' : 'SWITCH ON'}
+                          </span>
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-[10px] font-bold text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40">
+                          <Lock className="w-3 h-3 text-amber-600 shrink-0" />
+                          <span>{language === 'mr' ? 'फक्त दुकान मालक निखिल सखारे ही सेटिंग बदलू शकतात.' : language === 'hi' ? 'केवल दुकान मालिक निखिल सखारे यह सेटिंग बदल सकते हैं।' : 'Only Shop Owner Nikhil Sakhare can modify this.'}</span>
+                        </div>
+                      )}
+
+                      {regFeedback && (
+                        <p className={`text-[11px] font-bold px-2 py-1 rounded-lg animate-in fade-in transition ${
+                          regFeedback.includes('✓') 
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300/80' 
+                            : 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300/80'
+                        }`}>
+                          {regFeedback}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 4. PROFILE NAME & ACCOUNT PLACED AT THE LAST */}
                   <div className="border-t border-slate-100 dark:border-[#24352F] pt-2 space-y-2">
                     {/* Active User Name & Email Badge */}
                     <div className="px-3 py-2 bg-slate-50 dark:bg-[#1A2A25] rounded-xl border border-slate-100 dark:border-[#24352F]/70 flex items-center gap-2.5">

@@ -8,6 +8,10 @@ import {
   revokeSessionSecurity,
   grantBiometricSecurityUnlock
 } from '../lib/security';
+import { 
+  isRegistrationAllowedSync, 
+  syncRegistrationSettingFromCloud 
+} from '../lib/registrationConfig';
 
 interface AuthContextType {
   user: User | null;
@@ -177,6 +181,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (mounted) setUser(parsed);
           }
         } catch {}
+
+        // 3. Sync registration configuration from cloud in background
+        syncRegistrationSettingFromCloud().catch(() => {});
 
         if (!supabase) {
           if (mounted) setIsLoading(false);
@@ -415,6 +422,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     roleChoice?: UserRole, 
     slotChoice?: 1 | 2 | null
   ) => {
+    // Security Gatekeeper: Check if registration is allowed by Shop Owner Nikhil Sakhare
+    if (!isRegistrationAllowedSync()) {
+      return { 
+        error: { 
+          message: 'नवीन ऑपरेटर नोंदणी सध्या दुकान मालक निखिल सखारे यांच्याद्वारे बंद करण्यात आली आहे. (New operator registration is currently disabled by Shop Owner Nikhil Sakhare).' 
+        } 
+      };
+    }
+
     if (!supabase) return { error: { message: 'Supabase client not initialized' } };
     setIsLoading(true);
     try {

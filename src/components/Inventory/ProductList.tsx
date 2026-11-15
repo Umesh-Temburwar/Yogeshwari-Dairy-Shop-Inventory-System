@@ -64,8 +64,6 @@ export const ProductList: React.FC<ProductListProps> = ({
     setActiveView,
     totalCatalogCount = 33518,
     totalBarcodesCount = 23320,
-    globalScannerRequest,
-    consumeGlobalScannerRequest,
     setIsBarcodeScannerOpen
   } = useStore();
   const { t, language } = useLanguage();
@@ -101,17 +99,6 @@ export const ProductList: React.FC<ProductListProps> = ({
   const [quickBuyPrice, setQuickBuyPrice] = useState('');
   const [quickSellPrice, setQuickSellPrice] = useState('');
   const [quickStock, setQuickStock] = useState('0');
-
-  // Global Shake-to-Scan integration for Stock-In (Double Shake) and Stock Edit (Triple Shake)
-  useEffect(() => {
-    if (globalScannerRequest === 'stock_in') {
-      consumeGlobalScannerRequest('stock_in');
-      setShowBarcodeStockIn(true);
-    } else if (globalScannerRequest === 'stock_edit') {
-      consumeGlobalScannerRequest('stock_edit');
-      setShowBarcodeScanner(true);
-    }
-  }, [globalScannerRequest, consumeGlobalScannerRequest]);
 
   // Keep StoreContext updated with modal open status so global shake knows when camera is active
   useEffect(() => {

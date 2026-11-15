@@ -5,16 +5,16 @@ export interface ShakeDetectorOptions {
   enabled?: boolean;
   /** Motion sensitivity threshold in m/s^2 (default: 20) */
   threshold?: number;
-  /** Time window in ms for 2 reversal peaks to form 1 physical shake snap (default: 450ms) */
-  peakWindowMs?: number;
-  /** Time window in ms to accumulate successive shakes into double/triple gesture (default: 650ms) */
-  gestureWindowMs?: number;
-  /** Cooldown in ms after successful gesture trigger before next detection (default: 1800ms) */
+  /** Minimum direction reversal peaks required in time window to qualify as an intentional shake (default: 2) */
+  minPeaks?: number;
+  /** Time window in ms to accumulate motion peaks (default: 450ms) */
+  timeWindowMs?: number;
+  /** Cooldown in ms after successful shake before next detection (default: 2000ms) */
   cooldownMs?: number;
-  /** Callback fired for legacy single-shake handlers */
-  onShake?: () => void;
-  /** Callback fired when a classified gesture occurs: 1 (Single), 2 (Double), or 3 (Triple) */
-  onGesture?: (count: 1 | 2 | 3) => void;
+  /** Callback fired immediately when one intentional shake is confirmed */
+  onShake: () => void;
+  /** Optional callback for backward compatibility */
+  onGesture?: (count: 1) => void;
 }
 
 /**
@@ -49,27 +49,22 @@ export async function requestMotionPermission(): Promise<boolean> {
 }
 
 /**
- * Production-Ready Multi-Shake Gesture Classifier Hook
- * 
- * Classifies physical phone shakes into 3 distinct gestures:
- * - 1 Shake -> Single Shake (Billing Scanner)
- * - 2 Shakes -> Double Shake (Stock-In Scanner)
- * - 3 Shakes -> Triple Shake (Stock Edit Scanner)
+ * Single Intentional Global Shake-to-Scan Detector for Android Chrome
  * 
  * Features:
  * - Euclidean directional acceleration delta magnitude tracking
- * - 2-peak directional reversal filtering per shake (eliminates drops, walking, bumps)
- * - Accumulation window with immediate trigger on 3rd shake
- * - Strict 1800ms cooldown to avoid bounce/duplicate triggers
- * - Haptic pulse feedback matching gesture count
- * - Safe passive event listener with automatic cleanup
+ * - 2-peak directional reversal filtering (filters out walking, handling, and pocket movements)
+ * - Immediate zero-delay trigger upon single intentional shake
+ * - Strict 2000ms cooldown (prevents duplicate scanner launches)
+ * - Safe passive event listener with automatic cleanup on unmount
+ * - Haptic vibration feedback on successful detection
  */
 export function useShakeDetector({
   enabled = true,
   threshold = 20,
-  peakWindowMs = 450,
-  gestureWindowMs = 650,
-  cooldownMs = 1800,
+  minPeaks = 2,
+  timeWindowMs = 450,
+  cooldownMs = 2000,
   onShake,
   onGesture
 }: ShakeDetectorOptions) {
@@ -81,8 +76,6 @@ export function useShakeDetector({
   const lastZ = useRef<number | null>(null);
   const lastUpdate = useRef<number>(0);
   const peakTimestamps = useRef<number[]>([]);
-  const shakeCount = useRef<number>(0);
-  const gestureTimer = useRef<any>(null);
   const lastTriggerTime = useRef<number>(0);
 
   const onShakeRef = useRef(onShake);
@@ -118,47 +111,16 @@ export function useShakeDetector({
   useEffect(() => {
     if (!enabled || !isSupported) return;
 
-    const triggerGesture = (count: number) => {
-      if (gestureTimer.current) {
-        clearTimeout(gestureTimer.current);
-        gestureTimer.current = null;
-      }
-      shakeCount.current = 0;
-      peakTimestamps.current = [];
-      lastTriggerTime.current = Date.now();
-
-      const normalizedCount = (Math.min(Math.max(count, 1), 3)) as 1 | 2 | 3;
-
-      // Haptic feedback matching gesture count
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        try {
-          if (normalizedCount === 1) {
-            navigator.vibrate([80]);
-          } else if (normalizedCount === 2) {
-            navigator.vibrate([60, 40, 80]);
-          } else {
-            navigator.vibrate([60, 40, 60, 40, 100]);
-          }
-        } catch {}
-      }
-
-      if (onGestureRef.current) {
-        onGestureRef.current(normalizedCount);
-      }
-      if (normalizedCount === 1 && onShakeRef.current) {
-        onShakeRef.current();
-      }
-    };
-
     const handleMotion = (event: DeviceMotionEvent) => {
       const current = Date.now();
-      if (current - lastTriggerTime.current < cooldownMs) return;
+      const inCooldown = (current - lastTriggerTime.current < cooldownMs);
+      if (inCooldown) return;
 
       const acc = event.accelerationIncludingGravity || event.acceleration;
       if (!acc || acc.x === null || acc.y === null || acc.z === null) return;
 
       const timeDiff = current - lastUpdate.current;
-      // Rate limiter: sample every 25ms (~40Hz)
+      // Rate limiter: sample every 25ms (~40Hz) to prevent CPU spikes
       if (timeDiff < 25) return;
 
       if (lastX.current !== null && lastY.current !== null && lastZ.current !== null) {
@@ -166,39 +128,42 @@ export function useShakeDetector({
         const deltaY = Math.abs(acc.y - lastY.current);
         const deltaZ = Math.abs(acc.z - lastZ.current);
 
+        // Vector magnitude of 3-axis acceleration delta in m/s^2
         const deltaMag = Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
 
         if (deltaMag > threshold) {
+          // Register peak
           peakTimestamps.current.push(current);
+
+          // Prune peaks outside the active time window
           peakTimestamps.current = peakTimestamps.current.filter(
-            (t) => current - t <= peakWindowMs
+            (t) => current - t <= timeWindowMs
           );
 
-          // 2 directional acceleration peaks constitute 1 deliberate shake snap
-          if (peakTimestamps.current.length >= 2) {
+          // If required directional peaks occurred within window -> Confirm Intentional Shake!
+          if (peakTimestamps.current.length >= minPeaks) {
             peakTimestamps.current = [];
-            shakeCount.current += 1;
+            lastTriggerTime.current = current;
 
-            if (shakeCount.current >= 3) {
-              // 3rd shake reached -> execute Triple Shake immediately
-              triggerGesture(3);
-              return;
+            // Haptic vibration feedback (single crisp buzz)
+            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+              try {
+                navigator.vibrate([80]);
+              } catch {}
             }
 
-            // Accumulate within gesture window (e.g. wait for double or triple shake)
-            if (gestureTimer.current) {
-              clearTimeout(gestureTimer.current);
+            // Immediately trigger the single shake action without delay
+            if (onShakeRef.current) {
+              onShakeRef.current();
             }
-            gestureTimer.current = setTimeout(() => {
-              const count = shakeCount.current;
-              if (count > 0) {
-                triggerGesture(count);
-              }
-            }, gestureWindowMs);
+            if (onGestureRef.current) {
+              onGestureRef.current(1);
+            }
           }
         }
       }
 
+      // Always update position vectors for next delta calculation
       lastX.current = acc.x;
       lastY.current = acc.y;
       lastZ.current = acc.z;
@@ -209,18 +174,13 @@ export function useShakeDetector({
 
     return () => {
       window.removeEventListener('devicemotion', handleMotion);
-      if (gestureTimer.current) {
-        clearTimeout(gestureTimer.current);
-        gestureTimer.current = null;
-      }
       lastX.current = null;
       lastY.current = null;
       lastZ.current = null;
       lastUpdate.current = 0;
       peakTimestamps.current = [];
-      shakeCount.current = 0;
     };
-  }, [enabled, isSupported, threshold, peakWindowMs, gestureWindowMs, cooldownMs]);
+  }, [enabled, isSupported, threshold, minPeaks, timeWindowMs, cooldownMs]);
 
   return {
     isSupported,

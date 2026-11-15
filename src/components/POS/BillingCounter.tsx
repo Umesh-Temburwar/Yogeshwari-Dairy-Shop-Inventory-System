@@ -109,23 +109,27 @@ const ProductCard = React.memo<ProductCardProps>(({
           </span>
         </div>
 
-        <div className="flex items-start gap-2.5 mb-1.5">
+        {/* Large Product Image Banner */}
+        <div className="w-full flex justify-center items-center py-2 mb-2 bg-slate-50/70 dark:bg-[#1A2A25]/50 rounded-xl border border-slate-100 dark:border-[#24352F]/60 overflow-hidden">
           <ProductImage 
             src={prod.image_url} 
             alt={prod.name} 
             category={prod.category} 
-            size="sm" 
+            size="md" 
+            className="shadow-xs"
           />
-          <div className="flex-1 min-w-0">
-            <h4 className="font-bold text-slate-900 dark:text-[#E7F0EC] text-sm leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400 line-clamp-2">
-              {displayName}
-            </h4>
-            {prod.name !== displayName && (
-              <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium truncate mt-0.5">
-                {prod.name}
-              </p>
-            )}
-          </div>
+        </div>
+
+        {/* Product Title */}
+        <div className="mb-1.5">
+          <h4 className="font-extrabold text-slate-900 dark:text-[#E7F0EC] text-sm leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 line-clamp-2">
+            {displayName}
+          </h4>
+          {prod.name !== displayName && (
+            <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium truncate mt-0.5">
+              {prod.name}
+            </p>
+          )}
         </div>
 
         {/* Near Expiry Warning Pill for Cashier */}

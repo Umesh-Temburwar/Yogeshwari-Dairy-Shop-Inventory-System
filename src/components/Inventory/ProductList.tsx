@@ -856,12 +856,13 @@ export const ProductList: React.FC<ProductListProps> = ({
                   </div>
 
                   {/* Product Image & Title */}
-                  <div className="flex items-start gap-3 my-1.5">
+                  <div className="flex items-start gap-3.5 my-2">
                     <ProductImage 
                       src={prod.image_url} 
                       alt={prod.name} 
                       category={prod.category} 
                       size="md" 
+                      className="shadow-sm shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <h3 className="text-base font-black text-slate-900 dark:text-white leading-snug line-clamp-2">

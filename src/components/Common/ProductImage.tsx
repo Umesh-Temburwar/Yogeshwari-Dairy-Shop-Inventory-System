@@ -6,7 +6,7 @@ export interface ProductImageProps {
   alt: string;
   className?: string;
   category?: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   loading?: 'lazy' | 'eager';
 }
 
@@ -14,6 +14,7 @@ export interface ProductImageProps {
  * Reusable, High-Performance Product Image Component
  * 
  * Features:
+ * - Generous, high-visibility sizing optimized for mobile & desktop POS
  * - Reactive state synchronization when src prop updates asynchronously
  * - Neutral referrerPolicy="no-referrer" to prevent third-party CDN hotlink blocking
  * - Lazy loading and async image decoding
@@ -40,11 +41,12 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   }, [src]);
 
   const sizeClasses = {
-    xs: 'w-8 h-8 rounded-lg',
-    sm: 'w-10 h-10 rounded-xl',
-    md: 'w-14 h-14 rounded-2xl',
-    lg: 'w-20 h-20 rounded-2xl',
-    xl: 'w-32 h-32 rounded-3xl'
+    xs: 'w-10 h-10 rounded-xl',
+    sm: 'w-16 h-16 sm:w-20 sm:h-20 rounded-xl',
+    md: 'w-24 h-24 sm:w-28 sm:h-28 rounded-2xl',
+    lg: 'w-32 h-32 sm:w-40 sm:h-40 rounded-2xl',
+    xl: 'w-44 h-44 sm:w-52 sm:h-52 rounded-3xl',
+    '2xl': 'w-60 h-60 sm:w-72 sm:h-72 rounded-3xl'
   }[size];
 
   const getCategoryFallback = () => {

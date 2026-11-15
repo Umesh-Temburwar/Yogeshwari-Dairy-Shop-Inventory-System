@@ -25452,10 +25452,280 @@
       "url": "https://images.openfoodfacts.org/images/products/893/999/763/0902/front_en.14.400.jpg",
       "source": "OpenFoodFacts",
       "timestamp": "2026-11-15T18:34:52.998433"
+    },
+    "1b846710-1504-4512-89dd-8c868ddeb94a": {
+      "status": "verified",
+      "barcode": "8908021531201",
+      "url": "https://images.openfoodfacts.org/images/products/890/802/153/1201/front_en.3.400.jpg",
+      "source": "OpenFoodFacts",
+      "timestamp": "2026-11-15T18:34:55.778528"
+    },
+    "1b85e6a7-9d05-4c9f-97db-5eb508357c02": {
+      "status": "missing",
+      "barcode": "8908007499105",
+      "timestamp": "2026-11-15T18:34:56.842579"
+    },
+    "1b83506b-724e-4710-9008-f373ae143e12": {
+      "status": "missing",
+      "barcode": "8904083303015",
+      "timestamp": "2026-11-15T18:34:56.993647"
+    },
+    "1b89427e-f8b4-430c-9e8a-b4dafbe749b8": {
+      "status": "missing",
+      "barcode": "8904199003144",
+      "timestamp": "2026-11-15T18:34:58.428300"
+    },
+    "1b8d571f-06c2-4aeb-b161-6423db11963f": {
+      "status": "missing",
+      "barcode": "8901701115753",
+      "timestamp": "2026-11-15T18:35:01.319209"
+    },
+    "1b8dce91-6e03-42ae-993c-cc59c4b9af8e": {
+      "status": "verified",
+      "barcode": "8908004730959",
+      "url": "https://images.openfoodfacts.org/images/products/890/800/473/0959/front_en.7.400.jpg",
+      "source": "OpenFoodFacts",
+      "timestamp": "2026-11-15T18:35:06.620052"
+    },
+    "1b8bedc7-0e71-4483-8b73-f7dff084c5ca": {
+      "status": "missing",
+      "barcode": "0716170228938",
+      "timestamp": "2026-11-15T18:35:06.770746"
+    },
+    "1b8e3ccf-39ee-45ba-86dc-7669a95d290f": {
+      "status": "verified",
+      "barcode": "8906015615333",
+      "url": "https://images.openfoodfacts.org/images/products/890/601/561/5333/front_en.3.400.jpg",
+      "source": "OpenFoodFacts",
+      "timestamp": "2026-11-15T18:35:08.040325"
+    },
+    "1b8f03f0-0bea-4950-b79c-1a3cab2f3288": {
+      "status": "missing",
+      "barcode": "8903363014795",
+      "timestamp": "2026-11-15T18:35:08.896297"
+    },
+    "1b8f6be1-51a6-4704-b886-696b5676e5b9": {
+      "status": "missing",
+      "barcode": "8908012811930",
+      "timestamp": "2026-11-15T18:35:09.964208"
+    },
+    "1b8eb71f-b7df-4505-9ff8-612731f2989e": {
+      "status": "verified",
+      "barcode": "8906009071800",
+      "url": "https://images.openfoodfacts.org/images/products/890/600/907/1800/front_en.7.400.jpg",
+      "source": "OpenFoodFacts",
+      "timestamp": "2026-11-15T18:35:11.937783"
+    },
+    "1b910e96-f5d6-475a-9c1a-715950b7ea12": {
+      "status": "missing",
+      "barcode": "8906112996090",
+      "timestamp": "2026-11-15T18:35:12.088331"
+    },
+    "1b910d12-9a5c-40f6-83af-6293bc997bb8": {
+      "status": "missing",
+      "barcode": "8906021400640",
+      "timestamp": "2026-11-15T18:35:12.238964"
+    },
+    "1b91642b-5f56-421d-bd79-a964a16708d9": {
+      "status": "missing",
+      "barcode": "8902901211245",
+      "timestamp": "2026-11-15T18:35:13.124489"
+    },
+    "1b951bc8-c316-4414-a911-87973d08d373": {
+      "status": "missing",
+      "barcode": "8901248121071",
+      "timestamp": "2026-11-15T18:35:14.155401"
+    },
+    "1b96913b-1715-47ce-bd84-a3bbca00dfa6": {
+      "status": "missing",
+      "barcode": "8906066202414",
+      "timestamp": "2026-11-15T18:35:14.684364"
+    },
+    "1b978d04-2c71-4b44-8095-3237f600a109": {
+      "status": "missing",
+      "barcode": "8902901219586",
+      "timestamp": "2026-11-15T18:35:14.834744"
+    },
+    "1b9857ae-69f3-452d-af49-951a9b315763": {
+      "status": "missing",
+      "barcode": "8901262070676",
+      "timestamp": "2026-11-15T18:35:17.047785"
+    },
+    "1b9ac98c-f00d-4a69-97c4-7acfcad47824": {
+      "status": "missing",
+      "barcode": "8906153561202",
+      "timestamp": "2026-11-15T18:35:17.624287"
+    },
+    "1b9946fc-83ed-4c24-9ac2-394d2a0a4e62": {
+      "status": "missing",
+      "barcode": "8908013080182",
+      "timestamp": "2026-11-15T18:35:17.775245"
+    },
+    "1ba6f6e7-6823-4585-a8d8-01e540803fd9": {
+      "status": "missing",
+      "barcode": "8906127550294",
+      "timestamp": "2026-11-15T18:35:20.431616"
+    },
+    "1ba4749b-6ba2-4776-b097-fbe8ac14ef0e": {
+      "status": "missing",
+      "barcode": "8901063365032",
+      "timestamp": "2026-11-15T18:35:20.583215"
+    },
+    "1ba0f5fb-85a5-4b23-86b5-be6759bbdd0f": {
+      "status": "verified",
+      "barcode": "8908017280113",
+      "url": "https://images.openfoodfacts.org/images/products/890/801/728/0113/front_en.3.400.jpg",
+      "source": "OpenFoodFacts",
+      "timestamp": "2026-11-15T18:35:21.976573"
+    },
+    "1ba7482f-8919-4924-9767-3cf004131c7d": {
+      "status": "missing",
+      "barcode": "8908015692468",
+      "timestamp": "2026-11-15T18:35:23.509974"
+    },
+    "1ba6f9aa-01ed-4391-b289-6132ccdb43ba": {
+      "status": "missing",
+      "barcode": "8908005144052",
+      "timestamp": "2026-11-15T18:35:23.660870"
+    },
+    "1ba8b68c-b1b3-4283-84ee-608e1b778cd2": {
+      "status": "missing",
+      "barcode": "8906080600586",
+      "timestamp": "2026-11-15T18:35:23.850002"
+    },
+    "1ba9d25c-1e5f-4738-ba60-3d1077321ec1": {
+      "status": "missing",
+      "barcode": "8904063210180",
+      "timestamp": "2026-11-15T18:35:25.123962"
+    },
+    "1ba9f766-6d7b-4755-9659-f768fe466391": {
+      "status": "missing",
+      "barcode": "8906009503714",
+      "timestamp": "2026-11-15T18:35:28.211852"
+    },
+    "1baa642f-f219-4573-8197-31d3d9c6e6dd": {
+      "status": "missing",
+      "barcode": "8903241230224",
+      "timestamp": "2026-11-15T18:35:28.544618"
+    },
+    "1babdb17-557a-483c-8468-6d54448763d7": {
+      "status": "verified",
+      "barcode": "8906159670571",
+      "url": "https://images.openfoodfacts.org/images/products/890/615/967/0571/front_en.3.400.jpg",
+      "source": "OpenFoodFacts",
+      "timestamp": "2026-11-15T18:35:34.390107"
+    },
+    "1baefd2c-0119-45de-a352-cc5f4680757f": {
+      "status": "missing",
+      "barcode": "8904422705319",
+      "timestamp": "2026-11-15T18:35:35.331297"
+    },
+    "1baf6312-9f64-426a-9c97-1eb4d50f9420": {
+      "status": "missing",
+      "barcode": "8904234102511",
+      "timestamp": "2026-11-15T18:35:35.691132"
+    },
+    "1bae78d0-5829-4a17-ab42-a5196313b502": {
+      "status": "verified",
+      "barcode": "8908024409002",
+      "url": "https://images.openfoodfacts.org/images/products/890/802/440/9002/front_en.3.400.jpg",
+      "source": "OpenFoodFacts",
+      "timestamp": "2026-11-15T18:35:36.258034"
+    },
+    "1bb031c2-3855-469a-bc8b-6f201dfd6f42": {
+      "status": "missing",
+      "barcode": "8904320007034",
+      "timestamp": "2026-11-15T18:35:40.002879"
+    },
+    "1bb75655-c4d1-46c2-9c33-40843b112b58": {
+      "status": "missing",
+      "barcode": "8906059910012",
+      "timestamp": "2026-11-15T18:35:40.218293"
+    },
+    "1bb0dfb2-768f-4f03-9aff-87054cac18c4": {
+      "status": "missing",
+      "barcode": "8902268002982",
+      "timestamp": "2026-11-15T18:35:40.369478"
+    },
+    "1bbd71ef-d8a3-4c99-bad8-c2f5b1d6017e": {
+      "status": "missing",
+      "barcode": "8908017333314",
+      "timestamp": "2026-11-15T18:35:42.874908"
+    },
+    "1bbb482b-56b9-48d2-ae9a-06839878d126": {
+      "status": "missing",
+      "barcode": "8908016793409",
+      "timestamp": "2026-11-15T18:35:43.025368"
+    },
+    "1bb9af71-e757-48f0-a092-b5f4acac5c80": {
+      "status": "verified",
+      "barcode": "8901058000221",
+      "url": "https://images.openfoodfacts.org/images/products/890/105/800/0221/front_en.9.400.jpg",
+      "source": "OpenFoodFacts",
+      "timestamp": "2026-11-15T18:35:43.826189"
+    },
+    "1bbe73f4-4e56-42c2-a979-dd0a9dc4c873": {
+      "status": "verified",
+      "barcode": "8903363010605",
+      "url": "https://images.openfoodfacts.org/images/products/890/336/301/0605/front_en.3.400.jpg",
+      "source": "OpenFoodFacts",
+      "timestamp": "2026-11-15T18:35:44.557770"
+    },
+    "1bbefc95-422f-49ed-89f8-ece8399a7da1": {
+      "status": "missing",
+      "barcode": "8906063891116",
+      "timestamp": "2026-11-15T18:35:47.298943"
+    },
+    "1bbe8797-5ab8-488b-bc63-f39eff09b4d0": {
+      "status": "missing",
+      "barcode": "8904293721708",
+      "timestamp": "2026-11-15T18:35:47.449575"
+    },
+    "1bc0a9e9-e0c5-42f7-8ceb-8b0ca03fa47a": {
+      "status": "verified",
+      "barcode": "8908010900094",
+      "url": "https://images.openfoodfacts.org/images/products/890/801/090/0094/front_en.3.400.jpg",
+      "source": "OpenFoodFacts",
+      "timestamp": "2026-11-15T18:35:48.644090"
+    },
+    "1bc16ddc-150e-4d4d-a665-a9fe9f554922": {
+      "status": "missing",
+      "barcode": "8904039702367",
+      "timestamp": "2026-11-15T18:35:49.924596"
+    },
+    "1bc13077-bc00-4434-aff2-407343218216": {
+      "status": "missing",
+      "barcode": "8903023006047",
+      "timestamp": "2026-11-15T18:35:50.075520"
+    },
+    "1bc26fc1-4eb0-43b5-b2c9-2f208acd3af8": {
+      "status": "missing",
+      "barcode": "6784005228563",
+      "timestamp": "2026-11-15T18:35:50.943102"
+    },
+    "1bc69ce6-c6af-42b4-9d07-51bfc4d05b84": {
+      "status": "missing",
+      "barcode": "8906005506719",
+      "timestamp": "2026-11-15T18:35:51.686053"
+    },
+    "1bc4d1cf-e9c3-4d19-9c27-6cc15c5173cc": {
+      "status": "missing",
+      "barcode": "8908000295797",
+      "timestamp": "2026-11-15T18:35:55.118684"
+    },
+    "1bc8be7a-d787-4822-adcd-85e3bd4178c2": {
+      "status": "missing",
+      "barcode": "8901030976742",
+      "timestamp": "2026-11-15T18:35:55.773539"
+    },
+    "1bc9d38c-d9ee-41b9-b697-5ca3308b4f4d": {
+      "status": "missing",
+      "barcode": "8906021121156",
+      "timestamp": "2026-11-15T18:35:56.345008"
     }
   },
-  "verified": 1025,
-  "missing": 3775,
+  "verified": 1035,
+  "missing": 3815,
   "failed": 0,
-  "last_updated": "2026-11-15T18:34:53.150368"
+  "last_updated": "2026-11-15T18:35:56.497054"
 }

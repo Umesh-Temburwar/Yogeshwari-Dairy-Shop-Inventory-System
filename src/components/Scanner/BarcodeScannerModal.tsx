@@ -274,6 +274,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       let isLoopRunning = true;
       let isDecodingFrame = false;
       let isAutoOcrRunning = false;
+      let ocrTimer: any = null;
       const tracker = new BarcodeConfirmationTracker();
 
       // Show OCR fallback button immediately so user can tap it anytime

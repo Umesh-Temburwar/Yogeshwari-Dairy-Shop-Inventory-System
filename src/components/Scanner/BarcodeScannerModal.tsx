@@ -3,8 +3,11 @@ import { BrowserMultiFormatReader } from '@zxing/browser';
 import {
   createBarcodeReader,
   decodeVideoMultiAngle,
-  decodeImageMultiAngle
+  decodeImageMultiAngle,
+  BarcodeConfirmationTracker
 } from '../../utils/barcodeScannerEngine';
+import { performBarcodeOcrFallback } from '../../utils/barcodeOcrFallback';
+import { validateBarcode, BarcodeValidationResult } from '../../utils/barcodeChecksum';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product } from '../../types';
@@ -21,7 +24,10 @@ import {
   Flashlight,
   VideoOff,
   Video,
-  SwitchCamera
+  SwitchCamera,
+  Sparkles,
+  ShieldCheck,
+  Check
 } from 'lucide-react';
 
 interface BarcodeScannerModalProps {
@@ -59,6 +65,10 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   const [torchEnabled, setTorchEnabled] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [diagnosticsLogs, setDiagnosticsLogs] = useState<string[]>([]);
+  const [isOcrRunning, setIsOcrRunning] = useState(false);
+  const [showOcrButton, setShowOcrButton] = useState(false);
+  const [validationResult, setValidationResult] = useState<BarcodeValidationResult | null>(null);
+  const [matchedSource, setMatchedSource] = useState<'product_barcodes' | 'products' | 'rpc' | 'local' | 'catalogue' | null>(null);
 
   // Stop camera tracks cleanly
   const stopCamera = () => {
@@ -245,7 +255,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       const capabilities: any = track?.getCapabilities ? track.getCapabilities() : {};
       setHasTorch(Boolean(capabilities?.torch));
 
-      // 2. High-Performance Multi-Angle ZXing Scanning Engine (0°, 180°, 90°, Center Reticle Crop)
+      // 2. High-Performance Multi-Pass AI & Multi-Angle Computer Vision Decoder
       const codeReader = createBarcodeReader();
       codeReaderRef.current = codeReader;
 
@@ -254,6 +264,14 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
       let isLoopRunning = true;
       let isDecodingFrame = false;
+      const tracker = new BarcodeConfirmationTracker();
+
+      // Offer OCR fallback button after 3.5s of scanning without decode
+      const ocrTimer = setTimeout(() => {
+        if (isLoopRunning) {
+          setShowOcrButton(true);
+        }
+      }, 3500);
 
       const scanInterval = setInterval(() => {
         if (!isLoopRunning || isDecodingFrame) return;
@@ -262,23 +280,28 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
         isDecodingFrame = true;
         try {
-          const detectedText = decodeVideoMultiAngle(videoElement, codeReader, scanCanvas, scanCtx);
-          if (detectedText && isLoopRunning) {
-            isLoopRunning = false;
-            clearInterval(scanInterval);
-            handleBarcodeDetected(detectedText);
+          const rawText = decodeVideoMultiAngle(videoElement, codeReader, scanCanvas, scanCtx);
+          if (rawText && isLoopRunning) {
+            const confirmed = tracker.evaluateCandidate(rawText);
+            if (confirmed && isLoopRunning) {
+              isLoopRunning = false;
+              clearInterval(scanInterval);
+              clearTimeout(ocrTimer);
+              handleBarcodeDetected(confirmed.text);
+            }
           }
         } catch (frameErr) {
           // ignore transient frame capture glitches
         } finally {
           isDecodingFrame = false;
         }
-      }, 140);
+      }, 120);
 
       scannerControlsRef.current = {
         stop: () => {
           isLoopRunning = false;
           clearInterval(scanInterval);
+          clearTimeout(ocrTimer);
         }
       };
 
@@ -327,6 +350,31 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     setFacingMode(prev => (prev === 'environment' ? 'user' : 'environment'));
   };
 
+  // Trigger AI OCR Fallback for damaged/scratched barcodes
+  const handleTriggerOcr = async () => {
+    if (!videoRef.current || isOcrRunning) return;
+    setIsOcrRunning(true);
+    try {
+      const ocrRes = await performBarcodeOcrFallback(videoRef.current);
+      if (ocrRes.found && ocrRes.barcode) {
+        if (scannerControlsRef.current) {
+          scannerControlsRef.current.stop();
+        }
+        handleBarcodeDetected(ocrRes.barcode);
+      } else {
+        alert(
+          language === 'mr'
+            ? 'बारकोड क्रमांक ओळखता आला नाही. कृपया बारकोड थेट प्रकाशात आणा किंवा हाताने नंबर टाका.'
+            : 'बारकोड संख्या पहचानी नहीं जा सकी। कृपया रोशनी में लाएं या बारकोड संख्या टाइप करें।'
+        );
+      }
+    } catch (err) {
+      console.warn('OCR error:', err);
+    } finally {
+      setIsOcrRunning(false);
+    }
+  };
+
   // Lifecycle
   useEffect(() => {
     if (!isOpen) {
@@ -336,6 +384,9 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
     setScannedCode(null);
     setMatchedProduct(null);
+    setValidationResult(null);
+    setMatchedSource(null);
+    setShowOcrButton(false);
     setCameraError(null);
     startCamera();
 
@@ -348,6 +399,10 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     playBeepSound();
     const clean = code.trim();
     setScannedCode(clean);
+
+    const val = validateBarcode(clean);
+    setValidationResult(val);
+
     if (onBarcodeScanned) {
       onBarcodeScanned(clean);
     }
@@ -357,14 +412,16 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     const found = products.find(p => p.barcode && candidates.includes(p.barcode.trim()));
     if (found) {
       setMatchedProduct(found);
+      setMatchedSource('local');
       return;
     }
 
-    // 2. Lookup in online Supabase catalog (product_barcodes + products)
+    // 2. Lookup in online Supabase catalog (product_barcodes + products + catalogue)
     try {
       const result = await searchProductByBarcodeOnline(clean);
       if (result.found && result.product) {
         setMatchedProduct(result.product);
+        setMatchedSource(result.source);
         return;
       }
     } catch (e) {
@@ -372,6 +429,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     }
 
     setMatchedProduct(null);
+    setMatchedSource(null);
   };
 
   const handleManualSearch = (e: React.FormEvent) => {
@@ -451,7 +509,31 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
           {isCameraActive && (
             <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-[11px] font-bold backdrop-blur-md shadow-md">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>{language === 'mr' ? 'कॅमेरा सुरू • स्कॅनिंग सक्रिय' : 'कैमरा चालू • स्कैनिंग सक्रिय'}</span>
+              <span>{language === 'mr' ? 'AI स्कॅनर सक्रिय (Multi-Pass)' : 'AI स्कैनर सक्रिय (Multi-Pass)'}</span>
+            </div>
+          )}
+
+          {/* Prompt OCR Fallback button if scanning takes a few seconds */}
+          {showOcrButton && isCameraActive && !isOcrRunning && (
+            <div className="absolute bottom-3 inset-x-0 flex justify-center z-20 px-3 pointer-events-auto">
+              <button
+                type="button"
+                onClick={handleTriggerOcr}
+                className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs shadow-xl flex items-center gap-1.5 transition active:scale-95 animate-bounce"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                <span>{language === 'mr' ? 'खराब बारकोड? नंबर OCR ने वाचा' : 'खराब बारकोड? नंबर OCR से पढ़ें'}</span>
+              </button>
+            </div>
+          )}
+
+          {/* OCR Processing Overlay */}
+          {isOcrRunning && (
+            <div className="absolute inset-0 bg-slate-950/85 z-30 flex flex-col items-center justify-center text-white space-y-2.5 animate-fadeIn">
+              <RefreshCw className="w-7 h-7 text-amber-400 animate-spin" />
+              <p className="text-xs font-bold text-amber-200">
+                {language === 'mr' ? 'AI OCR द्वारे बारकोड नंबर वाचत आहे...' : 'AI OCR द्वारा बारकोड संख्या पढ़ी जा रही है...'}
+              </p>
             </div>
           )}
 
@@ -622,13 +704,35 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         {/* Result Area */}
         {scannedCode && (
           <div className="p-4 bg-white dark:bg-[#131F1B] border-t border-slate-200 dark:border-[#24352F] space-y-3 animate-fadeIn">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                {language === 'mr' ? 'स्कॅन केलेला कोड:' : 'स्कैन किया गया कोड:'}
-              </span>
-              <span className="font-mono text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
-                {scannedCode}
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-slate-500 dark:text-[#8FA69C]">
+                  {language === 'mr' ? 'स्कॅन केलेला कोड:' : 'स्कैन किया गया कोड:'}
+                </span>
+                <span className="font-mono text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
+                  {scannedCode}
+                </span>
+              </div>
+
+              {/* Validation & Source Badges */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {validationResult?.isGS1 && validationResult?.isValid && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold border border-emerald-300 dark:border-emerald-800">
+                    <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                    <span>{validationResult.format.replace('_', '-')} GS1 Valid</span>
+                  </span>
+                )}
+                {matchedSource === 'catalogue' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 text-[10px] font-bold border border-sky-300 dark:border-sky-800">
+                    <span>📦 46K+ Master Catalogue</span>
+                  </span>
+                )}
+                {matchedSource === 'products' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold border border-emerald-300 dark:border-emerald-800">
+                    <span>🏪 दुकान स्टॉक</span>
+                  </span>
+                )}
+              </div>
             </div>
 
             {matchedProduct ? (

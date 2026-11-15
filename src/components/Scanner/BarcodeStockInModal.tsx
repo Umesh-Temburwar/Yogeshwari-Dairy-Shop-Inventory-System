@@ -3,8 +3,11 @@ import { BrowserMultiFormatReader } from '@zxing/browser';
 import {
   createBarcodeReader,
   decodeVideoMultiAngle,
-  decodeImageMultiAngle
+  decodeImageMultiAngle,
+  BarcodeConfirmationTracker
 } from '../../utils/barcodeScannerEngine';
+import { performBarcodeOcrFallback } from '../../utils/barcodeOcrFallback';
+import { validateBarcode, BarcodeValidationResult } from '../../utils/barcodeChecksum';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product, ProductCategory, ProductUnit } from '../../types';
@@ -66,6 +69,10 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   const [torchEnabled, setTorchEnabled] = useState(false);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [diagnosticsLogs, setDiagnosticsLogs] = useState<string[]>([]);
+  const [isOcrRunning, setIsOcrRunning] = useState(false);
+  const [showOcrButton, setShowOcrButton] = useState(false);
+  const [validationResult, setValidationResult] = useState<BarcodeValidationResult | null>(null);
+  const [matchedSource, setMatchedSource] = useState<'product_barcodes' | 'products' | 'rpc' | 'local' | 'catalogue' | null>(null);
 
   // Matched / Selected Product
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -308,7 +315,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       const capabilities: any = track?.getCapabilities ? track.getCapabilities() : {};
       setHasTorch(Boolean(capabilities?.torch));
 
-      // 2. High-Performance Multi-Angle ZXing Scanning Engine (0°, 180°, 90°, Center Reticle Crop)
+      // 2. High-Performance Multi-Pass AI & Multi-Angle Computer Vision Decoder
       const codeReader = createBarcodeReader();
       codeReaderRef.current = codeReader;
 
@@ -317,6 +324,14 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
 
       let isLoopRunning = true;
       let isDecodingFrame = false;
+      const tracker = new BarcodeConfirmationTracker();
+
+      // Offer OCR fallback button after 3.5s of scanning without decode
+      const ocrTimer = setTimeout(() => {
+        if (isLoopRunning) {
+          setShowOcrButton(true);
+        }
+      }, 3500);
 
       const scanInterval = setInterval(() => {
         if (!isLoopRunning || isDecodingFrame) return;
@@ -325,23 +340,28 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
 
         isDecodingFrame = true;
         try {
-          const detectedText = decodeVideoMultiAngle(videoElement, codeReader, scanCanvas, scanCtx);
-          if (detectedText && isLoopRunning) {
-            isLoopRunning = false;
-            clearInterval(scanInterval);
-            handleBarcodeDetected(detectedText);
+          const rawText = decodeVideoMultiAngle(videoElement, codeReader, scanCanvas, scanCtx);
+          if (rawText && isLoopRunning) {
+            const confirmed = tracker.evaluateCandidate(rawText);
+            if (confirmed && isLoopRunning) {
+              isLoopRunning = false;
+              clearInterval(scanInterval);
+              clearTimeout(ocrTimer);
+              handleBarcodeDetected(confirmed.text);
+            }
           }
         } catch (frameErr) {
           // ignore transient frame capture glitches
         } finally {
           isDecodingFrame = false;
         }
-      }, 140);
+      }, 120);
 
       scannerControlsRef.current = {
         stop: () => {
           isLoopRunning = false;
           clearInterval(scanInterval);
+          clearTimeout(ocrTimer);
         }
       };
 
@@ -386,8 +406,34 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     setFacingMode(prev => (prev === 'environment' ? 'user' : 'environment'));
   };
 
+  // AI OCR Fallback for damaged or scratched barcode labels
+  const handleTriggerOcr = async () => {
+    if (!videoRef.current || isOcrRunning) return;
+    setIsOcrRunning(true);
+    try {
+      const ocrRes = await performBarcodeOcrFallback(videoRef.current);
+      if (ocrRes.found && ocrRes.barcode) {
+        if (scannerControlsRef.current) {
+          scannerControlsRef.current.stop();
+        }
+        handleBarcodeDetected(ocrRes.barcode);
+      } else {
+        alert(
+          language === 'mr'
+            ? 'बारकोड क्रमांक ओळखता आला नाही. कृपया बारकोड थेट प्रकाशात आणा किंवा हाताने नंबर टाका.'
+            : 'बारकोड संख्या पहचानी नहीं जा सकी। कृपया रोशनी में लाएं या बारकोड संख्या टाइप करें।'
+        );
+      }
+    } catch (err) {
+      console.warn('OCR error:', err);
+    } finally {
+      setIsOcrRunning(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen && step === 'scan') {
+      setShowOcrButton(false);
       startCamera();
     } else {
       stopCamera();
@@ -402,6 +448,10 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     if (!clean) return;
     playBeepSound();
     setBarcodeInput(clean);
+
+    const val = validateBarcode(clean);
+    setValidationResult(val);
+
     lookupBarcode(clean);
   };
 
@@ -418,14 +468,16 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     );
 
     if (localMatch) {
+      setMatchedSource('local');
       proceedWithProduct(localMatch);
       return;
     }
 
-    // 2. Query online database (product_barcodes, products, RPC)
+    // 2. Query online database (product_barcodes, products, RPC, product_catalogue)
     try {
       const result = await searchProductByBarcodeOnline(clean);
       if (result.found && result.product) {
+        setMatchedSource(result.source);
         proceedWithProduct(result.product);
         return;
       }
@@ -433,6 +485,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       console.warn('Online barcode lookup failed:', e);
     }
 
+    setMatchedSource(null);
     // Not found -> Step 2: Register product
     stopCamera();
     setStep('register');
@@ -701,7 +754,31 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                 {isScanningCamera && (
                   <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-[11px] font-bold backdrop-blur-md shadow-md">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                    <span>{language === 'mr' ? 'कॅमेरा सुरू • स्कॅनिंग सक्रिय' : 'कैमरा चालू • स्कैनिंग सक्रिय'}</span>
+                    <span>{language === 'mr' ? 'AI स्कॅनर सक्रिय (Multi-Pass)' : 'AI स्कैनर सक्रिय (Multi-Pass)'}</span>
+                  </div>
+                )}
+
+                {/* Prompt OCR Fallback button if scanning takes a few seconds */}
+                {showOcrButton && isScanningCamera && !isOcrRunning && (
+                  <div className="absolute bottom-3 inset-x-0 flex justify-center z-20 px-3 pointer-events-auto">
+                    <button
+                      type="button"
+                      onClick={handleTriggerOcr}
+                      className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs shadow-xl flex items-center gap-1.5 transition active:scale-95 animate-bounce"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                      <span>{language === 'mr' ? 'खराब बारकोड? नंबर OCR ने वाचा' : 'खराब बारकोड? नंबर OCR से पढ़ें'}</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* OCR Processing Overlay */}
+                {isOcrRunning && (
+                  <div className="absolute inset-0 bg-slate-950/85 z-30 flex flex-col items-center justify-center text-white space-y-2.5 animate-fadeIn">
+                    <RefreshCw className="w-7 h-7 text-amber-400 animate-spin" />
+                    <p className="text-xs font-bold text-amber-200">
+                      {language === 'mr' ? 'AI OCR द्वारे बारकोड नंबर वाचत आहे...' : 'AI OCR द्वारा बारकोड संख्या पढ़ी जा रही है...'}
+                    </p>
                   </div>
                 )}
 
@@ -1015,6 +1092,19 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                     <p className="text-xs text-slate-500 font-mono mt-0.5">
                       {selectedProduct.name} • {selectedProduct.brand || 'Yogeshwari Dairy'}
                     </p>
+                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                      {validationResult?.isGS1 && validationResult?.isValid && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-[10px] font-bold">
+                          <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                          <span>{validationResult.format.replace('_', '-')} GS1 Verified</span>
+                        </span>
+                      )}
+                      {matchedSource === 'catalogue' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-200 text-[10px] font-bold">
+                          <span>📦 Master Catalogue SKU</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="text-right">
                     <span className="text-xs text-slate-500">{language === 'mr' ? 'सध्याचा साठा' : 'वर्तमान स्टॉक'}</span>

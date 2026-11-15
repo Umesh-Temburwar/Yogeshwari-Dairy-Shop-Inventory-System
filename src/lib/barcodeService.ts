@@ -10,12 +10,14 @@
 
 import { supabase } from './supabase';
 import { Product, ProductCategory, ProductUnit } from '../types';
+import { validateBarcode, BarcodeValidationResult } from '../utils/barcodeChecksum';
 
 export interface BarcodeSearchResult {
   found: boolean;
   product: Product | null;
   barcode: string;
-  source: 'product_barcodes' | 'products' | 'rpc' | 'local';
+  source: 'product_barcodes' | 'products' | 'rpc' | 'local' | 'catalogue';
+  validation?: BarcodeValidationResult;
 }
 
 /**
@@ -199,11 +201,23 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
         is_active: true,
         created_at: c.created_at || new Date().toISOString()
       };
-      return { found: true, product: prod, barcode: c.barcode || clean, source: 'catalogue' as any };
+      return {
+        found: true,
+        product: prod,
+        barcode: c.barcode || clean,
+        source: 'catalogue',
+        validation: validateBarcode(clean)
+      };
     }
   } catch (err) {
     console.warn('[BarcodeService] product_catalogue table lookup error:', err);
   }
 
-  return { found: false, product: null, barcode: clean, source: 'local' };
+  return {
+    found: false,
+    product: null,
+    barcode: clean,
+    source: 'local',
+    validation: validateBarcode(clean)
+  };
 }

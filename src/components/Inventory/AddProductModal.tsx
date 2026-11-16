@@ -81,6 +81,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
   useEffect(() => {
     isUserTypingRef.current = false;
+    setIsTranslating(false);
     if (productToEdit) {
       setName(productToEdit.name);
       setHindiName(productToEdit.hindi_name || '');
@@ -109,6 +110,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   // Debounced translation hook when user types English name
   useEffect(() => {
     if (!isUserTypingRef.current || !autoTranslateEnabled || !name.trim() || name.trim().length < 2) {
+      setIsTranslating(false);
       return;
     }
 
@@ -125,13 +127,14 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       } catch (e) {
         console.warn('Auto-translate error:', e);
       } finally {
-        if (!cancelled) setIsTranslating(false);
+        setIsTranslating(false);
       }
     }, 300);
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
+      setIsTranslating(false);
     };
   }, [name, autoTranslateEnabled]);
 
@@ -145,20 +148,32 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       setMarathiName(instant.marathi);
       setHindiName(instant.hindi);
     } else if (!val.trim()) {
+      setIsTranslating(false);
       if (autoTranslateEnabled) {
         setMarathiName('');
         setHindiName('');
       }
+    } else {
+      setIsTranslating(false);
     }
   };
 
   const handleManualTranslateTrigger = async () => {
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setIsTranslating(false);
+      return;
+    }
     setIsTranslating(true);
     try {
+      // 1. Instant synchronous preview for zero perceived delay
+      const instant = translateProductNameSync(name);
+      if (instant.marathi) setMarathiName(instant.marathi);
+      if (instant.hindi) setHindiName(instant.hindi);
+
+      // 2. High-accuracy asynchronous refinement
       const res = await translateProductName(name);
-      setMarathiName(res.marathi);
-      setHindiName(res.hindi);
+      if (res.marathi) setMarathiName(res.marathi);
+      if (res.hindi) setHindiName(res.hindi);
     } catch (e) {
       const fallback = translateProductNameSync(name);
       setMarathiName(fallback.marathi);
@@ -549,15 +564,17 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 <button
                   type="button"
                   onClick={handleManualTranslateTrigger}
-                  disabled={isTranslating || !name.trim()}
+                  disabled={(isTranslating && Boolean(name.trim())) || !name.trim()}
                   className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 flex items-center gap-1 transition active:scale-95 disabled:opacity-50"
                   title="मराठी आणि हिंदी नाव आपोआप भरा (Re-translate)"
                 >
-                  <Sparkles className={`w-3.5 h-3.5 ${isTranslating ? 'animate-spin text-amber-500' : 'text-emerald-500'}`} />
+                  <Sparkles className={`w-3.5 h-3.5 ${isTranslating && Boolean(name.trim()) ? 'animate-spin text-amber-500' : 'text-emerald-500'}`} />
                   <span>
-                    {isTranslating
+                    {isTranslating && Boolean(name.trim())
                       ? (language === 'mr' ? 'अनुवाद करत आहे...' : 'अनुवाद कर रहे हैं...')
-                      : (language === 'mr' ? '✨ पुन्हा भाषांतर करा' : '✨ ऑटो ट्रांसलेट')}
+                      : (language === 'mr'
+                        ? (name.trim() ? '✨ पुन्हा भाषांतर करा' : '✨ ऑटो भाषांतर')
+                        : (name.trim() ? '✨ पुनः अनुवाद करें' : '✨ ऑटो ट्रांसलेट'))}
                   </span>
                 </button>
               </div>

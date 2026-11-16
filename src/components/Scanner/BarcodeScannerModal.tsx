@@ -38,6 +38,7 @@ interface BarcodeScannerModalProps {
   onProductSelected?: (product: Product) => void;
   onBarcodeScanned?: (barcode: string) => void;
   mode?: 'pos' | 'stock_inward' | 'lookup';
+  zIndex?: string;
 }
 
 export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
@@ -45,7 +46,8 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   onClose,
   onProductSelected,
   onBarcodeScanned,
-  mode = 'lookup'
+  mode = 'lookup',
+  zIndex = 'z-[120]'
 }) => {
   const { products } = useStore();
   const { language } = useLanguage();
@@ -537,7 +539,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fadeIn">
+    <div className={`fixed inset-0 ${zIndex} flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fadeIn`}>
       <div className="bg-white dark:bg-[#131F1B] max-w-lg w-full rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
 
         {/* Header */}

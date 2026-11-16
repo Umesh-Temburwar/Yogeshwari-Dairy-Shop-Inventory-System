@@ -26,7 +26,10 @@ import {
   ShoppingBag,
   ArrowUpDown,
   Tag,
-  UserPlus
+  UserPlus,
+  EyeOff,
+  Power,
+  Activity
 } from 'lucide-react';
 import { formatSaleDate, formatSaleTime, formatTimeAgo } from '../../lib/dateUtils';
 import { 
@@ -35,6 +38,11 @@ import {
   subscribeToRegistrationSetting,
   syncRegistrationSettingFromCloud
 } from '../../lib/registrationConfig';
+import { 
+  isAuditStreamEnabledSync, 
+  setAuditStreamEnabled, 
+  subscribeToAuditStreamSetting 
+} from '../../lib/auditStreamConfig';
 
 export const OwnerAdminCounterWidget: React.FC = () => {
   const { sales, adminActivities, purchases, damages, refreshData, isSyncing } = useStore();
@@ -51,6 +59,23 @@ export const OwnerAdminCounterWidget: React.FC = () => {
   // Registration setting state & sync
   const [isRegistrationAllowed, setIsRegistrationAllowed] = useState<boolean>(() => isRegistrationAllowedSync());
   const [isTogglingReg, setIsTogglingReg] = useState(false);
+
+  // Live Audit Stream ON / OFF state (Shop Owner controlled)
+  const [isAuditStreamEnabled, setIsAuditStreamEnabled] = useState<boolean>(() => isAuditStreamEnabledSync());
+
+  React.useEffect(() => {
+    const unsubscribe = subscribeToAuditStreamSetting(setIsAuditStreamEnabled);
+    return () => unsubscribe();
+  }, []);
+
+  const handleToggleAuditStream = () => {
+    if (role !== 'Owner') return;
+    const nextState = !isAuditStreamEnabled;
+    const res = setAuditStreamEnabled(nextState, role);
+    if (res.success) {
+      setIsAuditStreamEnabled(nextState);
+    }
+  };
 
   React.useEffect(() => {
     syncRegistrationSettingFromCloud().then(setIsRegistrationAllowed);
@@ -538,19 +563,88 @@ export const OwnerAdminCounterWidget: React.FC = () => {
             </p>
           </div>
 
-          {/* Search Box */}
-          <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
-            <input
-              type="text"
-              placeholder={isMr ? 'बिल क्र., वस्तू, नाव किंवा ईमेल शोधा...' : isHi ? 'बिल क्र., सामान, नाम या ईमेल खोजें...' : 'Search bill, item, name or email...'}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
-            />
+          {/* Right Header Actions: Owner ON/OFF Toggle + Search Box */}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            {/* Live Audit Stream ON / OFF Switch (Shop Owner Control) */}
+            {role === 'Owner' ? (
+              <button
+                type="button"
+                onClick={handleToggleAuditStream}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black transition-all shadow-xs shrink-0 ${
+                  isAuditStreamEnabled
+                    ? 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-300/80 dark:border-emerald-700/60'
+                    : 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-300/80 dark:border-rose-800/60'
+                }`}
+                title={isAuditStreamEnabled ? (isMr ? 'नोंदवही बंद करा (Turn OFF)' : 'रजिस्टर बंद करें (Turn OFF)') : (isMr ? 'नोंदवही चालू करा (Turn ON)' : 'रजिस्टर चालू करें (Turn ON)')}
+              >
+                <span className={`w-2 h-2 rounded-full ${isAuditStreamEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                <span>{isMr ? 'नोंदवही:' : isHi ? 'रजिस्टर:' : 'Audit:'}</span>
+                <span className="font-extrabold uppercase">
+                  {isAuditStreamEnabled ? (isMr ? 'चालू (ON)' : 'ON') : (isMr ? 'बंद (OFF)' : 'OFF')}
+                </span>
+                <Power className={`w-3.5 h-3.5 ml-0.5 ${isAuditStreamEnabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`} />
+              </button>
+            ) : (
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[11px] font-bold shrink-0 ${
+                isAuditStreamEnabled
+                  ? 'bg-emerald-50/80 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200/80'
+                  : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-rose-200'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isAuditStreamEnabled ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                <span>{isAuditStreamEnabled ? 'Audit: ON' : 'Audit: OFF'}</span>
+              </div>
+            )}
+
+            {/* Search Box - visible when Audit Stream is ON */}
+            {isAuditStreamEnabled && (
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
+                <input
+                  type="text"
+                  placeholder={isMr ? 'बिल क्र., वस्तू, नाव शोधा...' : isHi ? 'बिल क्र., सामान, नाम खोजें...' : 'Search bill, item, name...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+            )}
           </div>
         </div>
 
+        {!isAuditStreamEnabled ? (
+          <div className="p-6 sm:p-8 rounded-2xl bg-slate-50 dark:bg-[#16221E] border border-dashed border-slate-300 dark:border-[#24352F] text-center space-y-3">
+            <div className="w-12 h-12 mx-auto rounded-full bg-rose-50 dark:bg-rose-950/40 flex items-center justify-center text-rose-500 border border-rose-200/80 dark:border-rose-800/50">
+              <EyeOff className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="font-extrabold text-sm text-slate-800 dark:text-white">
+                {isMr
+                  ? 'थेट तपासणी नोंदवही (Live Audit Stream) बंद आहे'
+                  : isHi
+                  ? 'लाइव ऑडिट रजिस्टर (Live Audit Stream) बंद है'
+                  : 'Live Audit Stream is Currently Turned OFF'}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-1 max-w-md mx-auto">
+                {isMr
+                  ? 'दुकान मालक (Nikhil Sakhare) यांनी थेट तपासणी नोंदवहीचा प्रवाह बंद (OFF) केला आहे.'
+                  : isHi
+                  ? 'दुकान मालिक (Nikhil Sakhare) ने लाइव ऑडिट स्ट्रीम को बंद (OFF) किया है।'
+                  : 'Shop Owner Nikhil Sakhare has turned OFF the live audit stream and activity history display.'}
+              </p>
+            </div>
+            {role === 'Owner' && (
+              <button
+                type="button"
+                onClick={handleToggleAuditStream}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-all shadow-md active:scale-95"
+              >
+                <Power className="w-4 h-4" />
+                <span>{isMr ? 'नोंदवही पुन्हा चालू करा (Switch ON)' : isHi ? 'रजिस्टर पुनः चालू करें (Switch ON)' : 'Turn ON Audit Stream'}</span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
         {/* Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {[
@@ -775,6 +869,8 @@ export const OwnerAdminCounterWidget: React.FC = () => {
               })
             )}
           </div>
+        )}
+          </>
         )}
       </div>
 

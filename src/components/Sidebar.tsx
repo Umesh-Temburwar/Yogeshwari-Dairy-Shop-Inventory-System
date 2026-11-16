@@ -32,7 +32,9 @@ import {
   LogOut,
   CheckCircle2,
   Loader2,
-  ChevronDown
+  ChevronDown,
+  Power,
+  Activity
 } from 'lucide-react';
 import { 
   isRegistrationAllowedSync, 
@@ -40,6 +42,11 @@ import {
   subscribeToRegistrationSetting,
   syncRegistrationSettingFromCloud
 } from '../lib/registrationConfig';
+import { 
+  isAuditStreamEnabledSync, 
+  setAuditStreamEnabled, 
+  subscribeToAuditStreamSetting 
+} from '../lib/auditStreamConfig';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -79,6 +86,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isRegistrationAllowed, setIsRegistrationAllowed] = useState<boolean>(() => isRegistrationAllowedSync());
   const [isUpdatingReg, setIsUpdatingReg] = useState(false);
   const [regFeedback, setRegFeedback] = useState<string | null>(null);
+
+  // Live Audit Stream ON / OFF state (Shop Owner controlled)
+  const [isAuditStreamEnabled, setIsAuditStreamEnabled] = useState<boolean>(() => isAuditStreamEnabledSync());
+
+  useEffect(() => {
+    const unsubscribe = subscribeToAuditStreamSetting(setIsAuditStreamEnabled);
+    return () => unsubscribe();
+  }, []);
+
+  const handleToggleAuditStream = () => {
+    if (role !== 'Owner') return;
+    const nextState = !isAuditStreamEnabled;
+    const res = setAuditStreamEnabled(nextState, role);
+    if (res.success) {
+      setIsAuditStreamEnabled(nextState);
+    }
+  };
 
   useEffect(() => {
     syncRegistrationSettingFromCloud().then(setIsRegistrationAllowed);
@@ -562,7 +586,57 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </div>
                   </div>
 
-                  {/* 5. Mobile App Install Button */}
+                  {/* 5. Live Audit Stream ON / OFF (Shop Owner Nikhil Sakhare) */}
+                  <div>
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <Activity className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span className="text-[11px] font-black text-slate-800 dark:text-[#E7F0EC]">
+                            {language === 'mr' ? 'थेट तपासणी नोंदवही' : language === 'hi' ? 'लाइव ऑडिट रजिस्टर' : 'Live Audit Stream'}
+                          </span>
+                        </div>
+                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border flex items-center gap-1 ${
+                          isAuditStreamEnabled
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300/80 dark:border-emerald-700/60'
+                            : 'bg-rose-50 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border-rose-200 dark:border-rose-900/60'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${isAuditStreamEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                          <span>{isAuditStreamEnabled ? 'ON' : 'OFF'}</span>
+                        </span>
+                      </div>
+
+                      {role === 'Owner' ? (
+                        <button
+                          type="button"
+                          onClick={handleToggleAuditStream}
+                          className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-black transition-all border shadow-xs ${
+                            isAuditStreamEnabled
+                              ? 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/40'
+                              : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
+                          }`}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <Power className="w-3 h-3" />
+                            <span className="text-[11px]">
+                              {isAuditStreamEnabled
+                                ? (language === 'mr' ? 'नोंदवही बंद करा' : 'रजिस्टर बंद करें')
+                                : (language === 'mr' ? 'नोंदवही चालू करा' : 'रजिस्टर चालू करें')}
+                            </span>
+                          </span>
+                          <span className="text-[9px] font-black uppercase">
+                            {isAuditStreamEnabled ? 'SWITCH OFF' : 'SWITCH ON'}
+                          </span>
+                        </button>
+                      ) : (
+                        <p className="text-[10px] text-amber-700 dark:text-amber-400">
+                          {language === 'mr' ? 'फक्त मालक बदलू शकतात' : 'केवल मालिक बदल सकते हैं'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 6. Mobile App Install Button */}
                   {onOpenAppDownload && (
                     <div>
                       <button

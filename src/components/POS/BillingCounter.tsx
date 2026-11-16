@@ -81,18 +81,18 @@ const ProductCard = React.memo<ProductCardProps>(({
           onAddToCart(prod, 1);
         }
       }}
-      className={`relative bg-white dark:bg-[#131F1B] rounded-2xl p-3.5 border transition-all duration-150 flex flex-col justify-between group select-none ${
+      className={`relative bg-white dark:bg-[#131F1B] rounded-2xl p-3 sm:p-3.5 border transition-all duration-150 flex flex-col justify-between group select-none shadow-2xs ${
         isOutOfStock || hasExpiredOnly
           ? 'border-slate-200 dark:border-[#24352F] opacity-60 bg-slate-50/50 dark:bg-[#16221E]' 
           : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500 dark:hover:border-emerald-500/60 hover:shadow-md cursor-pointer'
       }`}
     >
       <div>
-        <div className="flex items-start justify-between gap-1 mb-1">
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] uppercase truncate max-w-[85px]">
+        <div className="flex items-start justify-between gap-1 mb-1.5">
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] uppercase truncate max-w-[85px]">
             {prod.unit}
           </span>
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 ${
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 ${
             hasExpiredOnly 
               ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800' :
             isOutOfStock ? 'bg-red-100 dark:bg-rose-950/60 text-red-700 dark:text-rose-400' :
@@ -109,24 +109,24 @@ const ProductCard = React.memo<ProductCardProps>(({
           </span>
         </div>
 
-        {/* Large Product Image Banner */}
-        <div className="w-full flex justify-center items-center py-2 mb-2 bg-slate-50/70 dark:bg-[#1A2A25]/50 rounded-xl border border-slate-100 dark:border-[#24352F]/60 overflow-hidden">
+        {/* Standardized Aspect Product Image Box */}
+        <div className="w-full h-24 sm:h-28 flex justify-center items-center py-1.5 mb-2 bg-slate-50/80 dark:bg-[#1A2A25]/60 rounded-xl border border-slate-100 dark:border-[#24352F]/60 overflow-hidden">
           <ProductImage 
             src={prod.image_url} 
             alt={prod.name} 
             category={prod.category} 
             size="md" 
-            className="shadow-xs"
+            className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-200"
           />
         </div>
 
         {/* Product Title */}
-        <div className="mb-1.5">
-          <h4 className="font-extrabold text-slate-900 dark:text-[#E7F0EC] text-sm leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 line-clamp-2">
+        <div className="mb-1">
+          <h4 className="font-extrabold text-slate-900 dark:text-[#E7F0EC] text-xs sm:text-sm leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 line-clamp-2 min-h-[2.2rem]">
             {displayName}
           </h4>
           {prod.name !== displayName && (
-            <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium truncate mt-0.5">
+            <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium truncate mt-0.5">
               {prod.name}
             </p>
           )}
@@ -134,52 +134,57 @@ const ProductCard = React.memo<ProductCardProps>(({
 
         {/* Near Expiry Warning Pill for Cashier */}
         {hasExpiringToday && !hasExpiredOnly && (
-          <div className="mt-1.5 flex items-center gap-1 text-[10px] font-extrabold text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-2 py-0.5 rounded-md border border-orange-200 dark:border-orange-900/50">
+          <div className="mt-1 flex items-center gap-1 text-[10px] font-extrabold text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-2 py-0.5 rounded-md border border-orange-200 dark:border-orange-900/50">
             <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
             <Clock className="w-3 h-3 text-orange-600 dark:text-orange-400 shrink-0" />
-            <span>{language === 'mr' ? 'आज संपत आहे (आधी विका)' : language === 'hi' ? 'आज एक्सपायर (पहले बेचें)' : 'Expiring Today (Sell first)'}</span>
+            <span className="truncate">{language === 'mr' ? 'आज संपत आहे' : language === 'hi' ? 'आज एक्सपायर' : 'Exp. Today'}</span>
           </div>
         )}
         {hasExpiringTomorrow && !hasExpiringToday && !hasExpiredOnly && (
-          <div className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900/50">
+          <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900/50">
             <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span>{language === 'mr' ? 'उद्या एक्सपायर' : language === 'hi' ? 'कल एक्सपायर' : 'Exp. Tomorrow'}</span>
+            <span className="truncate">{language === 'mr' ? 'उद्या एक्सपायर' : language === 'hi' ? 'कल एक्सपायर' : 'Exp. Tomorrow'}</span>
           </div>
         )}
       </div>
 
-      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between">
-        <div>
-          <span className="text-xs text-slate-500 dark:text-[#8FA69C]">{language === 'mr' ? 'दर:' : language === 'hi' ? 'भाव:' : 'Rate:'}</span>{' '}
-          <span className="text-base font-extrabold text-slate-900 dark:text-white">
+      <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between gap-1">
+        <div className="min-w-0">
+          <span className="text-[10px] text-slate-400 dark:text-[#8FA69C] block leading-none font-semibold">
+            {language === 'mr' ? 'दर' : language === 'hi' ? 'भाव' : 'Rate'}
+          </span>
+          <span className="text-sm sm:text-base font-black text-emerald-700 dark:text-emerald-400 leading-tight">
             ₹{prod.selling_price}
           </span>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* Quick ₹ Calculator button */}
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onQuickCalc(prod);
             }}
             title={t('measureInRupees')}
-            className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40 text-xs"
+            className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40 flex items-center justify-center transition active:scale-95 cursor-pointer"
           >
             <Calculator className="w-3.5 h-3.5" />
           </button>
 
           {/* Add to Cart button */}
           <button
+            type="button"
             disabled={isOutOfStock || hasExpiredOnly}
             onClick={(e) => {
               e.stopPropagation();
               onAddToCart(prod, 1);
             }}
-            className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-slate-300 dark:disabled:bg-slate-800 transition-colors"
+            className="h-8 px-2.5 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs disabled:bg-slate-300 dark:disabled:bg-slate-800 transition active:scale-95 flex items-center gap-1 shadow-xs cursor-pointer"
             title={hasExpiredOnly ? 'Expired Batch Blocked' : 'Add 1 Unit'}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
+            <span className="hidden xs:inline">{language === 'mr' ? 'जोडा' : language === 'hi' ? 'जोड़ें' : 'Add'}</span>
           </button>
         </div>
       </div>
@@ -245,6 +250,7 @@ export const BillingCounter: React.FC = () => {
   const [tenderedCash, setTenderedCash] = useState<number>(0);
   const [splitCashAmount, setSplitCashAmount] = useState<number>(0);
   const [splitOnlineAmount, setSplitOnlineAmount] = useState<number>(0);
+  const [showCustomerDetails, setShowCustomerDetails] = useState<boolean>(false);
 
   // Modals & Confirmation
   const [showQrModal, setShowQrModal] = useState(false);
@@ -402,6 +408,21 @@ export const BillingCounter: React.FC = () => {
 
     return result.slice(0, 30);
   }, [products, deferredSearchQuery, selectedCategory, onlineSearchedProduct, onlineSearchResults]);
+
+  // Fast thumbnail and category lookup map for Cart items
+  const productThumbMap = useMemo(() => {
+    const map = new Map<string, { image_url?: string; category?: string }>();
+    products.forEach(p => map.set(p.id, { image_url: p.image_url, category: p.category }));
+    onlineSearchResults.forEach(p => map.set(p.id, { image_url: p.image_url, category: p.category }));
+    if (onlineSearchedProduct) map.set(onlineSearchedProduct.id, { image_url: onlineSearchedProduct.image_url, category: onlineSearchedProduct.category });
+    return map;
+  }, [products, onlineSearchResults, onlineSearchedProduct]);
+
+  // Unit helper for fractional vs discrete item quantities
+  const isFractionalUnit = useCallback((unit?: string) => {
+    const u = (unit || '').toLowerCase().trim();
+    return ['kg', 'gm', 'g', 'l', 'litre', 'ltr', 'ml', 'किलो', 'ग्रॅम', 'लिटर'].includes(u);
+  }, []);
 
   // Helper display name
   const getProductDisplayName = useCallback((prod: Product) => {
@@ -791,7 +812,7 @@ export const BillingCounter: React.FC = () => {
         </div>
 
         {/* Product Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto max-h-[600px] pr-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 overflow-y-auto max-h-[calc(100vh-14rem)] min-h-[420px] pr-1">
           {filteredProducts.length === 0 ? (
             <div className="col-span-full py-16 px-4 bg-white dark:bg-[#131F1B] rounded-2xl border border-dashed border-slate-200 dark:border-[#24352F] text-center flex flex-col items-center justify-center">
               <Package className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-2" />
@@ -861,62 +882,91 @@ export const BillingCounter: React.FC = () => {
           </div>
 
           {/* Cart Item Rows */}
-          <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-[300px] lg:max-h-[340px] overflow-y-auto pr-1">
             {cart.length > 0 ? (
-              cart.map((item) => (
-                <div 
-                  key={item.product_id}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/80 dark:bg-[#1A2A25] border border-slate-200/60 dark:border-[#24352F]"
-                >
-                  <div className="min-w-0 pr-2">
-                    <h5 className="text-xs font-bold text-slate-900 dark:text-[#E7F0EC] truncate">
-                      {item.product_name}
-                    </h5>
-                    <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-                      ₹{item.unit_price} &times; {item.quantity} {item.unit}
-                    </div>
-                  </div>
+              cart.map((item) => {
+                const prodThumb = productThumbMap.get(item.product_id);
+                const isFractional = isFractionalUnit(item.unit);
+                const step = isFractional ? 0.5 : 1;
 
-                  <div className="flex items-center gap-3 shrink-0">
-                    {/* Qty +/- Controls */}
-                    <div className="flex items-center gap-1 bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] rounded-lg p-0.5">
-                      <button
-                        onClick={() => updateQuantity(item.product_id, item.quantity - 0.5)}
-                        className="p-1 hover:bg-slate-100 dark:hover:bg-[#1A2A25] rounded text-slate-600 dark:text-[#8FA69C]"
-                      >
-                        <Minus className="w-3 h-3" />
-                      </button>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={item.quantity}
-                        onChange={(e) => updateQuantity(item.product_id, parseFloat(e.target.value) || 0)}
-                        className="w-12 text-center text-xs font-bold text-slate-900 dark:text-white bg-transparent focus:outline-none"
+                return (
+                  <div 
+                    key={item.product_id}
+                    className="flex items-center gap-2.5 p-2 sm:p-2.5 rounded-2xl bg-slate-50/90 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] hover:border-emerald-500/30 transition shadow-2xs group"
+                  >
+                    {/* Thumbnail Image */}
+                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] p-0.5 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                      <ProductImage
+                        src={prodThumb?.image_url}
+                        alt={item.product_name}
+                        category={prodThumb?.category}
+                        size="sm"
+                        className="max-w-full max-h-full object-contain"
                       />
-                      <button
-                        onClick={() => updateQuantity(item.product_id, item.quantity + 0.5)}
-                        className="p-1 hover:bg-slate-100 dark:hover:bg-[#1A2A25] rounded text-slate-600 dark:text-[#8FA69C]"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </button>
                     </div>
 
-                    <span className="text-xs font-black text-slate-900 dark:text-white w-14 text-right tabular-nums">
-                      ₹{item.total_price}
-                    </span>
+                    {/* Name & Rate */}
+                    <div className="min-w-0 flex-1">
+                      <h5 className="text-xs font-bold text-slate-900 dark:text-[#E7F0EC] truncate leading-tight">
+                        {item.product_name}
+                      </h5>
+                      <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-semibold mt-0.5 flex items-center gap-1">
+                        <span>₹{item.unit_price}</span>
+                        <span>&times;</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{item.quantity} {item.unit}</span>
+                      </div>
+                    </div>
 
-                    <button
-                      onClick={() => removeFromCart(item.product_id)}
-                      className="text-slate-400 hover:text-rose-600 dark:text-[#8FA69C] dark:hover:text-rose-400 p-1"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+                    {/* Quantity Controls & Line Total */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] rounded-xl p-0.5 shadow-2xs">
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.product_id, Number((item.quantity - step).toFixed(2)))}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] active:scale-90 transition cursor-pointer"
+                          title="कमी करा (Decrease)"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <input
+                          type="number"
+                          step={isFractional ? "0.1" : "1"}
+                          value={item.quantity}
+                          onChange={(e) => updateQuantity(item.product_id, parseFloat(e.target.value) || 0)}
+                          className="w-11 text-center text-xs font-black text-slate-900 dark:text-white bg-transparent focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.product_id, Number((item.quantity + step).toFixed(2)))}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] active:scale-90 transition cursor-pointer"
+                          title="वाढवा (Increase)"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="w-14 sm:w-16 text-right font-black text-xs text-slate-900 dark:text-white tabular-nums">
+                        ₹{item.total_price.toLocaleString('en-IN')}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => removeFromCart(item.product_id)}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                        title="काढून टाका (Remove)"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
-              <div className="py-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs space-y-3">
-                <p>{t('cartEmptyMsg')}</p>
+              <div className="py-10 text-center text-slate-400 dark:text-[#8FA69C] text-xs space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-[#1A2A25] text-slate-300 dark:text-slate-600 mx-auto flex items-center justify-center">
+                  <ShoppingCart className="w-6 h-6" />
+                </div>
+                <p className="font-bold">{t('cartEmptyMsg')}</p>
                 <button
                   type="button"
                   onClick={() => setMobileTab('products')}
@@ -929,38 +979,69 @@ export const BillingCounter: React.FC = () => {
             )}
           </div>
 
-          {/* Pricing Totals & Discount */}
-          <div className="pt-3 border-t border-slate-200 dark:border-[#24352F] space-y-1.5 text-xs">
-            <div className="flex justify-between text-slate-600 dark:text-[#8FA69C]">
-              <span>{t('subtotal')}</span>
-              <span className="font-semibold text-slate-900 dark:text-white">₹{subtotal.toFixed(2)}</span>
+          {/* Pricing Totals & Discount Card */}
+          <div className="pt-3 border-t border-slate-200 dark:border-[#24352F] space-y-2 text-xs">
+            <div className="flex justify-between items-center text-slate-600 dark:text-[#8FA69C]">
+              <span className="font-semibold">{t('subtotal')}</span>
+              <span className="font-bold text-slate-900 dark:text-white">₹{subtotal.toFixed(2)}</span>
             </div>
 
-            <div className="flex items-center justify-between text-slate-600 dark:text-[#8FA69C]">
-              <span className="flex items-center gap-1">
+            <div className="flex items-center justify-between text-slate-600 dark:text-[#8FA69C] gap-2">
+              <span className="font-semibold flex items-center gap-1 shrink-0">
                 <span>{t('discount')}</span>
               </span>
-              <div className="flex items-center gap-1">
-                <span>₹</span>
-                <input
-                  type="number"
-                  value={discount || ''}
-                  placeholder="0"
-                  onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                  className="w-16 px-1.5 py-0.5 border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] rounded text-right font-bold text-slate-900 dark:text-white focus:outline-none"
-                />
+              <div className="flex items-center gap-1.5">
+                {[5, 10, 20].map(disc => (
+                  <button
+                    key={disc}
+                    type="button"
+                    onClick={() => setDiscount(disc)}
+                    className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 text-slate-600 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F]"
+                  >
+                    -₹{disc}
+                  </button>
+                ))}
+                {discount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setDiscount(0)}
+                    className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600 dark:bg-rose-950/40 hover:bg-rose-100"
+                  >
+                    0
+                  </button>
+                )}
+                <div className="flex items-center gap-1 bg-white dark:bg-[#1A2A25] border border-slate-300 dark:border-[#24352F] rounded-lg px-1.5 py-0.5">
+                  <span className="text-[11px] font-bold">₹</span>
+                  <input
+                    type="number"
+                    value={discount || ''}
+                    placeholder="0"
+                    onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                    className="w-12 text-right font-bold text-slate-900 dark:text-white focus:outline-none text-xs"
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="flex justify-between items-baseline pt-2 border-t border-dashed border-slate-200 dark:border-[#24352F] text-slate-900 dark:text-white">
-              <span className="font-bold text-sm">{t('netAmount')}</span>
-              <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400">₹{netTotal.toFixed(2)}</span>
+            {/* Net Total Display Banner */}
+            <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 dark:from-emerald-950/40 dark:via-[#1A2A25] dark:to-emerald-950/40 border border-emerald-500/30 flex items-center justify-between shadow-2xs">
+              <div>
+                <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 block leading-tight">
+                  {language === 'mr' ? 'एकूण देय रक्कम' : language === 'hi' ? 'कुल देय राशि' : 'Net Payable Amount'}
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-[#8FA69C]">
+                  {cart.length} {language === 'mr' ? 'वस्तूंचे बिल' : language === 'hi' ? 'सामान का बिल' : 'items'}
+                </span>
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
+                ₹{netTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
             </div>
           </div>
 
           {/* Payment Method Selector */}
           <div>
-            <label className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC] block mb-2">
+            <label className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1.5">
               {t('paymentMethod')}
             </label>
             <div className="grid grid-cols-4 gap-1.5 relative">
@@ -979,9 +1060,9 @@ export const BillingCounter: React.FC = () => {
                       setPaymentMode(m.id as PaymentMode);
                       if (m.id === 'Online_UPI') setShowQrModal(true);
                     }}
-                    className={`p-2 rounded-xl border text-center transition-all ${
+                    className={`p-2 rounded-xl border text-center transition-all cursor-pointer active:scale-95 ${
                       isSelected
-                        ? 'border-emerald-600 dark:border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 font-bold shadow-xs'
+                        ? 'border-emerald-600 dark:border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 font-bold shadow-xs ring-1 ring-emerald-500/30'
                         : 'border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-50 dark:hover:bg-[#223630]'
                     }`}
                   >
@@ -1013,7 +1094,7 @@ export const BillingCounter: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowQrModal(true)}
-                  className="px-2.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition active:scale-95"
+                  className="px-2.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer"
                 >
                   <QrCode className="w-3.5 h-3.5" />
                   <span>{language === 'mr' ? 'QR उघडा' : language === 'hi' ? 'QR खोलें' : 'View QR'}</span>
@@ -1024,28 +1105,36 @@ export const BillingCounter: React.FC = () => {
 
           {/* Cash Tender & Change Calculator */}
           {paymentMode === 'Cash' && (
-            <div className="bg-blue-50/70 dark:bg-[#1A2A25] p-3 rounded-xl border border-blue-200/80 dark:border-blue-500/30 space-y-2">
+            <div className="bg-blue-50/70 dark:bg-[#1A2A25] p-3 rounded-2xl border border-blue-200/80 dark:border-blue-500/30 space-y-2">
               <div className="flex items-center justify-between text-xs font-semibold text-blue-900 dark:text-blue-300">
                 <span>{t('cashReceived')}</span>
                 <div className="flex items-center gap-1">
-                  <span>₹</span>
+                  <span className="font-bold">₹</span>
                   <input
                     type="number"
                     value={tenderedCash || ''}
                     placeholder={netTotal.toString()}
                     onChange={(e) => setTenderedCash(parseFloat(e.target.value) || 0)}
-                    className="w-20 px-2 py-1 rounded bg-white dark:bg-[#131F1B] border border-blue-300 dark:border-blue-500/40 font-bold text-blue-950 dark:text-white focus:outline-none"
+                    className="w-24 px-2 py-1 rounded-xl bg-white dark:bg-[#131F1B] border border-blue-300 dark:border-blue-500/40 font-bold text-blue-950 dark:text-white focus:outline-none"
                   />
                 </div>
               </div>
 
               {/* Quick Cash Buttons */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setTenderedCash(Math.round(netTotal))}
+                  className="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 active:scale-95 transition cursor-pointer shadow-2xs"
+                >
+                  {language === 'mr' ? 'बरोबर (Exact)' : language === 'hi' ? 'सटीक (Exact)' : 'Exact'}
+                </button>
                 {[50, 100, 200, 500].map(val => (
                   <button
                     key={val}
+                    type="button"
                     onClick={() => setTenderedCash(val)}
-                    className="px-2 py-0.5 bg-white dark:bg-[#131F1B] border border-blue-200 dark:border-blue-500/30 rounded text-[11px] font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-[#223630]"
+                    className="px-2.5 py-1 bg-white dark:bg-[#131F1B] border border-blue-200 dark:border-blue-500/30 rounded-lg text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-[#223630] active:scale-95 transition cursor-pointer"
                   >
                     ₹{val}
                   </button>
@@ -1053,9 +1142,9 @@ export const BillingCounter: React.FC = () => {
               </div>
 
               {tenderedCash > netTotal && (
-                <div className="flex justify-between items-center text-xs font-bold text-emerald-700 dark:text-emerald-400 pt-1 border-t border-blue-200 dark:border-blue-500/30">
+                <div className="flex justify-between items-center text-xs font-bold text-emerald-700 dark:text-emerald-400 pt-1.5 border-t border-blue-200 dark:border-blue-500/30">
                   <span>{t('changeToReturn')}</span>
-                  <span className="text-sm">₹{cashChange.toFixed(2)}</span>
+                  <span className="text-base font-black">₹{cashChange.toFixed(2)}</span>
                 </div>
               )}
             </div>
@@ -1063,7 +1152,7 @@ export const BillingCounter: React.FC = () => {
 
           {/* Split Payment inputs */}
           {paymentMode === 'Split' && (
-            <div className="grid grid-cols-2 gap-2 bg-teal-50/70 dark:bg-[#1A2A25] p-3 rounded-xl border border-teal-200/80 dark:border-teal-500/30">
+            <div className="grid grid-cols-2 gap-2 bg-teal-50/70 dark:bg-[#1A2A25] p-3 rounded-2xl border border-teal-200/80 dark:border-teal-500/30">
               <div>
                 <label className="text-[11px] font-bold text-teal-900 dark:text-teal-300 block mb-1">
                   {language === 'mr' ? 'रोख रक्कम:' : language === 'hi' ? 'रोकड़ राशि:' : 'Cash Amount:'}
@@ -1076,7 +1165,7 @@ export const BillingCounter: React.FC = () => {
                     setSplitCashAmount(cashVal);
                     setSplitOnlineAmount(Math.max(0, netTotal - cashVal));
                   }}
-                  className="w-full px-2 py-1 rounded bg-white dark:bg-[#131F1B] border border-teal-300 dark:border-teal-500/40 text-xs font-bold text-slate-900 dark:text-white"
+                  className="w-full px-2 py-1 rounded-xl bg-white dark:bg-[#131F1B] border border-teal-300 dark:border-teal-500/40 text-xs font-bold text-slate-900 dark:text-white"
                 />
               </div>
               <div>
@@ -1087,7 +1176,7 @@ export const BillingCounter: React.FC = () => {
                   type="number"
                   value={splitOnlineAmount || ''}
                   onChange={(e) => setSplitOnlineAmount(parseFloat(e.target.value) || 0)}
-                  className="w-full px-2 py-1 rounded bg-white dark:bg-[#131F1B] border border-teal-300 dark:border-teal-500/40 text-xs font-bold text-slate-900 dark:text-white"
+                  className="w-full px-2 py-1 rounded-xl bg-white dark:bg-[#131F1B] border border-teal-300 dark:border-teal-500/40 text-xs font-bold text-slate-900 dark:text-white"
                 />
                 <button
                   type="button"
@@ -1103,7 +1192,7 @@ export const BillingCounter: React.FC = () => {
 
           {/* Udhar / Credit Customer Input */}
           {paymentMode === 'Udhar' && (
-            <div className="bg-amber-50/80 dark:bg-amber-950/25 p-3 rounded-xl border border-amber-300 dark:border-amber-700/50 space-y-2">
+            <div className="bg-amber-50/80 dark:bg-amber-950/25 p-3 rounded-2xl border border-amber-300 dark:border-amber-700/50 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-amber-950 dark:text-amber-200">
                   {language === 'mr' ? 'उधार खाते / ग्राहकाचे नाव' : language === 'hi' ? 'उधार खाता / ग्राहक का नाम' : 'Customer Name for Credit / Udhar'}
@@ -1118,80 +1207,118 @@ export const BillingCounter: React.FC = () => {
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder={language === 'mr' ? 'उदा. रमेश पाटील' : language === 'hi' ? 'उदा. रमेश वर्मा' : 'e.g. Ramesh Patil'}
-                  className="w-full px-2.5 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700/60 bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700/60 bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500"
                 />
                 <input
                   type="tel"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder={language === 'mr' ? 'मोबाईल क्र. (ऐच्छिक)' : language === 'hi' ? 'मोबाइल नंबर (वैकल्पिक)' : 'Phone (Optional)'}
-                  className="w-full px-2.5 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700/60 bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700/60 bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500"
                 />
               </div>
             </div>
           )}
 
-          {/* Customer Gender & Age Group — shown for ALL payment modes */}
-          <div className="bg-slate-50/80 dark:bg-[#1A2A25]/60 p-3 rounded-xl border border-slate-200 dark:border-[#24352F] space-y-2.5">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] uppercase tracking-wide block">
-              {language === 'mr' ? 'ग्राहक माहिती (ऐच्छिक)' : language === 'hi' ? 'ग्राहक जानकारी (वैकल्पिक)' : 'Customer Info (Optional)'}
-            </span>
-
-            {/* Gender Selector */}
-            <div>
-              <label className="text-[11px] font-semibold text-slate-600 dark:text-[#8FA69C] block mb-1.5">
-                {language === 'mr' ? 'लिंग:' : language === 'hi' ? 'लिंग:' : 'Gender:'}
-              </label>
-              <div className="flex gap-1.5">
-                {([
-                  { value: 'Male',   emoji: '👨', labelMr: 'पुरुष',  labelHi: 'पुरुष',  labelEn: 'Male'   },
-                  { value: 'Female', emoji: '👩', labelMr: 'महिला',  labelHi: 'महिला',  labelEn: 'Female' },
-                  { value: 'Other',  emoji: '🧑', labelMr: 'इतर',    labelHi: 'अन्य',   labelEn: 'Other'  },
-                ] as { value: CustomerGender; emoji: string; labelMr: string; labelHi: string; labelEn: string }[]).map((g) => (
-                  <button
-                    key={g.value}
-                    type="button"
-                    onClick={() => setCustomerGender(g.value)}
-                    className={`flex-1 py-1 rounded-lg border text-[11px] font-bold transition-all flex items-center justify-center gap-1 ${
-                      customerGender === g.value
-                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 shadow-xs'
-                        : 'border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-500 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#223630]'
-                    }`}
-                  >
-                    <span>{g.emoji}</span>
-                    <span>{language === 'mr' ? g.labelMr : language === 'hi' ? g.labelHi : g.labelEn}</span>
-                  </button>
-                ))}
+          {/* Customer Details & Demographics (Collapsible Accordion) */}
+          <div className="border border-slate-200/90 dark:border-[#24352F] rounded-2xl overflow-hidden bg-slate-50/70 dark:bg-[#1A2A25]/50">
+            <button
+              type="button"
+              onClick={() => setShowCustomerDetails(!showCustomerDetails)}
+              className="w-full px-3 py-2 flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-[#20332D] transition cursor-pointer"
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-emerald-600 dark:text-emerald-400">👤</span>
+                <span className="truncate">{language === 'mr' ? 'ग्राहक माहिती (ऐच्छिक)' : language === 'hi' ? 'ग्राहक जानकारी (वैकल्पिक)' : 'Customer Info (Optional)'}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] text-slate-500 font-semibold shrink-0">
+                  {customerGender === 'Male' ? '👨' : customerGender === 'Female' ? '👩' : '🧑'} {customerAgeGroup.split(' ')[0]}
+                </span>
               </div>
-            </div>
-
-            {/* Age Group Selector */}
-            <div>
-              <label className="text-[11px] font-semibold text-slate-600 dark:text-[#8FA69C] block mb-1.5">
-                {language === 'mr' ? 'वयोगट:' : language === 'hi' ? 'आयु वर्ग:' : 'Age Group:'}
-              </label>
-              <div className="grid grid-cols-4 gap-1">
-                {([
-                  { value: 'Kids (<18)',      labelMr: '<18',      labelHi: '<18',      labelEn: '<18'    },
-                  { value: 'Youth (18-25)',   labelMr: '18-25',    labelHi: '18-25',    labelEn: '18-25'  },
-                  { value: 'Adults (26-45)',  labelMr: '26-45',    labelHi: '26-45',    labelEn: '26-45'  },
-                  { value: 'Senior (45+)',    labelMr: '45+',      labelHi: '45+',      labelEn: '45+'    },
-                ] as { value: CustomerAgeGroup; labelMr: string; labelHi: string; labelEn: string }[]).map((ag) => (
-                  <button
-                    key={ag.value}
-                    type="button"
-                    onClick={() => setCustomerAgeGroup(ag.value)}
-                    className={`py-1 rounded-lg border text-[11px] font-bold transition-all text-center ${
-                      customerAgeGroup === ag.value
-                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 shadow-xs'
-                        : 'border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-500 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#223630]'
-                    }`}
-                  >
-                    {language === 'mr' ? ag.labelMr : language === 'hi' ? ag.labelHi : ag.labelEn}
-                  </button>
-                ))}
+              <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold shrink-0">
+                <span>{showCustomerDetails ? (language === 'mr' ? 'लपवा' : 'छुपाएं') : (language === 'mr' ? 'बदला' : 'बदलें')}</span>
+                <span className="text-xs transition-transform duration-200" style={{ transform: showCustomerDetails ? 'rotate(180deg)' : 'none' }}>▼</span>
               </div>
-            </div>
+            </button>
+
+            {showCustomerDetails && (
+              <div className="p-3 pt-2 border-t border-slate-200/80 dark:border-[#24352F] space-y-2.5 bg-white dark:bg-[#131F1B]">
+                {/* Customer Name & Phone (Optional for Cash/Online) */}
+                {paymentMode !== 'Udhar' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder={language === 'mr' ? 'ग्राहकाचे नाव (ऐच्छिक)' : language === 'hi' ? 'ग्राहक का नाम (वैकल्पिक)' : 'Customer Name'}
+                      className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-slate-50 dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                    <input
+                      type="tel"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      placeholder={language === 'mr' ? 'मोबाईल नंबर' : language === 'hi' ? 'मोबाइल नंबर' : 'Phone Number'}
+                      className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-slate-50 dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                )}
+
+                {/* Gender Selector */}
+                <div>
+                  <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
+                    {language === 'mr' ? 'लिंग:' : language === 'hi' ? 'लिंग:' : 'Gender:'}
+                  </label>
+                  <div className="flex gap-1.5">
+                    {([
+                      { value: 'Male',   emoji: '👨', labelMr: 'पुरुष',  labelHi: 'पुरुष',  labelEn: 'Male'   },
+                      { value: 'Female', emoji: '👩', labelMr: 'महिला',  labelHi: 'महिला',  labelEn: 'Female' },
+                      { value: 'Other',  emoji: '🧑', labelMr: 'इतर',    labelHi: 'अन्य',   labelEn: 'Other'  },
+                    ] as { value: CustomerGender; emoji: string; labelMr: string; labelHi: string; labelEn: string }[]).map((g) => (
+                      <button
+                        key={g.value}
+                        type="button"
+                        onClick={() => setCustomerGender(g.value)}
+                        className={`flex-1 py-1 rounded-lg border text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95 ${
+                          customerGender === g.value
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 shadow-xs'
+                            : 'border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-500 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#223630]'
+                        }`}
+                      >
+                        <span>{g.emoji}</span>
+                        <span>{language === 'mr' ? g.labelMr : language === 'hi' ? g.labelHi : g.labelEn}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Age Group Selector */}
+                <div>
+                  <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
+                    {language === 'mr' ? 'वयोगट:' : language === 'hi' ? 'आयु वर्ग:' : 'Age Group:'}
+                  </label>
+                  <div className="grid grid-cols-4 gap-1">
+                    {([
+                      { value: 'Kids (<18)',      labelMr: '<18',      labelHi: '<18',      labelEn: '<18'    },
+                      { value: 'Youth (18-25)',   labelMr: '18-25',    labelHi: '18-25',    labelEn: '18-25'  },
+                      { value: 'Adults (26-45)',  labelMr: '26-45',    labelHi: '26-45',    labelEn: '26-45'  },
+                      { value: 'Senior (45+)',    labelMr: '45+',      labelHi: '45+',      labelEn: '45+'    },
+                    ] as { value: CustomerAgeGroup; labelMr: string; labelHi: string; labelEn: string }[]).map((ag) => (
+                      <button
+                        key={ag.value}
+                        type="button"
+                        onClick={() => setCustomerAgeGroup(ag.value)}
+                        className={`py-1 rounded-lg border text-[11px] font-bold transition-all text-center cursor-pointer active:scale-95 ${
+                          customerAgeGroup === ag.value
+                            ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 shadow-xs'
+                            : 'border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-500 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#223630]'
+                        }`}
+                      >
+                        {language === 'mr' ? ag.labelMr : language === 'hi' ? ag.labelHi : ag.labelEn}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
         </div>

@@ -123,24 +123,25 @@
   animation: shimmer-sweep 2s ease-in-out infinite;
 }
 
-/* Fluid neon laser scan beam animation */
+/* Fluid neon laser scan beam animation (Hardware-Accelerated Smooth Motion) */
 @keyframes scannerSweep {
   0% {
-    top: 8%;
-    opacity: 0.8;
+    top: 6%;
+    opacity: 0.75;
   }
   50% {
-    top: 90%;
+    top: 88%;
     opacity: 1;
   }
   100% {
-    top: 8%;
-    opacity: 0.8;
+    top: 6%;
+    opacity: 0.75;
   }
 }
 
 .animate-scanner-sweep {
-  animation: scannerSweep 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: scannerSweep 2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  will-change: top, opacity;
 }
 
 /* Thermal receipt printing optimization - MUST ALWAYS PRINT IN LIGHT MODE */

@@ -915,27 +915,6 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                   playsInline
                   muted
                 />
-                {/* Active Scanning Status Badge */}
-                {isScanningCamera && (
-                  <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-[11px] font-bold backdrop-blur-md shadow-md">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                    <span>{language === 'mr' ? 'AI स्कॅनर सक्रिय (Multi-Pass)' : 'AI स्कैनर सक्रिय (Multi-Pass)'}</span>
-                  </div>
-                )}
-
-                {/* Prompt OCR Fallback button if scanning takes a few seconds */}
-                {showOcrButton && isScanningCamera && !isOcrRunning && (
-                  <div className="absolute bottom-3 inset-x-0 flex justify-center z-20 px-3 pointer-events-auto">
-                    <button
-                      type="button"
-                      onClick={handleTriggerOcr}
-                      className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs shadow-xl flex items-center gap-1.5 transition active:scale-95 animate-bounce"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-slate-950" />
-                      <span>{language === 'mr' ? 'खराब बारकोड? नंबर OCR ने वाचा' : 'खराब बारकोड? नंबर OCR से पढ़ें'}</span>
-                    </button>
-                  </div>
-                )}
 
                 {/* OCR Processing Overlay */}
                 {isOcrRunning && (
@@ -947,43 +926,23 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                   </div>
                 )}
 
-                {/* Aiming Reticle: Adapts to Barcode vs Number Mode */}
+                {/* Aiming Reticle: Clean Minimalist Frame with Smooth Glowing Laser */}
                 {isScanningCamera && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    {scanTarget === 'numbers' ? (
-                      <div className="w-72 h-20 border-2 border-amber-400/90 rounded-2xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.65)] overflow-hidden">
-                        <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent shadow-[0_0_12px_#fbbf24] animate-scanner-sweep pointer-events-none" />
-                        <div className="absolute top-1.5 left-0 right-0 text-center text-[10px] font-bold text-slate-950 tracking-wider uppercase bg-amber-400 rounded-md py-0.5 px-2.5 max-w-fit mx-auto shadow-sm">
-                          {language === 'mr' ? '🔢 बारकोड खालील नंबर येथे धरा' : '🔢 बारकोड के नीचे के नंबर यहां रखें'}
-                        </div>
+                    <div className="w-64 h-36 border-2 border-emerald-400/90 rounded-2xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] overflow-hidden">
+                      {/* Ultra-Smooth Glowing Neon Laser Beam */}
+                      <div className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-300 to-transparent shadow-[0_0_15px_#10b981,0_0_32px_#34d399] animate-scanner-sweep pointer-events-none">
+                        <div className="absolute -top-2 left-4 right-4 h-5 bg-gradient-to-b from-emerald-400/25 to-transparent blur-[2px] pointer-events-none" />
                       </div>
-                    ) : (
-                      <div className="w-64 h-36 border-2 border-emerald-400/90 rounded-2xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] overflow-hidden">
-                        <div className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_12px_#34d399] animate-scanner-sweep pointer-events-none" />
-                        <div className="absolute top-2 left-0 right-0 text-center text-[10px] font-bold text-white tracking-wider uppercase bg-emerald-800/90 rounded-md py-0.5 px-2.5 max-w-fit mx-auto shadow-sm">
-                          {language === 'mr' ? 'बारकोड चौकटीत धरा' : 'बारकोड फ्रेम में रखें'}
-                        </div>
+                      <div className="absolute top-2 left-0 right-0 text-center text-[10px] font-bold text-white tracking-wider uppercase bg-emerald-800/90 rounded-md py-0.5 px-2.5 max-w-fit mx-auto shadow-sm">
+                        {language === 'mr' ? 'बारकोड चौकटीत धरा' : 'बारकोड फ्रेम में रखें'}
                       </div>
-                    )}
+                    </div>
                   </div>
                 )}
 
-                {/* Floating Viewfinder Controls */}
+                {/* Floating Viewfinder Controls: Torch & Camera Switch Only */}
                 <div className="absolute top-3 right-3 flex items-center gap-2 z-20">
-                  {isScanningCamera && (
-                    <button
-                      type="button"
-                      onClick={() => setScanTarget(prev => (prev === 'barcode' ? 'numbers' : 'barcode'))}
-                      className={`px-2.5 py-1.5 rounded-xl backdrop-blur-md border text-xs font-black transition flex items-center gap-1 shadow-lg ${
-                        scanTarget === 'numbers'
-                          ? 'bg-amber-400 text-slate-900 border-amber-300'
-                          : 'bg-black/60 text-white border-white/20 hover:bg-black/80'
-                      }`}
-                      title={scanTarget === 'barcode' ? 'खराब बारकोड नंबर स्कॅन' : 'पट्टे स्कॅन'}
-                    >
-                      <span>{scanTarget === 'numbers' ? '🔢 नंबर' : '條 पट्टे'}</span>
-                    </button>
-                  )}
 
                   {hasTorch && isScanningCamera && (
                     <button

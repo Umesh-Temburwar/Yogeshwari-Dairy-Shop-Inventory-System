@@ -662,7 +662,7 @@ export const BillingCounter: React.FC = () => {
   };
 
   return (
-    <div className="relative max-w-7xl mx-auto pb-32 sm:pb-8">
+    <div className="relative max-w-7xl mx-auto pb-24 sm:pb-8">
       {/* Mobile Tab Switcher: Products vs Bill Checkout */}
       <div className="lg:hidden grid grid-cols-2 p-1.5 bg-slate-200/90 dark:bg-[#1A2A25] rounded-2xl border border-slate-300/60 dark:border-[#24352F] mb-3 sticky top-0 z-20 backdrop-blur-md shadow-xs">
         <button
@@ -724,7 +724,7 @@ export const BillingCounter: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 min-h-[calc(100vh-8rem)]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:min-h-[calc(100vh-8rem)]">
         
         {/* LEFT COLUMN: Product Catalog & Fast Selection */}
         <div className={`lg:col-span-7 flex flex-col space-y-3 sm:space-y-4 ${mobileTab === 'cart' ? 'hidden lg:flex' : 'flex'}`}>
@@ -812,7 +812,7 @@ export const BillingCounter: React.FC = () => {
         </div>
 
         {/* Product Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 overflow-y-auto max-h-[calc(100vh-14rem)] min-h-[420px] pr-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 lg:overflow-y-auto lg:max-h-[calc(100vh-14rem)] lg:min-h-[420px] pr-1 pb-6 lg:pb-0">
           {filteredProducts.length === 0 ? (
             <div className="col-span-full py-16 px-4 bg-white dark:bg-[#131F1B] rounded-2xl border border-dashed border-slate-200 dark:border-[#24352F] text-center flex flex-col items-center justify-center">
               <Package className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-2" />
@@ -841,7 +841,7 @@ export const BillingCounter: React.FC = () => {
       </div>
 
       {/* RIGHT COLUMN: Active Cart, Customer Info & Payment Checkout */}
-      <div className={`lg:col-span-5 flex flex-col bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-sm p-4 sm:p-5 justify-between transition-colors ${mobileTab === 'products' ? 'hidden lg:flex' : 'flex'} pb-32 sm:pb-5`}>
+      <div className={`lg:col-span-5 flex flex-col bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-sm p-4 sm:p-5 justify-between transition-colors ${mobileTab === 'products' ? 'hidden lg:flex' : 'flex'} pb-24 sm:pb-5`}>
         <div className="space-y-4">
           
           {/* Header & Clear */}

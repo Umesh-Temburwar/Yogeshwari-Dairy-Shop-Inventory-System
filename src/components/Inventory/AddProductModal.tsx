@@ -8,13 +8,12 @@ import { ProductPhotoModal } from '../Scanner/ProductPhotoModal';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { translateProductName, translateProductNameSync } from '../../lib/productTranslator';
 import { playBeepSound, playSuccessChime } from '../../utils/audioUtils';
-import { 
-  isSpeechRecognitionSupported, 
-  processVoiceTranscript, 
+import {
+  isSpeechRecognitionSupported,
+  processVoiceTranscript,
   processVoiceTranscriptSync,
-  VoiceLanguage 
+  VoiceLanguage
 } from '../../lib/voiceProductRecognizer';
-import { VoiceFormAssistant } from './VoiceFormAssistant';
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -41,9 +40,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [minStockAlert, setMinStockAlert] = useState<string>('15');
   const [barcode, setBarcode] = useState<string>('');
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
-
-  // Conversational AI Voice Assistant State
-  const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
 
   // Auto-translation states
   const [isTranslating, setIsTranslating] = useState(false);
@@ -208,7 +204,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
   const initRecognition = (selectedLang: VoiceLanguage) => {
     if (recognitionRef.current) {
-      try { recognitionRef.current.abort(); } catch {}
+      try { recognitionRef.current.abort(); } catch { }
     }
 
     try {
@@ -278,8 +274,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
             language === 'mr'
               ? 'मायक्रोफोन परवानगी नाकारली आहे. कृपया ॲड्रेस बारमधील कुलूप (Lock) आयकॉनवर क्लिक करून Microphone Allow करा.'
               : language === 'hi'
-              ? 'माइक्रोफ़ोन अनुमति अस्वीकृत है। कृपया Address bar में Lock आइकॉन पर क्लिक करके Microphone Allow करें।'
-              : 'Microphone access denied. Please click the lock icon in address bar to allow microphone.'
+                ? 'माइक्रोफ़ोन अनुमति अस्वीकृत है। कृपया Address bar में Lock आइकॉन पर क्लिक करके Microphone Allow करें।'
+                : 'Microphone access denied. Please click the lock icon in address bar to allow microphone.'
           );
         } else if (event.error === 'network') {
           userStoppedRef.current = true;
@@ -334,8 +330,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           language === 'mr'
             ? 'काही आवाज ऐकू आला नाही. कृपया माईक जवळ धरून पुन्हा बोला.'
             : language === 'hi'
-            ? 'कोई आवाज़ सुनाई नहीं दी। कृपया माइक के पास बोलें।'
-            : 'No speech detected. Please speak closer to the microphone.'
+              ? 'कोई आवाज़ सुनाई नहीं दी। कृपया माइक के पास बोलें।'
+              : 'No speech detected. Please speak closer to the microphone.'
         );
       };
 
@@ -491,63 +487,14 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setIsVoiceModeOpen(!isVoiceModeOpen)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition-all shadow-xs ${
-                isVoiceModeOpen
-                  ? 'bg-rose-500 text-white shadow-rose-500/30 ring-2 ring-rose-400'
-                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20 active:scale-95'
-              }`}
-              title="बोलून संपूर्ण फॉर्म भरा (Conversational AI Voice Assistant)"
-            >
-              <Mic className={`w-3.5 h-3.5 ${isVoiceModeOpen ? 'animate-bounce' : ''}`} />
-              <span>{isVoiceModeOpen ? (language === 'mr' ? 'व्हॉइस चालू' : 'वॉयस चालू') : (language === 'mr' ? '🎙️ बोलून भरा' : language === 'hi' ? '🎙️ बोलकर भरें' : '🎙️ Voice Assistant')}</span>
-            </button>
-
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+          
+          <button
+            onClick={onClose}
+            className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
-
-        {/* Step-by-Step AI Conversational Voice Assistant */}
-        {isVoiceModeOpen && (
-          <VoiceFormAssistant
-            name={name}
-            marathiName={marathiName}
-            hindiName={hindiName}
-            barcode={barcode}
-            category={category}
-            unit={unit}
-            purchasePrice={purchasePrice}
-            sellingPrice={sellingPrice}
-            stockQuantity={stockQuantity}
-            minStockAlert={minStockAlert}
-            existingProducts={products}
-            language={language}
-            setName={setName}
-            setMarathiName={setMarathiName}
-            setHindiName={setHindiName}
-            setBarcode={setBarcode}
-            setCategory={setCategory}
-            setUnit={setUnit}
-            setPurchasePrice={setPurchasePrice}
-            setSellingPrice={setSellingPrice}
-            setStockQuantity={setStockQuantity}
-            setMinStockAlert={setMinStockAlert}
-            onOpenBarcodeScanner={() => setShowBarcodeScanner(true)}
-            onSaveProduct={() => {
-              const syntheticEvent = { preventDefault: () => {} } as any;
-              handleSubmit(syntheticEvent);
-            }}
-            onCloseVoiceMode={() => setIsVoiceModeOpen(false)}
-          />
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
 

@@ -38,8 +38,10 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
   const { language } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [statusFilter, setStatusFilter] = useState<ImageStatusFilter>('ALL');
+  const [visibleCount, setVisibleCount] = useState(40);
   
   // Barcode scanner trigger state
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
@@ -67,6 +69,19 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
 
   // Hidden File input for direct camera photo capture
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Debounce search query (300ms) for high performance across 46k records
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Reset visible items count when search or filter changes
+  useEffect(() => {
+    setVisibleCount(40);
+  }, [debouncedSearch, selectedCategory, statusFilter]);
 
   // Calculate live statistics across all 8 prompt-required states
   const stats = useMemo(() => {
@@ -119,6 +134,18 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
     };
   }, [products, totalCatalogCount, totalBarcodesCount]);
 
+  // Stat chips definition in prompt-specified order
+  const statChips = useMemo(() => [
+    { id: 'ALL' as ImageStatusFilter, label: language === 'mr' ? 'एकूण' : 'Total', count: stats.totalProducts, border: 'border-slate-300 dark:border-slate-700', activeBg: 'bg-emerald-600' },
+    { id: 'OFFICIAL' as ImageStatusFilter, label: 'Official', count: stats.officialCount, border: 'border-emerald-300 dark:border-emerald-700', activeBg: 'bg-emerald-600' },
+    { id: 'TRUSTED' as ImageStatusFilter, label: 'Trusted', count: stats.trustedCount, border: 'border-sky-300 dark:border-sky-700', activeBg: 'bg-sky-600' },
+    { id: 'RETAILER' as ImageStatusFilter, label: 'Retailer', count: stats.retailerCount, border: 'border-indigo-300 dark:border-indigo-700', activeBg: 'bg-indigo-600' },
+    { id: 'NEEDS_REVIEW' as ImageStatusFilter, label: 'Review', count: stats.needsReviewCount, border: 'border-amber-300 dark:border-amber-700', activeBg: 'bg-amber-600' },
+    { id: 'INCORRECT' as ImageStatusFilter, label: 'Incorrect', count: stats.incorrectCount, border: 'border-rose-300 dark:border-rose-700', activeBg: 'bg-rose-600' },
+    { id: 'BROKEN' as ImageStatusFilter, label: 'Broken', count: stats.brokenCount, border: 'border-red-300 dark:border-red-700', activeBg: 'bg-red-600' },
+    { id: 'MISSING' as ImageStatusFilter, label: 'Missing', count: stats.missingCount, border: 'border-slate-300 dark:border-slate-600', activeBg: 'bg-slate-700' },
+  ], [stats, language]);
+
   // Categories list
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -131,7 +158,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
   // Filtered products for display
   const filteredProducts = useMemo(() => {
     return products.filter((p: Product) => {
-      const q = searchQuery.toLowerCase().trim();
+      const q = debouncedSearch.toLowerCase().trim();
       const matchesSearch = !q || 
         p.name.toLowerCase().includes(q) || 
         (p.barcode && p.barcode.includes(q)) ||
@@ -162,7 +189,12 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
 
       return matchesSearch && matchesCat && matchesStatus;
     });
-  }, [products, searchQuery, selectedCategory, statusFilter]);
+  }, [products, debouncedSearch, selectedCategory, statusFilter]);
+
+  // Sliced products for high-performance lazy rendering
+  const displayedProducts = useMemo(() => {
+    return filteredProducts.slice(0, visibleCount);
+  }, [filteredProducts, visibleCount]);
 
   if (!isOpen) return null;
 
@@ -440,146 +472,83 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-2 sm:p-4 overflow-y-auto">
-      <div className="relative w-full max-w-6xl bg-white dark:bg-[#131F1B] rounded-3xl shadow-2xl border border-slate-200 dark:border-[#24352F] flex flex-col max-h-[94vh] overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-0 sm:p-4 overflow-hidden">
+      <div className="relative w-full h-[100dvh] sm:h-[94vh] sm:max-w-2xl lg:max-w-3xl bg-white dark:bg-[#131F1B] sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-[#24352F] flex flex-col overflow-hidden">
         
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-[#24352F] bg-slate-50/70 dark:bg-[#1A2A25]/50">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+        {/* 1. Sticky Modal Header (One Row, h-14) */}
+        <div className="h-14 px-3 sm:px-4 border-b border-slate-100 dark:border-[#24352F] bg-slate-50/90 dark:bg-[#1A2A25]/90 backdrop-blur-md flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0 pr-2">
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
               <ImageIcon className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <span>Product Image Management Dashboard</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800">
-                  46,571 Master Records
-                </span>
+            <div className="min-w-0">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white truncate leading-tight">
+                Product Image Dashboard
               </h3>
-              <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                {language === 'mr'
-                  ? 'अधिकृत ब्रँड आणि फूड डेटाबेसमधून अचूक फोटो पडताळणी व बारकोड व्यवस्थापन'
-                  : 'आधिकारिक ब्रांड और खाद्य डेटाबेस से सटीक उत्पाद तस्वीर सत्यापन व बारकोड प्रबंधन'}
+              <p className="text-xs text-slate-500 dark:text-[#8FA69C] truncate">
+                {stats.totalProducts.toLocaleString()} records • {stats.eligibleBarcodes.toLocaleString()} barcodes
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsBarcodeScannerOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition cursor-pointer"
-              title="कॅमेराने बारकोड स्कॅन करून फोटो अपडेट करा"
-            >
-              <Barcode className="w-4 h-4" />
-              <Camera className="w-3.5 h-3.5" />
-              <span>{language === 'mr' ? 'बारकोड स्कॅन' : language === 'hi' ? 'बारकोड स्कैन' : 'Scan Barcode'}</span>
-            </button>
-
-            <button
-              onClick={() => {
-                if (progress.isRunning) handleStop();
-                onClose();
-              }}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#24352F] transition cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              if (progress.isRunning) handleStop();
+              onClose();
+            }}
+            className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#24352F] transition cursor-pointer active:scale-95"
+            title="बंद करा (Close)"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Success Toast */}
         {saveSuccessToast && (
-          <div className="px-4 py-2 bg-emerald-500 text-white text-xs font-bold flex items-center justify-between shadow-xs animate-in fade-in">
-            <span>{saveSuccessToast}</span>
-            <button onClick={() => setSaveSuccessToast(null)} className="p-0.5 hover:opacity-75">
+          <div className="px-3 py-2 bg-emerald-600 text-white text-xs font-bold flex items-center justify-between shadow-xs animate-in fade-in shrink-0">
+            <span className="truncate pr-2">{saveSuccessToast}</span>
+            <button onClick={() => setSaveSuccessToast(null)} className="p-1 hover:opacity-75">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
 
-        {/* 8 Metric KPI Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 p-3 bg-slate-100/60 dark:bg-[#0E1714] border-b border-slate-200 dark:border-[#24352F] text-center">
-          <div className="p-2 rounded-xl bg-white dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F]">
-            <span className="text-[10px] font-bold text-slate-500 block truncate">एकूण उत्पादने</span>
-            <span className="text-sm font-black text-slate-900 dark:text-white">{stats.totalProducts.toLocaleString()}</span>
-          </div>
-
-          <div className="p-2 rounded-xl bg-white dark:bg-[#1A2A25] border border-emerald-300 dark:border-emerald-800">
-            <span className="text-[10px] font-bold text-emerald-600 block truncate">Official Brand</span>
-            <span className="text-sm font-black text-emerald-600">{stats.officialCount.toLocaleString()}</span>
-          </div>
-
-          <div className="p-2 rounded-xl bg-white dark:bg-[#1A2A25] border border-sky-300 dark:border-sky-800">
-            <span className="text-[10px] font-bold text-sky-600 block truncate">Trusted DB</span>
-            <span className="text-sm font-black text-sky-600">{stats.trustedCount.toLocaleString()}</span>
-          </div>
-
-          <div className="p-2 rounded-xl bg-white dark:bg-[#1A2A25] border border-indigo-300 dark:border-indigo-800">
-            <span className="text-[10px] font-bold text-indigo-600 block truncate">Retailer Verified</span>
-            <span className="text-sm font-black text-indigo-600">{stats.retailerCount.toLocaleString()}</span>
-          </div>
-
-          <div className="p-2 rounded-xl bg-white dark:bg-[#1A2A25] border border-amber-300 dark:border-amber-800">
-            <span className="text-[10px] font-bold text-amber-600 block truncate">Needs Review</span>
-            <span className="text-sm font-black text-amber-600">{stats.needsReviewCount.toLocaleString()}</span>
-          </div>
-
-          <div className="p-2 rounded-xl bg-white dark:bg-[#1A2A25] border border-rose-300 dark:border-rose-800">
-            <span className="text-[10px] font-bold text-rose-600 block truncate">Incorrect</span>
-            <span className="text-sm font-black text-rose-600">{stats.incorrectCount.toLocaleString()}</span>
-          </div>
-
-          <div className="p-2 rounded-xl bg-white dark:bg-[#1A2A25] border border-red-300 dark:border-red-800">
-            <span className="text-[10px] font-bold text-red-500 block truncate">Broken URLs</span>
-            <span className="text-sm font-black text-red-500">{stats.brokenCount.toLocaleString()}</span>
-          </div>
-
-          <div className="p-2 rounded-xl bg-white dark:bg-[#1A2A25] border border-slate-300 dark:border-slate-700">
-            <span className="text-[10px] font-bold text-slate-500 block truncate">Missing Image</span>
-            <span className="text-sm font-black text-slate-600 dark:text-slate-300">{stats.missingCount.toLocaleString()}</span>
-          </div>
-        </div>
-
         {/* Live Batch Engine Progress Banner (If Running) */}
         {progress.isRunning && (
-          <div className="px-4 py-3 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border-b border-emerald-500/30 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
+          <div className="px-3 py-2 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border-b border-emerald-500/30 flex items-center justify-between gap-2 shrink-0">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               <Sparkles className="w-4 h-4 text-emerald-600 animate-spin shrink-0" />
-              <div>
-                <span className="text-xs font-black text-slate-800 dark:text-white block">
-                  {progress.isPaused ? '⏸️ प्रक्रिया थांबवली आहे (Paused)' : '🔄 अचूक फोटो पडताळणी सुरू आहे...'}
+              <div className="min-w-0">
+                <span className="text-xs font-black text-slate-800 dark:text-white block truncate">
+                  {progress.isPaused ? '⏸️ प्रक्रिया थांबवली (Paused)' : '🔄 फोटो पडताळणी सुरू...'}
                 </span>
-                <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                  तपासत आहे: <strong>{progress.currentBarcode}</strong> ({progress.currentProductName || 'उत्पादन'})
+                <span className="text-[10px] text-slate-500 dark:text-[#8FA69C] truncate block">
+                  {progress.currentBarcode || 'Searching'} • सापडले: {progress.verified}
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-white dark:bg-[#131F1B] border border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
-                सापडले: {progress.verified} | अनुपलब्ध: {progress.missing}
-              </span>
+            <div className="flex items-center gap-1.5 shrink-0">
               {progress.isPaused ? (
                 <button
                   onClick={handleResume}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 hover:bg-emerald-700 cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center gap-1 hover:bg-emerald-700 cursor-pointer"
                 >
-                  <Play className="w-3.5 h-3.5" />
+                  <Play className="w-3 h-3 fill-current" />
                   <span>Resume</span>
                 </button>
               ) : (
                 <button
                   onClick={handlePause}
-                  className="px-3 py-1.5 rounded-xl bg-amber-500 text-white font-bold text-xs flex items-center gap-1.5 hover:bg-amber-600 cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg bg-amber-500 text-white font-bold text-xs flex items-center gap-1 hover:bg-amber-600 cursor-pointer"
                 >
-                  <Pause className="w-3.5 h-3.5" />
+                  <Pause className="w-3 h-3" />
                   <span>Pause</span>
                 </button>
               )}
               <button
                 onClick={handleStop}
-                className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-300 cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-300 cursor-pointer"
               >
                 Stop
               </button>
@@ -587,83 +556,131 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
           </div>
         )}
 
-        {/* 8 Filter Pills Toolbar */}
-        <div className="p-3 border-b border-slate-200 dark:border-[#24352F] flex flex-wrap items-center justify-between gap-2.5">
-          <div className="flex flex-wrap items-center gap-1.5">
-            {[
-              { id: 'ALL', label: 'सर्व (All)' },
-              { id: 'OFFICIAL', label: '🛡️ Official Brand' },
-              { id: 'TRUSTED', label: '🗄️ Trusted DB' },
-              { id: 'RETAILER', label: '🏪 Retailer' },
-              { id: 'NEEDS_REVIEW', label: '⚠️ Needs Review' },
-              { id: 'INCORRECT', label: '❌ Incorrect' },
-              { id: 'BROKEN', label: '🚫 Broken' },
-              { id: 'MISSING', label: '🔍 Missing' },
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setStatusFilter(tab.id as ImageStatusFilter)}
-                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
-                  statusFilter === tab.id
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-700 dark:text-[#8FA69C]'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+        {/* 2. Primary Action Row: Scan Barcode, Auto-Fetch, Export CSV */}
+        <div className="px-3 pt-2.5 pb-1 flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsBarcodeScannerOpen(true)}
+            className="flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition flex items-center justify-center gap-1.5 cursor-pointer"
+            title="कॅमेराने बारकोड स्कॅन करून फोटो शोधा / अपडेट करा"
+          >
+            <Barcode className="w-4 h-4 shrink-0" />
+            <Camera className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">{language === 'mr' ? 'बारकोड स्कॅन' : language === 'hi' ? 'बारकोड स्कैन' : 'Scan Barcode'}</span>
+          </button>
 
-          <div className="flex items-center gap-2">
-            {!progress.isRunning && (
-              <button
-                onClick={handleStartFetching}
-                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Auto-Fetch</span>
-              </button>
-            )}
-            <button
-              onClick={handleExportMissing}
-              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] font-bold text-xs flex items-center gap-1.5 border border-slate-200 dark:border-[#24352F] cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Search & Category Filter Sub-toolbar */}
-        <div className="px-4 py-2 bg-slate-50/70 dark:bg-[#1A2A25]/30 border-b border-slate-100 dark:border-[#24352F] flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 flex-1 max-w-lg">
-            <div className="relative flex-1">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="बारकोड, ब्रँड किंवा नाव शोधा (Search by Barcode, Brand, Name)..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 rounded-xl text-xs bg-white dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-800 dark:text-white outline-none focus:border-emerald-500"
-              />
-            </div>
-
+          {!progress.isRunning ? (
             <button
               type="button"
-              onClick={() => setIsBarcodeScannerOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs active:scale-95 transition cursor-pointer shrink-0"
-              title="कॅमेराने बारकोड स्कॅन करून फोटो शोधा"
+              onClick={handleStartFetching}
+              className="flex-1 h-11 rounded-xl border border-emerald-500/50 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 transition active:scale-95 cursor-pointer"
+              title="ऑनलाइन फूड डेटाबेसमधून फोटो ऑटो-फेच करा"
             >
-              <Barcode className="w-3.5 h-3.5" />
-              <Camera className="w-3 h-3" />
-              <span>{language === 'mr' ? 'स्कॅन' : language === 'hi' ? 'स्कैन' : 'Scan'}</span>
+              <Play className="w-3.5 h-3.5 fill-current shrink-0" />
+              <span className="truncate">Auto-Fetch</span>
             </button>
+          ) : (
+            <div className="flex-1 h-11 flex items-center gap-1.5">
+              {progress.isPaused ? (
+                <button
+                  type="button"
+                  onClick={handleResume}
+                  className="flex-1 h-11 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition cursor-pointer"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Resume</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handlePause}
+                  className="flex-1 h-11 rounded-xl bg-amber-500 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition cursor-pointer"
+                >
+                  <Pause className="w-3.5 h-3.5" />
+                  <span>Pause</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleStop}
+                className="h-11 px-3 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center active:scale-95 transition cursor-pointer"
+              >
+                Stop
+              </button>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleExportMissing}
+            className="w-11 h-11 shrink-0 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-700 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F] flex items-center justify-center transition active:scale-95 cursor-pointer"
+            title={language === 'mr' ? 'मिसिंग फोटोंची CSV फाईल डाऊनलोड करा (Export CSV)' : 'मिसिंग फोटो CSV निर्यात करें'}
+          >
+            <Download className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* 3. Compact Horizontally Scrollable Stat Chips Row (Tapping applies filter) */}
+        <div className="px-3 py-1.5 shrink-0 overflow-x-auto no-scrollbar snap-x flex gap-2">
+          {statChips.map(chip => {
+            const isActive = statusFilter === chip.id;
+            return (
+              <button
+                key={chip.id}
+                type="button"
+                onClick={() => setStatusFilter(chip.id)}
+                className={`min-w-[96px] snap-start shrink-0 rounded-xl px-2.5 py-1.5 text-center cursor-pointer transition select-none border active:scale-95 ${
+                  isActive
+                    ? `${chip.activeBg} text-white border-transparent ring-2 ring-emerald-400/50 shadow-sm`
+                    : `bg-slate-50 dark:bg-[#1A2A25] ${chip.border} text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#20332D]`
+                }`}
+              >
+                <span className={`text-base font-black block leading-none ${isActive ? 'text-white' : ''}`}>
+                  {chip.count.toLocaleString()}
+                </span>
+                <span className={`text-[10px] font-bold block truncate mt-1 ${isActive ? 'text-white/90' : 'text-slate-500 dark:text-[#8FA69C]'}`}>
+                  {chip.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 4. Sticky Search & Category Row (All items h-11) */}
+        <div className="px-3 pb-2.5 pt-1 flex items-center gap-2 shrink-0 border-b border-slate-100 dark:border-[#24352F]">
+          <div className="relative flex-1 h-11">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search name / barcode"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full h-11 pl-9 pr-8 rounded-xl text-xs bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
+
+          <button
+            type="button"
+            onClick={() => setIsBarcodeScannerOpen(true)}
+            className="w-11 h-11 shrink-0 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-xs active:scale-95 transition cursor-pointer"
+            title="Scan Barcode"
+          >
+            <Barcode className="w-5 h-5" />
+          </button>
 
           <select
             value={selectedCategory}
             onChange={e => setSelectedCategory(e.target.value)}
-            className="px-3 py-1.5 rounded-xl text-xs bg-white dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-800 dark:text-white outline-none"
+            className="h-11 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-800 dark:text-white outline-none shrink-0 max-w-[110px] truncate"
           >
             {categories.map(c => (
               <option key={c} value={c}>{c}</option>
@@ -671,8 +688,8 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
           </select>
         </div>
 
-        {/* Product Image Catalog Table / Grid */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        {/* 5. Product Image Catalog List (Only this section scrolls) */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-3 py-2 space-y-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {filteredProducts.length === 0 ? (
             <div className="text-center py-12 text-slate-400 space-y-3">
               <ImageIcon className="w-10 h-10 mx-auto opacity-30" />
@@ -680,41 +697,48 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
               <button
                 type="button"
                 onClick={() => setIsBarcodeScannerOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-xs cursor-pointer active:scale-95"
               >
-                <Barcode className="w-3.5 h-3.5" />
+                <Barcode className="w-4 h-4" />
                 <span>बारकोड स्कॅन करून फोटो जोडा</span>
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 dark:divide-[#24352F]">
-              {filteredProducts.slice(0, 60).map((prod: Product) => {
-                const st = (prod.image_status || '').toLowerCase();
-                const src = prod.image_source || '';
-                const isOfficial = st === 'official_verified' || src.toLowerCase().includes('official');
-                const isRetailer = st === 'retailer_verified' || src.toLowerCase().includes('retailer');
-                const isNeedsReview = st === 'needs_manual_review' || (Boolean(prod.image_url) && st === 'pending');
+            <>
+              <div className="space-y-2">
+                {displayedProducts.map((prod: Product) => {
+                  const st = (prod.image_status || '').toLowerCase();
+                  const src = prod.image_source || '';
+                  const isOfficial = st === 'official_verified' || src.toLowerCase().includes('official');
+                  const isRetailer = st === 'retailer_verified' || src.toLowerCase().includes('retailer');
+                  const isNeedsReview = st === 'needs_manual_review' || (Boolean(prod.image_url) && st === 'pending');
 
-                return (
-                  <div key={prod.id} className="py-2.5 flex items-center justify-between gap-3 hover:bg-slate-50/60 dark:hover:bg-[#1A2A25]/40 px-2 rounded-xl transition">
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      <ProductImage 
-                        src={(prod as any)?.image_url ?? prod.image_url} 
-                        alt={prod.name} 
-                        category={prod.category} 
-                        size="md" 
-                        className="shadow-sm shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                            {prod.name}
-                          </span>
-                          
-                          {/* Status Badge */}
+                  return (
+                    <div 
+                      key={prod.id} 
+                      className="p-2.5 rounded-2xl bg-white dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-between gap-2.5 shadow-2xs hover:border-emerald-500/40 transition"
+                    >
+                      {/* Left: Product Image 64x64 */}
+                      <div className="w-16 h-16 rounded-xl bg-slate-50 dark:bg-[#131F1B] border border-slate-100 dark:border-[#24352F] p-1 flex items-center justify-center overflow-hidden shrink-0">
+                        <ProductImage 
+                          src={(prod as any)?.image_url ?? prod.image_url} 
+                          alt={prod.name} 
+                          category={prod.category} 
+                          size="md" 
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </div>
+
+                      {/* Middle: Name, Badges, Category */}
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug">
+                          {prod.name}
+                        </span>
+
+                        <div className="flex items-center gap-1.5 flex-wrap mt-1">
                           {isOfficial && (
                             <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold border border-emerald-300 dark:border-emerald-800 shrink-0">
-                              🛡️ Official Brand
+                              🛡️ Official
                             </span>
                           )}
                           {!isOfficial && isRetailer && (
@@ -724,84 +748,93 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                           )}
                           {!isOfficial && !isRetailer && prod.image_url && !isNeedsReview && (
                             <span className="px-1.5 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 text-[10px] font-bold border border-sky-300 dark:border-sky-800 shrink-0">
-                              🗄️ Trusted DB
+                              🗄️ Trusted
                             </span>
                           )}
                           {isNeedsReview && (
                             <span className="px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-[10px] font-bold border border-amber-300 dark:border-amber-800 shrink-0">
-                              ⚠️ Needs Review
+                              ⚠️ Review
                             </span>
                           )}
                           {!prod.image_url && (
                             <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold shrink-0">
-                              🚫 Missing
+                              🔍 Missing
                             </span>
                           )}
-                        </div>
 
-                        <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 flex-wrap">
                           {prod.barcode ? (
-                            <span className="font-mono bg-slate-100 dark:bg-[#131F1B] px-1.5 py-0.2 rounded text-[10px]">
+                            <span className="font-mono bg-slate-100 dark:bg-[#131F1B] px-1.5 py-0.5 rounded text-[10px] text-slate-600 dark:text-slate-300 font-bold shrink-0">
                               {prod.barcode}
                             </span>
                           ) : (
                             <span className="text-slate-400 text-[10px] italic">बारकोड नाही</span>
                           )}
-                          {prod.brand && <span>• {prod.brand}</span>}
-                          <span>• {prod.category}</span>
-                          {prod.unit && <span>• {prod.unit}</span>}
+                        </div>
+
+                        <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 truncate">
+                          {prod.category}{prod.unit && ` • ${prod.unit}`}{prod.brand && ` • ${prod.brand}`}
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {isNeedsReview && (
-                        <>
-                          <button
-                            onClick={() => handleApproveImage(prod)}
-                            className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition cursor-pointer"
-                            title="Approve Image"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleRejectImage(prod)}
-                            className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
-                            title="Reject Image"
-                          >
-                            <Ban className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
+                      {/* Right: Actions (Minimum 40px touch targets) */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        {isNeedsReview && (
+                          <>
+                            <button
+                              onClick={() => handleApproveImage(prod)}
+                              className="w-10 h-10 rounded-xl text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 flex items-center justify-center transition active:scale-95 cursor-pointer"
+                              title="Approve Image"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleRejectImage(prod)}
+                              className="w-10 h-10 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center transition active:scale-95 cursor-pointer"
+                              title="Reject Image"
+                            >
+                              <Ban className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
 
-                      {prod.image_url && (
+                        {prod.image_url && (
+                          <button
+                            onClick={() => setPreviewImage({ url: prod.image_url!, name: prod.name })}
+                            className="w-10 h-10 rounded-xl text-slate-400 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-[#24352F] flex items-center justify-center transition active:scale-95 cursor-pointer"
+                            title="फोटो मोठा करून पहा"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        )}
+
                         <button
-                          onClick={() => setPreviewImage({ url: prod.image_url!, name: prod.name })}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-[#24352F] transition cursor-pointer"
-                          title="फोटो मोठा करून पहा"
+                          onClick={() => openImageEditorForProduct(prod)}
+                          className="h-10 px-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-[#131F1B] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-[#8FA69C] transition flex items-center gap-1 cursor-pointer border border-slate-200 dark:border-[#24352F] active:scale-95"
+                          title="फोटो URL अपडेट करा"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Edit2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          <span className="hidden xs:inline">{prod.image_url ? 'बदला' : 'जोडा'}</span>
                         </button>
-                      )}
-
-                      <button
-                        onClick={() => openImageEditorForProduct(prod)}
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 text-slate-700 dark:text-[#8FA69C] transition flex items-center gap-1 cursor-pointer border border-slate-200 dark:border-[#24352F]"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                        <span>{prod.image_url ? 'बदला' : 'URL जोडा'}</span>
-                      </button>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
 
-          {filteredProducts.length > 60 && (
-            <div className="text-center py-2 text-xs text-slate-400 border-t border-slate-100 dark:border-[#24352F]">
-              ...आणखी {filteredProducts.length - 60} उत्पादने उपलब्ध (पहिली ६० दाखवत आहोत). विशिष्ट उत्पादनासाठी सर्च वापरा.
-            </div>
+              {visibleCount < filteredProducts.length && (
+                <div className="py-2.5 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount(prev => prev + 40)}
+                    className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold border border-slate-200 dark:border-[#24352F] transition active:scale-95 cursor-pointer"
+                  >
+                    {language === 'mr'
+                      ? `आणखी उत्पादने दाखवा (${displayedProducts.length} / ${filteredProducts.length})`
+                      : `और उत्पाद लोड करें (${displayedProducts.length} / ${filteredProducts.length})`}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -838,7 +871,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
               <button
                 type="button"
                 onClick={() => setScannedBarcodeNotFound(null)}
-                className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs cursor-pointer active:scale-95 transition"
+                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs cursor-pointer active:scale-95 transition"
               >
                 {language === 'mr' ? 'समजले (OK)' : 'ठीक है (OK)'}
               </button>
@@ -849,7 +882,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
         {/* Manual & Barcode-Driven Image URL Edit Modal Dialog */}
         {editingProduct && (
           <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-30 overflow-y-auto">
-            <div className="w-full max-w-lg bg-white dark:bg-[#1A2A25] rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-[#24352F] space-y-4 max-h-[92vh] overflow-y-auto">
+            <div className="w-full max-w-lg bg-white dark:bg-[#1A2A25] rounded-3xl p-4 sm:p-5 shadow-2xl border border-slate-200 dark:border-[#24352F] space-y-4 max-h-[92vh] overflow-y-auto">
               
               {/* Header */}
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
@@ -871,7 +904,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                     setEditingProduct(null);
                     setOnlineSuggestedImage(null);
                   }}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1011,7 +1044,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                     setEditingProduct(null);
                     setOnlineSuggestedImage(null);
                   }}
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 cursor-pointer"
                 >
                   {language === 'mr' ? 'रद्द करा' : 'रद्द करें'}
                 </button>
@@ -1033,10 +1066,10 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
         {/* Full Image Preview Modal */}
         {previewImage && (
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-30" onClick={() => setPreviewImage(null)}>
-            <div className="relative max-w-sm bg-white dark:bg-[#1A2A25] rounded-3xl p-4 shadow-2xl border border-slate-200 dark:border-[#24352F] space-y-3" onClick={e => e.stopPropagation()}>
+            <div className="relative max-w-sm w-full bg-white dark:bg-[#1A2A25] rounded-3xl p-4 shadow-2xl border border-slate-200 dark:border-[#24352F] space-y-3" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-800 dark:text-white truncate pr-2">{previewImage.name}</span>
-                <button onClick={() => setPreviewImage(null)} className="p-1 text-slate-400 hover:text-white cursor-pointer">
+                <button onClick={() => setPreviewImage(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white cursor-pointer">
                   <X className="w-4 h-4" />
                 </button>
               </div>

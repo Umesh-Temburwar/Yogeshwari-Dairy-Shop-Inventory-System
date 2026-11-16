@@ -5,7 +5,7 @@ import { useStore, AppView } from '../context/StoreContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { 
-  LayoutDashboard, 
+  House, 
   ShoppingCart, 
   Package, 
   AlertCircle, 
@@ -61,7 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       id: 'dashboard',
       labelKey: 'dashboard',
-      icon: LayoutDashboard,
+      icon: House,
       section: 'main'
     },
     {

@@ -1158,22 +1158,42 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         if (pErr) {
           console.error('Failed to sync new product to Supabase:', pErr);
-        } else if (initialBatch) {
-          const { error: bErr } = await supabase.from('batches').insert([{
-            id: initialBatch.id,
-            product_id: initialBatch.product_id,
-            product_name: initialBatch.product_name,
-            batch_no: initialBatch.batch_no,
-            mfg_date: initialBatch.mfg_date,
-            expiry_date: initialBatch.expiry_date,
-            qty_received: initialBatch.qty_received,
-            qty_remaining: initialBatch.qty_remaining,
-            purchase_price: initialBatch.purchase_price,
-            selling_price: newProduct.selling_price,
-            notes: initialBatch.notes,
-            status: 'ACTIVE'
-          }]);
-          if (bErr) console.warn('Failed to sync initial batch to Supabase:', bErr);
+        } else {
+          // Direct client guarantee for product_barcodes (works alongside DB trigger)
+          if (newProduct.barcode && newProduct.barcode.trim()) {
+            const cleanBc = newProduct.barcode.trim();
+            const bcType = cleanBc.length === 8 ? 'EAN-8' : cleanBc.length === 12 ? 'UPC-A' : cleanBc.length === 14 ? 'GTIN-14' : 'EAN-13';
+            try {
+              await supabase.from('product_barcodes').upsert([{
+                product_id: newProduct.id,
+                barcode: cleanBc,
+                barcode_type: bcType,
+                is_primary: true,
+                source: 'STORE_CONTEXT_ADD',
+                is_active: true
+              }], { onConflict: 'barcode' });
+            } catch (bcSyncErr) {
+              console.warn('Sync to product_barcodes:', bcSyncErr);
+            }
+          }
+
+          if (initialBatch) {
+            const { error: bErr } = await supabase.from('batches').insert([{
+              id: initialBatch.id,
+              product_id: initialBatch.product_id,
+              product_name: initialBatch.product_name,
+              batch_no: initialBatch.batch_no,
+              mfg_date: initialBatch.mfg_date,
+              expiry_date: initialBatch.expiry_date,
+              qty_received: initialBatch.qty_received,
+              qty_remaining: initialBatch.qty_remaining,
+              purchase_price: initialBatch.purchase_price,
+              selling_price: newProduct.selling_price,
+              notes: initialBatch.notes,
+              status: 'ACTIVE'
+            }]);
+            if (bErr) console.warn('Failed to sync initial batch to Supabase:', bErr);
+          }
         }
         broadcastMutation('products', 'insert');
       } catch (e) {
@@ -1208,6 +1228,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           ...updates,
           updated_at: new Date().toISOString()
         }).eq('id', id);
+
+        if (updates.barcode && updates.barcode.trim()) {
+          const cleanBc = updates.barcode.trim();
+          const bcType = cleanBc.length === 8 ? 'EAN-8' : cleanBc.length === 12 ? 'UPC-A' : cleanBc.length === 14 ? 'GTIN-14' : 'EAN-13';
+          try {
+            await supabase.from('product_barcodes').upsert([{
+              product_id: id,
+              barcode: cleanBc,
+              barcode_type: bcType,
+              is_primary: true,
+              source: 'STORE_CONTEXT_UPDATE',
+              is_active: true
+            }], { onConflict: 'barcode' });
+          } catch (bcSyncErr) {
+            console.warn('Sync updated barcode to product_barcodes:', bcSyncErr);
+          }
+        }
+
         broadcastMutation('products', 'update');
       } catch (e) {
         console.error('Failed to update product in Supabase', e);

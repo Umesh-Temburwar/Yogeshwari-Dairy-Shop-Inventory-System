@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
+import { QuickProductRegisterModal } from '../Scanner/QuickProductRegisterModal';
 import { ProductImage } from '../Common/ProductImage';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { requestMotionPermission, isMobileDevice } from '../../hooks/useShakeDetector';
@@ -256,6 +257,8 @@ export const BillingCounter: React.FC = () => {
   const [showQrModal, setShowQrModal] = useState(false);
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [quickRegisterBarcode, setQuickRegisterBarcode] = useState<string | null>(null);
+  const [showQuickRegisterModal, setShowQuickRegisterModal] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [lastCompletedSale, setLastCompletedSale] = useState<any>(null);
   const [onlineSearchedProduct, setOnlineSearchedProduct] = useState<Product | null>(null);
@@ -739,6 +742,18 @@ export const BillingCounter: React.FC = () => {
                 placeholder={t('searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const q = searchQuery.trim();
+                    if (filteredProducts.length === 1) {
+                      addToCart(filteredProducts[0], 1);
+                      setSearchQuery('');
+                    } else if (filteredProducts.length === 0 && /^\d{5,}$/.test(q)) {
+                      setQuickRegisterBarcode(q);
+                      setShowQuickRegisterModal(true);
+                    }
+                  }
+                }}
                 className="w-full h-11 pl-9 pr-8 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm font-semibold"
               />
               {searchQuery && (
@@ -814,15 +829,47 @@ export const BillingCounter: React.FC = () => {
         {/* Product Cards Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 lg:overflow-y-auto lg:max-h-[calc(100vh-14rem)] lg:min-h-[420px] pr-1 pb-6 lg:pb-0">
           {filteredProducts.length === 0 ? (
-            <div className="col-span-full py-16 px-4 bg-white dark:bg-[#131F1B] rounded-2xl border border-dashed border-slate-200 dark:border-[#24352F] text-center flex flex-col items-center justify-center">
-              <Package className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-2" />
-              <p className="font-bold text-sm text-slate-700 dark:text-slate-300">
-                {language === 'mr' ? 'कोणतेही उत्पादन उपलब्ध नाही' : language === 'hi' ? 'कोई उत्पाद उपलब्ध नहीं है' : 'No Products Available for Billing'}
-              </p>
-              <p className="text-xs text-slate-400 dark:text-[#8FA69C] mt-1">
-                {language === 'mr' ? 'प्रथम "Products & Stock" मध्ये माल किंवा उत्पादन जोडा.' : language === 'hi' ? 'पहले "Products & Stock" में जाकर उत्पाद जोड़ें।' : 'Add your products in "Products & Stock" first.'}
-              </p>
-            </div>
+            /^\d{5,}$/.test(searchQuery.trim()) ? (
+              <div className="col-span-full py-10 px-5 bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-emerald-950/20 dark:via-[#131F1B] dark:to-[#1A2A25] rounded-2xl border-2 border-dashed border-emerald-500/50 text-center flex flex-col items-center justify-center space-y-3 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                  <Barcode className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm sm:text-base text-slate-800 dark:text-white">
+                    {language === 'mr' ? 'नवीन बारकोड सापडला!' : 'नया बारकोड मिला!'}
+                  </h3>
+                  <p className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">
+                    {searchQuery.trim()}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-1 max-w-sm">
+                    {language === 'mr' 
+                      ? 'हा बारकोड सिस्टिममध्ये नाही. त्वरित नाव आणि दर भरून १ सेकंदात बिलात जोडा.' 
+                      : 'यह बारकोड सिस्टम में नहीं है। तुरंत नाम और मूल्य दर्ज कर 1 सेकंड में बिल में लें।'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuickRegisterBarcode(searchQuery.trim());
+                    setShowQuickRegisterModal(true);
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-emerald-600/30 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-200" />
+                  <span>{language === 'mr' ? '⚡ त्वरित कॅटलॉगमध्ये जोडा आणि बिलात घ्या' : '⚡ तुरंत कैटलॉग में जोड़ें और बिल में लें'}</span>
+                </button>
+              </div>
+            ) : (
+              <div className="col-span-full py-16 px-4 bg-white dark:bg-[#131F1B] rounded-2xl border border-dashed border-slate-200 dark:border-[#24352F] text-center flex flex-col items-center justify-center">
+                <Package className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-2" />
+                <p className="font-bold text-sm text-slate-700 dark:text-slate-300">
+                  {language === 'mr' ? 'कोणतेही उत्पादन उपलब्ध नाही' : language === 'hi' ? 'कोई उत्पाद उपलब्ध नहीं है' : 'No Products Available for Billing'}
+                </p>
+                <p className="text-xs text-slate-400 dark:text-[#8FA69C] mt-1">
+                  {language === 'mr' ? 'प्रथम "Products & Stock" मध्ये माल किंवा उत्पादन जोडा.' : language === 'hi' ? 'पहले "Products & Stock" में जाकर उत्पाद जोड़ें।' : 'Add your products in "Products & Stock" first.'}
+                </p>
+              </div>
+            )
           ) : (
             filteredProducts.map((prod) => (
               <ProductCard
@@ -1733,10 +1780,34 @@ export const BillingCounter: React.FC = () => {
                   setShowBarcodeScanner(false);
                 }
               }
+            } else {
+              // Not found online either -> Auto open Quick Register Modal
+              setQuickRegisterBarcode(clean);
+              setShowQuickRegisterModal(true);
+              setShowBarcodeScanner(false);
             }
           } catch (e) {}
         }}
       />
+
+      {/* Quick Register Modal for Unknown Barcodes */}
+      {showQuickRegisterModal && quickRegisterBarcode && (
+        <QuickProductRegisterModal
+          isOpen={showQuickRegisterModal}
+          onClose={() => {
+            setShowQuickRegisterModal(false);
+            setQuickRegisterBarcode(null);
+          }}
+          barcode={quickRegisterBarcode}
+          mode="pos"
+          onProductCreated={(createdProd) => {
+            addToCart(createdProd, 1);
+            setShowQuickRegisterModal(false);
+            setQuickRegisterBarcode(null);
+            setSearchQuery('');
+          }}
+        />
+      )}
 
     </div>
   );

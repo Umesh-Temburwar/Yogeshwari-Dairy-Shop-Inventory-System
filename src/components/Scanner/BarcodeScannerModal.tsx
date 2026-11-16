@@ -15,6 +15,7 @@ import { Product } from '../../types';
 import { playBeepSound } from '../../utils/audioUtils';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { ProductImage } from '../Common/ProductImage';
+import { QuickProductRegisterModal } from './QuickProductRegisterModal';
 import {
   Camera,
   X,
@@ -74,6 +75,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   const [scanTarget, setScanTarget] = useState<'barcode' | 'numbers'>('barcode');
   const [validationResult, setValidationResult] = useState<BarcodeValidationResult | null>(null);
   const [matchedSource, setMatchedSource] = useState<'product_barcodes' | 'products' | 'rpc' | 'local' | 'catalogue' | null>(null);
+  const [showQuickRegister, setShowQuickRegister] = useState(false);
 
   // Instant auto-lookup when user types complete barcode digits
   useEffect(() => {
@@ -813,28 +815,58 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                 </button>
               </div>
             ) : (
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-900/60 flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-bold text-amber-800 dark:text-amber-300 block">
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-900/60 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <span className="text-xs font-bold text-amber-800 dark:text-amber-300 block truncate">
                     {language === 'mr' ? 'हे उत्पादन इन्व्हेंटरीमध्ये नाही' : 'यह उत्पाद इन्वेंटरी में नहीं मिला'}
                   </span>
-                  <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                    {language === 'mr' ? 'तुम्ही या बारकोडसह नवीन उत्पादन तयार करू शकता.' : 'आप इस बारकोड से नया उत्पाद बना सकते हैं।'}
+                  <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] block truncate">
+                    {language === 'mr' ? 'या बारकोडसह १-क्लिक मध्ये त्वरित नोंदणी करा:' : 'इस बारकोड से 1-क्लिक में तुरंत पंजीकरण करें:'}
                   </span>
                 </div>
 
-                <button
-                  onClick={() => {
-                    if (onBarcodeScanned) onBarcodeScanned(scannedCode);
-                    onClose();
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs"
-                >
-                  + {language === 'mr' ? 'नवीन जोडा' : 'नया जोड़ें'}
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => {
+                      setShowQuickRegister(true);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center gap-1 shadow-sm active:scale-95 transition-all"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-200" />
+                    <span>{language === 'mr' ? '⚡ त्वरित नोंदणी' : '⚡ त्वरित पंजीकरण'}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (onBarcodeScanned) onBarcodeScanned(scannedCode);
+                      onClose();
+                    }}
+                    className="px-2 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-[#1A2A25] text-slate-700 dark:text-slate-300 font-bold text-xs"
+                    title={language === 'mr' ? 'बंद करा' : 'बंद करें'}
+                  >
+                    {language === 'mr' ? 'बंद' : 'बंद'}
+                  </button>
+                </div>
               </div>
             )}
           </div>
+        )}
+
+        {/* Quick Product Register Modal for Unknown Barcodes */}
+        {showQuickRegister && scannedCode && (
+          <QuickProductRegisterModal
+            isOpen={showQuickRegister}
+            onClose={() => setShowQuickRegister(false)}
+            barcode={scannedCode}
+            mode={mode === 'pos' ? 'pos' : 'catalogue'}
+            onProductCreated={(createdProd) => {
+              setShowQuickRegister(false);
+              setMatchedProduct(createdProd);
+              if (onProductSelected) {
+                onProductSelected(createdProd);
+              }
+              onClose();
+            }}
+          />
         )}
 
       </div>

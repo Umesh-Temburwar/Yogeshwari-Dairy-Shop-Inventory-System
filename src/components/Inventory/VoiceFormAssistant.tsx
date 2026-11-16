@@ -125,6 +125,13 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
   const activeStepRef = useRef<VoiceStep>('name');
   activeStepRef.current = currentStep;
 
+  // Lifecycle & Anti-closure refs
+  const transcriptRef = useRef<string>('');
+  const isListeningRef = useRef<boolean>(false);
+  const userStoppedRef = useRef<boolean>(false);
+  const restartCountRef = useRef<number>(0);
+  const silenceTimeoutRef = useRef<any>(null);
+
   // Ordered Steps Definition
   const STEPS_ORDER: VoiceStep[] = [
     'name',
@@ -251,72 +258,137 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
       return;
     }
 
+    transcriptRef.current = '';
+    userStoppedRef.current = false;
+    restartCountRef.current = 0;
+    setInterimTranscript('');
+
+    initAssistantRecognition();
+  };
+
+  const initAssistantRecognition = () => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch {}
+    }
+
     try {
       const SpeechClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechClass();
       recognitionRef.current = recognition;
 
-      recognition.continuous = false;
+      recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = voiceLang;
 
       playBeepSound();
+      isListeningRef.current = true;
       setIsListening(true);
 
-      let finalAccumulated = '';
+      const scheduleFinalizeOnSilence = () => {
+        if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+        silenceTimeoutRef.current = setTimeout(() => {
+          if (transcriptRef.current.trim()) {
+            stopListening();
+          }
+        }, 2200);
+      };
 
       recognition.onstart = () => {
+        isListeningRef.current = true;
         setIsListening(true);
       };
 
       recognition.onresult = (e: any) => {
         let interim = '';
-        for (let i = e.resultIndex; i < e.results.length; ++i) {
+        let finalized = '';
+
+        for (let i = 0; i < e.results.length; ++i) {
           if (e.results[i].isFinal) {
-            finalAccumulated += e.results[i][0].transcript;
+            finalized += e.results[i][0].transcript + ' ';
           } else {
             interim += e.results[i][0].transcript;
           }
         }
-        setInterimTranscript(interim || finalAccumulated);
+
+        const currentText = (finalized + interim).trim();
+        if (currentText) {
+          transcriptRef.current = currentText;
+          setInterimTranscript(currentText);
+          scheduleFinalizeOnSilence();
+        }
       };
 
       recognition.onerror = (e: any) => {
-        console.warn('Speech recognition error:', e.error);
-        setIsListening(false);
+        console.warn('Speech recognition notice:', e.error);
         if (e.error === 'not-allowed') {
+          userStoppedRef.current = true;
+          isListeningRef.current = false;
+          setIsListening(false);
           setErrorMessage(
             language === 'mr' 
               ? 'मायक्रोफोन परवानगी नाकारली आहे. कृपया माईक ऑन करा.' 
               : 'Microphone permission denied. Please allow microphone access.'
           );
-        } else if (e.error === 'no-speech') {
-          // Gracefully wait or allow manual click
         }
       };
 
       recognition.onend = async () => {
-        setIsListening(false);
-        const spoken = (finalAccumulated || interimTranscript).trim();
-        if (spoken) {
-          await handleSpokenAnswer(spoken, activeStepRef.current);
+        if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+
+        if (userStoppedRef.current) {
+          isListeningRef.current = false;
+          setIsListening(false);
+          return;
         }
+
+        const spoken = transcriptRef.current.trim();
+        if (spoken) {
+          isListeningRef.current = false;
+          setIsListening(false);
+          await handleSpokenAnswer(spoken, activeStepRef.current);
+          return;
+        }
+
+        if (isListeningRef.current && restartCountRef.current < 4) {
+          restartCountRef.current += 1;
+          try {
+            recognition.start();
+            return;
+          } catch {
+            setTimeout(() => {
+              if (isListeningRef.current) initAssistantRecognition();
+            }, 100);
+            return;
+          }
+        }
+
+        isListeningRef.current = false;
+        setIsListening(false);
       };
 
       recognition.start();
     } catch (err) {
       console.warn('Failed to start speech recognition:', err);
+      isListeningRef.current = false;
       setIsListening(false);
     }
   };
 
   const stopListening = () => {
+    userStoppedRef.current = true;
+    isListeningRef.current = false;
+    if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
     if (recognitionRef.current) {
       try {
-        recognitionRef.current.abort();
+        recognitionRef.current.stop();
       } catch {}
     }
     setIsListening(false);
+
+    const spoken = transcriptRef.current.trim();
+    if (spoken) {
+      handleSpokenAnswer(spoken, activeStepRef.current);
+    }
   };
 
   // Toggle Mute

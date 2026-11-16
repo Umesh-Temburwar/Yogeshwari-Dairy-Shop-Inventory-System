@@ -153,28 +153,51 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       const recognition = new SpeechClass();
       barcodeRecognitionRef.current = recognition;
       recognition.lang = language === 'hi' ? 'hi-IN' : language === 'en' ? 'en-IN' : 'mr-IN';
-      recognition.interimResults = false;
+      recognition.interimResults = true;
+      recognition.continuous = true;
 
       playBeepSound();
       setIsVoiceListening(true);
 
+      let accumulated = '';
+      let stopTimer: any = null;
+
+      const resetStopTimer = () => {
+        if (stopTimer) clearTimeout(stopTimer);
+        stopTimer = setTimeout(() => {
+          try { recognition.stop(); } catch {}
+        }, 2500);
+      };
+
       recognition.onresult = async (e: any) => {
-        const text = e.results[0]?.[0]?.transcript || '';
-        if (text.trim()) {
-          const processed = await processVoiceTranscript(text.trim(), recognition.lang);
+        resetStopTimer();
+        let interim = '';
+        for (let i = 0; i < e.results.length; ++i) {
+          if (e.results[i].isFinal) {
+            accumulated += e.results[i][0].transcript + ' ';
+          } else {
+            interim += e.results[i][0].transcript;
+          }
+        }
+        const text = (accumulated + interim).trim();
+        if (text) {
+          const processed = await processVoiceTranscript(text, recognition.lang);
           if (processed.englishName) {
             setNewProdName(processed.englishName);
             setNewProdMarathiName(processed.marathiName);
             if (processed.detectedCategory) setNewProdCategory(processed.detectedCategory);
             if (processed.detectedUnit) setNewProdUnit(processed.detectedUnit);
             if (processed.packSize) setNewProdPackSize(processed.packSize);
-            playSuccessChime();
           }
         }
       };
 
       recognition.onerror = () => setIsVoiceListening(false);
-      recognition.onend = () => setIsVoiceListening(false);
+      recognition.onend = () => {
+        if (stopTimer) clearTimeout(stopTimer);
+        setIsVoiceListening(false);
+        playSuccessChime();
+      };
 
       recognition.start();
     } catch {

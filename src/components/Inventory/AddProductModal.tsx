@@ -11,6 +11,7 @@ import { playBeepSound, playSuccessChime } from '../../utils/audioUtils';
 import { 
   isSpeechRecognitionSupported, 
   processVoiceTranscript, 
+  processVoiceTranscriptSync,
   VoiceLanguage 
 } from '../../lib/voiceProductRecognizer';
 import { VoiceFormAssistant } from './VoiceFormAssistant';
@@ -21,10 +22,10 @@ interface AddProductModalProps {
   productToEdit?: Product | null;
 }
 
-export const AddProductModal: React.FC<AddProductModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  productToEdit 
+export const AddProductModal: React.FC<AddProductModalProps> = ({
+  isOpen,
+  onClose,
+  productToEdit
 }) => {
   const { addProduct, updateProduct, products } = useStore();
   const { t, language } = useLanguage();
@@ -57,15 +58,23 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [interimTranscript, setInterimTranscript] = useState('');
   const [voiceFeedback, setVoiceFeedback] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+
+  // Lifecycle & Anti-closure refs
+  const isListeningRef = useRef(false);
+  const userStoppedRef = useRef(false);
+  const restartCountRef = useRef(0);
   const recognitionRef = useRef<any>(null);
+  const transcriptRef = useRef<string>('');
+  const silenceTimeoutRef = useRef<any>(null);
 
   // Clean up speech recognition on unmount or modal close
   useEffect(() => {
     return () => {
+      if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
       if (recognitionRef.current) {
         try {
           recognitionRef.current.abort();
-        } catch {}
+        } catch { }
       }
     };
   }, [isOpen]);
@@ -95,7 +104,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       setMinStockAlert('10');
       setBarcode('');
     }
-    setIsVoiceModeOpen(false);
   }, [productToEdit, isOpen]);
 
   // Debounced translation hook when user types English name
@@ -165,16 +173,27 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     setVoiceError(null);
     setInterimTranscript('');
     setVoiceFeedback(null);
+    transcriptRef.current = '';
+    userStoppedRef.current = false;
+    restartCountRef.current = 0;
 
     if (!isSpeechRecognitionSupported()) {
       setVoiceError(
         language === 'mr'
           ? 'तुमच्या ब्राउझरमध्ये व्हॉइस इनपुट उपलब्ध नाही. कृपया Google Chrome किंवा Microsoft Edge वापरा.'
           : language === 'hi'
-          ? 'आपके ब्राउज़र में वॉयस इनपुट उपलब्ध नहीं है। कृपया Google Chrome या Edge का उपयोग करें।'
-          : 'Voice input is not supported in this browser. Please use Chrome or Edge.'
+            ? 'आपके ब्राउज़र में वॉयस इनपुट उपलब्ध नहीं है। कृपया Google Chrome या Edge का उपयोग करें।'
+            : 'Voice input is not supported in this browser. Please use Chrome or Edge.'
       );
       return;
+    }
+
+    initRecognition(selectedLang);
+  };
+
+  const initRecognition = (selectedLang: VoiceLanguage) => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch {}
     }
 
     try {
@@ -182,77 +201,178 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       const recognition = new SpeechRecognitionClass();
       recognitionRef.current = recognition;
 
-      recognition.continuous = false;
+      recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = selectedLang;
 
       playBeepSound();
+      isListeningRef.current = true;
       setIsListening(true);
 
-      let finalAccumulated = '';
+      const scheduleFinalizeOnSilence = () => {
+        if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+        silenceTimeoutRef.current = setTimeout(() => {
+          if (transcriptRef.current.trim()) {
+            stopVoiceListening();
+          }
+        }, 2500); // 2.5s of silence after speech detected
+      };
 
       recognition.onstart = () => {
+        isListeningRef.current = true;
         setIsListening(true);
       };
 
       recognition.onresult = (event: any) => {
         let interim = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
+        let finalized = '';
+
+        for (let i = 0; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
-            finalAccumulated += event.results[i][0].transcript;
+            finalized += event.results[i][0].transcript + ' ';
           } else {
             interim += event.results[i][0].transcript;
           }
         }
-        setInterimTranscript(interim || finalAccumulated);
+
+        const currentText = (finalized + interim).trim();
+        if (currentText) {
+          transcriptRef.current = currentText;
+          setInterimTranscript(currentText);
+          scheduleFinalizeOnSilence();
+
+          // Instant preview across all 3 language fields, category & unit
+          const instant = processVoiceTranscriptSync(currentText, selectedLang);
+          if (instant.englishName) {
+            setName(instant.englishName);
+            setMarathiName(instant.marathiName);
+            setHindiName(instant.hindiName);
+            if (instant.detectedCategory) setCategory(instant.detectedCategory);
+            if (instant.detectedUnit) setUnit(instant.detectedUnit);
+          }
+        }
       };
 
       recognition.onerror = (event: any) => {
-        console.warn('Speech recognition error:', event.error);
-        setIsListening(false);
+        console.warn('Speech recognition notice:', event.error);
         if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          userStoppedRef.current = true;
+          isListeningRef.current = false;
+          setIsListening(false);
           setVoiceError(
             language === 'mr'
-              ? 'मायक्रोफोन परवानगी नाकारली आहे. कृपया ब्राउझरमध्ये माईक परवानगी Allow करा.'
+              ? 'मायक्रोफोन परवानगी नाकारली आहे. कृपया ॲड्रेस बारमधील कुलूप (Lock) आयकॉनवर क्लिक करून Microphone Allow करा.'
               : language === 'hi'
-              ? 'माइक्रोफ़ोन अनुमति अस्वीकृत है। कृपया ब्राउज़र में माइक अनुमति चालू करें।'
-              : 'Microphone permission denied. Please allow microphone access.'
+              ? 'माइक्रोफ़ोन अनुमति अस्वीकृत है। कृपया Address bar में Lock आइकॉन पर क्लिक करके Microphone Allow करें।'
+              : 'Microphone access denied. Please click the lock icon in address bar to allow microphone.'
           );
-        } else if (event.error === 'no-speech') {
-          setVoiceFeedback(
-            language === 'mr' ? 'काही आवाज ऐकू आला नाही. कृपया पुन्हा बोला.' : 'कोई आवाज़ सुनाई नहीं दी। कृपया फिर बोलें।'
+        } else if (event.error === 'network') {
+          userStoppedRef.current = true;
+          isListeningRef.current = false;
+          setIsListening(false);
+          setVoiceError(
+            language === 'mr'
+              ? 'Google Voice Network त्रुटी. कृपया इंटरनेट कनेक्शन तपासा.'
+              : 'Google Voice Network error. Please check your internet connection.'
           );
-        } else {
-          setVoiceError(`Voice notice: ${event.error}`);
         }
       };
 
       recognition.onend = async () => {
-        setIsListening(false);
-        const textToProcess = (finalAccumulated || interimTranscript).trim();
-        if (textToProcess) {
-          await handleVoiceResult(textToProcess, selectedLang);
+        if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+
+        // Case 1: User explicitly cancelled or stopped
+        if (userStoppedRef.current) {
+          isListeningRef.current = false;
+          setIsListening(false);
+          return;
         }
+
+        // Case 2: We have captured speech transcript
+        const capturedText = transcriptRef.current.trim();
+        if (capturedText) {
+          isListeningRef.current = false;
+          setIsListening(false);
+          await handleVoiceResult(capturedText, selectedLang);
+          return;
+        }
+
+        // Case 3: No speech captured yet, but user is still in listening mode!
+        // Allow up to 4 auto-restarts (~15s listening window) so slight hesitations do not abort
+        if (isListeningRef.current && restartCountRef.current < 4) {
+          restartCountRef.current += 1;
+          try {
+            recognition.start();
+            return;
+          } catch {
+            setTimeout(() => {
+              if (isListeningRef.current) initRecognition(selectedLang);
+            }, 100);
+            return;
+          }
+        }
+
+        // Case 4: Timed out after prolonged silence (15+ seconds)
+        isListeningRef.current = false;
+        setIsListening(false);
+        setVoiceFeedback(
+          language === 'mr'
+            ? 'काही आवाज ऐकू आला नाही. कृपया माईक जवळ धरून पुन्हा बोला.'
+            : language === 'hi'
+            ? 'कोई आवाज़ सुनाई नहीं दी। कृपया माइक के पास बोलें।'
+            : 'No speech detected. Please speak closer to the microphone.'
+        );
       };
 
       recognition.start();
     } catch (err: any) {
       console.error('Failed to start speech recognition:', err);
+      isListeningRef.current = false;
       setIsListening(false);
       setVoiceError(
-        language === 'mr' ? 'माईक सुरू करताना त्रुटी आली.' : 'माइक शुरू करने में समस्या आई।'
+        language === 'mr' ? 'माईक सुरू करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.' : 'माइक शुरू करने में समस्या आई।'
       );
     }
   };
 
-  // Stop Speech Recognition
-  const stopVoiceListening = () => {
+  // Stop Speech Recognition & finalize
+  const stopVoiceListening = async () => {
+    userStoppedRef.current = true;
+    isListeningRef.current = false;
+    if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch {}
+      } catch { }
     }
     setIsListening(false);
+
+    const textToProcess = transcriptRef.current.trim();
+    if (textToProcess) {
+      await handleVoiceResult(textToProcess, voiceLang);
+    }
+  };
+
+  // Cancel Speech Recognition without saving
+  const cancelVoiceListening = () => {
+    userStoppedRef.current = true;
+    isListeningRef.current = false;
+    if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch { }
+    }
+    setIsListening(false);
+    setInterimTranscript('');
+  };
+
+  // 1-Tap Quick Suggestion Apply
+  const applyVoiceSuggestion = (phrase: string) => {
+    stopVoiceListening();
+    transcriptRef.current = phrase;
+    setInterimTranscript(phrase);
+    handleVoiceResult(phrase, voiceLang);
   };
 
   // Process Recognized Voice Transcript using Trained Dairy Intelligence
@@ -338,7 +458,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border border-transparent dark:border-[#24352F] rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
-        
+
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
           <div className="flex items-center gap-2">
@@ -347,7 +467,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-slate-900 dark:text-[#E7F0EC] text-base">
-                {productToEdit 
+                {productToEdit
                   ? (language === 'mr' ? 'मालाची माहिती बदला' : language === 'hi' ? 'माल की जानकारी अपडेट करें' : 'Edit Product Details')
                   : (language === 'mr' ? 'दुकानात नवीन माल जोडा' : language === 'hi' ? 'दुकान में नया माल जोड़ें' : 'Add New Dairy Product')}
               </h3>
@@ -371,7 +491,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               <span>{isVoiceModeOpen ? (language === 'mr' ? 'व्हॉइस चालू' : 'वॉयस चालू') : (language === 'mr' ? '🎙️ बोलून भरा' : language === 'hi' ? '🎙️ बोलकर भरें' : '🎙️ Voice Assistant')}</span>
             </button>
 
-            <button 
+            <button
               onClick={onClose}
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
             >
@@ -415,7 +535,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          
+
           {/* Trilingual Names: English, Marathi, Hindi with Automatic Translation */}
           <div className="space-y-2">
             <div>
@@ -435,8 +555,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 >
                   <Sparkles className={`w-3.5 h-3.5 ${isTranslating ? 'animate-spin text-amber-500' : 'text-emerald-500'}`} />
                   <span>
-                    {isTranslating 
-                      ? (language === 'mr' ? 'अनुवाद करत आहे...' : 'अनुवाद कर रहे हैं...') 
+                    {isTranslating
+                      ? (language === 'mr' ? 'अनुवाद करत आहे...' : 'अनुवाद कर रहे हैं...')
                       : (language === 'mr' ? '✨ पुन्हा भाषांतर करा' : '✨ ऑटो ट्रांसलेट')}
                   </span>
                 </button>
@@ -455,17 +575,16 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   <button
                     type="button"
                     onClick={isListening ? stopVoiceListening : () => startVoiceListening(voiceLang)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-black transition-all shadow-xs ${
-                      isListening
-                        ? 'bg-rose-600 hover:bg-rose-700 text-white animate-pulse shadow-rose-500/40 ring-2 ring-rose-400'
-                        : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
-                    }`}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-black transition-all shadow-xs ${isListening
+                      ? 'bg-rose-600 hover:bg-rose-700 text-white animate-pulse shadow-rose-500/40 ring-2 ring-rose-400'
+                      : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
+                      }`}
                     title={isListening ? 'माईक थांबवा (Stop)' : 'बोलून नाव टाका (Voice to Text)'}
                   >
                     <Mic className={`w-3.5 h-3.5 ${isListening ? 'animate-bounce text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
                     <span className="text-[11px] font-black">
-                      {isListening 
-                        ? (language === 'mr' ? 'ऐकत आहे...' : 'सुन रहा है...') 
+                      {isListening
+                        ? (language === 'mr' ? 'ऐकत आहे...' : 'सुन रहा है...')
                         : (language === 'mr' ? '🎤 बोला' : language === 'hi' ? '🎤 बोलें' : '🎤 Voice')}
                     </span>
                   </button>
@@ -474,15 +593,21 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
               {/* Live Interactive Voice Recognition Assistant Panel */}
               {isListening && (
-                <div className="mt-2 p-3 bg-gradient-to-r from-emerald-50 via-teal-50/60 to-emerald-50 dark:from-emerald-950/40 dark:via-[#1A2A25] dark:to-emerald-950/40 border-2 border-emerald-500 rounded-2xl shadow-md space-y-2 animate-in fade-in zoom-in-95 duration-150">
+                <div className="mt-2 p-3 bg-gradient-to-r from-emerald-50 via-teal-50/60 to-emerald-50 dark:from-emerald-950/40 dark:via-[#1A2A25] dark:to-emerald-950/40 border-2 border-emerald-500 rounded-2xl shadow-md space-y-2.5 animate-in fade-in zoom-in-95 duration-150">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="relative flex h-3 w-3">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
                       </span>
-                      <span className="text-xs font-black text-slate-800 dark:text-white flex items-center gap-1.5">
-                        <Volume2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
+                      {/* Audio visualizer wave bars */}
+                      <div className="flex items-center gap-0.5 h-3.5 px-1 bg-rose-100 dark:bg-rose-950/60 rounded-md">
+                        <span className="w-1 bg-rose-500 rounded-full animate-bounce h-2" style={{ animationDelay: '0ms' }}></span>
+                        <span className="w-1 bg-rose-500 rounded-full animate-bounce h-3.5" style={{ animationDelay: '150ms' }}></span>
+                        <span className="w-1 bg-rose-500 rounded-full animate-bounce h-2.5" style={{ animationDelay: '300ms' }}></span>
+                        <span className="w-1 bg-rose-500 rounded-full animate-bounce h-1.5" style={{ animationDelay: '75ms' }}></span>
+                      </div>
+                      <span className="text-xs font-black text-slate-800 dark:text-white flex items-center gap-1">
                         <span>{language === 'mr' ? 'माईक चालू आहे... कृपया बोला:' : language === 'hi' ? 'माइक चालू है... कृपया बोलें:' : 'Listening... Speak clearly:'}</span>
                       </span>
                     </div>
@@ -501,11 +626,10 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                               stopVoiceListening();
                               setTimeout(() => startVoiceListening(langCode), 150);
                             }}
-                            className={`px-2 py-0.5 text-[10px] font-black rounded-md transition ${
-                              isActive 
-                                ? 'bg-emerald-600 text-white shadow-2xs font-extrabold' 
-                                : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
-                            }`}
+                            className={`px-2 py-0.5 text-[10px] font-black rounded-md transition ${isActive
+                              ? 'bg-emerald-600 text-white shadow-2xs font-extrabold'
+                              : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
+                              }`}
                           >
                             {label}
                           </button>
@@ -515,12 +639,19 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   </div>
 
                   {/* Live Speech Recognition Transcription Box */}
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-emerald-800/60 min-h-[40px] flex items-center justify-between gap-2 shadow-2xs">
-                    <p className="text-xs font-bold text-emerald-900 dark:text-emerald-300 truncate">
-                      {interimTranscript 
-                        ? `🎙️ "${interimTranscript}"` 
-                        : (language === 'mr' ? 'काहीही बोला (उदा. "अमुल ताझा ५०० मिली", "म्हशीचे दूध १ लिटर")...' : 'कुछ भी बोलें (उदा. "अमुल ताज़ा 500 मिली", "भैंस का दूध 1 लीटर")...')}
-                    </p>
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-emerald-800/60 min-h-[44px] flex items-center justify-between gap-2 shadow-2xs">
+                    <div className="truncate flex-1">
+                      <p className="text-xs font-black text-emerald-950 dark:text-emerald-200 truncate">
+                        {interimTranscript
+                          ? `🎙️ "${interimTranscript}"`
+                          : (language === 'mr' ? 'काहीही बोला (उदा. "अमुल ताझा ५०० मिली", "म्हशीचे दूध १ लिटर")...' : 'कुछ भी बोलें (उदा. "अमुल ताज़ा 500 मिली", "भैंस का दूध 1 लीटर")...')}
+                      </p>
+                      {name && (
+                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold truncate mt-0.5">
+                          ✓ Auto: <span className="font-bold">{name}</span> {category && `[${category}]`} {unit && `[${unit}]`}
+                        </p>
+                      )}
+                    </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         type="button"
@@ -528,14 +659,11 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                         className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black shadow-xs flex items-center gap-1 active:scale-95"
                       >
                         <span>✓</span>
-                        <span>{language === 'mr' ? 'पूर्ण झाले' : language === 'hi' ? 'पूर्ण हुआ' : 'Done'}</span>
+                        <span>{language === 'mr' ? 'पूर्ण' : language === 'hi' ? 'पूर्ण' : 'Done'}</span>
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          stopVoiceListening();
-                          setInterimTranscript('');
-                        }}
+                        onClick={cancelVoiceListening}
                         className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white"
                         title="रद्द करा (Cancel)"
                       >
@@ -544,16 +672,33 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Trained voice suggestions */}
-                  <p className="text-[10px] text-slate-500 dark:text-[#8FA69C] leading-relaxed">
-                    💡 <span className="font-bold">{language === 'mr' ? 'ट्रेन केलेले नमुने:' : language === 'hi' ? 'प्रशिक्षित उदाहरण:' : 'Trained phrases:'}</span>{' '}
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">"म्हशीचे दूध १ लिटर"</span>,{' '}
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">"अमुल ताझा ५०० मिली"</span>,{' '}
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">"ताजे पनीर २०० ग्रॅम"</span>,{' '}
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">"गाय तूप १ किलो"</span>,{' '}
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">"काजू कतली पाव किलो"</span>,{' '}
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">"मसाला ताक"</span>
-                  </p>
+                  {/* Trained voice suggestions with 1-tap fast buttons */}
+                  <div className="space-y-1 pt-0.5">
+                    <p className="text-[10px] text-slate-500 dark:text-[#8FA69C] font-bold">
+                      💡 {language === 'mr' ? '१-टॅप नमुने किंवा थेट बोला:' : language === 'hi' ? '1-टैप उदाहरण या सीधे बोलें:' : '1-Tap quick samples or speak:'}
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        { label: '🥛 म्हशीचे दूध १L', val: 'म्हशीचे दूध १ लिटर' },
+                        { label: '🥛 अमुल ताझा ५००ml', val: 'अमुल ताझा ५०० मिली' },
+                        { label: '🧈 अमुल बटर १००g', val: 'अमुल बटर १०० ग्रॅम' },
+                        { label: '🧀 ताजे पनीर ५००g', val: 'ताजे पनीर ५०० ग्रॅम' },
+                        { label: '🫙 गायीचे तूप १L', val: 'गायीचे तूप १ लिटर' },
+                        { label: '🥤 मसाला ताक', val: 'मसाला ताक' },
+                        { label: '🍬 काजू कतली', val: 'काजू कतली' },
+                        { label: '🍞 बटर खारी', val: 'बटर खारी' }
+                      ].map((item) => (
+                        <button
+                          key={item.val}
+                          type="button"
+                          onClick={() => applyVoiceSuggestion(item.val)}
+                          className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition active:scale-95 shadow-2xs"
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 

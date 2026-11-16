@@ -412,26 +412,49 @@ export const ProductList: React.FC<ProductListProps> = ({
       const recognition = new SpeechClass();
       quickVoiceRecognitionRef.current = recognition;
       recognition.lang = language === 'hi' ? 'hi-IN' : language === 'en' ? 'en-IN' : 'mr-IN';
-      recognition.interimResults = false;
+      recognition.interimResults = true;
+      recognition.continuous = true;
 
       playBeepSound();
       setIsQuickVoiceListening(true);
 
+      let accumulated = '';
+      let stopTimer: any = null;
+
+      const resetStopTimer = () => {
+        if (stopTimer) clearTimeout(stopTimer);
+        stopTimer = setTimeout(() => {
+          try { recognition.stop(); } catch {}
+        }, 2500);
+      };
+
       recognition.onresult = async (e: any) => {
-        const text = e.results[0]?.[0]?.transcript || '';
-        if (text.trim()) {
-          const processed = await processVoiceTranscript(text.trim(), recognition.lang);
+        resetStopTimer();
+        let interim = '';
+        for (let i = 0; i < e.results.length; ++i) {
+          if (e.results[i].isFinal) {
+            accumulated += e.results[i][0].transcript + ' ';
+          } else {
+            interim += e.results[i][0].transcript;
+          }
+        }
+        const text = (accumulated + interim).trim();
+        if (text) {
+          const processed = await processVoiceTranscript(text, recognition.lang);
           if (processed.englishName) {
             setQuickName(processed.englishName);
             if (processed.detectedCategory) setQuickCategory(processed.detectedCategory);
             if (processed.detectedUnit) setQuickUnit(processed.detectedUnit);
-            playSuccessChime();
           }
         }
       };
 
       recognition.onerror = () => setIsQuickVoiceListening(false);
-      recognition.onend = () => setIsQuickVoiceListening(false);
+      recognition.onend = () => {
+        if (stopTimer) clearTimeout(stopTimer);
+        setIsQuickVoiceListening(false);
+        playSuccessChime();
+      };
 
       recognition.start();
     } catch {

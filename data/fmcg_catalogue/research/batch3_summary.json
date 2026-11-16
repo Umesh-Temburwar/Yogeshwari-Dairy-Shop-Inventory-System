@@ -1,0 +1,72 @@
+[
+  {
+    "brand": "Yellow Diamond",
+    "manufacturer": "Prataap Snacks Ltd.",
+    "counts": {
+      "candidates": 118,
+      "verified_barcodes": 117,
+      "verified_images": 87,
+      "missing_images": 30,
+      "unverified_products": 1,
+      "review_changes": 7,
+      "new_products": 93
+    },
+    "duration_sec": 291.64
+  },
+  {
+    "brand": "Chakote",
+    "manufacturer": "Shree Ganesh Bakery Nandani Pvt. Ltd. (Chakote Group)",
+    "counts": {
+      "candidates": 13,
+      "verified_barcodes": 13,
+      "verified_images": 13,
+      "missing_images": 0,
+      "unverified_products": 0,
+      "review_changes": 10,
+      "new_products": 0
+    },
+    "duration_sec": 40.78
+  },
+  {
+    "brand": "Moti Namkeen",
+    "manufacturer": "Moti Food Products",
+    "counts": {
+      "candidates": 2,
+      "verified_barcodes": 2,
+      "verified_images": 2,
+      "missing_images": 0,
+      "unverified_products": 0,
+      "review_changes": 1,
+      "new_products": 0
+    },
+    "duration_sec": 13.23
+  },
+  {
+    "brand": "Campa",
+    "manufacturer": "Reliance Consumer Products Ltd. (Reliance Retail)",
+    "counts": {
+      "candidates": 56,
+      "verified_barcodes": 56,
+      "verified_images": 43,
+      "missing_images": 13,
+      "unverified_products": 0,
+      "review_changes": 29,
+      "new_products": 1
+    },
+    "duration_sec": 158.29
+  },
+  {
+    "brand": "Sprite",
+    "manufacturer": "Hindustan Coca-Cola Beverages Pvt. Ltd. (The Coca-Cola Company)",
+    "counts": {
+      "candidates": 117,
+      "verified_barcodes": 112,
+      "verified_images": 83,
+      "missing_images": 29,
+      "unverified_products": 5,
+      "review_changes": 13,
+      "new_products": 95
+    },
+    "duration_sec": 232.56
+  }
+]

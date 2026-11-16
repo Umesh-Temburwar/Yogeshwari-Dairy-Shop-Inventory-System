@@ -1,0 +1,14 @@
+barcode,product_name,brand,field_changed,old_value,new_value,reason
+'8901764031106,Sprite,Sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/1106/front_fr.4.400.jpg,Added verified trusted_db packshot
+'8901764031182,Sprite,Sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/1182/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901764031250,Sprite Lemon drink 300ml can,Sprite,pack_size,NULL,300 ml,Enriched pack size
+'8901764032271,Sprite 750ml,Sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/2271/front_en.50.400.jpg,Added verified trusted_db packshot
+'8901764032301,Sprite,Sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/2301/front_en.4.400.jpg,Added verified trusted_db packshot
+'8901764032400,Sprite Lemon Lime flv Coke Brand 2ltr,Sprite,pack_size,NULL,9,Enriched pack size
+'8901764032608,sprite,Sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/2608/front_en.4.400.jpg,Added verified trusted_db packshot
+'8901764032707,Sprite,Sprite,pack_size,NULL,600 ml,Enriched pack size
+'8901764032806,Sprite,Sprite,pack_size,NULL,1.25 l,Enriched pack size
+'8901764032905,Sprite,Sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/2905/front_en.28.400.jpg,Added verified trusted_db packshot
+'8901764032912,Sprite,Sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/2912/front_en.26.400.jpg,Added verified trusted_db packshot
+'8901764038877,sprite,Sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/8877/front_gu.4.400.jpg,Added verified trusted_db packshot
+'8992761002022,Sprite 390ml,Sprite,pack_size,NULL,390 ml,Enriched pack size

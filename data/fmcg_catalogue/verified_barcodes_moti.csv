@@ -1,0 +1,3 @@
+barcode,product_name,brand,pack_size,barcode_source_url,barcode_evidence,status
+'8906059240416,Moti Poha Chiwda,Moti Namkeen,Piece,https://world.openfoodfacts.org/product/8906059240416,"OFF GTIN Record (Name: Moti Poha Chiwda, Brand: Moti)",verified
+'8906059240942,moti special mixture,Moti Namkeen,200 g,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906059240942,Existing verified DB entry for Moti Namkeen,single_source

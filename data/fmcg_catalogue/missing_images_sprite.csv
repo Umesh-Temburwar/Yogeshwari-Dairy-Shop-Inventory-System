@@ -1,0 +1,30 @@
+barcode,product_name,brand,attempted_url,reason
+'0049000007640,Sprite 20 oz,Sprite,https://images.openfoodfacts.net/images/products/004/900/000/7640/front_en.3.400.jpg,Dimensions too small (131x400 < 150x150)
+'0067000110573,Zero Sugar Lemon-Lime Soda,Sprite,https://images.openfoodfacts.net/images/products/006/700/011/0573/front_en.30.400.jpg,File too small (6523 bytes < 10KB threshold; possible placeholder/tracking pixel)
+'3174780006235,Sprite,Sprite,https://images.openfoodfacts.net/images/products/317/478/000/6235/front_fr.5.400.jpg,Dimensions too small (124x400 < 150x150)
+'4801981116270,Lemon-Lime Drink Sprite,Sprite,https://images.openfoodfacts.net/images/products/480/198/111/6270/front_en.23.400.jpg,Dimensions too small (145x400 < 150x150)
+'5000112546491,Sprite,Sprite,https://images.openfoodfacts.net/images/products/500/011/254/6491/front_de.22.400.jpg,Dimensions too small (106x400 < 150x150)
+'5000112547207,Sprite,Sprite,https://images.openfoodfacts.net/images/products/500/011/254/7207/front_de.8.400.jpg,Dimensions too small (144x400 < 150x150)
+'5000112547825,Sprite Zitrone-Limette,Sprite,https://images.openfoodfacts.net/images/products/500/011/254/7825/front_de.32.400.jpg,Dimensions too small (131x400 < 150x150)
+'5000112548129,Sprite Zitrone-Limette,Sprite,https://images.openfoodfacts.net/images/products/500/011/254/8129/front_de.67.400.jpg,File too small (3684 bytes < 10KB threshold; possible placeholder/tracking pixel)
+'5000112642650,Sprite,Sprite,https://images.openfoodfacts.net/images/products/500/011/264/2650/front_es.3.400.jpg,File too small (9772 bytes < 10KB threshold; possible placeholder/tracking pixel)
+'50112135,Sprite,Sprite,https://images.openfoodfacts.net/images/products/000/005/011/2135/front_de.23.400.jpg,Dimensions too small (108x400 < 150x150)
+'54000797,Sprite,Sprite,https://images.openfoodfacts.net/images/products/000/005/400/0797/front_fr.3.400.jpg,File too small (8020 bytes < 10KB threshold; possible placeholder/tracking pixel)
+'5449000104700,Sprite,Sprite,https://images.openfoodfacts.net/images/products/544/900/010/4700/front_en.9.400.jpg,Dimensions too small (134x400 < 150x150)
+'5449000108258,Sprite classique,Sprite,https://images.openfoodfacts.net/images/products/544/900/010/8258/front_en.4.400.jpg,File too small (9964 bytes < 10KB threshold; possible placeholder/tracking pixel)
+'5449000110671,Sprite 0.5,Sprite,https://images.openfoodfacts.net/images/products/544/900/011/0671/front_fr.3.400.jpg,Dimensions too small (109x400 < 150x150)
+'5449000121172,Sprite Zero,Sprite,https://images.openfoodfacts.net/images/products/544/900/012/1172/front_de.34.400.jpg,Dimensions too small (121x400 < 150x150)
+'5449000132505,Sprite,Sprite,https://images.openfoodfacts.net/images/products/544/900/013/2505/front_fr.20.400.jpg,Dimensions too small (117x400 < 150x150)
+'5449000205544,Sprite,Sprite,https://images.openfoodfacts.net/images/products/544/900/020/5544/front_fr.4.400.jpg,"Network error: HTTPSConnectionPool(host='images.openfoodfacts.net', port=443): Read timed out."
+'5449000205551,Lima-Limão,Sprite,https://images.openfoodfacts.net/images/products/544/900/020/5551/front_pt.24.400.jpg,Dimensions too small (112x400 < 150x150)
+'5449000241405,Sprite,Sprite,https://images.openfoodfacts.net/images/products/544/900/024/1405/front_it.31.400.jpg,Dimensions too small (119x400 < 150x150)
+'5449000242655,Sprite citron-citron vert-concombre,Sprite,https://images.openfoodfacts.net/images/products/544/900/024/2655/front_fr.4.400.jpg,Dimensions too small (118x400 < 150x150)
+'5449000250148,Sprite Lemon lime & cucumber,Sprite,https://images.openfoodfacts.net/images/products/544/900/025/0148/front_fr.4.400.jpg,Dimensions too small (136x400 < 150x150)
+'5449000308719,Sprite,Sprite,https://images.openfoodfacts.net/images/products/544/900/030/8719/front_de.4.400.jpg,File too small (9658 bytes < 10KB threshold; possible placeholder/tracking pixel)
+'8901764032400,Sprite Lemon Lime flv Coke Brand 2ltr,Sprite,https://images.openfoodfacts.net/images/products/890/176/403/2400/front_en.5.400.jpg,Dimensions too small (138x400 < 150x150)
+'8901764032707,Sprite,Sprite,https://images.openfoodfacts.net/images/products/890/176/403/2707/front_en.20.400.jpg,Dimensions too small (133x400 < 150x150)
+'8901764032806,Sprite,Sprite,https://images.openfoodfacts.net/images/products/890/176/403/2806/front_en.19.400.jpg,File too small (8545 bytes < 10KB threshold; possible placeholder/tracking pixel)
+'8901764032967,Sprite LEMON-LIME FLAVOURE,Sprite,,No image candidate found
+'8901764311253,Sprite Zero Sugar Lemon-Lime Flavoured,Sprite,,No image candidate found
+'8901764312021,Sprite,Sprite,,No image candidate found
+'90495502,"Sprite 0,2",Sprite,https://images.openfoodfacts.net/images/products/000/009/049/5502/front_en.4.400.jpg,Dimensions too small (141x400 < 150x150)

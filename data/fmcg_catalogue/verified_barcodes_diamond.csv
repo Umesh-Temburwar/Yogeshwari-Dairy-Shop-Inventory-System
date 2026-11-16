@@ -1,0 +1,118 @@
+barcode,product_name,brand,pack_size,barcode_source_url,barcode_evidence,status
+'0070450051525,Nueces,Yellow Diamond,3 l,https://world.openfoodfacts.org/product/0070450051525,"OFF GTIN Record (Name: Nueces, Brand: Diamond)",verified
+'0070450142315,Chopped Pecans,Yellow Diamond,,https://world.openfoodfacts.org/product/0070450142315,"OFF GTIN Record (Name: Chopped Pecans, Brand: Diamond, Diamond of California)",verified
+'0073711873065,Shelled Walnuts,Yellow Diamond,,https://world.openfoodfacts.org/product/0073711873065,"OFF GTIN Record (Name: Shelled Walnuts, Brand: Diamond)",verified
+'0127443022212,Röstzwiebeln,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/0127443022212,"OFF GTIN Record (Name: Röstzwiebeln, Brand: Diamond)",verified
+'0310743061351,Mie Nudeln,Yellow Diamond,500 g,https://world.openfoodfacts.org/product/0310743061351,"OFF GTIN Record (Name: Mie Nudeln, Brand: Diamond)",verified
+'0316743067805,Mie Noodles,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/0316743067805,"OFF GTIN Record (Name: Mie Noodles, Brand: Diamond)",verified
+'0757449234663,White Vinegar,Yellow Diamond,,https://world.openfoodfacts.org/product/0757449234663,"OFF GTIN Record (Name: White Vinegar, Brand: Diamond)",verified
+'4030011170009,Rjaschenka,Yellow Diamond,500 g,https://world.openfoodfacts.org/product/4030011170009,"OFF GTIN Record (Name: Rjaschenka, Brand: Diamond)",verified
+'4316734002422,Ingwer Würfel,Yellow Diamond,70 g,https://world.openfoodfacts.org/product/4316734002422,"OFF GTIN Record (Name: Ingwer Würfel, Brand: Diamond)",verified
+'4316734002507,Surimi Sticks,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734002507,"OFF GTIN Record (Name: Surimi Sticks, Brand: Diamond)",verified
+'4316734002781,Lotuswurzeln,Yellow Diamond,1000 g,https://world.openfoodfacts.org/product/4316734002781,"OFF GTIN Record (Name: Lotuswurzeln, Brand: Diamond)",verified
+'4316734003122,"Wok-Gemüse, TK",Yellow Diamond,1000 g,https://world.openfoodfacts.org/product/4316734003122,"OFF GTIN Record (Name: Wok-Gemüse, TK, Brand: Diamond)",verified
+'4316734004365,Shiitake Pize,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734004365,"OFF GTIN Record (Name: Shiitake Pize, Brand: Diamond)",verified
+'4316734004709,"Mangohälften, tk",Yellow Diamond,,https://world.openfoodfacts.org/product/4316734004709,"OFF GTIN Record (Name: Mangohälften, tk, Brand: Diamond)",verified
+'4316734005089,Mangowürfel Tiefgefroren,Yellow Diamond,1000 g,https://world.openfoodfacts.org/product/4316734005089,"OFF GTIN Record (Name: Mangowürfel Tiefgefroren, Brand: Diamond)",verified
+'4316734005737,Sojabohnenkerne Mukimame blanchiert,Yellow Diamond,500 g,https://world.openfoodfacts.org/product/4316734005737,"OFF GTIN Record (Name: Sojabohnenkerne Mukimame blanchiert, Brand: Diamond)",verified
+'4316734008158,Süßkartoffeln,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734008158,"OFF GTIN Record (Name: Süßkartoffeln, Brand: Diamond)",verified
+'4316734016962,Mini-Frühlingsrollen,Yellow Diamond,300 g,https://world.openfoodfacts.org/product/4316734016962,"OFF GTIN Record (Name: Mini-Frühlingsrollen, Brand: Diamond)",verified
+'4316734017310,Wantan-Teig,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734017310,"OFF GTIN Record (Name: Wantan-Teig, Brand: Diamond)",verified
+'4316734017341,Wantan-Teig,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734017341,"OFF GTIN Record (Name: Wantan-Teig, Brand: Diamond)",verified
+'4316734018928,Yakitori Chicken,Yellow Diamond,360 g,https://world.openfoodfacts.org/product/4316734018928,"OFF GTIN Record (Name: Yakitori Chicken, Brand: Diamond)",verified
+'4316734018935,Yakitory,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734018935,"OFF GTIN Record (Name: Yakitory, Brand: Diamond)",verified
+'4316734019307,Curry Taschen,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/4316734019307,"OFF GTIN Record (Name: Curry Taschen, Brand: Diamond)",verified
+'4316734019314,Samosa - Curry Trigon,Yellow Diamond,600 g,https://world.openfoodfacts.org/product/4316734019314,"OFF GTIN Record (Name: Samosa - Curry Trigon, Brand: Diamond)",verified
+'4316734021874,Kalmar Calamari,Yellow Diamond,700 g,https://world.openfoodfacts.org/product/4316734021874,"OFF GTIN Record (Name: Kalmar Calamari, Brand: Diamond)",verified
+'4316734022222,Röstzwiebeln,Yellow Diamond,500 g,https://world.openfoodfacts.org/product/4316734022222,"OFF GTIN Record (Name: Röstzwiebeln, Brand: Diamond)",verified
+'4316734039343,Mu-Err Pilz,Yellow Diamond,60 g,https://world.openfoodfacts.org/product/4316734039343,"OFF GTIN Record (Name: Mu-Err Pilz, Brand: Diamond)",verified
+'4316734039350,Shiitake Pilze,Yellow Diamond,30 g,https://world.openfoodfacts.org/product/4316734039350,"OFF GTIN Record (Name: Shiitake Pilze, Brand: Diamond)",verified
+'4316734039572,Reisstroh Pilze,Yellow Diamond,200 g,https://world.openfoodfacts.org/product/4316734039572,"OFF GTIN Record (Name: Reisstroh Pilze, Brand: Diamond)",verified
+'4316734039619,Shiitake Pilze,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/4316734039619,"OFF GTIN Record (Name: Shiitake Pilze, Brand: Diamond)",verified
+'4316734039657,"White Fungus Silberohr Morcheln, Pilze",Yellow Diamond,100 g,https://world.openfoodfacts.org/product/4316734039657,"OFF GTIN Record (Name: White Fungus Silberohr Morcheln, Pilze, Brand: Diamond)",verified
+'4316734039718,Black Fungus getrocknet,Yellow Diamond,50 g,https://world.openfoodfacts.org/product/4316734039718,"OFF GTIN Record (Name: Black Fungus getrocknet, Brand: Diamond)",verified
+'4316734039732,Mu-Err Pilze,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734039732,"OFF GTIN Record (Name: Mu-Err Pilze, Brand: Diamond)",verified
+'4316734039855,Dried Shiitake,Yellow Diamond,100 g,https://world.openfoodfacts.org/product/4316734039855,"OFF GTIN Record (Name: Dried Shiitake, Brand: Diamond)",verified
+'4316734039909,Shiitake getrocknet,Yellow Diamond,50 g,https://world.openfoodfacts.org/product/4316734039909,"OFF GTIN Record (Name: Shiitake getrocknet, Brand: Diamond)",verified
+'4316734047522,Lychees,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734047522,"OFF GTIN Record (Name: Lychees, Brand: Diamond)",verified
+'4316734047607,Mango scheibé,Yellow Diamond,230 g,https://world.openfoodfacts.org/product/4316734047607,"OFF GTIN Record (Name: Mango scheibé, Brand: Diamond)",verified
+'4316734047669,Mango Püree,Yellow Diamond,850 g,https://world.openfoodfacts.org/product/4316734047669,"OFF GTIN Record (Name: Mango Püree, Brand: Diamond)",verified
+'4316734047690,Mangopüree,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/4316734047690,"OFF GTIN Record (Name: Mangopüree, Brand: Diamond)",verified
+'4316734047737,Lychees,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734047737,"OFF GTIN Record (Name: Lychees, Brand: Diamond)",verified
+'4316734048086,Wasserkastanien,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734048086,"OFF GTIN Record (Name: Wasserkastanien, Brand: Diamond)",verified
+'4316734048093,Wasserkastanien,Yellow Diamond,140 g,https://world.openfoodfacts.org/product/4316734048093,"OFF GTIN Record (Name: Wasserkastanien, Brand: Diamond)",verified
+'4316734049946,Feine Mungobohnenkeimlinge,Yellow Diamond,175 g,https://world.openfoodfacts.org/product/4316734049946,"OFF GTIN Record (Name: Feine Mungobohnenkeimlinge, Brand: Diamond)",verified
+'4316734049953,Chinagemüse/Glas,Yellow Diamond,175 g,https://world.openfoodfacts.org/product/4316734049953,"OFF GTIN Record (Name: Chinagemüse/Glas, Brand: Diamond)",verified
+'4316734049960,Bambus Scheiben,Yellow Diamond,330 g,https://world.openfoodfacts.org/product/4316734049960,"OFF GTIN Record (Name: Bambus Scheiben, Brand: Diamond)",verified
+'4316734049977,Bambusstreifen,Yellow Diamond,175 g,https://world.openfoodfacts.org/product/4316734049977,"OFF GTIN Record (Name: Bambusstreifen, Brand: Diamond)",verified
+'4316734049984,Sojabohnenkeimlinge,Yellow Diamond,330 g,https://world.openfoodfacts.org/product/4316734049984,"OFF GTIN Record (Name: Sojabohnenkeimlinge, Brand: Diamond)",verified
+'4316734050195,Bambus Streifen,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/4316734050195,"OFF GTIN Record (Name: Bambus Streifen, Brand: Diamond)",verified
+'4316734050225,Bambus,Yellow Diamond,300 g,https://world.openfoodfacts.org/product/4316734050225,"OFF GTIN Record (Name: Bambus, Brand: Diamond)",verified
+'4316734050256,Bambus Scheiben,Yellow Diamond,227 g,https://world.openfoodfacts.org/product/4316734050256,"OFF GTIN Record (Name: Bambus Scheiben, Brand: Diamond)",verified
+'4316734050942,Bambusstreifen,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/4316734050942,"OFF GTIN Record (Name: Bambusstreifen, Brand: Diamond)",verified
+'4316734050959,Bambus Scheiben,Yellow Diamond,540 g,https://world.openfoodfacts.org/product/4316734050959,"OFF GTIN Record (Name: Bambus Scheiben, Brand: Diamond)",verified
+'4316734051413,Crunchy Peanut Butter,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734051413,"OFF GTIN Record (Name: Crunchy Peanut Butter, Brand: Diamond)",verified
+'4316734051604,Erdnussbutter,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/4316734051604,"OFF GTIN Record (Name: Erdnussbutter, Brand: Diamond)",verified
+'4316734051611,Peanut Butter,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734051611,"OFF GTIN Record (Name: Peanut Butter, Brand: Diamond)",verified
+'4316734061351,Quick cooking noodles,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/4316734061351,"OFF GTIN Record (Name: Quick cooking noodles, Brand: Diamond, Kreyenhop & Kluge)",verified
+'4316734061535,Quick cooking noodles,Yellow Diamond,500 g,https://world.openfoodfacts.org/product/4316734061535,"OFF GTIN Record (Name: Quick cooking noodles, Brand: Diamond)",verified
+'4316734061627,Quick Cooking Noodles,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734061627,"OFF GTIN Record (Name: Quick Cooking Noodles, Brand: Diamond)",verified
+'4316734063683,Hsing-Fu Nudeln,Yellow Diamond,250 g,https://world.openfoodfacts.org/product/4316734063683,"OFF GTIN Record (Name: Hsing-Fu Nudeln, Brand: Hsing-Fu Nudeln, diamond)",verified
+'4316734063805,Mie Noodles,Yellow Diamond,250 g,https://world.openfoodfacts.org/product/4316734063805,"OFF GTIN Record (Name: Mie Noodles, Brand: Asien, Diamond)",verified
+'4316734063843,Mie Noodles,Yellow Diamond,100 g,https://world.openfoodfacts.org/product/4316734063843,"OFF GTIN Record (Name: Mie Noodles, Brand: Diamond)",verified
+'4316734064154,Udon Noodles,Yellow Diamond,200 g,https://world.openfoodfacts.org/product/4316734064154,"OFF GTIN Record (Name: Udon Noodles, Brand: Diamond)",verified
+'4316734068879,Mie Noodles Chili,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/4316734068879,"OFF GTIN Record (Name: Mie Noodles Chili, Brand: Diamond)",verified
+'4316734068886,Mie noddles,Yellow Diamond,250 g,https://world.openfoodfacts.org/product/4316734068886,"OFF GTIN Record (Name: Mie noddles, Brand: Diamond)",verified
+'4316734069036,Nudeln Mie Noodles,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734069036,"OFF GTIN Record (Name: Nudeln Mie Noodles, Brand: Diamond)",verified
+'4316734080093,Sambala Oelek,Yellow Diamond,740 g,https://world.openfoodfacts.org/product/4316734080093,"OFF GTIN Record (Name: Sambala Oelek, Brand: Diamond)",verified
+'4316734080345,Kokos Milch,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/4316734080345,"OFF GTIN Record (Name: Kokos Milch, Brand: diamond)",verified
+'4316734080352,Kokos Creme,Yellow Diamond,400 ml,https://world.openfoodfacts.org/product/4316734080352,"OFF GTIN Record (Name: Kokos Creme, Brand: Diamond)",verified
+'4316734083285,Sambal Oelek,Yellow Diamond,200 g,https://world.openfoodfacts.org/product/4316734083285,"OFF GTIN Record (Name: Sambal Oelek, Brand: Diamond)",verified
+'4316734083308,Sambal Oelek,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734083308,"OFF GTIN Record (Name: Sambal Oelek, Brand: Diamond)",verified
+'4316734084244,Sambal Oelek,Yellow Diamond,200 g,https://world.openfoodfacts.org/product/4316734084244,"OFF GTIN Record (Name: Sambal Oelek, Brand: Diamond)",verified
+'4316734084282,Sambal Oelek,Yellow Diamond,750 g,https://world.openfoodfacts.org/product/4316734084282,"OFF GTIN Record (Name: Sambal Oelek, Brand: Diamond)",verified
+'4316734084527,Kokosnussmilch,Yellow Diamond,400 ml,https://world.openfoodfacts.org/product/4316734084527,"OFF GTIN Record (Name: Kokosnussmilch, Brand: Diamond)",verified
+'4316734085814,sojasauce hell,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/4316734085814,"OFF GTIN Record (Name: sojasauce hell, Brand: Diamond)",verified
+'4316734086910,Hoi Sin Sauce,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/4316734086910,"OFF GTIN Record (Name: Hoi Sin Sauce, Brand: Diamond)",verified
+'4316734087375,Schwarze Bohnen,Yellow Diamond,250 g,https://world.openfoodfacts.org/product/4316734087375,"OFF GTIN Record (Name: Schwarze Bohnen, Brand: Diamond)",verified
+'4316734087511,Austern Sauce,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734087511,"OFF GTIN Record (Name: Austern Sauce, Brand: Diamond)",verified
+'4316734087528,Austern Sauce,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734087528,"OFF GTIN Record (Name: Austern Sauce, Brand: Diamond)",verified
+'4316734087658,"Diamond Reisessig, 3% Säureung (1 x 610 ml)",Yellow Diamond,150 ml,https://world.openfoodfacts.org/product/4316734087658,"OFF GTIN Record (Name: Diamond Reisessig, 3% Säureung (1 x 610 ml), Brand: Diamond)",verified
+'4316734087672,Reisessig,Yellow Diamond,610 ml,https://world.openfoodfacts.org/product/4316734087672,"OFF GTIN Record (Name: Reisessig, Brand: Diamond)",verified
+'4316734087818,Sesamöl,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/4316734087818,"OFF GTIN Record (Name: Sesamöl, Brand: Diamond)",verified
+'4316734087832,Sedam Öl,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734087832,"OFF GTIN Record (Name: Sedam Öl, Brand: Diamond)",verified
+'4316734117294,Mini Frühlingsrollen,Yellow Diamond,,https://world.openfoodfacts.org/product/4316734117294,"OFF GTIN Record (Name: Mini Frühlingsrollen, Brand: Diamond)",verified
+'4316734212029,Seasoning with chicken flavour,Yellow Diamond,1 kg,https://world.openfoodfacts.org/product/4316734212029,"OFF GTIN Record (Name: Seasoning with chicken flavour, Brand: Diamond)",verified
+'5304000222659,PENNE RIGATE,Yellow Diamond,,https://world.openfoodfacts.org/product/5304000222659,"OFF GTIN Record (Name: PENNE RIGATE, Brand: Diamond)",verified
+'6908268807277,Frozen chicken skinless leg meat yakitori fully cooked,Yellow Diamond,,https://world.openfoodfacts.org/product/6908268807277,"OFF GTIN Record (Name: Frozen chicken skinless leg meat yakitori fully cooked, Brand: Diamond)",verified
+'6908268813285,Yakitori,Yellow Diamond,50,https://world.openfoodfacts.org/product/6908268813285,"OFF GTIN Record (Name: Yakitori, Brand: diamond)",verified
+'6908268814404,Chicken nuggets,Yellow Diamond,800 g,https://world.openfoodfacts.org/product/6908268814404,"OFF GTIN Record (Name: Chicken nuggets, Brand: Diamond)",verified
+'8316730063805,Mie Noodles,Yellow Diamond,1pcs,https://world.openfoodfacts.org/product/8316730063805,"OFF GTIN Record (Name: Mie Noodles, Brand: Diamond)",verified
+'8436558547520,Sesam Öl,Yellow Diamond,,https://world.openfoodfacts.org/product/8436558547520,"OFF GTIN Record (Name: Sesam Öl, Brand: diamond)",verified
+'8906004560262,Chulbule Teekha Tadka Flavour,Yellow Diamond,Piece,https://world.openfoodfacts.org/product/8906004560262,"OFF GTIN Record (Name: , Brand: None)",verified
+'8906004560682,Plain salted potato chips,Yellow Diamond,35 g,https://world.openfoodfacts.org/product/8906004560682,"OFF GTIN Record (Name: Plain salted potato chips, Brand: Yellow diamond)",verified
+'8906004560767,Chulbule Tangy Tomato,Yellow Diamond,Piece,https://world.openfoodfacts.org/product/8906004560767,"OFF GTIN Record (Name: , Brand: None)",verified
+'8906004561054,Moong Dal,Yellow Diamond,Piece,https://world.openfoodfacts.org/product/8906004561054,"OFF GTIN Record (Name: , Brand: None)",verified
+'8906004561061,Aloo Bhujia,Yellow Diamond,Piece,https://world.openfoodfacts.org/product/8906004561061,"OFF GTIN Record (Name: , Brand: None)",verified
+'8906004561078,Peanut Snacks,Yellow Diamond,20 g,https://world.openfoodfacts.org/product/8906004561078,"OFF GTIN Record (Name: Peanut Snacks, Brand: Yellow Diamond)",verified
+'8906004561900,Wheels Chatpata Masala Flavour,Yellow Diamond,20 g,https://world.openfoodfacts.org/product/8906004561900,"OFF GTIN Record (Name: Wheels Chatpata Masala Flavour, Brand: Yellow Diamond)",verified
+'8906004562044,Masala Matar,Yellow Diamond,1.0 nan,https://world.openfoodfacts.org/product/8906004562044,"OFF GTIN Record (Name: Masala Matar, Brand: Diamond)",verified
+'8906004562051,Masala Sev Mamra,Yellow Diamond,Piece,https://world.openfoodfacts.org/product/8906004562051,"OFF GTIN Record (Name: , Brand: None)",verified
+'8906004562389,Yellow Diamond Plain Sev Mamra,Yellow Diamond,,https://world.openfoodfacts.org/product/8906004562389,"OFF GTIN Record (Name: Yellow Diamond Plain Sev Mamra, Brand: Yellow Diamond)",verified
+'8906004562877,cullbulle,Yellow Diamond,82 g,https://world.openfoodfacts.org/product/8906004562877,"OFF GTIN Record (Name: cullbulle, Brand: diamond)",verified
+'8906004562884,Chulbule,Yellow Diamond,Piece,https://world.openfoodfacts.org/product/8906004562884,"OFF GTIN Record (Name: Chulbule, Brand: yellow diamond)",verified
+'8906004563133,Diamond 7 Wonders Lentil Crackers,Yellow Diamond,1.0 nan,https://world.openfoodfacts.org/product/8906004563133,"OFF GTIN Record (Name: Diamond 7 Wonders Lentil Crackers, Brand: 7 Wonders)",verified
+'8906004563539,Pipes - Salted Crunch,Yellow Diamond,Piece,https://world.openfoodfacts.org/product/8906004563539,"OFF GTIN Record (Name: Pipes - Salted Crunch, Brand: Yellow Diamond)",verified
+'8906004563577,8906004563577,Yellow Diamond,0.25/g,https://world.openfoodfacts.org/product/8906004563577,"OFF GTIN Record (Name: 8906004563577, Brand: yellow diamond)",verified
+'8906004564376,Diamond tomato,Yellow Diamond,Piece,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906004564376,Existing verified DB entry for Yellow Diamond,single_source
+'8906004564710,Piri Piri Chips,Yellow Diamond,Piece,https://world.openfoodfacts.org/product/8906004564710,"OFF GTIN Record (Name: Piri Piri Chips, Brand: Yellow Diamond)",verified
+'8906004564741,Chips Piri Piri Flavour,Yellow Diamond,Piece,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906004564741,Existing verified DB entry for Yellow Diamond,single_source
+'8906004564765,Halka Fulka,Yellow Diamond,25 g,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906004564765,Existing verified DB entry for Yellow Diamond,single_source
+'8906004565342,Spicy Korean Chips,Yellow Diamond,Piece,https://world.openfoodfacts.org/product/8906004565342,"OFF GTIN Record (Name: Spicy Korean Chips, Brand: Diamond)",verified
+'8906004565373,Yellow Diamond sizzling cheese,Yellow Diamond,80 g,https://world.openfoodfacts.org/product/8906004565373,"OFF GTIN Record (Name: Yellow Diamond sizzling cheese, Brand: Yellow Diamond)",verified
+'8906004565953,Puffcorn Cheese Flavour,Yellow Diamond,Piece,https://world.openfoodfacts.org/product/8906004565953,"OFF GTIN Record (Name: Puffcorn Cheese Flavour, Brand: Diamond)",verified
+'8906004565960,Katori Tomato Flavour,Yellow Diamond,Piece,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906004565960,Existing verified DB entry for Yellow Diamond,single_source
+'8906004567834,Halka Fulka,Yellow Diamond,150 g,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906004567834,Existing verified DB entry for Yellow Diamond,single_source
+'8999898962588,Susu UHT Rendah Lemak,Yellow Diamond,,https://world.openfoodfacts.org/product/8999898962588,"OFF GTIN Record (Name: Susu UHT Rendah Lemak, Brand: Diamond)",verified
+'9400593002480,gluten free lasagne sheets,Yellow Diamond,200 g,https://world.openfoodfacts.org/product/9400593002480,"OFF GTIN Record (Name: gluten free lasagne sheets, Brand: Diamond)",verified
+'9400593002558,Spirals Durum Wheat Pasta,Yellow Diamond,,https://world.openfoodfacts.org/product/9400593002558,"OFF GTIN Record (Name: Spirals Durum Wheat Pasta, Brand: Diamond)",verified

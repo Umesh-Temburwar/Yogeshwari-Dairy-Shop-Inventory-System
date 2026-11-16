@@ -80,33 +80,25 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Right Controls: User Profile Badge (Click opens mobile drawer on touch devices) */}
+        {/* Right Controls: User Profile Photo Only (Click opens mobile drawer on touch devices) */}
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={onOpenMobileSidebar}
-            className="h-9 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] text-xs font-bold transition-all shadow-2xs group"
-            title={role === 'Owner' ? 'Nikhil Sakhare (Shop Owner)' : 'Nilesh Sakhare (Admin)'}
+            className="w-10 h-10 rounded-full p-0.5 bg-slate-100 hover:bg-slate-200/80 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border-2 border-amber-400/90 dark:border-amber-400 shadow-xs transition-transform hover:scale-105 active:scale-95 flex items-center justify-center overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+            title={`${currentUserName} (${role === 'Owner' ? 'Shop Owner' : 'Admin'})`}
           >
             {role === 'Owner' ? (
               <img 
                 src={nikhilAvatar} 
-                alt="Nikhil Sakhare" 
-                className="w-6 h-6 rounded-full object-cover border border-amber-400 shrink-0 shadow-xs" 
+                alt={currentUserName} 
+                className="w-full h-full rounded-full object-cover" 
               />
             ) : (
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+              <div className="w-full h-full rounded-full flex items-center justify-center text-sm font-black bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
                 🛡️
               </div>
             )}
-            <div className="flex flex-col text-left">
-              <span className="text-xs font-black leading-none">
-                {currentUserName}
-              </span>
-              <span className="text-[9px] text-slate-500 dark:text-[#8FA69C] leading-none mt-0.5 truncate max-w-[70px] sm:max-w-[100px] hidden sm:block">
-                {user?.email?.split('@')[0] || 'Yogeshwari'}
-              </span>
-            </div>
           </button>
         </div>
 

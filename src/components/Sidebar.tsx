@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ydoLogo from '../assets/YDO_logo.jpg';
 import nikhilAvatar from '../assets/nikhil_avatar.png';
 import { useStore, AppView } from '../context/StoreContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, Language } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { 
   House, 
@@ -20,14 +21,33 @@ import {
   ShieldAlert,
   X,
   Smartphone,
-  Download
+  Download,
+  Camera,
+  Sun,
+  Moon,
+  Lock,
+  Settings,
+  Globe,
+  UserPlus,
+  LogOut,
+  ShieldCheck,
+  CheckCircle2,
+  Loader2
 } from 'lucide-react';
+import { 
+  isRegistrationAllowedSync, 
+  setRegistrationSetting, 
+  subscribeToRegistrationSetting,
+  syncRegistrationSettingFromCloud
+} from '../lib/registrationConfig';
 
 interface SidebarProps {
   isCollapsed: boolean;
   isMobileOpen: boolean;
   onCloseMobile: () => void;
   onOpenAppDownload?: () => void;
+  onOpenSettings?: () => void;
+  onOpenPhotoDatabase?: () => void;
 }
 
 interface NavItem {
@@ -44,17 +64,88 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isMobileOpen,
   onCloseMobile,
   onOpenAppDownload,
+  onOpenSettings,
+  onOpenPhotoDatabase,
 }) => {
   const { activeView, setActiveView, metrics, products, totalCatalogCount } = useStore();
-  const { t, language } = useLanguage();
-  const { user, role } = useAuth();
+  const { t, language, setLanguage } = useLanguage();
+  const { resolvedTheme, toggleTheme } = useTheme();
+  const { user, role, setRole, lockSecurity, signOut } = useAuth();
 
+  // Registration control state (syncs in real-time with Navbar & Supabase Cloud)
+  const [isRegistrationAllowed, setIsRegistrationAllowed] = useState<boolean>(() => isRegistrationAllowedSync());
+  const [isUpdatingReg, setIsUpdatingReg] = useState(false);
+  const [regFeedback, setRegFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    syncRegistrationSettingFromCloud().then(setIsRegistrationAllowed);
+    const unsubscribe = subscribeToRegistrationSetting(setIsRegistrationAllowed);
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const languagesList: Array<{ code: Language; label: string }> = [
+    { code: 'mr', label: 'मराठी' },
+    { code: 'hi', label: 'हिंदी' },
+    { code: 'en', label: 'English' },
+  ];
+
+  // Active User display name: Nikhil Sakhare (Owner) vs Nilesh Sakhare (Admin)
   const currentUserName = 
     role === 'Owner' || user?.email?.toLowerCase().includes('yogeshwari')
       ? 'Nikhil Sakhare'
       : role === 'Admin' || user?.email?.toLowerCase().includes('nilu')
       ? 'Nilesh Sakhare'
       : (user?.user_metadata?.full_name || 'Nikhil Sakhare');
+
+  const isOwnerUser = 
+    !user?.email ||
+    user?.email.toLowerCase() === 'yogeshwaridairy9896@gmail.com' ||
+    user?.email.toLowerCase().includes('yogeshwari') ||
+    user?.email.toLowerCase().includes('owner') ||
+    (user?.user_metadata?.role === 'Owner' && !user?.email.toLowerCase().includes('nilu'));
+
+  const handleToggleRegistration = async () => {
+    if (role !== 'Owner') {
+      setRegFeedback(
+        language === 'mr' 
+          ? 'फक्त मालक (Nikhil Sakhare) हे बदलू शकतात!' 
+          : language === 'hi' 
+          ? 'केवल मालिक (Nikhil Sakhare) यह बदल सकते हैं!' 
+          : 'Only Shop Owner Nikhil Sakhare can modify this!'
+      );
+      setTimeout(() => setRegFeedback(null), 3000);
+      return;
+    }
+
+    const nextState = !isRegistrationAllowed;
+    setIsUpdatingReg(true);
+    try {
+      const res = await setRegistrationSetting(
+        nextState,
+        role,
+        user?.email || 'yogeshwaridairy9896@gmail.com',
+        currentUserName
+      );
+
+      if (res.success) {
+        setIsRegistrationAllowed(nextState);
+        setRegFeedback(
+          nextState 
+            ? (language === 'mr' ? '✓ नोंदणी चालू केली' : language === 'hi' ? '✓ पंजीकरण चालू किया' : '✓ Registration Enabled')
+            : (language === 'mr' ? '✓ नोंदणी बंद केली' : language === 'hi' ? '✓ पंजीकरण बंद किया' : '✓ Registration Disabled')
+        );
+      } else {
+        setRegFeedback(res.error || 'त्रुटी आली');
+      }
+    } catch (e: any) {
+      setRegFeedback(e.message || 'त्रुटी आली');
+    } finally {
+      setIsUpdatingReg(false);
+      setTimeout(() => setRegFeedback(null), 3500);
+    }
+  };
 
   const navItems: NavItem[] = [
     // Section 1: Main / Operations
@@ -162,16 +253,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   ];
 
-  const renderSection = (sectionKey: 'main' | 'inventory' | 'accounts', titleKey: string) => {
+  const renderSection = (sectionKey: 'main' | 'inventory' | 'accounts', titleKey: string, isMobileDrawer: boolean) => {
+    const isActuallyCollapsed = isMobileDrawer ? false : isCollapsed;
     const items = navItems.filter(item => item.section === sectionKey);
     return (
-      <div key={sectionKey} className="space-y-1 mb-3">
-        {!isCollapsed && (
+      <div key={sectionKey} className="space-y-1 mb-2">
+        {!isActuallyCollapsed && (
           <div className="px-3 pt-2 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-[#8FA69C]">
             {t(titleKey)}
           </div>
         )}
-        {isCollapsed && <div className="h-px bg-slate-200 dark:bg-[#24352F] my-2 mx-2" />}
+        {isActuallyCollapsed && <div className="h-px bg-slate-200 dark:bg-[#24352F] my-2 mx-2" />}
 
         {items.map((item) => {
           const Icon = item.icon;
@@ -179,39 +271,68 @@ export const Sidebar: React.FC<SidebarProps> = ({
           const label = t(item.labelKey);
 
           return (
-            <button
-              key={item.id}
-              onClick={() => {
-                setActiveView(item.id);
-                onCloseMobile();
-              }}
-              title={label}
-              className={`w-full flex items-center ${isCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2.5'} rounded-xl text-left transition-all duration-150 group ${
-                isActive 
-                  ? 'bg-emerald-600 text-white shadow-xs font-semibold' 
-                  : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25] hover:text-slate-900 dark:hover:text-[#E7F0EC] font-medium'
-              }`}
-            >
-              <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 min-w-0'} flex-1`}>
-                <Icon className={`w-5 h-5 shrink-0 transition-transform group-hover:scale-105 ${
-                  isActive ? 'text-white' : 'text-slate-500 dark:text-[#8FA69C] group-hover:text-emerald-600 dark:group-hover:text-emerald-400'
-                }`} />
-                
-                {!isCollapsed && (
-                  <span className="text-sm truncate leading-tight font-medium">
-                    {label}
+            <React.Fragment key={item.id}>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveView(item.id);
+                  if (isMobileDrawer) onCloseMobile();
+                }}
+                title={label}
+                className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2.5'} rounded-xl text-left transition-all duration-150 group ${
+                  isActive 
+                    ? 'bg-emerald-600 text-white shadow-xs font-semibold' 
+                    : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25] hover:text-slate-900 dark:hover:text-[#E7F0EC] font-medium'
+                }`}
+              >
+                <div className={`flex items-center ${isActuallyCollapsed ? 'justify-center' : 'gap-3 min-w-0'} flex-1`}>
+                  <Icon className={`w-5 h-5 shrink-0 transition-transform group-hover:scale-105 ${
+                    isActive ? 'text-white' : 'text-slate-500 dark:text-[#8FA69C] group-hover:text-emerald-600 dark:group-hover:text-emerald-400'
+                  }`} />
+                  
+                  {!isActuallyCollapsed && (
+                    <span className="text-sm truncate leading-tight font-medium">
+                      {label}
+                    </span>
+                  )}
+                </div>
+
+                {!isActuallyCollapsed && item.badge !== undefined && (
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full shrink-0 ml-2 font-medium ${
+                    isActive ? 'bg-white/20 text-white' : item.badgeColor
+                  }`}>
+                    {item.badge}
                   </span>
                 )}
-              </div>
+              </button>
 
-              {!isCollapsed && item.badge !== undefined && (
-                <span className={`text-[11px] px-2 py-0.5 rounded-full shrink-0 ml-2 font-medium ${
-                  isActive ? 'bg-white/20 text-white' : item.badgeColor
-                }`}>
-                  {item.badge}
-                </span>
+              {/* PHOTO DATABASE (फोटो डेटाबेस) ITEM - Rendered prominently directly below Products & Stock */}
+              {item.id === 'inventory' && onOpenPhotoDatabase && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isMobileDrawer) onCloseMobile();
+                    onOpenPhotoDatabase();
+                  }}
+                  title={language === 'mr' ? 'फोटो डेटाबेस (Images & Barcodes)' : language === 'hi' ? 'फोटो डेटाबेस (Images & Barcodes)' : 'Photo Database (Images & Barcodes)'}
+                  className={`w-full flex items-center ${isActuallyCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2.5'} rounded-xl text-left transition-all duration-150 group text-slate-700 dark:text-[#8FA69C] hover:bg-emerald-50/80 dark:hover:bg-[#1A2A25] hover:text-emerald-900 dark:hover:text-[#E7F0EC] font-medium`}
+                >
+                  <div className={`flex items-center ${isActuallyCollapsed ? 'justify-center' : 'gap-3 min-w-0'} flex-1`}>
+                    <Camera className="w-5 h-5 shrink-0 text-emerald-600 dark:text-emerald-400 transition-transform group-hover:scale-110" />
+                    {!isActuallyCollapsed && (
+                      <span className="text-sm truncate leading-tight font-medium">
+                        {language === 'mr' ? 'फोटो डेटाबेस (Images)' : language === 'hi' ? 'फोटो डेटाबेस (Images)' : 'Photo Database'}
+                      </span>
+                    )}
+                  </div>
+                  {!isActuallyCollapsed && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full shrink-0 ml-2 font-black bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300/60 dark:border-emerald-800/60">
+                      📸 DB
+                    </span>
+                  )}
+                </button>
               )}
-            </button>
+            </React.Fragment>
           );
         })}
       </div>
@@ -238,11 +359,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }}
               />
             </div>
-            <span className="font-extrabold text-sm text-slate-900 dark:text-[#E7F0EC] truncate">
-              {t('shopName')}
-            </span>
+            <div className="min-w-0">
+              <span className="font-extrabold text-sm text-slate-900 dark:text-[#E7F0EC] truncate block">
+                {t('shopName')}
+              </span>
+              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block truncate">
+                {language === 'mr' ? 'मेनू डॅशबोर्ड' : language === 'hi' ? 'मेनू डैशबोर्ड' : 'Menu Dashboard'}
+              </span>
+            </div>
           </div>
           <button 
+            type="button"
             onClick={onCloseMobile}
             className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
           >
@@ -250,33 +377,228 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
 
-        {/* Scrollable Navigation Groups */}
-        <div className="flex-1 overflow-y-auto p-3 no-scrollbar">
-          {renderSection('main', 'navSectionMain')}
-          {renderSection('inventory', 'navSectionInventory')}
-          {renderSection('accounts', 'navSectionAccounts')}
-          {onOpenAppDownload && (
-            <div className="pt-3 px-1">
-              <button
-                type="button"
-                onClick={() => {
-                  onCloseMobile();
-                  onOpenAppDownload();
-                }}
-                className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl border border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/80 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-300 font-extrabold text-xs transition shadow-2xs ${isActuallyCollapsed ? "justify-center" : "justify-between"}`}
-                title={language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल करा' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल करें' : 'Install Mobile App'}
-              >
-                <div className="flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  {!isActuallyCollapsed && (
-                    <span className="truncate">
-                      {language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल' : 'Install App'}
+        {/* Scrollable Navigation Groups & Controls */}
+        <div className="flex-1 overflow-y-auto p-3 no-scrollbar space-y-2">
+          {renderSection('main', 'navSectionMain', isMobileDrawer)}
+          {renderSection('inventory', 'navSectionInventory', isMobileDrawer)}
+          {renderSection('accounts', 'navSectionAccounts', isMobileDrawer)}
+
+          {/* SECTION 4: CONTROLS, SETTINGS & PREFERENCES (Requested in Menu Dashboard) */}
+          {!isActuallyCollapsed ? (
+            <div className="pt-2 border-t border-slate-100 dark:border-[#24352F] space-y-2.5">
+              <div className="px-3 pt-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-[#8FA69C]">
+                {language === 'mr' ? 'सुविधा व सेटिंग्ज' : language === 'hi' ? 'सुविधाएं व सेटिंग्स' : 'Controls & Settings'}
+              </div>
+
+              {/* 1. Language Switcher (मराठी, हिंदी, English) */}
+              <div className="px-1">
+                <div className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-bold text-slate-600 dark:text-[#8FA69C]">
+                  <Globe className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>{language === 'mr' ? 'भाषा (Language)' : language === 'hi' ? 'भाषा (Language)' : 'Language'}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl border border-slate-200/80 dark:border-[#24352F]">
+                  {languagesList.map((lang) => {
+                    const isActive = language === lang.code;
+                    return (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => setLanguage(lang.code)}
+                        className={`py-1.5 px-1 rounded-lg text-xs font-bold transition-all text-center ${
+                          isActive
+                            ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-xs ring-1 ring-slate-200/60 dark:ring-[#24352F] font-extrabold'
+                            : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-[#E7F0EC]'
+                        }`}
+                      >
+                        {lang.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. Theme Mode & Counter Lock Buttons */}
+              <div className="grid grid-cols-2 gap-2 px-1">
+                {/* Theme Toggle */}
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border border-slate-200/80 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC] transition shadow-2xs"
+                  title={language === 'mr' ? 'थीम बदला' : 'थीम बदलें'}
+                >
+                  {resolvedTheme === 'dark' ? (
+                    <Sun className="w-4 h-4 text-amber-400 shrink-0" />
+                  ) : (
+                    <Moon className="w-4 h-4 text-indigo-500 shrink-0" />
+                  )}
+                  <span className="truncate">
+                    {resolvedTheme === 'dark'
+                      ? (language === 'mr' ? 'डार्क 🌙' : language === 'hi' ? 'डार्क 🌙' : 'Dark 🌙')
+                      : (language === 'mr' ? 'लाइट ☀️' : language === 'hi' ? 'लाइट ☀️' : 'Light ☀️')}
+                  </span>
+                </button>
+
+                {/* Counter Lock */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isMobileDrawer) onCloseMobile();
+                    lockSecurity();
+                  }}
+                  className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 dark:hover:bg-amber-900/40 border border-amber-200/80 dark:border-amber-800/50 text-xs font-bold text-amber-800 dark:text-amber-300 transition shadow-2xs"
+                  title={language === 'mr' ? 'काउंटर त्वरित लॉक करा' : 'काउंटर तुरंत लॉक करें'}
+                >
+                  <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span className="truncate">
+                    {language === 'mr' ? 'काउंटर लॉक' : language === 'hi' ? 'काउंटर लॉक' : 'Lock Screen'}
+                  </span>
+                </button>
+              </div>
+
+              {/* 3. Counter Settings (Supabase / Counter Modal) */}
+              {onOpenSettings && (
+                <div className="px-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isMobileDrawer) onCloseMobile();
+                      onOpenSettings();
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border border-slate-200/80 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC] transition shadow-2xs"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Settings className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span className="truncate">
+                        {language === 'mr' ? 'काउंटर व क्लाउड सेटिंग्ज' : language === 'hi' ? 'काउंटर व क्लाउड सेटिंग्स' : 'Counter & Cloud Settings'}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-white dark:bg-[#131F1B] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#24352F] shrink-0">
+                      F12
                     </span>
+                  </button>
+                </div>
+              )}
+
+              {/* 4. Operator Registration Control (Shop Owner Nikhil Sakhare) */}
+              <div className="px-1">
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <UserPlus className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span className="text-xs font-black text-slate-800 dark:text-[#E7F0EC]">
+                        {language === 'mr' ? 'नवीन ऑपरेटर नोंदणी' : language === 'hi' ? 'नया ऑपरेटर पंजीकरण' : 'Operator Registration'}
+                      </span>
+                    </div>
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border flex items-center gap-1 ${
+                      isRegistrationAllowed
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300/80 dark:border-emerald-700/60'
+                        : 'bg-rose-50 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border-rose-200 dark:border-rose-900/60'
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${isRegistrationAllowed ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                      <span>{isRegistrationAllowed ? 'ON' : 'OFF'}</span>
+                    </span>
+                  </div>
+
+                  {role === 'Owner' ? (
+                    <button
+                      type="button"
+                      disabled={isUpdatingReg}
+                      onClick={handleToggleRegistration}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-black transition-all border shadow-xs ${
+                        isRegistrationAllowed
+                          ? 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/40'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        {isUpdatingReg ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : isRegistrationAllowed ? (
+                          <Lock className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                        ) : (
+                          <UserPlus className="w-3.5 h-3.5 text-white" />
+                        )}
+                        <span>
+                          {isUpdatingReg 
+                            ? (language === 'mr' ? 'बदलत आहे...' : 'बदल रहा है...') 
+                            : isRegistrationAllowed
+                            ? (language === 'mr' ? 'नोंदणी बंद करा' : 'पंजीकरण बंद करें')
+                            : (language === 'mr' ? 'नोंदणी चालू करा' : 'पंजीकरण चालू करें')}
+                        </span>
+                      </span>
+                      <span className="text-[9px] font-black uppercase">
+                        {isRegistrationAllowed ? 'OFF' : 'ON'}
+                      </span>
+                    </button>
+                  ) : (
+                    <p className="text-[10px] text-amber-700 dark:text-amber-400">
+                      {language === 'mr' ? 'फक्त मालक बदलू शकतात' : 'केवल मालिक बदल सकते हैं'}
+                    </p>
+                  )}
+
+                  {regFeedback && (
+                    <p className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                      regFeedback.includes('✓') 
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' 
+                        : 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300'
+                    }`}>
+                      {regFeedback}
+                    </p>
                   )}
                 </div>
-                {!isActuallyCollapsed && (
-                  <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                )}
+              </div>
+
+              {/* 5. Mobile App Install Button */}
+              {onOpenAppDownload && (
+                <div className="px-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isMobileDrawer) onCloseMobile();
+                      onOpenAppDownload();
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/80 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-300 font-extrabold text-xs transition shadow-2xs"
+                    title={language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल करा' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल करें' : 'Install Mobile App'}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span className="truncate">
+                        {language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल' : 'Install App'}
+                      </span>
+                    </div>
+                    <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Collapsed desktop rail buttons */
+            <div className="pt-2 border-t border-slate-200 dark:bg-[#24352F] space-y-2">
+              {onOpenSettings && (
+                <button
+                  type="button"
+                  onClick={onOpenSettings}
+                  title="Counter Settings"
+                  className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center text-slate-500 hover:text-emerald-600 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                title="Toggle Theme"
+                className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center text-slate-500 hover:text-amber-500 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
+              >
+                {resolvedTheme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-indigo-500" />}
+              </button>
+              <button
+                type="button"
+                onClick={lockSecurity}
+                title="Lock Counter"
+                className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+              >
+                <Lock className="w-5 h-5" />
               </button>
             </div>
           )}
@@ -313,32 +635,97 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
 
-        {/* Pinned User Profile at the Very Last of Menu */}
+        {/* SECTION 5: PINNED USER PROFILE & ACCOUNT SWITCHER & LOGOUT (Requested in Menu Dashboard) */}
         <div className={`p-3 pt-0 ${isMobileDrawer ? 'pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]' : 'pb-3'}`}>
           {!isActuallyCollapsed ? (
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-between gap-2 shadow-2xs">
-              <div className="flex items-center gap-2.5 min-w-0">
-                {role === 'Owner' ? (
-                  <img 
-                    src={nikhilAvatar} 
-                    alt="Nikhil Sakhare" 
-                    className="w-8 h-8 rounded-full object-cover border-2 border-amber-400 shrink-0 shadow-xs" 
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-500/30">
-                    🛡️
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] space-y-2 shadow-2xs">
+              {/* Active Profile Info */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {role === 'Owner' ? (
+                    <img 
+                      src={nikhilAvatar} 
+                      alt="Nikhil Sakhare" 
+                      className="w-8 h-8 rounded-full object-cover border-2 border-amber-400 shrink-0 shadow-xs" 
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-500/30">
+                      🛡️
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-slate-900 dark:text-white truncate leading-tight">
+                      {currentUserName}
+                    </p>
+                    <p className="text-[10px] text-slate-500 dark:text-[#8FA69C] truncate leading-tight mt-0.5">
+                      {role === 'Owner' ? 'Shop Owner' : 'Counter 1 (Admin)'}
+                    </p>
                   </div>
-                )}
-                <div className="min-w-0">
-                  <p className="text-xs font-black text-slate-900 dark:text-white truncate leading-tight">
-                    {currentUserName}
-                  </p>
-                  <p className="text-[10px] text-slate-500 dark:text-[#8FA69C] truncate leading-tight mt-0.5">
-                    {role === 'Owner' ? 'Shop Owner' : 'Counter 1 (Admin)'}
-                  </p>
                 </div>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 ring-2 ring-emerald-500/20" title="Online" />
               </div>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 ring-2 ring-emerald-500/20" title="Online" />
+
+              {/* Profile Account Switcher (Nikhil Sakhare vs Nilesh Sakhare) */}
+              <div className="space-y-1 pt-1 border-t border-slate-200/70 dark:border-[#24352F]">
+                {isOwnerUser && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRole('Owner', null);
+                      if (isMobileDrawer) onCloseMobile();
+                    }}
+                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-bold transition ${
+                      role === 'Owner'
+                        ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40'
+                        : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#131F1B]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <img 
+                        src={nikhilAvatar} 
+                        alt="Nikhil" 
+                        className="w-4 h-4 rounded-full object-cover border border-amber-400 shrink-0" 
+                      />
+                      <span className="truncate">Nikhil Sakhare (Owner)</span>
+                    </div>
+                    {role === 'Owner' && <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRole('Admin', 1);
+                    if (isMobileDrawer) onCloseMobile();
+                  }}
+                  className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-bold transition ${
+                    role === 'Admin'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40'
+                      : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#131F1B]'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-xs">🛡️</span>
+                    <span className="truncate">Nilesh Sakhare (Admin)</span>
+                  </div>
+                  {role === 'Admin' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
+                </button>
+              </div>
+
+              {/* Sign Out Button */}
+              <div className="pt-1 border-t border-slate-200/70 dark:border-[#24352F]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isMobileDrawer) onCloseMobile();
+                    signOut();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-1.5 px-2 rounded-lg text-xs font-black text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition border border-transparent hover:border-rose-200 dark:hover:border-rose-900/40"
+                >
+                  <LogOut className="w-3.5 h-3.5 shrink-0" />
+                  <span>{language === 'mr' ? 'बाहेर पडा (Sign Out)' : language === 'hi' ? 'साइन आउट करें' : 'Sign Out'}</span>
+                </button>
+              </div>
             </div>
           ) : (
             role === 'Owner' ? (
@@ -372,10 +759,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         />
       )}
 
-      {/* Sidebar: w-[264px] or w-[72px] on desktop, fixed drawer on mobile */}
+      {/* Sidebar: w-[280px] on mobile drawer, w-[264px] or w-[72px] on desktop */}
       <aside 
         className={`fixed inset-y-0 left-0 z-50 lg:static flex flex-col justify-between bg-white dark:bg-[#0F1A17] border-r border-slate-200 dark:border-[#24352F] shrink-0 h-full overflow-hidden transition-all duration-200 ease-in-out ${
-          isMobileOpen ? 'translate-x-0 w-[280px] max-w-[85vw] shadow-2xl' : '-translate-x-full lg:translate-x-0'
+          isMobileOpen ? 'translate-x-0 w-[285px] max-w-[85vw] shadow-2xl' : '-translate-x-full lg:translate-x-0'
         } ${isCollapsed ? 'lg:w-[72px]' : 'lg:w-[264px]'}`}
       >
         {renderSidebarInner(isMobileOpen)}

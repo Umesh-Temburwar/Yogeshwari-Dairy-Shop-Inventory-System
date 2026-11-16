@@ -33,6 +33,7 @@ const DailySalesTracker = React.lazy(() => import('./components/Sales/DailySales
 const ReturnsTracker = React.lazy(() => import('./components/Returns/ReturnsTracker').then(m => ({ default: m.ReturnsTracker })));
 const ReturnProductModal = React.lazy(() => import('./components/Returns/ReturnProductModal').then(m => ({ default: m.ReturnProductModal })));
 const SupabaseConfigModal = React.lazy(() => import('./components/Settings/SupabaseConfigModal').then(m => ({ default: m.SupabaseConfigModal })));
+const ProductImageManagerModal = React.lazy(() => import('./components/Admin/ProductImageManagerModal').then(m => ({ default: m.ProductImageManagerModal })));
 
 const MainContent: React.FC = () => {
   const { activeView, setActiveView, refreshData, isSyncing } = useStore();
@@ -42,6 +43,7 @@ const MainContent: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [returnPrefill, setReturnPrefill] = useState<{ productId?: string; invoiceNo?: string; customerName?: string; customerPhone?: string }>({});
+  const [isPhotoDatabaseOpen, setIsPhotoDatabaseOpen] = useState(false);
   const [isAppDownloadOpen, setIsAppDownloadOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
@@ -171,6 +173,8 @@ const MainContent: React.FC = () => {
           isMobileOpen={isMobileSidebarOpen}
           onCloseMobile={() => setIsMobileSidebarOpen(false)}
           onOpenAppDownload={() => setIsAppDownloadOpen(true)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenPhotoDatabase={() => setIsPhotoDatabaseOpen(true)}
         />
 
         {/* Main Content Area - pb-28 on mobile prevents bottom nav & floating POS button overlap */}
@@ -267,6 +271,15 @@ const MainContent: React.FC = () => {
           <SupabaseConfigModal 
             isOpen={isSettingsOpen}
             onClose={() => setIsSettingsOpen(false)}
+          />
+        )}
+      </Suspense>
+
+      <Suspense fallback={null}>
+        {isPhotoDatabaseOpen && (
+          <ProductImageManagerModal 
+            isOpen={isPhotoDatabaseOpen}
+            onClose={() => setIsPhotoDatabaseOpen(false)}
           />
         )}
       </Suspense>

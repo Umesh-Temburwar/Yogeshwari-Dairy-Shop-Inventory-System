@@ -1,0 +1,772 @@
+barcode,product_name,field_changed,old_value,new_value,reason,brand
+'8901719100956,Parle G,pack_size,NULL,80 g,Enriched pack size,
+'8901719101007,Parle-g,pack_size,NULL,188 g,Enriched pack size,
+'8901719101038,Parle - G,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/910/1038/front_en.20.400.jpg,Added verified trusted_db packshot,
+'8901719104640,Parle-G,pack_size,NULL,70 g,Enriched pack size,
+'8901719105913,parle hide & seek 120g,pack_size,NULL,120 g,Enriched pack size,
+'8901719107528,Parle Fab Jam in,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/910/7528/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719108532,Parle cream n onion chips,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/910/8532/front_fr.3.400.jpg,Added verified trusted_db packshot,
+'8901719112393,Parle G,pack_size,NULL,55 g,Enriched pack size,
+'8901719114038,PARLE fab jam in 150g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/911/4038/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719116520,Parle Bode&seek 120g(26),image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/911/6520/front_en.7.400.jpg,Added verified trusted_db packshot,
+'8901719117213,Parle HIDEGSEEK,pack_size,NULL,100 g,Enriched pack size,
+'8901719117312,Parle-G Original Gluco Biscuits,pack_size,NULL,800 g,Enriched pack size,
+'8901719117978,parle,pack_size,NULL,600 g,Enriched pack size,
+'8901719119026,Parle Assorted Candy orange bite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/911/9026/front_en.6.400.jpg,Added verified trusted_db packshot,
+'8901719119040,Parle Mazelo Candy,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/911/9040/front_en.4.400.jpg,Added verified trusted_db packshot,
+'8901719119187,parle-G,pack_size,NULL,60 g,Enriched pack size,
+'8901719119255,Parle Cafechino,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/911/9255/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719119385,"parle 20,20 Nice sugar",image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/911/9385/front_en.12.400.jpg,Added verified trusted_db packshot,
+'8901719119903,Parle Top,pack_size,NULL,250 g,Enriched pack size,
+'8901719120077,parle krack jack 700 3 pis,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/0077/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719120787,PARLE top,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/0787/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719120800,Parle-G 250,pack_size,NULL,250,Enriched pack size,
+'8901719120985,Parle krack jack700g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/0985/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719120992,Parle Monaco biscuits 700,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/0992/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719121425,parle monaco,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/1425/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719121746,Parle G,pack_size,NULL,55 g,Enriched pack size,
+'8901719122293,Parles,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/2293/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719122316,parles's potato piri piri chips,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/2316/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719122637,Parle happy happy (400g),image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/2637/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719122682,Parle 20-20 Nice,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/2682/front_en.6.400.jpg,Added verified trusted_db packshot,
+'8901719122774,Parle krackjack 800g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/2774/front_en.4.400.jpg,Added verified trusted_db packshot,
+'8901719122781,Parle Monaco 700g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/2781/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719122880,Parle's wafers,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/2880/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719122910,Parle real elaichi rusk 182gm,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/2910/front_en.9.400.jpg,Added verified trusted_db packshot,
+'8901719122927,Parle rusk milk premium rusk,pack_size,NULL,182 g,Enriched pack size,
+'8901719123788,Parle manaco 250g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/3788/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719123795,Parle monaco(200g),image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/3795/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719123801,Parle MONACO 400g,pack_size,NULL,400 g,Enriched pack size,
+'8901719123894,Parle -G (800g),image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/3894/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719123900,Parle g gold,pack_size,NULL,1 kg,Enriched pack size,
+'8901719123917,Parle-G GOLD 1kg,pack_size,NULL,1 kg,Enriched pack size,
+'8901719123993,PARLE Krack jack250g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/3993/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719124006,Parle krack jack 200g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/4006/front_en.4.400.jpg,Added verified trusted_db packshot,
+'8901719124068,Parle Rusk real elaichi,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/4068/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719124143,ParleG gold 75 g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/4143/front_en.8.400.jpg,Added verified trusted_db packshot,
+'8901719124600,Parle Monaco can 150g,pack_size,NULL,12,Enriched pack size,
+'8901719124860,parle,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/4860/front_en.8.400.jpg,Added verified trusted_db packshot,
+'8901719124877,Parle Maire,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/4877/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719125072,Parle Happy Happy,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/5072/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719125478,Parle-G gold 75g,pack_size,NULL,50 g,Enriched pack size,
+'8901719125638,Parle Rusk Real Elaichi,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/5638/front_en.5.400.jpg,Added verified trusted_db packshot,
+'8901719125799,Parle hide and seek milano jazelnut,pack_size,NULL,60 g,Enriched pack size,
+'8901719126093,Parle Rusk 327g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/6093/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719126109,parle 20 20 choco,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/6109/front_en.17.400.jpg,Added verified trusted_db packshot,
+'8901719126123,PARLE magic ORANGE,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/6123/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719126130,PARLE MAGIX choco,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/6130/front_en.15.400.jpg,Added verified trusted_db packshot,
+'8901719126468,parle 20-20,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/6468/front_en.8.400.jpg,Added verified trusted_db packshot,
+'8901719126598,PARLE Krack Jack,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/6598/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719126970,Parle 20 20cashew biscuits,pack_size,NULL,604 g,Enriched pack size,
+'8901719127120,Parle hide&seek,pack_size,NULL,308,Enriched pack size,
+'8901719127359,Parle milk shakti,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/7359/front_en.5.400.jpg,Added verified trusted_db packshot,
+'8901719127434,Parle Monaco salted,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/7434/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719127915,parle Monaco pizza 311.4,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/7915/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719127922,Parle monaco piri piri,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/7922/front_en.4.400.jpg,Added verified trusted_db packshot,
+'8901719127939,Parle Krack jack butter,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/7939/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719127977,PARLE PIRIPIRI 1ONACO,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/7977/front_en.4.400.jpg,Added verified trusted_db packshot,
+'8901719128004,Parle-G Oats & berries,pack_size,NULL,93.75 g,Enriched pack size,
+'8901719128264,PARLE ALOO BIKKI,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/8264/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719128271,Parle aloo bikki,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/8271/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719128288,Parle,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/8288/front_en.17.400.jpg,Added verified trusted_db packshot,
+'8901719128462,Parle-G,pack_size,NULL,100 g,Enriched pack size,
+'8901719128486,Parle g rs 10,pack_size,NULL,100,Enriched pack size,
+'8901719128530,Parle Happy Happy cake 100gm,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/8530/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719128608,parle G Royale,pack_size,NULL,20 g,Enriched pack size,
+'8901719128837,Parle happy happy cake 30g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/8837/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719129049,PARLE Fabl,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/9049/front_en.4.400.jpg,Added verified trusted_db packshot,
+'8901719129087,Parle fab 300g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/9087/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719129193,parle pari pari  (311.04 g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/9193/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719129223,Parles wafers,pack_size,NULL,75 g,Enriched pack size,
+'8901719129247,parle wafers classic salted,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/9247/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719129285,parle krack jack 700g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/9285/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719129582,parle fultoss baked,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/912/9582/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719130014,Happy happy biscuit - Parle - Parle,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/0014/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719130069,Parle millano250 g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/0069/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719130144,PARLE hide&seek400g,pack_size,NULL,412.5,Enriched pack size,
+'8901719130236,Parle Chatkeens Salted Peanuts,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/0236/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719130380,parle platina,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/0380/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719130397,parle,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/0397/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719130694,parle 2020 604.8g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/0694/front_en.5.400.jpg,Added verified trusted_db packshot,
+'8901719130724,parle 2020 gold,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/0724/front_en.12.400.jpg,Added verified trusted_db packshot,
+'8901719130748,parle 20 20 ( 604),image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/0748/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719130762,parle 20-20 604.8g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/0762/front_en.5.400.jpg,Added verified trusted_db packshot,
+'8901719131141,Parle 20-20 Cashew Cookies,pack_size,NULL,35 g,Enriched pack size,
+'8901719131219,Parle g 800 g,pack_size,NULL,800 g,Enriched pack size,
+'8901719133695,Parle Rusk 1kg,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/3695/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719133701,Parle Rusk 1kg,pack_size,NULL,1 kg,Enriched pack size,
+'8901719134074,parle occasion,pack_size,NULL,309,Enriched pack size,
+'8901719134845,parle,pack_size,NULL,45 g,Enriched pack size,
+'8901719134937,Parle g dark biscuits,pack_size,NULL,50 g,Enriched pack size,
+'8901719134975,Parle Marie 800g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/4975/front_en.5.400.jpg,Added verified trusted_db packshot,
+'8901719134999,parle 20-20 1kg,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/4999/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719135156,PARLE MONACO,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/5156/front_en.4.400.jpg,Added verified trusted_db packshot,
+'8901719135163,Parle Monaco,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/5163/front_en.4.400.jpg,Added verified trusted_db packshot,
+'8901719135170,parle monaco 700g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/5170/front_en.16.400.jpg,Added verified trusted_db packshot,
+'8901719135323,parle krackjack,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/5323/front_en.19.400.jpg,Added verified trusted_db packshot,
+'8901719135354,parle monaco cheeslings,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/5354/front_en.5.400.jpg,Added verified trusted_db packshot,
+'8901719135392,parle monaco jeffs,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/5392/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719135439,parle monaco sixer,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/5439/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719135477,Parle G gold,pack_size,NULL,1 kg,Enriched pack size,
+'8901719135491,Parle-G Royale Biscuits,pack_size,NULL,360 g,Enriched pack size,
+'8901719135576,parle marie,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/5576/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719135767,Parle-G ROYALE,pack_size,NULL,48 g,Enriched pack size,
+'8901719135835,Parle h&s orenge cream biscuit,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/5835/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719136450,Parle -fab bourbon,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/6450/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719136504,Parle fabi bourbon,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/6504/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719136719,Parle jam in,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/6719/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719136795,parle hide&serk,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/913/6795/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901719255144,Parle-G,pack_size,NULL,1,Enriched pack size,
+'8901719255151,Parle-G Original Gluco Biscuits,pack_size,NULL,150 g,Enriched pack size,
+'8901719255168,parle G,pack_size,NULL,250 g,Enriched pack size,
+'8901719702051,Parle Monaco Classic Biscuit,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/970/2051/front_en.4.400.jpg,Added verified trusted_db packshot,
+'8901719784040,PARLE COCONUT,image_url,NULL,https://images.openfoodfacts.net/images/products/890/171/978/4040/front_en.3.400.jpg,Added verified trusted_db packshot,
+'8901063001022,Britannia nutri choice,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/300/1022/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063004092,Good day (chocochip),image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/300/4092/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063004146,good day,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/300/4146/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063004207,Britannia Good Day Chocochip Cookies,pack_size,NULL,111 g,Enriched pack size,Britannia
+'8901063004221,Good Day Chocochip cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/300/4221/front_en.9.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063007826,Britannia 50 50 potazos,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/300/7826/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063012431,Britannia milk bikis (500g),image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/301/2431/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063012721,BRITANNIA MiIk Bikis,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/301/2721/front_en.4.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063012738,BRITANNIA Milk Bikis,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/301/2738/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063012882,Britannia milk bikis,pack_size,NULL,100 g,Enriched pack size,Britannia
+'8901063014206,Britannia Vita Marie Gold,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/301/4206/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063014299,vita meri,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/301/4299/front_en.21.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063016613,Britannia 50 50 SWEET & SALTY,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/301/6613/front_en.14.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063016781,Britannia 5050(72g),image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/301/6781/front_en.4.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063016934,BRITANNIA 5050,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/301/6934/front_en.12.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063017399,Britannia 5050 maska chaska (300g),image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/301/7399/front_en.8.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063017535,Britannia gol maal,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/301/7535/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063017559,Britannia 5050 Potazos 71.5g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/301/7559/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063017566,Britannia patazos,pack_size,NULL,1,Enriched pack size,Britannia
+'8901063017634,Britannia 5050,pack_size,NULL,105 g,Enriched pack size,Britannia
+'8901063018341,Britannia 50 50 time pass (63g),image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/301/8341/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063026162,"BRITANNIA nutri SUGAR, FREE",pack_size,NULL,300 g,Enriched pack size,Britannia
+'8901063028197,Britannia mibe time (300g),image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/302/8197/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063028210,Britannia Nice,pack_size,NULL,59.4 g,Enriched pack size,Britannia
+'8901063028227,Britannia nice time (8),image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/302/8227/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063028708,Britannia nutri choice,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/302/8708/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063029217,Jim Jam,pack_size,NULL,25 g,Enriched pack size,Britannia
+'8901063029262,Jim jam92 g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/302/9262/front_en.5.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063029323,Jim jam Britannia biscuit,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/302/9323/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063029408,Jim Jam Biscuits,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/302/9408/front_en.12.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063029415,Jim Jam,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/302/9415/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063031807,Britannia Treat,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/303/1807/front_fr.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063032446,Britannia Treat croissant coco cream bauli,pack_size,NULL,45 g,Enriched pack size,Britannia
+'8901063032484,Britannia treat Croissant Mixed Fruit,pack_size,NULL,47 g,Enriched pack size,Britannia
+'8901063032514,Britannia Traet Croissant,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/303/2514/front_fr.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063032699,Britannia Treat Strawberry flavoured Waffers,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/303/2699/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063032705,Britannia treat orang,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/303/2705/front_en.4.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063032712,Britannia treat,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/303/2712/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063032804,Britannia treat (50g),image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/303/2804/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063032866,Britannia Treat croissant 225gm,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/303/2866/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063032958,BRITANNIA Treat Creme Wafers,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/303/2958/front_en.4.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063032996,britannia Treat choco,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/303/2996/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063033160,Britannia treat rs 10,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/303/3160/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063033306,Britannia Treat Orange Creme,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/303/3306/front_en.11.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063033412,britannia treat,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/303/3412/front_en.8.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063035133,BRITANNIA MiIK Bikic,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/303/5133/front_en.5.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063035249,8901063035249,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/303/5249/front_en.5.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063091023,Good Day Harmony,pack_size,NULL,120 g,Enriched pack size,Britannia
+'8901063092334,BRITANNIA,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/2334/front_en.7.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063092402,Good Day,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/2402/front_en.10.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063092433,Good day cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/2433/front_en.6.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063092440,Good day,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/2440/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063092464,Good day cashew 200g (8),image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/2464/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063092501,BRITANN Good day 600 g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/2501/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063092617,Good Day Butter Cookies,pack_size,NULL,68 g,Enriched pack size,Britannia
+'8901063092631,Britannia Good day (60g),image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/2631/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063092686,Good Day Butter Cookies (25),pack_size,NULL,60 g,Enriched pack size,Britannia
+'8901063092730,britannia,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/2730/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063092754,Good Day Fruit &Nut,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/2754/front_en.7.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063092761,Good Day Butter Jeera,pack_size,NULL,450,Enriched pack size,Britannia
+'8901063092792,Britannia Good Day Butter Jeera Biscuits,pack_size,NULL,90 g,Enriched pack size,Britannia
+'8901063092815,Britannia goodday,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/2815/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063092822,BRITANNIA Good day  BUTTER COOKIES,pack_size,NULL,52.5 g,Enriched pack size,Britannia
+'8901063092853,Good Day cashew cookie,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/2853/front_en.4.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063092884,britannia Good Day,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/2884/front_en.5.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063093089,Good day Cashew,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/3089/front_en.10.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063093287,Good Day Cashew Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/3287/front_en.18.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063093294,Britannia good day 250g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/3294/front_en.7.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063093355,Good Day Cashew Cookies Medium Pack 600g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/3355/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063093393,Good day cashew cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/3393/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063093409,good day cashew cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/3409/front_en.4.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063093478,Good day,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/3478/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063093485,Good Day,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/3485/front_fr.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063093522,Good Day - Cashew Cookies,pack_size,NULL,52.5 g,Enriched pack size,Britannia
+'8901063093614,Good day 905g(2),image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/3614/front_en.5.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063093621,good day,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/3621/front_en.5.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063093638,Good Day,pack_size,NULL,52.5 g,Enriched pack size,Britannia
+'8901063093737,Good Day,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/3737/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063094147,good day,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/4147/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063094154,good day pista badam,pack_size,NULL,200 g,Enriched pack size,Britannia
+'8901063094185,good day,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/4185/front_en.5.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063094208,Good Day Biscuit,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/4208/front_en.4.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063094246,Britannia gd pista badam cookies 600g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/4246/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063094253,BRITANNIA Good day PISTA BADAM COOKIES,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/309/4253/front_en.4.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063098831,Good day butter cookies,pack_size,NULL,600,Enriched pack size,Britannia
+'8901063138469,Britannia Thin Arrowroot,pack_size,NULL,150 g,Enriched pack size,Britannia
+'8901063139336,Britannia bourbon 100g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/313/9336/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063139343,BRITANNIA BOURBON4+1,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/313/9343/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063139350,BRITANNIA bourbon 500g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/313/9350/front_en.18.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063142022,Britannia Nutrichoice Digestive,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/314/2022/front_en.4.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063142114,Britannia Nutri Choice Oats,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/314/2114/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063142213,Britannia nutri choice 75g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/314/2213/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063142299,Nutrichoice,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/314/2299/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063142367,Britannia NutriChoice oats chocolate & almond,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/314/2367/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063142459,Britannia nutri choice herbs,pack_size,NULL,100 g,Enriched pack size,Britannia
+'8901063142534,BRITANNIA nutri Choice,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/314/2534/front_en.12.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063142541,Britannia nutri choice 200g(sys),image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/314/2541/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063142619,Britannia nutri choice,pack_size,NULL,120 g,Enriched pack size,Britannia
+'8901063142626,BRITANNIA nutri choice,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/314/2626/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063142664,britannia,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/314/2664/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063142671,Britannia digestive 1.2 kg,pack_size,NULL,1.2 kg,Enriched pack size,Britannia
+'8901063146297,Britannia Winkin cow thick lassi 180ml,pack_size,NULL,180 ml,Enriched pack size,Britannia
+'8901063146457,Britannia winking cow chocolate 180ml,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/314/6457/front_en.36.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063146464,Britannia winking cow strawberry 180ml,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/314/6464/front_en.12.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063146488,Britannia winking cow vanilla 180ml,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/314/6488/front_en.10.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063146600,britannia,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/314/6600/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063154049,Britannia Nutrichoice Oatmeal Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/315/4049/front_fr.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063155343,Britannia Tiger Crunch ChocoChips,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/315/5343/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063155619,Britannia Tiger Krunch Chocochips,pack_size,NULL,60 g,Enriched pack size,Britannia
+'8901063160293,Britannia pure magic,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/316/0293/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063160361,Britannia pure magic choco frames,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/316/0361/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063160408,BRITANNIA,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/316/0408/front_en.4.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063161429,BRITANNIA CHOCOLUSH Pure,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/316/1429/front_en.4.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063162242,Britannia Marie Gold,pack_size,NULL,1 kg,Enriched pack size,Britannia
+'8901063162464,BRITANNIA marie GOLD,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/316/2464/front_en.10.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063162648,Britannia Marie Gold,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/316/2648/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063325036,Britannia toastea 250gm,pack_size,NULL,250 g,Enriched pack size,Britannia
+'8901063325463,Britannia toastea,pack_size,NULL,400 g,Enriched pack size,Britannia
+'8901063325708,Britannia Toastea Butter Rusk,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/332/5708/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063325753,Britannia Toastea Premium Bake Rusk,pack_size,NULL,183 g,Enriched pack size,Britannia
+'8901063325777,Britannia Rusk,pack_size,NULL,50 g,Enriched pack size,Britannia
+'8901063325883,Britannia Toastea (217g),image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/332/5883/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063338494,Britannia Pav,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/333/8494/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063338838,Britannia Brown Bread 200 g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/333/8838/front_en.20.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063342033,britannia bread,pack_size,NULL,250 g,Enriched pack size,Britannia
+'8901063344617,Britannia Atta Bread,pack_size,NULL,400 g,Enriched pack size,Britannia
+'8901063362086,Britannia Golddes,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/336/2086/front_en.4.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063362857,Britannia cake,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/336/2857/front_en.7.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063363779,Britannia cake fruity fun,pack_size,NULL,50 g,Enriched pack size,Britannia
+'8901063363977,BRITANNIA Cake Gobbles Fruity Fun,pack_size,NULL,110 g,Enriched pack size,Britannia
+'8901063365032,Britannia cake gobbles 30g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/336/5032/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063365070,Britannia gobbles,pack_size,NULL,30 g,Enriched pack size,Britannia
+'8901063365100,Britannia Gobble marble cake 110g,pack_size,NULL,110 g,Enriched pack size,Britannia
+'8901063365131,BRITANNIA marble cake,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/336/5131/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063365162,Britannia Cake Roll Yo!,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/336/5162/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063365285,Britannia roll yo cake 24gm,pack_size,NULL,24 g,Enriched pack size,Britannia
+'8901063365384,Britannia Cake Gobbles 35g,pack_size,NULL,35 g,Enriched pack size,Britannia
+'8901063365896,Britannia cake pineapple 28gm,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/336/5896/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063365919,Britannia Gobbles cake butter blast 28gm,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/336/5919/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063365964,Britannia Chocolate Cake 100gm,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/336/5964/front_en.22.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063367258,britannia 5050,pack_size,NULL,38 g,Enriched pack size,Britannia
+'8901063368033,Cake Choco Chill Gobbles Britannia,pack_size,NULL,55 g,Enriched pack size,Britannia
+'8901063370050,Good day,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/337/0050/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063370067,good day,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/337/0067/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063401082,Britannia cheese cube,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/340/1082/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063401457,Britannia Cheese,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/340/1457/front_en.4.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063401525,BRITANNIA,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/340/1525/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063402270,BRITANNIA DAIRY,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/340/2270/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063402300,BRITANNIA DAIRY WHITENER,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/340/2300/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063405011,Britannia Cow's ghee,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/340/5011/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063408203,Britannia Come Alive Dahi,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/340/8203/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'8901063410053,Cheese Britannia,image_url,NULL,https://images.openfoodfacts.net/images/products/890/106/341/0053/front_en.3.400.jpg,Added verified trusted_db packshot,Britannia
+'7622201101428,perk,pack_size,NULL,16.5 g,Enriched pack size,Cadbury
+'7622201138394,Cadbury Temptations Rum & Raisin Chocolate Bar,pack_size,NULL,72 g,Enriched pack size,Cadbury
+'7622201138486,Bournville,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/113/8486/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622201149406,Cadbury Dairy Milk Chocolate,pack_size,NULL,24 g,Enriched pack size,Cadbury
+'7622201149543,Dairy Milk Chocolate,pack_size,NULL,36 g,Enriched pack size,Cadbury
+'7622201150181,Dairy Milk,pack_size,NULL,36 g,Enriched pack size,Cadbury
+'7622201150273,Cadbury Shots,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/115/0273/front_en.18.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622201150419,Cadbury 5 Star,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/115/0419/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622201438371,Cadbury,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/143/8371/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622201440046,dairy milk,pack_size,NULL,12 g,Enriched pack size,Cadbury
+'7622201442019,Dairy Milk,pack_size,NULL,23 g,Enriched pack size,Cadbury
+'7622201443290,Cadbury Dairy Milk,pack_size,NULL,468 g,Enriched pack size,Cadbury
+'7622201447809,Cadbury Dairy Milk Oreo chocolate bar,pack_size,NULL,15 g,Enriched pack size,Cadbury
+'7622201452674,Dairy milk chocolate fruit and nut 55g,pack_size,NULL,55 g,Enriched pack size,Cadbury
+'7622201685638,Dairy Milk Silky Bubbly BubbleGum,pack_size,NULL,120 g,Enriched pack size,Cadbury
+'7622201710606,5 star chocolate,pack_size,NULL,22 g,Enriched pack size,Cadbury
+'7622201715670,Cadbury Celebrations,pack_size,NULL,113.8 g,Enriched pack size,Cadbury
+'7622201715717,Cadbury celebrations,pack_size,NULL,178.8 g,Enriched pack size,Cadbury
+'7622201756918,Cadbury Oreo Vanilla 481.25g,pack_size,NULL,581.25 g,Enriched pack size,Cadbury
+'7622201756932,Cadbury Oreo coco creme,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/175/6932/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622201758042,Dairy Milk Silk Minis,pack_size,NULL,153 g,Enriched pack size,Cadbury
+'7622201758660,Perk Double,pack_size,NULL,22 g,Enriched pack size,Cadbury
+'7622201759742,Dairy Milk Silk Ganache,pack_size,NULL,146 g,Enriched pack size,Cadbury
+'7622201761561,Dairy Milk Silk Fruit & Nut,pack_size,NULL,137 g,Enriched pack size,Cadbury
+'7622201761738,Dairy Milk Silk Hazelnut,pack_size,NULL,58 g,Enriched pack size,Cadbury
+'7622201761769,Cadbury Dairy milk Hazelnut 143g,pack_size,NULL,143 g,Enriched pack size,Cadbury
+'7622201762063,Dairy milk chocolate,pack_size,NULL,123 g,Enriched pack size,Cadbury
+'7622201762193,Dairy Milk Silk Oreo,pack_size,NULL,60 g,Enriched pack size,Cadbury
+'7622201762476,Dairy Milk Minis,pack_size,NULL,119 g,Enriched pack size,Cadbury
+'7622201762490,5 Star Bites Home Treats,pack_size,NULL,191.9 g,Enriched pack size,Cadbury
+'7622201762537,Cadbury Hot Chocolate,pack_size,NULL,200 g,Enriched pack size,Cadbury
+'7622201762896,Cadbury chocolairs gold 557.5g,pack_size,NULL,557.5 g,Enriched pack size,Cadbury
+'7622201766054,Cadbury bourvita,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/176/6054/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622201798260,Cadbury gems,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/179/8260/front_en.47.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622201808013,dairy milk silk,pack_size,NULL,250 g,Enriched pack size,Cadbury
+'7622201822163,Dairy milk,pack_size,NULL,55 g,Enriched pack size,Cadbury
+'7622202025426,Dairy milk,pack_size,NULL,134 g,Enriched pack size,Cadbury
+'7622202026263,Cadbury Bournvita 200g pet,pack_size,NULL,5,Enriched pack size,Cadbury
+'7622202026423,Cadbury Bournvita 500g pet,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/202/6423/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202026461,Cadbury Bournvita 5star 500g,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/202/6461/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202026508,Cadbury Bournvita Shakti 5 Star Magic 750g pp,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/202/6508/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202026522,Cadbury Bournvita Shakti 750g pp,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/202/6522/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202026683,Cadbury Bournvita Shakti 75g pp,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/202/6683/front_en.5.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202029431,Cadbury rich dry fruit,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/202/9431/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202030840,Bournville 50% Dark,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/203/0840/front_en.6.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202030901,Cadbury Temptations Rum & Raisins,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/203/0901/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202031496,Cadbury Cocoa powder 150g pet,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/203/1496/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202031519,Cadbury Hot Chocolate 200g tube,pack_size,NULL,7,Enriched pack size,Cadbury
+'7622202042508,CREATIONS Br Cadbury,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/204/2508/front_en.4.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202210365,DAIRY MILK MAHA 40RS,pack_size,NULL,1.38 kg,Enriched pack size,Cadbury
+'7622202216336,Cadbury Fuse (22g),image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/221/6336/front_en.6.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202216749,Cadbury Gems,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/221/6749/front_en.8.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202216916,Cadbury Chocobakes 17gm,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/221/6916/front_en.22.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202237379,Dairy Milk Lolly,pack_size,NULL,7.4,Enriched pack size,Cadbury
+'7622202237942,Cadbury dairy milk,pack_size,NULL,12.5 g,Enriched pack size,Cadbury
+'7622202237973,Dairy milk,pack_size,NULL,6.3 g,Enriched pack size,Cadbury
+'7622202238789,Cadbury dairy mlk bites hazelnut,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/223/8789/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202265525,Perk,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/226/5525/front_en.10.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202271861,Dairy Milk Silk Bubbly Chocolate,pack_size,NULL,46 g,Enriched pack size,Cadbury
+'7622202272639,Cadbury Dairy Milk,pack_size,NULL,21 g,Enriched pack size,Cadbury
+'7622202274152,Cadbury  CHOCO BAKES,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/227/4152/front_en.4.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202290428,Dairy Milk Silk Roast Almond,pack_size,NULL,58,Enriched pack size,Cadbury
+'7622202304040,Cadbury cocoa pwd 150g,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/230/4040/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202318009,Cadbury 5 STAR,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/231/8009/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202318047,Cadbury 5Star,pack_size,NULL,33 g,Enriched pack size,Cadbury
+'7622202318078,5 Star Chocolate Bar,pack_size,NULL,18 g,Enriched pack size,Cadbury
+'7622202320330,Cadbury 5 Star Oreo,pack_size,NULL,40 g,Enriched pack size,Cadbury
+'7622202324369,CADBURY CHOCOLAIRS,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/232/4369/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202324604,Dairy Milk Family Pack,pack_size,NULL,112 g,Enriched pack size,Cadbury
+'7622202325250,Cadbury fuse,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/232/5250/front_en.6.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202325939,Cadbury Bournville,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/232/5939/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202325960,Bournville Intense 70% Dark,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/232/5960/front_en.11.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202326059,Dairy Milk Silk Mousse,pack_size,NULL,48.5 g,Enriched pack size,Cadbury
+'7622202326172,Cadbury Dairy Milk Silk Roast Almond,pack_size,NULL,52 g,Enriched pack size,Cadbury
+'7622202326202,Dairy Milk Silk Fruit and Nut Chocolate Bar,pack_size,NULL,129 g,Enriched pack size,Cadbury
+'7622202328749,Dairy Milk Milkinis,pack_size,NULL,34 g,Enriched pack size,Cadbury
+'7622202329494,Dairy Milk (Classic milk chocolate variant),pack_size,NULL,40 g,Enriched pack size,Cadbury
+'7622202334009,dairy milk,pack_size,NULL,11 g,Enriched pack size,Cadbury
+'7622202346385,Cadbury Dairy Milk,pack_size,NULL,100 g,Enriched pack size,Cadbury
+'7622202364907,cadbury chocobakes,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/236/4907/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202398698,Cadbury Dairy Milk,pack_size,NULL,23 g,Enriched pack size,Cadbury
+'7622202815096,Dairy Milk Crackle Chocolate,pack_size,NULL,10.5 g,Enriched pack size,Cadbury
+'7622202815423,Cadbury mini treat 128.7g,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/281/5423/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202818301,Dairy Milk,pack_size,NULL,6.1 g,Enriched pack size,Cadbury
+'7622202818431,Cadbury,pack_size,NULL,9.8 g,Enriched pack size,Cadbury
+'7622202823862,Cadbury bournville intense orange 70%,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/282/3862/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622202846816,Cadbury Fuse,pack_size,NULL,43 g,Enriched pack size,Cadbury
+'8901233011202,Cadbury Original Oreo,image_url,NULL,https://images.openfoodfacts.net/images/products/890/123/301/1202/front_en.6.400.jpg,Added verified trusted_db packshot,Cadbury
+'8901233013091,Cadbury Oreo Small Pack,image_url,NULL,https://images.openfoodfacts.net/images/products/890/123/301/3091/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'8901233020273,Cadbury 5 star,image_url,NULL,https://images.openfoodfacts.net/images/products/890/123/302/0273/front_en.5.400.jpg,Added verified trusted_db packshot,Cadbury
+'8901233020624,Dairy Milk - Home Treats,pack_size,NULL,100 g,Enriched pack size,Cadbury
+'8901233021645,Cadbury bournville premium chocolate,pack_size,NULL,31 g,Enriched pack size,Cadbury
+'8901233022086,dairy milk silk bubbly,pack_size,NULL,50 g,Enriched pack size,Cadbury
+'8901233024042,perk,image_url,NULL,https://images.openfoodfacts.net/images/products/890/123/302/4042/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'8901233027555,Cadbury Choco Creme Oreo,image_url,NULL,https://images.openfoodfacts.net/images/products/890/123/302/7555/front_en.18.400.jpg,Added verified trusted_db packshot,Cadbury
+'8901233028361,Dairy Milk,pack_size,NULL,Good,Enriched pack size,Cadbury
+'8901233028958,5 star,pack_size,NULL,5rs,Enriched pack size,Cadbury
+'8901233029856,Cadbury Dairy Milk Chocolate Bar,pack_size,NULL,130 g,Enriched pack size,Cadbury
+'8901233029900,Cadbury Bournvita Nutrition Drink,image_url,NULL,https://images.openfoodfacts.net/images/products/890/123/302/9900/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'8901233030272,Perk,pack_size,NULL,14.3 g,Enriched pack size,Cadbury
+'8901233030548,Cadbury Dairy Milk,pack_size,NULL,13.2 g,Enriched pack size,Cadbury
+'8901233034300,Cadbury dairy milk silk bubbly,pack_size,NULL,50 g,Enriched pack size,Cadbury
+'8929752286352,SUPERKAKI,image_url,NULL,https://images.openfoodfacts.net/images/products/892/975/228/6352/front_en.3.400.jpg,Added verified trusted_db packshot,Cadbury
+'7622201428501,Oreo,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/142/8501/front_en.8.400.jpg,Added verified trusted_db packshot,Oreo
+'7622201431594,Oreo Cream Biscuit,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/143/1594/front_en.21.400.jpg,Added verified trusted_db packshot,Oreo
+'7622201432249,Oreo chocolatey sandwich biscuits,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/143/2249/front_fr.3.400.jpg,Added verified trusted_db packshot,Oreo
+'7622201432263,Oreo Cricket Edition,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/143/2263/front_en.6.400.jpg,Added verified trusted_db packshot,Oreo
+'7622201447809,Cadbury Dairy Milk Oreo chocolate bar,pack_size,NULL,15 g,Enriched pack size,Oreo
+'7622201452889,silk oreo,pack_size,NULL,130 g,Enriched pack size,Oreo
+'7622201464486,Oreo,pack_size,NULL,7,Enriched pack size,Oreo
+'7622201675660,Cricket Edition Oreo Original,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/167/5660/front_en.3.400.jpg,Added verified trusted_db packshot,Oreo
+'7622201756697,Oreo,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/175/6697/front_en.3.400.jpg,Added verified trusted_db packshot,Oreo
+'7622201756789,Oreo Strawberry Biscuit,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/175/6789/front_en.3.400.jpg,Added verified trusted_db packshot,Oreo
+'7622201756918,Cadbury Oreo Vanilla 481.25g,pack_size,NULL,581.25 g,Enriched pack size,Oreo
+'7622201756932,Cadbury Oreo coco creme,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/175/6932/front_en.3.400.jpg,Added verified trusted_db packshot,Oreo
+'7622201757212,Original Oreo,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/175/7212/front_en.3.400.jpg,Added verified trusted_db packshot,Oreo
+'7622201757236,OREO,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/175/7236/front_en.3.400.jpg,Added verified trusted_db packshot,Oreo
+'7622201762193,Dairy Milk Silk Oreo,pack_size,NULL,60 g,Enriched pack size,Oreo
+'7622201763213,Silk Oreo Red Velvet,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/176/3213/front_en.3.400.jpg,Added verified trusted_db packshot,Oreo
+'7622201801878,Oreo Original,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/180/1878/front_en.36.400.jpg,Added verified trusted_db packshot,Oreo
+'7622202015366,Choco Crème Flavoured Oreo 288.75g,pack_size,NULL,288.75 g,Enriched pack size,Oreo
+'7622202225512,Use By,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/222/5512/front_en.16.400.jpg,Added verified trusted_db packshot,Oreo
+'7622202236914,Original Oreo,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/223/6914/front_en.3.400.jpg,Added verified trusted_db packshot,Oreo
+'7622202252372,Oreo stobery,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/225/2372/front_en.3.400.jpg,Added verified trusted_db packshot,Oreo
+'7622202252419,Oreo 30 rs,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/225/2419/front_en.8.400.jpg,Added verified trusted_db packshot,Oreo
+'7622202253614,Oreo sandwich biscuits,pack_size,NULL,459 g,Enriched pack size,Oreo
+'7622202253638,Oreo 5 Pack,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/225/3638/front_en.7.400.jpg,Added verified trusted_db packshot,Oreo
+'7622202257575,Oreo original,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/225/7575/front_en.5.400.jpg,Added verified trusted_db packshot,Oreo
+'7622202298400,OREO PIKACHU,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/229/8400/front_en.4.400.jpg,Added verified trusted_db packshot,Oreo
+'7622202304415,oreo family pack chocolate,pack_size,NULL,1 kg,Enriched pack size,Oreo
+'7622202320330,Cadbury 5 Star Oreo,pack_size,NULL,40 g,Enriched pack size,Oreo
+'7622202326110,Oreo Silk,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/232/6110/front_en.3.400.jpg,Added verified trusted_db packshot,Oreo
+'7622202395598,Oreo maha pack,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/239/5598/front_en.3.400.jpg,Added verified trusted_db packshot,Oreo
+'7622202395741,Choco Creme Oreos,image_url,NULL,https://images.openfoodfacts.net/images/products/762/220/239/5741/front_es.3.400.jpg,Added verified trusted_db packshot,Oreo
+'8901233011202,Cadbury Original Oreo,image_url,NULL,https://images.openfoodfacts.net/images/products/890/123/301/1202/front_en.6.400.jpg,Added verified trusted_db packshot,Oreo
+'8901233013091,Cadbury Oreo Small Pack,image_url,NULL,https://images.openfoodfacts.net/images/products/890/123/301/3091/front_en.3.400.jpg,Added verified trusted_db packshot,Oreo
+'8901233027555,Cadbury Choco Creme Oreo,image_url,NULL,https://images.openfoodfacts.net/images/products/890/123/302/7555/front_en.18.400.jpg,Added verified trusted_db packshot,Oreo
+'8906009068886,UNIBIC Choco Nut Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/906/8886/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009070445,unibic choco kiss,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/0445/front_en.4.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009070520,UNIBIC Orange Splash Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/0520/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009070636,Fruit & Nut Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/0636/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009070759,Milk Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/0759/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009070902,unibic honey otmeal,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/0902/front_en.11.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009070926,Unibic choco rs 5,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/0926/front_en.6.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009070933,Butter cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/0933/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009071107,UNIBIC Choco Chip Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/1107/front_en.4.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009071138,Unibic butter cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/1138/front_en.8.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009071183,Chocokiss,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/1183/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009071282,Creamy Cheese,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/1282/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009071602,unibic choco nut,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/1602/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009071848,Unibic Fuirt & Nut,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/1848/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009072012,Pista badam,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/2012/front_en.5.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009072128,Orange Splash Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/2128/front_en.4.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009072449,Snappers Cream n'Onion,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/2449/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009072654,Unibic Snapper potato spice 300g( 2ta),image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/2654/front_en.12.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009072661,Unibic Snapper potato,pack_size,NULL,18,Enriched pack size,Unibic
+'8906009072678,Unibic Choco nut Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/2678/front_en.5.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009072685,Unibic shortbread,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/2685/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009072784,Biscott,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/2784/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009073286,UNIBIC Biscott Caramel Cinnamon Flavou,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/3286/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009073484,Unibic Cubz,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/3484/front_en.10.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009073729,Big & Bold Fruit Blast,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/3729/front_en.6.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009073736,UNIBIC BIG BOLD choco blast,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/3736/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009073958,Unibic Coconut Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/3958/front_en.4.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009073965,Danish Coconut Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/3965/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009073972,unobic disano coconut,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/3972/front_en.13.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009075068,Atta Marie Thinz,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/5068/front_en.6.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009075167,Unibic Royal Vanilla cake 140g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/5167/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009075273,Millet Pop Crisp Sweet Chilli,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/5273/front_en.10.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009075600,Swaadesi shahi kaju katli,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/5600/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009075839,Unibic Swaadesi Bikaneri Bhujia,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/5839/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009075846,Swaadesi crunchy nuts,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/5846/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009075853,Unibic Swaadesi Navratan Mixture,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/5853/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009076843,Unibic Signature Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/6843/front_en.7.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009077017,fruit & nut cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/7017/front_en.5.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009077321,UNIBIC Choco Chip Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/7321/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009077437,UNIBIC Daily Digestie,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/7437/front_en.4.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009077581,Choco Kiss Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/7581/front_en.15.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009078687,UNIBIC Pista Badam Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/8687/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009078762,Unibic oats 50,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/8762/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009078847,Unibic Choco ripple biscuit,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/8847/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009079028,UNIBIC Splash Orange Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/9028/front_en.4.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009079073,UNIBIC Choco Ripple Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/9073/front_en.4.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009079127,UNIBIC Milk Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/9127/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009079288,Kesar Cashew Badam Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/9288/front_en.5.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009079356,unibic choco nut cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/9356/front_en.11.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009079363,Fruit & nut cookis,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/9363/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009079684,Unibic choco,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/9684/front_en.5.400.jpg,Added verified trusted_db packshot,Unibic
+'8906009079844,UNIBIC Cashew Badam Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/907/9844/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906188960018,Choco Nut Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/618/896/0018/front_en.7.400.jpg,Added verified trusted_db packshot,Unibic
+'8906188960025,Choco Chip Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/618/896/0025/front_en.13.400.jpg,Added verified trusted_db packshot,Unibic
+'8906188960032,unibic fruit and nut cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/618/896/0032/front_en.9.400.jpg,Added verified trusted_db packshot,Unibic
+'8906188960094,Jeera Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/618/896/0094/front_en.3.400.jpg,Added verified trusted_db packshot,Unibic
+'8906188960100,UNIBIC pista badam cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/618/896/0100/front_en.7.400.jpg,Added verified trusted_db packshot,Unibic
+'8906188960131,sugar free cashew cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/618/896/0131/front_en.19.400.jpg,Added verified trusted_db packshot,Unibic
+'8906188960483,cookiz dates & jaggery,image_url,NULL,https://images.openfoodfacts.net/images/products/890/618/896/0483/front_en.5.400.jpg,Added verified trusted_db packshot,Unibic
+'8904297801529,Balaji Bakers Pavbhaji Pav,image_url,NULL,https://images.openfoodfacts.net/images/products/890/429/780/1529/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500030,Malasa Masti,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0030/front_en.26.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500047,masala masti,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0047/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500078,Balaji Farali Chivda,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0078/front_en.5.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500085,Chevdo,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0085/front_fr.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500092,Balaji Wafers Crunchex,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0092/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500207,Balaji Wafers Chana Dal,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0207/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500221,Balaji Wafers Mung Dal,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0221/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500245,Balaji Wafers Masala Sev Murmura,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0245/front_en.20.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500290,Shing Bhujia,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0290/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500306,Ratlami Sev,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0306/front_fr.10.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500313,Balaji Wafers Ratlami Sev,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0313/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500337,Aloo Sev,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0337/front_en.4.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500368,Tikha Mitha Mix,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0368/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500481,Crunchm,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0481/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500511,Chataka Pataka,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0511/front_en.9.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500535,Balaji Wafers Chaat Chaska,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0535/front_en.21.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500542,Balaji Wafers Sev Murmura,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0542/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500566,Balaji Wafers Tikha Mitha Mix,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0566/front_en.4.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500573,Farali Chevdo,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0573/front_fr.7.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500610,Chata Pataka Tomato,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0610/front_en.18.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500627,Chataka Pataka Tangy Tomato,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0627/front_en.4.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500702,Chana dal,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0702/front_en.5.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500849,Balaji Wafers Jeera Khakhra,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0849/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500863,Shing Bhujiya - Nimbu Chatka,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0863/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500870,BALAJI CREAM ONION,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0870/front_en.7.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010500900,Wheelos Masala Flavour,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/0900/front_en.20.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010501198,Crunchem Pizzy Masala,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/1198/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010501228,Scoopitos Masala Flavour,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/1228/front_en.5.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010501242,wheelos masala flavour,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/1242/front_en.14.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010501259,Masala sev murmura,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/1259/front_en.18.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010501570,Balaji Wafers Crunchex,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/1570/front_en.13.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010501822,GIPPI,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/1822/front_en.7.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010501952,Balaji Wafers Rumbles Potato Chips Pudina Twist flavour,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/1952/front_en.4.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010502119,Chataka pataka,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/2119/front_en.7.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010502164,Katak Batak - Chilli Lemon,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/2164/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010502300,balaji wafers flamin hot,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/2300/front_en.12.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010502492,Crunchem Peri Peri Flavour,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/2492/front_en.8.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010502782,Stack Up - Simply Salted,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/2782/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010503253,Balaji Wafers Dum Bar,pack_size,NULL,19 g,Enriched pack size,Balaji
+'8906010503451,Noodle Sticks Masala,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/3451/front_en.6.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010503499,Ratlami Sev,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/3499/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010503505,Aloo Sev,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/3505/front_en.4.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010503529,CHRUNCHEM Masala Masti,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/3529/front_en.6.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010503543,Balaji Crunchem Chaat Chaska,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/3543/front_en.9.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010503581,GIPPI masala noodles,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/3581/front_en.15.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010503611,CHRUNCHEX,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/3611/front_en.5.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010504304,Crunchex,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/4304/front_en.5.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010504359,Snack'em Chokdi Masala,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/4359/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8906010504878,Khichiya Papad,image_url,NULL,https://images.openfoodfacts.net/images/products/890/601/050/4878/front_en.3.400.jpg,Added verified trusted_db packshot,Balaji
+'8903553832437,temptin soy sauce,image_url,NULL,https://images.openfoodfacts.net/images/products/890/355/383/2437/front_en.3.400.jpg,Added verified trusted_db packshot,Temptin
+'8903553000409,Ram Bandhu Lime pickle,image_url,NULL,https://images.openfoodfacts.net/images/products/890/355/300/0409/front_en.3.400.jpg,Added verified trusted_db packshot,Ram Bandhu
+'8903553103292,Rambandhu  BIRYANI MASALA,image_url,NULL,https://images.openfoodfacts.net/images/products/890/355/310/3292/front_en.3.400.jpg,Added verified trusted_db packshot,Ram Bandhu
+'8903553124297,Rambandhu  JALJIRA POWDER,image_url,NULL,https://images.openfoodfacts.net/images/products/890/355/312/4297/front_en.3.400.jpg,Added verified trusted_db packshot,Ram Bandhu
+'8903553132292,Ram bandhu kichen king,image_url,NULL,https://images.openfoodfacts.net/images/products/890/355/313/2292/front_en.3.400.jpg,Added verified trusted_db packshot,Ram Bandhu
+'8903553136290,Ram Bandhu GARAM MASALA,image_url,NULL,https://images.openfoodfacts.net/images/products/890/355/313/6290/front_en.3.400.jpg,Added verified trusted_db packshot,Ram Bandhu
+'8903553178290,Ram bandhu chakali masala,image_url,NULL,https://images.openfoodfacts.net/images/products/890/355/317/8290/front_en.3.400.jpg,Added verified trusted_db packshot,Ram Bandhu
+'8903553535109,ram bandhu udad papad 10/-,image_url,NULL,https://images.openfoodfacts.net/images/products/890/355/353/5109/front_en.3.400.jpg,Added verified trusted_db packshot,Ram Bandhu
+'8903553601439,Ram Bandhu Mango pickle,pack_size,NULL,200 g,Enriched pack size,Ram Bandhu
+'8903553601491,Ram Bandhu Mango pickle,image_url,NULL,https://images.openfoodfacts.net/images/products/890/355/360/1491/front_en.3.400.jpg,Added verified trusted_db packshot,Ram Bandhu
+'8903553649431,Ram Bandhu Lime pickle,image_url,NULL,https://images.openfoodfacts.net/images/products/890/355/364/9431/front_en.3.400.jpg,Added verified trusted_db packshot,Ram Bandhu
+'8901662024798,suhana sambar masal,image_url,NULL,https://images.openfoodfacts.net/images/products/890/166/202/4798/front_en.4.400.jpg,Added verified trusted_db packshot,Suhana
+'8901662027010,Suhana mutter paneer mix,image_url,NULL,https://images.openfoodfacts.net/images/products/890/166/202/7010/front_en.3.400.jpg,Added verified trusted_db packshot,Suhana
+'8901662033509,Suhana Super garam masala,pack_size,NULL,50 g,Enriched pack size,Suhana
+'8901662036524,Suhana Paneer Masala,image_url,NULL,https://images.openfoodfacts.net/images/products/890/166/203/6524/front_en.4.400.jpg,Added verified trusted_db packshot,Suhana
+'8901662038153,Suhana Instant Mix Khaman Dhokla,image_url,NULL,https://images.openfoodfacts.net/images/products/890/166/203/8153/front_en.3.400.jpg,Added verified trusted_db packshot,Suhana
+'8901662038344,suhana chicken gravy,image_url,NULL,https://images.openfoodfacts.net/images/products/890/166/203/8344/front_en.3.400.jpg,Added verified trusted_db packshot,Suhana
+'8901662040125,Suhana Misal Masala,image_url,NULL,https://images.openfoodfacts.net/images/products/890/166/204/0125/front_en.3.400.jpg,Added verified trusted_db packshot,Suhana
+'8901662042075,Suhana Veg Biriyani Mix,image_url,NULL,https://images.openfoodfacts.net/images/products/890/166/204/2075/front_en.3.400.jpg,Added verified trusted_db packshot,Suhana
+'8903241230224,Suhana Date Tamarind Chutnet,image_url,NULL,https://images.openfoodfacts.net/images/products/890/324/123/0224/front_en.3.400.jpg,Added verified trusted_db packshot,Suhana
+'8903241230248,Suhana Pravin Panipuri Mix,image_url,NULL,https://images.openfoodfacts.net/images/products/890/324/123/0248/front_en.3.400.jpg,Added verified trusted_db packshot,Suhana
+'8992775002933,MALKIST Gery Saluut DOUBLE ABON gery,image_url,NULL,https://images.openfoodfacts.net/images/products/899/277/500/2933/front_en.4.400.jpg,Added verified trusted_db packshot,Mayora Malkist
+'8992775305188,Gery salut malkist matcha latte,pack_size,NULL,18 g,Enriched pack size,Mayora Malkist
+'8996001312490,Mayora Malkist Chocolate Flavored Sandwich Cracker Biscuits,image_url,NULL,https://images.openfoodfacts.net/images/products/899/600/131/2490/front_en.14.400.jpg,Added verified trusted_db packshot,Mayora Malkist
+'8996001312506,Malkist Cheese Flavoured Crunchy Layered Cracker Biscuits,image_url,NULL,https://images.openfoodfacts.net/images/products/899/600/131/2506/front_en.3.400.jpg,Added verified trusted_db packshot,Mayora Malkist
+'8996001312650,Malkist sugar crackers,image_url,NULL,https://images.openfoodfacts.net/images/products/899/600/131/2650/front_en.3.400.jpg,Added verified trusted_db packshot,Mayora Malkist
+'8996001312667,Malkist Cappuccino,image_url,NULL,https://images.openfoodfacts.net/images/products/899/600/131/2667/front_en.5.400.jpg,Added verified trusted_db packshot,Mayora Malkist
+'8996001375327,choki choki chocolate milk,image_url,NULL,https://images.openfoodfacts.net/images/products/899/600/137/5327/front_en.3.400.jpg,Added verified trusted_db packshot,Mayora Malkist
+'8996001375334,Choki choki,image_url,NULL,https://images.openfoodfacts.net/images/products/899/600/137/5334/front_en.28.400.jpg,Added verified trusted_db packshot,Mayora Malkist
+'8996001524039,Super Bubur Kuah Kari,image_url,NULL,https://images.openfoodfacts.net/images/products/899/600/152/4039/front_en.5.400.jpg,Added verified trusted_db packshot,Mayora Malkist
+'8906004560262,Chulbule Teekha Tadka Flavour,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/456/0262/front_en.8.400.jpg,Added verified trusted_db packshot,Yellow Diamond
+'8906004560682,Plain salted potato chips,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/456/0682/front_en.7.400.jpg,Added verified trusted_db packshot,Yellow Diamond
+'8906004560767,Chulbule Tangy Tomato,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/456/0767/front_en.5.400.jpg,Added verified trusted_db packshot,Yellow Diamond
+'8906004561061,Aloo Bhujia,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/456/1061/front_en.3.400.jpg,Added verified trusted_db packshot,Yellow Diamond
+'8906004561078,Peanut Snacks,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/456/1078/front_en.3.400.jpg,Added verified trusted_db packshot,Yellow Diamond
+'8906004562051,Masala Sev Mamra,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/456/2051/front_en.5.400.jpg,Added verified trusted_db packshot,Yellow Diamond
+'8906004563539,Pipes - Salted Crunch,image_url,NULL,https://images.openfoodfacts.net/images/products/890/600/456/3539/front_en.3.400.jpg,Added verified trusted_db packshot,Yellow Diamond
+'8906031251140,Chakote Milk Toast,image_url,NULL,https://images.openfoodfacts.net/images/products/890/603/125/1140/front_en.5.400.jpg,Added verified trusted_db packshot,Chakote
+'8906031251225,Chakote Milk Toast,image_url,NULL,https://images.openfoodfacts.net/images/products/890/603/125/1225/front_en.3.400.jpg,Added verified trusted_db packshot,Chakote
+'8906031251263,Chakote Suji Toast,image_url,NULL,https://images.openfoodfacts.net/images/products/890/603/125/1263/front_en.5.400.jpg,Added verified trusted_db packshot,Chakote
+'8906031251515,Chakote Doughnut,image_url,NULL,https://images.openfoodfacts.net/images/products/890/603/125/1515/front_en.3.400.jpg,Added verified trusted_db packshot,Chakote
+'8906031251720,Milk Masti Bread,image_url,NULL,https://images.openfoodfacts.net/images/products/890/603/125/1720/front_en.13.400.jpg,Added verified trusted_db packshot,Chakote
+'8906031252314,Chakote Slice Cake,image_url,NULL,https://images.openfoodfacts.net/images/products/890/603/125/2314/front_en.4.400.jpg,Added verified trusted_db packshot,Chakote
+'8908019312348,Coconut Cookies,image_url,NULL,https://images.openfoodfacts.net/images/products/890/801/931/2348/front_en.3.400.jpg,Added verified trusted_db packshot,Chakote
+'8908019319095,Yummy Tomato Potato Chips,image_url,NULL,https://images.openfoodfacts.net/images/products/890/801/931/9095/front_en.4.400.jpg,Added verified trusted_db packshot,Chakote
+'8908019319286,Kolhapuri Bhadang,image_url,NULL,https://images.openfoodfacts.net/images/products/890/801/931/9286/front_en.5.400.jpg,Added verified trusted_db packshot,Chakote
+'8908019319804,Bhadang,image_url,NULL,https://images.openfoodfacts.net/images/products/890/801/931/9804/front_en.3.400.jpg,Added verified trusted_db packshot,Chakote
+'8906059240416,Moti Poha Chiwda,image_url,NULL,https://images.openfoodfacts.net/images/products/890/605/924/0416/front_en.5.400.jpg,Added verified trusted_db packshot,Moti Namkeen
+'8904132944671,Campa cola,pack_size,NULL,600 ml,Enriched pack size,Campa
+'8904132948174,Campa (cola) 500ml pet,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/294/8174/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132948181,Campa Orange Flavour 500ml,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/294/8181/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132949676,Campa Cola,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/294/9676/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132949775,Campa Lemon Flv 1ltr,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/294/9775/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132949799,Campa Orange Flv 1ltr pet,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/294/9799/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132950757,Campa Club Soda 200ml pet,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/295/0757/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132950771,Campa cricket lemon 250ml,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/295/0771/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132950788,Campa cricket with electrolytes,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/295/0788/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132952607,Campa cola 2ltr pet,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/295/2607/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132952645,Campa Orange 2ltr pet,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/295/2645/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132953413,Campa Cola,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/295/3413/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132953437,Campa lemon flv can,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/295/3437/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132954885,Campa,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/295/4885/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132972025,Campa energy drink 250ml,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/297/2025/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132972056,Campa energy drink 250ml,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/297/2056/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132973084,RAS KIK MANGO,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/297/3084/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132975316,Campa energy drink 200ml,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/297/5316/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132975392,campa cola,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/297/5392/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132975408,campa cola,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/297/5408/front_en.6.400.jpg,Added verified trusted_db packshot,Campa
+'8904132975439,Campa 2ltr,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/297/5439/front_en.5.400.jpg,Added verified trusted_db packshot,Campa
+'8904132975446,8904132975446,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/297/5446/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132975491,Orange Flavoured,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/297/5491/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132975507,Campa Orange Flavour,pack_size,NULL,500 ml,Enriched pack size,Campa
+'8904132975774,Campa power up,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/297/5774/front_en.5.400.jpg,Added verified trusted_db packshot,Campa
+'8904132976184,Campa cola,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/297/6184/front_en.9.400.jpg,Added verified trusted_db packshot,Campa
+'8904132976351,Energy Drink Berry Kick,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/297/6351/front_en.3.400.jpg,Added verified trusted_db packshot,Campa
+'8904132976962,Campa Jeera Up,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/297/6962/front_en.4.400.jpg,Added verified trusted_db packshot,Campa
+'8904132992313,Campa Cola,image_url,NULL,https://images.openfoodfacts.net/images/products/890/413/299/2313/front_en.5.400.jpg,Added verified trusted_db packshot,Campa
+'8901764031106,Sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/1106/front_fr.4.400.jpg,Added verified trusted_db packshot,Sprite
+'8901764031182,Sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/1182/front_en.3.400.jpg,Added verified trusted_db packshot,Sprite
+'8901764031250,Sprite Lemon drink 300ml can,pack_size,NULL,300 ml,Enriched pack size,Sprite
+'8901764032271,Sprite 750ml,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/2271/front_en.50.400.jpg,Added verified trusted_db packshot,Sprite
+'8901764032301,Sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/2301/front_en.4.400.jpg,Added verified trusted_db packshot,Sprite
+'8901764032400,Sprite Lemon Lime flv Coke Brand 2ltr,pack_size,NULL,9,Enriched pack size,Sprite
+'8901764032608,sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/2608/front_en.4.400.jpg,Added verified trusted_db packshot,Sprite
+'8901764032707,Sprite,pack_size,NULL,600 ml,Enriched pack size,Sprite
+'8901764032806,Sprite,pack_size,NULL,1.25 l,Enriched pack size,Sprite
+'8901764032905,Sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/2905/front_en.28.400.jpg,Added verified trusted_db packshot,Sprite
+'8901764032912,Sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/2912/front_en.26.400.jpg,Added verified trusted_db packshot,Sprite
+'8901764038877,sprite,image_url,NULL,https://images.openfoodfacts.net/images/products/890/176/403/8877/front_gu.4.400.jpg,Added verified trusted_db packshot,Sprite
+'8992761002022,Sprite 390ml,pack_size,NULL,390 ml,Enriched pack size,Sprite
+,Dairy Power Fresh Curd (Dahi) 200g Cup,manufacturer,NULL,Dairy Power Limited,Enriched verified local manufacturer,Dairy Power
+,Dairy Power Fresh Curd (Dahi) 400g Pouch,manufacturer,NULL,Dairy Power Limited,Enriched verified local manufacturer,Dairy Power
+,Dairy Power Spiced Masala Chaas 200ml,manufacturer,NULL,Dairy Power Limited,Enriched verified local manufacturer,Dairy Power
+,Dairy Power Sweet Lassi 200ml Cup,manufacturer,NULL,Dairy Power Limited,Enriched verified local manufacturer,Dairy Power
+,Dairy Power Fresh Malai Paneer 200g,manufacturer,NULL,Dairy Power Limited,Enriched verified local manufacturer,Dairy Power
+,Dairy Power Fresh Malai Paneer 1kg Block,manufacturer,NULL,Dairy Power Limited,Enriched verified local manufacturer,Dairy Power
+,Dairy Power Pure Cow Ghee 500ml Pouch,manufacturer,NULL,Dairy Power Limited,Enriched verified local manufacturer,Dairy Power
+,Dairy Power Pure Cow Ghee 1L Jar,manufacturer,NULL,Dairy Power Limited,Enriched verified local manufacturer,Dairy Power
+,Dairy Power Pure Buffalo Ghee 500ml,manufacturer,NULL,Dairy Power Limited,Enriched verified local manufacturer,Dairy Power
+,Dairy Power Pure Buffalo Ghee 1L Jar,manufacturer,NULL,Dairy Power Limited,Enriched verified local manufacturer,Dairy Power
+,Dairy Power Elaichi Shrikhand 250g,manufacturer,NULL,Dairy Power Limited,Enriched verified local manufacturer,Dairy Power
+,Dairy Power Elaichi Shrikhand 500g,manufacturer,NULL,Dairy Power Limited,Enriched verified local manufacturer,Dairy Power
+,Dairy Power Mango Amrakhand 250g,manufacturer,NULL,Dairy Power Limited,Enriched verified local manufacturer,Dairy Power
+,Dairy Power Mango Amrakhand 500g,manufacturer,NULL,Dairy Power Limited,Enriched verified local manufacturer,Dairy Power
+,Empire Aqua Water 200ml Glass/Pouch,manufacturer,NULL,The Empire Aqua (Ambajogai),Enriched verified local manufacturer,Empire Aqua
+,Empire Aqua Water 500ml Bottle,manufacturer,NULL,The Empire Aqua (Ambajogai),Enriched verified local manufacturer,Empire Aqua
+,Empire Aqua Water 20 Litre Jar,manufacturer,NULL,The Empire Aqua (Ambajogai),Enriched verified local manufacturer,Empire Aqua
+,Empire Aqua Water 1 Litre Bottle,manufacturer,NULL,The Empire Aqua (Ambajogai),Enriched verified local manufacturer,Empire Aqua
+,Sunreach Aqua Water 250ml Bottle,manufacturer,NULL,Bai-Kakaji Aquasure Solutions Pvt. Ltd. (Sunrich Aqua),Enriched verified local manufacturer,Sunrich Aqua
+,Sunreach Aqua Water 500ml Bottle,manufacturer,NULL,Bai-Kakaji Aquasure Solutions Pvt. Ltd. (Sunrich Aqua),Enriched verified local manufacturer,Sunrich Aqua
+,Sunreach Aqua Water 1 Litre Bottle,manufacturer,NULL,Bai-Kakaji Aquasure Solutions Pvt. Ltd. (Sunrich Aqua),Enriched verified local manufacturer,Sunrich Aqua
+,Sunreach Aqua Water 20 Litre Jar,manufacturer,NULL,Bai-Kakaji Aquasure Solutions Pvt. Ltd. (Sunrich Aqua),Enriched verified local manufacturer,Sunrich Aqua
+'89009758,NESCAFE classic,pack_size,NULL,24 g,Enriched pack size,Nestlé India
+'8901058000269,Maggi,pack_size,NULL,280 g,Enriched pack size,Nestlé India
+'8901058000290,maggi,pack_size,NULL,70,Enriched pack size,Nestlé India
+'8901058000306,Maggi noodles masala,pack_size,NULL,560 g,Enriched pack size,Nestlé India
+'8901058000702,Munch,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/0702/front_en.20.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058001181,maggi,pack_size,NULL,1 kg,Enriched pack size,Nestlé India
+'8901058001846,Kitkat,pack_size,NULL,18.5 g,Enriched pack size,Nestlé India
+'8901058002270,Maggi spicy Garltc,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/2270/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058003055,Maggi pazzta cheese macaroni,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/3055/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058003079,Maggi cheesy Tomato,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/3079/front_en.21.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058003734,Maggie korean noodles,pack_size,NULL,90 g,Enriched pack size,Nestlé India
+'8901058003802,Nestle Everyday Dairy Whitener 15g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/3802/front_en.7.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058003970,Munch Crunchilicious Cereal,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/3970/front_en.9.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058004700,Nescafe classic Coffee,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/4700/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058004816,Nestle class,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/4816/front_en.5.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058005080,Munch Max,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/5080/front_en.7.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058005233,Kitkat mini chocolate coated wafer,pack_size,NULL,11.9 g,Enriched pack size,Nestlé India
+'8901058005424,maggie koriean spicy cheesy,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/5424/front_en.14.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058005509,Nescafe Sunrise,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/5509/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058005608,Maggi,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/5608/front_en.6.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058005790,Maggi special masala,pack_size,NULL,280,Enriched pack size,Nestlé India
+'8901058005905,KitKat Dark Chocolate Coated Wafer,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/5905/front_en.18.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058006032,maggi cup,pack_size,NULL,70 g,Enriched pack size,Nestlé India
+'8901058006124,Maggie chicken noodles,pack_size,NULL,284,Enriched pack size,Nestlé India
+'8901058006148,maggie chicken noodles,pack_size,NULL,71 g,Enriched pack size,Nestlé India
+'8901058006643,Maggi 2 Minutes Noodles Masala,pack_size,NULL,1.68 kg,Enriched pack size,Nestlé India
+'8901058007060,Milkmaid Mini,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/7060/front_en.6.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058007169,Nescafe Classic Instant coffee,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/7169/front_en.10.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058007220,Maggie masala magic,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/7220/front_en.11.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058007435,Nescafe Classic Black Roast,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/7435/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058008050,Maggi,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/8050/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058009422,Munch,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/9422/front_en.8.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058009712,Maggi Masala Veg Atta noodles,pack_size,NULL,51 g,Enriched pack size,Nestlé India
+'8901058010510,Munch brownie max,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/0510/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058010619,Maggi cheese noodles,pack_size,NULL,304 g,Enriched pack size,Nestlé India
+'8901058010701,Nestle Munch Vanilla Flavour,pack_size,NULL,14 g,Enriched pack size,Nestlé India
+'8901058010749,Maggie,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/0749/front_en.11.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058011012,KitKat Minis,pack_size,NULL,133.2 g,Enriched pack size,Nestlé India
+'8901058011067,Maggi veg atta noodles,pack_size,NULL,290 g,Enriched pack size,Nestlé India
+'8901058011371,Nestle Cerelac,pack_size,NULL,350 g,Enriched pack size,Nestlé India
+'8901058011401,Nescafe Ice Roast,pack_size,NULL,90 g,Enriched pack size,Nestlé India
+'8901058011746,Maggi sauce,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/1746/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058012330,Kitkat 10 mrp,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/2330/front_en.4.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058012415,Munch max,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/2415/front_en.4.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058012637,Maggi imli sauce pichkoo 75 g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/2637/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058012897,munch crunchilious cereal,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/2897/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058013061,Nescafe Sunrise,pack_size,NULL,190 g,Enriched pack size,Nestlé India
+'8901058013665,maggi hot and sweet,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/3665/front_en.19.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058013863,Kitkat Double Choco,pack_size,NULL,63 g,Enriched pack size,Nestlé India
+'8901058014044,MAGGI RICH TOMATO KETCHUP,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/4044/front_en.8.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058014235,Maggi,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/4235/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058014341,KitKat Delights dark,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/4341/front_en.7.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058015171,Nestle KitKat,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/5171/front_en.12.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058015799,Nestle Cerelac Wheat Apple Carrot,pack_size,NULL,300 g,Enriched pack size,Nestlé India
+'8901058016055,Nescafe Classic Instant Coffee,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/6055/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058016116,KitKat 50,pack_size,NULL,19 g,Enriched pack size,Nestlé India
+'8901058017601,Nescafe 10 rupees,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/7601/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058017670,Maggi 280g,pack_size,NULL,280,Enriched pack size,Nestlé India
+'8901058017687,maggi,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/7687/front_en.13.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058018493,Maggi,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/8493/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058019568,Maggi Pazzta,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/9568/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058019841,Nestle Everyday Dairy Whitener,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/9841/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058019872,Nestle Everyday,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/9872/front_en.5.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058020021,Munch Nut Max,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/0021/front_en.11.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058020335,Munch Crunchilicious Cereal,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/0335/front_en.5.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058021271,Nestle everyday,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/1271/front_en.14.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058021950,Nestle Milkmaid Mini,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/1950/front_en.5.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058022087,Munch,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/2087/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058022179,Munch,pack_size,NULL,17.4 g,Enriched pack size,Nestlé India
+'8901058022193,Maggi Noodles,pack_size,NULL,70 g,Enriched pack size,Nestlé India
+'8901058023183,KitKat Lemony Lime,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/3183/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058023329,KitKat Delights Hazelnut,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/3329/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058023558,KitKat Dark Chocolate Minis,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/3558/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058023800,Maggi,pack_size,NULL,560,Enriched pack size,Nestlé India
+'8901058024425,Maggie Double Masala Instant Noodles,pack_size,NULL,98 g,Enriched pack size,Nestlé India
+'8901058027129,Maggi 2-minute noodles with limited edition bowl,pack_size,NULL,450 g,Enriched pack size,Nestlé India
+'8901058029109,Maggi Pazzta Masala Penne,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/9109/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058798487,nestle Nan pro formula milk,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/879/8487/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058815900,Nescafe Sunrise Extra,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/881/5900/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058817836,Nescafe Classic Coffee,pack_size,NULL,100 g,Enriched pack size,Nestlé India
+'8901058823844,Maggie 8pk,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/882/3844/front_en.20.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058826784,Nescafe classic,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/882/6784/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058830460,Nestle every day,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/883/0460/front_en.6.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058838008,Nescafe,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/883/8008/front_en.4.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058844757,Masala Cuppa Noodles,pack_size,NULL,70 g,Enriched pack size,Nestlé India
+'8901058844894,maggi rich tomato ketchup pichkoo,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/884/4894/front_en.10.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058847482,Maggie Pazzta Chese Macaroni,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/884/7482/front_en.7.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058847505,Masala penne pasta,pack_size,NULL,65 g,Enriched pack size,Nestlé India
+'8901058847789,Nestle Resource High Protein,pack_size,NULL,1 kg,Enriched pack size,Nestlé India
+'8901058850680,MAGGI MASALA NOODLES,pack_size,NULL,280 g,Enriched pack size,Nestlé India
+'8901058851298,Maggi 2-minutes Noodles,pack_size,NULL,70 g,Enriched pack size,Nestlé India
+'8901058851304,Maggi Masala Noodles,pack_size,NULL,70 g,Enriched pack size,Nestlé India
+'8901058851311,Maggi Masala 2 Minute 2 Noodles - 280 GM,pack_size,NULL,70 g,Enriched pack size,Nestlé India
+'8901058851335,maggi,pack_size,NULL,560 g,Enriched pack size,Nestlé India
+'8901058852141,kitkat caramel chocolate coated wafer,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/885/2141/front_en.13.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058857245,Kitkat,pack_size,NULL,28.3 g,Enriched pack size,Nestlé India
+'8901058858860,Maggi Atta noodle - Masala,pack_size,NULL,300 g,Enriched pack size,Nestlé India
+'8901058859737,Nestle Nan,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/885/9737/front_fr.4.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058860726,Maggi Special Masala,pack_size,NULL,70 g,Enriched pack size,Nestlé India
+'8901058867923,Atta Maggi,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/886/7923/front_fr.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058868012,Kitkat,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/886/8012/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058868036,KitKat,pack_size,NULL,55 g,Enriched pack size,Nestlé India
+'8901058869002,Munch,pack_size,NULL,12.5 g,Enriched pack size,Nestlé India
+'8901058869408,"Nestle, EveryDay",image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/886/9408/front_en.6.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058869460,Nestle Everyday Dairy Whitener,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/886/9460/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058875324,Maggi - Desi Cheesy,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/887/5324/front_en.4.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058875744,munch nuts,pack_size,NULL,78kcal,Enriched pack size,Nestlé India
+'8901058889987,Maggi pasta,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/888/9987/front_en.7.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058890310,nestle milkmaid,pack_size,NULL,400 g,Enriched pack size,Nestlé India
+'8901058890709,maggie masala chuppa noodles,pack_size,NULL,70.5 g,Enriched pack size,Nestlé India
+'8901058891416,2-minute noodles,pack_size,NULL,70 g,Enriched pack size,Nestlé India
+'8901058894547,Maggi Pichkoo,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/889/4547/front_fr.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058895322,Nescafe Sunrise,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/889/5322/front_en.5.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058895766,maggi Pichkoo tomato ketchup,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/889/5766/front_en.5.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058896152,Maggi,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/889/6152/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058896381,Nescafe sunrise coffe 200g,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/889/6381/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058898330,Nescafe choco mocha,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/889/8330/front_es.5.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058898613,Maggi,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/889/8613/front_fr.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058900118,Nescafe Sunrise 50g pp,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/0118/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058900231,Maggie Souce,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/0231/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058900361,Munch Nuts,pack_size,NULL,30 g,Enriched pack size,Nestlé India
+'8901058901542,Maggie,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/1542/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058901559,Maggi 2-Minute Noodles,pack_size,NULL,280 g,Enriched pack size,Nestlé India
+'8901058902372,Maggi pazzta,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/2372/front_fr.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058902938,Nescafe Sunrise,pack_size,NULL,5 g,Enriched pack size,Nestlé India
+'8901058903164,KitKat win gold,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/3164/front_en.29.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058903812,Maggi Rich Tomato Ketchup Pichkoo,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/3812/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058903843,Milkmaid,pack_size,NULL,380 g,Enriched pack size,Nestlé India
+'8901058903959,milkmaid 100+ recipes,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/3959/front_en.5.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058904093,Munch Max,pack_size,NULL,42 g,Enriched pack size,Nestlé India
+'8901058904338,Nescafe Classic,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/4338/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058904697,maggi Masala Oats Noodles,pack_size,NULL,73.5 g,Enriched pack size,Nestlé India
+'8901058904741,Nestle kit Kat (Ind),image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/4741/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058904758,Kitkat,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/4758/front_en.4.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058904987,Maggi Pichku,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/4987/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058905113,Kit kat,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/5113/front_fr.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058905441,Maggi 2-minute noodles Special Masala,pack_size,NULL,70 g,Enriched pack size,Nestlé India
+'8901058905526,Nestle NAN Excellapro,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/5526/front_en.3.400.jpg,Added verified trusted_db packshot,Nestlé India
+'8901058905571,munch,pack_size,NULL,18 g,Enriched pack size,Nestlé India

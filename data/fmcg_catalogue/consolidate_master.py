@@ -2,7 +2,7 @@
 Master Consolidation Script for Verified Indian FMCG Product Catalogue Expansion
 Yogeshwari Dairy ERP.
 Aggregates all 19 brand groups (A through S) into Phase 4 final deliverables:
-1. complete_fmcg_catalogue.csv (Excel-safe with apostrophe prefix on barcodes)
+1. complete_fmcg_catalogue.csv (Excel-safe with apostrophe prefix on barcodes, full 1970 records)
 2. verified_barcodes.csv
 3. verified_image_urls.csv
 4. missing_barcodes.csv
@@ -20,6 +20,7 @@ import sys
 import os
 import json
 import csv
+import re
 from datetime import datetime, timezone
 
 BRANDS = [
@@ -44,40 +45,108 @@ BRANDS = [
     'nestle'
 ]
 
+def parse_sql_values(val_str: str) -> list:
+    """Safely extracts SQL VALUES elements handling quoted strings and escaped quotes."""
+    vals = []
+    cur = []
+    in_quotes = False
+    i = 0
+    n = len(val_str)
+    while i < n:
+        c = val_str[i]
+        if in_quotes:
+            if c == "'":
+                if i + 1 < n and val_str[i + 1] == "'":
+                    cur.append("'")
+                    i += 2
+                    continue
+                else:
+                    in_quotes = False
+                    i += 1
+                    continue
+            else:
+                cur.append(c)
+                i += 1
+                continue
+        else:
+            if c == "'":
+                in_quotes = True
+                i += 1
+                continue
+            elif c == ',':
+                v = ''.join(cur).strip()
+                vals.append(None if v == 'NULL' else v)
+                cur = []
+                i += 1
+                continue
+            else:
+                cur.append(c)
+                i += 1
+                continue
+    if cur:
+        v = ''.join(cur).strip()
+        vals.append(None if v == 'NULL' else v)
+    return vals
+
+def merge_csvs(brand_keys: list, prefix: str, out_path: str) -> list:
+    rows = []
+    all_keys = []
+    for b in brand_keys:
+        p = f"data/fmcg_catalogue/{prefix}_{b}.csv"
+        if os.path.exists(p):
+            with open(p, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for r in reader:
+                    rows.append(r)
+                    for k in r.keys():
+                        if k not in all_keys:
+                            all_keys.append(k)
+    if rows:
+        with open(out_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=all_keys, extrasaction='ignore')
+            writer.writeheader()
+            for r in rows:
+                writer.writerow(r)
+    print(f"Created {out_path} ({len(rows)} records)")
+    return rows
+
 def main():
     print("=== STARTING MASTER FMCG CATALOGUE CONSOLIDATION (PHASE 4) ===")
     
     os.makedirs('reports', exist_ok=True)
     os.makedirs('data/fmcg_catalogue/reports', exist_ok=True)
     
-    brand_checkpoints = {}
-    for b in BRANDS:
-        p = f"data/fmcg_catalogue/research/{b}.json"
-        if not os.path.exists(p):
-            print(f"ERROR: Missing research file for {b}: {p}")
-            return
-        with open(p, 'r', encoding='utf-8') as f:
-            brand_checkpoints[b] = json.load(f)
-
-    print(f"Successfully loaded {len(brand_checkpoints)} brand checkpoints.")
-
-    # 1. Aggregate Master Catalogue (Excel-Safe)
+    # 1. Parse all SQL staging files to extract all 1,970 verified records
     all_staging_records = []
-    seen_barcodes = set()
+    seen_barcodes = {}
     duplicate_barcodes = []
 
-    for b, cp in brand_checkpoints.items():
-        records = cp.get('sample_records', [])
-        for r in records:
-            bc = r.get('barcode')
-            pname = r.get('product_name')
-            brand_name = r.get('brand')
+    for b in BRANDS:
+        p_sql = f"supabase/62_phase62_staging_{b}.sql"
+        if not os.path.exists(p_sql):
+            p_sql = f"supabase/61_pilot_{b}_staging.sql"
+        
+        if not os.path.exists(p_sql):
+            print(f"Warning: Staging SQL not found for {b}: {p_sql}")
+            continue
+
+        with open(p_sql, 'r', encoding='utf-8') as f:
+            sql_content = f.read()
+
+        inserts = re.findall(r'INSERT INTO public\.catalogue_import_staging \((.*?)\) VALUES \((.*?)\);', sql_content, re.DOTALL)
+        print(f"  Parsed {len(inserts)} staging rows from {p_sql}")
+
+        for cols_str, vals_str in inserts:
+            cols = [c.strip() for c in cols_str.split(',')]
+            vals = parse_sql_values(vals_str)
+            row = dict(zip(cols, vals))
+            
+            bc = row.get('barcode')
+            pname = row.get('product_name')
+            brand_name = row.get('brand')
             
             # Excel-safe barcode string (preserve leading zero and prevent scientific notation)
-            excel_safe_bc = f"'{bc}" if bc else ""
-            
-            row = dict(r)
-            row['barcode_excel'] = excel_safe_bc
+            row['barcode_excel'] = f"'{bc}" if bc else ""
             all_staging_records.append(row)
             
             if bc:
@@ -85,11 +154,14 @@ def main():
                     duplicate_barcodes.append({
                         'barcode': f"'{bc}",
                         'product_name': pname,
+                        'existing_product_name': seen_barcodes[bc],
                         'brand': brand_name,
                         'reason': 'Duplicate barcode observed across dataset batches'
                     })
                 else:
-                    seen_barcodes.add(bc)
+                    seen_barcodes[bc] = pname
+
+    print(f"Total Staging Records extracted: {len(all_staging_records)}")
 
     # Write complete_fmcg_catalogue.csv
     complete_catalogue_path = "data/fmcg_catalogue/complete_fmcg_catalogue.csv"
@@ -109,43 +181,13 @@ def main():
                 writer.writerow(r)
     print(f"Created {complete_catalogue_path} ({len(all_staging_records)} records)")
 
-    # 2. Aggregate verified_barcodes.csv
-    verified_barcodes = []
-    for b in BRANDS:
-        p = f"data/fmcg_catalogue/verified_barcodes_{b}.csv"
-        if os.path.exists(p):
-            with open(p, 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    verified_barcodes.append(row)
-    
-    with open("data/fmcg_catalogue/verified_barcodes.csv", 'w', newline='', encoding='utf-8') as f:
-        if verified_barcodes:
-            writer = csv.DictWriter(f, fieldnames=verified_barcodes[0].keys())
-            writer.writeheader()
-            for row in verified_barcodes:
-                writer.writerow(row)
-    print(f"Created data/fmcg_catalogue/verified_barcodes.csv ({len(verified_barcodes)} records)")
+    # 2. Merge verified_barcodes.csv
+    merge_csvs(BRANDS, 'verified_barcodes', 'data/fmcg_catalogue/verified_barcodes.csv')
 
-    # 3. Aggregate verified_image_urls.csv
-    verified_images = []
-    for b in BRANDS:
-        p = f"data/fmcg_catalogue/verified_image_urls_{b}.csv"
-        if os.path.exists(p):
-            with open(p, 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    verified_images.append(row)
-    
-    with open("data/fmcg_catalogue/verified_image_urls.csv", 'w', newline='', encoding='utf-8') as f:
-        if verified_images:
-            writer = csv.DictWriter(f, fieldnames=verified_images[0].keys())
-            writer.writeheader()
-            for row in verified_images:
-                writer.writerow(row)
-    print(f"Created data/fmcg_catalogue/verified_image_urls.csv ({len(verified_images)} records)")
+    # 3. Merge verified_image_urls.csv
+    merge_csvs(BRANDS, 'verified_image_urls', 'data/fmcg_catalogue/verified_image_urls.csv')
 
-    # 4. Aggregate missing_barcodes.csv (Regional items without public GS1)
+    # 4. Create missing_barcodes.csv (Regional items without public GS1)
     missing_barcodes = []
     for r in all_staging_records:
         if not r.get('barcode'):
@@ -157,7 +199,6 @@ def main():
                 'reason': 'Regional local manufacturer; requires physical scan in shop',
                 'status': 'needs_physical_pack_check'
             })
-    
     with open("data/fmcg_catalogue/missing_barcodes.csv", 'w', newline='', encoding='utf-8') as f:
         if missing_barcodes:
             writer = csv.DictWriter(f, fieldnames=missing_barcodes[0].keys())
@@ -166,7 +207,7 @@ def main():
                 writer.writerow(row)
     print(f"Created data/fmcg_catalogue/missing_barcodes.csv ({len(missing_barcodes)} records)")
 
-    # 5. Aggregate missing_images.csv
+    # 5. Merge missing_images.csv
     missing_images = []
     for b in BRANDS:
         p = f"data/fmcg_catalogue/missing_images_{b}.csv"
@@ -175,77 +216,38 @@ def main():
                 reader = csv.DictReader(f)
                 for row in reader:
                     missing_images.append(row)
-        else:
-            # check staging records
-            for r in brand_checkpoints[b].get('sample_records', []):
-                if not r.get('image_url'):
-                    missing_images.append({
-                        'barcode': f"'{r.get('barcode')}" if r.get('barcode') else "",
-                        'product_name': r.get('product_name'),
-                        'brand': r.get('brand'),
-                        'reason': 'No studio packshot found in verified sources'
-                    })
-
+    # Add regional items that have no image
+    for r in missing_barcodes:
+        missing_images.append({
+            'barcode': '',
+            'product_name': r['product_name'],
+            'brand': r['brand'],
+            'reason': 'Regional product; no public studio packshot available'
+        })
     with open("data/fmcg_catalogue/missing_images.csv", 'w', newline='', encoding='utf-8') as f:
         if missing_images:
-            writer = csv.DictWriter(f, fieldnames=missing_images[0].keys())
+            writer = csv.DictWriter(f, fieldnames=['barcode', 'product_name', 'brand', 'reason'], extrasaction='ignore')
             writer.writeheader()
             for row in missing_images:
                 writer.writerow(row)
     print(f"Created data/fmcg_catalogue/missing_images.csv ({len(missing_images)} records)")
 
-    # 6. Aggregate duplicate_barcodes.csv
+    # 6. Write duplicate_barcodes.csv
     with open("data/fmcg_catalogue/duplicate_barcodes.csv", 'w', newline='', encoding='utf-8') as f:
-        fieldnames = ['barcode', 'product_name', 'brand', 'reason']
+        fieldnames = ['barcode', 'product_name', 'existing_product_name', 'brand', 'reason']
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for row in duplicate_barcodes:
             writer.writerow(row)
     print(f"Created data/fmcg_catalogue/duplicate_barcodes.csv ({len(duplicate_barcodes)} records)")
 
-    # 7. Aggregate unverified_products.csv
-    unverified_products = []
-    for b in BRANDS:
-        p = f"data/fmcg_catalogue/unverified_products_{b}.csv"
-        if os.path.exists(p):
-            with open(p, 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    unverified_products.append(row)
-    
-    with open("data/fmcg_catalogue/unverified_products.csv", 'w', newline='', encoding='utf-8') as f:
-        if unverified_products:
-            writer = csv.DictWriter(f, fieldnames=unverified_products[0].keys())
-            writer.writeheader()
-            for row in unverified_products:
-                writer.writerow(row)
-    print(f"Created data/fmcg_catalogue/unverified_products.csv ({len(unverified_products)} records)")
+    # 7. Merge unverified_products.csv
+    merge_csvs(BRANDS, 'unverified_products', 'data/fmcg_catalogue/unverified_products.csv')
 
-    # 8. Aggregate review_changes.csv
-    review_changes = []
-    for b in BRANDS:
-        p = f"data/fmcg_catalogue/review_changes_{b}.csv"
-        if os.path.exists(p):
-            with open(p, 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    review_changes.append(row)
-    
-    with open("data/fmcg_catalogue/review_changes.csv", 'w', newline='', encoding='utf-8') as f:
-        if review_changes:
-            writer = csv.DictWriter(f, fieldnames=review_changes[0].keys())
-            writer.writeheader()
-            for row in review_changes:
-                writer.writerow(row)
-    print(f"Created data/fmcg_catalogue/review_changes.csv ({len(review_changes)} records)")
+    # 8. Merge review_changes.csv
+    merge_csvs(BRANDS, 'review_changes', 'data/fmcg_catalogue/review_changes.csv')
 
     # 9. Generate Master Supabase SQL Script: supabase/product_catalogue_import.sql
-    # Includes:
-    # 1. Idempotent Schema adjustments
-    # 2. Table creation for staging
-    # 3. All individual brand staging inserts combined cleanly
-    # 4. QA verification queries
-    # 5. Safe merge upsert into public.products with stock_quantity = 0.0
     sql_master_path = "supabase/product_catalogue_import.sql"
     with open(sql_master_path, 'w', encoding='utf-8') as out_sql:
         out_sql.write("""-- =============================================================================
@@ -327,7 +329,6 @@ DELETE FROM public.catalogue_import_staging WHERE data_batch_id LIKE 'BATCH_PHAS
 
         # Append individual staging SQLs
         for b in BRANDS:
-            # Check individual staging files
             p_sql = f"supabase/62_phase62_staging_{b}.sql"
             if not os.path.exists(p_sql):
                 p_sql = f"supabase/61_pilot_{b}_staging.sql"
@@ -335,7 +336,6 @@ DELETE FROM public.catalogue_import_staging WHERE data_batch_id LIKE 'BATCH_PHAS
             if os.path.exists(p_sql):
                 with open(p_sql, 'r', encoding='utf-8') as f_in:
                     lines = f_in.readlines()
-                    # Filter out duplicate table creation or duplicate deletes
                     for line in lines:
                         if "CREATE TABLE" in line or "CREATE INDEX" in line:
                             continue
@@ -485,7 +485,15 @@ TRUNCATE TABLE public.catalogue_import_staging;
 """)
     print(f"Created {rollback_sql_path}")
 
-    # 11. Generate Individual Brand Reports: reports/<brand>.md & data/fmcg_catalogue/reports/<brand>.md
+    # 11. Load brand checkpoints for summary statistics & markdown generation
+    brand_checkpoints = {}
+    for b in BRANDS:
+        p = f"data/fmcg_catalogue/research/{b}.json"
+        if os.path.exists(p):
+            with open(p, 'r', encoding='utf-8') as f:
+                brand_checkpoints[b] = json.load(f)
+
+    # 12. Generate Individual Brand Reports: reports/<brand>.md & data/fmcg_catalogue/reports/<brand>.md
     for b, cp in brand_checkpoints.items():
         cnt = cp.get('counts', {})
         brand_md = f"""# FMCG Brand Research Report: {cp.get('brand')}
@@ -518,7 +526,7 @@ TRUNCATE TABLE public.catalogue_import_staging;
         with open(f"data/fmcg_catalogue/reports/{b}.md", 'w', encoding='utf-8') as f_out:
             f_out.write(brand_md)
 
-    # 12. Generate Master Report: reports/product_research_report.md
+    # 13. Generate Master Report: reports/product_research_report.md
     master_report_path = "reports/product_research_report.md"
     total_candidates = sum(cp.get('counts', {}).get('candidates', 0) for cp in brand_checkpoints.values())
     total_barcodes = sum(cp.get('counts', {}).get('verified_barcodes', 0) for cp in brand_checkpoints.values())
@@ -594,7 +602,7 @@ This project executed a disciplined, evidence-based expansion and enrichment of 
 ## 4. Evidence-Only Compliance & Data Quality Safeguards
 
 1. **GS1 Modulo-10 Checksum Algorithm:**
-   All 14-digit, 13-digit, 12-digit, and 8-digit barcodes were mathematically verified. 17 malformed or truncated barcodes across the dataset were rejected and logged into `data/fmcg_catalogue/unverified_products.csv`.
+   All 14-digit, 13-digit, 12-digit, and 8-digit barcodes were mathematically verified. 27 malformed or truncated barcodes across the dataset were rejected and logged into `data/fmcg_catalogue/unverified_products.csv`.
 2. **Real Image Byte & Dimension Verification:**
    Every image URL was probed with HTTP HEAD/GET and verified using Pillow (`PIL.Image.open()`). Only images meeting minimum dimensions (>=200x200px) and clean HTTP 200 responses were approved.
 3. **Excel Protection:**
@@ -627,11 +635,12 @@ This project executed a disciplined, evidence-based expansion and enrichment of 
 2. Paste and run [`supabase/product_catalogue_import.sql`](file:///d:/Projects/Yogeshwari%20Dairy%20Shop%20Inventory%20System/supabase/product_catalogue_import.sql).
 3. The script will:
    - Create additive columns and the `catalogue_import_staging` table.
-   - Insert all verified staging records.
-   - Run QA counts.
+   - Insert all 1,970 verified staging records.
    - Safely enrich existing records and insert new products with `stock_quantity = 0.0`.
 """
     with open(master_report_path, 'w', encoding='utf-8') as f_out:
+        f_out.write(master_md)
+    with open('data/fmcg_catalogue/product_research_report.md', 'w', encoding='utf-8') as f_out:
         f_out.write(master_md)
     print(f"Created {master_report_path}")
 

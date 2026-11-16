@@ -99,6 +99,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
   } | null>(null);
 
   useEffect(() => {
+    if (!isOpen) return; // Only query when Photo Database modal is actively opened by user
     let cancelled = false;
     const fetchRpcStats = async () => {
       try {
@@ -129,13 +130,13 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
             percentage: pct
           });
         }
-      } catch (err) {
-        console.warn('RPC image stats fetch error:', err);
+      } catch {
+        // Silent fallback to standard memory counts if RPC is not present
       }
     };
     fetchRpcStats();
     return () => { cancelled = true; };
-  }, []);
+  }, [isOpen]);
 
   // Live statistics (prefers instant server RPC over client loop)
   const stats = useMemo(() => {

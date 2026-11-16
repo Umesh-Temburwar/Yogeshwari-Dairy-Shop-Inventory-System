@@ -1,0 +1,58 @@
+[
+  {
+    "brand": "Dairy Power",
+    "manufacturer": "Dairy Power Limited",
+    "counts": {
+      "candidates": 14,
+      "verified_barcodes": 0,
+      "verified_images": 0,
+      "missing_images": 14,
+      "unverified_products": 14,
+      "review_changes": 14,
+      "new_products": 0
+    },
+    "duration_sec": 0.5
+  },
+  {
+    "brand": "Empire Aqua",
+    "manufacturer": "The Empire Aqua (Ambajogai)",
+    "counts": {
+      "candidates": 4,
+      "verified_barcodes": 0,
+      "verified_images": 0,
+      "missing_images": 4,
+      "unverified_products": 4,
+      "review_changes": 4,
+      "new_products": 0
+    },
+    "duration_sec": 0.5
+  },
+  {
+    "brand": "Sunrich Aqua",
+    "manufacturer": "Bai-Kakaji Aquasure Solutions Pvt. Ltd. (Sunrich Aqua)",
+    "counts": {
+      "candidates": 4,
+      "verified_barcodes": 0,
+      "verified_images": 0,
+      "missing_images": 4,
+      "unverified_products": 4,
+      "review_changes": 4,
+      "new_products": 0
+    },
+    "duration_sec": 0.5
+  },
+  {
+    "brand": "Nestl\u00e9 India",
+    "manufacturer": "Nestl\u00e9 India Ltd.",
+    "counts": {
+      "candidates": 496,
+      "verified_barcodes": 486,
+      "verified_images": 410,
+      "missing_images": 76,
+      "unverified_products": 10,
+      "review_changes": 139,
+      "new_products": 285
+    },
+    "duration_sec": 900.69
+  }
+]

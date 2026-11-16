@@ -1,0 +1,77 @@
+barcode,product_name,brand,attempted_url,reason
+'3033710084005,Arome MAGGI - Bouteille 1kg,Nestlé India,https://images.openfoodfacts.net/images/products/303/371/008/4005/front_en.148.400.jpg,Dimensions too small (134x400 < 150x150)
+'3069941258458,"KITKAT Ball, Chapelet Billes au chocolat au Lait, 5x30g",Nestlé India,https://images.openfoodfacts.net/images/products/306/994/125/8458/front_fr.53.400.jpg,Dimensions too small (133x400 < 150x150)
+'3800020411971,KITKAT Chunky Peanut Butter 42g,Nestlé India,https://images.openfoodfacts.net/images/products/380/002/041/1971/front_fr.19.400.jpg,Dimensions too small (400x111 < 150x150)
+'3800020418130,KitKat Chunky Salted Caramel,Nestlé India,https://images.openfoodfacts.net/images/products/380/002/041/8130/front_de.13.400.jpg,Dimensions too small (400x102 < 150x150)
+'3800020418338,"KITKAT Chunky Duo Barre au chocolat au lait, 64g, unitaire",Nestlé India,https://images.openfoodfacts.net/images/products/380/002/041/8338/front_fr.110.400.jpg,Dimensions too small (400x102 < 150x150)
+'3800020418604,KITKAT Chunky Peanut Butter Wrapper 42g,Nestlé India,https://images.openfoodfacts.net/images/products/380/002/041/8604/front_fr.100.400.jpg,Dimensions too small (400x111 < 150x150)
+'3800020424223,Kitkat Chunky Hazelnut Cream,Nestlé India,https://images.openfoodfacts.net/images/products/380/002/042/4223/front_bg.9.400.jpg,Dimensions too small (400x79 < 150x150)
+'3800020432266,KitKat Chunky White,Nestlé India,https://images.openfoodfacts.net/images/products/380/002/043/2266/front_de.14.400.jpg,Dimensions too small (400x128 < 150x150)
+'3800020456224,KITKAT Chunky Barre au chocolat au Lait 40g,Nestlé India,https://images.openfoodfacts.net/images/products/380/002/045/6224/front_fr.83.400.jpg,Dimensions too small (400x111 < 150x150)
+'40055091,Maggi Würze,Nestlé India,https://images.openfoodfacts.net/images/products/000/004/005/5091/front_de.71.400.jpg,Dimensions too small (142x400 < 150x150)
+'40345925,KitKat Singles,Nestlé India,https://images.openfoodfacts.net/images/products/000/004/034/5925/front_de.6.400.jpg,Dimensions too small (400x65 < 150x150)
+'42402671,Gemüse Brühe,Nestlé India,https://images.openfoodfacts.net/images/products/000/004/240/2671/front_de.56.400.jpg,File too small (8758 bytes < 10KB threshold; possible placeholder/tracking pixel)
+'5000243726960,Authentic Indian Tamarind Sauce,Nestlé India,https://images.openfoodfacts.net/images/products/500/024/372/6960/front_fr.9.400.jpg,Dimensions too small (133x400 < 150x150)
+'6111018501480,Nescafé,Nestlé India,https://images.openfoodfacts.net/images/products/611/101/850/1480/front_fr.25.400.jpg,Dimensions too small (400x99 < 150x150)
+'7613035366749,Kit Kat x10,Nestlé India,https://images.openfoodfacts.net/images/products/761/303/536/6749/front_en.132.400.jpg,Dimensions too small (400x113 < 150x150)
+'7613035421554,"KITKAT barre chocolatée 41,5g",Nestlé India,https://images.openfoodfacts.net/images/products/761/303/542/1554/front_fr.128.400.jpg,Dimensions too small (400x110 < 150x150)
+'7613036236034,KITKAT Sachet d'oeufs 120g,Nestlé India,https://images.openfoodfacts.net/images/products/761/303/623/6034/front_fr.13.400.jpg,Dimensions too small (138x400 < 150x150)
+'7613039078662,KITKAT au chocolat blanc,Nestlé India,https://images.openfoodfacts.net/images/products/761/303/907/8662/front_fr.76.400.jpg,Dimensions too small (400x143 < 150x150)
+'7613039079126,"KITKAT White barre au chocolat blanc, 8x41.5g",Nestlé India,https://images.openfoodfacts.net/images/products/761/303/907/9126/front_fr.39.400.jpg,Dimensions too small (400x134 < 150x150)
+'7613287148223,Barres au chocolat noir,Nestlé India,https://images.openfoodfacts.net/images/products/761/328/714/8223/front_fr.41.400.jpg,Dimensions too small (400x136 < 150x150)
+'80002239,nescafe per latte,Nestlé India,https://images.openfoodfacts.net/images/products/000/008/000/2239/front_en.25.400.jpg,File too small (8997 bytes < 10KB threshold; possible placeholder/tracking pixel)
+'8000300428650,KITKAT Creamy Sauce au cacao et éclats de gaufrettes 1kg,Nestlé India,https://images.openfoodfacts.net/images/products/800/030/042/8650/front_fr.40.400.jpg,Dimensions too small (111x400 < 150x150)
+'8445290541994,"KITKAT 4F Noisette Multipack 4x41,5g",Nestlé India,https://images.openfoodfacts.net/images/products/844/529/054/1994/front_fr.58.400.jpg,Dimensions too small (400x143 < 150x150)
+'8901058001181,maggi,Nestlé India,https://images.openfoodfacts.net/images/products/890/105/800/1181/front_en.17.400.jpg,Dimensions too small (111x400 < 150x150)
+'8901058001846,Kitkat,Nestlé India,https://images.openfoodfacts.net/images/products/890/105/800/1846/front_en.14.400.jpg,Dimensions too small (114x400 < 150x150)
+'8901058001983,Nescafe All in 1 Frappe Coffee - Instant Refreshment,Nestlé India,,No image candidate found
+'8901058005790,Maggi special masala,Nestlé India,https://images.openfoodfacts.net/images/products/890/105/800/5790/front_en.8.400.jpg,Dimensions too small (400x111 < 150x150)
+'8901058007077,Nestle KitKat Chocolate Combo Pack,Nestlé India,,No image candidate found
+'8901058008012,Maggi Masala - Shahi Gravy Magic,Nestlé India,,No image candidate found
+'8901058009439,munch,Nestlé India,https://images.openfoodfacts.net/images/products/890/105/800/9439/front_en.10.400.jpg,Dimensions too small (400x98 < 150x150)
+'8901058010701,Nestle Munch Vanilla Flavour,Nestlé India,https://images.openfoodfacts.net/images/products/890/105/801/0701/front_en.3.400.jpg,File too small (9220 bytes < 10KB threshold; possible placeholder/tracking pixel)
+'8901058011012,KitKat Minis,Nestlé India,,No image candidate found
+'8901058011371,Nestle Cerelac,Nestlé India,https://images.openfoodfacts.net/images/products/890/105/801/1371/front_en.3.400.jpg,File too small (1063 bytes < 10KB threshold; possible placeholder/tracking pixel)
+'8901058011548,Maggi Hot & Sweet Tomato Chilli Sauce,Nestlé India,,No image candidate found
+'8901058012569,Maggi Imli Sauce Pichkoo 75 gm,Nestlé India,,No image candidate found
+'8901058013016,Nescafe sunrise,Nestlé India,,No image candidate found
+'8901058015942,Nescafe Sunrise Coffee,Nestlé India,,No image candidate found
+'8901058016116,KitKat 50,Nestlé India,https://images.openfoodfacts.net/images/products/890/105/801/6116/front_en.30.400.jpg,File too small (8783 bytes < 10KB threshold; possible placeholder/tracking pixel)
+'8901058016789,Nescafe classic,Nestlé India,,No image candidate found
+'8901058016802,Nescafe classic,Nestlé India,,No image candidate found
+'8901058016895,Nescafe Classic Coffee,Nestlé India,,No image candidate found
+'8901058018127,Maggi Hot & Sweet Tomato Chilli Sauce 1kg,Nestlé India,,No image candidate found
+'8901058018400,Nestle Ceralac,Nestlé India,,No image candidate found
+'8901058019933,Nestle Everyday Dairy Whitener 1 kg,Nestlé India,,No image candidate found
+'8901058020281,Munch Brownie Max,Nestlé India,,No image candidate found
+'8901058020304,Munch max butterscotch,Nestlé India,,No image candidate found
+'8901058021356,nescafe classic coffee 180 gm (jar),Nestlé India,,No image candidate found
+'8901058022179,Munch,Nestlé India,https://images.openfoodfacts.net/images/products/890/105/802/2179/front_en.27.400.jpg,File too small (8861 bytes < 10KB threshold; possible placeholder/tracking pixel)
+'8901058023800,Maggi,Nestlé India,https://images.openfoodfacts.net/images/products/890/105/802/3800/front_en.3.400.jpg,Dimensions too small (400x120 < 150x150)
+'8901058025408,Maggie Masala,Nestlé India,,No image candidate found
+'8901058027778,Munch Max crunchies,Nestlé India,https://images.openfoodfacts.org/images/products/890/105/802/7778/front_en.5.400.jpg,Connection timed out
+'8901058028492,Nescafe classic,Nestlé India,,No image candidate found
+'8901058029772,maggi green chilli,Nestlé India,,No image candidate found
+'8901058117226,nestle everyday shahi ghee 1 ltr,Nestlé India,,No image candidate found
+'8901058138726,Maggi Meri Masala,Nestlé India,,No image candidate found
+'8901058817836,Nescafe Classic Coffee,Nestlé India,,No image candidate found
+'8901058847505,Masala penne pasta,Nestlé India,https://images.openfoodfacts.net/images/products/890/105/884/7505/front_en.16.400.jpg,Dimensions too small (123x400 < 150x150)
+'8901058847789,Nestle Resource High Protein,Nestlé India,,No image candidate found
+'8901058851335,maggi,Nestlé India,https://images.openfoodfacts.net/images/products/890/105/885/1335/front_fr.21.400.jpg,Dimensions too small (400x124 < 150x150)
+'8901058857207,KITKAT,Nestlé India,,No image candidate found
+'8901058869002,Munch,Nestlé India,https://images.openfoodfacts.net/images/products/890/105/886/9002/front_en.18.400.jpg,Dimensions too small (400x134 < 150x150)
+'8901058870183,maggi,Nestlé India,,No image candidate found
+'8901058875744,munch nuts,Nestlé India,,No image candidate found
+'8901058890310,nestle milkmaid,Nestlé India,,No image candidate found
+'8901058890341,Maggi Masala A Magic 120 gm,Nestlé India,,No image candidate found
+'8901058891379,Nestle Koko Krunch Variety Pack,Nestlé India,,No image candidate found
+'8901058891805,Nescafe Gold Caramel Latte Coffee,Nestlé India,,No image candidate found
+'8901058895735,Maggie ketchup Rich,Nestlé India,,No image candidate found
+'8901058896961,Maggi Magic Cubes Chicken 40 gm,Nestlé India,,No image candidate found
+'8901058897005,Maggi Magic Cubes Vegetarian 40 gm,Nestlé India,,No image candidate found
+'8901058897074,Nestle Gold Crunchy Corn & Oat Flakes,Nestlé India,,No image candidate found
+'8901058900361,Munch Nuts,Nestlé India,https://images.openfoodfacts.net/images/products/890/105/890/0361/front_en.4.400.jpg,Dimensions too small (400x110 < 150x150)
+'8901058902938,Nescafe Sunrise,Nestlé India,,No image candidate found
+'8901058903843,Milkmaid,Nestlé India,,No image candidate found
+'8901058904383,Maggi Masala A Magic 50 gm,Nestlé India,,No image candidate found
+'8901058905571,munch,Nestlé India,https://images.openfoodfacts.net/images/products/890/105/890/5571/front_en.3.400.jpg,Dimensions too small (400x67 < 150x150)

@@ -1,0 +1,140 @@
+barcode,product_name,brand,field_changed,old_value,new_value,reason
+'89009758,NESCAFE classic,Nestlé India,pack_size,NULL,24 g,Enriched pack size
+'8901058000269,Maggi,Nestlé India,pack_size,NULL,280 g,Enriched pack size
+'8901058000290,maggi,Nestlé India,pack_size,NULL,70,Enriched pack size
+'8901058000306,Maggi noodles masala,Nestlé India,pack_size,NULL,560 g,Enriched pack size
+'8901058000702,Munch,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/0702/front_en.20.400.jpg,Added verified trusted_db packshot
+'8901058001181,maggi,Nestlé India,pack_size,NULL,1 kg,Enriched pack size
+'8901058001846,Kitkat,Nestlé India,pack_size,NULL,18.5 g,Enriched pack size
+'8901058002270,Maggi spicy Garltc,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/2270/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058003055,Maggi pazzta cheese macaroni,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/3055/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058003079,Maggi cheesy Tomato,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/3079/front_en.21.400.jpg,Added verified trusted_db packshot
+'8901058003734,Maggie korean noodles,Nestlé India,pack_size,NULL,90 g,Enriched pack size
+'8901058003802,Nestle Everyday Dairy Whitener 15g,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/3802/front_en.7.400.jpg,Added verified trusted_db packshot
+'8901058003970,Munch Crunchilicious Cereal,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/3970/front_en.9.400.jpg,Added verified trusted_db packshot
+'8901058004700,Nescafe classic Coffee,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/4700/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058004816,Nestle class,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/4816/front_en.5.400.jpg,Added verified trusted_db packshot
+'8901058005080,Munch Max,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/5080/front_en.7.400.jpg,Added verified trusted_db packshot
+'8901058005233,Kitkat mini chocolate coated wafer,Nestlé India,pack_size,NULL,11.9 g,Enriched pack size
+'8901058005424,maggie koriean spicy cheesy,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/5424/front_en.14.400.jpg,Added verified trusted_db packshot
+'8901058005509,Nescafe Sunrise,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/5509/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058005608,Maggi,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/5608/front_en.6.400.jpg,Added verified trusted_db packshot
+'8901058005790,Maggi special masala,Nestlé India,pack_size,NULL,280,Enriched pack size
+'8901058005905,KitKat Dark Chocolate Coated Wafer,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/5905/front_en.18.400.jpg,Added verified trusted_db packshot
+'8901058006032,maggi cup,Nestlé India,pack_size,NULL,70 g,Enriched pack size
+'8901058006124,Maggie chicken noodles,Nestlé India,pack_size,NULL,284,Enriched pack size
+'8901058006148,maggie chicken noodles,Nestlé India,pack_size,NULL,71 g,Enriched pack size
+'8901058006643,Maggi 2 Minutes Noodles Masala,Nestlé India,pack_size,NULL,1.68 kg,Enriched pack size
+'8901058007060,Milkmaid Mini,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/7060/front_en.6.400.jpg,Added verified trusted_db packshot
+'8901058007169,Nescafe Classic Instant coffee,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/7169/front_en.10.400.jpg,Added verified trusted_db packshot
+'8901058007220,Maggie masala magic,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/7220/front_en.11.400.jpg,Added verified trusted_db packshot
+'8901058007435,Nescafe Classic Black Roast,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/7435/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058008050,Maggi,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/8050/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058009422,Munch,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/800/9422/front_en.8.400.jpg,Added verified trusted_db packshot
+'8901058009712,Maggi Masala Veg Atta noodles,Nestlé India,pack_size,NULL,51 g,Enriched pack size
+'8901058010510,Munch brownie max,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/0510/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058010619,Maggi cheese noodles,Nestlé India,pack_size,NULL,304 g,Enriched pack size
+'8901058010701,Nestle Munch Vanilla Flavour,Nestlé India,pack_size,NULL,14 g,Enriched pack size
+'8901058010749,Maggie,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/0749/front_en.11.400.jpg,Added verified trusted_db packshot
+'8901058011012,KitKat Minis,Nestlé India,pack_size,NULL,133.2 g,Enriched pack size
+'8901058011067,Maggi veg atta noodles,Nestlé India,pack_size,NULL,290 g,Enriched pack size
+'8901058011371,Nestle Cerelac,Nestlé India,pack_size,NULL,350 g,Enriched pack size
+'8901058011401,Nescafe Ice Roast,Nestlé India,pack_size,NULL,90 g,Enriched pack size
+'8901058011746,Maggi sauce,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/1746/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058012330,Kitkat 10 mrp,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/2330/front_en.4.400.jpg,Added verified trusted_db packshot
+'8901058012415,Munch max,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/2415/front_en.4.400.jpg,Added verified trusted_db packshot
+'8901058012637,Maggi imli sauce pichkoo 75 g,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/2637/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058012897,munch crunchilious cereal,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/2897/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058013061,Nescafe Sunrise,Nestlé India,pack_size,NULL,190 g,Enriched pack size
+'8901058013665,maggi hot and sweet,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/3665/front_en.19.400.jpg,Added verified trusted_db packshot
+'8901058013863,Kitkat Double Choco,Nestlé India,pack_size,NULL,63 g,Enriched pack size
+'8901058014044,MAGGI RICH TOMATO KETCHUP,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/4044/front_en.8.400.jpg,Added verified trusted_db packshot
+'8901058014235,Maggi,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/4235/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058014341,KitKat Delights dark,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/4341/front_en.7.400.jpg,Added verified trusted_db packshot
+'8901058015171,Nestle KitKat,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/5171/front_en.12.400.jpg,Added verified trusted_db packshot
+'8901058015799,Nestle Cerelac Wheat Apple Carrot,Nestlé India,pack_size,NULL,300 g,Enriched pack size
+'8901058016055,Nescafe Classic Instant Coffee,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/6055/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058016116,KitKat 50,Nestlé India,pack_size,NULL,19 g,Enriched pack size
+'8901058017601,Nescafe 10 rupees,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/7601/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058017670,Maggi 280g,Nestlé India,pack_size,NULL,280,Enriched pack size
+'8901058017687,maggi,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/7687/front_en.13.400.jpg,Added verified trusted_db packshot
+'8901058018493,Maggi,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/8493/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058019568,Maggi Pazzta,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/9568/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058019841,Nestle Everyday Dairy Whitener,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/9841/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058019872,Nestle Everyday,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/801/9872/front_en.5.400.jpg,Added verified trusted_db packshot
+'8901058020021,Munch Nut Max,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/0021/front_en.11.400.jpg,Added verified trusted_db packshot
+'8901058020335,Munch Crunchilicious Cereal,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/0335/front_en.5.400.jpg,Added verified trusted_db packshot
+'8901058021271,Nestle everyday,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/1271/front_en.14.400.jpg,Added verified trusted_db packshot
+'8901058021950,Nestle Milkmaid Mini,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/1950/front_en.5.400.jpg,Added verified trusted_db packshot
+'8901058022087,Munch,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/2087/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058022179,Munch,Nestlé India,pack_size,NULL,17.4 g,Enriched pack size
+'8901058022193,Maggi Noodles,Nestlé India,pack_size,NULL,70 g,Enriched pack size
+'8901058023183,KitKat Lemony Lime,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/3183/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058023329,KitKat Delights Hazelnut,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/3329/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058023558,KitKat Dark Chocolate Minis,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/3558/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058023800,Maggi,Nestlé India,pack_size,NULL,560,Enriched pack size
+'8901058024425,Maggie Double Masala Instant Noodles,Nestlé India,pack_size,NULL,98 g,Enriched pack size
+'8901058027129,Maggi 2-minute noodles with limited edition bowl,Nestlé India,pack_size,NULL,450 g,Enriched pack size
+'8901058029109,Maggi Pazzta Masala Penne,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/802/9109/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058798487,nestle Nan pro formula milk,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/879/8487/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058815900,Nescafe Sunrise Extra,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/881/5900/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058817836,Nescafe Classic Coffee,Nestlé India,pack_size,NULL,100 g,Enriched pack size
+'8901058823844,Maggie 8pk,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/882/3844/front_en.20.400.jpg,Added verified trusted_db packshot
+'8901058826784,Nescafe classic,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/882/6784/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058830460,Nestle every day,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/883/0460/front_en.6.400.jpg,Added verified trusted_db packshot
+'8901058838008,Nescafe,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/883/8008/front_en.4.400.jpg,Added verified trusted_db packshot
+'8901058844757,Masala Cuppa Noodles,Nestlé India,pack_size,NULL,70 g,Enriched pack size
+'8901058844894,maggi rich tomato ketchup pichkoo,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/884/4894/front_en.10.400.jpg,Added verified trusted_db packshot
+'8901058847482,Maggie Pazzta Chese Macaroni,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/884/7482/front_en.7.400.jpg,Added verified trusted_db packshot
+'8901058847505,Masala penne pasta,Nestlé India,pack_size,NULL,65 g,Enriched pack size
+'8901058847789,Nestle Resource High Protein,Nestlé India,pack_size,NULL,1 kg,Enriched pack size
+'8901058850680,MAGGI MASALA NOODLES,Nestlé India,pack_size,NULL,280 g,Enriched pack size
+'8901058851298,Maggi 2-minutes Noodles,Nestlé India,pack_size,NULL,70 g,Enriched pack size
+'8901058851304,Maggi Masala Noodles,Nestlé India,pack_size,NULL,70 g,Enriched pack size
+'8901058851311,Maggi Masala 2 Minute 2 Noodles - 280 GM,Nestlé India,pack_size,NULL,70 g,Enriched pack size
+'8901058851335,maggi,Nestlé India,pack_size,NULL,560 g,Enriched pack size
+'8901058852141,kitkat caramel chocolate coated wafer,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/885/2141/front_en.13.400.jpg,Added verified trusted_db packshot
+'8901058857245,Kitkat,Nestlé India,pack_size,NULL,28.3 g,Enriched pack size
+'8901058858860,Maggi Atta noodle - Masala,Nestlé India,pack_size,NULL,300 g,Enriched pack size
+'8901058859737,Nestle Nan,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/885/9737/front_fr.4.400.jpg,Added verified trusted_db packshot
+'8901058860726,Maggi Special Masala,Nestlé India,pack_size,NULL,70 g,Enriched pack size
+'8901058867923,Atta Maggi,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/886/7923/front_fr.3.400.jpg,Added verified trusted_db packshot
+'8901058868012,Kitkat,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/886/8012/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058868036,KitKat,Nestlé India,pack_size,NULL,55 g,Enriched pack size
+'8901058869002,Munch,Nestlé India,pack_size,NULL,12.5 g,Enriched pack size
+'8901058869408,"Nestle, EveryDay",Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/886/9408/front_en.6.400.jpg,Added verified trusted_db packshot
+'8901058869460,Nestle Everyday Dairy Whitener,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/886/9460/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058875324,Maggi - Desi Cheesy,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/887/5324/front_en.4.400.jpg,Added verified trusted_db packshot
+'8901058875744,munch nuts,Nestlé India,pack_size,NULL,78kcal,Enriched pack size
+'8901058889987,Maggi pasta,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/888/9987/front_en.7.400.jpg,Added verified trusted_db packshot
+'8901058890310,nestle milkmaid,Nestlé India,pack_size,NULL,400 g,Enriched pack size
+'8901058890709,maggie masala chuppa noodles,Nestlé India,pack_size,NULL,70.5 g,Enriched pack size
+'8901058891416,2-minute noodles,Nestlé India,pack_size,NULL,70 g,Enriched pack size
+'8901058894547,Maggi Pichkoo,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/889/4547/front_fr.3.400.jpg,Added verified trusted_db packshot
+'8901058895322,Nescafe Sunrise,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/889/5322/front_en.5.400.jpg,Added verified trusted_db packshot
+'8901058895766,maggi Pichkoo tomato ketchup,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/889/5766/front_en.5.400.jpg,Added verified trusted_db packshot
+'8901058896152,Maggi,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/889/6152/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058896381,Nescafe sunrise coffe 200g,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/889/6381/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058898330,Nescafe choco mocha,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/889/8330/front_es.5.400.jpg,Added verified trusted_db packshot
+'8901058898613,Maggi,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/889/8613/front_fr.3.400.jpg,Added verified trusted_db packshot
+'8901058900118,Nescafe Sunrise 50g pp,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/0118/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058900231,Maggie Souce,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/0231/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058900361,Munch Nuts,Nestlé India,pack_size,NULL,30 g,Enriched pack size
+'8901058901542,Maggie,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/1542/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058901559,Maggi 2-Minute Noodles,Nestlé India,pack_size,NULL,280 g,Enriched pack size
+'8901058902372,Maggi pazzta,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/2372/front_fr.3.400.jpg,Added verified trusted_db packshot
+'8901058902938,Nescafe Sunrise,Nestlé India,pack_size,NULL,5 g,Enriched pack size
+'8901058903164,KitKat win gold,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/3164/front_en.29.400.jpg,Added verified trusted_db packshot
+'8901058903812,Maggi Rich Tomato Ketchup Pichkoo,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/3812/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058903843,Milkmaid,Nestlé India,pack_size,NULL,380 g,Enriched pack size
+'8901058903959,milkmaid 100+ recipes,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/3959/front_en.5.400.jpg,Added verified trusted_db packshot
+'8901058904093,Munch Max,Nestlé India,pack_size,NULL,42 g,Enriched pack size
+'8901058904338,Nescafe Classic,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/4338/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058904697,maggi Masala Oats Noodles,Nestlé India,pack_size,NULL,73.5 g,Enriched pack size
+'8901058904741,Nestle kit Kat (Ind),Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/4741/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058904758,Kitkat,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/4758/front_en.4.400.jpg,Added verified trusted_db packshot
+'8901058904987,Maggi Pichku,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/4987/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058905113,Kit kat,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/5113/front_fr.3.400.jpg,Added verified trusted_db packshot
+'8901058905441,Maggi 2-minute noodles Special Masala,Nestlé India,pack_size,NULL,70 g,Enriched pack size
+'8901058905526,Nestle NAN Excellapro,Nestlé India,image_url,NULL,https://images.openfoodfacts.net/images/products/890/105/890/5526/front_en.3.400.jpg,Added verified trusted_db packshot
+'8901058905571,munch,Nestlé India,pack_size,NULL,18 g,Enriched pack size

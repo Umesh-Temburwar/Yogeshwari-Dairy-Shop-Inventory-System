@@ -1,0 +1,487 @@
+barcode,product_name,brand,pack_size,barcode_source_url,barcode_evidence,status
+'0028000743079,Coffee,Nestlé India,14oz,https://world.openfoodfacts.org/product/0028000743079,"OFF GTIN Record (Name: Coffee, Brand: Nescafé)",verified
+'0643435552579,Cappuccino choco-blanc,Nestlé India,,https://world.openfoodfacts.org/product/0643435552579,"OFF GTIN Record (Name: Cappuccino choco-blanc, Brand: Nescafé)",verified
+'0643435781627,Bouillon Kub Légumes,Nestlé India,180 g,https://world.openfoodfacts.org/product/0643435781627,"OFF GTIN Record (Name: Bouillon Kub Légumes, Brand: Maggi)",verified
+'0643439830727,Fond de veau,Nestlé India,,https://world.openfoodfacts.org/product/0643439830727,"OFF GTIN Record (Name: Fond de veau, Brand: Maggi)",verified
+'0643439832417,Fumet de poisson,Nestlé India,90 g,https://world.openfoodfacts.org/product/0643439832417,"OFF GTIN Record (Name: Fumet de poisson, Brand: Maggi)",verified
+'0941458001846,KitKat,Nestlé India,,https://world.openfoodfacts.org/product/0941458001846,"OFF GTIN Record (Name: , Brand: KitKat)",verified
+'3033710012794,"KITKAT Ball, Billes au chocolat au Lait,140g",Nestlé India,140 g,https://world.openfoodfacts.org/product/3033710012794,"OFF GTIN Record (Name: KITKAT Ball, Billes au chocolat au Lait,140g, Brand: Kit Kat, KitKat, Nestlé)",verified
+'3033710019526,"KITKAT Ball, Billes au chocolat au Lait, 250g",Nestlé India,250 g,https://world.openfoodfacts.org/product/3033710019526,"OFF GTIN Record (Name: KITKAT Ball, Billes au chocolat au Lait, 250g, Brand: KitKat, Nestlé, Kit kat ball)",verified
+'3033710039586,Nescafé,Nestlé India,200 g,https://world.openfoodfacts.org/product/3033710039586,"OFF GTIN Record (Name: Nescafé, Brand: Nescafé)",verified
+'3033710047765,"Nescafé, Gold cappuccino, Cappuccino",Nestlé India,140 g,https://world.openfoodfacts.org/product/3033710047765,"OFF GTIN Record (Name: Nescafé, Gold cappuccino, Cappuccino, Brand: Nescafé, Cappuccino, Gold cappuccino)",verified
+'3033710074525,special filtre,Nestlé India,200 g,https://world.openfoodfacts.org/product/3033710074525,"OFF GTIN Record (Name: special filtre, Brand: Nescafé)",verified
+'3033710074617,"NESCAFÉ SPECIAL FILTRE Décaféiné, Café Soluble, Flacon de 100g",Nestlé India,100 g,https://world.openfoodfacts.org/product/3033710074617,"OFF GTIN Record (Name: NESCAFÉ SPECIAL FILTRE Décaféiné, Café Soluble, Flacon de 100g, Brand: Nescafé, Special filtre, Special filtre decaf)",verified
+'3033710074624,"NESCAFÉ SPECIAL FILTRE Décaféiné, Café Soluble, Flacon de 200g",Nestlé India,200 g,https://world.openfoodfacts.org/product/3033710074624,"OFF GTIN Record (Name: NESCAFÉ SPECIAL FILTRE Décaféiné, Café Soluble, Flacon de 200g, Brand: Nescafé, Nestlé, Special filtre, Special filtre decaf)",verified
+'3033710075225,Cafe,Nestlé India,200 g,https://world.openfoodfacts.org/product/3033710075225,"OFF GTIN Record (Name: Cafe, Brand: Nescafé)",verified
+'3033710075270,"NESCAFÉ Sélection, Café Soluble, Flacon de 100g",Nestlé India,100 g,https://world.openfoodfacts.org/product/3033710075270,"OFF GTIN Record (Name: NESCAFÉ Sélection, Café Soluble, Flacon de 100g, Brand: Nescafé, Selection)",verified
+'3033710076772,"NESCAFÉ SPECIAL FILTRE L'Original Décaféiné, Café Soluble, Boîte de 25 Sticks",Nestlé India,50 g,https://world.openfoodfacts.org/product/3033710076772,"OFF GTIN Record (Name: NESCAFÉ SPECIAL FILTRE L'Original Décaféiné, Café Soluble, Boîte de 25 Sticks, Brand: Nescafé, Special filtre)",verified
+'3033710076789,nescafé expresso,Nestlé India,45 g,https://world.openfoodfacts.org/product/3033710076789,"OFF GTIN Record (Name: nescafé expresso, Brand: Nescafé)",verified
+'3033710076895,"NESCAFÉ Sélection Décaféiné, Café Soluble, Flacon de 200g",Nestlé India,200 g,https://world.openfoodfacts.org/product/3033710076895,"OFF GTIN Record (Name: NESCAFÉ Sélection Décaféiné, Café Soluble, Flacon de 200g, Brand: Nescafé, Selection)",verified
+'3033710077274,"NESCAFÉ NES, Café Soluble, Boîte de 200g",Nestlé India,200 g,https://world.openfoodfacts.org/product/3033710077274,"OFF GTIN Record (Name: NESCAFÉ NES, Café Soluble, Boîte de 200g, Brand: Nescafé, Nestlé, Nes)",verified
+'3033710083107,MAGGI Bouillon KUB Bœuf 80g,Nestlé India,80 g,https://world.openfoodfacts.org/product/3033710083107,"OFF GTIN Record (Name: MAGGI Bouillon KUB Bœuf 80g, Brand: Maggi)",verified
+'3033710083626,MAGGI Bouillon Pot au Feu 80g,Nestlé India,80 g,https://world.openfoodfacts.org/product/3033710083626,"OFF GTIN Record (Name: MAGGI Bouillon Pot au Feu 80g, Brand: Maggi, Nestlé)",verified
+'3033710084005,Arome MAGGI - Bouteille 1kg,Nestlé India,1000 g,https://world.openfoodfacts.org/product/3033710084005,"OFF GTIN Record (Name: Arome MAGGI - Bouteille 1kg, Brand: Maggi)",verified
+'3033710085095,"MAGGI Court Bouillon Citron et Fines Herbes 8 tablettes, 89,6g",Nestlé India,89.6 g,https://world.openfoodfacts.org/product/3033710085095,"OFF GTIN Record (Name: MAGGI Court Bouillon Citron et Fines Herbes 8 tablettes, 89,6g, Brand: Maggi, Nestlé)",verified
+'3033710088034,Court-Bouillon MAGGI Légumes Vin Blanc - 3x50g,Nestlé India,150 g,https://world.openfoodfacts.org/product/3033710088034,"OFF GTIN Record (Name: Court-Bouillon MAGGI Légumes Vin Blanc - 3x50g, Brand: Maggi, Nestlé)",verified
+'3069941258458,"KITKAT Ball, Chapelet Billes au chocolat au Lait, 5x30g",Nestlé India,150 g,https://world.openfoodfacts.org/product/3069941258458,"OFF GTIN Record (Name: KITKAT Ball, Chapelet Billes au chocolat au Lait, 5x30g, Brand: KitKat, Nestlé, Kit kat ball)",verified
+'3760381260000,Mousline Bio nature,Nestlé India,200 g,https://world.openfoodfacts.org/product/3760381260000,"OFF GTIN Record (Name: Mousline Bio nature, Brand: Maggi, Mousline)",verified
+'3800020410745,Kitkat chunky,Nestlé India,,https://world.openfoodfacts.org/product/3800020410745,"OFF GTIN Record (Name: Kitkat chunky, Brand: KitKat)",verified
+'3800020411957,KitKat Chunky 4er-Pack,Nestlé India,160 g,https://world.openfoodfacts.org/product/3800020411957,"OFF GTIN Record (Name: KitKat Chunky 4er-Pack, Brand: KitKat, Nestlé)",verified
+'3800020411971,KITKAT Chunky Peanut Butter 42g,Nestlé India,42 g,https://world.openfoodfacts.org/product/3800020411971,"OFF GTIN Record (Name: KITKAT Chunky Peanut Butter 42g, Brand: KitKat, Nestlé)",verified
+'3800020413210,Chunky Caramel,Nestlé India,1pcs,https://world.openfoodfacts.org/product/3800020413210,"OFF GTIN Record (Name: Chunky Caramel, Brand: KitKat)",verified
+'3800020417577,Вафлі в молочному шоколаді Chunky KitKat,Nestlé India,40 g,https://world.openfoodfacts.org/product/3800020417577,"OFF GTIN Record (Name: Вафлі в молочному шоколаді Chunky KitKat, Brand: KitKat, Nestlé)",verified
+'3800020418130,KitKat Chunky Salted Caramel,Nestlé India,42 g,https://world.openfoodfacts.org/product/3800020418130,"OFF GTIN Record (Name: KitKat Chunky Salted Caramel, Brand: KitKat, Nestlé)",verified
+'3800020418338,"KITKAT Chunky Duo Barre au chocolat au lait, 64g, unitaire",Nestlé India,64 g,https://world.openfoodfacts.org/product/3800020418338,"OFF GTIN Record (Name: KITKAT Chunky Duo Barre au chocolat au lait, 64g, unitaire, Brand: KitKat, Nestlé, Kit kat chunky)",verified
+'3800020418420,Senses Caramel pointe de sel,Nestlé India,200 g,https://world.openfoodfacts.org/product/3800020418420,"OFF GTIN Record (Name: Senses Caramel pointe de sel, Brand: KitKat)",verified
+'3800020418451,KitKat senses,Nestlé India,200 g,https://world.openfoodfacts.org/product/3800020418451,"OFF GTIN Record (Name: KitKat senses, Brand: KitKat, Nestlé)",verified
+'3800020418604,KITKAT Chunky Peanut Butter Wrapper 42g,Nestlé India,42 g,https://world.openfoodfacts.org/product/3800020418604,"OFF GTIN Record (Name: KITKAT Chunky Peanut Butter Wrapper 42g, Brand: Nestlé)",verified
+'3800020418819,KITKAT CHUNKY Peanut Butter 168g,Nestlé India,168 g,https://world.openfoodfacts.org/product/3800020418819,"OFF GTIN Record (Name: KITKAT CHUNKY Peanut Butter 168g, Brand: KitKat, Nestlé, Kit kat chunky)",verified
+'3800020420027,KitKat Chunky White,Nestlé India,200 g,https://world.openfoodfacts.org/product/3800020420027,"OFF GTIN Record (Name: KitKat Chunky White, Brand: Kit Kat, KitKat, Nestlé)",verified
+'3800020423998,"KITKAT Mini Break Barres au chocolat au Lait, 104g",Nestlé India,104 g,https://world.openfoodfacts.org/product/3800020423998,"OFF GTIN Record (Name: KITKAT Mini Break Barres au chocolat au Lait, 104g, Brand: KitKat, Nestlé, Kit kat mini break)",verified
+'3800020424223,Kitkat Chunky Hazelnut Cream,Nestlé India,,https://world.openfoodfacts.org/product/3800020424223,"OFF GTIN Record (Name: Kitkat Chunky Hazelnut Cream, Brand: KitKat)",verified
+'3800020432266,KitKat Chunky White,Nestlé India,40 g,https://world.openfoodfacts.org/product/3800020432266,"OFF GTIN Record (Name: KitKat Chunky White, Brand: KitKat)",verified
+'3800020432914,Black white,Nestlé India,,https://world.openfoodfacts.org/product/3800020432914,"OFF GTIN Record (Name: Black white, Brand: KitKat)",verified
+'3800020453490,Kitkat chunky black white,Nestlé India,42 g,https://world.openfoodfacts.org/product/3800020453490,"OFF GTIN Record (Name: Kitkat chunky black white, Brand: KitKat)",verified
+'3800020453544,KIITKAT CHUNKY BLACK&WHITE (4x42g),Nestlé India,168 g,https://world.openfoodfacts.org/product/3800020453544,"OFF GTIN Record (Name: KIITKAT CHUNKY BLACK&WHITE (4x42g), Brand: KitKat, Nestlé)",verified
+'3800020456224,KITKAT Chunky Barre au chocolat au Lait 40g,Nestlé India,40 g,https://world.openfoodfacts.org/product/3800020456224,"OFF GTIN Record (Name: KITKAT Chunky Barre au chocolat au Lait 40g, Brand: KitKat, Nestlé, Kit kat chunky)",verified
+'3800020456262,KitKat Chunky,Nestlé India,160 g,https://world.openfoodfacts.org/product/3800020456262,"OFF GTIN Record (Name: KitKat Chunky, Brand: KitKat, Nestlé)",verified
+'3800020456484,KitKat Singles,Nestlé India,2 g,https://world.openfoodfacts.org/product/3800020456484,"OFF GTIN Record (Name: KitKat Singles, Brand: KitKat, Nestlé)",verified
+'3800020472743,KitKat chunky - salted caramel pop corn,Nestlé India,168 g,https://world.openfoodfacts.org/product/3800020472743,"OFF GTIN Record (Name: KitKat chunky - salted caramel pop corn, Brand: KitKat)",verified
+'3800020483992,Gaufrette chocolat noisettes et éclats de cacao,Nestlé India,200 g,https://world.openfoodfacts.org/product/3800020483992,"OFF GTIN Record (Name: Gaufrette chocolat noisettes et éclats de cacao, Brand: KitKat, Nestlé, Kit kat pops)",verified
+'3800020488423,Kit Kat Chunky Peanut Butter - Nestlé - 24 × 42g,Nestlé India,1008 g,https://world.openfoodfacts.org/product/3800020488423,"OFF GTIN Record (Name: Kit Kat Chunky Peanut Butter - Nestlé - 24 × 42g, Brand: KitKat, Nestlé)",verified
+'3800020488652,Bounty,Nestlé India,1pcs,https://world.openfoodfacts.org/product/3800020488652,"OFF GTIN Record (Name: Bounty, Brand: KitKat)",verified
+'3800020492956,Kit Kat mini Mix,Nestlé India,197.4 g,https://world.openfoodfacts.org/product/3800020492956,"OFF GTIN Record (Name: Kit Kat mini Mix, Brand: KitKat, Nestlé)",verified
+'3800020493885,Kitkat Pops,Nestlé India,,https://world.openfoodfacts.org/product/3800020493885,"OFF GTIN Record (Name: Kitkat Pops, Brand: KitKat)",verified
+'3800020493892,Pops,Nestlé India,,https://world.openfoodfacts.org/product/3800020493892,"OFF GTIN Record (Name: Pops, Brand: KitKat)",verified
+'3800020604038,Zumo,Nestlé India,250 ml,https://world.openfoodfacts.org/product/3800020604038,"OFF GTIN Record (Name: Zumo, Brand: KitKat)",verified
+'40052397,"KITKAT 4 Fingers Barre au Chocolat au Lait 41,5g, unitaire",Nestlé India,41.5 g,https://world.openfoodfacts.org/product/40052397,"OFF GTIN Record (Name: KITKAT 4 Fingers Barre au Chocolat au Lait 41,5g, unitaire, Brand: Nestlé)",verified
+'40052403,kit kat,Nestlé India,5 g,https://world.openfoodfacts.org/product/40052403,"OFF GTIN Record (Name: kit kat, Brand: Nestlé)",verified
+'40052496,"KITKAT 4 Finger Barre au chocolat au Lait, 41,5g en lot de 3",Nestlé India,124.5 g,https://world.openfoodfacts.org/product/40052496,"OFF GTIN Record (Name: KITKAT 4 Finger Barre au chocolat au Lait, 41,5g en lot de 3, Brand: Kit Kat, KitKat, Nestlé)",verified
+'4005500005827,Nescafé Classic,Nestlé India,200 g,https://world.openfoodfacts.org/product/4005500005827,"OFF GTIN Record (Name: Nescafé Classic, Brand: Nescafé, Nestlé)",verified
+'4005500016236,Maggi Würze,Nestlé India,250 g,https://world.openfoodfacts.org/product/4005500016236,"OFF GTIN Record (Name: Maggi Würze, Brand: Maggi, Nestlé, Fach 4)",verified
+'4005500274995,Eiskaffee,Nestlé India,275 g,https://world.openfoodfacts.org/product/4005500274995,"OFF GTIN Record (Name: Eiskaffee, Brand: Nescafé, Nestlé)",verified
+'4005500306504,Brühwürfel Fette Brühe,Nestlé India,10pcs,https://world.openfoodfacts.org/product/4005500306504,"OFF GTIN Record (Name: Brühwürfel Fette Brühe, Brand: Maggi)",verified
+'4005500321972,Fondor (angebrochen),Nestlé India,200 g,https://world.openfoodfacts.org/product/4005500321972,"OFF GTIN Record (Name: Fondor (angebrochen), Brand: Maggi)",verified
+'4005500330318,Ravioli Gemüse,Nestlé India,800 g,https://world.openfoodfacts.org/product/4005500330318,"OFF GTIN Record (Name: Ravioli Gemüse, Brand: Maggi, Nestlé)",verified
+'4005500333630,Mexicana Salsa,Nestlé India,500 ml,https://world.openfoodfacts.org/product/4005500333630,"OFF GTIN Record (Name: Mexicana Salsa, Brand: Maggi)",verified
+'4005500339205,Maggi Ravioli in pikanter Sauce 4005500339205 Ravioli in pikanter Sauce mit Rindfleisch und Speck,Nestlé India,800 g,https://world.openfoodfacts.org/product/4005500339205,"OFF GTIN Record (Name: Maggi Ravioli in pikanter Sauce 4005500339205 Ravioli in pikanter Sauce mit Rindfleisch und Speck, Brand: Maggi, Nestlé)",verified
+'4005500339403,Ravioli in Tomatensauce mit Fleischhaltiger Füllung,Nestlé India,800 g,https://world.openfoodfacts.org/product/4005500339403,"OFF GTIN Record (Name: Ravioli in Tomatensauce mit Fleischhaltiger Füllung, Brand: Maggi, Nestlé)",verified
+'4005500569503,"KITKAT Mini Barre au chocolat au Lait, 350g",Nestlé India,350 g,https://world.openfoodfacts.org/product/4005500569503,"OFF GTIN Record (Name: KITKAT Mini Barre au chocolat au Lait, 350g, Brand: KitKat, Nestlé, Kit kat mini)",verified
+'40055091,Maggi Würze,Nestlé India,100 ml,https://world.openfoodfacts.org/product/40055091,"OFF GTIN Record (Name: Maggi Würze, Brand: Maggi, Nestlé)",verified
+'40056531,Gemüse Bouillon Bio,Nestlé India,110 g,https://world.openfoodfacts.org/product/40056531,"OFF GTIN Record (Name: Gemüse Bouillon Bio, Brand: Maggi)",verified
+'40114101,Kitkat Green Tea Matcha,Nestlé India,5 g,https://world.openfoodfacts.org/product/40114101,"OFF GTIN Record (Name: Kitkat Green Tea Matcha, Brand: Kit Kat, KitKat, Nestlé)",verified
+'4032600122055,Kartoffelpüree,Nestlé India,240 g,https://world.openfoodfacts.org/product/4032600122055,"OFF GTIN Record (Name: Kartoffelpüree, Brand: Maggi, Pfanni, Unilever)",verified
+'40345116,KitKat,Nestlé India,41.5 g,https://world.openfoodfacts.org/product/40345116,"OFF GTIN Record (Name: KitKat, Brand: Kit Kat, KitKat, Nestlé)",verified
+'40345925,KitKat Singles,Nestlé India,2 g,https://world.openfoodfacts.org/product/40345925,"OFF GTIN Record (Name: KitKat Singles, Brand: KitKat, Nestlé)",verified
+'42395065,KITKAT Lapin 85G,Nestlé India,85 g,https://world.openfoodfacts.org/product/42395065,"OFF GTIN Record (Name: KITKAT Lapin 85G, Brand: KitKat, Nestlé)",verified
+'42402671,Gemüse Brühe,Nestlé India,119 g,https://world.openfoodfacts.org/product/42402671,"OFF GTIN Record (Name: Gemüse Brühe, Brand: Maggi, Nestlé)",verified
+'42402688,Hühnerbrühe,Nestlé India,92 g,https://world.openfoodfacts.org/product/42402688,"OFF GTIN Record (Name: Hühnerbrühe, Brand: Maggi)",verified
+'4600680000640,Nescafe Gold,Nestlé India,190 g,https://world.openfoodfacts.org/product/4600680000640,"OFF GTIN Record (Name: Nescafe Gold, Brand: Nescafé)",verified
+'4902201165914,KitKat Uji Matcha (thé vert),Nestlé India,8 g,https://world.openfoodfacts.org/product/4902201165914,"OFF GTIN Record (Name: KitKat Uji Matcha (thé vert), Brand: KitKat, Nestlé)",verified
+'4902201174602,Kitkat a la patate douce,Nestlé India,,https://world.openfoodfacts.org/product/4902201174602,"OFF GTIN Record (Name: Kitkat a la patate douce, Brand: KitKat)",verified
+'4902201176538,KitKat Thé Vert Matcha,Nestlé India,,https://world.openfoodfacts.org/product/4902201176538,"OFF GTIN Record (Name: KitKat Thé Vert Matcha, Brand: KitKat)",verified
+'4902201180115,Cheesecake,Nestlé India,,https://world.openfoodfacts.org/product/4902201180115,"OFF GTIN Record (Name: Cheesecake, Brand: KitKat, Nestlé)",verified
+'4902201180801,Milk Tea,Nestlé India,81 g,https://world.openfoodfacts.org/product/4902201180801,"OFF GTIN Record (Name: Milk Tea, Brand: KitKat)",verified
+'4902201180863,KitKat Cookies & Cream,Nestlé India,,https://world.openfoodfacts.org/product/4902201180863,"OFF GTIN Record (Name: KitKat Cookies & Cream, Brand: KitKat)",verified
+'4902201181174,Kitkat maca,Nestlé India,128 g,https://world.openfoodfacts.org/product/4902201181174,"OFF GTIN Record (Name: Kitkat maca, Brand: KitKat)",verified
+'4902201181181,Hafer,Nestlé India,1pcs,https://world.openfoodfacts.org/product/4902201181181,"OFF GTIN Record (Name: Hafer, Brand: KitKat)",verified
+'4902201181600,Kitkat,Nestlé India,,https://world.openfoodfacts.org/product/4902201181600,"OFF GTIN Record (Name: Kitkat, Brand: KitKat)",verified
+'5000189974579,"KITKAT Mini Barre au chocolat au Lait, 200g",Nestlé India,200 g,https://world.openfoodfacts.org/product/5000189974579,"OFF GTIN Record (Name: KITKAT Mini Barre au chocolat au Lait, 200g, Brand: Nestlé)",verified
+'5000243726960,Authentic Indian Tamarind Sauce,Nestlé India,,https://world.openfoodfacts.org/product/5000243726960,"OFF GTIN Record (Name: Authentic Indian Tamarind Sauce, Brand: Maggi)",verified
+'5011546415468,Nescafé Original,Nestlé India,100 g,https://world.openfoodfacts.org/product/5011546415468,"OFF GTIN Record (Name: Nescafé Original, Brand: Nescafé)",verified
+'5011546415499,Nescafe Original,Nestlé India,300 g,https://world.openfoodfacts.org/product/5011546415499,"OFF GTIN Record (Name: Nescafe Original, Brand: Nescafé, Nestlé)",verified
+'5201219046109,NESCAFE CLASSIC 100G TIN EXP 10 / 18 (GR),Nestlé India,100 γρ,https://world.openfoodfacts.org/product/5201219046109,"OFF GTIN Record (Name: NESCAFE CLASSIC 100G TIN EXP 10 / 18 (GR), Brand: Nescafé)",verified
+'5201219046154,Frappe,Nestlé India,200 g,https://world.openfoodfacts.org/product/5201219046154,"OFF GTIN Record (Name: Frappe, Brand: Nescafé, Nescafé classic)",verified
+'5900085011180,Przyprawa Maggi,Nestlé India,50 g,https://world.openfoodfacts.org/product/5900085011180,"OFF GTIN Record (Name: Przyprawa Maggi, Brand: Maggi, Nestlé)",verified
+'59949305,Kitkat œuf géant,Nestlé India,180 g,https://world.openfoodfacts.org/product/59949305,"OFF GTIN Record (Name: Kitkat œuf géant, Brand: KitKat, Nestlé)",verified
+'6111018501480,Nescafé,Nestlé India,95 g,https://world.openfoodfacts.org/product/6111018501480,"OFF GTIN Record (Name: Nescafé, Brand: Nescafé)",verified
+'6181002001845,Nescafe Classic,Nestlé India,,https://world.openfoodfacts.org/product/6181002001845,"OFF GTIN Record (Name: Nescafe Classic, Brand: Nescafé)",verified
+'6294003582777,KitKat Sense mini desserts,Nestlé India,202 g,https://world.openfoodfacts.org/product/6294003582777,"OFF GTIN Record (Name: KitKat Sense mini desserts, Brand: KitKat, Nestlé)",verified
+'6294003588274,Chunky Caramel,Nestlé India,41 g,https://world.openfoodfacts.org/product/6294003588274,"OFF GTIN Record (Name: Chunky Caramel, Brand: KitKat)",verified
+'6294003596514,KitKat miniature,Nestlé India,,https://world.openfoodfacts.org/product/6294003596514,"OFF GTIN Record (Name: KitKat miniature, Brand: KitKat)",verified
+'7290000072753,Nescafe Tasters Choice,Nestlé India,1,https://world.openfoodfacts.org/product/7290000072753,"OFF GTIN Record (Name: Nescafe Tasters Choice, Brand: Nescafé, Nestlé)",verified
+'7610100010316,Polenta,Nestlé India,188 g,https://world.openfoodfacts.org/product/7610100010316,"OFF GTIN Record (Name: Polenta, Brand: Maggi)",verified
+'7613030811725,MAGGI Ma Sauce Fine Béchamel 350ml,Nestlé India,350 ml,https://world.openfoodfacts.org/product/7613030811725,"OFF GTIN Record (Name: MAGGI Ma Sauce Fine Béchamel 350ml, Brand: Maggi, Ma sauce fine)",verified
+'7613031236480,Classic café soluble natural,Nestlé India,,https://world.openfoodfacts.org/product/7613031236480,"OFF GTIN Record (Name: Classic café soluble natural, Brand: Nescafé)",verified
+'7613032394547,MAGGI KUB OR Herbes de Provence 32 cubes - 128g,Nestlé India,128 g,https://world.openfoodfacts.org/product/7613032394547,"OFF GTIN Record (Name: MAGGI KUB OR Herbes de Provence 32 cubes - 128g, Brand: Nestlé)",verified
+'7613032397623,MAGGI Bouillon KUB Volaille Réduit en sel de -25% 120g,Nestlé India,120 g,https://world.openfoodfacts.org/product/7613032397623,"OFF GTIN Record (Name: MAGGI Bouillon KUB Volaille Réduit en sel de -25% 120g, Brand: Maggi, Nestlé)",verified
+'7613032568436,Cappuccino soluble,Nestlé India,280 g,https://world.openfoodfacts.org/product/7613032568436,"OFF GTIN Record (Name: Cappuccino soluble, Brand: Nescafé, Cappuccino)",verified
+'7613032573867,"NESCAFÉ Cappuccino Vanille, Café soluble, Boîte de 310g",Nestlé India,310 g,https://world.openfoodfacts.org/product/7613032573867,"OFF GTIN Record (Name: NESCAFÉ Cappuccino Vanille, Café soluble, Boîte de 310g, Brand: Nescafé)",verified
+'7613032847449,MAGGI Bouillon KUB DUO Légumes + Herbes du marché 105g,Nestlé India,105 g,https://world.openfoodfacts.org/product/7613032847449,"OFF GTIN Record (Name: MAGGI Bouillon KUB DUO Légumes + Herbes du marché 105g, Brand: Maggi, Nestlé)",verified
+'7613032915735,MAGGI Papillotes Poulet Ail Oignon 36g,Nestlé India,36 g,https://world.openfoodfacts.org/product/7613032915735,"OFF GTIN Record (Name: MAGGI Papillotes Poulet Ail Oignon 36g, Brand: Maggi)",verified
+'7613032946142,MAGGI Papillotes Poulet Herbes de Provence - Sachet de 34g,Nestlé India,34 g,https://world.openfoodfacts.org/product/7613032946142,"OFF GTIN Record (Name: MAGGI Papillotes Poulet Herbes de Provence - Sachet de 34g, Brand: Maggi)",verified
+'7613033006937,Nescafé Gold dessert,Nestlé India,200 g,https://world.openfoodfacts.org/product/7613033006937,"OFF GTIN Record (Name: Nescafé Gold dessert, Brand: Nescafé)",verified
+'7613033110603,Kit Kat Mini Snack Bag Chocolate,Nestlé India,217 g,https://world.openfoodfacts.org/product/7613033110603,"OFF GTIN Record (Name: Kit Kat Mini Snack Bag Chocolate, Brand: Kit Kat, KitKat)",verified
+'7613033134272,"KITKAT Mini Barre au chocolat au Lait, 350g",Nestlé India,350 g,https://world.openfoodfacts.org/product/7613033134272,"OFF GTIN Record (Name: KITKAT Mini Barre au chocolat au Lait, 350g, Brand: KitKat, Nestlé, Kit kat mini)",verified
+'7613033162220,Capsules NESCAFE DOLCE GUSTO NESQUIK x16,Nestlé India,256 g,https://world.openfoodfacts.org/product/7613033162220,"OFF GTIN Record (Name: Capsules NESCAFE DOLCE GUSTO NESQUIK x16, Brand: Nescafé, Nescafé Dolce Gusto)",verified
+'7613033174667,Café au Lait,Nestlé India,160 g,https://world.openfoodfacts.org/product/7613033174667,"OFF GTIN Record (Name: Café au Lait, Brand: Nescafé, Nescafé Dolce Gusto)",verified
+'7613033174704,Nestlé Nescafé Dolce Gusto Café Au Lait,Nestlé India,160 g,https://world.openfoodfacts.org/product/7613033174704,"OFF GTIN Record (Name: Nestlé Nescafé Dolce Gusto Café Au Lait, Brand: Nescafé, Nescafé Dolce Gusto, Café au lait, Grande, dolce gusto nescafe)",verified
+'7613033496752,MAGGI Arôme flacon 200ml (Halal),Nestlé India,200 ml,https://world.openfoodfacts.org/product/7613033496752,"OFF GTIN Record (Name: MAGGI Arôme flacon 200ml (Halal), Brand: Maggi, Nestlé)",verified
+'7613033590146,Capsules NESCAFE DOLCE GUSTO Lungo Intenso 16 Capsules,Nestlé India,144 g,https://world.openfoodfacts.org/product/7613033590146,"OFF GTIN Record (Name: Capsules NESCAFE DOLCE GUSTO Lungo Intenso 16 Capsules, Brand: Nescafé, Nescafé Dolce Gusto, Nestlé)",verified
+'7613033687884,MAGGI Bouillon de Volaille 18 cubes - 180g,Nestlé India,180 g,https://world.openfoodfacts.org/product/7613033687884,"OFF GTIN Record (Name: MAGGI Bouillon de Volaille 18 cubes - 180g, Brand: Maggi, Nestlé)",verified
+'7613033687914,MAGGI Bouillon Pot-Au-Feu 180g,Nestlé India,180 g,https://world.openfoodfacts.org/product/7613033687914,"OFF GTIN Record (Name: MAGGI Bouillon Pot-Au-Feu 180g, Brand: Maggi)",verified
+'7613033910074,Garlic bag,Nestlé India,,https://world.openfoodfacts.org/product/7613033910074,"OFF GTIN Record (Name: Garlic bag, Brand: Maggi)",verified
+'7613033918643,"MAGGI Papillotes Poulet Façon Paysanne Oignon, Carotte, Thym 32g",Nestlé India,32 g,https://world.openfoodfacts.org/product/7613033918643,"OFF GTIN Record (Name: MAGGI Papillotes Poulet Façon Paysanne Oignon, Carotte, Thym 32g, Brand: Maggi)",verified
+'7613034025340,Classic crème café soluble natural con crema,Nestlé India,100 tazas,https://world.openfoodfacts.org/product/7613034025340,"OFF GTIN Record (Name: Classic crème café soluble natural con crema, Brand: Nescafé, Nestlé)",verified
+'7613034056122,"NESCAFÉ SPECIAL FILTRE L'Original, Café Soluble, Recharge de 150g",Nestlé India,150 g,https://world.openfoodfacts.org/product/7613034056122,"OFF GTIN Record (Name: NESCAFÉ SPECIAL FILTRE L'Original, Café Soluble, Recharge de 150g, Brand: Nescafé, Nestlé, Special filtre)",verified
+'7613034315557,Nescafé Gold Vanilla Latte,Nestlé India,18.5 g,https://world.openfoodfacts.org/product/7613034315557,"OFF GTIN Record (Name: Nescafé Gold Vanilla Latte, Brand: Nescafé, Nestlé, Gold)",verified
+'7613034418982,NESCAFE SPECIAL FILTRE café soluble,Nestlé India,140 g,https://world.openfoodfacts.org/product/7613034418982,"OFF GTIN Record (Name: NESCAFE SPECIAL FILTRE café soluble, Brand: Nescafé, Gold special filtre, Special filtre)",verified
+'7613034542854,"NESCAFÉ® Cappuccino Noisette, Café soluble, Boîte de 270g",Nestlé India,270 g,https://world.openfoodfacts.org/product/7613034542854,"OFF GTIN Record (Name: NESCAFÉ® Cappuccino Noisette, Café soluble, Boîte de 270g, Brand: Nescafé, Cappuccino)",verified
+'7613034652843,"NESCAFÉ SPECIAL FILTRE Fine Créma, Café Soluble, Flacon de 100g",Nestlé India,100 g,https://world.openfoodfacts.org/product/7613034652843,"OFF GTIN Record (Name: NESCAFÉ SPECIAL FILTRE Fine Créma, Café Soluble, Flacon de 100g, Brand: Nescafé, Special filtre)",verified
+'7613034678515,Bouillon dégraissé,Nestlé India,128 g,https://world.openfoodfacts.org/product/7613034678515,"OFF GTIN Record (Name: Bouillon dégraissé, Brand: Maggi, Kub or)",verified
+'7613034852366,"NESCAFÉ Espresso Intenso, Café Soluble 100% pur Arabica, 25x1,8g",Nestlé India,45 g,https://world.openfoodfacts.org/product/7613034852366,"OFF GTIN Record (Name: NESCAFÉ Espresso Intenso, Café Soluble 100% pur Arabica, 25x1,8g, Brand: Nescafé, Espresso)",verified
+'7613034870940,"NESCAFÉ Espresso Original, Café Soluble 100% pur Arabica, Boîte de 95g",Nestlé India,95 g,https://world.openfoodfacts.org/product/7613034870940,"OFF GTIN Record (Name: NESCAFÉ Espresso Original, Café Soluble 100% pur Arabica, Boîte de 95g, Brand: Nescafé, Espresso)",verified
+'7613034870971,"NESCAFÉ Espresso Intenso, Café Soluble 100% pur Arabica, Boîte de 95g",Nestlé India,95 g,https://world.openfoodfacts.org/product/7613034870971,"OFF GTIN Record (Name: NESCAFÉ Espresso Intenso, Café Soluble 100% pur Arabica, Boîte de 95g, Brand: Nescafé, Espresso)",verified
+'7613035001848,Nescafé Dolce Gusto - Ricoré Latte,Nestlé India,168 g,https://world.openfoodfacts.org/product/7613035001848,"OFF GTIN Record (Name: Nescafé Dolce Gusto - Ricoré Latte, Brand: Nescafé, Nescafé Dolce Gusto, Nestlé)",verified
+'7613035037250,MAGGI Papillotes Poulet Paprika Tomates 28g,Nestlé India,28 g,https://world.openfoodfacts.org/product/7613035037250,"OFF GTIN Record (Name: MAGGI Papillotes Poulet Paprika Tomates 28g, Brand: Maggi)",verified
+'7613035062795,Instant Noodles,Nestlé India,59 g,https://world.openfoodfacts.org/product/7613035062795,"OFF GTIN Record (Name: Instant Noodles, Brand: Maggi)",verified
+'7613035067585,MAGGI Bouillon KUB DUO Pâtes Basilic 105g,Nestlé India,105 g,https://world.openfoodfacts.org/product/7613035067585,"OFF GTIN Record (Name: MAGGI Bouillon KUB DUO Pâtes Basilic 105g, Brand: Maggi)",verified
+'7613035147232,"MOUSLINE Purée Nature Format Individuel (4x31,25g)",Nestlé India,125 g,https://world.openfoodfacts.org/product/7613035147232,"OFF GTIN Record (Name: MOUSLINE Purée Nature Format Individuel (4x31,25g), Brand: Maggi, Mousline)",verified
+'7613035365896,"KITKAT 4 Finger Barre au chocolat au Lait, 41,5g en lot de 6",Nestlé India,249 g,https://world.openfoodfacts.org/product/7613035365896,"OFF GTIN Record (Name: KITKAT 4 Finger Barre au chocolat au Lait, 41,5g en lot de 6, Brand: Kit Kat, KitKat, Nestlé)",verified
+'7613035366749,Kit Kat x10,Nestlé India,415 g,https://world.openfoodfacts.org/product/7613035366749,"OFF GTIN Record (Name: Kit Kat x10, Brand: Kit Kat, KitKat, Nestlé)",verified
+'7613035397934,CAFÉ AU LAIT DECAFFEINATO,Nestlé India,10 g,https://world.openfoodfacts.org/product/7613035397934,"OFF GTIN Record (Name: CAFÉ AU LAIT DECAFFEINATO, Brand: Nescafé Dolce Gusto)",verified
+'7613035421554,"KITKAT barre chocolatée 41,5g",Nestlé India,415 g,https://world.openfoodfacts.org/product/7613035421554,"OFF GTIN Record (Name: KITKAT barre chocolatée 41,5g, Brand: Kit Kat, KitKat, Nestlé)",verified
+'7613035511019,KitKat White,Nestlé India,5 g,https://world.openfoodfacts.org/product/7613035511019,"OFF GTIN Record (Name: KitKat White, Brand: KitKat, Nestlé)",verified
+'7613035552579,"NESCAFÉ® Cappuccino Chocolat Blanc, Café soluble, Boîte de 270g",Nestlé India,270 g,https://world.openfoodfacts.org/product/7613035552579,"OFF GTIN Record (Name: NESCAFÉ® Cappuccino Chocolat Blanc, Café soluble, Boîte de 270g, Brand: Nescafé, Mocha)",verified
+'7613035645585,MAGGI Bouillon de Volaille 80g - 8 cubes,Nestlé India,80 g,https://world.openfoodfacts.org/product/7613035645585,"OFF GTIN Record (Name: MAGGI Bouillon de Volaille 80g - 8 cubes, Brand: Maggi)",verified
+'7613035690639,Capsules NESCAFE Dolce Gusto CHOCOCINO x16,Nestlé India,256 g,https://world.openfoodfacts.org/product/7613035690639,"OFF GTIN Record (Name: Capsules NESCAFE Dolce Gusto CHOCOCINO x16, Brand: Nescafé, Nescafé Dolce Gusto)",verified
+'7613035781627,Bouillon Kub Légumes,Nestlé India,180 g,https://world.openfoodfacts.org/product/7613035781627,"OFF GTIN Record (Name: Bouillon Kub Légumes, Brand: Maggi)",verified
+'7613035862265,"MAGGI KUB OR Bouillon Réduit en sel de -25% - 32 cubes - 121,6g",Nestlé India,121.6 g,https://world.openfoodfacts.org/product/7613035862265,"OFF GTIN Record (Name: MAGGI KUB OR Bouillon Réduit en sel de -25% - 32 cubes - 121,6g, Brand: Maggi, Kub or)",verified
+'7613035890008,Magic Asia: Gebratene Nudeln Huhn,Nestlé India,121 g,https://world.openfoodfacts.org/product/7613035890008,"OFF GTIN Record (Name: Magic Asia: Gebratene Nudeln Huhn, Brand: Maggi)",verified
+'7613035909014,Nescafé Gold de Luxe,Nestlé India,200 g,https://world.openfoodfacts.org/product/7613035909014,"OFF GTIN Record (Name: Nescafé Gold de Luxe, Brand: Nestlé, Nestle nutrition)",verified
+'7613035952331,MAGGI Bouillon KUB Poule au Pot 15 cubes - 150g,Nestlé India,150 g,https://world.openfoodfacts.org/product/7613035952331,"OFF GTIN Record (Name: MAGGI Bouillon KUB Poule au Pot 15 cubes - 150g, Brand: Maggi)",verified
+'7613035989153,"GOLD Cappuccino Decaf Unsweetened Taste Coffee, 8 Sachets x",Nestlé India,,https://world.openfoodfacts.org/product/7613035989153,"OFF GTIN Record (Name: GOLD Cappuccino Decaf Unsweetened Taste Coffee, 8 Sachets x, Brand: Nescafé)",verified
+'7613036042000,Buchstaben Suppe,Nestlé India,1pcs,https://world.openfoodfacts.org/product/7613036042000,"OFF GTIN Record (Name: Buchstaben Suppe, Brand: Maggi)",verified
+'7613036069816,GOLD BLEND Instant Coffee,Nestlé India,100 g,https://world.openfoodfacts.org/product/7613036069816,"OFF GTIN Record (Name: GOLD BLEND Instant Coffee, Brand: Nescafé)",verified
+'7613036077538,Gold Blend Decaff,Nestlé India,200 g,https://world.openfoodfacts.org/product/7613036077538,"OFF GTIN Record (Name: Gold Blend Decaff, Brand: Nescafé)",verified
+'7613036217675,KUB OR,Nestlé India,192 g,https://world.openfoodfacts.org/product/7613036217675,"OFF GTIN Record (Name: KUB OR, Brand: Maggi)",verified
+'7613036236034,KITKAT Sachet d'oeufs 120g,Nestlé India,120 g,https://world.openfoodfacts.org/product/7613036236034,"OFF GTIN Record (Name: KITKAT Sachet d'oeufs 120g, Brand: Kit Kat, KitKat, Nestlé)",verified
+'7613036271868,NESCAFE DOLCE GUSTO Cappuccino Extra Crema 16 Capsules (8 Lait et 8 Café),Nestlé India,186.4 g,https://world.openfoodfacts.org/product/7613036271868,"OFF GTIN Record (Name: NESCAFE DOLCE GUSTO Cappuccino Extra Crema 16 Capsules (8 Lait et 8 Café), Brand: Nescafé, Nescafé Dolce Gusto)",verified
+'7613036300827,Gold,Nestlé India,100 g,https://world.openfoodfacts.org/product/7613036300827,"OFF GTIN Record (Name: Gold, Brand: Nescafé)",verified
+'7613036303033,"Capsules NESCAFÉ Dolce Gusto Cappuccino 30 Capsules 349,5g",Nestlé India,349.5 g,https://world.openfoodfacts.org/product/7613036303033,"OFF GTIN Record (Name: Capsules NESCAFÉ Dolce Gusto Cappuccino 30 Capsules 349,5g, Brand: Nescafé, Nescafé Dolce Gusto)",verified
+'7613036303910,löslicher Kaffee entkof.- Fach 21,Nestlé India,200 g,https://world.openfoodfacts.org/product/7613036303910,"OFF GTIN Record (Name: löslicher Kaffee entkof.- Fach 21, Brand: Nescafé)",verified
+'7613036305846,Instant Kaffee,Nestlé India,200 g,https://world.openfoodfacts.org/product/7613036305846,"OFF GTIN Record (Name: Instant Kaffee, Brand: Nescafé, Nestlé, 3x Nescafé Classic 11.26 - 2x Nescafé Gold 11.26, 3x Nescafé Classic 11.26 - 3x Nescafé Gold 11.26, 3x Nescafé Classic 11.27 - 2x Nescafé Gold 11.26, 3x Nescafé Gold 11.26, Nescafé Gold)",verified
+'7613036347310,Kaffee,Nestlé India,200 g,https://world.openfoodfacts.org/product/7613036347310,"OFF GTIN Record (Name: Kaffee, Brand: Müller, Nescafé, Nestlé)",verified
+'7613036394109,Gold,Nestlé India,200 g,https://world.openfoodfacts.org/product/7613036394109,"OFF GTIN Record (Name: Gold, Brand: Nescafé)",verified
+'7613036400411,MAGGI Bouillon Pot au Feu Dégraissé 120g,Nestlé India,120 g,https://world.openfoodfacts.org/product/7613036400411,"OFF GTIN Record (Name: MAGGI Bouillon Pot au Feu Dégraissé 120g, Brand: Maggi)",verified
+'7613036400640,Bouillon de volaille dégraissé,Nestlé India,120 g,https://world.openfoodfacts.org/product/7613036400640,"OFF GTIN Record (Name: Bouillon de volaille dégraissé, Brand: Maggi)",verified
+'7613036400671,MAGGI Bouillon KUB Bœuf Dégraissé x12 cubes - 120g,Nestlé India,120 g,https://world.openfoodfacts.org/product/7613036400671,"OFF GTIN Record (Name: MAGGI Bouillon KUB Bœuf Dégraissé x12 cubes - 120g, Brand: Maggi)",verified
+'7613036445818,Nescafe gold,Nestlé India,100 g,https://world.openfoodfacts.org/product/7613036445818,"OFF GTIN Record (Name: Nescafe gold, Brand: Nescafé)",verified
+'7613036451253,"NESCAFE SPECIAL FILTRE L'Original, Café Soluble, Flacon de 200g",Nestlé India,200 g,https://world.openfoodfacts.org/product/7613036451253,"OFF GTIN Record (Name: NESCAFE SPECIAL FILTRE L'Original, Café Soluble, Flacon de 200g, Brand: Nescafé, Nestlé, Special filtre)",verified
+'7613036457712,Nescafe Classic Crema,Nestlé India,200 g,https://world.openfoodfacts.org/product/7613036457712,"OFF GTIN Record (Name: Nescafe Classic Crema, Brand: Nescafé, Nestlé)",verified
+'7613036600996,Espresso intense aroma,Nestlé India,100 g,https://world.openfoodfacts.org/product/7613036600996,"OFF GTIN Record (Name: Espresso intense aroma, Brand: Nescafé)",verified
+'7613036667852,"NESCAFÉ Cappuccino Caramel, Café soluble, Boîte de 306g",Nestlé India,306 g,https://world.openfoodfacts.org/product/7613036667852,"OFF GTIN Record (Name: NESCAFÉ Cappuccino Caramel, Café soluble, Boîte de 306g, Brand: Nescafé, Cappuccino)",verified
+'7613036680028,Noodle Cup - Chicken Taste,Nestlé India,63 g,https://world.openfoodfacts.org/product/7613036680028,"OFF GTIN Record (Name: Noodle Cup - Chicken Taste, Brand: Maggi, Nestlé)",verified
+'7613036683371,Noodle cup beef taste,Nestlé India,63 g,https://world.openfoodfacts.org/product/7613036683371,"OFF GTIN Record (Name: Noodle cup beef taste, Brand: Maggi)",verified
+'7613036750011,BOUILLON KUB LEGUMES - 25% DE SEL,Nestlé India,120 g,https://world.openfoodfacts.org/product/7613036750011,"OFF GTIN Record (Name: BOUILLON KUB LEGUMES - 25% DE SEL, Brand: Maggi)",verified
+'7613036862295,Dolce Gusto Espresso Intenso,Nestlé India,112 g,https://world.openfoodfacts.org/product/7613036862295,"OFF GTIN Record (Name: Dolce Gusto Espresso Intenso, Brand: Nescafé, Nescafé Dolce Gusto, Nestlé)",verified
+'7613036867207,Capsules NESCAFE DOLCE GUSTO Espresso Intenso 30 Capsules,Nestlé India,210 g,https://world.openfoodfacts.org/product/7613036867207,"OFF GTIN Record (Name: Capsules NESCAFE DOLCE GUSTO Espresso Intenso 30 Capsules, Brand: Nescafé, Nescafé Dolce Gusto)",verified
+'7613036868082,Capsules NESCAFÉ DOLCE GUSTO Espresso Intenso 16 Capsules,Nestlé India,112 g,https://world.openfoodfacts.org/product/7613036868082,"OFF GTIN Record (Name: Capsules NESCAFÉ DOLCE GUSTO Espresso Intenso 16 Capsules, Brand: Nescafé, Nescafé Dolce Gusto, Nestlé)",verified
+'7613036892360,MAGGI KUB OR Classique - 128g,Nestlé India,128 g,https://world.openfoodfacts.org/product/7613036892360,"OFF GTIN Record (Name: MAGGI KUB OR Classique - 128g, Brand: Maggi, Kub or)",verified
+'7613036892520,MAGGI KUB OR 32 Cubes - 128g,Nestlé India,128 g,https://world.openfoodfacts.org/product/7613036892520,"OFF GTIN Record (Name: MAGGI KUB OR 32 Cubes - 128g, Brand: Maggi, Kub or)",verified
+'7613036943673,STARBUCKS by NESCAFE DOLCE GUSTO Cappuccino 120g,Nestlé India,120 g,https://world.openfoodfacts.org/product/7613036943673,"OFF GTIN Record (Name: STARBUCKS by NESCAFE DOLCE GUSTO Cappuccino 120g, Brand: Starbucks)",verified
+'7613036962759,"KITKAT Thé vert 3 x 41,5g",Nestlé India,124.5 g,https://world.openfoodfacts.org/product/7613036962759,"OFF GTIN Record (Name: KITKAT Thé vert 3 x 41,5g, Brand: KitKat, Nestlé)",verified
+'7613037037852,Nescafé Gold Capuccino,Nestlé India,124 g,https://world.openfoodfacts.org/product/7613037037852,"OFF GTIN Record (Name: Nescafé Gold Capuccino, Brand: Nescafé)",verified
+'7613037067507,MAGGI BIO Soupe Bouillon Poule Vermicelle 65g,Nestlé India,65 g,https://world.openfoodfacts.org/product/7613037067507,"OFF GTIN Record (Name: MAGGI BIO Soupe Bouillon Poule Vermicelle 65g, Brand: Bio, Knorr, Maggi)",verified
+'7613037491173,Latte Macchiato,Nestlé India,8pcs,https://world.openfoodfacts.org/product/7613037491173,"OFF GTIN Record (Name: Latte Macchiato, Brand: Nescafé Dolce Gusto)",verified
+'7613037639780,5 Minuten Terrine - Kartoffelbrei mit Röstzwiebeln & Croûtons,Nestlé India,56 g,https://world.openfoodfacts.org/product/7613037639780,"OFF GTIN Record (Name: 5 Minuten Terrine - Kartoffelbrei mit Röstzwiebeln & Croûtons, Brand: Maggi, Nestlé, 5 Minuten Terrine, Maggi - Nestlé)",verified
+'7613037683608,Saucy Noodles Sweet Chili,Nestlé India,75 g,https://world.openfoodfacts.org/product/7613037683608,"OFF GTIN Record (Name: Saucy Noodles Sweet Chili, Brand: Maggi)",verified
+'7613037788228,Capsules NESCAFE DOLCE GUSTO Caramel Macchiato 16 Capsules,Nestlé India,145.6 g,https://world.openfoodfacts.org/product/7613037788228,"OFF GTIN Record (Name: Capsules NESCAFE DOLCE GUSTO Caramel Macchiato 16 Capsules, Brand: Nescafé Dolce Gusto)",verified
+'7613037788884,Dolce Gusto Latte Macchiato Caramel,Nestlé India,3520 ml,https://world.openfoodfacts.org/product/7613037788884,"OFF GTIN Record (Name: Dolce Gusto Latte Macchiato Caramel, Brand: Nescafé, Nescafé Dolce Gusto)",verified
+'7613037928532,NESCAFE DOLCE GUSTO Espresso 16 Capsules,Nestlé India,88 g,https://world.openfoodfacts.org/product/7613037928532,"OFF GTIN Record (Name: NESCAFE DOLCE GUSTO Espresso 16 Capsules, Brand: Nescafé, Nescafé Dolce Gusto)",verified
+'7613037935080,Capsules NESCAFE DOLCE GUSTO Espresso 30 Capsules,Nestlé India,165 g,https://world.openfoodfacts.org/product/7613037935080,"OFF GTIN Record (Name: Capsules NESCAFE DOLCE GUSTO Espresso 30 Capsules, Brand: Nescafé, Nescafé Dolce Gusto)",verified
+'7613038158884,Nescafe strong 3in1,Nestlé India,,https://world.openfoodfacts.org/product/7613038158884,"OFF GTIN Record (Name: Nescafe strong 3in1, Brand: Nescafé, Nestlé)",verified
+'7613038185071,"NESCAFÉ® Cappuccino Praline, Café soluble, Boîte de 279g",Nestlé India,279 g,https://world.openfoodfacts.org/product/7613038185071,"OFF GTIN Record (Name: NESCAFÉ® Cappuccino Praline, Café soluble, Boîte de 279g, Brand: Nescafé)",verified
+'7613039078662,KITKAT au chocolat blanc,Nestlé India,166 g,https://world.openfoodfacts.org/product/7613039078662,"OFF GTIN Record (Name: KITKAT au chocolat blanc, Brand: KitKat, Nestlé)",verified
+'7613039079126,"KITKAT White barre au chocolat blanc, 8x41.5g",Nestlé India,332 g,https://world.openfoodfacts.org/product/7613039079126,"OFF GTIN Record (Name: KITKAT White barre au chocolat blanc, 8x41.5g, Brand: KitKat, Nestlé)",verified
+'7613039137413,MAGGI Marché du Jour Le Bouillon Liquide Légumes du Marché 400ml,Nestlé India,400 ml,https://world.openfoodfacts.org/product/7613039137413,"OFF GTIN Record (Name: MAGGI Marché du Jour Le Bouillon Liquide Légumes du Marché 400ml, Brand: Maggi)",verified
+'7613039158319,MAGGI Marché du Jour Le Bouillon Liquide Volaille 400ml,Nestlé India,400 ml,https://world.openfoodfacts.org/product/7613039158319,"OFF GTIN Record (Name: MAGGI Marché du Jour Le Bouillon Liquide Volaille 400ml, Brand: Maggi)",verified
+'7613039669990,Kitkat Lata Papá Noel,Nestlé India,,https://world.openfoodfacts.org/product/7613039669990,"OFF GTIN Record (Name: Kitkat Lata Papá Noel, Brand: KitKat)",verified
+'7613039779309,Cappuccino,Nestlé India,12,https://world.openfoodfacts.org/product/7613039779309,"OFF GTIN Record (Name: Cappuccino, Brand: Nescafé)",verified
+'7613039829264,MAGGI Fond de Veau Dégraissé boîte 100g,Nestlé India,100 g,https://world.openfoodfacts.org/product/7613039829264,"OFF GTIN Record (Name: MAGGI Fond de Veau Dégraissé boîte 100g, Brand: Maggi)",verified
+'7613039830079,MAGGI Fond pour Rôtis boîte 110g,Nestlé India,110 g,https://world.openfoodfacts.org/product/7613039830079,"OFF GTIN Record (Name: MAGGI Fond pour Rôtis boîte 110g, Brand: Maggi)",verified
+'7613039830727,MAGGI Fond de Veau boîte 110g,Nestlé India,110 g,https://world.openfoodfacts.org/product/7613039830727,"OFF GTIN Record (Name: MAGGI Fond de Veau boîte 110g, Brand: Maggi)",verified
+'7613039830864,Fond de Volaille boîte,Nestlé India,110 g,https://world.openfoodfacts.org/product/7613039830864,"OFF GTIN Record (Name: Fond de Volaille boîte, Brand: Maggi)",verified
+'7613039831014,MAGGI Fond de Veau boîte 240g,Nestlé India,240 g,https://world.openfoodfacts.org/product/7613039831014,"OFF GTIN Record (Name: MAGGI Fond de Veau boîte 240g, Brand: Maggi)",verified
+'7613039832417,Fumet de Poisson boîte,Nestlé India,90 g,https://world.openfoodfacts.org/product/7613039832417,"OFF GTIN Record (Name: Fumet de Poisson boîte, Brand: Maggi)",verified
+'7613287093752,Gemüsebrühe,Nestlé India,288 g,https://world.openfoodfacts.org/product/7613287093752,"OFF GTIN Record (Name: Gemüsebrühe, Brand: Maggi)",verified
+'7613287148223,Barres au chocolat noir,Nestlé India,166 g,https://world.openfoodfacts.org/product/7613287148223,"OFF GTIN Record (Name: Barres au chocolat noir, Brand: KitKat, Nestlé)",verified
+'7613287344021,KitKat Mini,Nestlé India,,https://world.openfoodfacts.org/product/7613287344021,"OFF GTIN Record (Name: KitKat Mini, Brand: KitKat)",verified
+'7613287872302,Nescafe spécial Filtre Bio,Nestlé India,90 g,https://world.openfoodfacts.org/product/7613287872302,"OFF GTIN Record (Name: Nescafe spécial Filtre Bio, Brand: Nescafé, Nestlé)",verified
+'7613287947703,Fond bio de veau maggi,Nestlé India,80 g,https://world.openfoodfacts.org/product/7613287947703,"OFF GTIN Record (Name: Fond bio de veau maggi, Brand: Bio, Maggi)",verified
+'7891000071823,Nescafe Classic Coffee,Nestlé India,0.03 kg,https://world.openfoodfacts.org/product/7891000071823,"OFF GTIN Record (Name: Nescafe Classic Coffee, Brand: Nescafé)",verified
+'7891000255025,"Double filter,full flavour",Nestlé India,200 g,https://world.openfoodfacts.org/product/7891000255025,"OFF GTIN Record (Name: Double filter,full flavour, Brand: Nescafé)",verified
+'7891000255049,Nescafé classic- café instantáneo,Nestlé India,100 g,https://world.openfoodfacts.org/product/7891000255049,"OFF GTIN Record (Name: Nescafé classic- café instantáneo, Brand: Nescafé)",verified
+'7891000300602,Nescafé Original,Nestlé India,200 g,https://world.openfoodfacts.org/product/7891000300602,"OFF GTIN Record (Name: Nescafé Original, Brand: Nescafé, Nestlé)",verified
+'80000822,Nescafe' Classic,Nestlé India,100 g,https://world.openfoodfacts.org/product/80000822,"OFF GTIN Record (Name: Nescafe' Classic, Brand: Nescafé)",verified
+'80000839,Nescafe' Gran Aroma Solubile GR. 100,Nestlé India,100 g,https://world.openfoodfacts.org/product/80000839,"OFF GTIN Record (Name: Nescafe' Gran Aroma Solubile GR. 100, Brand: Nescafé)",verified
+'80002239,nescafe per latte,Nestlé India,,https://world.openfoodfacts.org/product/80002239,"OFF GTIN Record (Name: nescafe per latte, Brand: Nescafé)",verified
+'8000300211368,"NESCAFÉ® Cappuccino Viennois au chocolat, Café soluble, Boîte de 306g",Nestlé India,306 g,https://world.openfoodfacts.org/product/8000300211368,"OFF GTIN Record (Name: NESCAFÉ® Cappuccino Viennois au chocolat, Café soluble, Boîte de 306g, Brand: Nescafé, Nestlé, Cafe viennois)",verified
+'8000300248623,Kitkat Ball,Nestlé India,1 kg,https://world.openfoodfacts.org/product/8000300248623,"OFF GTIN Record (Name: Kitkat Ball, Brand: KitKat, Nestlé)",verified
+'8000300280951,"KITKAT Ball, Billes au chocolat au Lait, 400g",Nestlé India,400 g,https://world.openfoodfacts.org/product/8000300280951,"OFF GTIN Record (Name: KITKAT Ball, Billes au chocolat au Lait, 400g, Brand: KitKat, Nestlé)",verified
+'8000300288292,"KITKAT Ball, Billes au chocolat Blanc, 250g",Nestlé India,250 g,https://world.openfoodfacts.org/product/8000300288292,"OFF GTIN Record (Name: KITKAT Ball, Billes au chocolat Blanc, 250g, Brand: KitKat, Nestlé)",verified
+'8000300395860,Kit Kat Easter Break,Nestlé India,,https://world.openfoodfacts.org/product/8000300395860,"OFF GTIN Record (Name: Kit Kat Easter Break, Brand: KitKat, Nestlé)",verified
+'8000300401240,Kit kat Christmas break,Nestlé India,,https://world.openfoodfacts.org/product/8000300401240,"OFF GTIN Record (Name: Kit kat Christmas break, Brand: KitKat, Nestlé)",verified
+'8000300404425,KITKAT Mini oeufs 90g,Nestlé India,90 g,https://world.openfoodfacts.org/product/8000300404425,"OFF GTIN Record (Name: KITKAT Mini oeufs 90g, Brand: KitKat, Nestlé)",verified
+'8000300404722,O Maiss Christmas break Nestle KitKat * 3x SCORE D,Nestlé India,29 g,https://world.openfoodfacts.org/product/8000300404722,"OFF GTIN Record (Name: O Maiss Christmas break Nestle KitKat * 3x SCORE D, Brand: KitKat, Nestlé)",verified
+'8000300405118,KITKAT Lapin,Nestlé India,66 g,https://world.openfoodfacts.org/product/8000300405118,"OFF GTIN Record (Name: KITKAT Lapin, Brand: KitKat, Nestlé)",verified
+'8000300407860,Calendario de adviento kitkat,Nestlé India,,https://world.openfoodfacts.org/product/8000300407860,"OFF GTIN Record (Name: Calendario de adviento kitkat, Brand: KitKat, Nestlé)",verified
+'8000300410464,"KITKAT Calendrier de l'avent 209,6g",Nestlé India,209.6 g,https://world.openfoodfacts.org/product/8000300410464,"OFF GTIN Record (Name: KITKAT Calendrier de l'avent 209,6g, Brand: KitKat, Nestlé)",verified
+'8000300413649,Easter break bunnies,Nestlé India,,https://world.openfoodfacts.org/product/8000300413649,"OFF GTIN Record (Name: Easter break bunnies, Brand: KitKat, Nestlé)",verified
+'8000300423143,Kitkat,Nestlé India,,https://world.openfoodfacts.org/product/8000300423143,"OFF GTIN Record (Name: Kitkat, Brand: KitKat, Nestlé)",verified
+'8000300424010,KITKAT Mini figurines,Nestlé India,147 g,https://world.openfoodfacts.org/product/8000300424010,"OFF GTIN Record (Name: KITKAT Mini figurines, Brand: KitKat, Nestlé)",verified
+'8000300428650,KITKAT Creamy Sauce au cacao et éclats de gaufrettes 1kg,Nestlé India,1000 g,https://world.openfoodfacts.org/product/8000300428650,"OFF GTIN Record (Name: KITKAT Creamy Sauce au cacao et éclats de gaufrettes 1kg, Brand: KitKat, Nestlé)",verified
+'8000550438621,Nescafé gold capuccino,Nestlé India,250 g,https://world.openfoodfacts.org/product/8000550438621,"OFF GTIN Record (Name: Nescafé gold capuccino, Brand: Nescafé)",verified
+'8410100020570,Nescafé Classic,Nestlé India,20 g,https://world.openfoodfacts.org/product/8410100020570,"OFF GTIN Record (Name: Nescafé Classic, Brand: Nescafé, Nestlé)",verified
+'8410100020921,"Bebida instantánea en polvo con azúcar, leche y café",Nestlé India,14 g,https://world.openfoodfacts.org/product/8410100020921,"OFF GTIN Record (Name: Bebida instantánea en polvo con azúcar, leche y café, Brand: Nescafé)",verified
+'8410100021560,Classic descafeinado,Nestlé India,50 g,https://world.openfoodfacts.org/product/8410100021560,"OFF GTIN Record (Name: Classic descafeinado, Brand: Nescafé, Nestlé)",verified
+'8410100021577,Classic descafeinado,Nestlé India,2 g,https://world.openfoodfacts.org/product/8410100021577,"OFF GTIN Record (Name: Classic descafeinado, Brand: Nescafé, Nestlé)",verified
+'8410100063935,Pasta oriental sabor pollo,Nestlé India,71 g,https://world.openfoodfacts.org/product/8410100063935,"OFF GTIN Record (Name: Pasta oriental sabor pollo, Brand: Maggi, Nestlé)",verified
+'8410100065113,Pure De Patatas,Nestlé India,230 g,https://world.openfoodfacts.org/product/8410100065113,"OFF GTIN Record (Name: Pure De Patatas, Brand: Maggi, Nestlé)",verified
+'8410100065144,Puré de patatas 460g,Nestlé India,460 g,https://world.openfoodfacts.org/product/8410100065144,"OFF GTIN Record (Name: Puré de patatas 460g, Brand: Maggi, Nestlé)",verified
+'8445290163790,Maggi so juicy mexican,Nestlé India,,https://world.openfoodfacts.org/product/8445290163790,"OFF GTIN Record (Name: Maggi so juicy mexican, Brand: Maggi)",verified
+'8445290334510,Kit Kat vegan,Nestlé India,124.5 g,https://world.openfoodfacts.org/product/8445290334510,"OFF GTIN Record (Name: Kit Kat vegan, Brand: Kit Kat, KitKat, Nestlé)",verified
+'8445290437730,KITKAT Vegan Wrapper 41.5g,Nestlé India,41.5 g,https://world.openfoodfacts.org/product/8445290437730,"OFF GTIN Record (Name: KITKAT Vegan Wrapper 41.5g, Brand: Kit Kat, KitKat, Nestlé)",verified
+'8445290446282,Grande,Nestlé India,136 g,https://world.openfoodfacts.org/product/8445290446282,"OFF GTIN Record (Name: Grande, Brand: Nescafé, Nescafé Dolce Gusto)",verified
+'8445290448644,Capsules NESCAFÉ DOLCE GUSTO Grande Intenso 16 Capsules 132.8g,Nestlé India,132.8 g,https://world.openfoodfacts.org/product/8445290448644,"OFF GTIN Record (Name: Capsules NESCAFÉ DOLCE GUSTO Grande Intenso 16 Capsules 132.8g, Brand: Nescafé, Nescafé Dolce Gusto)",verified
+'8445290455642,NESCAFE DOLCE GUSTO Grande 30 Capsules,Nestlé India,255 g,https://world.openfoodfacts.org/product/8445290455642,"OFF GTIN Record (Name: NESCAFE DOLCE GUSTO Grande 30 Capsules, Brand: Nescafé, Nescafé Dolce Gusto)",verified
+'8445290538154,KITKAT Noisette Marbré 41.5g,Nestlé India,41.5 g,https://world.openfoodfacts.org/product/8445290538154,"OFF GTIN Record (Name: KITKAT Noisette Marbré 41.5g, Brand: KitKat, Nestlé)",verified
+'8445290538765,"KITKAT 4F Noisette Multipack 8x41,5g",Nestlé India,332 g,https://world.openfoodfacts.org/product/8445290538765,"OFF GTIN Record (Name: KITKAT 4F Noisette Multipack 8x41,5g, Brand: KitKat, Nestlé)",verified
+'8445290541994,"KITKAT 4F Noisette Multipack 4x41,5g",Nestlé India,166 g,https://world.openfoodfacts.org/product/8445290541994,"OFF GTIN Record (Name: KITKAT 4F Noisette Multipack 4x41,5g, Brand: KitKat, Nestlé)",verified
+'8445290542281,Kitkat dark,Nestlé India,41.5 g,https://world.openfoodfacts.org/product/8445290542281,"OFF GTIN Record (Name: Kitkat dark, Brand: Nestlé)",verified
+'8445290549969,"NESCAFÉ® Cappuccino Vanille, Café soluble, Boîte de 276g",Nestlé India,276 g,https://world.openfoodfacts.org/product/8445290549969,"OFF GTIN Record (Name: NESCAFÉ® Cappuccino Vanille, Café soluble, Boîte de 276g, Brand: Nescafé)",verified
+'8445290553409,KitKat Dark,Nestlé India,,https://world.openfoodfacts.org/product/8445290553409,"OFF GTIN Record (Name: KitKat Dark, Brand: KitKat)",verified
+'8445290698551,Nescafe farmers origins colombia (6x90g),Nestlé India,90 g,https://world.openfoodfacts.org/product/8445290698551,"OFF GTIN Record (Name: Nescafe farmers origins colombia (6x90g), Brand: Farmers Origins, Nescafé, Nestlé)",verified
+'8445290699046,NESCAFE FARMERS ORIGINS LATIN AMERICA 90g,Nestlé India,90 g,https://world.openfoodfacts.org/product/8445290699046,"OFF GTIN Record (Name: NESCAFE FARMERS ORIGINS LATIN AMERICA 90g, Brand: Farmers Origins, Nescafé, Nestlé)",verified
+'8445290728791,KitKat Cereal,Nestlé India,330 g,https://world.openfoodfacts.org/product/8445290728791,"OFF GTIN Record (Name: KitKat Cereal, Brand: Nestlé)",verified
+'8445290753373,MAGGI Soupe Tomate Vermicelles 70g,Nestlé India,70 g,https://world.openfoodfacts.org/product/8445290753373,"OFF GTIN Record (Name: MAGGI Soupe Tomate Vermicelles 70g, Brand: Maggi, Saveur a l'ancienne)",verified
+'8445290753717,MAGGI Soupe Déshydratée Pot-au-feu Vermicelles 57g,Nestlé India,57 g,https://world.openfoodfacts.org/product/8445290753717,"OFF GTIN Record (Name: MAGGI Soupe Déshydratée Pot-au-feu Vermicelles 57g, Brand: Maggi)",verified
+'8445290753755,MAGGI Soupe Chinoise 60g,Nestlé India,60 g,https://world.openfoodfacts.org/product/8445290753755,"OFF GTIN Record (Name: MAGGI Soupe Chinoise 60g, Brand: Maggi)",verified
+'8445290753793,MAGGI Soupe Vietnamienne 40g,Nestlé India,40 g,https://world.openfoodfacts.org/product/8445290753793,"OFF GTIN Record (Name: MAGGI Soupe Vietnamienne 40g, Brand: Maggi)",verified
+'8445290753922,MAGGI Soupe Japonaise 50g,Nestlé India,50 g,https://world.openfoodfacts.org/product/8445290753922,"OFF GTIN Record (Name: MAGGI Soupe Japonaise 50g, Brand: Maggi, Nestlé)",verified
+'8445290754004,MAGGI Soupe Harira Marocaine 90g,Nestlé India,90 g,https://world.openfoodfacts.org/product/8445290754004,"OFF GTIN Record (Name: MAGGI Soupe Harira Marocaine 90g, Brand: Maggi, Nestlé)",verified
+'8445290754530,MAGGI Saveur à l'Ancienne Poule au Pot aux petits légumes 58g,Nestlé India,58 g,https://world.openfoodfacts.org/product/8445290754530,"OFF GTIN Record (Name: MAGGI Saveur à l'Ancienne Poule au Pot aux petits légumes 58g, Brand: Maggi, Saveur a l'ancienne)",verified
+'8445290754592,MAGGI Bouillon Déshydraté Poule Aux Vermicelles 65g,Nestlé India,65 g,https://world.openfoodfacts.org/product/8445290754592,"OFF GTIN Record (Name: MAGGI Bouillon Déshydraté Poule Aux Vermicelles 65g, Brand: Maggi, Saveur a l'ancienne)",verified
+'8445290813909,Maggi,Nestlé India,,https://world.openfoodfacts.org/product/8445290813909,"OFF GTIN Record (Name: Maggi, Brand: Maggi)",verified
+'8445290851659,MAGGI Soupe à l'Oignon 61g,Nestlé India,61 g,https://world.openfoodfacts.org/product/8445290851659,"OFF GTIN Record (Name: MAGGI Soupe à l'Oignon 61g, Brand: Maggi)",verified
+'8445290866783,Court bouillon légumes et vin blanc,Nestlé India,150 g,https://world.openfoodfacts.org/product/8445290866783,"OFF GTIN Record (Name: Court bouillon légumes et vin blanc, Brand: Maggi)",verified
+'8445290867315,MAGGI poule aux vermicelles 3X59g,Nestlé India,177 g,https://world.openfoodfacts.org/product/8445290867315,"OFF GTIN Record (Name: MAGGI poule aux vermicelles 3X59g, Brand: Maggi)",verified
+'8445290871923,Capsules NESCAFE DOLCE GUSTO Lungo 16 Capsules 168g,Nestlé India,89.6 g,https://world.openfoodfacts.org/product/8445290871923,"OFF GTIN Record (Name: Capsules NESCAFE DOLCE GUSTO Lungo 16 Capsules 168g, Brand: Nescafé Dolce Gusto)",verified
+'8445290941565,Latte,Nestlé India,,https://world.openfoodfacts.org/product/8445290941565,"OFF GTIN Record (Name: Latte, Brand: Nescafé)",verified
+'8445291080041,KITKAT Mini white 252.7g,Nestlé India,252.7 g,https://world.openfoodfacts.org/product/8445291080041,"OFF GTIN Record (Name: KITKAT Mini white 252.7g, Brand: KitKat, Nestlé)",verified
+'8445291140950,Air Fryer Fajita,Nestlé India,27 g,https://world.openfoodfacts.org/product/8445291140950,"OFF GTIN Record (Name: Air Fryer Fajita, Brand: Maggi)",verified
+'8445291218499,Kit Kat hazelnut,Nestlé India,9 g,https://world.openfoodfacts.org/product/8445291218499,"OFF GTIN Record (Name: Kit Kat hazelnut, Brand: Nestlé)",verified
+'8585002438874,MAGGI BOUILLON KUB BIO Boeuf 80g,Nestlé India,80 g,https://world.openfoodfacts.org/product/8585002438874,"OFF GTIN Record (Name: MAGGI BOUILLON KUB BIO Boeuf 80g, Brand: Maggi, Seasoning)",verified
+'8585002441027,Bouillon kub,Nestlé India,10 g,https://world.openfoodfacts.org/product/8585002441027,"OFF GTIN Record (Name: Bouillon kub, Brand: Maggi)",verified
+'8585002441263,Bouillon kub bio volaille,Nestlé India,80 g,https://world.openfoodfacts.org/product/8585002441263,"OFF GTIN Record (Name: Bouillon kub bio volaille, Brand: Bio, Maggi)",verified
+'8585002441805,Bouillon de légumes,Nestlé India,,https://world.openfoodfacts.org/product/8585002441805,"OFF GTIN Record (Name: Bouillon de légumes, Brand: Maggi)",verified
+'8585002441829,Bouillon kub,Nestlé India,120 g,https://world.openfoodfacts.org/product/8585002441829,"OFF GTIN Record (Name: Bouillon kub, Brand: Maggi)",verified
+'8585002442499,MAGGI Bouillon Kub Or 128g Bio - 16 Cubes,Nestlé India,128 g,https://world.openfoodfacts.org/product/8585002442499,"OFF GTIN Record (Name: MAGGI Bouillon Kub Or 128g Bio - 16 Cubes, Brand: Maggi, Kub or)",verified
+'8585002460028,Secretul gustului cu Legume,Nestlé India,200 g,https://world.openfoodfacts.org/product/8585002460028,"OFF GTIN Record (Name: Secretul gustului cu Legume, Brand: Maggi, Nestlé)",verified
+'8585002460486,Magg Secretul Gustului GUST DE GAINA pentru plus d,Nestlé India,,https://world.openfoodfacts.org/product/8585002460486,"OFF GTIN Record (Name: Magg Secretul Gustului GUST DE GAINA pentru plus d, Brand: Maggi, Nestlé)",verified
+'8585002484055,MAGGI Bouillon KUB BIO Bouquet Garni 80g,Nestlé India,80 g,https://world.openfoodfacts.org/product/8585002484055,"OFF GTIN Record (Name: MAGGI Bouillon KUB BIO Bouquet Garni 80g, Brand: Maggi)",verified
+'8585002484079,MAGGI Bouillon KUB BIO Volaille 80g,Nestlé India,80 g,https://world.openfoodfacts.org/product/8585002484079,"OFF GTIN Record (Name: MAGGI Bouillon KUB BIO Volaille 80g, Brand: Bio, Maggi)",verified
+'8585002484093,MAGGI Bouillon KUB BIO Légumes 80g,Nestlé India,80 g,https://world.openfoodfacts.org/product/8585002484093,"OFF GTIN Record (Name: MAGGI Bouillon KUB BIO Légumes 80g, Brand: Maggi)",verified
+'8850125008663,Kitkat,Nestlé India,65 g,https://world.openfoodfacts.org/product/8850125008663,"OFF GTIN Record (Name: Kitkat, Brand: KitKat, คิทแคท)",verified
+'89009758,NESCAFE classic,Nestlé India,24 g,https://world.openfoodfacts.org/product/89009758,"OFF GTIN Record (Name: NESCAFE classic, Brand: Nescafé)",verified
+'8901058000269,Maggi,Nestlé India,280 g,https://world.openfoodfacts.org/product/8901058000269,"OFF GTIN Record (Name: Maggi, Brand: Maggi)",verified
+'8901058000276,Maggi 2 Mins Noodles 30 MRP,Nestlé India,,https://world.openfoodfacts.org/product/8901058000276,"OFF GTIN Record (Name: Maggi 2 Mins Noodles 30 MRP, Brand: Maggi)",verified
+'8901058000290,maggi,Nestlé India,70,https://world.openfoodfacts.org/product/8901058000290,"OFF GTIN Record (Name: maggi, Brand: Nestlé)",verified
+'8901058000306,Maggi noodles masala,Nestlé India,560 g,https://world.openfoodfacts.org/product/8901058000306,"OFF GTIN Record (Name: Maggi noodles masala, Brand: Nestlé)",verified
+'8901058000702,Munch,Nestlé India,100 g,https://world.openfoodfacts.org/product/8901058000702,"OFF GTIN Record (Name: Munch, Brand: Nestlé)",verified
+'8901058001181,maggi,Nestlé India,1 kg,https://world.openfoodfacts.org/product/8901058001181,"OFF GTIN Record (Name: maggi, Brand: Maggi)",verified
+'8901058001846,Kitkat,Nestlé India,18.5 g,https://world.openfoodfacts.org/product/8901058001846,"OFF GTIN Record (Name: Kitkat, Brand: Nestlé)",verified
+'8901058001983,Nescafe All in 1 Frappe Coffee - Instant Refreshment,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058001983,Existing verified DB entry for Nestlé India,single_source
+'8901058002270,Maggi spicy Garltc,Nestlé India,,https://world.openfoodfacts.org/product/8901058002270,"OFF GTIN Record (Name: Maggi spicy Garltc, Brand: Maggi)",verified
+'8901058003055,Maggi pazzta cheese macaroni,Nestlé India,150,https://world.openfoodfacts.org/product/8901058003055,"OFF GTIN Record (Name: Maggi pazzta cheese macaroni, Brand: Maggi)",verified
+'8901058003079,Maggi cheesy Tomato,Nestlé India,68.5,https://world.openfoodfacts.org/product/8901058003079,"OFF GTIN Record (Name: Maggi cheesy Tomato, Brand: Maggi)",verified
+'8901058003215,Nestle Lactogrow,Nestlé India,,https://world.openfoodfacts.org/product/8901058003215,"OFF GTIN Record (Name: Nestle Lactogrow, Brand: Nestlé)",verified
+'8901058003727,Maggie korean BBQ chicken noodles,Nestlé India,,https://world.openfoodfacts.org/product/8901058003727,"OFF GTIN Record (Name: Maggie korean BBQ chicken noodles, Brand: None)",verified
+'8901058003734,Maggie korean noodles,Nestlé India,90 g,https://world.openfoodfacts.org/product/8901058003734,"OFF GTIN Record (Name: Maggie korean noodles, Brand: Maggi)",verified
+'8901058003802,Nestle Everyday Dairy Whitener 15g,Nestlé India,15 g,https://world.openfoodfacts.org/product/8901058003802,"OFF GTIN Record (Name: Nestle Everyday Dairy Whitener 15g, Brand: Nestlé)",verified
+'8901058003970,Munch Crunchilicious Cereal,Nestlé India,,https://world.openfoodfacts.org/product/8901058003970,"OFF GTIN Record (Name: , Brand: None)",verified
+'8901058004144,MAGGI MASALA NOODLES,Nestlé India,,https://world.openfoodfacts.org/product/8901058004144,"OFF GTIN Record (Name: MAGGI MASALA NOODLES, Brand: Maggi)",verified
+'8901058004700,Nescafe classic Coffee,Nestlé India,90 g,https://world.openfoodfacts.org/product/8901058004700,"OFF GTIN Record (Name: Nescafe classic Coffee, Brand: Nescafé)",verified
+'8901058004786,Nestle classic (15g),Nestlé India,,https://world.openfoodfacts.org/product/8901058004786,"OFF GTIN Record (Name: Nestle classic (15g), Brand: Nestlé)",verified
+'8901058004809,Nestle classic,Nestlé India,,https://world.openfoodfacts.org/product/8901058004809,"OFF GTIN Record (Name: Nestle classic, Brand: Nestle nutrition)",verified
+'8901058004816,Nestle class,Nestlé India,120 g,https://world.openfoodfacts.org/product/8901058004816,"OFF GTIN Record (Name: Nestle class, Brand: chocolate)",verified
+'8901058004922,(MAGGI) Rich Tomato Sauce 485Gram,Nestlé India,,https://world.openfoodfacts.org/product/8901058004922,"OFF GTIN Record (Name: (MAGGI) Rich Tomato Sauce 485Gram, Brand: Maggi)",verified
+'8901058005080,Munch Max,Nestlé India,38.5 g,https://world.openfoodfacts.org/product/8901058005080,"OFF GTIN Record (Name: Munch Max, Brand: Nestlé)",verified
+'8901058005233,Kitkat mini chocolate coated wafer,Nestlé India,11.9 g,https://world.openfoodfacts.org/product/8901058005233,"OFF GTIN Record (Name: Kitkat mini chocolate coated wafer, Brand: KitKat, Nestle nutrition)",verified
+'8901058005424,maggie koriean spicy cheesy,Nestlé India,71.5 g,https://world.openfoodfacts.org/product/8901058005424,"OFF GTIN Record (Name: maggie koriean spicy cheesy, Brand: Nestlé)",verified
+'8901058005509,Nescafe Sunrise,Nestlé India,,https://world.openfoodfacts.org/product/8901058005509,"OFF GTIN Record (Name: Nescafe Sunrise, Brand: Nescafé)",verified
+'8901058005608,Maggi,Nestlé India,may/24/jan/25-D,https://world.openfoodfacts.org/product/8901058005608,"OFF GTIN Record (Name: Maggi, Brand: Maggi)",verified
+'8901058005653,Maggi spicy,Nestlé India,,https://world.openfoodfacts.org/product/8901058005653,"OFF GTIN Record (Name: , Brand: None)",verified
+'8901058005776,nestle masala millet,Nestlé India,,https://world.openfoodfacts.org/product/8901058005776,"OFF GTIN Record (Name: nestle masala millet, Brand: Nestle a+)",verified
+'8901058005790,Maggi special masala,Nestlé India,280,https://world.openfoodfacts.org/product/8901058005790,"OFF GTIN Record (Name: Maggi special masala, Brand: Maggi)",verified
+'8901058005851,Maggi Atta Noodles,Nestlé India,,https://world.openfoodfacts.org/product/8901058005851,"OFF GTIN Record (Name: Maggi Atta Noodles, Brand: Nestlé)",verified
+'8901058005905,KitKat Dark Chocolate Coated Wafer,Nestlé India,150 g,https://world.openfoodfacts.org/product/8901058005905,"OFF GTIN Record (Name: KitKat Dark Chocolate Coated Wafer, Brand: Nestlé)",verified
+'8901058006025,8901058006025,Nestlé India,,https://world.openfoodfacts.org/product/8901058006025,"OFF GTIN Record (Name: 8901058006025, Brand: Maggi)",verified
+'8901058006032,maggi cup,Nestlé India,70 g,https://world.openfoodfacts.org/product/8901058006032,"OFF GTIN Record (Name: maggi cup, Brand: None)",verified
+'8901058006124,Maggie chicken noodles,Nestlé India,284,https://world.openfoodfacts.org/product/8901058006124,"OFF GTIN Record (Name: Maggie chicken noodles, Brand: Nestlé)",verified
+'8901058006148,maggie chicken noodles,Nestlé India,71 g,https://world.openfoodfacts.org/product/8901058006148,"OFF GTIN Record (Name: maggie chicken noodles, Brand: Nestlé)",verified
+'8901058006643,Maggi 2 Minutes Noodles Masala,Nestlé India,1.68 kg,https://world.openfoodfacts.org/product/8901058006643,"OFF GTIN Record (Name: Maggi 2 Minutes Noodles Masala, Brand: Nestlé)",verified
+'8901058007060,Milkmaid Mini,Nestlé India,,https://world.openfoodfacts.org/product/8901058007060,"OFF GTIN Record (Name: Milkmaid Mini, Brand: Nestlé)",verified
+'8901058007077,Nestle KitKat Chocolate Combo Pack,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058007077,Existing verified DB entry for Nestlé India,single_source
+'8901058007169,Nescafe Classic Instant coffee,Nestlé India,4 g,https://world.openfoodfacts.org/product/8901058007169,"OFF GTIN Record (Name: Nescafe Classic Instant coffee, Brand: Nescafé)",verified
+'8901058007220,Maggie masala magic,Nestlé India,,https://world.openfoodfacts.org/product/8901058007220,"OFF GTIN Record (Name: Maggie masala magic, Brand: Maggi)",verified
+'8901058007299,Maggi 2-Minute Masala Noodles 4 Pack,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058007299,Existing verified DB entry for Nestlé India,single_source
+'8901058007435,Nescafe Classic Black Roast,Nestlé India,,https://world.openfoodfacts.org/product/8901058007435,"OFF GTIN Record (Name: Nescafe Classic Black Roast, Brand: Nescafé)",verified
+'8901058008012,Maggi Masala - Shahi Gravy Magic,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058008012,Existing verified DB entry for Nestlé India,single_source
+'8901058008050,Maggi,Nestlé India,,https://world.openfoodfacts.org/product/8901058008050,"OFF GTIN Record (Name: Maggi, Brand: Maggi)",verified
+'8901058008463,Maggi pichkoo,Nestlé India,,https://world.openfoodfacts.org/product/8901058008463,"OFF GTIN Record (Name: Maggi pichkoo, Brand: Maggi)",verified
+'8901058009422,Munch,Nestlé India,,https://world.openfoodfacts.org/product/8901058009422,"OFF GTIN Record (Name: Munch, Brand: Nestlé)",verified
+'8901058009439,munch,Nestlé India,,https://world.openfoodfacts.org/product/8901058009439,"OFF GTIN Record (Name: munch, Brand: Nestlé)",verified
+'8901058009712,Maggi Masala Veg Atta noodles,Nestlé India,51 g,https://world.openfoodfacts.org/product/8901058009712,"OFF GTIN Record (Name: Maggi Masala Veg Atta noodles, Brand: Maggi)",verified
+'8901058010510,Munch brownie max,Nestlé India,,https://world.openfoodfacts.org/product/8901058010510,"OFF GTIN Record (Name: Munch brownie max, Brand: Cadbury)",verified
+'8901058010572,Maggi,Nestlé India,,https://world.openfoodfacts.org/product/8901058010572,"OFF GTIN Record (Name: Maggi, Brand: Nestlé)",verified
+'8901058010619,Maggi cheese noodles,Nestlé India,304 g,https://world.openfoodfacts.org/product/8901058010619,"OFF GTIN Record (Name: Maggi cheese noodles, Brand: Maggi)",verified
+'8901058010701,Nestle Munch Vanilla Flavour,Nestlé India,14 g,https://world.openfoodfacts.org/product/8901058010701,"OFF GTIN Record (Name: Nestle Munch Vanilla Flavour, Brand: Nestlé)",verified
+'8901058010749,Maggie,Nestlé India,,https://world.openfoodfacts.org/product/8901058010749,"OFF GTIN Record (Name: Maggie, Brand: Fassi, Fssai, Maggie)",verified
+'8901058011012,KitKat Minis,Nestlé India,133.2 g,https://world.openfoodfacts.org/product/8901058011012,"OFF GTIN Record (Name: KitKat Minis, Brand: Nestlé)",verified
+'8901058011067,Maggi veg atta noodles,Nestlé India,290 g,https://world.openfoodfacts.org/product/8901058011067,"OFF GTIN Record (Name: Maggi veg atta noodles, Brand: Maggi)",verified
+'8901058011371,Nestle Cerelac,Nestlé India,350 g,https://world.openfoodfacts.org/product/8901058011371,"OFF GTIN Record (Name: Nestle Cerelac, Brand: Nestlé)",verified
+'8901058011401,Nescafe Ice Roast,Nestlé India,90 g,https://world.openfoodfacts.org/product/8901058011401,"OFF GTIN Record (Name: Nescafe Ice Roast, Brand: Nestlé)",verified
+'8901058011548,Maggi Hot & Sweet Tomato Chilli Sauce,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058011548,Existing verified DB entry for Nestlé India,single_source
+'8901058011630,(MAGGI) Rich Tomato Sauce 970Gram,Nestlé India,,https://world.openfoodfacts.org/product/8901058011630,"OFF GTIN Record (Name: (MAGGI) Rich Tomato Sauce 970Gram, Brand: Maggi)",verified
+'8901058011746,Maggi sauce,Nestlé India,,https://world.openfoodfacts.org/product/8901058011746,"OFF GTIN Record (Name: Maggi sauce, Brand: Maggi)",verified
+'8901058012330,Kitkat 10 mrp,Nestlé India,,https://world.openfoodfacts.org/product/8901058012330,"OFF GTIN Record (Name: Kitkat 10 mrp, Brand: None)",verified
+'8901058012415,Munch max,Nestlé India,,https://world.openfoodfacts.org/product/8901058012415,"OFF GTIN Record (Name: Munch max, Brand: Nestlé)",verified
+'8901058012569,Maggi Imli Sauce Pichkoo 75 gm,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058012569,Existing verified DB entry for Nestlé India,single_source
+'8901058012637,Maggi imli sauce pichkoo 75 g,Nestlé India,,https://world.openfoodfacts.org/product/8901058012637,"OFF GTIN Record (Name: Maggi imli sauce pichkoo 75 g, Brand: None)",verified
+'8901058012897,munch crunchilious cereal,Nestlé India,18,https://world.openfoodfacts.org/product/8901058012897,"OFF GTIN Record (Name: munch crunchilious cereal, Brand: Nestlé)",verified
+'8901058013016,Nescafe sunrise,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058013016,Existing verified DB entry for Nestlé India,single_source
+'8901058013061,Nescafe Sunrise,Nestlé India,190 g,https://world.openfoodfacts.org/product/8901058013061,"OFF GTIN Record (Name: Nescafe Sunrise, Brand: Nescafé)",verified
+'8901058013665,maggi hot and sweet,Nestlé India,1,https://world.openfoodfacts.org/product/8901058013665,"OFF GTIN Record (Name: maggi hot and sweet, Brand: Maggi)",verified
+'8901058013863,Kitkat Double Choco,Nestlé India,63 g,https://world.openfoodfacts.org/product/8901058013863,"OFF GTIN Record (Name: Kitkat Double Choco, Brand: Nestlé)",verified
+'8901058014044,MAGGI RICH TOMATO KETCHUP,Nestlé India,,https://world.openfoodfacts.org/product/8901058014044,"OFF GTIN Record (Name: MAGGI RICH TOMATO KETCHUP, Brand: None)",verified
+'8901058014235,Maggi,Nestlé India,,https://world.openfoodfacts.org/product/8901058014235,"OFF GTIN Record (Name: Maggi, Brand: Neslé)",verified
+'8901058014341,KitKat Delights dark,Nestlé India,,https://world.openfoodfacts.org/product/8901058014341,"OFF GTIN Record (Name: , Brand: None)",verified
+'8901058014839,maggi PAZZTA Cheese Macaroni,Nestlé India,,https://world.openfoodfacts.org/product/8901058014839,"OFF GTIN Record (Name: maggi PAZZTA Cheese Macaroni, Brand: Maggi)",verified
+'8901058015171,Nestle KitKat,Nestlé India,22.1,https://world.openfoodfacts.org/product/8901058015171,"OFF GTIN Record (Name: Nestle KitKat, Brand: Nestlé)",verified
+'8901058015799,Nestle Cerelac Wheat Apple Carrot,Nestlé India,300 g,https://world.openfoodfacts.org/product/8901058015799,"OFF GTIN Record (Name: Nestle Cerelac Wheat Apple Carrot, Brand: Nestlé)",verified
+'8901058015942,Nescafe Sunrise Coffee,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058015942,Existing verified DB entry for Nestlé India,single_source
+'8901058016055,Nescafe Classic Instant Coffee,Nestlé India,3.5 g,https://world.openfoodfacts.org/product/8901058016055,"OFF GTIN Record (Name: Nescafe Classic Instant Coffee, Brand: Nescafé)",verified
+'8901058016116,KitKat 50,Nestlé India,19 g,https://world.openfoodfacts.org/product/8901058016116,"OFF GTIN Record (Name: KitKat 50, Brand: KitKat)",verified
+'8901058016789,Nescafe classic,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058016789,Existing verified DB entry for Nestlé India,single_source
+'8901058016802,Nescafe classic,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058016802,Existing verified DB entry for Nestlé India,single_source
+'8901058016895,Nescafe Classic Coffee,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058016895,Existing verified DB entry for Nestlé India,single_source
+'8901058017601,Nescafe 10 rupees,Nestlé India,,https://world.openfoodfacts.org/product/8901058017601,"OFF GTIN Record (Name: Nescafe 10 rupees, Brand: None)",verified
+'8901058017670,Maggi 280g,Nestlé India,280,https://world.openfoodfacts.org/product/8901058017670,"OFF GTIN Record (Name: Maggi 280g, Brand: Maggi)",verified
+'8901058017687,maggi,Nestlé India,75,https://world.openfoodfacts.org/product/8901058017687,"OFF GTIN Record (Name: maggi, Brand: Maggi)",verified
+'8901058017762,Maggi 48g,Nestlé India,,https://world.openfoodfacts.org/product/8901058017762,"OFF GTIN Record (Name: Maggi 48g, Brand: None)",verified
+'8901058018127,Maggi Hot & Sweet Tomato Chilli Sauce 1kg,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058018127,Existing verified DB entry for Nestlé India,single_source
+'8901058018400,Nestle Ceralac,Nestlé India,,https://world.openfoodfacts.org/product/8901058018400,"OFF GTIN Record (Name: Nestle Ceralac, Brand: None)",verified
+'8901058018493,Maggi,Nestlé India,768,https://world.openfoodfacts.org/product/8901058018493,"OFF GTIN Record (Name: Maggi, Brand: None)",verified
+'8901058019568,Maggi Pazzta,Nestlé India,68.5 g,https://world.openfoodfacts.org/product/8901058019568,"OFF GTIN Record (Name: Maggi Pazzta, Brand: Maggi)",verified
+'8901058019841,Nestle Everyday Dairy Whitener,Nestlé India,,https://world.openfoodfacts.org/product/8901058019841,"OFF GTIN Record (Name: Nestle Everyday Dairy Whitener, Brand: Nestlé)",verified
+'8901058019872,Nestle Everyday,Nestlé India,400 g,https://world.openfoodfacts.org/product/8901058019872,"OFF GTIN Record (Name: Nestle Everyday, Brand: Every Day)",verified
+'8901058019933,Nestle Everyday Dairy Whitener 1 kg,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058019933,Existing verified DB entry for Nestlé India,single_source
+'8901058020021,Munch Nut Max,Nestlé India,,https://world.openfoodfacts.org/product/8901058020021,"OFF GTIN Record (Name: Munch Nut Max, Brand: Nestlé)",verified
+'8901058020281,Munch Brownie Max,Nestlé India,,https://world.openfoodfacts.org/product/8901058020281,"OFF GTIN Record (Name: Munch Brownie Max, Brand: Nestlé)",verified
+'8901058020304,Munch max butterscotch,Nestlé India,,https://world.openfoodfacts.org/product/8901058020304,"OFF GTIN Record (Name: Munch max butterscotch, Brand: Nestlé)",verified
+'8901058020335,Munch Crunchilicious Cereal,Nestlé India,,https://world.openfoodfacts.org/product/8901058020335,"OFF GTIN Record (Name: , Brand: None)",verified
+'8901058021271,Nestle everyday,Nestlé India,,https://world.openfoodfacts.org/product/8901058021271,"OFF GTIN Record (Name: , Brand: None)",verified
+'8901058021356,nescafe classic coffee 180 gm (jar),Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058021356,Existing verified DB entry for Nestlé India,single_source
+'8901058021950,Nestle Milkmaid Mini,Nestlé India,190 g,https://world.openfoodfacts.org/product/8901058021950,"OFF GTIN Record (Name: Nestle Milkmaid Mini, Brand: Nestlé)",verified
+'8901058022087,Munch,Nestlé India,,https://world.openfoodfacts.org/product/8901058022087,"OFF GTIN Record (Name: Munch, Brand: Nestlé)",verified
+'8901058022179,Munch,Nestlé India,17.4 g,https://world.openfoodfacts.org/product/8901058022179,"OFF GTIN Record (Name: Munch, Brand: Nestlé)",verified
+'8901058022193,Maggi Noodles,Nestlé India,70 g,https://world.openfoodfacts.org/product/8901058022193,"OFF GTIN Record (Name: Maggi Noodles, Brand: Maggi)",verified
+'8901058022445,KitKat Minis,Nestlé India,,https://world.openfoodfacts.org/product/8901058022445,"OFF GTIN Record (Name: , Brand: None)",verified
+'8901058023183,KitKat Lemony Lime,Nestlé India,,https://world.openfoodfacts.org/product/8901058023183,"OFF GTIN Record (Name: , Brand: None)",verified
+'8901058023329,KitKat Delights Hazelnut,Nestlé India,,https://world.openfoodfacts.org/product/8901058023329,"OFF GTIN Record (Name: KitKat Delights Hazelnut, Brand: Nestlé)",verified
+'8901058023558,KitKat Dark Chocolate Minis,Nestlé India,,https://world.openfoodfacts.org/product/8901058023558,"OFF GTIN Record (Name: KitKat Dark Chocolate Minis, Brand: Nestlé)",verified
+'8901058023800,Maggi,Nestlé India,560,https://world.openfoodfacts.org/product/8901058023800,"OFF GTIN Record (Name: Maggi, Brand: Maggi)",verified
+'8901058024425,Maggie Double Masala Instant Noodles,Nestlé India,98 g,https://world.openfoodfacts.org/product/8901058024425,"OFF GTIN Record (Name: Maggie Double Masala Instant Noodles, Brand: Maggie, Nestle India)",verified
+'8901058025408,Maggie Masala,Nestlé India,,https://world.openfoodfacts.org/product/8901058025408,"OFF GTIN Record (Name: Maggie Masala, Brand: None)",verified
+'8901058027129,Maggi 2-minute noodles with limited edition bowl,Nestlé India,450 g,https://world.openfoodfacts.org/product/8901058027129,"OFF GTIN Record (Name: Maggi 2-minute noodles with limited edition bowl, Brand: Maggi)",verified
+'8901058027778,Munch Max crunchies,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058027778,Existing verified DB entry for Nestlé India,single_source
+'8901058028492,Nescafe classic,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058028492,Existing verified DB entry for Nestlé India,single_source
+'8901058029109,Maggi Pazzta Masala Penne,Nestlé India,,https://world.openfoodfacts.org/product/8901058029109,"OFF GTIN Record (Name: Maggi Pazzta Masala Penne, Brand: Maggi)",verified
+'8901058029772,maggi green chilli,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058029772,Existing verified DB entry for Nestlé India,single_source
+'8901058117226,nestle everyday shahi ghee 1 ltr,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058117226,Existing verified DB entry for Nestlé India,single_source
+'8901058128819,Maggi Masala Cuppa Noodles 70.5g,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058128819,Existing verified DB entry for Nestlé India,single_source
+'8901058138726,Maggi Meri Masala,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058138726,Existing verified DB entry for Nestlé India,single_source
+'8901058798487,nestle Nan pro formula milk,Nestlé India,,https://world.openfoodfacts.org/product/8901058798487,"OFF GTIN Record (Name: nestle Nan pro formula milk, Brand: None)",verified
+'8901058815900,Nescafe Sunrise Extra,Nestlé India,,https://world.openfoodfacts.org/product/8901058815900,"OFF GTIN Record (Name: Nescafe Sunrise Extra, Brand: Nescafé)",verified
+'8901058817836,Nescafe Classic Coffee,Nestlé India,100 g,https://world.openfoodfacts.org/product/8901058817836,"OFF GTIN Record (Name: Nescafe Classic Coffee, Brand: Nescafé, Nestlé)",verified
+'8901058823844,Maggie 8pk,Nestlé India,,https://world.openfoodfacts.org/product/8901058823844,"OFF GTIN Record (Name: Maggie 8pk, Brand: Maggi, Nestlé)",verified
+'8901058826784,Nescafe classic,Nestlé India,200 g,https://world.openfoodfacts.org/product/8901058826784,"OFF GTIN Record (Name: Nescafe classic, Brand: Nescafé)",verified
+'8901058830460,Nestle every day,Nestlé India,1 kg,https://world.openfoodfacts.org/product/8901058830460,"OFF GTIN Record (Name: Nestle every day, Brand: None)",verified
+'8901058838008,Nescafe,Nestlé India,500 g,https://world.openfoodfacts.org/product/8901058838008,"OFF GTIN Record (Name: Nescafe, Brand: Classic)",verified
+'8901058842746,Maggi 2-Minute Masala Noodles 280g,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058842746,Existing verified DB entry for Nestlé India,single_source
+'8901058844757,Masala Cuppa Noodles,Nestlé India,70 g,https://world.openfoodfacts.org/product/8901058844757,"OFF GTIN Record (Name: Masala Cuppa Noodles, Brand: Maggi, Nestlé)",verified
+'8901058844894,maggi rich tomato ketchup pichkoo,Nestlé India,90 g,https://world.openfoodfacts.org/product/8901058844894,"OFF GTIN Record (Name: maggi rich tomato ketchup pichkoo, Brand: Nestlé)",verified
+'8901058847482,Maggie Pazzta Chese Macaroni,Nestlé India,,https://world.openfoodfacts.org/product/8901058847482,"OFF GTIN Record (Name: Maggie Pazzta Chese Macaroni, Brand: Maggi)",verified
+'8901058847505,Masala penne pasta,Nestlé India,65 g,https://world.openfoodfacts.org/product/8901058847505,"OFF GTIN Record (Name: Masala penne pasta, Brand: Nestlé)",verified
+'8901058847789,Nestle Resource High Protein,Nestlé India,1 kg,https://world.openfoodfacts.org/product/8901058847789,"OFF GTIN Record (Name: Nestle Resource High Protein, Brand: Nestlé)",verified
+'8901058850680,MAGGI MASALA NOODLES,Nestlé India,280 g,https://world.openfoodfacts.org/product/8901058850680,"OFF GTIN Record (Name: MAGGI MASALA NOODLES, Brand: Maggi)",verified
+'8901058851298,Maggi 2-minutes Noodles,Nestlé India,70 g,https://world.openfoodfacts.org/product/8901058851298,"OFF GTIN Record (Name: Maggi 2-minutes Noodles, Brand: Maggi, Nestlé)",verified
+'8901058851304,Maggi Masala Noodles,Nestlé India,70 g,https://world.openfoodfacts.org/product/8901058851304,"OFF GTIN Record (Name: Maggi Masala Noodles, Brand: Nestlé)",verified
+'8901058851311,Maggi Masala 2 Minute 2 Noodles - 280 GM,Nestlé India,70 g,https://world.openfoodfacts.org/product/8901058851311,"OFF GTIN Record (Name: Maggi Masala 2 Minute 2 Noodles - 280 GM, Brand: Nestlé)",verified
+'8901058851328,Maggi 2 Minutes Noodles Masala,Nestlé India,,https://world.openfoodfacts.org/product/8901058851328,"OFF GTIN Record (Name: Maggi 2 Minutes Noodles Masala, Brand: Maggi)",verified
+'8901058851335,maggi,Nestlé India,560 g,https://world.openfoodfacts.org/product/8901058851335,"OFF GTIN Record (Name: maggi, Brand: Maggi)",verified
+'8901058852141,kitkat caramel chocolate coated wafer,Nestlé India,,https://world.openfoodfacts.org/product/8901058852141,"OFF GTIN Record (Name: kitkat caramel chocolate coated wafer, Brand: Nestlé)",verified
+'8901058852165,KitKat,Nestlé India,,https://world.openfoodfacts.org/product/8901058852165,"OFF GTIN Record (Name: KitKat, Brand: Nestlé)",verified
+'8901058857207,KITKAT,Nestlé India,,https://world.openfoodfacts.org/product/8901058857207,"OFF GTIN Record (Name: KITKAT, Brand: None)",verified
+'8901058857245,Kitkat,Nestlé India,28.3 g,https://world.openfoodfacts.org/product/8901058857245,"OFF GTIN Record (Name: Kitkat, Brand: Nestlé)",verified
+'8901058858860,Maggi Atta noodle - Masala,Nestlé India,300 g,https://world.openfoodfacts.org/product/8901058858860,"OFF GTIN Record (Name: Maggi Atta noodle - Masala, Brand: Maggi)",verified
+'8901058859737,Nestle Nan,Nestlé India,,https://world.openfoodfacts.org/product/8901058859737,"OFF GTIN Record (Name: Nestle Nan, Brand: Nestlé)",verified
+'8901058860726,Maggi Special Masala,Nestlé India,70 g,https://world.openfoodfacts.org/product/8901058860726,"OFF GTIN Record (Name: Maggi Special Masala, Brand: Maggi)",verified
+'8901058867923,Atta Maggi,Nestlé India,,https://world.openfoodfacts.org/product/8901058867923,"OFF GTIN Record (Name: Atta Maggi, Brand: Maggi)",verified
+'8901058868012,Kitkat,Nestlé India,,https://world.openfoodfacts.org/product/8901058868012,"OFF GTIN Record (Name: , Brand: None)",verified
+'8901058868036,KitKat,Nestlé India,55 g,https://world.openfoodfacts.org/product/8901058868036,"OFF GTIN Record (Name: KitKat, Brand: Nestlé)",verified
+'8901058868647,KitKat delighta,Nestlé India,,https://world.openfoodfacts.org/product/8901058868647,"OFF GTIN Record (Name: KitKat delighta, Brand: None)",verified
+'8901058869002,Munch,Nestlé India,12.5 g,https://world.openfoodfacts.org/product/8901058869002,"OFF GTIN Record (Name: Munch, Brand: Nestlé)",verified
+'8901058869408,"Nestle, EveryDay",Nestlé India,400 g,https://world.openfoodfacts.org/product/8901058869408,"OFF GTIN Record (Name: Nestle, EveryDay, Brand: Nestlé)",verified
+'8901058869460,Nestle Everyday Dairy Whitener,Nestlé India,1 kg,https://world.openfoodfacts.org/product/8901058869460,"OFF GTIN Record (Name: Nestle Everyday Dairy Whitener, Brand: Nestlé)",verified
+'8901058870183,maggi,Nestlé India,,https://world.openfoodfacts.org/product/8901058870183,"OFF GTIN Record (Name: maggi, Brand: Nestlé)",verified
+'8901058875324,Maggi - Desi Cheesy,Nestlé India,60.5 g,https://world.openfoodfacts.org/product/8901058875324,"OFF GTIN Record (Name: Maggi - Desi Cheesy, Brand: Maggi, Nestlé)",verified
+'8901058875744,munch nuts,Nestlé India,78kcal,https://world.openfoodfacts.org/product/8901058875744,"OFF GTIN Record (Name: munch nuts, Brand: Nestlé)",verified
+'8901058889987,Maggi pasta,Nestlé India,,https://world.openfoodfacts.org/product/8901058889987,"OFF GTIN Record (Name: Maggi pasta, Brand: Maggi)",verified
+'8901058890310,nestle milkmaid,Nestlé India,400 g,https://world.openfoodfacts.org/product/8901058890310,"OFF GTIN Record (Name: nestle milkmaid, Brand: None)",verified
+'8901058890341,Maggi Masala A Magic 120 gm,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058890341,Existing verified DB entry for Nestlé India,single_source
+'8901058890624,Maggi Chicken Cuppa Noodles 67 gm,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058890624,Existing verified DB entry for Nestlé India,single_source
+'8901058890709,maggie masala chuppa noodles,Nestlé India,70.5 g,https://world.openfoodfacts.org/product/8901058890709,"OFF GTIN Record (Name: maggie masala chuppa noodles, Brand: Nestlé)",verified
+'8901058890716,Nestle Optifast,Nestlé India,,https://world.openfoodfacts.org/product/8901058890716,"OFF GTIN Record (Name: Nestle Optifast, Brand: Nestlé)",verified
+'8901058891379,Nestle Koko Krunch Variety Pack,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058891379,Existing verified DB entry for Nestlé India,single_source
+'8901058891416,2-minute noodles,Nestlé India,70 g,https://world.openfoodfacts.org/product/8901058891416,"OFF GTIN Record (Name: 2-minute noodles, Brand: Maggi, Nestlé)",verified
+'8901058891805,Nescafe Gold Caramel Latte Coffee,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058891805,Existing verified DB entry for Nestlé India,single_source
+'8901058892765,Maggi 2-Minute Masala Noodles 140g,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058892765,Existing verified DB entry for Nestlé India,single_source
+'8901058894547,Maggi Pichkoo,Nestlé India,,https://world.openfoodfacts.org/product/8901058894547,"OFF GTIN Record (Name: Maggi Pichkoo, Brand: Maggi)",verified
+'8901058895322,Nescafe Sunrise,Nestlé India,5.5 g,https://world.openfoodfacts.org/product/8901058895322,"OFF GTIN Record (Name: Nescafe Sunrise, Brand: Nescafé)",verified
+'8901058895735,Maggie ketchup Rich,Nestlé India,,https://world.openfoodfacts.org/product/8901058895735,"OFF GTIN Record (Name: Maggie ketchup Rich, Brand: None)",verified
+'8901058895766,maggi Pichkoo tomato ketchup,Nestlé India,90 g,https://world.openfoodfacts.org/product/8901058895766,"OFF GTIN Record (Name: maggi Pichkoo tomato ketchup, Brand: Nestlé)",verified
+'8901058896152,Maggi,Nestlé India,tomato ketchup,https://world.openfoodfacts.org/product/8901058896152,"OFF GTIN Record (Name: Maggi, Brand: None)",verified
+'8901058896381,Nescafe sunrise coffe 200g,Nestlé India,,https://world.openfoodfacts.org/product/8901058896381,"OFF GTIN Record (Name: Nescafe sunrise coffe 200g, Brand: Nescafé)",verified
+'8901058896961,Maggi Magic Cubes Chicken 40 gm,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058896961,Existing verified DB entry for Nestlé India,single_source
+'8901058897005,Maggi Magic Cubes Vegetarian 40 gm,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058897005,Existing verified DB entry for Nestlé India,single_source
+'8901058897074,Nestle Gold Crunchy Corn & Oat Flakes,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058897074,Existing verified DB entry for Nestlé India,single_source
+'8901058897838,Maggi,Nestlé India,,https://world.openfoodfacts.org/product/8901058897838,"OFF GTIN Record (Name: Maggi, Brand: Nestlé)",verified
+'8901058898330,Nescafe choco mocha,Nestlé India,180 ml,https://world.openfoodfacts.org/product/8901058898330,"OFF GTIN Record (Name: Nescafe choco mocha, Brand: Nestlé)",verified
+'8901058898613,Maggi,Nestlé India,,https://world.openfoodfacts.org/product/8901058898613,"OFF GTIN Record (Name: Maggi, Brand: Maggi)",verified
+'8901058900118,Nescafe Sunrise 50g pp,Nestlé India,5,https://world.openfoodfacts.org/product/8901058900118,"OFF GTIN Record (Name: Nescafe Sunrise 50g pp, Brand: None)",verified
+'8901058900231,Maggie Souce,Nestlé India,1 kg,https://world.openfoodfacts.org/product/8901058900231,"OFF GTIN Record (Name: Maggie Souce, Brand: None)",verified
+'8901058900361,Munch Nuts,Nestlé India,30 g,https://world.openfoodfacts.org/product/8901058900361,"OFF GTIN Record (Name: Munch Nuts, Brand: Nestlé)",verified
+'8901058901542,Maggie,Nestlé India,140 g,https://world.openfoodfacts.org/product/8901058901542,"OFF GTIN Record (Name: Maggie, Brand: Maggi)",verified
+'8901058901559,Maggi 2-Minute Noodles,Nestlé India,280 g,https://world.openfoodfacts.org/product/8901058901559,"OFF GTIN Record (Name: Maggi 2-Minute Noodles, Brand: Maggi, Nestlé)",verified
+'8901058902372,Maggi pazzta,Nestlé India,,https://world.openfoodfacts.org/product/8901058902372,"OFF GTIN Record (Name: Maggi pazzta, Brand: Maggi)",verified
+'8901058902938,Nescafe Sunrise,Nestlé India,5 g,https://world.openfoodfacts.org/product/8901058902938,"OFF GTIN Record (Name: Nescafe Sunrise, Brand: Nestlé)",verified
+'8901058903164,KitKat win gold,Nestlé India,38.5 g,https://world.openfoodfacts.org/product/8901058903164,"OFF GTIN Record (Name: KitKat win gold, Brand: Nestlé)",verified
+'8901058903201,Munch,Nestlé India,,https://world.openfoodfacts.org/product/8901058903201,"OFF GTIN Record (Name: Munch, Brand: Nestlé)",verified
+'8901058903812,Maggi Rich Tomato Ketchup Pichkoo,Nestlé India,120 g,https://world.openfoodfacts.org/product/8901058903812,"OFF GTIN Record (Name: Maggi Rich Tomato Ketchup Pichkoo, Brand: Maggi, Nestlé)",verified
+'8901058903843,Milkmaid,Nestlé India,380 g,https://world.openfoodfacts.org/product/8901058903843,"OFF GTIN Record (Name: Milkmaid, Brand: None)",verified
+'8901058903959,milkmaid 100+ recipes,Nestlé India,380 g,https://world.openfoodfacts.org/product/8901058903959,"OFF GTIN Record (Name: milkmaid 100+ recipes, Brand: Nestlé)",verified
+'8901058904093,Munch Max,Nestlé India,42 g,https://world.openfoodfacts.org/product/8901058904093,"OFF GTIN Record (Name: Munch Max, Brand: Nestlé)",verified
+'8901058904338,Nescafe Classic,Nestlé India,,https://world.openfoodfacts.org/product/8901058904338,"OFF GTIN Record (Name: Nescafe Classic, Brand: Nescafé)",verified
+'8901058904383,Maggi Masala A Magic 50 gm,Nestlé India,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901058904383,Existing verified DB entry for Nestlé India,single_source
+'8901058904697,maggi Masala Oats Noodles,Nestlé India,73.5 g,https://world.openfoodfacts.org/product/8901058904697,"OFF GTIN Record (Name: maggi Masala Oats Noodles, Brand: Nestlé Maggi)",verified
+'8901058904741,Nestle kit Kat (Ind),Nestlé India,,https://world.openfoodfacts.org/product/8901058904741,"OFF GTIN Record (Name: Nestle kit Kat (Ind), Brand: KitKat)",verified
+'8901058904758,Kitkat,Nestlé India,,https://world.openfoodfacts.org/product/8901058904758,"OFF GTIN Record (Name: Kitkat, Brand: None)",verified
+'8901058904987,Maggi Pichku,Nestlé India,80 g,https://world.openfoodfacts.org/product/8901058904987,"OFF GTIN Record (Name: Maggi Pichku, Brand: Maggi)",verified
+'8901058905113,Kit kat,Nestlé India,57 g,https://world.openfoodfacts.org/product/8901058905113,"OFF GTIN Record (Name: Kit kat, Brand: Nestlé)",verified
+'8901058905441,Maggi 2-minute noodles Special Masala,Nestlé India,70 g,https://world.openfoodfacts.org/product/8901058905441,"OFF GTIN Record (Name: Maggi 2-minute noodles Special Masala, Brand: Nestlé)",verified
+'8901058905526,Nestle NAN Excellapro,Nestlé India,,https://world.openfoodfacts.org/product/8901058905526,"OFF GTIN Record (Name: Nestle NAN Excellapro, Brand: Nestlé)",verified
+'8901058905571,munch,Nestlé India,18 g,https://world.openfoodfacts.org/product/8901058905571,"OFF GTIN Record (Name: munch, Brand: Nestlé)",verified
+'9556001027252,Kit Kat Wafer Chocolate Flavour,Nestlé India,35 g,https://world.openfoodfacts.org/product/9556001027252,"OFF GTIN Record (Name: Kit Kat Wafer Chocolate Flavour, Brand: KitKat, Nestlé, คิทแคท, เนสเล่)",verified
+'9556001227539,Kitkat Green Tea,Nestlé India,15,https://world.openfoodfacts.org/product/9556001227539,"OFF GTIN Record (Name: Kitkat Green Tea, Brand: KitKat, Nestlé, คิทแคท, เนสเล่)",verified

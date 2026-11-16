@@ -492,29 +492,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </button>
                   </div>
 
-                  {/* 3. Counter & Cloud Database Settings (F12) */}
-                  {onOpenSettings && (
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (isMobileDrawer) onCloseMobile();
-                          onOpenSettings();
-                        }}
-                        className="w-full flex items-center justify-between p-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border border-slate-200/80 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC] transition shadow-2xs"
-                      >
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <Settings className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          <span className="truncate text-[11px]">
-                            {language === 'mr' ? 'क्लाउड व डेटाबेस' : language === 'hi' ? 'क्लाउड व डेटाबेस' : 'Cloud DB Settings'}
-                          </span>
-                        </div>
-                        <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-white dark:bg-[#131F1B] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#24352F] shrink-0">
-                          F12
-                        </span>
-                      </button>
-                    </div>
-                  )}
 
                   {/* 4. Operator Registration Control (Shop Owner Nikhil Sakhare) */}
                   <div>

@@ -281,19 +281,22 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     setIsScanningCamera(false);
     setCameraError(null);
 
-    // Wait a brief tick for DOM to attach video ref if needed
+    // Robust video element check with retry polling
     let videoElement = videoRef.current;
-    if (!videoElement) {
-      await new Promise(r => setTimeout(r, 150));
+    let attempts = 0;
+    while (!videoElement && attempts < 15) {
+      await new Promise(r => setTimeout(r, 50));
       videoElement = videoRef.current;
+      attempts++;
     }
 
     if (!videoElement) {
       setCameraError(
         language === 'mr'
-          ? 'कॅमेरा लोड झाला नाही. खालील बटण दाबून कॅमेरा सुरू करा.'
-          : 'कैमरा लोड नहीं हुआ। नीचे दिए बटन से कैमरा शुरू करें।'
+          ? 'कॅमेरा सुरू करण्यासाठी खालील बटण दाबा.'
+          : 'कैमरा शुरू करने के लिए नीचे दिए बटन को दबाएं।'
       );
+      setIsScanningCamera(false);
       return;
     }
 
@@ -599,7 +602,13 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   useEffect(() => {
     if (isOpen && step === 'scan') {
       setShowOcrButton(true);
-      startCamera();
+      const timer = setTimeout(() => {
+        startCamera();
+      }, 50);
+      return () => {
+        clearTimeout(timer);
+        stopCamera();
+      };
     } else {
       stopCamera();
     }
@@ -701,10 +710,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     setExpiryDate(d.toISOString().split('T')[0]);
   };
 
-  // Handle registering a new product to catalogue (Available Stock = 0.00)
+  // Handle registering a new product to catalogue & instant database save
   const handleRegisterProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProdName.trim()) {
+    const cleanName = newProdName.trim();
+    if (!cleanName) {
       setErrorMessage(language === 'mr' ? 'उत्पादनाचे नाव आवश्यक आहे' : 'उत्पाद का नाम आवश्यक है');
       return;
     }
@@ -712,62 +722,82 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     setIsRegistering(true);
     setErrorMessage(null);
 
+    const sPrice = typeof sellingPrice === 'number' ? sellingPrice : 0;
+    const pPrice = typeof purchasePrice === 'number' ? purchasePrice : (sPrice > 0 ? sPrice * 0.85 : 0);
+    const qtyToAdd = typeof quantity === 'number' ? quantity : 0;
+    const cleanBc = barcodeInput.trim();
+
     try {
-      // 1. Try atomic register RPC
-      const { data: regData, error: regErr } = await supabase.rpc(
-        'fn_register_product_and_barcode',
-        {
-          p_name: newProdName.trim(),
-          p_marathi_name: newProdMarathiName.trim() || newProdName.trim(),
-          p_category: newProdCategory,
-          p_unit: newProdUnit,
-          p_barcode: barcodeInput.trim(),
-          p_brand: newProdBrand.trim(),
-          p_pack_size: newProdPackSize.trim() || newProdUnit,
-          p_purchase_price: typeof purchasePrice === 'number' ? purchasePrice : 0,
-          p_selling_price: typeof sellingPrice === 'number' ? sellingPrice : 0
+      // 1. Add product to StoreContext & Supabase products table
+      const createdProd = await addProduct({
+        name: cleanName,
+        marathi_name: newProdMarathiName.trim() || undefined,
+        category: newProdCategory || 'Bakery & Extras',
+        unit: newProdUnit || 'Piece',
+        brand: newProdBrand.trim() || undefined,
+        purchase_price: pPrice,
+        selling_price: sPrice,
+        stock_quantity: qtyToAdd,
+        min_stock_alert: 5,
+        barcode: cleanBc,
+        is_active: true
+      });
+
+      // 2. Direct client guarantee for public.product_barcodes
+      if (supabase && cleanBc) {
+        const bcType = cleanBc.length === 8 ? 'EAN-8' : cleanBc.length === 12 ? 'UPC-A' : cleanBc.length === 14 ? 'GTIN-14' : 'EAN-13';
+        try {
+          await supabase.from('product_barcodes').upsert([{
+            product_id: createdProd.id,
+            barcode: cleanBc,
+            barcode_type: bcType,
+            is_primary: true,
+            source: 'STOCK_IN_QUICK_SAVE',
+            is_active: true
+          }], { onConflict: 'barcode' });
+        } catch (bcErr) {
+          console.warn('[BarcodeStockIn] product_barcodes upsert:', bcErr);
         }
-      );
-
-      let createdProd: Product;
-
-      if (!regErr && regData && regData.product_id) {
-        createdProd = {
-          id: regData.product_id,
-          name: newProdName.trim(),
-          marathi_name: newProdMarathiName.trim() || newProdName.trim(),
-          category: newProdCategory,
-          unit: newProdUnit,
-          brand: newProdBrand.trim(),
-          pack_size: newProdPackSize.trim() || newProdUnit,
-          purchase_price: typeof purchasePrice === 'number' ? purchasePrice : 0,
-          selling_price: typeof sellingPrice === 'number' ? sellingPrice : 0,
-          stock_quantity: 0.0, // Strictly 0 upon creation
-          min_stock_alert: 5,
-          barcode: barcodeInput.trim(),
-          is_active: true,
-          created_at: new Date().toISOString()
-        };
-      } else {
-        // Fallback storeContext addProduct (catalogue creation with stock = 0)
-        createdProd = await addProduct({
-          name: newProdName.trim(),
-          marathi_name: newProdMarathiName.trim() || newProdName.trim(),
-          category: newProdCategory,
-          unit: newProdUnit,
-          brand: newProdBrand.trim(),
-          purchase_price: typeof purchasePrice === 'number' ? purchasePrice : 0,
-          selling_price: typeof sellingPrice === 'number' ? sellingPrice : 0,
-          stock_quantity: 0.0,
-          min_stock_alert: 5,
-          barcode: barcodeInput.trim(),
-          is_active: true
-        });
       }
 
-      setSelectedProduct(createdProd);
-      setStep('details');
+      // 3. If quantity > 0, create batch
+      const finalBatch = generateBatchNumber();
+      if (qtyToAdd > 0) {
+        try {
+          await addBatch({
+            product_id: createdProd.id,
+            product_name: createdProd.name,
+            batch_no: finalBatch,
+            mfg_date: new Date().toISOString().split('T')[0],
+            expiry_date: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+            qty_received: qtyToAdd,
+            qty_remaining: qtyToAdd,
+            purchase_price: pPrice,
+            selling_price: sPrice,
+            notes: 'बारकोड आवक द्वारे नोंदणी'
+          });
+        } catch (batchErr) {
+          console.warn('Batch creation error:', batchErr);
+        }
+      }
+
+      setLastStockInResult({
+        productName: createdProd.name,
+        barcode: cleanBc,
+        batchNo: finalBatch,
+        qtyAdded: qtyToAdd,
+        newTotalStock: qtyToAdd
+      });
+
+      playSuccessChime();
+      if (onSuccess) {
+        onSuccess(createdProd, finalBatch, qtyToAdd);
+      }
+
+      // Direct to Success screen!
+      setStep('success');
     } catch (err: any) {
+      console.error('Register product error:', err);
       setErrorMessage(err?.message || 'उत्पादन नोंदणी करताना त्रुटी आली.');
     } finally {
       setIsRegistering(false);
@@ -1037,11 +1067,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                 )}
               </div>
 
-              {/* Manual Barcode Input / Scanner Gun */}
-              <div className="space-y-2">
+              {/* Manual Barcode Input / Scanner Gun (Optional secondary input, no autoFocus) */}
+              <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800">
                 <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                   <Barcode className="w-4 h-4 text-emerald-600" />
-                  {language === 'mr' ? 'किंवा बारकोड नंबर टाका / स्कॅनर गन वापरा:' : 'या बारकोड दर्ज करें / स्कैनर गन उपयोग करें:'}
+                  {language === 'mr' ? 'किंवा बारकोड नंबर टाईप करा / स्कॅनर गन वापरा:' : 'या बारकोड नंबर टाइप करें / स्कैनर गन उपयोग करें:'}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -1055,12 +1085,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                       }
                     }}
                     placeholder={language === 'mr' ? 'उदा. 8901030384721' : 'उदा. 8901030384721'}
-                    className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-base focus:ring-2 focus:ring-emerald-500 outline-none"
-                    autoFocus
+                    className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                   />
                   <label
                     title={language === 'mr' ? 'मोबाईल कॅमेऱ्याने फोटो काढून स्कॅन करा' : 'मोबाइल कैमरे से फोटो खींचकर स्कैन करें'}
-                    className="px-4 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white rounded-xl flex items-center justify-center cursor-pointer shadow-md active:scale-95 transition shrink-0"
+                    className="px-3.5 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white rounded-xl flex items-center justify-center cursor-pointer shadow-md active:scale-95 transition shrink-0"
                   >
                     <Camera className="w-5 h-5" />
                     <input
@@ -1095,41 +1124,45 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
             </div>
           )}
 
-          {/* STEP 2: REGISTER NEW PRODUCT IN CATALOGUE (WHEN NOT FOUND) */}
+          {/* STEP 2: REGISTER NEW PRODUCT IN CATALOGUE (MINIMAL 1-STEP: NAME + BARCODE ONLY) */}
           {step === 'register' && (
             <form onSubmit={handleRegisterProduct} className="space-y-4">
-              <div className="p-3.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-2xl flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200">
-                    {language === 'mr' ? 'उत्पादन सापडले नाही (Product Not Found)' : 'उत्पाद नहीं मिला'}
-                  </h4>
-                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
-                    {language === 'mr'
-                      ? `बारकोड [${barcodeInput}] साठी उत्पादन सूचीमध्ये नवीन नोंद करा. सुरुवातीचा साठा शून्य (0) राहील.`
-                      : `बारकोड [${barcodeInput}] के लिए उत्पाद सूची में दर्ज करें। प्रारंभिक स्टॉक शून्य (0) रहेगा।`}
-                  </p>
+              <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-amber-900 dark:text-amber-200">
+                      {language === 'mr' ? 'नवीन बारकोड - फक्त उत्पादनाचे नाव नोंदवा' : 'नया बारकोड - केवल उत्पाद का नाम दर्ज करें'}
+                    </h4>
+                    <p className="font-mono text-xs font-bold text-amber-700 dark:text-amber-400 mt-0.5">
+                      {barcodeInput}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Product Name Input - The Core Required Field */}
+              <div className="space-y-3">
                 <div>
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      {language === 'mr' ? 'उत्पादनाचे नाव (इंग्रजी) *' : 'उत्पाद का नाम (अंग्रेजी) *'}
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                      {language === 'mr' ? 'उत्पादनाचे नाव (Product Name) *' : 'उत्पाद का नाम (Product Name) *'}
                     </label>
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
                       🎤 {language === 'mr' ? 'व्हॉइस उपलब्ध' : 'वॉयस उपलब्ध'}
                     </span>
                   </div>
-                  <div className="relative mt-1">
+                  <div className="relative">
                     <input
                       type="text"
+                      autoFocus
                       required
                       value={newProdName}
                       onChange={(e) => handleNewProdNameChange(e.target.value)}
-                      placeholder="उदा. Amul Taaza Milk 500ml"
-                      className="w-full pr-24 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                      placeholder="उदा. Parle Monaco 50g / Britannia Toast"
+                      className="w-full pr-24 px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                     <button
                       type="button"
@@ -1146,10 +1179,12 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                     </button>
                   </div>
                 </div>
+
+                {/* Marathi Name (Auto-Translated) */}
                 <div>
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      {language === 'mr' ? 'मराठी नाव' : 'मराठी/हिंदी नाम'}
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                      {language === 'mr' ? 'मराठी नाव (आपोआप भाषांतर)' : 'मराठी/हिंदी नाम'}
                     </label>
                     {newProdMarathiName && (
                       <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/40">
@@ -1161,93 +1196,71 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                     type="text"
                     value={newProdMarathiName}
                     onChange={(e) => setNewProdMarathiName(e.target.value)}
-                    placeholder="उदा. अमूल ताझा दूध ५०० मिली"
-                    className="w-full mt-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                    placeholder="उदा. पार्ले मोनाको ५० ग्रॅम"
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500"
                   />
+                </div>
+
+                {/* Optional Stock Quantity & Selling Price (Compact) */}
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1 block">
+                      {language === 'mr' ? 'विक्री दर (दर ₹)' : 'बिक्री मूल्य (₹)'}
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={sellingPrice}
+                      onChange={(e) => setSellingPrice(e.target.value ? parseFloat(e.target.value) : '')}
+                      placeholder="उदा. 20 (ऐच्छिक)"
+                      className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1 block">
+                      {language === 'mr' ? 'साठा आवक (नग संख्या)' : 'स्टॉक आवक (मात्रा)'}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={quantity}
+                      onChange={(e) => setQuantity(e.target.value ? parseFloat(e.target.value) : '')}
+                      placeholder="उदा. 10 (किंवा 0)"
+                      className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {language === 'mr' ? 'ब्रँड (Brand)' : 'ब्रांड'}
-                  </label>
-                  <input
-                    type="text"
-                    value={newProdBrand}
-                    onChange={(e) => setNewProdBrand(e.target.value)}
-                    placeholder="उदा. Amul, Gowardhan"
-                    className="w-full mt-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {language === 'mr' ? 'प्रवर्ग (Category)' : 'श्रेणी'}
-                  </label>
-                  <select
-                    value={newProdCategory}
-                    onChange={(e) => setNewProdCategory(e.target.value as ProductCategory)}
-                    className="w-full mt-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm outline-none"
-                  >
-                    <option value="Milk">Milk (दूध)</option>
-                    <option value="Curd & Chaas">Curd & Chaas (दही व ताक)</option>
-                    <option value="Paneer & Butter">Paneer & Butter (पनीर व बटर)</option>
-                    <option value="Ghee">Ghee (शुद्ध तूप)</option>
-                    <option value="Sweets/Mithai">Sweets/Mithai (मिठाई/पेढा)</option>
-                    <option value="Bakery & Extras">Bakery & Extras (बेकरी व इतर)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {language === 'mr' ? 'पॅक साईज (उदा. 500ml, 1kg)' : 'पैक साइज'}
-                  </label>
-                  <input
-                    type="text"
-                    value={newProdPackSize}
-                    onChange={(e) => setNewProdPackSize(e.target.value)}
-                    placeholder="500 ml"
-                    className="w-full mt-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {language === 'mr' ? 'एकक (Unit)' : 'इकाई'}
-                  </label>
-                  <select
-                    value={newProdUnit}
-                    onChange={(e) => setNewProdUnit(e.target.value as ProductUnit)}
-                    className="w-full mt-1 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm outline-none"
-                  >
-                    <option value="Piece">Piece (नग)</option>
-                    <option value="Packet (500ml)">Packet (500ml)</option>
-                    <option value="Packet (1L)">Packet (1L)</option>
-                    <option value="Litre">Litre (लिटर)</option>
-                    <option value="Kg">Kg (किलो)</option>
-                    <option value="Gram">Gram (ग्रॅम)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+              {/* Action Buttons: Instant 1-Click Save */}
+              <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
-                  onClick={() => setStep('scan')}
-                  className="px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-sm font-medium"
+                  onClick={() => {
+                    setStep('scan');
+                    startCamera();
+                  }}
+                  className="px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-xs font-bold"
                 >
                   {language === 'mr' ? 'मागे जा' : 'वापस'}
                 </button>
                 <button
                   type="submit"
                   disabled={isRegistering}
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold flex items-center gap-2 shadow-lg disabled:opacity-50"
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-lg shadow-emerald-600/30 active:scale-95 transition disabled:opacity-50"
                 >
-                  <PlusCircle className="w-4 h-4" />
-                  {isRegistering
-                    ? (language === 'mr' ? 'नोंदणी करत आहे...' : 'पंजीकरण हो रहा है...')
-                    : (language === 'mr' ? 'उत्पादन जतन करा व पुढे जा' : 'सहेजें एवं आगे बढ़ें')}
+                  {isRegistering ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>{language === 'mr' ? 'डेटाबेसमध्ये सेव्ह करत आहे...' : 'डेटाबेस में सहेज रहे हैं...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <PlusCircle className="w-4 h-4" />
+                      <span>{language === 'mr' ? '⚡ थेट डेटाबेसमध्ये सेव्ह करा' : '⚡ सीधे डेटाबेस में सहेजें'}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

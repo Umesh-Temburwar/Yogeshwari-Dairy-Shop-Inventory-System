@@ -1143,7 +1143,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                 </div>
               </div>
 
-              {/* Product Name Input - The Core Required Field */}
+              {/* Product Name Input - The ONLY Required Field */}
               <div className="space-y-3">
                 <div>
                   <div className="flex items-center justify-between mb-1">
@@ -1200,37 +1200,6 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                     className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
-
-                {/* Optional Stock Quantity & Selling Price (Compact) */}
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1 block">
-                      {language === 'mr' ? 'विक्री दर (दर ₹)' : 'बिक्री मूल्य (₹)'}
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={sellingPrice}
-                      onChange={(e) => setSellingPrice(e.target.value ? parseFloat(e.target.value) : '')}
-                      placeholder="उदा. 20 (ऐच्छिक)"
-                      className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1 block">
-                      {language === 'mr' ? 'साठा आवक (नग संख्या)' : 'स्टॉक आवक (मात्रा)'}
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value ? parseFloat(e.target.value) : '')}
-                      placeholder="उदा. 10 (किंवा 0)"
-                      className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-                </div>
               </div>
 
               {/* Action Buttons: Instant 1-Click Save */}
@@ -1266,274 +1235,41 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
             </form>
           )}
 
-          {/* STEP 3: ENTER STOCK INWARD DETAILS */}
+          {/* STEP 3: PRODUCT ALREADY IN DATABASE (CLEAN DISPLAY, NO EXTRA FIELDS) */}
           {step === 'details' && selectedProduct && (
-            <form onSubmit={handleProceedToConfirm} className="space-y-4">
-              {/* Product Info Card */}
-              <div className="p-4 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
-                      <Tag className="w-3 h-3" /> {selectedProduct.category}
-                    </span>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white mt-1">
-                      {selectedProduct.marathi_name || selectedProduct.name}
-                    </h3>
-                    <p className="text-xs text-slate-500 font-mono mt-0.5">
-                      {selectedProduct.name} • {selectedProduct.brand || 'Yogeshwari Dairy'}
-                    </p>
-                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                      {validationResult?.isGS1 && validationResult?.isValid && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-[10px] font-bold">
-                          <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                          <span>{validationResult.format.replace('_', '-')} GS1 Verified</span>
-                        </span>
-                      )}
-                      {matchedSource === 'catalogue' && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-200 text-[10px] font-bold">
-                          <span>📦 Master Catalogue SKU</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs text-slate-500">{language === 'mr' ? 'सध्याचा साठा' : 'वर्तमान स्टॉक'}</span>
-                    <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">
-                      {selectedProduct.stock_quantity || 0} {selectedProduct.unit}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quantity & Prices */}
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {language === 'mr' ? 'आवक नग (Qty) *' : 'आवक मात्रा *'}
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    min="0.1"
-                    required
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="उदा. 50"
-                    className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-base font-bold text-emerald-600 outline-none focus:ring-2 focus:ring-emerald-500"
-                    autoFocus
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {language === 'mr' ? 'खरेदी भाव (₹)' : 'खरीद मूल्य (₹)'}
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={purchasePrice}
-                    onChange={(e) => setPurchasePrice(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder={`₹${selectedProduct.purchase_price || 0}`}
-                    className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {language === 'mr' ? 'विक्री भाव (₹)' : 'बिक्री मूल्य (₹)'}
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={sellingPrice}
-                    onChange={(e) => setSellingPrice(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder={`₹${selectedProduct.selling_price || 0}`}
-                    className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Batch & Expiry */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {language === 'mr' ? 'बॅच नंबर (Batch No)' : 'बैच संख्या'}
-                  </label>
-                  <input
-                    type="text"
-                    value={batchNo}
-                    onChange={(e) => setBatchNo(e.target.value)}
-                    placeholder="LOT-20261115-A1"
-                    className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {language === 'mr' ? 'एक्सपायरी तारीख (Expiry) *' : 'समाप्ति तिथि *'}
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Quick Expiry Shortcuts */}
-              <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-                <span className="text-[11px] font-semibold text-slate-400">
-                  {language === 'mr' ? 'जलद तारीख:' : 'त्वरित अवधि:'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setExpiryDaysFromToday(2)}
-                  className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 rounded-md transition-all text-[11px]"
-                >
-                  +२ दिवस (दूध)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setExpiryDaysFromToday(7)}
-                  className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 rounded-md transition-all text-[11px]"
-                >
-                  +७ दिवस (दही/पनीर)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setExpiryDaysFromToday(30)}
-                  className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 rounded-md transition-all text-[11px]"
-                >
-                  +३० दिवस
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setExpiryDaysFromToday(180)}
-                  className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 rounded-md transition-all text-[11px]"
-                >
-                  +६ महिने
-                </button>
-              </div>
-
-              {/* Supplier & Notes */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {language === 'mr' ? 'सप्लायर / पुरवठादार (ऐच्छिक)' : 'सप्लायर (वैकल्पिक)'}
-                  </label>
-                  <input
-                    type="text"
-                    value={supplierName}
-                    onChange={(e) => setSupplierName(e.target.value)}
-                    placeholder="उदा. अमूल डिस्ट्रिब्युटर"
-                    className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {language === 'mr' ? 'नोंद (Notes)' : 'टिप्पणी'}
-                  </label>
-                  <input
-                    type="text"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="उदा. इनव्हॉइस #4982"
-                    className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center pt-3 border-t border-slate-200 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setStep('scan')}
-                  className="px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 rounded-xl text-sm font-medium"
-                >
-                  {language === 'mr' ? 'मागे जा' : 'वापस'}
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold flex items-center gap-2 shadow-lg"
-                >
-                  <span>{language === 'mr' ? 'खात्री करा' : 'समीक्षा करें'}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* STEP 4: REVIEW & CONFIRM SUMMARY */}
-          {step === 'confirm' && selectedProduct && (
             <div className="space-y-4">
-              <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl space-y-3">
-                <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-sm">
-                  <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                  <span>{language === 'mr' ? 'साठा आवक तपशील तपासा' : 'स्टॉक आवक विवरण की जांच करें'}</span>
+              <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-500/40 rounded-2xl text-center space-y-3">
+                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                  <CheckCircle2 className="w-6 h-6" />
                 </div>
-
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-300 pt-1">
-                  <div>
-                    <span className="text-slate-400 block">{language === 'mr' ? 'उत्पादन:' : 'उत्पाद:'}</span>
-                    <strong className="text-slate-900 dark:text-white text-sm">
-                      {selectedProduct.marathi_name || selectedProduct.name}
-                    </strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block">{language === 'mr' ? 'बारकोड:' : 'बारकोड:'}</span>
-                    <span className="font-mono">{barcodeInput || selectedProduct.barcode}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block">{language === 'mr' ? 'आवक नग संख्या:' : 'आवक संख्या:'}</span>
-                    <strong className="text-emerald-600 text-base">
-                      +{quantity} {selectedProduct.unit}
-                    </strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block">{language === 'mr' ? 'नवीन एकूण साठा:' : 'नया कुल स्टॉक:'}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">
-                      {Number(selectedProduct.stock_quantity || 0) + Number(quantity)} {selectedProduct.unit}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block">{language === 'mr' ? 'बॅच क्रमांक:' : 'बैच संख्या:'}</span>
-                    <span className="font-mono">{batchNo}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block">{language === 'mr' ? 'एक्सपायरी तारीख:' : 'समाप्ति तिथि:'}</span>
-                    <span>{expiryDate}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block">{language === 'mr' ? 'खरेदी भाव:' : 'खरीद मूल्य:'}</span>
-                    <span>₹{purchasePrice || selectedProduct.purchase_price || 0} / {selectedProduct.unit}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block">{language === 'mr' ? 'एकूण खरेदी रक्कम:' : 'कुल खरीद लागत:'}</span>
-                    <strong className="text-slate-900 dark:text-white">
-                      ₹{((Number(quantity) || 0) * (Number(purchasePrice) || selectedProduct.purchase_price || 0)).toFixed(2)}
-                    </strong>
-                  </div>
+                <div>
+                  <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
+                    {language === 'mr' ? '✓ उत्पादन डेटाबेसमध्ये आधीच उपलब्ध आहे' : '✓ उत्पाद डेटाबेस में पहले से उपलब्ध है'}
+                  </span>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white mt-1">
+                    {selectedProduct.marathi_name || selectedProduct.name}
+                  </h3>
+                  <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    बारकोड: <strong className="text-slate-800 dark:text-slate-200">{selectedProduct.barcode || barcodeInput}</strong> | साठा: <strong className="text-emerald-600 dark:text-emerald-400">{selectedProduct.stock_quantity || 0} {selectedProduct.unit}</strong>
+                  </p>
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-2">
+              <div className="flex justify-center gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setStep('details')}
-                  className="px-4 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl text-sm font-medium"
+                  onClick={resetAll}
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-md shadow-emerald-600/30 active:scale-95 transition"
                 >
-                  {language === 'mr' ? 'बदल करा' : 'बदलें'}
+                  <RotateCcw className="w-4 h-4" />
+                  <span>{language === 'mr' ? 'पुढील बारकोड स्कॅन करा' : 'अगला बारकोड स्कैन करें'}</span>
                 </button>
                 <button
                   type="button"
-                  onClick={handleConfirmStockIn}
-                  disabled={isSubmitting}
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg disabled:opacity-50"
+                  onClick={onClose}
+                  className="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition"
                 >
-                  <CheckCircle2 className="w-5 h-5" />
-                  {isSubmitting
-                    ? (language === 'mr' ? 'साठा जमा होत आहे...' : 'स्टॉक दर्ज हो रहा है...')
-                    : (language === 'mr' ? 'साठा आवक पक्का करा' : 'स्टॉक आवक पुष्ट करें')}
+                  {language === 'mr' ? 'पूर्ण झाले / बंद करा' : 'पूर्ण / बंद करें'}
                 </button>
               </div>
             </div>
@@ -1547,18 +1283,17 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                  {language === 'mr' ? 'साठा यशस्वीरीत्या जमा झाला!' : 'स्टॉक सफलतापूर्वक दर्ज हुआ!'}
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                  {language === 'mr' ? 'उत्पादन आणि बारकोड यशस्वीरीत्या सेव्ह झाले!' : 'उत्पाद और बारकोड सफलतापूर्वक दर्ज हुआ!'}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  {lastStockInResult.productName} मध्ये <strong>+{lastStockInResult.qtyAdded}</strong> नग साठा जमा केला.
+                  डेटाबेसमध्ये नवीन नोंद पूर्ण झाली आहे.
                 </p>
               </div>
 
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl inline-block text-left text-xs space-y-1 font-mono">
-                <div>बॅच क्रमांक: <strong>{lastStockInResult.batchNo}</strong></div>
-                <div>बारकोड: <strong>{lastStockInResult.barcode}</strong></div>
-                <div>उपलब्ध एकूण साठा: <strong className="text-emerald-600">{lastStockInResult.newTotalStock} नग</strong></div>
+              <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl inline-block text-left text-xs space-y-1 font-mono">
+                <div>उत्पादन: <strong className="text-slate-900 dark:text-white text-sm">{lastStockInResult.productName}</strong></div>
+                <div>बारकोड: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{lastStockInResult.barcode}</strong></div>
               </div>
 
               <div className="flex justify-center gap-3 pt-3">

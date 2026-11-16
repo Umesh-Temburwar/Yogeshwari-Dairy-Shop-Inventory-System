@@ -354,7 +354,7 @@ export const BillingCounter: React.FC = () => {
         return [onlineSearchedProduct];
       }
       const localBarcodeMatches = products.filter(p =>
-        p.is_active && p.barcode && (
+        p.is_active && p.stock_quantity > 0 && p.barcode && (
           p.barcode.toLowerCase() === q ||
           p.barcode.toLowerCase() === ('0' + q) ||
           p.barcode.toLowerCase().replace(/^0+/, '') === q.replace(/^0+/, '') ||
@@ -367,6 +367,10 @@ export const BillingCounter: React.FC = () => {
     }
 
     const base = products.filter(p => {
+      if (!p.is_active) return false;
+      // Strictly show ONLY products physically in stock in the shop (stock_quantity > 0)
+      if (!q && p.stock_quantity <= 0) return false;
+
       const barcodeMatches = Boolean(
         p.barcode && (
           p.barcode.toLowerCase() === q ||
@@ -382,7 +386,7 @@ export const BillingCounter: React.FC = () => {
         (p.marathi_name && p.marathi_name.toLowerCase().includes(q)) ||
         barcodeMatches;
       const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
-      return matchesSearch && matchesCategory && p.is_active;
+      return matchesSearch && matchesCategory;
     });
 
     let result = base;
@@ -396,7 +400,7 @@ export const BillingCounter: React.FC = () => {
       result = [onlineSearchedProduct, ...base];
     }
 
-    return result;
+    return result.slice(0, 30);
   }, [products, deferredSearchQuery, selectedCategory, onlineSearchedProduct, onlineSearchResults]);
 
   // Helper display name

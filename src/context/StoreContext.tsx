@@ -415,10 +415,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [currentReceipt, setCurrentReceipt] = useState<Sale | null>(null);
 
-  // Initialize state from LocalStorage or mock data
+  // Initialize state from LocalStorage with strict in-stock filtering
   const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('yd_products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+    try {
+      const saved = localStorage.getItem('yd_products');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Strictly keep only actual in-stock store items to prevent catalogue bloat
+          const inStock = parsed.filter((p: Product) => p && p.stock_quantity > 0);
+          if (inStock.length > 0) return inStock;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to parse yd_products:', e);
+    }
+    return INITIAL_PRODUCTS.filter(p => p.stock_quantity > 0);
   });
 
   const [totalCatalogCount, setTotalCatalogCount] = useState<number>(33518);
@@ -518,7 +530,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     safeSetItem('yd_admin_activities', adminActivities);
   }, [adminActivities]);
   useEffect(() => {
-    safeSetItem('yd_products', products);
+    const inStockOnly = products.filter(p => p.stock_quantity > 0);
+    safeSetItem('yd_products', inStockOnly);
   }, [products]);
 
   useEffect(() => {

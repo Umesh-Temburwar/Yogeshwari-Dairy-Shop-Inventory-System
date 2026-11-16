@@ -438,7 +438,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         unit,
         purchase_price: pPrice,
         selling_price: sPrice,
-        stock_quantity: sQty,
+        // In Edit Mode, stock_quantity is preserved and managed via Batches/Stock Inward!
         min_stock_alert: minAlert,
         barcode: barcode.trim() || undefined
       });
@@ -837,40 +837,70 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           </div>
 
           {/* Current Stock & Low Stock Alert Level */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {language === 'mr' ? `सध्याचा साठा (${unit} मध्ये)` : language === 'hi' ? `मौजूदा स्टॉक (${unit} में)` : `Current Stock (in ${unit})`}
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                value={stockQuantity}
-                onChange={(e) => setStockQuantity(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-            </div>
+          {productToEdit ? (
+            /* In Edit Mode: Clean Informative Stock Card + Editable Low Stock Alert */
+            <div className="bg-emerald-50/60 dark:bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/40 flex items-center justify-between gap-3">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 block">
+                  {language === 'mr' ? 'सध्या दुकानातील शिल्लक साठा:' : language === 'hi' ? 'दुकान में मौजूदा स्टॉक:' : 'Current Shop Stock:'}
+                </span>
+                <span className="text-xl font-black text-slate-900 dark:text-white">
+                  {productToEdit.stock_quantity} <span className="text-xs font-bold text-slate-500">{unit}</span>
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-[#8FA69C] block mt-0.5">
+                  ✓ {language === 'mr' ? 'लॉट व मुदत बॅचनुसार सुरक्षित (बदलण्यासाठी स्टॉक आवक वापरा)' : language === 'hi' ? 'बैच व एक्सपायरी अनुसार सुरक्षित (बदलने हेतु स्टॉक आवक करें)' : 'Managed via Batches & Inward'}
+                </span>
+              </div>
 
-            <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {language === 'mr' ? `कमी साठा मर्यादा (${unit})` : language === 'hi' ? `कम स्टॉक अलर्ट सीमा (${unit})` : `Low Stock Threshold (${unit})`}
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                value={minStockAlert}
-                onChange={(e) => setMinStockAlert(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-amber-700 dark:text-amber-400 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
+              <div className="w-36 shrink-0">
+                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+                  {language === 'mr' ? `कमी साठा इशारा (${unit})` : language === 'hi' ? `कम स्टॉक अलर्ट (${unit})` : `Low Alert (${unit})`}
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={minStockAlert}
+                  onChange={(e) => setMinStockAlert(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-amber-700 dark:text-amber-400 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
             </div>
+          ) : (
+            /* In Add Mode (New product): Editable Initial Stock & Alert */
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+                  {language === 'mr' ? `सुरुवातीचा साठा (${unit} मध्ये)` : language === 'hi' ? `आरंभिक स्टॉक (${unit} में)` : `Initial Stock (${unit})`}
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={stockQuantity}
+                  onChange={(e) => setStockQuantity(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="0"
+                />
+              </div>
 
-            {!productToEdit && (
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+                  {language === 'mr' ? `कमी साठा मर्यादा (${unit})` : language === 'hi' ? `कम स्टॉक अलर्ट सीमा (${unit})` : `Low Stock Threshold (${unit})`}
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={minStockAlert}
+                  onChange={(e) => setMinStockAlert(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-amber-700 dark:text-amber-400 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
               <div className="col-span-2 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/40 flex items-center gap-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold">
                 <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>{getShelfLifeNote(category, name, language)} &bull; {language === 'mr' ? 'आरंभीच्या साठ्याची बॅच आपोआप तयार होईल' : language === 'hi' ? 'आरंभिक स्टॉक का बैच स्वतः बन जाएगा' : 'Initial stock batch auto-created with variety expiry'}</span>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Form Actions */}
           <div className="flex gap-2 pt-3 border-t border-slate-100 dark:border-[#24352F]">

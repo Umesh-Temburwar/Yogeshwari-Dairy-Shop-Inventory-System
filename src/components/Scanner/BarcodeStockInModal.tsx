@@ -775,7 +775,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
             purchase_price: pPrice,
             selling_price: sPrice,
             notes: 'बारकोड आवक द्वारे नोंदणी'
-          });
+          }, createdProd);
         } catch (batchErr) {
           console.warn('Batch creation error:', batchErr);
         }
@@ -866,7 +866,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
         selling_price: pPrice,
         supplier_name: supplierName.trim() || undefined,
         notes: notes.trim() || undefined
-      });
+      }, selectedProduct);
 
       const newTotalStock = Number(selectedProduct.stock_quantity || 0) + qtyToAdd;
 

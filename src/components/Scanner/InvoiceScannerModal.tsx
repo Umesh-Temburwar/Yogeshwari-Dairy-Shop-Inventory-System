@@ -179,7 +179,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
           supplier_name: supplierName,
           lot_type: 'fresh_today',
           notes: `Inward from Supplier Bill #${invoiceNumber}`
-        }]);
+        }], matchedProd);
 
         // Record purchase history
         await createPurchase({

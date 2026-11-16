@@ -87,7 +87,8 @@ interface StoreContextType {
       expiry_date?: string; 
       mfg_date?: string;
       supplier_name?: string;
-    }
+    },
+    productFallback?: Product
   ) => Promise<void>;
 
   addStockEntries: (
@@ -102,10 +103,11 @@ interface StoreContextType {
       supplier_name?: string;
       lot_type?: 'fresh_today' | 'previous_lot' | 'existing_batch';
       notes?: string;
-    }>
+    }>,
+    productFallback?: Product
   ) => Promise<void>;
 
-  addBatch: (batchData: Omit<ProductBatch, 'id' | 'created_at'>) => Promise<ProductBatch>;
+  addBatch: (batchData: Omit<ProductBatch, 'id' | 'created_at'>, productFallback?: Product) => Promise<ProductBatch>;
   updateBatch: (id: string, updates: Partial<ProductBatch>) => Promise<void>;
   deleteBatch: (id: string) => Promise<void>;
   
@@ -1220,8 +1222,29 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateProduct = async (id: string, updates: Partial<Product>) => {
-    const existingProd = products.find(p => p.id === id);
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p));
+    let existingProd = products.find(p => p.id === id);
+    if (!existingProd && supabase) {
+      try {
+        const { data: pDb } = await supabase.from('products').select('*').eq('id', id).maybeSingle();
+        if (pDb) existingProd = pDb as Product;
+      } catch (err) {
+        console.warn('Failed to load existing product for updateProduct:', err);
+      }
+    }
+
+    setProducts(prev => {
+      const exists = prev.some(p => p.id === id);
+      if (exists) {
+        return prev.map(p => p.id === id ? { ...p, ...updates, updated_at: new Date().toISOString() } : p);
+      } else if (existingProd) {
+        const merged = { ...existingProd, ...updates, id, updated_at: new Date().toISOString() };
+        if ((merged.stock_quantity ?? 0) > 0) {
+          return [merged, ...prev];
+        }
+      }
+      return prev;
+    });
+
     if (supabase) {
       try {
         await supabase.from('products').update({
@@ -1341,12 +1364,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       expiry_date?: string; 
       mfg_date?: string;
       supplier_name?: string;
-    }
+    },
+    productFallback?: Product
   ) => {
-    const prod = products.find(p => p.id === id);
+    let prod = products.find(p => p.id === id) || productFallback;
+    if (!prod && supabase) {
+      try {
+        const { data: pDb } = await supabase.from('products').select('*').eq('id', id).maybeSingle();
+        if (pDb) prod = pDb as Product;
+      } catch (err) {
+        console.warn('Failed to load product for adjustStock:', err);
+      }
+    }
     if (!prod) return;
 
-    const newStockQty = Math.max(0, Number((prod.stock_quantity + qtyDelta).toFixed(2)));
+    const newStockQty = Math.max(0, Number(((prod.stock_quantity || 0) + qtyDelta).toFixed(2)));
 
     let createdBatch: ProductBatch | null = null;
     let updatedBatchId: string | null = null;
@@ -1427,12 +1459,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }
 
-    setProducts(prev => prev.map(p => {
-      if (p.id === id) {
-        return { ...p, stock_quantity: newStockQty };
+    setProducts(prev => {
+      const exists = prev.some(p => p.id === id);
+      if (exists) {
+        return prev.map(p => {
+          if (p.id === id) {
+            return { ...p, stock_quantity: newStockQty };
+          }
+          return p;
+        });
+      } else if (newStockQty > 0) {
+        return [{ ...prod!, stock_quantity: newStockQty }, ...prev];
       }
-      return p;
-    }));
+      return prev;
+    });
 
     if (supabase) {
       try {
@@ -1445,6 +1485,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           await supabase.from('batches').insert([{
             id: createdBatch.id,
             product_id: createdBatch.product_id,
+            product_name: createdBatch.product_name || prod.name,
             batch_no: createdBatch.batch_no,
             mfg_date: createdBatch.mfg_date,
             expiry_date: createdBatch.expiry_date,
@@ -1464,6 +1505,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
 
         broadcastMutation('stock', 'adjust');
+        broadcastMutation('products', 'update');
       } catch (err) {
         console.error('Failed to sync adjustStock to Supabase:', err);
       }
@@ -1500,9 +1542,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       supplier_name?: string;
       lot_type?: 'fresh_today' | 'previous_lot' | 'existing_batch';
       notes?: string;
-    }>
+    }>,
+    productFallback?: Product
   ) => {
-    const prod = products.find(p => p.id === productId);
+    let prod = products.find(p => p.id === productId) || productFallback;
+    if (!prod && supabase) {
+      try {
+        const { data: pDb } = await supabase.from('products').select('*').eq('id', productId).maybeSingle();
+        if (pDb) prod = pDb as Product;
+      } catch (err) {
+        console.warn('Failed to load product for addStockEntries:', err);
+      }
+    }
     if (!prod || entries.length === 0) return;
 
     let totalQtyAdded = 0;
@@ -1558,48 +1609,90 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setBatches(prev => [...newBatchesToAppend, ...prev]);
     }
 
-    const finalProductStock = Number((prod.stock_quantity + totalQtyAdded).toFixed(2));
-    setProducts(prev => prev.map(p => {
-      if (p.id === productId) {
-        return {
-          ...p,
-          stock_quantity: finalProductStock
-        };
+    const finalProductStock = Number(((prod.stock_quantity || 0) + totalQtyAdded).toFixed(2));
+    setProducts(prev => {
+      const exists = prev.some(p => p.id === productId);
+      if (exists) {
+        return prev.map(p => {
+          if (p.id === productId) {
+            return {
+              ...p,
+              stock_quantity: finalProductStock
+            };
+          }
+          return p;
+        });
+      } else {
+        return [{ ...prod!, stock_quantity: finalProductStock }, ...prev];
       }
-      return p;
-    }));
+    });
 
     if (supabase) {
       try {
-        if (newBatchesToAppend.length > 0) {
-          await supabase.from('batches').insert(newBatchesToAppend.map(b => ({
-            id: b.id,
-            product_id: b.product_id,
-            batch_no: b.batch_no,
-            mfg_date: b.mfg_date,
-            expiry_date: b.expiry_date,
-            qty_received: b.qty_received,
-            qty_remaining: b.qty_remaining,
-            purchase_price: b.purchase_price,
-            selling_price: prod.selling_price || 0,
-            supplier_name: b.supplier_name || null,
-            notes: b.notes,
-            status: 'ACTIVE'
-          })));
+        let rpcHandled = false;
+        // If single new batch entry without existing batch topups, try atomic RPC
+        if (newBatchesToAppend.length === 1 && existingBatchesToUpdate.length === 0) {
+          const singleB = newBatchesToAppend[0];
+          try {
+            const { data: rpcRes, error: rpcErr } = await supabase.rpc('fn_record_stock_inward', {
+              p_product_id: productId,
+              p_quantity: singleB.qty_received,
+              p_batch_no: singleB.batch_no,
+              p_mfg_date: singleB.mfg_date,
+              p_expiry_date: singleB.expiry_date,
+              p_purchase_price: singleB.purchase_price || 0,
+              p_selling_price: prod!.selling_price || 0,
+              p_supplier_name: singleB.supplier_name || null,
+              p_notes: singleB.notes || 'Stock Inward'
+            });
+            if (!rpcErr && rpcRes && rpcRes.success) {
+              rpcHandled = true;
+            }
+          } catch (eRpc) {
+            // Fallback to direct table queries
+          }
         }
-        for (const eb of existingBatchesToUpdate) {
-          await supabase.from('batches').update({
-            qty_received: eb.qty_received,
-            qty_remaining: eb.qty_remaining,
+
+        if (!rpcHandled) {
+          if (newBatchesToAppend.length > 0) {
+            const { error: batchErr } = await supabase.from('batches').insert(newBatchesToAppend.map(b => ({
+              id: b.id,
+              product_id: b.product_id,
+              product_name: b.product_name || prod!.name,
+              batch_no: b.batch_no,
+              mfg_date: b.mfg_date,
+              expiry_date: b.expiry_date,
+              qty_received: b.qty_received,
+              qty_remaining: b.qty_remaining,
+              purchase_price: b.purchase_price,
+              selling_price: prod!.selling_price || 0,
+              supplier_name: b.supplier_name || null,
+              notes: b.notes,
+              status: 'ACTIVE'
+            })));
+            if (batchErr) {
+              console.error('Supabase batch insert error in addStockEntries:', batchErr);
+            }
+          }
+          for (const eb of existingBatchesToUpdate) {
+            await supabase.from('batches').update({
+              qty_received: eb.qty_received,
+              qty_remaining: eb.qty_remaining,
+              updated_at: new Date().toISOString()
+            }).eq('id', eb.id);
+          }
+          const { error: prodErr } = await supabase.from('products').update({
+            stock_quantity: finalProductStock,
             updated_at: new Date().toISOString()
-          }).eq('id', eb.id);
+          }).eq('id', productId);
+          if (prodErr) {
+            console.error('Supabase product stock update error in addStockEntries:', prodErr);
+          }
         }
-        await supabase.from('products').update({
-          stock_quantity: finalProductStock,
-          updated_at: new Date().toISOString()
-        }).eq('id', productId);
 
         broadcastMutation('stock', 'inward');
+        broadcastMutation('products', 'update');
+        broadcastMutation('batches', 'insert');
       } catch (err) {
         console.warn('Supabase batch inward sync error:', err);
       }
@@ -1625,38 +1718,58 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
-  const addBatch = async (batchData: Omit<ProductBatch, 'id' | 'created_at'>): Promise<ProductBatch> => {
+  const addBatch = async (batchData: Omit<ProductBatch, 'id' | 'created_at'>, productFallback?: Product): Promise<ProductBatch> => {
+    let targetProd = products.find(p => p.id === batchData.product_id) || productFallback;
+    if (!targetProd && supabase) {
+      try {
+        const { data: pDb } = await supabase.from('products').select('*').eq('id', batchData.product_id).maybeSingle();
+        if (pDb) targetProd = pDb as Product;
+      } catch (err) {
+        console.warn('Failed to load target product for addBatch:', err);
+      }
+    }
+
     const newBatch: ProductBatch = {
       ...batchData,
       id: generateUUID(),
+      product_name: batchData.product_name || targetProd?.name || 'उत्पादन',
       created_at: new Date().toISOString()
     };
     setBatches(prev => [newBatch, ...prev]);
 
-    let finalProdStock = 0;
-    setProducts(prev => prev.map(p => {
-      if (p.id === batchData.product_id) {
-        finalProdStock = Number((p.stock_quantity + batchData.qty_remaining).toFixed(2));
-        return {
-          ...p,
-          stock_quantity: finalProdStock
-        };
+    let finalProdStock = Number(((targetProd?.stock_quantity || 0) + batchData.qty_remaining).toFixed(2));
+    setProducts(prev => {
+      const exists = prev.some(p => p.id === batchData.product_id);
+      if (exists) {
+        return prev.map(p => {
+          if (p.id === batchData.product_id) {
+            finalProdStock = Number((p.stock_quantity + batchData.qty_remaining).toFixed(2));
+            return {
+              ...p,
+              stock_quantity: finalProdStock
+            };
+          }
+          return p;
+        });
+      } else if (targetProd) {
+        return [{ ...targetProd, stock_quantity: finalProdStock }, ...prev];
       }
-      return p;
-    }));
+      return prev;
+    });
 
     if (supabase) {
       try {
         await supabase.from('batches').insert([{
           id: newBatch.id,
           product_id: newBatch.product_id,
+          product_name: newBatch.product_name || targetProd?.name || 'उत्पादन',
           batch_no: newBatch.batch_no,
           mfg_date: newBatch.mfg_date,
           expiry_date: newBatch.expiry_date,
           qty_received: newBatch.qty_received,
           qty_remaining: newBatch.qty_remaining,
           purchase_price: newBatch.purchase_price,
-          selling_price: 0,
+          selling_price: targetProd?.selling_price || 0,
           supplier_name: newBatch.supplier_name || null,
           notes: newBatch.notes,
           status: 'ACTIVE'
@@ -1668,13 +1781,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }).eq('id', batchData.product_id);
         }
         broadcastMutation('batches', 'add');
+        broadcastMutation('products', 'update');
       } catch (e) {
         console.error('Supabase addBatch error:', e);
       }
     }
 
     const admin = getActiveAdminInfo();
-    const targetProd = products.find(p => p.id === batchData.product_id);
     logAdminActivity({
       admin_name: admin.name,
       admin_email: admin.email,

@@ -279,11 +279,19 @@ export const ProductList: React.FC<ProductListProps> = ({
       });
 
       if (onlineSearchResults && onlineSearchResults.length > 0) {
+        // Synchronize with real-time in-memory products state (so stock inward/batch updates reflect immediately)
+        const syncedOnlineResults = onlineSearchResults.map(os => {
+          const fresh = products.find(p => p.id === os.id);
+          return fresh || os;
+        });
         const existingIds = new Set(baseFiltered.map(p => p.id));
-        const additional = onlineSearchResults.filter(p => !existingIds.has(p.id));
-        return [...additional, ...baseFiltered];
-      } else if (onlineSearchedProduct && !baseFiltered.some(p => p.id === onlineSearchedProduct.id)) {
-        return [onlineSearchedProduct, ...baseFiltered];
+        const additional = syncedOnlineResults.filter(p => !existingIds.has(p.id));
+        return [...baseFiltered, ...additional];
+      } else if (onlineSearchedProduct) {
+        const fresh = products.find(p => p.id === onlineSearchedProduct.id) || onlineSearchedProduct;
+        if (!baseFiltered.some(p => p.id === fresh.id)) {
+          return [fresh, ...baseFiltered];
+        }
       }
       return baseFiltered;
     }
@@ -1631,7 +1639,19 @@ export const ProductList: React.FC<ProductListProps> = ({
       {selectedProductForStockIn && (
         <StockInwardModal 
           product={selectedProductForStockIn} 
-          onClose={() => setSelectedProductForStockIn(null)} 
+          onClose={() => {
+            setSelectedProductForStockIn(null);
+            // Re-fetch online search result to guarantee immediate fresh state
+            const q = searchQuery.trim();
+            if (q.length >= 2 && /^\d{5,}$/.test(q)) {
+              searchProductByBarcodeOnline(q).then(res => {
+                if (res.found && res.product) {
+                  setOnlineSearchedProduct(res.product);
+                  setOnlineSearchResults([res.product]);
+                }
+              });
+            }
+          }} 
         />
       )}
 

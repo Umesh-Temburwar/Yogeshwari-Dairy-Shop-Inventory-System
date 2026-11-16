@@ -68,6 +68,7 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
   const [expiryDate, setExpiryDate] = useState('');
   const [batchNo, setBatchNo] = useState('');
   const [supplierName, setSupplierName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Previous Lot Sub-type: 'new_previous_batch' | 'add_to_existing'
   const [previousSubtype, setPreviousSubtype] = useState<'new_previous_batch' | 'add_to_existing'>('new_previous_batch');
@@ -172,46 +173,53 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
   // Submit Handler
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (totalInwardQty <= 0) return;
+    if (totalInwardQty <= 0 || isSaving) return;
 
-    if (inwardMode === 'multi_lot') {
-      // Multiple batch entries
-      const entries = multiRows.map(r => ({
-        batch_no: r.batch_no.trim() || generateBatchNumber(product.name, r.mfg_date),
-        mfg_date: r.mfg_date,
-        expiry_date: r.expiry_date,
-        quantity: parseFloat(r.quantity) || 0,
-        lot_type: r.lot_type,
-        purchase_price: product.purchase_price,
-        supplier_name: supplierName.trim() || undefined,
-        notes: r.lot_type === 'fresh_today' 
-          ? (language === 'mr' ? 'आजचा ताजा माल आवक' : language === 'hi' ? 'आज का ताज़ा माल' : "Today's fresh lot")
-          : (language === 'mr' ? 'आधीचा / मागील शिल्लक माल' : language === 'hi' ? 'पहले का / पुराना माल' : 'Previous stock lot')
-      })).filter(e => e.quantity > 0);
+    try {
+      setIsSaving(true);
+      if (inwardMode === 'multi_lot') {
+        // Multiple batch entries
+        const entries = multiRows.map(r => ({
+          batch_no: r.batch_no.trim() || generateBatchNumber(product.name, r.mfg_date),
+          mfg_date: r.mfg_date,
+          expiry_date: r.expiry_date,
+          quantity: parseFloat(r.quantity) || 0,
+          lot_type: r.lot_type,
+          purchase_price: product.purchase_price,
+          supplier_name: supplierName.trim() || undefined,
+          notes: r.lot_type === 'fresh_today' 
+            ? (language === 'mr' ? 'आजचा ताजा माल आवक' : language === 'hi' ? 'आज का ताज़ा माल' : "Today's fresh lot")
+            : (language === 'mr' ? 'आधीचा / मागील शिल्लक माल' : language === 'hi' ? 'पहले का / पुराना माल' : 'Previous stock lot')
+        })).filter(e => e.quantity > 0);
 
-      await addStockEntries(product.id, entries);
-    } else if (inwardMode === 'previous_lot' && previousSubtype === 'add_to_existing' && selectedExistingBatchId) {
-      // Top up existing active batch
-      await adjustStock(product.id, totalInwardQty, undefined, {
-        batch_id: selectedExistingBatchId
-      });
-    } else {
-      // Single new batch entry (fresh today or new previous batch)
-      await addStockEntries(product.id, [{
-        batch_no: batchNo.trim() || generateBatchNumber(product.name, mfgDate),
-        mfg_date: mfgDate,
-        expiry_date: expiryDate || getSuggestedExpiryDate(mfgDate, shelfDays),
-        quantity: totalInwardQty,
-        lot_type: inwardMode,
-        purchase_price: product.purchase_price,
-        supplier_name: supplierName.trim() || undefined,
-        notes: inwardMode === 'fresh_today'
-          ? (language === 'mr' ? 'आजचा ताजा माल आवक' : language === 'hi' ? 'आज का ताज़ा माल' : "Today's fresh lot")
-          : (language === 'mr' ? 'आधीचा / मागील शिल्लक माल' : language === 'hi' ? 'पहले का / पुराना माल' : 'Previous stock lot')
-      }]);
+        await addStockEntries(product.id, entries, product);
+      } else if (inwardMode === 'previous_lot' && previousSubtype === 'add_to_existing' && selectedExistingBatchId) {
+        // Top up existing active batch
+        await adjustStock(product.id, totalInwardQty, undefined, {
+          batch_id: selectedExistingBatchId
+        }, product);
+      } else {
+        // Single new batch entry (fresh today or new previous batch)
+        await addStockEntries(product.id, [{
+          batch_no: batchNo.trim() || generateBatchNumber(product.name, mfgDate),
+          mfg_date: mfgDate,
+          expiry_date: expiryDate || getSuggestedExpiryDate(mfgDate, shelfDays),
+          quantity: totalInwardQty,
+          lot_type: inwardMode,
+          purchase_price: product.purchase_price,
+          supplier_name: supplierName.trim() || undefined,
+          notes: inwardMode === 'fresh_today'
+            ? (language === 'mr' ? 'आजचा ताजा माल आवक' : language === 'hi' ? 'आज का ताज़ा माल' : "Today's fresh lot")
+            : (language === 'mr' ? 'आधीचा / मागील शिल्लक माल' : language === 'hi' ? 'पहले का / पुराना माल' : 'Previous stock lot')
+        }], product);
+      }
+
+      onClose();
+    } catch (err) {
+      console.error('Failed to submit stock inward:', err);
+    } finally {
+      setIsSaving(false);
     }
-
-    onClose();
   };
 
   const displayName = language === 'mr' && product.marathi_name ? product.marathi_name :
@@ -648,10 +656,17 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
 
             <button
               type="submit"
-              disabled={totalInwardQty <= 0}
-              className="w-1/2 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all disabled:opacity-50"
+              disabled={totalInwardQty <= 0 || isSaving}
+              className="w-1/2 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
-              {language === 'mr' ? 'होय, साठा जमा करा' : language === 'hi' ? 'हाँ, स्टॉक दर्ज करें' : 'Confirm Stock In'}
+              {isSaving ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>{language === 'mr' ? 'साठा नोंद होत आहे...' : language === 'hi' ? 'स्टॉक दर्ज हो रहा है...' : 'Recording Stock In...'}</span>
+                </>
+              ) : (
+                <span>{language === 'mr' ? 'होय, साठा जमा करा' : language === 'hi' ? 'हाँ, स्टॉक दर्ज करें' : 'Confirm Stock In'}</span>
+              )}
             </button>
           </div>
 

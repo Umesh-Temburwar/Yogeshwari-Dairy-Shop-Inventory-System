@@ -1,0 +1,20 @@
+barcode,product_name,brand,pack_size,barcode_source_url,barcode_evidence,status
+'8903553000409,Ram Bandhu Lime pickle,Ram Bandhu,500 g,https://world.openfoodfacts.org/product/8903553000409,"OFF GTIN Record (Name: Ram Bandhu Lime pickle, Brand: Ram bandhu)",verified
+'8903553103292,Rambandhu  BIRYANI MASALA,Ram Bandhu,,https://world.openfoodfacts.org/product/8903553103292,"OFF GTIN Record (Name: Rambandhu  BIRYANI MASALA, Brand: None)",verified
+'8903553112102,Ram Bandhu Punjabi Chole Masala,Ram Bandhu,,https://world.openfoodfacts.org/product/8903553112102,"OFF GTIN Record (Name: Ram Bandhu Punjabi Chole Masala, Brand: Ram Bandhu)",verified
+'8903553121104,Ram Bandhu sambar Masala,Ram Bandhu,,https://world.openfoodfacts.org/product/8903553121104,"OFF GTIN Record (Name: Ram Bandhu sambar Masala, Brand: Ram Bandhu)",verified
+'8903553124297,Rambandhu  JALJIRA POWDER,Ram Bandhu,,https://world.openfoodfacts.org/product/8903553124297,"OFF GTIN Record (Name: Rambandhu  JALJIRA POWDER, Brand: None)",verified
+'8903553125294,Ram Bandhu  SHAHI PANEER,Ram Bandhu,,https://world.openfoodfacts.org/product/8903553125294,"OFF GTIN Record (Name: Ram Bandhu  SHAHI PANEER, Brand: None)",verified
+'8903553132292,Ram bandhu kichen king,Ram Bandhu,,https://world.openfoodfacts.org/product/8903553132292,"OFF GTIN Record (Name: Ram bandhu kichen king, Brand: None)",verified
+'8903553136290,Ram Bandhu GARAM MASALA,Ram Bandhu,,https://world.openfoodfacts.org/product/8903553136290,"OFF GTIN Record (Name: Ram Bandhu GARAM MASALA, Brand: None)",verified
+'8903553178290,Ram bandhu chakali masala,Ram Bandhu,50 g,https://world.openfoodfacts.org/product/8903553178290,"OFF GTIN Record (Name: Ram bandhu chakali masala, Brand: None)",verified
+'8903553535109,ram bandhu udad papad 10/-,Ram Bandhu,,https://world.openfoodfacts.org/product/8903553535109,"OFF GTIN Record (Name: ram bandhu udad papad 10/-, Brand: None)",verified
+'8903553601439,Ram Bandhu Mango pickle,Ram Bandhu,200 g,https://world.openfoodfacts.org/product/8903553601439,"OFF GTIN Record (Name: Ram Bandhu Mango pickle, Brand: Ram bandhu)",verified
+'8903553601460,Mango Pickle,Ram Bandhu,350 g,https://world.openfoodfacts.org/product/8903553601460,"OFF GTIN Record (Name: Mango Pickle, Brand: Ram Bandhu)",verified
+'8903553601491,Ram Bandhu Mango pickle,Ram Bandhu,500 g,https://world.openfoodfacts.org/product/8903553601491,"OFF GTIN Record (Name: Ram Bandhu Mango pickle, Brand: Ram bandhu)",verified
+'8903553645495,Ram Bandhu Mixed Pickle,Ram Bandhu,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8903553645495,Existing verified DB entry for Ram Bandhu,single_source
+'8903553645617,Rambandhu mix Achar,Ram Bandhu,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8903553645617,Existing verified DB entry for Ram Bandhu,single_source
+'8903553646461,Ram Bandhu mix pickl,Ram Bandhu,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8903553646461,Existing verified DB entry for Ram Bandhu,single_source
+'8903553649431,Ram Bandhu Lime pickle,Ram Bandhu,200 g,https://world.openfoodfacts.org/product/8903553649431,"OFF GTIN Record (Name: Ram Bandhu Lime pickle, Brand: Ram bandhu)",verified
+'8903553651465,Lime Chilli Pickle,Ram Bandhu,350 g,https://world.openfoodfacts.org/product/8903553651465,"OFF GTIN Record (Name: Lime Chilli Pickle, Brand: Ram Bandhu)",verified
+'8903553661433,Ram Bandhu Mixed Pickle,Ram Bandhu,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8903553661433,Existing verified DB entry for Ram Bandhu,single_source

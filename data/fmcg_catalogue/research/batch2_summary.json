@@ -1,0 +1,72 @@
+[
+  {
+    "brand": "Balaji",
+    "manufacturer": "Balaji Wafers Pvt. Ltd.",
+    "counts": {
+      "candidates": 86,
+      "verified_barcodes": 86,
+      "verified_images": 82,
+      "missing_images": 4,
+      "unverified_products": 0,
+      "review_changes": 50,
+      "new_products": 1
+    },
+    "duration_sec": 322.32
+  },
+  {
+    "brand": "Temptin",
+    "manufacturer": "Empire Spices & Foods Ltd.",
+    "counts": {
+      "candidates": 6,
+      "verified_barcodes": 6,
+      "verified_images": 6,
+      "missing_images": 0,
+      "unverified_products": 0,
+      "review_changes": 1,
+      "new_products": 0
+    },
+    "duration_sec": 23.05
+  },
+  {
+    "brand": "Ram Bandhu",
+    "manufacturer": "Empire Spices & Foods Ltd.",
+    "counts": {
+      "candidates": 19,
+      "verified_barcodes": 19,
+      "verified_images": 13,
+      "missing_images": 6,
+      "unverified_products": 0,
+      "review_changes": 10,
+      "new_products": 2
+    },
+    "duration_sec": 41.09
+  },
+  {
+    "brand": "Suhana",
+    "manufacturer": "Pravin Masalewale",
+    "counts": {
+      "candidates": 26,
+      "verified_barcodes": 26,
+      "verified_images": 14,
+      "missing_images": 12,
+      "unverified_products": 0,
+      "review_changes": 10,
+      "new_products": 0
+    },
+    "duration_sec": 93.85
+  },
+  {
+    "brand": "Mayora Malkist",
+    "manufacturer": "Inbisco India Pvt. Ltd. (Mayora Group)",
+    "counts": {
+      "candidates": 24,
+      "verified_barcodes": 24,
+      "verified_images": 17,
+      "missing_images": 7,
+      "unverified_products": 0,
+      "review_changes": 9,
+      "new_products": 11
+    },
+    "duration_sec": 104.28
+  }
+]

@@ -1,0 +1,27 @@
+barcode,product_name,brand,pack_size,barcode_source_url,barcode_evidence,status
+'8901662023517,Suhana Pavbhaji Masala 100G,Suhana,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901662023517,Existing verified DB entry for Suhana,single_source
+'8901662023524,Suhana Chat Masala 100G,Suhana,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901662023524,Existing verified DB entry for Suhana,single_source
+'8901662023586,Suhana Kitchen King Masala 100G,Suhana,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901662023586,Existing verified DB entry for Suhana,single_source
+'8901662024224,suhana,Suhana,,https://world.openfoodfacts.org/product/8901662024224,"OFF GTIN Record (Name: suhana, Brand: None)",verified
+'8901662024798,suhana sambar masal,Suhana,,https://world.openfoodfacts.org/product/8901662024798,"OFF GTIN Record (Name: , Brand: None)",verified
+'8901662027010,Suhana mutter paneer mix,Suhana,,https://world.openfoodfacts.org/product/8901662027010,"OFF GTIN Record (Name: Suhana mutter paneer mix, Brand: None)",verified
+'8901662029205,"Suhana Vegetable Kadai , Masala Mix 50G",Suhana,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901662029205,Existing verified DB entry for Suhana,single_source
+'8901662031017,Suhana paneer butter masala mix,Suhana,,https://world.openfoodfacts.org/product/8901662031017,"OFF GTIN Record (Name: Suhana paneer butter masala mix, Brand: None)",verified
+'8901662033042,Suhana Panipuri Masala 70G,Suhana,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901662033042,Existing verified DB entry for Suhana,single_source
+'8901662033509,Suhana Super garam masala,Suhana,50 g,https://world.openfoodfacts.org/product/8901662033509,"OFF GTIN Record (Name: Suhana Super garam masala, Brand: Suhana)",verified
+'8901662033714,Suhana- Achar Gosht Masala Mix,Suhana,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901662033714,Existing verified DB entry for Suhana,single_source
+'8901662033721,Suhana-Haleem Masala Mix,Suhana,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901662033721,Existing verified DB entry for Suhana,single_source
+'8901662033745,Suhana-Seekh Kebab Masala Mix,Suhana,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901662033745,Existing verified DB entry for Suhana,single_source
+'8901662036524,Suhana Paneer Masala,Suhana,,https://world.openfoodfacts.org/product/8901662036524,"OFF GTIN Record (Name: Suhana Paneer Masala, Brand: Suhana)",verified
+'8901662038153,Suhana Instant Mix Khaman Dhokla,Suhana,200 g,https://world.openfoodfacts.org/product/8901662038153,"OFF GTIN Record (Name: Suhana Instant Mix Khaman Dhokla, Brand: Suhana)",verified
+'8901662038344,suhana chicken gravy,Suhana,,https://world.openfoodfacts.org/product/8901662038344,"OFF GTIN Record (Name: suhana chicken gravy, Brand: None)",verified
+'8901662040019,Suhana-Chana Masala,Suhana,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901662040019,Existing verified DB entry for Suhana,single_source
+'8901662040040,Suhana Biryani Masala 70G,Suhana,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8901662040040,Existing verified DB entry for Suhana,single_source
+'8901662040125,Suhana Misal Masala,Suhana,,https://world.openfoodfacts.org/product/8901662040125,"OFF GTIN Record (Name: Suhana Misal Masala, Brand: Suhana)",verified
+'8901662042075,Suhana Veg Biriyani Mix,Suhana,25 g,https://world.openfoodfacts.org/product/8901662042075,"OFF GTIN Record (Name: Suhana Veg Biriyani Mix, Brand: Suhana)",verified
+'8903241230224,Suhana Date Tamarind Chutnet,Suhana,,https://world.openfoodfacts.org/product/8903241230224,"OFF GTIN Record (Name: Suhana Date Tamarind Chutnet, Brand: None)",verified
+'8903241230248,Suhana Pravin Panipuri Mix,Suhana,,https://world.openfoodfacts.org/product/8903241230248,"OFF GTIN Record (Name: Suhana Pravin Panipuri Mix, Brand: Suhana Pravin)",verified
+'8903241230316,Suhana Red Chilli Sauce,Suhana,,https://world.openfoodfacts.org/product/8903241230316,"OFF GTIN Record (Name: Suhana Red Chilli Sauce, Brand: None)",verified
+'8903241230347,Suhana Soya Sauce,Suhana,,https://world.openfoodfacts.org/product/8903241230347,"OFF GTIN Record (Name: Suhana Soya Sauce, Brand: Suhana)",verified
+'8903241230354,(Suhana) SCHEZWAN CHUTNEY,Suhana,,https://world.openfoodfacts.org/product/8903241230354,"OFF GTIN Record (Name: (Suhana) SCHEZWAN CHUTNEY, Brand: None)",verified
+'8906064231621,Cuppa dal chawal,Suhana,Piece,https://world.openfoodfacts.org/product/8906064231621,"OFF GTIN Record (Name: Cuppa dal chawal, Brand: Suhana)",verified

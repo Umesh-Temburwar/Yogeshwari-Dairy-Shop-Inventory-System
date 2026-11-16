@@ -2,11 +2,11 @@ import React from 'react';
 import { useStore, AppView } from '../context/StoreContext';
 import { useLanguage } from '../context/LanguageContext';
 import { 
-  LayoutDashboard, 
-  ShoppingCart, 
-  Package, 
-  BookOpen, 
-  Menu
+  Home, 
+  Boxes, 
+  ReceiptIndianRupee, 
+  BookUser, 
+  LayoutGrid
 } from 'lucide-react';
 
 interface MobileActionBarProps {
@@ -51,31 +51,31 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   }> = [
     {
       id: 'dashboard',
-      label: language === 'mr' ? 'डॅशबोर्ड' : language === 'hi' ? 'डैशबोर्ड' : 'Home',
-      icon: LayoutDashboard,
+      label: language === 'mr' ? 'होम' : language === 'hi' ? 'होम' : 'Home',
+      icon: Home,
     },
     {
       id: 'inventory',
       label: language === 'mr' ? 'स्टॉक' : language === 'hi' ? 'स्टॉक' : 'Stock',
-      icon: Package,
+      icon: Boxes,
       badgeCount: metrics.lowStockCount > 0 ? metrics.lowStockCount : undefined,
       badgeColor: 'bg-rose-500 text-white',
     },
     {
       id: 'pos',
-      label: language === 'mr' ? 'बिलिंग' : language === 'hi' ? 'बिलिंग' : 'POS',
-      icon: ShoppingCart,
+      label: language === 'mr' ? 'POS बिलिंग' : language === 'hi' ? 'POS बिलिंग' : 'POS',
+      icon: ReceiptIndianRupee,
       isAction: true,
     },
     {
       id: 'udhar',
       label: language === 'mr' ? 'खातेवही' : language === 'hi' ? 'खाताबही' : 'Khata',
-      icon: BookOpen,
+      icon: BookUser,
     },
     {
       id: 'menu',
       label: language === 'mr' ? 'मेनू' : language === 'hi' ? 'मेनू' : 'Menu',
-      icon: Menu,
+      icon: LayoutGrid,
       badgeCount: metrics.expiredBatchesCount > 0 ? metrics.expiredBatchesCount : undefined,
       badgeColor: 'bg-amber-500 text-white',
     },
@@ -93,7 +93,7 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
           const Icon = tab.icon;
           const isActive = isTabActive(tab.id);
 
-          // Center Prominent POS Button with Spring Lift-Up Animation
+          // Center Prominent POS Button with Spring Lift-Up Animation & Rupee Receipt Icon
           if (tab.isAction) {
             return (
               <button
@@ -116,7 +116,7 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
 
                 {/* Animated Label */}
                 <span 
-                  className={`text-[10px] leading-none tracking-tight transition-all duration-300 ${
+                  className={`text-[10px] leading-none tracking-tight transition-all duration-300 truncate max-w-[62px] ${
                     isActive 
                       ? '-translate-y-2 text-emerald-700 dark:text-emerald-400 font-black scale-105' 
                       : '-translate-y-0.5 text-slate-600 dark:text-[#8FA69C] font-bold'

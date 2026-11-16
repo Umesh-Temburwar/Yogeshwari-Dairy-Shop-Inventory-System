@@ -188,6 +188,7 @@ export const ProductList: React.FC<ProductListProps> = ({
           .from('products')
           .select('id, name, hindi_name, marathi_name, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, brand, pack_size, is_active')
           .order('name', { ascending: true })
+          .order('id', { ascending: true })
           .range(0, 39);
 
         if (selectedCategory !== 'All') {
@@ -214,10 +215,11 @@ export const ProductList: React.FC<ProductListProps> = ({
     if (isLoadingCatalogue || !hasMoreCatalogue) return;
     setIsLoadingCatalogue(true);
     try {
-      let query = supabase
+        let query = supabase
         .from('products')
         .select('id, name, hindi_name, marathi_name, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, brand, pack_size, is_active')
         .order('name', { ascending: true })
+        .order('id', { ascending: true })
         .range(catalogueOffset, catalogueOffset + 39);
 
       if (selectedCategory !== 'All') {

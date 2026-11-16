@@ -13,9 +13,9 @@ export interface Translations {
 export const TRANSLATIONS: Translations = {
   // Brand & General
   shopName: {
-    en: 'Yogeshwari Dairy & Products ',
-    hi: 'योगेश्वरी डेरी &उत्पादन',
-    mr: 'योगेश्वरी डेअरी &उत्पादन'
+    en: 'Yogeshwari Dairy Products',
+    hi: 'योगेश्वरी डेरी उत्पाद',
+    mr: 'योगेश्वरी डेअरी उत्पाद'
   },
   shopSubtitle: {
     en: 'Dairy ERP & Inventory Khata System',

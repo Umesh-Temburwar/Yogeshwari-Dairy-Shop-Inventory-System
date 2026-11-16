@@ -86,7 +86,7 @@ export const KhataBook: React.FC = () => {
         `📌 *Outstanding Balance: ₹${customer.current_balance.toLocaleString('en-IN')}*\n\n` +
         `Kindly settle the due amount at your earliest convenience.\n` +
         `💳 *UPI ID:* Q226038088@ybl\n` +
-        `Thank you!\nYogeshwari Dairy & Products`;
+        `Thank you!\nYogeshwari Dairy Products`;
     }
 
     const message = encodeURIComponent(messageText);

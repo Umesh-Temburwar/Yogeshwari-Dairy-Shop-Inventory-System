@@ -105,7 +105,7 @@ export const getReportHTMLMarkup = (options: PDFReportOptions): string => {
       locale: 'en-IN',
       defaultSubtitle: 'Dairy ERP & Inventory Khata System',
       defaultAuthor: 'Yogeshwari Dairy Manager',
-      brandTitle: 'Yogeshwari Dairy & Products',
+      brandTitle: 'Yogeshwari Dairy Products',
       brandSubtitle: 'Enterprise Dairy ERP & Inventory Khata System',
       topBarTitle: 'Yogeshwari Dairy Official Report',
       topBarSub: 'Print or Save as PDF file',

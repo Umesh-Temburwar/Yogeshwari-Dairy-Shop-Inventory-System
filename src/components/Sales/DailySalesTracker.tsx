@@ -247,7 +247,7 @@ export const DailySalesTracker: React.FC = () => {
 
     return {
       title: `${isMr ? 'विक्री पावती' : isHi ? 'बिक्री रसीद' : 'Sales Invoice'} (${sale.invoice_no})`,
-      subtitle: `${isMr ? 'योगेश्वरी डेअरी & उत्पादने' : isHi ? 'योगेश्वरी डेरी & उत्पाद' : 'Yogeshwari Dairy & Products'} | FSSAI: 21524012000341`,
+      subtitle: `${isMr ? 'योगेश्वरी डेअरी उत्पादने' : isHi ? 'योगेश्वरी डेरी उत्पाद' : 'Yogeshwari Dairy Products'} | FSSAI: 21524012000341`,
       periodText: `${isMr ? 'बिल क्र.' : isHi ? 'बिल क्र.' : 'Invoice No.'}: ${sale.invoice_no} | ${isMr ? 'बिल दिनांक व वेळ' : isHi ? 'बिल दिनांक व समय' : 'Bill Date & Time'}: ${dateTimeFormatted}`,
       createdAt: sale.created_at,
       language,

@@ -3,7 +3,7 @@ import {
   X, Image as ImageIcon, Play, Pause, Download, 
   Search, CheckCircle2, AlertTriangle, ExternalLink, Sparkles, 
   Edit2, Eye, ShieldCheck, Database, ShoppingBag, AlertOctagon, HelpCircle, Check, Ban,
-  Barcode, Camera, Upload, RefreshCw
+  Barcode, Camera, Upload, RefreshCw, Loader2
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -202,16 +202,138 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
     { id: 'MISSING' as ImageStatusFilter, label: 'Missing', count: stats.missingCount, border: 'border-slate-300 dark:border-slate-600', activeBg: 'bg-slate-700' },
   ], [stats, language]);
 
+  // Database-backed Catalogue Products State for Photo Dashboard
+  const [modalProducts, setModalProducts] = useState<Product[]>([]);
+  const [isLoadingModalProducts, setIsLoadingModalProducts] = useState(false);
+  const [modalOffset, setModalOffset] = useState(0);
+  const [hasMoreModalProducts, setHasMoreModalProducts] = useState(true);
+
+  // Fetch initial page whenever filters change
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+
+    const fetchModalProducts = async () => {
+      setIsLoadingModalProducts(true);
+      try {
+        if (!supabase) return;
+
+        let query = supabase.from('products').select('*');
+
+        // Apply Status Filter
+        if (statusFilter === 'MISSING') {
+          query = query.is('image_url', null).not('barcode', 'is', null).neq('barcode', '');
+        } else if (statusFilter === 'OFFICIAL') {
+          query = query.not('image_url', 'is', null).or('image_status.eq.official_verified,image_source.ilike.%official%');
+        } else if (statusFilter === 'TRUSTED') {
+          query = query.not('image_url', 'is', null).or('image_status.eq.trusted_database_verified,image_status.eq.verified,image_source.ilike.%openfoodfacts%');
+        } else if (statusFilter === 'RETAILER') {
+          query = query.not('image_url', 'is', null).or('image_status.eq.retailer_verified,image_source.ilike.%retailer%');
+        } else if (statusFilter === 'NEEDS_REVIEW') {
+          query = query.or('image_status.eq.needs_manual_review,and(image_url.not.is.null,image_status.eq.pending)');
+        } else if (statusFilter === 'INCORRECT') {
+          query = query.or('image_status.eq.incorrect,image_status.eq.incorrect_product_image');
+        } else if (statusFilter === 'BROKEN') {
+          query = query.or('image_status.eq.invalid_url,image_status.eq.broken');
+        }
+
+        // Apply Search Filter (name, barcode, brand)
+        const q = debouncedSearch.trim();
+        if (q) {
+          query = query.or(`name.ilike.%${q}%,barcode.ilike.%${q}%,brand.ilike.%${q}%`);
+        }
+
+        // Apply Category Filter
+        if (selectedCategory && selectedCategory !== 'All') {
+          query = query.eq('category', selectedCategory);
+        }
+
+        const { data, error } = await query
+          .order('id', { ascending: true })
+          .range(0, 39);
+
+        if (!cancelled && !error && data) {
+          setModalProducts(data as Product[]);
+          setModalOffset(40);
+          setHasMoreModalProducts(data.length === 40);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch modal products:', err);
+      } finally {
+        if (!cancelled) setIsLoadingModalProducts(false);
+      }
+    };
+
+    fetchModalProducts();
+    return () => { cancelled = true; };
+  }, [isOpen, debouncedSearch, selectedCategory, statusFilter]);
+
+  // Load More Handler for Catalogue Slicing
+  const handleLoadMoreModalProducts = async () => {
+    if (isLoadingModalProducts || !hasMoreModalProducts || !supabase) return;
+    setIsLoadingModalProducts(true);
+    try {
+      let query = supabase.from('products').select('*');
+
+      if (statusFilter === 'MISSING') {
+        query = query.is('image_url', null).not('barcode', 'is', null).neq('barcode', '');
+      } else if (statusFilter === 'OFFICIAL') {
+        query = query.not('image_url', 'is', null).or('image_status.eq.official_verified,image_source.ilike.%official%');
+      } else if (statusFilter === 'TRUSTED') {
+        query = query.not('image_url', 'is', null).or('image_status.eq.trusted_database_verified,image_status.eq.verified,image_source.ilike.%openfoodfacts%');
+      } else if (statusFilter === 'RETAILER') {
+        query = query.not('image_url', 'is', null).or('image_status.eq.retailer_verified,image_source.ilike.%retailer%');
+      } else if (statusFilter === 'NEEDS_REVIEW') {
+        query = query.or('image_status.eq.needs_manual_review,and(image_url.not.is.null,image_status.eq.pending)');
+      } else if (statusFilter === 'INCORRECT') {
+        query = query.or('image_status.eq.incorrect,image_status.eq.incorrect_product_image');
+      } else if (statusFilter === 'BROKEN') {
+        query = query.or('image_status.eq.invalid_url,image_status.eq.broken');
+      }
+
+      const q = debouncedSearch.trim();
+      if (q) {
+        query = query.or(`name.ilike.%${q}%,barcode.ilike.%${q}%,brand.ilike.%${q}%`);
+      }
+
+      if (selectedCategory && selectedCategory !== 'All') {
+        query = query.eq('category', selectedCategory);
+      }
+
+      const { data, error } = await query
+        .order('id', { ascending: true })
+        .range(modalOffset, modalOffset + 39);
+
+      if (!error && data && data.length > 0) {
+        setModalProducts(prev => [...prev, ...(data as Product[])]);
+        setModalOffset(prev => prev + data.length);
+        setHasMoreModalProducts(data.length === 40);
+      } else {
+        setHasMoreModalProducts(false);
+      }
+    } catch (err) {
+      console.warn('Failed to load more modal products:', err);
+    } finally {
+      setIsLoadingModalProducts(false);
+    }
+  };
+
   // Categories list
   const categories = useMemo(() => {
-    const set = new Set<string>();
+    const defaultCats = [
+      'All', 'Dairy', 'Milk', 'Paneer & Butter', 'Curd & Lassi', 'Ghee', 
+      'Sweets', 'Ice Cream', 'Beverages', 'Bakery & Snacks', 'Groceries', 
+      'Dry Fruits & Spices', 'Frozen & Instant', 'Cleaning & Household', 
+      'Personal Care', 'Pooja & Festivities', 'Stationery & General'
+    ];
+    const set = new Set<string>(defaultCats);
     products.forEach((p: Product) => {
       if (p.category) set.add(p.category);
     });
-    return ['All', ...Array.from(set).sort()];
+    return Array.from(set);
   }, [products]);
 
-  // Filtered products for display
+  // Filtered products for display (fallback if offline or loading)
   const filteredProducts = useMemo(() => {
     return products.filter((p: Product) => {
       const q = debouncedSearch.toLowerCase().trim();
@@ -247,10 +369,13 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
     });
   }, [products, debouncedSearch, selectedCategory, statusFilter]);
 
-  // Sliced products for high-performance lazy rendering
+  // Products to display in grid (prefers live Supabase catalog slice over 13 store items)
   const displayedProducts = useMemo(() => {
+    if (modalProducts.length > 0) {
+      return modalProducts;
+    }
     return filteredProducts.slice(0, visibleCount);
-  }, [filteredProducts, visibleCount]);
+  }, [modalProducts, filteredProducts, visibleCount]);
 
   if (!isOpen) return null;
 
@@ -262,7 +387,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
     const clean = scannedBarcode.trim();
     if (!clean) return;
 
-    // 1. Try finding in memory (with leading zero variations)
+    // 1. Try finding in loaded products (modal products or store products)
     const candidates = [clean];
     if (clean.startsWith('0')) {
       candidates.push(clean.replace(/^0+/, ''));
@@ -270,7 +395,9 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
       candidates.push('0' + clean);
     }
 
-    let found = products.find((p: Product) => 
+    let found = modalProducts.find((p: Product) => 
+      p.barcode && candidates.includes(p.barcode.trim())
+    ) || products.find((p: Product) => 
       p.barcode && candidates.includes(p.barcode.trim())
     );
 
@@ -358,23 +485,46 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
     reader.readAsDataURL(file);
   };
 
-  // Start Batch Image Fetching
+  // Start Batch Image Fetching (Database-backed across 34,600+ catalogue items)
   const handleStartFetching = () => {
-    globalImageManager.startProcessing(products, {
+    globalImageManager.startProcessing({
       batchSize: 20,
-      delayMs: 200,
+      delayMs: 250,
       onProgress: (p) => setProgress(p),
-      onProductUpdated: (productId, newUrl) => {
+      onProductUpdated: (updatedProd) => {
+        // 1. Update in-memory store products if present in shop inventory
         if (setProducts) {
           setProducts((prev: Product[]) => 
-            prev.map(item => item.id === productId ? { 
+            prev.map(item => item.id === updatedProd.id ? { 
               ...item, 
-              image_url: newUrl, 
-              image_status: 'trusted_database_verified',
-              image_source: 'OpenFoodFacts'
+              image_url: updatedProd.image_url, 
+              image_status: updatedProd.image_status,
+              image_source: updatedProd.image_source
             } : item)
           );
         }
+        // 2. Update modal catalog list if currently loaded on screen
+        setModalProducts((prev: Product[]) =>
+          prev.map(item => item.id === updatedProd.id ? {
+            ...item,
+            image_url: updatedProd.image_url,
+            image_status: updatedProd.image_status,
+            image_source: updatedProd.image_source
+          } : item)
+        );
+        // 3. Update server stats counters live
+        setServerStats(prev => {
+          if (!prev) return prev;
+          const newWithImages = prev.totalWithImages + 1;
+          const newMissing = Math.max(0, prev.missingCount - 1);
+          return {
+            ...prev,
+            trustedCount: prev.trustedCount + 1,
+            totalWithImages: newWithImages,
+            missingCount: newMissing,
+            percentage: prev.totalProducts > 0 ? Math.round((newWithImages / prev.totalProducts) * 100) : prev.percentage
+          };
+        });
       }
     });
   };
@@ -411,6 +561,9 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
           prev.map(p => p.id === product.id ? { ...p, image_status: 'trusted_database_verified' } : p)
         );
       }
+      setModalProducts((prev: Product[]) =>
+        prev.map(p => p.id === product.id ? { ...p, image_status: 'trusted_database_verified' } : p)
+      );
       playSuccessChime();
     } catch (e) {
       console.error('Failed to approve image:', e);
@@ -435,6 +588,9 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
           prev.map(p => p.id === product.id ? { ...p, image_url: undefined, image_status: 'incorrect' } : p)
         );
       }
+      setModalProducts((prev: Product[]) =>
+        prev.map(p => p.id === product.id ? { ...p, image_url: undefined, image_status: 'incorrect' } : p)
+      );
     } catch (e) {
       console.error('Failed to reject image:', e);
     }
@@ -486,6 +642,14 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
           } : p)
         );
       }
+      setModalProducts((prev: Product[]) =>
+        prev.map(p => p.id === editingProduct.id ? {
+          ...p,
+          image_url: cleanUrl || undefined,
+          image_status: newStatus,
+          image_source: newSource || undefined
+        } : p)
+      );
 
       playSuccessChime();
       setSaveSuccessToast(
@@ -505,26 +669,49 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
     }
   };
 
-  // Export Missing as CSV
-  const handleExportMissing = () => {
-    const missing = products.filter((p: Product) => (!p.image_url || p.image_url.trim() === '') && p.barcode);
-    const headers = ['barcode', 'product_name', 'brand', 'category', 'pack_size', 'selling_price'];
-    const rows = missing.map((p: Product) => [
-      `"${p.barcode || ''}"`,
-      `"${(p.name || '').replace(/"/g, '""')}"`,
-      `"${(p.brand || '').replace(/"/g, '""')}"`,
-      `"${(p.category || '').replace(/"/g, '""')}"`,
-      `"${(p.pack_size || p.unit || '').replace(/"/g, '""')}"`,
-      p.selling_price || ''
-    ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `missing_product_images_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // Export Missing as CSV (queries Supabase for up to 1,000 missing catalogue products)
+  const handleExportMissing = async () => {
+    try {
+      let missingItems: any[] = [];
+      if (supabase) {
+        const { data: dbMissing } = await supabase
+          .from('products')
+          .select('barcode, name, brand, category, pack_size, unit, selling_price')
+          .not('barcode', 'is', null)
+          .neq('barcode', '')
+          .is('image_url', null)
+          .order('id', { ascending: true })
+          .limit(1000);
+
+        if (dbMissing && dbMissing.length > 0) {
+          missingItems = dbMissing;
+        }
+      }
+
+      if (missingItems.length === 0) {
+        missingItems = products.filter((p: Product) => (!p.image_url || p.image_url.trim() === '') && p.barcode);
+      }
+
+      const headers = ['barcode', 'product_name', 'brand', 'category', 'pack_size', 'selling_price'];
+      const rows = missingItems.map((p: any) => [
+        `"${p.barcode || ''}"`,
+        `"${(p.name || '').replace(/"/g, '""')}"`,
+        `"${(p.brand || '').replace(/"/g, '""')}"`,
+        `"${(p.category || '').replace(/"/g, '""')}"`,
+        `"${(p.pack_size || p.unit || '').replace(/"/g, '""')}"`,
+        p.selling_price || ''
+      ]);
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `missing_product_images_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Failed to export missing CSV:', err);
+    }
   };
 
   return (
@@ -746,7 +933,12 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
 
         {/* 5. Product Image Catalog List (Only this section scrolls) */}
         <div className="flex-1 min-h-0 overflow-y-auto px-3 py-2 space-y-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          {filteredProducts.length === 0 ? (
+          {isLoadingModalProducts && displayedProducts.length === 0 ? (
+            <div className="text-center py-16 text-slate-400 space-y-3">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-emerald-600" />
+              <p className="text-xs font-medium">{language === 'mr' ? 'उत्पादने लोड होत आहेत...' : 'उत्पाद लोड हो रहे हैं...'}</p>
+            </div>
+          ) : displayedProducts.length === 0 ? (
             <div className="text-center py-12 text-slate-400 space-y-3">
               <ImageIcon className="w-10 h-10 mx-auto opacity-30" />
               <p className="text-xs">कोणतेही उत्पादन सापडले नाही (No products match criteria).</p>
@@ -877,16 +1069,20 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                 })}
               </div>
 
-              {visibleCount < filteredProducts.length && (
+              {hasMoreModalProducts && (
                 <div className="py-2.5 text-center">
                   <button
                     type="button"
-                    onClick={() => setVisibleCount(prev => prev + 40)}
-                    className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold border border-slate-200 dark:border-[#24352F] transition active:scale-95 cursor-pointer"
+                    disabled={isLoadingModalProducts}
+                    onClick={handleLoadMoreModalProducts}
+                    className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-700 dark:text-white text-xs font-bold border border-slate-200 dark:border-[#24352F] transition active:scale-95 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {language === 'mr'
-                      ? `आणखी उत्पादने दाखवा (${displayedProducts.length} / ${filteredProducts.length})`
-                      : `और उत्पाद लोड करें (${displayedProducts.length} / ${filteredProducts.length})`}
+                    {isLoadingModalProducts && <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />}
+                    <span>
+                      {language === 'mr'
+                        ? `आणखी उत्पादने दाखवा (${displayedProducts.length}+)`
+                        : `और उत्पाद लोड करें (${displayedProducts.length}+)`}
+                    </span>
                   </button>
                 </div>
               )}

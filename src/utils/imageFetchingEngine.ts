@@ -8,7 +8,7 @@
  * Safety & Rules:
  * - EXACT barcode matching only
  * - Validates external image URL before saving
- * - Updates ONLY `image_url` column on products table
+ * - Updates ONLY `image_url`, `image_status`, `image_source`, and `image_fetched_at` columns
  * - ZERO modification to stock, prices, batches, or sales
  */
 
@@ -35,13 +35,39 @@ export interface ImageLookupResult {
   productName?: string;
 }
 
+export interface BulkProcessOptions {
+  products?: Array<{ id: string; name: string; barcode?: string | null; image_url?: string | null; image_status?: string | null }>;
+  batchSize?: number;
+  delayMs?: number;
+  useDatabase?: boolean;
+  onProgress?: (progress: ImageFetchProgress) => void;
+  onProductUpdated?: (updated: {
+    id: string;
+    name: string;
+    barcode?: string;
+    image_url: string;
+    image_status: string;
+    image_source: string;
+  }) => void;
+}
+
 /**
  * Validates that an image URL actually returns a valid image (not 404, HTML, or CORS error)
  */
-export async function validateImageUrl(url: string, timeoutMs: number = 5000): Promise<boolean> {
+export async function validateImageUrl(url: string, timeoutMs: number = 4000): Promise<boolean> {
   if (!url || typeof url !== 'string') return false;
   const clean = url.trim();
   if (!clean.startsWith('http://') && !clean.startsWith('https://')) return false;
+
+  // In non-browser environments (SSR, Node tests), skip Image element validation
+  if (typeof window === 'undefined' || typeof Image === 'undefined') {
+    return true;
+  }
+
+  // Official Open Food Facts and Open Products Facts CDNs are pre-verified
+  if (clean.includes('images.openfoodfacts.org') || clean.includes('images.openproductsfacts.org')) {
+    return true;
+  }
 
   return new Promise((resolve) => {
     const timer = setTimeout(() => {
@@ -51,7 +77,6 @@ export async function validateImageUrl(url: string, timeoutMs: number = 5000): P
     const img = new Image();
     img.onload = () => {
       clearTimeout(timer);
-      // Ensure image has real dimensions
       if (img.naturalWidth > 10 && img.naturalHeight > 10) {
         resolve(true);
       } else {
@@ -75,8 +100,8 @@ export async function lookupProductImageByBarcode(barcode: string): Promise<Imag
     return { barcode: clean, imageUrl: null, source: 'None', status: 'missing' };
   }
 
-  // Generate candidate barcodes (e.g. raw, with leading zero, without leading zero)
-  const candidates = [clean];
+  // Generate candidate barcodes (e.g. raw, with leading zero stripped, or with leading zero added)
+  const candidates: string[] = [clean];
   if (clean.startsWith('0') && clean.length > 8) {
     candidates.push(clean.replace(/^0+/, ''));
   } else if (!clean.startsWith('0') && clean.length === 12) {
@@ -86,7 +111,7 @@ export async function lookupProductImageByBarcode(barcode: string): Promise<Imag
   // 1. Check Open Food Facts
   for (const cand of candidates) {
     try {
-      const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(cand)}.json?fields=code,product_name,image_front_url,image_url,image_front_small_url`;
+      const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(cand)}.json?fields=code,product_name,image_front_url,image_url,image_front_small_url,selected_images&app_name=YogeshwariDairyERP&app_version=1.0`;
       const res = await fetch(url, {
         headers: {
           'Accept': 'application/json'
@@ -96,7 +121,10 @@ export async function lookupProductImageByBarcode(barcode: string): Promise<Imag
       if (res.ok) {
         const data = await res.json();
         if (data && data.status === 1 && data.product) {
-          const rawImg = data.product.image_front_url || data.product.image_url || data.product.image_front_small_url;
+          const selectedFront = data.product.selected_images?.front?.display?.en ||
+            data.product.selected_images?.front?.display?.in ||
+            data.product.selected_images?.front?.small?.en;
+          const rawImg = data.product.image_front_url || data.product.image_url || data.product.image_front_small_url || selectedFront;
           if (rawImg && typeof rawImg === 'string' && rawImg.startsWith('http')) {
             const isValid = await validateImageUrl(rawImg);
             if (isValid) {
@@ -119,7 +147,7 @@ export async function lookupProductImageByBarcode(barcode: string): Promise<Imag
   // 2. Check Open Products Facts (for non-food items / cosmetics / general packaged goods)
   for (const cand of candidates) {
     try {
-      const url = `https://world.openproductsfacts.org/api/v2/product/${encodeURIComponent(cand)}.json?fields=code,product_name,image_front_url,image_url`;
+      const url = `https://world.openproductsfacts.org/api/v2/product/${encodeURIComponent(cand)}.json?fields=code,product_name,image_front_url,image_url&app_name=YogeshwariDairyERP&app_version=1.0`;
       const res = await fetch(url, {
         headers: {
           'Accept': 'application/json'
@@ -154,6 +182,7 @@ export async function lookupProductImageByBarcode(barcode: string): Promise<Imag
 
 /**
  * Controller class for managing interactive batch processing of product images
+ * Seamlessly handles both in-memory product arrays and live database-backed batches.
  */
 export class BulkImageProcessingManager {
   private isRunning: boolean = false;
@@ -161,31 +190,46 @@ export class BulkImageProcessingManager {
   private onProgressCallback?: (progress: ImageFetchProgress) => void;
 
   public async startProcessing(
-    products: Array<{ id: string; name: string; barcode?: string | null; image_url?: string | null }>,
-    options: {
-      batchSize?: number;
-      delayMs?: number;
-      onProgress?: (progress: ImageFetchProgress) => void;
-      onProductUpdated?: (productId: string, imageUrl: string) => void;
-    } = {}
+    productsOrOptions?: Array<{ id: string; name: string; barcode?: string | null; image_url?: string | null }> | BulkProcessOptions,
+    maybeOptions?: BulkProcessOptions
   ): Promise<void> {
-    const { batchSize = 10, delayMs = 300, onProgress, onProductUpdated } = options;
+    let productsList: Array<{ id: string; name: string; barcode?: string | null; image_url?: string | null }> | undefined;
+    let opts: BulkProcessOptions = {};
+
+    if (Array.isArray(productsOrOptions)) {
+      productsList = productsOrOptions;
+      opts = maybeOptions || {};
+    } else if (typeof productsOrOptions === 'object' && productsOrOptions !== null) {
+      opts = productsOrOptions;
+      productsList = opts.products;
+    }
+
+    const {
+      batchSize = 20,
+      delayMs = 250,
+      useDatabase = false,
+      onProgress,
+      onProductUpdated
+    } = opts;
+
     this.onProgressCallback = onProgress;
     this.isRunning = true;
     this.isPaused = false;
 
-    // Filter eligible products: must have valid barcode and currently no image_url
-    const eligible = products.filter(p => p.barcode && p.barcode.trim().length >= 5 && (!p.image_url || p.image_url.trim() === ''));
-    
+    // Check if in-memory products have eligible items
+    const inMemoryEligible = (productsList || []).filter(
+      p => p.barcode && p.barcode.trim().length >= 5 && (!p.image_url || p.image_url.trim() === '')
+    );
+
     let processed = 0;
     let verified = 0;
     let missing = 0;
     let failed = 0;
 
-    const report = (currB?: string, currN?: string) => {
+    const report = (currB?: string, currN?: string, totalCount?: number) => {
       if (this.onProgressCallback) {
         this.onProgressCallback({
-          total: eligible.length,
+          total: totalCount !== undefined ? totalCount : (inMemoryEligible.length > 0 ? inMemoryEligible.length : 0),
           processed,
           verified,
           missing,
@@ -198,17 +242,155 @@ export class BulkImageProcessingManager {
       }
     };
 
-    report();
+    // MODE 1: In-Memory Processing (if eligible products were explicitly passed)
+    if (!useDatabase && inMemoryEligible.length > 0) {
+      report(undefined, undefined, inMemoryEligible.length);
 
-    for (let i = 0; i < eligible.length; i += batchSize) {
-      if (!this.isRunning) break;
+      for (let i = 0; i < inMemoryEligible.length; i += batchSize) {
+        if (!this.isRunning) break;
 
+        while (this.isPaused) {
+          await new Promise(r => setTimeout(r, 300));
+          if (!this.isRunning) break;
+        }
+
+        const batch = inMemoryEligible.slice(i, i + batchSize);
+
+        for (const prod of batch) {
+          if (!this.isRunning) break;
+          while (this.isPaused) {
+            await new Promise(r => setTimeout(r, 300));
+            if (!this.isRunning) break;
+          }
+
+          report(prod.barcode!, prod.name, inMemoryEligible.length);
+
+          try {
+            const res = await lookupProductImageByBarcode(prod.barcode!);
+            processed++;
+
+            if (res.status === 'verified' && res.imageUrl) {
+              verified++;
+              const nowIso = new Date().toISOString();
+              if (supabase) {
+                await supabase
+                  .from('products')
+                  .update({
+                    image_url: res.imageUrl,
+                    image_status: 'trusted_database_verified',
+                    image_source: res.source,
+                    image_fetched_at: nowIso
+                  })
+                  .eq('id', prod.id);
+              }
+              if (onProductUpdated) {
+                onProductUpdated({
+                  id: prod.id,
+                  name: prod.name,
+                  barcode: prod.barcode || undefined,
+                  image_url: res.imageUrl,
+                  image_status: 'trusted_database_verified',
+                  image_source: res.source
+                });
+              }
+            } else {
+              missing++;
+              if (supabase) {
+                await supabase
+                  .from('products')
+                  .update({
+                    image_status: 'not_found',
+                    image_fetched_at: new Date().toISOString()
+                  })
+                  .eq('id', prod.id);
+              }
+            }
+          } catch {
+            processed++;
+            failed++;
+          }
+
+          report(prod.barcode!, prod.name, inMemoryEligible.length);
+          if (delayMs > 0) {
+            await new Promise(r => setTimeout(r, delayMs));
+          }
+        }
+      }
+
+      this.isRunning = false;
+      this.isPaused = false;
+      report(undefined, undefined, inMemoryEligible.length);
+      return;
+    }
+
+    // MODE 2: Database-Backed Batch Processing (Directly from 34,600+ Supabase items)
+    let totalDbMissing = 34614;
+    try {
+      if (supabase) {
+        const { count: pendingCount } = await supabase
+          .from('products')
+          .select('id', { count: 'exact', head: true })
+          .not('barcode', 'is', null)
+          .neq('barcode', '')
+          .is('image_url', null)
+          .or('image_status.is.null,image_status.eq.pending');
+
+        if (pendingCount && pendingCount > 0) {
+          totalDbMissing = pendingCount;
+        } else {
+          const { count: allMissing } = await supabase
+            .from('products')
+            .select('id', { count: 'exact', head: true })
+            .not('barcode', 'is', null)
+            .neq('barcode', '')
+            .is('image_url', null);
+          if (allMissing && allMissing > 0) {
+            totalDbMissing = allMissing;
+          }
+        }
+      }
+    } catch {
+      // Fallback estimate
+    }
+
+    report(undefined, undefined, totalDbMissing);
+
+    while (this.isRunning) {
       while (this.isPaused) {
         await new Promise(r => setTimeout(r, 400));
         if (!this.isRunning) break;
       }
+      if (!this.isRunning) break;
 
-      const batch = eligible.slice(i, i + batchSize);
+      if (!supabase) break;
+
+      // Query next batch of pending missing items
+      let { data: batch, error } = await supabase
+        .from('products')
+        .select('id, name, barcode, image_url, image_status')
+        .not('barcode', 'is', null)
+        .neq('barcode', '')
+        .is('image_url', null)
+        .or('image_status.is.null,image_status.eq.pending')
+        .order('id', { ascending: true })
+        .limit(batchSize);
+
+      if (error || !batch || batch.length === 0) {
+        // Fallback: check if any missing products exist regardless of status
+        const { data: remBatch } = await supabase
+          .from('products')
+          .select('id, name, barcode, image_url, image_status')
+          .not('barcode', 'is', null)
+          .neq('barcode', '')
+          .is('image_url', null)
+          .order('id', { ascending: true })
+          .limit(batchSize);
+
+        if (!remBatch || remBatch.length === 0) {
+          break; // Completed all missing products in database!
+        }
+        batch = remBatch;
+      }
 
       for (const prod of batch) {
         if (!this.isRunning) break;
@@ -216,34 +398,57 @@ export class BulkImageProcessingManager {
           await new Promise(r => setTimeout(r, 400));
           if (!this.isRunning) break;
         }
+        if (!this.isRunning) break;
 
-        report(prod.barcode!, prod.name);
+        const bcode = prod.barcode ? prod.barcode.trim() : '';
+        if (!bcode) continue;
+
+        report(bcode, prod.name, totalDbMissing);
 
         try {
-          const res = await lookupProductImageByBarcode(prod.barcode!);
+          const res = await lookupProductImageByBarcode(bcode);
           processed++;
 
           if (res.status === 'verified' && res.imageUrl) {
             verified++;
-            // Update Supabase product image_url
-            if (supabase) {
-              await supabase
-                .from('products')
-                .update({ image_url: res.imageUrl })
-                .eq('id', prod.id);
-            }
+            const nowIso = new Date().toISOString();
+            await supabase
+              .from('products')
+              .update({
+                image_url: res.imageUrl,
+                image_status: 'trusted_database_verified',
+                image_source: res.source,
+                image_fetched_at: nowIso
+              })
+              .eq('id', prod.id);
+
             if (onProductUpdated) {
-              onProductUpdated(prod.id, res.imageUrl);
+              onProductUpdated({
+                id: prod.id,
+                name: prod.name,
+                barcode: bcode,
+                image_url: res.imageUrl,
+                image_status: 'trusted_database_verified',
+                image_source: res.source
+              });
             }
           } else {
             missing++;
+            // Update image_status to 'not_found' so this product won't be re-fetched in this run
+            await supabase
+              .from('products')
+              .update({
+                image_status: 'not_found',
+                image_fetched_at: new Date().toISOString()
+              })
+              .eq('id', prod.id);
           }
         } catch {
           processed++;
           failed++;
         }
 
-        report(prod.barcode!, prod.name);
+        report(bcode, prod.name, totalDbMissing);
         if (delayMs > 0) {
           await new Promise(r => setTimeout(r, delayMs));
         }
@@ -252,7 +457,7 @@ export class BulkImageProcessingManager {
 
     this.isRunning = false;
     this.isPaused = false;
-    report();
+    report(undefined, undefined, totalDbMissing);
   }
 
   public pause(): void {

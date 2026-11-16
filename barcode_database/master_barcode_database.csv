@@ -123,12 +123,12 @@ barcode,product_name,marathi_name,hindi_name,brand,category,subcategory,pack_siz
 8901000100057,Amul Masti Spiced Buttermilk 200ml Pouch,अमूल मसाला ताक पाऊच 200 मिली,अमूल मसाला छाछ पाउच 200 मिली,Amul,Curd & Chaas,Shop Inventory,Piece,Piece,12.0,15.0,15.0,YOGESHWARI_DAIRY_SHOP
 8901000100058,Amul Masti Spiced Buttermilk 500ml Tetra,अमूल मसाला ताक टेट्रा 500 मिली,अमूल मसाला छाछ टेट्रा 500 मिली,Amul,Curd & Chaas,Shop Inventory,Packet (500ml),Packet (500ml),28.0,32.0,32.0,YOGESHWARI_DAIRY_SHOP
 8901000100059,Amul Lassi Rose 200ml Tetra,अमूल लस्सी रोझ टेट्रा 200 मिली,अमूल लस्सी रोज़ टेट्रा 200 मिली,Amul,Curd & Chaas,Shop Inventory,Piece,Piece,22.0,25.0,25.0,YOGESHWARI_DAIRY_SHOP
-8901000100060,Amul Kool Cafe 200ml Can,अमूल कूल कॅफे कॅन 200 मिली,अमूल कूल कैफे कैन 200 मिली,Amul,Curd & Chaas,Shop Inventory,Piece,Piece,35.0,40.0,40.0,YOGESHWARI_DAIRY_SHOP
-8901000100061,Amul Kool Badam 200ml Bottle,अमूल कूल बदाम बॉटल 200 मिली,अमूल कूल बादाम बोतल 200 मिली,Amul,Curd & Chaas,Shop Inventory,Piece,Piece,25.0,30.0,30.0,YOGESHWARI_DAIRY_SHOP
-8901000100062,Amul Salted Butter 100g,अमूल लोणी / बटर 100 ग्रॅम,अमूल बटर 100 ग्राम,Amul,Paneer & Butter,Shop Inventory,Piece,Piece,52.0,60.0,60.0,YOGESHWARI_DAIRY_SHOP
+8901000100060,Gramilk Lassi Vanilla,ग्रामिल्क लस्सी व्हॅनिला,ग्रामिल्क लस्सी वैनिला,Yogeshwari Dairy,Curd & Chaas,Shop Inventory,Piece,Piece,20.0,25.0,25.0,YOGESHWARI_DAIRY_SHOP
+8901000100061,Gramilk Lassi Mango,ग्रामिल्क लस्सी मँगो,ग्रामिल्क लस्सी मैंगो,Yogeshwari Dairy,Curd & Chaas,Shop Inventory,Piece,Piece,20.0,25.0,25.0,YOGESHWARI_DAIRY_SHOP
+8901000100062,Gramilk Butter Milk,ग्रामिल्क ताक / बटर मिल्क,ग्रामिल्क छाछ / बटर मिल्क,Yogeshwari Dairy,Curd & Chaas,Shop Inventory,Packet (500ml),Packet (500ml),12.0,15.0,15.0,YOGESHWARI_DAIRY_SHOP
 8901000100063,Amul Salted Butter 500g,अमूल लोणी / बटर 500 ग्रॅम,अमूल बटर 500 ग्राम,Amul,Paneer & Butter,Shop Inventory,Piece,Piece,250.0,285.0,285.0,YOGESHWARI_DAIRY_SHOP
 8901000100064,Amul White Butter 500g,अमूल पांढरे लोणी 500 ग्रॅम,अमूल सफेद मक्खन 500 ग्राम,Amul,Paneer & Butter,Shop Inventory,Piece,Piece,240.0,275.0,275.0,YOGESHWARI_DAIRY_SHOP
-8901000100065,Amul Garlic and Herbs Butter 100g,अमूल गार्लिक अँड हर्ब्स बटर 100 ग्रॅम,अमूल गार्लिक एंड हर्ब्स बटर 100 ग्राम,Amul,Paneer & Butter,Shop Inventory,Piece,Piece,56.0,65.0,65.0,YOGESHWARI_DAIRY_SHOP
+8901000100065,Gramilk Slim Curd 180 gm,ग्रामिल्क स्लिम दही 180 ग्रॅम,ग्रामिल्क स्लिम दही 180 ग्राम,Yogeshwari Dairy,Curd & Chaas,Shop Inventory,Piece,Piece,18.0,22.0,22.0,YOGESHWARI_DAIRY_SHOP
 8901000100066,Amul Diced Mozzarella Pizza Cheese 200g,अमूल डाइस्ड पिझ्झा मोझेरेला चीज 200 ग्रॅम,अमूल डाइस्ड पिज़्ज़ा मोज़ेरेला चीज़ 200 ग्राम,Amul,Paneer & Butter,Shop Inventory,Piece,Piece,115.0,130.0,130.0,YOGESHWARI_DAIRY_SHOP
 8901000100067,Amul Fresh Cream 250ml,अमूल फ्रेश क्रीम 250 मिली,अमूल फ्रेश क्रीम 250 मिली,Amul,Paneer & Butter,Shop Inventory,Piece,Piece,60.0,70.0,70.0,YOGESHWARI_DAIRY_SHOP
 8901000100068,Amul Lassi Mango 200ml Tetra,अमूल लस्सी मँगो टेट्रा 200 मिली,अमूल लस्सी मैंगो टेट्रा 200 मिली,Amul,Curd & Chaas,Shop Inventory,Piece,Piece,22.0,25.0,25.0,YOGESHWARI_DAIRY_SHOP
@@ -22402,3 +22402,5 @@ haldirams boondi",,,Haldiram's,Groceries & FMCG,,1.0 nan,,,,,OpenMRP India (open
 8906013070615,v,,,nan,Groceries & FMCG,,,,,,,OPENFOODFACTS
 8906031251980,C,,,Chakote,Beverages,,,,,,,OPENFOODFACTS
 8908001658584,O,,,Ocean,Groceries & FMCG,,,,,,,OPENFOODFACTS
+8901000100063,Gramilk Buffalo Ghee 500 gm,ग्रामिल्क म्हैस तूप 500 ग्रॅम,ग्रामिल्क भैंस घी 500 ग्राम,Yogeshwari Dairy,Ghee,Shop Inventory,Piece,Piece,340.0,395.0,395.0,YOGESHWARI_DAIRY_SHOP
+8901000100064,Gramilk Buffalo Ghee 1000 gm,ग्रामिल्क म्हैस तूप 1 किलो,ग्रामिल्क भैंस घी 1 किग्रा,Yogeshwari Dairy,Ghee,Shop Inventory,Kg,Kg,660.0,760.0,760.0,YOGESHWARI_DAIRY_SHOP

@@ -52,7 +52,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
     canonical: '500ml',
     marathiPack: '५०० मिली',
     hindiPack: '500 मिली',
-    unit: 'Pouch'
+    unit: 'Packet (500ml)'
   },
   // 1 Litre
   {
@@ -62,7 +62,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
     canonical: '1L',
     marathiPack: '१ लिटर',
     hindiPack: '1 लीटर',
-    unit: 'Litre'
+    unit: 'Packet (1L)'
   },
   // 250ml / Quarter Litre
   {
@@ -73,7 +73,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
     canonical: '250ml',
     marathiPack: '२५० मिली',
     hindiPack: '250 मिली',
-    unit: 'Pouch'
+    unit: 'Piece'
   },
   // 2 Litre
   {
@@ -103,7 +103,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
     canonical: '200ml',
     marathiPack: '२०० मिली',
     hindiPack: '200 मिली',
-    unit: 'Pouch'
+    unit: 'Piece'
   },
   // 100ml
   {
@@ -113,7 +113,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
     canonical: '100ml',
     marathiPack: '१०० मिली',
     hindiPack: '100 मिली',
-    unit: 'Pouch'
+    unit: 'Piece'
   },
   // 1 kg
   {
@@ -134,7 +134,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
     canonical: '500g',
     marathiPack: '५०० ग्रॅम',
     hindiPack: '500 ग्राम',
-    unit: 'Kg'
+    unit: 'Gram'
   },
   // 250g / Quarter Kg
   {
@@ -145,7 +145,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
     canonical: '250g',
     marathiPack: '२५० ग्रॅम',
     hindiPack: '250 ग्राम',
-    unit: 'Kg'
+    unit: 'Gram'
   },
   // 200g
   {
@@ -155,7 +155,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
     canonical: '200g',
     marathiPack: '२०० ग्रॅम',
     hindiPack: '200 ग्राम',
-    unit: 'Packet'
+    unit: 'Gram'
   },
   // 100g
   {
@@ -165,7 +165,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
     canonical: '100g',
     marathiPack: '१०० ग्रॅम',
     hindiPack: '100 ग्राम',
-    unit: 'Packet'
+    unit: 'Gram'
   },
   // 2 kg
   {
@@ -180,7 +180,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
   // 5 kg
   {
     patterns: [
-      /\b(पाच\s*किलो|पाँच\s*किलो|पांच\s*किलो|five\s*kg|5\s*किलो|5\s*केजी|5\s*kg|5kg|5\s*kilo)\b/i
+      /\b(पाच\s*किलो|पाँच\s*किलो|five\s*kg|5\s*किलो|5\s*केजी|5\s*kg|5kg|5\s*kilo)\b/i
     ],
     canonical: '5kg',
     marathiPack: '५ किलो',
@@ -195,7 +195,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
     canonical: '400g',
     marathiPack: '४०० ग्रॅम',
     hindiPack: '400 ग्राम',
-    unit: 'Packet'
+    unit: 'Gram'
   },
   // 50g
   {
@@ -205,7 +205,7 @@ const SPOKEN_MEASUREMENTS: SpokenMeasurement[] = [
     canonical: '50g',
     marathiPack: '५० ग्रॅम',
     hindiPack: '50 ग्राम',
-    unit: 'Packet'
+    unit: 'Gram'
   }
 ];
 
@@ -254,7 +254,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     marathiName: 'अमुल ताझा दूध',
     hindiName: 'अमूल ताजा दूध',
     category: 'Milk',
-    defaultUnit: 'Pouch'
+    defaultUnit: 'Packet (500ml)'
   },
   // 4. Amul Gold Milk
   {
@@ -265,7 +265,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     marathiName: 'अमुल गोल्ड दूध',
     hindiName: 'अमूल गोल्ड दूध',
     category: 'Milk',
-    defaultUnit: 'Pouch'
+    defaultUnit: 'Packet (500ml)'
   },
   // 5. Amul Cow Milk
   {
@@ -276,7 +276,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     marathiName: 'अमुल गाय दूध',
     hindiName: 'अमूल गाय दूध',
     category: 'Milk',
-    defaultUnit: 'Pouch'
+    defaultUnit: 'Packet (500ml)'
   },
   // 6. Amul Shakti Milk
   {
@@ -287,7 +287,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     marathiName: 'अमुल शक्ती दूध',
     hindiName: 'अमूल शक्ति दूध',
     category: 'Milk',
-    defaultUnit: 'Pouch'
+    defaultUnit: 'Packet (500ml)'
   },
   // 7. Gokul Special Milk
   {
@@ -298,7 +298,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     marathiName: 'गोकुळ स्पेशल दूध',
     hindiName: 'गोकुल स्पेशल दूध',
     category: 'Milk',
-    defaultUnit: 'Pouch'
+    defaultUnit: 'Packet (500ml)'
   },
   // 8. Gokul Cow Milk
   {
@@ -309,7 +309,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     marathiName: 'गोकुळ गाय दूध',
     hindiName: 'गोकुल गाय दूध',
     category: 'Milk',
-    defaultUnit: 'Pouch'
+    defaultUnit: 'Packet (500ml)'
   },
   // 9. Chitale Buffalo Milk
   {
@@ -320,7 +320,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     marathiName: 'चितळे म्हैस दूध',
     hindiName: 'चितले भैंस दूध',
     category: 'Milk',
-    defaultUnit: 'Pouch'
+    defaultUnit: 'Packet (500ml)'
   },
   // 10. Chitale Cow Milk
   {
@@ -331,7 +331,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     marathiName: 'चितळे गाय दूध',
     hindiName: 'चितले गाय दूध',
     category: 'Milk',
-    defaultUnit: 'Pouch'
+    defaultUnit: 'Packet (500ml)'
   },
   // 11. Warna Milk
   {
@@ -342,7 +342,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     marathiName: 'वारणा दूध',
     hindiName: 'वारणा दूध',
     category: 'Milk',
-    defaultUnit: 'Pouch'
+    defaultUnit: 'Packet (500ml)'
   },
   // 12. Mother Dairy Milk
   {
@@ -353,7 +353,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     marathiName: 'मदर डेअरी दूध',
     hindiName: 'मदर डेयरी दूध',
     category: 'Milk',
-    defaultUnit: 'Pouch'
+    defaultUnit: 'Packet (500ml)'
   },
   // 13. Generic Fresh Milk
   {
@@ -374,7 +374,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Fresh Malai Paneer',
     marathiName: 'ताजे मलाई पनीर',
     hindiName: 'ताज़ा मलाई पनीर',
-    category: 'Paneer',
+    category: 'Paneer & Butter',
     defaultUnit: 'Kg'
   },
   // 15. Amul Malai Paneer
@@ -385,8 +385,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Amul Malai Paneer',
     marathiName: 'अमुल मलाई पनीर',
     hindiName: 'अमूल मलाई पनीर',
-    category: 'Paneer',
-    defaultUnit: 'Packet'
+    category: 'Paneer & Butter',
+    defaultUnit: 'Piece'
   },
   // 16. Fresh Paneer (Generic)
   {
@@ -396,7 +396,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Fresh Paneer',
     marathiName: 'ताजे पनीर',
     hindiName: 'ताज़ा पनीर',
-    category: 'Paneer',
+    category: 'Paneer & Butter',
     defaultUnit: 'Kg'
   },
   // 17. Pure Desi Cow Ghee
@@ -473,8 +473,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Amul Butter',
     marathiName: 'अमुल बटर',
     hindiName: 'अमूल बटर',
-    category: 'Butter',
-    defaultUnit: 'Packet'
+    category: 'Paneer & Butter',
+    defaultUnit: 'Piece'
   },
   // 24. Fresh White Butter (Loni)
   {
@@ -484,7 +484,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Fresh White Butter (Loni)',
     marathiName: 'ताजे पांढरे लोणी',
     hindiName: 'ताज़ा सफेद मक्खन',
-    category: 'Butter',
+    category: 'Paneer & Butter',
     defaultUnit: 'Kg'
   },
   // 25. Table Butter (Generic)
@@ -495,8 +495,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Pasteurized Table Butter',
     marathiName: 'पाश्चराइज्ड बटर',
     hindiName: 'पाश्चुरीकृत मक्खन',
-    category: 'Butter',
-    defaultUnit: 'Packet'
+    category: 'Paneer & Butter',
+    defaultUnit: 'Piece'
   },
   // 26. Fresh Curd (Dahi)
   {
@@ -506,8 +506,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Fresh Curd (Dahi)',
     marathiName: 'ताजे दही',
     hindiName: 'ताज़ा दही',
-    category: 'Curd',
-    defaultUnit: 'Pouch'
+    category: 'Curd & Chaas',
+    defaultUnit: 'Packet (500ml)'
   },
   // 27. Amul Masti Dahi
   {
@@ -517,8 +517,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Amul Masti Dahi',
     marathiName: 'अमुल मस्ती दही',
     hindiName: 'अमूल मस्ती दही',
-    category: 'Curd',
-    defaultUnit: 'Pouch'
+    category: 'Curd & Chaas',
+    defaultUnit: 'Packet (500ml)'
   },
   // 28. Masala Buttermilk (Taak / Chaas)
   {
@@ -528,8 +528,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Masala Buttermilk',
     marathiName: 'मसाला ताक',
     hindiName: 'मसाला छाछ',
-    category: 'Buttermilk',
-    defaultUnit: 'Pouch'
+    category: 'Curd & Chaas',
+    defaultUnit: 'Packet (500ml)'
   },
   // 29. Fresh Plain Buttermilk
   {
@@ -539,8 +539,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Fresh Buttermilk (Taak)',
     marathiName: 'ताजे ताक',
     hindiName: 'ताज़ा छाछ',
-    category: 'Buttermilk',
-    defaultUnit: 'Pouch'
+    category: 'Curd & Chaas',
+    defaultUnit: 'Packet (500ml)'
   },
   // 30. Mango Lassi
   {
@@ -550,8 +550,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Mango Lassi',
     marathiName: 'आंबा लस्सी',
     hindiName: 'मैंगो लस्सी',
-    category: 'Lassi',
-    defaultUnit: 'Bottle'
+    category: 'Curd & Chaas',
+    defaultUnit: 'Piece'
   },
   // 31. Fresh Sweet Lassi
   {
@@ -561,8 +561,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Fresh Sweet Lassi',
     marathiName: 'ताजी गोड लस्सी',
     hindiName: 'ताज़ी मीठी लस्सी',
-    category: 'Lassi',
-    defaultUnit: 'Bottle'
+    category: 'Curd & Chaas',
+    defaultUnit: 'Piece'
   },
   // 32. Mango Amrakhand
   {
@@ -572,8 +572,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Mango Amrakhand',
     marathiName: 'स्वादिष्ट आम्रखंड',
     hindiName: 'स्वादिष्ट आम्रखंड',
-    category: 'Shrikhand',
-    defaultUnit: 'Packet'
+    category: 'Sweets/Mithai',
+    defaultUnit: 'Piece'
   },
   // 33. Fresh Shrikhand
   {
@@ -583,8 +583,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Fresh Elaichi Shrikhand',
     marathiName: 'ताजे वेलची श्रीखंड',
     hindiName: 'ताज़ा इलायची श्रीखंड',
-    category: 'Shrikhand',
-    defaultUnit: 'Packet'
+    category: 'Sweets/Mithai',
+    defaultUnit: 'Piece'
   },
   // 34. Fresh Basundi
   {
@@ -594,7 +594,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Fresh Cream Basundi',
     marathiName: 'ताजी मलाई बासुंदी',
     hindiName: 'ताज़ी मलाई बासुंदी',
-    category: 'Basundi',
+    category: 'Sweets/Mithai',
     defaultUnit: 'Kg'
   },
   // 35. Fresh Khawa (Mawa)
@@ -605,7 +605,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Fresh Khawa (Mawa)',
     marathiName: 'ताजा खवा (मावा)',
     hindiName: 'ताज़ा खोया (मावा)',
-    category: 'Khawa',
+    category: 'Sweets/Mithai',
     defaultUnit: 'Kg'
   },
   // 36. Malai Pedha
@@ -616,7 +616,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Fresh Malai Peda',
     marathiName: 'ताजे मलाई पेढे',
     hindiName: 'ताज़ा मलाई पेड़ा',
-    category: 'Sweets',
+    category: 'Sweets/Mithai',
     defaultUnit: 'Kg'
   },
   // 37. Kaju Katli
@@ -627,7 +627,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Kaju Katli Sweets',
     marathiName: 'काजू कतली',
     hindiName: 'काजू कतली',
-    category: 'Sweets',
+    category: 'Sweets/Mithai',
     defaultUnit: 'Kg'
   },
   // 38. Gulab Jamun
@@ -638,7 +638,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Fresh Gulab Jamun',
     marathiName: 'ताजे गुलाबजाम',
     hindiName: 'ताज़ा गुलाब जामुन',
-    category: 'Sweets',
+    category: 'Sweets/Mithai',
     defaultUnit: 'Kg'
   },
   // 39. Rasgulla
@@ -649,7 +649,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Fresh Spongy Rasgulla',
     marathiName: 'ताजे रसगुल्ले',
     hindiName: 'ताज़ा रसगुल्ला',
-    category: 'Sweets',
+    category: 'Sweets/Mithai',
     defaultUnit: 'Kg'
   },
   // 40. Belgaum Kunda
@@ -660,7 +660,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Special Belgaum Kunda',
     marathiName: 'स्पेशल कुंदा',
     hindiName: 'स्पेशल कुंदा मिठाई',
-    category: 'Sweets',
+    category: 'Sweets/Mithai',
     defaultUnit: 'Kg'
   },
   // 41. Crispy Toast Rusk
@@ -671,8 +671,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Crispy Toast Rusk',
     marathiName: 'कुरकुरीत टोस्ट रस्क',
     hindiName: 'खस्ता टोस्ट रस्क',
-    category: 'Bakery',
-    defaultUnit: 'Packet'
+    category: 'Bakery & Extras',
+    defaultUnit: 'Piece'
   },
   // 42. Crispy Khari
   {
@@ -682,8 +682,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Crispy Butter Khari',
     marathiName: 'कुरकुरीत बटर खारी',
     hindiName: 'खस्ता बटर खारी',
-    category: 'Bakery',
-    defaultUnit: 'Packet'
+    category: 'Bakery & Extras',
+    defaultUnit: 'Piece'
   },
   // 43. Fresh Ladi Pav
   {
@@ -693,8 +693,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Fresh Ladi Pav',
     marathiName: 'ताजे लादी पाव',
     hindiName: 'ताज़ा लादी पाव',
-    category: 'Bakery',
-    defaultUnit: 'Packet'
+    category: 'Bakery & Extras',
+    defaultUnit: 'Piece'
   },
   // 44. Sandwich Bread
   {
@@ -704,8 +704,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Fresh Sandwich Bread',
     marathiName: 'ताजा सँडविच ब्रेड',
     hindiName: 'ताज़ा सैंडविच ब्रेड',
-    category: 'Bakery',
-    defaultUnit: 'Packet'
+    category: 'Bakery & Extras',
+    defaultUnit: 'Piece'
   },
   // 45. Parle-G Biscuits
   {
@@ -715,8 +715,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Parle-G Glucose Biscuits',
     marathiName: 'पारले-जी ग्लुकोज बिस्किट',
     hindiName: 'पारले-जी ग्लूकोज बिस्कुट',
-    category: 'Biscuits',
-    defaultUnit: 'Packet'
+    category: 'Bakery & Extras',
+    defaultUnit: 'Piece'
   },
   // 46. Marie Gold Biscuits
   {
@@ -726,8 +726,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Britannia Marie Gold Biscuits',
     marathiName: 'ब्रिटानिया मारी गोल्ड बिस्किट',
     hindiName: 'ब्रिटानिया मैरी गोल्ड बिस्कुट',
-    category: 'Biscuits',
-    defaultUnit: 'Packet'
+    category: 'Bakery & Extras',
+    defaultUnit: 'Piece'
   },
   // 47. Good Day Biscuits
   {
@@ -737,8 +737,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Britannia Good Day Butter Biscuits',
     marathiName: 'गुड डे बटर बिस्किट',
     hindiName: 'गुड डे बटर बिस्कुट',
-    category: 'Biscuits',
-    defaultUnit: 'Packet'
+    category: 'Bakery & Extras',
+    defaultUnit: 'Piece'
   },
   // 48. Dairy Milk Chocolate
   {
@@ -748,7 +748,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Cadbury Dairy Milk Chocolate',
     marathiName: 'कॅडबरी डेअरी मिल्क चॉकलेट',
     hindiName: 'कैडबरी डेयरी मिल्क चॉकलेट',
-    category: 'Chocolates',
+    category: 'Bakery & Extras',
     defaultUnit: 'Piece'
   },
   // 49. Amul Kool Badam
@@ -759,8 +759,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Amul Kool Badam Drink',
     marathiName: 'अमुल कुल बदाम ड्रिंक',
     hindiName: 'अमूल कूल बादाम ड्रिंक',
-    category: 'Beverages',
-    defaultUnit: 'Bottle'
+    category: 'Bakery & Extras',
+    defaultUnit: 'Piece'
   },
   // 50. Amul Fresh Cream
   {
@@ -770,8 +770,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Amul Fresh Cream',
     marathiName: 'अमुल फ्रेश क्रीम',
     hindiName: 'अमूल फ्रेश क्रीम',
-    category: 'Other',
-    defaultUnit: 'Packet'
+    category: 'Bakery & Extras',
+    defaultUnit: 'Piece'
   },
   // 51. Vanilla Ice Cream
   {
@@ -781,8 +781,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Vanilla Ice Cream',
     marathiName: 'व्हॅनिला आईस्क्रीम',
     hindiName: 'वैनिला आइसक्रीम',
-    category: 'Other',
-    defaultUnit: 'Tub'
+    category: 'Bakery & Extras',
+    defaultUnit: 'Piece'
   },
   // 52. Matka Malai Kulfi
   {
@@ -792,7 +792,7 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Matka Malai Kulfi',
     marathiName: 'मटका मलाई कुल्फी',
     hindiName: 'मटका मलाई कुल्फी',
-    category: 'Other',
+    category: 'Bakery & Extras',
     defaultUnit: 'Piece'
   },
   // 53. Frozen Green Peas
@@ -803,8 +803,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Frozen Green Peas',
     marathiName: 'गोठवलेले हिरवे मटार',
     hindiName: 'फ्रोज़न हरी मटर',
-    category: 'Other',
-    defaultUnit: 'Packet'
+    category: 'Bakery & Extras',
+    defaultUnit: 'Piece'
   },
   // 54. Amul Processed Cheese
   {
@@ -814,8 +814,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Amul Processed Cheese',
     marathiName: 'अमुल प्रोसेस चीज',
     hindiName: 'अमूल प्रोसेस चीज़',
-    category: 'Other',
-    defaultUnit: 'Packet'
+    category: 'Paneer & Butter',
+    defaultUnit: 'Piece'
   },
   // 55. Cheese (Generic)
   {
@@ -825,8 +825,8 @@ const TRAINED_PRODUCT_RULES: TrainedProductRule[] = [
     canonicalEnglish: 'Processed Cheese',
     marathiName: 'प्रोसेस चीज',
     hindiName: 'प्रोसेस चीज़',
-    category: 'Other',
-    defaultUnit: 'Packet'
+    category: 'Paneer & Butter',
+    defaultUnit: 'Piece'
   }
 ];
 
@@ -928,17 +928,19 @@ export function processVoiceTranscriptSync(
   if (!detectedPackSize) {
     const mlMatch = cleanInput.match(/(\d+)\s*(?:मिली|मिलीलीटर|ml)\b/i);
     if (mlMatch) {
-      detectedPackSize = `${mlMatch[1]}ml`;
-      marathiPackText = `${mlMatch[1]} मिली`;
-      hindiPackText = `${mlMatch[1]} मिली`;
-      detectedUnit = 'Pouch';
+      const mlVal = parseInt(mlMatch[1], 10);
+      detectedPackSize = `${mlVal}ml`;
+      marathiPackText = `${mlVal} मिली`;
+      hindiPackText = `${mlVal} मिली`;
+      detectedUnit = mlVal === 500 ? 'Packet (500ml)' : 'Piece';
     } else {
       const litMatch = cleanInput.match(/(\d+(?:\.\d+)?)\s*(?:लिटर|लीटर|litre|liter|ltr|l)\b/i);
       if (litMatch) {
-        detectedPackSize = `${litMatch[1]}L`;
-        marathiPackText = `${litMatch[1]} लिटर`;
-        hindiPackText = `${litMatch[1]} लीटर`;
-        detectedUnit = 'Litre';
+        const litVal = litMatch[1];
+        detectedPackSize = `${litVal}L`;
+        marathiPackText = `${litVal} लिटर`;
+        hindiPackText = `${litVal} लीटर`;
+        detectedUnit = litVal === '1' ? 'Packet (1L)' : 'Litre';
       } else {
         const kgMatch = cleanInput.match(/(\d+(?:\.\d+)?)\s*(?:किलो|केजी|kg|kilo)\b/i);
         if (kgMatch) {
@@ -952,7 +954,7 @@ export function processVoiceTranscriptSync(
             detectedPackSize = `${gmMatch[1]}g`;
             marathiPackText = `${gmMatch[1]} ग्रॅम`;
             hindiPackText = `${gmMatch[1]} ग्राम`;
-            detectedUnit = 'Packet';
+            detectedUnit = 'Gram';
           }
         }
       }
@@ -1010,21 +1012,33 @@ export function processVoiceTranscriptSync(
 
     // Infer category from English words
     const lower = englishName.toLowerCase();
-    if (lower.includes('milk') || lower.includes('दूध')) detectedCategory = 'Milk';
-    else if (lower.includes('ghee') || lower.includes('तूप') || lower.includes('घी')) detectedCategory = 'Ghee';
-    else if (lower.includes('paneer') || lower.includes('पनीर')) detectedCategory = 'Paneer';
-    else if (lower.includes('butter') || lower.includes('लोणी') || lower.includes('बटर')) detectedCategory = 'Butter';
-    else if (lower.includes('curd') || lower.includes('dahi') || lower.includes('दही')) detectedCategory = 'Curd';
-    else if (lower.includes('chaas') || lower.includes('buttermilk') || lower.includes('ताक')) detectedCategory = 'Buttermilk';
-    else if (lower.includes('lassi') || lower.includes('लस्सी')) detectedCategory = 'Lassi';
-    else if (lower.includes('shrikhand') || lower.includes('श्रीखंड')) detectedCategory = 'Shrikhand';
-    else if (lower.includes('basundi') || lower.includes('बासुंदी')) detectedCategory = 'Basundi';
-    else if (lower.includes('khawa') || lower.includes('mawa') || lower.includes('खवा')) detectedCategory = 'Khawa';
-    else if (lower.includes('kaju') || lower.includes('peda') || lower.includes('jamun') || lower.includes('sweet')) detectedCategory = 'Sweets';
-    else if (lower.includes('toast') || lower.includes('khari') || lower.includes('bread') || lower.includes('rusk')) detectedCategory = 'Bakery';
-    else if (lower.includes('biscuit') || lower.includes('cookie')) detectedCategory = 'Biscuits';
-    else if (lower.includes('chocolate')) detectedCategory = 'Chocolates';
-    else if (lower.includes('wafer') || lower.includes('namkeen')) detectedCategory = 'Other';
+    if (lower.includes('milk') || lower.includes('दूध')) {
+      detectedCategory = 'Milk';
+    } else if (lower.includes('ghee') || lower.includes('तूप') || lower.includes('घी')) {
+      detectedCategory = 'Ghee';
+    } else if (
+      lower.includes('paneer') || lower.includes('पनीर') ||
+      lower.includes('butter') || lower.includes('लोणी') || lower.includes('बटर') ||
+      lower.includes('cheese') || lower.includes('चीज')
+    ) {
+      detectedCategory = 'Paneer & Butter';
+    } else if (
+      lower.includes('curd') || lower.includes('dahi') || lower.includes('दही') ||
+      lower.includes('chaas') || lower.includes('buttermilk') || lower.includes('ताक') ||
+      lower.includes('lassi') || lower.includes('लस्सी')
+    ) {
+      detectedCategory = 'Curd & Chaas';
+    } else if (
+      lower.includes('shrikhand') || lower.includes('श्रीखंड') ||
+      lower.includes('basundi') || lower.includes('बासुंदी') ||
+      lower.includes('khawa') || lower.includes('mawa') || lower.includes('खवा') ||
+      lower.includes('kaju') || lower.includes('peda') || lower.includes('jamun') ||
+      lower.includes('sweet') || lower.includes('mithai')
+    ) {
+      detectedCategory = 'Sweets/Mithai';
+    } else {
+      detectedCategory = 'Bakery & Extras';
+    }
 
     // Generate authentic translations
     const syncTranslation = translateProductNameSync(englishName);

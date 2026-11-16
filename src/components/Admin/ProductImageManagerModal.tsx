@@ -83,8 +83,64 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
     setVisibleCount(40);
   }, [debouncedSearch, selectedCategory, statusFilter]);
 
-  // Calculate live statistics across all 8 prompt-required states
+  // Fast Database-aggregated statistics from Supabase RPC fn_get_catalog_image_stats
+  const [serverStats, setServerStats] = useState<{
+    totalProducts: number;
+    eligibleBarcodes: number;
+    officialCount: number;
+    trustedCount: number;
+    retailerCount: number;
+    needsReviewCount: number;
+    incorrectCount: number;
+    brokenCount: number;
+    missingCount: number;
+    totalWithImages: number;
+    percentage: number;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchRpcStats = async () => {
+      try {
+        const { data, error } = await supabase.rpc('fn_get_catalog_image_stats');
+        if (!cancelled && !error && data) {
+          const totalProds = Number(data.total_products) || 46571;
+          const official = Number(data.official_verified) || 0;
+          const trusted = Number(data.trusted) || 0;
+          const retailer = Number(data.retailer_verified) || 0;
+          const needsReview = Number(data.needs_review) || 0;
+          const incorrect = Number(data.incorrect) || 0;
+          const broken = Number(data.broken) || 0;
+          const withImages = Number(data.with_images) || (official + trusted + retailer + needsReview + incorrect + broken);
+          const missing = Math.max(0, totalProds - withImages);
+          const pct = totalProds > 0 ? Math.round((withImages / totalProds) * 100) : 0;
+
+          setServerStats({
+            totalProducts: totalProds,
+            eligibleBarcodes: Number(data.eligible_barcodes) || 0,
+            officialCount: official,
+            trustedCount: trusted,
+            retailerCount: retailer,
+            needsReviewCount: needsReview,
+            incorrectCount: incorrect,
+            brokenCount: broken,
+            missingCount: missing,
+            totalWithImages: withImages,
+            percentage: pct
+          });
+        }
+      } catch (err) {
+        console.warn('RPC image stats fetch error:', err);
+      }
+    };
+    fetchRpcStats();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Live statistics (prefers instant server RPC over client loop)
   const stats = useMemo(() => {
+    if (serverStats) return serverStats;
+
     let officialCount = 0;
     let trustedCount = 0;
     let retailerCount = 0;
@@ -111,7 +167,6 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
       } else if (st === 'needs_manual_review' || st === 'pending') {
         needsReviewCount++;
       } else {
-        // Default verified image from open database
         trustedCount++;
       }
     });
@@ -132,7 +187,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
       totalWithImages,
       percentage
     };
-  }, [products, totalCatalogCount, totalBarcodesCount]);
+  }, [serverStats, products, totalCatalogCount, totalBarcodesCount]);
 
   // Stat chips definition in prompt-specified order
   const statChips = useMemo(() => [

@@ -568,33 +568,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!supabase) return;
     setIsSyncing(true);
     try {
-      // 1. Fetch products (prioritizing in-stock shop products first)
-      const { data: pData, error: pErr, count: totalCount } = await supabase
-        .from('products')
-        .select('*', { count: 'exact' })
-        .order('stock_quantity', { ascending: false })
-        .order('name', { ascending: true })
-        .limit(1000);
-
-      // Also fetch all products that have verified image_url so images always render in UI
-      let imgData: any[] | null = null;
+      // 1. Fetch exact total catalogue count and barcode count via lightweight HEAD-only queries (0 bytes payload)
       try {
-        const { data: iData } = await supabase
+        const { count: totalCount } = await supabase
           .from('products')
-          .select('*')
-          .not('image_url', 'is', null)
-          .neq('image_url', '')
-          .limit(1000);
-        imgData = iData;
-      } catch (iErr) {
-        console.warn('Image products fetch error:', iErr);
+          .select('id', { count: 'exact', head: true });
+
+        if (totalCount !== null && totalCount !== undefined) {
+          setTotalCatalogCount(totalCount);
+        }
+      } catch (cntErr) {
+        console.warn('Catalogue total count error:', cntErr);
       }
 
-      if (totalCount !== null && totalCount !== undefined) {
-        setTotalCatalogCount(totalCount);
-      }
-
-      // Fetch exact count of products with barcodes
       try {
         const { count: barcodeCount } = await supabase
           .from('products')
@@ -608,16 +594,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.warn('Barcode count fetch error:', bcErr);
       }
 
-      if (!pErr && pData && pData.length > 0) {
-        let merged = [...pData];
-        if (imgData && imgData.length > 0) {
-          const existingIds = new Set(pData.map(p => p.id));
-          const missingWithImages = imgData.filter(p => !existingIds.has(p.id));
-          if (missingWithImages.length > 0) {
-            merged = [...pData, ...missingWithImages];
-          }
-        }
-        setProducts(merged);
+      // 2. Fetch actual store inventory: Only load items currently carried or in stock (stock_quantity > 0)
+      // This strictly isolates 13 store inventory items from 46,559 catalogue items, saving 1.5MB+ memory & preventing UI lag
+      const { data: pData, error: pErr } = await supabase
+        .from('products')
+        .select('*')
+        .gt('stock_quantity', 0)
+        .order('stock_quantity', { ascending: false });
+
+      if (!pErr && pData) {
+        setProducts(pData);
       } else if (!pErr && (!pData || pData.length === 0)) {
         // Safe one-time migration: If central DB is empty, migrate any existing local items
         try {

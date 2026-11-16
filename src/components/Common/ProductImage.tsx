@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Milk, Coffee, Cookie, Sparkles, AlertCircle } from 'lucide-react';
+import { Package, Milk, Coffee, Cookie, Sparkles } from 'lucide-react';
+
+// Global cache for broken/unreachable image URLs across component mounts and scroll virtualizations
+const failedUrls = new Set<string>();
 
 export interface ProductImageProps {
   src?: string | null;
@@ -14,14 +17,12 @@ export interface ProductImageProps {
  * Reusable, High-Performance Product Image Component
  * 
  * Features:
- * - Generous, high-visibility sizing optimized for mobile & desktop POS
- * - Reactive state synchronization when src prop updates asynchronously
- * - Neutral referrerPolicy="no-referrer" to prevent third-party CDN hotlink blocking
- * - Lazy loading and async image decoding
- * - Seamless error fallback on 404, CORS, or broken URLs
+ * - Module-level failedUrls cache to prevent repeated 404 retries on scroll
+ * - Neutral referrerPolicy="no-referrer" without crossOrigin to allow unblocked hotlinks
+ * - Low fetch priority for background/grid images
+ * - Native async decoding and responsive lazy loading
  * - Category-aware graceful SVG placeholders
- * - Shimmer placeholder while loading
- * - No layout shift (consistent aspect-square)
+ * - Zero layout shift (strict aspect-square sizing)
  */
 export const ProductImage: React.FC<ProductImageProps> = ({
   src,
@@ -31,13 +32,19 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   size = 'md',
   loading = 'lazy'
 }) => {
-  const [hasError, setHasError] = useState(false);
-  const [isLoading, setIsLoading] = useState(Boolean(src));
+  const isPreFailed = Boolean(src && failedUrls.has(src));
+  const [hasError, setHasError] = useState(isPreFailed);
+  const [isLoading, setIsLoading] = useState(Boolean(src) && !isPreFailed);
 
   // Sync state when src changes dynamically (e.g. after Supabase fetch or virtual list scroll)
   useEffect(() => {
-    setHasError(false);
-    setIsLoading(Boolean(src));
+    if (src && failedUrls.has(src)) {
+      setHasError(true);
+      setIsLoading(false);
+    } else {
+      setHasError(false);
+      setIsLoading(Boolean(src));
+    }
   }, [src]);
 
   const sizeClasses = {
@@ -101,9 +108,10 @@ export const ProductImage: React.FC<ProductImageProps> = ({
         loading={loading}
         decoding="async"
         referrerPolicy="no-referrer"
-        crossOrigin="anonymous"
+        {...({ fetchPriority: loading === 'eager' ? 'high' : 'low' } as any)}
         onLoad={() => setIsLoading(false)}
         onError={() => {
+          if (src) failedUrls.add(src);
           setIsLoading(false);
           setHasError(true);
         }}

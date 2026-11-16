@@ -25,33 +25,50 @@ export const ReorderNeedsView: React.FC = () => {
 
   // Train & Analyze inventory based on sales velocity, customer returns, supplier defects, and shelf life
   const itemsNeedingRestock = useMemo(() => {
+    // Pre-aggregate metrics in O(N) Map lookups to eliminate quadratic nested loops
+    const salesByProduct = new Map<string, number>();
+    sales.forEach(s => {
+      s.items?.forEach(it => {
+        salesByProduct.set(it.product_id, (salesByProduct.get(it.product_id) || 0) + it.quantity);
+      });
+    });
+
+    const returnsByProduct = new Map<string, number>();
+    returns.forEach(r => {
+      returnsByProduct.set(r.product_id, (returnsByProduct.get(r.product_id) || 0) + r.quantity);
+    });
+
+    const supplierReturnsByProduct = new Map<string, { qty: number; pendingRefund: number }>();
+    supplierReturns.forEach(sr => {
+      const curr = supplierReturnsByProduct.get(sr.product_id) || { qty: 0, pendingRefund: 0 };
+      curr.qty += sr.quantity;
+      if (sr.refund_status === 'Pending') {
+        curr.pendingRefund += sr.total_refund_amount;
+      }
+      supplierReturnsByProduct.set(sr.product_id, curr);
+    });
+
+    const nearExpiryProducts = new Set<string>();
+    batches.forEach(b => {
+      if (b.qty_remaining > 0 && ['EXPIRING_TODAY', 'EXPIRING_TOMORROW'].includes(computeExpiryStatus(b.expiry_date).status)) {
+        nearExpiryProducts.add(b.product_id);
+      }
+    });
+
+    // Only actual shop products (in-stock or active store items) with stock <= min_stock_alert
     return products
-      .filter(p => p.stock_quantity <= p.min_stock_alert)
+      .filter(p => {
+        const isTrackedShopProduct = p.stock_quantity > 0 || (salesByProduct.get(p.id) || 0) > 0 || p.source === 'SHOP';
+        return isTrackedShopProduct && p.stock_quantity <= p.min_stock_alert;
+      })
       .map(p => {
-        // 1. Calculate actual sales volume
-        const totalSold = sales.reduce((sum, s) => {
-          const item = s.items?.find(it => it.product_id === p.id);
-          return sum + (item ? item.quantity : 0);
-        }, 0);
-
-        // 2. Calculate customer returns
-        const totalReturned = returns
-          .filter(r => r.product_id === p.id)
-          .reduce((sum, r) => sum + r.quantity, 0);
-
-        // 3. Calculate supplier / inward returns (defective/expired goods returned to vendor)
-        const vendorReturnedQty = supplierReturns
-          .filter(sr => sr.product_id === p.id)
-          .reduce((sum, sr) => sum + sr.quantity, 0);
-
-        const vendorPendingRefund = supplierReturns
-          .filter(sr => sr.product_id === p.id && sr.refund_status === 'Pending')
-          .reduce((sum, sr) => sum + sr.total_refund_amount, 0);
-
-        // 4. Check for batches nearing expiry
-        const hasNearExpiryBatch = batches.some(
-          b => b.product_id === p.id && b.qty_remaining > 0 && ['EXPIRING_TODAY', 'EXPIRING_TOMORROW'].includes(computeExpiryStatus(b.expiry_date).status)
-        );
+        // Fast O(1) lookups
+        const totalSold = salesByProduct.get(p.id) || 0;
+        const totalReturned = returnsByProduct.get(p.id) || 0;
+        const supplierInfo = supplierReturnsByProduct.get(p.id);
+        const vendorReturnedQty = supplierInfo?.qty || 0;
+        const vendorPendingRefund = supplierInfo?.pendingRefund || 0;
+        const hasNearExpiryBatch = nearExpiryProducts.has(p.id);
 
         // Dynamic demand-trained reorder recommendation
         const demandBuffer = totalSold > 0 ? Math.max(p.min_stock_alert * 1.5, totalSold * 1.2) : p.min_stock_alert * 2.5;

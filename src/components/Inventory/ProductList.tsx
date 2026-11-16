@@ -143,7 +143,7 @@ export const ProductList: React.FC<ProductListProps> = ({
         } else if (q.length >= 2) {
           const { data, error } = await supabase
             .from('products')
-            .select('*')
+            .select('id, name, hindi_name, marathi_name, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, brand, pack_size, is_active')
             .or(`name.ilike.%${q}%,brand.ilike.%${q}%`)
             .limit(30);
 
@@ -171,6 +171,74 @@ export const ProductList: React.FC<ProductListProps> = ({
     };
   }, [searchQuery]);
 
+  // Server-side paginated Catalogue state (keeps 46k master items separate from 13 store items)
+  const [catalogueItems, setCatalogueItems] = useState<Product[]>([]);
+  const [catalogueOffset, setCatalogueOffset] = useState(0);
+  const [isLoadingCatalogue, setIsLoadingCatalogue] = useState(false);
+  const [hasMoreCatalogue, setHasMoreCatalogue] = useState(true);
+
+  // Fetch initial catalogue page when CATALOGUE tab is selected
+  useEffect(() => {
+    if (inventoryViewTab !== 'CATALOGUE' || searchQuery.trim().length > 0) return;
+    let cancelled = false;
+    const fetchCatalogue = async () => {
+      setIsLoadingCatalogue(true);
+      try {
+        let query = supabase
+          .from('products')
+          .select('id, name, hindi_name, marathi_name, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, brand, pack_size, is_active')
+          .order('name', { ascending: true })
+          .range(0, 39);
+
+        if (selectedCategory !== 'All') {
+          query = query.eq('category', selectedCategory);
+        }
+
+        const { data, error } = await query;
+        if (!cancelled && !error && data) {
+          setCatalogueItems(data as Product[]);
+          setCatalogueOffset(40);
+          setHasMoreCatalogue(data.length === 40);
+        }
+      } catch (err) {
+        console.warn('Catalogue query error:', err);
+      } finally {
+        if (!cancelled) setIsLoadingCatalogue(false);
+      }
+    };
+    fetchCatalogue();
+    return () => { cancelled = true; };
+  }, [inventoryViewTab, selectedCategory, searchQuery]);
+
+  const handleLoadMoreCatalogue = async () => {
+    if (isLoadingCatalogue || !hasMoreCatalogue) return;
+    setIsLoadingCatalogue(true);
+    try {
+      let query = supabase
+        .from('products')
+        .select('id, name, hindi_name, marathi_name, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, brand, pack_size, is_active')
+        .order('name', { ascending: true })
+        .range(catalogueOffset, catalogueOffset + 39);
+
+      if (selectedCategory !== 'All') {
+        query = query.eq('category', selectedCategory);
+      }
+
+      const { data, error } = await query;
+      if (!error && data && data.length > 0) {
+        setCatalogueItems(prev => [...prev, ...(data as Product[])]);
+        setCatalogueOffset(prev => prev + data.length);
+        setHasMoreCatalogue(data.length === 40);
+      } else {
+        setHasMoreCatalogue(false);
+      }
+    } catch (err) {
+      console.warn('Load more catalogue error:', err);
+    } finally {
+      setIsLoadingCatalogue(false);
+    }
+  };
+
   const categories = [
     { id: 'All', label: language === 'mr' ? 'सर्व माल' : language === 'hi' ? 'सभी माल' : 'All Products' },
     { id: 'Milk', label: t('catMilk') },
@@ -184,67 +252,72 @@ export const ProductList: React.FC<ProductListProps> = ({
   // Filtered products (Search + Category + Expiry Status + Inventory Tab + Online Barcode Result)
   const filteredProducts = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    const isBarcodeQuery = /^\d{5,}$/.test(q);
 
-    const baseFiltered = products.filter(p => {
-      const barcodeMatches = Boolean(
-        p.barcode && (
-          p.barcode.toLowerCase() === q ||
-          p.barcode.toLowerCase() === ('0' + q) ||
-          p.barcode.toLowerCase().replace(/^0+/, '') === q.replace(/^0+/, '') ||
-          p.barcode.toLowerCase().includes(q)
-        )
-      );
+    // 1. If actively searching: Return matching search results (local items + online search results)
+    if (q.length > 0) {
+      const baseFiltered = products.filter(p => {
+        const barcodeMatches = Boolean(
+          p.barcode && (
+            p.barcode.toLowerCase() === q ||
+            p.barcode.toLowerCase() === ('0' + q) ||
+            p.barcode.toLowerCase().replace(/^0+/, '') === q.replace(/^0+/, '') ||
+            p.barcode.toLowerCase().includes(q)
+          )
+        );
 
-      const matchesSearch = !q || 
-        p.name.toLowerCase().includes(q) || 
-        (p.hindi_name && p.hindi_name.toLowerCase().includes(q)) ||
-        (p.marathi_name && p.marathi_name.toLowerCase().includes(q)) ||
-        (p.brand && p.brand.toLowerCase().includes(q)) ||
-        barcodeMatches;
+        const matchesSearch = 
+          p.name.toLowerCase().includes(q) || 
+          (p.hindi_name && p.hindi_name.toLowerCase().includes(q)) ||
+          (p.marathi_name && p.marathi_name.toLowerCase().includes(q)) ||
+          (p.brand && p.brand.toLowerCase().includes(q)) ||
+          barcodeMatches;
 
+        const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+      });
+
+      if (onlineSearchResults && onlineSearchResults.length > 0) {
+        const existingIds = new Set(baseFiltered.map(p => p.id));
+        const additional = onlineSearchResults.filter(p => !existingIds.has(p.id));
+        return [...additional, ...baseFiltered];
+      } else if (onlineSearchedProduct && !baseFiltered.some(p => p.id === onlineSearchedProduct.id)) {
+        return [onlineSearchedProduct, ...baseFiltered];
+      }
+      return baseFiltered;
+    }
+
+    // 2. If viewing master Product Catalogue tab: Return server paginated catalogue items
+    if (inventoryViewTab === 'CATALOGUE') {
+      return catalogueItems;
+    }
+
+    // 3. Tab-based store inventory filtering (for in-stock, low-stock, and out-of-stock)
+    return products.filter(p => {
       const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
-
-      // If user is searching (either barcode or name), NEVER hide matching products!
       let matchesTab = true;
-      if (q.length > 0) {
-        matchesTab = true;
-      } else if (inventoryViewTab === 'IN_STOCK') {
+      if (inventoryViewTab === 'IN_STOCK') {
         matchesTab = p.stock_quantity > 0;
       } else if (inventoryViewTab === 'OUT_OF_STOCK') {
         matchesTab = p.stock_quantity <= 0;
       } else if (inventoryViewTab === 'LOW_STOCK') {
         matchesTab = p.stock_quantity > 0 && p.stock_quantity <= p.min_stock_alert;
-      } // 'CATALOGUE' shows all products (including 0 stock)
-      
+      }
+
       // Expiry filter
       if (selectedExpiryFilter !== 'ALL') {
         const prodBatches = batches.filter(b => b.product_id === p.id && b.qty_remaining > 0);
         const hasMatchingBatch = prodBatches.some(b => computeExpiryStatus(b.expiry_date).status === selectedExpiryFilter);
-        return matchesSearch && matchesCategory && matchesTab && hasMatchingBatch;
+        return matchesCategory && matchesTab && hasMatchingBatch;
       }
 
-      return matchesSearch && matchesCategory && matchesTab;
+      return matchesCategory && matchesTab;
     });
-
-    // Merge online search results (if user searched for something beyond the 1,000 local items)
-    if (onlineSearchResults && onlineSearchResults.length > 0) {
-      const existingIds = new Set(baseFiltered.map(p => p.id));
-      const additional = onlineSearchResults.filter(p => !existingIds.has(p.id));
-      if (additional.length > 0) {
-        return [...additional, ...baseFiltered];
-      }
-    } else if (onlineSearchedProduct && !baseFiltered.some(p => p.id === onlineSearchedProduct.id)) {
-      return [onlineSearchedProduct, ...baseFiltered];
-    }
-
-    return baseFiltered;
-  }, [products, searchQuery, selectedCategory, selectedExpiryFilter, batches, inventoryViewTab, onlineSearchedProduct, onlineSearchResults]);
+  }, [products, searchQuery, selectedCategory, selectedExpiryFilter, batches, inventoryViewTab, onlineSearchedProduct, onlineSearchResults, catalogueItems]);
 
   const inStockCount = useMemo(() => products.filter(p => p.stock_quantity > 0).length, [products]);
   const lowStockCount = useMemo(() => products.filter(p => p.stock_quantity <= p.min_stock_alert && p.stock_quantity > 0).length, [products]);
   const totalCatalogueCount = Math.max(totalCatalogCount || 0, products.length);
-  const outOfStockCount = Math.max(totalCatalogueCount - inStockCount, products.filter(p => p.stock_quantity <= 0).length);
+  const outOfStockCount = useMemo(() => products.filter(p => p.stock_quantity <= 0).length, [products]);
 
   const totalStockCostValuation = useMemo(() => {
     return products.reduce((sum, p) => sum + (p.stock_quantity * p.purchase_price), 0);
@@ -481,14 +554,21 @@ export const ProductList: React.FC<ProductListProps> = ({
     setDisplayLimit(INITIAL_PAGE_SIZE);
   }, [searchQuery, selectedCategory, selectedExpiryFilter, inventoryViewTab]);
 
-  const visibleProducts = useMemo(() => {
-    return filteredProducts.slice(0, displayLimit);
-  }, [filteredProducts, displayLimit]);
+  const isCatalogueView = inventoryViewTab === 'CATALOGUE' && !searchQuery.trim();
 
-  const hasMore = displayLimit < filteredProducts.length;
+  const visibleProducts = useMemo(() => {
+    if (isCatalogueView) return filteredProducts;
+    return filteredProducts.slice(0, displayLimit);
+  }, [filteredProducts, displayLimit, isCatalogueView]);
+
+  const hasMore = isCatalogueView ? hasMoreCatalogue : (displayLimit < filteredProducts.length);
 
   const handleLoadMore = () => {
-    setDisplayLimit((prev) => Math.min(prev + INITIAL_PAGE_SIZE, filteredProducts.length));
+    if (isCatalogueView) {
+      handleLoadMoreCatalogue();
+    } else {
+      setDisplayLimit((prev) => Math.min(prev + INITIAL_PAGE_SIZE, filteredProducts.length));
+    }
   };
 
   const statusTabs: Array<{

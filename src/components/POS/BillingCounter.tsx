@@ -301,7 +301,7 @@ export const BillingCounter: React.FC = () => {
         } else if (q.length >= 2) {
           const { data, error } = await supabase
             .from('products')
-            .select('*')
+            .select('id, name, hindi_name, marathi_name, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, brand, pack_size, is_active')
             .or(`name.ilike.%${q}%,brand.ilike.%${q}%`)
             .limit(20);
 

@@ -30,9 +30,9 @@ import {
   Globe,
   UserPlus,
   LogOut,
-  ShieldCheck,
   CheckCircle2,
-  Loader2
+  Loader2,
+  ChevronDown
 } from 'lucide-react';
 import { 
   isRegistrationAllowedSync, 
@@ -72,7 +72,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { resolvedTheme, toggleTheme } = useTheme();
   const { user, role, setRole, lockSecurity, signOut } = useAuth();
 
-  // Registration control state (syncs in real-time with Navbar & Supabase Cloud)
+  // Collapsible state for the "Settings" option inside Menu Dashboard
+  const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
+
+  // Registration control state (syncs in real-time with Supabase Cloud)
   const [isRegistrationAllowed, setIsRegistrationAllowed] = useState<boolean>(() => isRegistrationAllowedSync());
   const [isUpdatingReg, setIsUpdatingReg] = useState(false);
   const [regFeedback, setRegFeedback] = useState<string | null>(null);
@@ -383,222 +386,241 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {renderSection('inventory', 'navSectionInventory', isMobileDrawer)}
           {renderSection('accounts', 'navSectionAccounts', isMobileDrawer)}
 
-          {/* SECTION 4: CONTROLS, SETTINGS & PREFERENCES (Requested in Menu Dashboard) */}
+          {/* SECTION 4: "SETTINGS" OPTION (कंट्रोल्स व सेटिंग्ज पर्याय) */}
           {!isActuallyCollapsed ? (
-            <div className="pt-2 border-t border-slate-100 dark:border-[#24352F] space-y-2.5">
-              <div className="px-3 pt-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-[#8FA69C]">
-                {language === 'mr' ? 'सुविधा व सेटिंग्ज' : language === 'hi' ? 'सुविधाएं व सेटिंग्स' : 'Controls & Settings'}
-              </div>
-
-              {/* 1. Language Switcher (मराठी, हिंदी, English) */}
-              <div className="px-1">
-                <div className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-bold text-slate-600 dark:text-[#8FA69C]">
-                  <Globe className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span>{language === 'mr' ? 'भाषा (Language)' : language === 'hi' ? 'भाषा (Language)' : 'Language'}</span>
-                </div>
-                <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl border border-slate-200/80 dark:border-[#24352F]">
-                  {languagesList.map((lang) => {
-                    const isActive = language === lang.code;
-                    return (
-                      <button
-                        key={lang.code}
-                        type="button"
-                        onClick={() => setLanguage(lang.code)}
-                        className={`py-1.5 px-1 rounded-lg text-xs font-bold transition-all text-center ${
-                          isActive
-                            ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-xs ring-1 ring-slate-200/60 dark:ring-[#24352F] font-extrabold'
-                            : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-[#E7F0EC]'
-                        }`}
-                      >
-                        {lang.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 2. Theme Mode & Counter Lock Buttons */}
-              <div className="grid grid-cols-2 gap-2 px-1">
-                {/* Theme Toggle */}
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border border-slate-200/80 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC] transition shadow-2xs"
-                  title={language === 'mr' ? 'थीम बदला' : 'थीम बदलें'}
-                >
-                  {resolvedTheme === 'dark' ? (
-                    <Sun className="w-4 h-4 text-amber-400 shrink-0" />
-                  ) : (
-                    <Moon className="w-4 h-4 text-indigo-500 shrink-0" />
-                  )}
-                  <span className="truncate">
-                    {resolvedTheme === 'dark'
-                      ? (language === 'mr' ? 'डार्क 🌙' : language === 'hi' ? 'डार्क 🌙' : 'Dark 🌙')
-                      : (language === 'mr' ? 'लाइट ☀️' : language === 'hi' ? 'लाइट ☀️' : 'Light ☀️')}
+            <div className="pt-2 border-t border-slate-100 dark:border-[#24352F]">
+              {/* Settings Option Button */}
+              <button
+                type="button"
+                onClick={() => setIsSettingsExpanded(prev => !prev)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-150 group ${
+                  isSettingsExpanded
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 shadow-xs font-bold'
+                    : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25] hover:text-slate-900 dark:hover:text-[#E7F0EC] font-medium'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <Settings className={`w-5 h-5 shrink-0 transition-transform ${
+                    isSettingsExpanded 
+                      ? 'text-emerald-600 dark:text-emerald-400 rotate-90 scale-105' 
+                      : 'text-slate-500 dark:text-[#8FA69C] group-hover:text-emerald-600 dark:group-hover:text-emerald-400'
+                  }`} />
+                  <span className="text-sm truncate leading-tight font-semibold">
+                    {language === 'mr' ? 'सेटिंग्ज (Settings)' : language === 'hi' ? 'सेटिंग्स (Settings)' : 'Settings'}
                   </span>
-                </button>
-
-                {/* Counter Lock */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (isMobileDrawer) onCloseMobile();
-                    lockSecurity();
-                  }}
-                  className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 dark:hover:bg-amber-900/40 border border-amber-200/80 dark:border-amber-800/50 text-xs font-bold text-amber-800 dark:text-amber-300 transition shadow-2xs"
-                  title={language === 'mr' ? 'काउंटर त्वरित लॉक करा' : 'काउंटर तुरंत लॉक करें'}
-                >
-                  <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                  <span className="truncate">
-                    {language === 'mr' ? 'काउंटर लॉक' : language === 'hi' ? 'काउंटर लॉक' : 'Lock Screen'}
-                  </span>
-                </button>
-              </div>
-
-              {/* 3. Counter Settings (Supabase / Counter Modal) */}
-              {onOpenSettings && (
-                <div className="px-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isMobileDrawer) onCloseMobile();
-                      onOpenSettings();
-                    }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border border-slate-200/80 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC] transition shadow-2xs"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Settings className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <span className="truncate">
-                        {language === 'mr' ? 'काउंटर व क्लाउड सेटिंग्ज' : language === 'hi' ? 'काउंटर व क्लाउड सेटिंग्स' : 'Counter & Cloud Settings'}
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-white dark:bg-[#131F1B] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#24352F] shrink-0">
-                      F12
-                    </span>
-                  </button>
                 </div>
-              )}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold ${
+                    isSettingsExpanded
+                      ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200'
+                      : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-500 dark:text-[#8FA69C]'
+                  }`}>
+                    Controls
+                  </span>
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${
+                    isSettingsExpanded ? 'rotate-180 text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
+                  }`} />
+                </div>
+              </button>
 
-              {/* 4. Operator Registration Control (Shop Owner Nikhil Sakhare) */}
-              <div className="px-1">
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <UserPlus className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <span className="text-xs font-black text-slate-800 dark:text-[#E7F0EC]">
-                        {language === 'mr' ? 'नवीन ऑपरेटर नोंदणी' : language === 'hi' ? 'नया ऑपरेटर पंजीकरण' : 'Operator Registration'}
-                      </span>
+              {/* Inside the Settings Option: Controls & Settings Panel */}
+              {isSettingsExpanded && (
+                <div className="mt-2.5 pl-2 pr-1 space-y-2.5 animate-fadeIn border-l-2 border-emerald-500/40 ml-3">
+                  
+                  {/* 1. Language Switcher (मराठी, हिंदी, English) */}
+                  <div className="pt-1">
+                    <div className="flex items-center gap-1.5 px-1 py-1 text-[11px] font-bold text-slate-600 dark:text-[#8FA69C]">
+                      <Globe className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span>{language === 'mr' ? 'भाषा (Language)' : language === 'hi' ? 'भाषा (Language)' : 'Language'}</span>
                     </div>
-                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border flex items-center gap-1 ${
-                      isRegistrationAllowed
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300/80 dark:border-emerald-700/60'
-                        : 'bg-rose-50 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border-rose-200 dark:border-rose-900/60'
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${isRegistrationAllowed ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                      <span>{isRegistrationAllowed ? 'ON' : 'OFF'}</span>
-                    </span>
+                    <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl border border-slate-200/80 dark:border-[#24352F]">
+                      {languagesList.map((lang) => {
+                        const isActive = language === lang.code;
+                        return (
+                          <button
+                            key={lang.code}
+                            type="button"
+                            onClick={() => setLanguage(lang.code)}
+                            className={`py-1.5 px-1 rounded-lg text-xs font-bold transition-all text-center ${
+                              isActive
+                                ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-xs ring-1 ring-slate-200/60 dark:ring-[#24352F] font-extrabold'
+                                : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-[#E7F0EC]'
+                            }`}
+                          >
+                            {lang.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  {role === 'Owner' ? (
+                  {/* 2. Theme Mode & Counter Lock Buttons */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Theme Toggle */}
                     <button
                       type="button"
-                      disabled={isUpdatingReg}
-                      onClick={handleToggleRegistration}
-                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-black transition-all border shadow-xs ${
-                        isRegistrationAllowed
-                          ? 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/40'
-                          : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
-                      }`}
+                      onClick={toggleTheme}
+                      className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border border-slate-200/80 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC] transition shadow-2xs"
+                      title={language === 'mr' ? 'थीम बदला' : 'थीम बदलें'}
                     >
-                      <span className="flex items-center gap-1.5">
-                        {isUpdatingReg ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : isRegistrationAllowed ? (
-                          <Lock className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-                        ) : (
-                          <UserPlus className="w-3.5 h-3.5 text-white" />
-                        )}
-                        <span>
-                          {isUpdatingReg 
-                            ? (language === 'mr' ? 'बदलत आहे...' : 'बदल रहा है...') 
-                            : isRegistrationAllowed
-                            ? (language === 'mr' ? 'नोंदणी बंद करा' : 'पंजीकरण बंद करें')
-                            : (language === 'mr' ? 'नोंदणी चालू करा' : 'पंजीकरण चालू करें')}
-                        </span>
-                      </span>
-                      <span className="text-[9px] font-black uppercase">
-                        {isRegistrationAllowed ? 'OFF' : 'ON'}
+                      {resolvedTheme === 'dark' ? (
+                        <Sun className="w-4 h-4 text-amber-400 shrink-0" />
+                      ) : (
+                        <Moon className="w-4 h-4 text-indigo-500 shrink-0" />
+                      )}
+                      <span className="truncate text-[11px]">
+                        {resolvedTheme === 'dark'
+                          ? (language === 'mr' ? 'डार्क 🌙' : language === 'hi' ? 'डार्क 🌙' : 'Dark 🌙')
+                          : (language === 'mr' ? 'लाइट ☀️' : language === 'hi' ? 'लाइट ☀️' : 'Light ☀️')}
                       </span>
                     </button>
-                  ) : (
-                    <p className="text-[10px] text-amber-700 dark:text-amber-400">
-                      {language === 'mr' ? 'फक्त मालक बदलू शकतात' : 'केवल मालिक बदल सकते हैं'}
-                    </p>
-                  )}
 
-                  {regFeedback && (
-                    <p className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                      regFeedback.includes('✓') 
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' 
-                        : 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300'
-                    }`}>
-                      {regFeedback}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* 5. Mobile App Install Button */}
-              {onOpenAppDownload && (
-                <div className="px-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isMobileDrawer) onCloseMobile();
-                      onOpenAppDownload();
-                    }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/80 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-300 font-extrabold text-xs transition shadow-2xs"
-                    title={language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल करा' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल करें' : 'Install Mobile App'}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <span className="truncate">
-                        {language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल' : 'Install App'}
+                    {/* Counter Lock */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isMobileDrawer) onCloseMobile();
+                        lockSecurity();
+                      }}
+                      className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 dark:hover:bg-amber-900/40 border border-amber-200/80 dark:border-amber-800/50 text-xs font-bold text-amber-800 dark:text-amber-300 transition shadow-2xs"
+                      title={language === 'mr' ? 'काउंटर त्वरित लॉक करा' : 'काउंटर तुरंत लॉक करें'}
+                    >
+                      <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                      <span className="truncate text-[11px]">
+                        {language === 'mr' ? 'स्क्रीन लॉक' : language === 'hi' ? 'स्क्रीन लॉक' : 'Lock Screen'}
                       </span>
+                    </button>
+                  </div>
+
+                  {/* 3. Counter & Cloud Database Settings (F12) */}
+                  {onOpenSettings && (
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isMobileDrawer) onCloseMobile();
+                          onOpenSettings();
+                        }}
+                        className="w-full flex items-center justify-between p-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border border-slate-200/80 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC] transition shadow-2xs"
+                      >
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <Settings className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span className="truncate text-[11px]">
+                            {language === 'mr' ? 'क्लाउड व डेटाबेस' : language === 'hi' ? 'क्लाउड व डेटाबेस' : 'Cloud DB Settings'}
+                          </span>
+                        </div>
+                        <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-white dark:bg-[#131F1B] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#24352F] shrink-0">
+                          F12
+                        </span>
+                      </button>
                     </div>
-                    <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  </button>
+                  )}
+
+                  {/* 4. Operator Registration Control (Shop Owner Nikhil Sakhare) */}
+                  <div>
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <UserPlus className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span className="text-[11px] font-black text-slate-800 dark:text-[#E7F0EC]">
+                            {language === 'mr' ? 'नवीन ऑपरेटर नोंदणी' : language === 'hi' ? 'नया ऑपरेटर पंजीकरण' : 'User Registration'}
+                          </span>
+                        </div>
+                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md border flex items-center gap-1 ${
+                          isRegistrationAllowed
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300/80 dark:border-emerald-700/60'
+                            : 'bg-rose-50 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border-rose-200 dark:border-rose-900/60'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${isRegistrationAllowed ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                          <span>{isRegistrationAllowed ? 'ON' : 'OFF'}</span>
+                        </span>
+                      </div>
+
+                      {role === 'Owner' ? (
+                        <button
+                          type="button"
+                          disabled={isUpdatingReg}
+                          onClick={handleToggleRegistration}
+                          className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg text-xs font-black transition-all border shadow-xs ${
+                            isRegistrationAllowed
+                              ? 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/40'
+                              : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
+                          }`}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            {isUpdatingReg ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : isRegistrationAllowed ? (
+                              <Lock className="w-3 h-3 text-rose-600 dark:text-rose-400" />
+                            ) : (
+                              <UserPlus className="w-3 h-3 text-white" />
+                            )}
+                            <span className="text-[11px]">
+                              {isUpdatingReg 
+                                ? (language === 'mr' ? 'बदलत आहे...' : 'बदल रहा है...') 
+                                : isRegistrationAllowed
+                                ? (language === 'mr' ? 'नोंदणी बंद करा' : 'पंजीकरण बंद करें')
+                                : (language === 'mr' ? 'नोंदणी चालू करा' : 'पंजीकरण चालू करें')}
+                            </span>
+                          </span>
+                          <span className="text-[9px] font-black uppercase">
+                            {isRegistrationAllowed ? 'OFF' : 'ON'}
+                          </span>
+                        </button>
+                      ) : (
+                        <p className="text-[10px] text-amber-700 dark:text-amber-400">
+                          {language === 'mr' ? 'फक्त मालक बदलू शकतात' : 'केवल मालिक बदल सकते हैं'}
+                        </p>
+                      )}
+
+                      {regFeedback && (
+                        <p className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                          regFeedback.includes('✓') 
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300' 
+                            : 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300'
+                        }`}>
+                          {regFeedback}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 5. Mobile App Install Button */}
+                  {onOpenAppDownload && (
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isMobileDrawer) onCloseMobile();
+                          onOpenAppDownload();
+                        }}
+                        className="w-full flex items-center justify-between p-2 rounded-xl border border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-50/80 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-300 font-extrabold text-xs transition shadow-2xs"
+                        title={language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल करा' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल करें' : 'Install Mobile App'}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <Smartphone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span className="truncate text-[11px]">
+                            {language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल' : 'Install App'}
+                          </span>
+                        </div>
+                        <Download className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      </button>
+                    </div>
+                  )}
+
                 </div>
               )}
             </div>
           ) : (
-            /* Collapsed desktop rail buttons */
-            <div className="pt-2 border-t border-slate-200 dark:bg-[#24352F] space-y-2">
-              {onOpenSettings && (
-                <button
-                  type="button"
-                  onClick={onOpenSettings}
-                  title="Counter Settings"
-                  className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center text-slate-500 hover:text-emerald-600 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
-                >
-                  <Settings className="w-5 h-5" />
-                </button>
-              )}
+            /* Collapsed desktop rail Settings button */
+            <div className="pt-2 border-t border-slate-200 dark:border-[#24352F] space-y-2">
               <button
                 type="button"
-                onClick={toggleTheme}
-                title="Toggle Theme"
-                className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center text-slate-500 hover:text-amber-500 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
+                onClick={() => setIsSettingsExpanded(prev => !prev)}
+                title={language === 'mr' ? 'सेटिंग्ज (Settings)' : 'Settings'}
+                className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center text-slate-500 hover:text-emerald-600 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition"
               >
-                {resolvedTheme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-indigo-500" />}
-              </button>
-              <button
-                type="button"
-                onClick={lockSecurity}
-                title="Lock Counter"
-                className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40"
-              >
-                <Lock className="w-5 h-5" />
+                <Settings className="w-5 h-5" />
               </button>
             </div>
           )}
@@ -635,7 +657,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
 
-        {/* SECTION 5: PINNED USER PROFILE & ACCOUNT SWITCHER & LOGOUT (Requested in Menu Dashboard) */}
+        {/* SECTION 5: PINNED USER PROFILE & ACCOUNT SWITCHER & LOGOUT */}
         <div className={`p-3 pt-0 ${isMobileDrawer ? 'pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]' : 'pb-3'}`}>
           {!isActuallyCollapsed ? (
             <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] space-y-2 shadow-2xs">
@@ -759,7 +781,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         />
       )}
 
-      {/* Sidebar: w-[280px] on mobile drawer, w-[264px] or w-[72px] on desktop */}
+      {/* Sidebar: w-[285px] on mobile drawer, w-[264px] or w-[72px] on desktop */}
       <aside 
         className={`fixed inset-y-0 left-0 z-50 lg:static flex flex-col justify-between bg-white dark:bg-[#0F1A17] border-r border-slate-200 dark:border-[#24352F] shrink-0 h-full overflow-hidden transition-all duration-200 ease-in-out ${
           isMobileOpen ? 'translate-x-0 w-[285px] max-w-[85vw] shadow-2xl' : '-translate-x-full lg:translate-x-0'

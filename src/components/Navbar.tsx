@@ -1,30 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ydoLogo from '../assets/YDO_logo.jpg';
 import nikhilAvatar from '../assets/nikhil_avatar.png';
-import { useLanguage, Language } from '../context/LanguageContext';
-import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Sun, 
-  Moon, 
   PanelLeftClose, 
-  PanelLeft, 
-  LogOut, 
-  Lock, 
-  ChevronDown, 
-  CheckCircle2, 
-  ShieldCheck, 
-  Globe,
-  Smartphone,
-  UserPlus,
-  Loader2
+  PanelLeft
 } from 'lucide-react';
-import { 
-  isRegistrationAllowedSync, 
-  setRegistrationSetting, 
-  subscribeToRegistrationSetting,
-  syncRegistrationSettingFromCloud
-} from '../lib/registrationConfig';
 
 interface NavbarProps {
   onOpenSettings?: () => void;
@@ -36,79 +18,12 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
-  onOpenSettings,
-  onOpenAppDownload,
-  isSidebarCollapsed,
   onToggleSidebarCollapse,
+  isSidebarCollapsed,
   onOpenMobileSidebar,
-  isMobileSidebarOpen = false,
 }) => {
-  const { language, setLanguage, t } = useLanguage();
-  const { resolvedTheme, toggleTheme } = useTheme();
-  const { user, role, setRole, lockSecurity, signOut } = useAuth();
-
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-
-  // New Operator Registration Control (Shop Owner Nikhil Sakhare)
-  const [isRegistrationAllowed, setIsRegistrationAllowed] = useState<boolean>(() => isRegistrationAllowedSync());
-  const [isUpdatingReg, setIsUpdatingReg] = useState(false);
-  const [regFeedback, setRegFeedback] = useState<string | null>(null);
-
-  React.useEffect(() => {
-    syncRegistrationSettingFromCloud().then(setIsRegistrationAllowed);
-    const unsubscribe = subscribeToRegistrationSetting(setIsRegistrationAllowed);
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-  const handleToggleRegistration = async () => {
-    if (role !== 'Owner') {
-      setRegFeedback(
-        language === 'mr' 
-          ? 'फक्त मालक (Nikhil Sakhare) हे बदलू शकतात!' 
-          : language === 'hi' 
-          ? 'केवल मालिक (Nikhil Sakhare) यह बदल सकते हैं!' 
-          : 'Only Shop Owner Nikhil Sakhare can modify this!'
-      );
-      setTimeout(() => setRegFeedback(null), 3000);
-      return;
-    }
-
-    const nextState = !isRegistrationAllowed;
-    setIsUpdatingReg(true);
-    try {
-      const res = await setRegistrationSetting(
-        nextState,
-        role,
-        user?.email || 'yogeshwaridairy9896@gmail.com',
-        currentUserName
-      );
-
-      if (res.success) {
-        setIsRegistrationAllowed(nextState);
-        setRegFeedback(
-          nextState 
-            ? (language === 'mr' ? '✓ नोंदणी चालू केली (Login Page वर दिसेल)' : language === 'hi' ? '✓ पंजीकरण चालू किया (लॉगिन पेज पर दिखेगा)' : '✓ Registration Enabled on Login Page')
-            : (language === 'mr' ? '✓ नोंदणी बंद व लपवली (सुरक्षित)' : language === 'hi' ? '✓ पंजीकरण बंद व सुरक्षित (लॉगिन से छिपाया)' : '✓ Registration Disabled & Hidden')
-        );
-      } else {
-        setRegFeedback(res.error || 'त्रुटी आली');
-      }
-    } catch (e: any) {
-      setRegFeedback(e.message || 'त्रुटी आली');
-    } finally {
-      setIsUpdatingReg(false);
-      setTimeout(() => setRegFeedback(null), 3500);
-    }
-  };
-
-  // Auto-close profile dropdown when mobile drawer is opened
-  React.useEffect(() => {
-    if (isMobileSidebarOpen) {
-      setShowProfileMenu(false);
-    }
-  }, [isMobileSidebarOpen]);
+  const { t } = useLanguage();
+  const { user, role } = useAuth();
 
   // Active User display name: Nikhil Sakhare (Owner) vs Nilesh Sakhare (Admin)
   const currentUserName = 
@@ -117,12 +32,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       : role === 'Admin' || user?.email?.toLowerCase().includes('nilu')
       ? 'Nilesh Sakhare'
       : (user?.user_metadata?.full_name || 'Nikhil Sakhare');
-
-  const languagesList: Array<{ code: Language; label: string }> = [
-    { code: 'mr', label: 'मराठी' },
-    { code: 'hi', label: 'हिंदी' },
-    { code: 'en', label: 'English' },
-  ];
 
   return (
     <header className="sticky top-0 z-30 h-16 w-full bg-white/95 dark:bg-[#131F1B]/95 backdrop-blur-md border-b border-slate-100 sm:border-slate-200 dark:border-[#24352F]/40 shadow-xs shrink-0 transition-colors duration-150">
@@ -171,336 +80,34 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Right Controls: User Profile/Settings */}
+        {/* Right Controls: User Profile Badge (Click opens mobile drawer on touch devices) */}
         <div className="flex items-center gap-2 shrink-0">
-          
-          {/* USER PROFILE BADGE & DROPDOWN */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowProfileMenu(prev => !prev)}
-              className="h-9 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] text-xs font-bold transition-all shadow-2xs group"
-              title="Profile & Settings"
-            >
-              {role === 'Owner' ? (
-                <img 
-                  src={nikhilAvatar} 
-                  alt="Nikhil Sakhare" 
-                  className="w-6 h-6 rounded-full object-cover border border-amber-400 shrink-0 shadow-xs" 
-                />
-              ) : (
-                <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                  🛡️
-                </div>
-              )}
-              <div className="flex flex-col text-left">
-                <span className="text-xs font-black leading-none">
-                  {currentUserName}
-                </span>
-                <span className="text-[9px] text-slate-500 dark:text-[#8FA69C] leading-none mt-0.5 truncate max-w-[70px] sm:max-w-[100px] hidden sm:block">
-                  {user?.email?.split('@')[0] || 'Yogeshwari'}
-                </span>
+          <button
+            type="button"
+            onClick={onOpenMobileSidebar}
+            className="h-9 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] text-xs font-bold transition-all shadow-2xs group"
+            title={role === 'Owner' ? 'Nikhil Sakhare (Shop Owner)' : 'Nilesh Sakhare (Admin)'}
+          >
+            {role === 'Owner' ? (
+              <img 
+                src={nikhilAvatar} 
+                alt="Nikhil Sakhare" 
+                className="w-6 h-6 rounded-full object-cover border border-amber-400 shrink-0 shadow-xs" 
+              />
+            ) : (
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                🛡️
               </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
-            </button>
-
-            {/* Dropdown Menu (Preferences first, then Profile Name & Accounts placed at LAST) */}
-            {showProfileMenu && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-                <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] shadow-2xl p-2.5 z-50 animate-fadeIn space-y-2.5">
-                  
-                  {/* 1. LANGUAGE & THEME PREFERENCES */}
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] px-1 flex items-center gap-1">
-                      <Globe className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                      <span>{language === 'mr' ? 'भाषा व थीम सेटिंग्ज' : language === 'hi' ? 'भाषा व थीम सेटिंग्स' : 'Language & Theme'}</span>
-                    </p>
-
-                    {/* Language Switcher */}
-                    <div className="px-1">
-                      <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl border border-slate-200/80 dark:border-[#24352F]">
-                        {languagesList.map((lang) => {
-                          const isActive = language === lang.code;
-                          return (
-                            <button
-                              key={lang.code}
-                              type="button"
-                              onClick={() => setLanguage(lang.code)}
-                              className={`py-1 px-1 rounded-lg text-xs font-bold transition-all text-center ${
-                                isActive
-                                  ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-xs ring-1 ring-slate-200/60 dark:ring-[#24352F] font-extrabold'
-                                  : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-[#E7F0EC]'
-                              }`}
-                            >
-                              {lang.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Theme Toggle (Dark / Light) */}
-                    <div className="px-1">
-                      <button
-                        type="button"
-                        onClick={toggleTheme}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border border-slate-200/80 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC] transition"
-                      >
-                        <span className="flex items-center gap-2">
-                          {resolvedTheme === 'dark' ? (
-                            <Sun className="w-4 h-4 text-amber-400" />
-                          ) : (
-                            <Moon className="w-4 h-4 text-indigo-500" />
-                          )}
-                          <span>{language === 'mr' ? 'थीम (Dark / Light)' : language === 'hi' ? 'थीम (Dark / Light)' : 'Theme Mode'}</span>
-                        </span>
-                        <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] text-emerald-700 dark:text-emerald-400">
-                          {resolvedTheme === 'dark'
-                            ? (language === 'mr' ? 'डार्क 🌙' : language === 'hi' ? 'डार्क 🌙' : 'Dark 🌙')
-                            : (language === 'mr' ? 'लाइट ☀️' : language === 'hi' ? 'लाइट ☀️' : 'Light ☀️')}
-                        </span>
-                      </button>
-                    </div>
-
-                    {/* Quick Trigger: Install Mobile App Modal */}
-                    {onOpenAppDownload && (
-                      <div className="px-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowProfileMenu(false);
-                            onOpenAppDownload();
-                          }}
-                          className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-300/80 dark:border-emerald-800/60 text-xs font-bold text-emerald-900 dark:text-emerald-300 transition shadow-2xs"
-                        >
-                          <span className="flex items-center gap-2">
-                            <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                            <span>{language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल करा' : language === 'hi' ? 'मोबाइल ऐप इंस्टॉल करें' : 'Install Mobile App'}</span>
-                          </span>
-                          <span className="text-[10px] font-black bg-emerald-600 text-white px-1.5 py-0.5 rounded-md">
-                            APP
-                          </span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 2. LOCK COUNTER SCREEN */}
-                  <div className="border-t border-slate-100 dark:border-[#24352F] pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowProfileMenu(false);
-                        lockSecurity();
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition"
-                    >
-                      <Lock className="w-3.5 h-3.5" />
-                      <span>{language === 'mr' ? 'काउंटर त्वरित लॉक करा' : language === 'hi' ? 'काउंटर तुरंत लॉक करें' : 'Lock Counter Screen'}</span>
-                    </button>
-                  </div>
-
-                  {/* 3. NEW OPERATOR REGISTRATION CONTROL (Shop Owner Nikhil Sakhare Only) */}
-                  <div className="border-t border-slate-100 dark:border-[#24352F] pt-2 px-1">
-                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <UserPlus className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                          <span className="text-xs font-black text-slate-800 dark:text-[#E7F0EC]">
-                            {language === 'mr' ? 'नवीन ऑपरेटर नोंदणी' : language === 'hi' ? 'नया ऑपरेटर पंजीकरण' : 'New User Registration'}
-                          </span>
-                        </div>
-                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md border flex items-center gap-1 ${
-                          isRegistrationAllowed
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300/80 dark:border-emerald-700/60'
-                            : 'bg-rose-50 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border-rose-200 dark:border-rose-900/60'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${isRegistrationAllowed ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                          <span>
-                            {isRegistrationAllowed 
-                              ? (language === 'mr' ? 'चालू (ON)' : language === 'hi' ? 'चालू (ON)' : 'ON') 
-                              : (language === 'mr' ? 'बंद (OFF)' : language === 'hi' ? 'बंद (OFF)' : 'OFF')}
-                          </span>
-                        </span>
-                      </div>
-
-                      <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] leading-snug">
-                        {isRegistrationAllowed
-                          ? (language === 'mr' ? 'लॉगिन पेजवर नोंदणी सुरू आहे (नवीन ऑपरेटर खाते उघडू शकतात).' : language === 'hi' ? 'लॉगिन पेज पर पंजीकरण खुला है (नया ऑपरेटर खाता बना सकते हैं)।' : 'Registration is OPEN on the login page.')
-                          : (language === 'mr' ? 'लॉगिन पेजवरून नोंदणी लपवली आहे (फक्त अस्तित्वातील खाती लॉगिन करू शकतात).' : language === 'hi' ? 'लॉगिन पेज से पंजीकरण छिपा हुआ है (केवल मौजूदा खाते लॉगिन कर सकते हैं)।' : 'Registration is HIDDEN from the login page (Strict security).')}
-                      </p>
-
-                      {/* Toggle Action */}
-                      {role === 'Owner' ? (
-                        <button
-                          type="button"
-                          disabled={isUpdatingReg}
-                          onClick={handleToggleRegistration}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-black transition-all border shadow-xs ${
-                            isRegistrationAllowed
-                              ? 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/40'
-                              : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
-                          }`}
-                        >
-                          <span className="flex items-center gap-1.5">
-                            {isUpdatingReg ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : isRegistrationAllowed ? (
-                              <Lock className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-                            ) : (
-                              <UserPlus className="w-3.5 h-3.5 text-white" />
-                            )}
-                            <span>
-                              {isUpdatingReg 
-                                ? (language === 'mr' ? 'बदलत आहे...' : language === 'hi' ? 'बदल रहा है...' : 'Updating...')
-                                : isRegistrationAllowed
-                                ? (language === 'mr' ? 'नोंदणी बंद करा (लपवा)' : language === 'hi' ? 'पंजीकरण बंद करें (छुपाएं)' : 'Turn OFF & Hide')
-                                : (language === 'mr' ? 'नोंदणी चालू करा (दाखवा)' : language === 'hi' ? 'पंजीकरण चालू करें (दिखाएं)' : 'Turn ON & Enable')}
-                            </span>
-                          </span>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-lg uppercase tracking-wider font-black ${
-                            isRegistrationAllowed ? 'bg-rose-200 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200' : 'bg-emerald-800 text-white'
-                          }`}>
-                            {isRegistrationAllowed ? 'SWITCH OFF' : 'SWITCH ON'}
-                          </span>
-                        </button>
-                      ) : (
-                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-[10px] font-bold text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40">
-                          <Lock className="w-3 h-3 text-amber-600 shrink-0" />
-                          <span>{language === 'mr' ? 'फक्त दुकान मालक निखिल सखारे ही सेटिंग बदलू शकतात.' : language === 'hi' ? 'केवल दुकान मालिक निखिल सखारे यह सेटिंग बदल सकते हैं।' : 'Only Shop Owner Nikhil Sakhare can modify this.'}</span>
-                        </div>
-                      )}
-
-                      {regFeedback && (
-                        <p className={`text-[11px] font-bold px-2 py-1 rounded-lg animate-in fade-in transition ${
-                          regFeedback.includes('✓') 
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300/80' 
-                            : 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300/80'
-                        }`}>
-                          {regFeedback}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 4. PROFILE NAME & ACCOUNT PLACED AT THE LAST */}
-                  <div className="border-t border-slate-100 dark:border-[#24352F] pt-2 space-y-2">
-                    {/* Active User Name & Email Badge */}
-                    <div className="px-3 py-2 bg-slate-50 dark:bg-[#1A2A25] rounded-xl border border-slate-100 dark:border-[#24352F]/70 flex items-center gap-2.5">
-                      {role === 'Owner' ? (
-                        <img 
-                          src={nikhilAvatar} 
-                          alt="Nikhil Sakhare" 
-                          className="w-9 h-9 rounded-full object-cover border-2 border-amber-400 shrink-0 shadow-xs" 
-                        />
-                      ) : (
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 shrink-0 border border-emerald-500/30">
-                          🛡️
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1 mb-0.5">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                          <p className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C] uppercase tracking-wider">
-                            {language === 'mr' ? 'सक्रिय प्रोफाइल (Profile)' : language === 'hi' ? 'सक्रिय प्रोफ़ाइल' : 'Active Profile'}
-                          </p>
-                        </div>
-                        <p className="text-xs font-black text-slate-900 dark:text-white truncate">
-                          {currentUserName}
-                        </p>
-                        <p className="text-[10px] text-slate-500 dark:text-[#8FA69C] truncate">
-                          {user?.email || 'yogeshwaridairy9896@gmail.com'}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Profile Selection (Nikhil Sakhare / Nilesh Sakhare) */}
-                    {(() => {
-                      const isOwnerUser = 
-                        !user?.email ||
-                        user?.email.toLowerCase() === 'yogeshwaridairy9896@gmail.com' ||
-                        user?.email.toLowerCase().includes('yogeshwari') ||
-                        user?.email.toLowerCase().includes('owner') ||
-                        (user?.user_metadata?.role === 'Owner' && !user?.email.toLowerCase().includes('nilu'));
-
-                      return (
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-bold text-slate-400 dark:text-[#8FA69C] px-1">
-                            {isOwnerUser 
-                              ? (language === 'mr' ? 'खाते निवडा' : language === 'hi' ? 'खाता चुनें' : 'Select Account')
-                              : (language === 'mr' ? 'सक्रिय खाते' : language === 'hi' ? 'सक्रिय खाता' : 'Active Account')}
-                          </p>
-
-                          {/* Nikhil Sakhare (Owner) Option */}
-                          {isOwnerUser && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setRole('Owner', null);
-                                setShowProfileMenu(false);
-                              }}
-                              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition ${
-                                role === 'Owner'
-                                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40'
-                                  : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <img 
-                                  src={nikhilAvatar} 
-                                  alt="Nikhil Sakhare" 
-                                  className="w-5 h-5 rounded-full object-cover border border-amber-400 shrink-0" 
-                                />
-                                <span className="font-extrabold">Nikhil Sakhare (Owner)</span>
-                              </div>
-                              {role === 'Owner' && <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />}
-                            </button>
-                          )}
-
-                          {/* Nilesh Sakhare (Admin) Option */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setRole('Admin', 1);
-                              setShowProfileMenu(false);
-                            }}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition ${
-                              role === 'Admin'
-                                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40'
-                                : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span>🛡️</span>
-                              <span className="font-extrabold">Nilesh Sakhare</span>
-                            </div>
-                            {role === 'Admin' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
-                          </button>
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* 4. SIGN OUT */}
-                  <div className="border-t border-slate-100 dark:border-[#24352F] pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowProfileMenu(false);
-                        signOut();
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      <span>{language === 'mr' ? 'बाहेर पडा' : language === 'hi' ? 'साइन आउट करें' : 'Sign Out'}</span>
-                    </button>
-                  </div>
-                </div>
-              </>
             )}
-          </div>
-
+            <div className="flex flex-col text-left">
+              <span className="text-xs font-black leading-none">
+                {currentUserName}
+              </span>
+              <span className="text-[9px] text-slate-500 dark:text-[#8FA69C] leading-none mt-0.5 truncate max-w-[70px] sm:max-w-[100px] hidden sm:block">
+                {user?.email?.split('@')[0] || 'Yogeshwari'}
+              </span>
+            </div>
+          </button>
         </div>
 
       </div>

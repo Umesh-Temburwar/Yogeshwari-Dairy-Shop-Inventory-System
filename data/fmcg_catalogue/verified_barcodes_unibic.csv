@@ -1,0 +1,107 @@
+barcode,product_name,brand,pack_size,barcode_source_url,barcode_evidence,status
+'8906009068886,UNIBIC Choco Nut Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009068886,"OFF GTIN Record (Name: UNIBIC Choco Nut Cookies, Brand: None)",verified
+'8906009070308,Oats Digestive,Unibic,Piece,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906009070308,Existing verified DB entry for Unibic,single_source
+'8906009070445,unibic choco kiss,Unibic,250,https://world.openfoodfacts.org/product/8906009070445,"OFF GTIN Record (Name: unibic choco kiss, Brand: Unibic)",verified
+'8906009070483,UNIBIC Choco Ripple Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009070483,"OFF GTIN Record (Name: UNIBIC Choco Ripple Cookies, Brand: None)",verified
+'8906009070490,UNIBIC Milk Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009070490,"OFF GTIN Record (Name: UNIBIC Milk Cookies, Brand: None)",verified
+'8906009070520,UNIBIC Orange Splash Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009070520,"OFF GTIN Record (Name: UNIBIC Orange Splash Cookies, Brand: None)",verified
+'8906009070636,Fruit & Nut Cookies,Unibic,500 g,https://world.openfoodfacts.org/product/8906009070636,"OFF GTIN Record (Name: Fruit & Nut Cookies, Brand: Unibic)",verified
+'8906009070759,Milk Cookies,Unibic,500 g,https://world.openfoodfacts.org/product/8906009070759,"OFF GTIN Record (Name: Milk Cookies, Brand: Unibic)",verified
+'8906009070834,Unibic cashew badam cookies 500g,Unibic,450 g,https://world.openfoodfacts.org/product/8906009070834,"OFF GTIN Record (Name: Unibic cashew badam cookies 500g, Brand: Unibic)",verified
+'8906009070902,unibic honey otmeal,Unibic,75 g,https://world.openfoodfacts.org/product/8906009070902,"OFF GTIN Record (Name: unibic honey otmeal, Brand: Unibic)",verified
+'8906009070926,Unibic choco rs 5,Unibic,Piece,https://world.openfoodfacts.org/product/8906009070926,"OFF GTIN Record (Name: Unibic choco rs 5, Brand: None)",verified
+'8906009070933,Butter cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009070933,"OFF GTIN Record (Name: Butter cookies, Brand: Unibic)",verified
+'8906009071022,UNIBIC WAFER YUMMY STRAWBERRY,Unibic,Piece,https://world.openfoodfacts.org/product/8906009071022,"OFF GTIN Record (Name: UNIBIC WAFER YUMMY STRAWBERRY, Brand: None)",verified
+'8906009071107,UNIBIC Choco Chip Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009071107,"OFF GTIN Record (Name: UNIBIC Choco Chip Cookies, Brand: unbic)",verified
+'8906009071138,Unibic butter cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009071138,"OFF GTIN Record (Name: Unibic butter cookies, Brand: Unbic)",verified
+'8906009071183,Chocokiss,Unibic,20 g,https://world.openfoodfacts.org/product/8906009071183,"OFF GTIN Record (Name: Chocokiss, Brand: Unibic)",verified
+'8906009071282,Creamy Cheese,Unibic,Piece,https://world.openfoodfacts.org/product/8906009071282,"OFF GTIN Record (Name: Creamy Cheese, Brand: Unibic)",verified
+'8906009071602,unibic choco nut,Unibic,75 g,https://world.openfoodfacts.org/product/8906009071602,"OFF GTIN Record (Name: unibic choco nut, Brand: Unibic)",verified
+'8906009071732,Unibic Choco nut Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009071732,"OFF GTIN Record (Name: Unibic Choco nut Cookies, Brand: Unibic)",verified
+'8906009071800,Choco chip cookies,Unibic,135 g,https://world.openfoodfacts.org/product/8906009071800,"OFF GTIN Record (Name: Choco chip cookies, Brand: UNIBIC)",verified
+'8906009071848,Unibic Fuirt & Nut,Unibic,Piece,https://world.openfoodfacts.org/product/8906009071848,"OFF GTIN Record (Name: Unibic Fuirt & Nut, Brand: Unibic)",verified
+'8906009072012,Pista badam,Unibic,75,https://world.openfoodfacts.org/product/8906009072012,"OFF GTIN Record (Name: Pista badam, Brand: Unibic)",verified
+'8906009072029,Pista Badam Cookies,Unibic,135 g,https://world.openfoodfacts.org/product/8906009072029,"OFF GTIN Record (Name: Pista Badam Cookies, Brand: UNIBIC)",verified
+'8906009072036,Unibic Jeera Cookies - 67.50 gm,Unibic,67.5 g,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906009072036,Existing verified DB entry for Unibic,single_source
+'8906009072111,Unibic orange splash cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009072111,"OFF GTIN Record (Name: Unibic orange splash cookies, Brand: Unibic)",verified
+'8906009072128,Orange Splash Cookies,Unibic,45 g,https://world.openfoodfacts.org/product/8906009072128,"OFF GTIN Record (Name: Orange Splash Cookies, Brand: None)",verified
+'8906009072135,Unibic orange,Unibic,Piece,https://world.openfoodfacts.org/product/8906009072135,"OFF GTIN Record (Name: Unibic orange, Brand: None)",verified
+'8906009072364,Unibic Orange Splash Cookies 500 gm,Unibic,500 g,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906009072364,Existing verified DB entry for Unibic,single_source
+'8906009072449,Snappers Cream n'Onion,Unibic,Piece,https://world.openfoodfacts.org/product/8906009072449,"OFF GTIN Record (Name: Snappers Cream n'Onion, Brand: Unibic)",verified
+'8906009072654,Unibic Snapper potato spice 300g( 2ta),Unibic,300,https://world.openfoodfacts.org/product/8906009072654,"OFF GTIN Record (Name: Unibic Snapper potato spice 300g( 2ta), Brand: Unibic)",verified
+'8906009072661,Unibic Snapper potato,Unibic,18,https://world.openfoodfacts.org/product/8906009072661,"OFF GTIN Record (Name: Unibic Snapper potato, Brand: Unibic)",verified
+'8906009072678,Unibic Choco nut Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009072678,"OFF GTIN Record (Name: Unibic Choco nut Cookies, Brand: Unibic)",verified
+'8906009072685,Unibic shortbread,Unibic,Piece,https://world.openfoodfacts.org/product/8906009072685,"OFF GTIN Record (Name: Unibic shortbread, Brand: None)",verified
+'8906009072784,Biscott,Unibic,250 g,https://world.openfoodfacts.org/product/8906009072784,"OFF GTIN Record (Name: Biscott, Brand: Unibic)",verified
+'8906009072906,UNIBIC Cashew Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009072906,"OFF GTIN Record (Name: UNIBIC Cashew Cookies, Brand: Unibic)",verified
+'8906009073163,swaadesi ghee besan laddoo,Unibic,180 g,https://world.openfoodfacts.org/product/8906009073163,"OFF GTIN Record (Name: swaadesi ghee besan laddoo, Brand: swaadesi, unibic)",verified
+'8906009073286,UNIBIC Biscott Caramel Cinnamon Flavou,Unibic,Piece,https://world.openfoodfacts.org/product/8906009073286,"OFF GTIN Record (Name: UNIBIC Biscott Caramel Cinnamon Flavou, Brand: None)",verified
+'8906009073323,Unibic Snappers,Unibic,Piece,https://world.openfoodfacts.org/product/8906009073323,"OFF GTIN Record (Name: Unibic Snappers, Brand: unbic)",verified
+'8906009073484,Unibic Cubz,Unibic,Piece,https://world.openfoodfacts.org/product/8906009073484,"OFF GTIN Record (Name: Unibic Cubz, Brand: Unibic)",verified
+'8906009073729,Big & Bold Fruit Blast,Unibic,300 g,https://world.openfoodfacts.org/product/8906009073729,"OFF GTIN Record (Name: Big & Bold Fruit Blast, Brand: Unibic)",verified
+'8906009073736,UNIBIC BIG BOLD choco blast,Unibic,Piece,https://world.openfoodfacts.org/product/8906009073736,"OFF GTIN Record (Name: UNIBIC BIG BOLD choco blast, Brand: None)",verified
+'8906009073958,Unibic Coconut Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009073958,"OFF GTIN Record (Name: Unibic Coconut Cookies, Brand: Unibic)",verified
+'8906009073965,Danish Coconut Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009073965,"OFF GTIN Record (Name: Danish Coconut Cookies, Brand: Unibic)",verified
+'8906009073972,unobic disano coconut,Unibic,300,https://world.openfoodfacts.org/product/8906009073972,"OFF GTIN Record (Name: unobic disano coconut, Brand: unibic)",verified
+'8906009074788,Oats Marie Thinz,Unibic,58 g,https://world.openfoodfacts.org/product/8906009074788,"OFF GTIN Record (Name: Oats Marie Thinz, Brand: Unibic)",verified
+'8906009075068,Atta Marie Thinz,Unibic,495 g,https://world.openfoodfacts.org/product/8906009075068,"OFF GTIN Record (Name: Atta Marie Thinz, Brand: Unibic)",verified
+'8906009075167,Unibic Royal Vanilla cake 140g,Unibic,Piece,https://world.openfoodfacts.org/product/8906009075167,"OFF GTIN Record (Name: Unibic Royal Vanilla cake 140g, Brand: Unibic)",verified
+'8906009075181,Unibic cake fruit n nut 140gm,Unibic,Piece,https://world.openfoodfacts.org/product/8906009075181,"OFF GTIN Record (Name: Unibic cake fruit n nut 140gm, Brand: None)",verified
+'8906009075204,Unibic Dates & Carrot cake 140g,Unibic,Piece,https://world.openfoodfacts.org/product/8906009075204,"OFF GTIN Record (Name: Unibic Dates & Carrot cake 140g, Brand: Unibic)",verified
+'8906009075273,Millet Pop Crisp Sweet Chilli,Unibic,Piece,https://world.openfoodfacts.org/product/8906009075273,"OFF GTIN Record (Name: Millet Pop Crisp Sweet Chilli, Brand: Unibic)",verified
+'8906009075464,Unibic coconut,Unibic,Piece,https://world.openfoodfacts.org/product/8906009075464,"OFF GTIN Record (Name: Unibic coconut, Brand: None)",verified
+'8906009075600,Swaadesi shahi kaju katli,Unibic,Piece,https://world.openfoodfacts.org/product/8906009075600,"OFF GTIN Record (Name: Swaadesi shahi kaju katli, Brand: UNIBIC)",verified
+'8906009075648,Unibic sugar free oats cookies,Unibic,Piece,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906009075648,Existing verified DB entry for Unibic,single_source
+'8906009075839,Unibic Swaadesi Bikaneri Bhujia,Unibic,Piece,https://world.openfoodfacts.org/product/8906009075839,"OFF GTIN Record (Name: Unibic Swaadesi Bikaneri Bhujia, Brand: Unibic)",verified
+'8906009075846,Swaadesi crunchy nuts,Unibic,150 g,https://world.openfoodfacts.org/product/8906009075846,"OFF GTIN Record (Name: Swaadesi crunchy nuts, Brand: Swaadesi, Unibic)",verified
+'8906009075853,Unibic Swaadesi Navratan Mixture,Unibic,165 g,https://world.openfoodfacts.org/product/8906009075853,"OFF GTIN Record (Name: Unibic Swaadesi Navratan Mixture, Brand: Unibic)",verified
+'8906009075884,Swaadesi Mysore Garlic Mix,Unibic,Piece,https://world.openfoodfacts.org/product/8906009075884,"OFF GTIN Record (Name: Swaadesi Mysore Garlic Mix, Brand: Unibic)",verified
+'8906009075952,UNIBIC maámiul 25% Date-filled,Unibic,Piece,https://world.openfoodfacts.org/product/8906009075952,"OFF GTIN Record (Name: UNIBIC maámiul 25% Date-filled, Brand: None)",verified
+'8906009076744,Choco ripple cookies,Unibic,98.8 g,https://world.openfoodfacts.org/product/8906009076744,"OFF GTIN Record (Name: Choco ripple cookies, Brand: Unibic)",verified
+'8906009076843,Unibic Signature Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009076843,"OFF GTIN Record (Name: Unibic Signature Cookies, Brand: Unibic)",verified
+'8906009077017,fruit & nut cookies,Unibic,75 g,https://world.openfoodfacts.org/product/8906009077017,"OFF GTIN Record (Name: fruit & nut cookies, Brand: unibic)",verified
+'8906009077277,Butter cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009077277,"OFF GTIN Record (Name: Butter cookies, Brand: Unibic)",verified
+'8906009077284,UNIBIC Sugar free,Unibic,,https://world.openfoodfacts.org/product/8906009077284,"OFF GTIN Record (Name: UNIBIC Sugar free, Brand: Unibic)",verified
+'8906009077291,Oatmeal cookies Sugar free,Unibic,1.0 nan,https://world.openfoodfacts.org/product/8906009077291,"OFF GTIN Record (Name: Oatmeal cookies Sugar free, Brand: Unibic)",verified
+'8906009077321,UNIBIC Choco Chip Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009077321,"OFF GTIN Record (Name: UNIBIC Choco Chip Cookies, Brand: None)",verified
+'8906009077338,Unibic Choco Nut Cookies 135 gm,Unibic,135 g,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906009077338,Existing verified DB entry for Unibic,single_source
+'8906009077420,Pineapple cookies (sugar free),Unibic,Piece,https://world.openfoodfacts.org/product/8906009077420,"OFF GTIN Record (Name: Pineapple cookies (sugar free), Brand: UNIBIC)",verified
+'8906009077437,UNIBIC Daily Digestie,Unibic,Piece,https://world.openfoodfacts.org/product/8906009077437,"OFF GTIN Record (Name: UNIBIC Daily Digestie, Brand: Unbic)",verified
+'8906009077543,Multigrain Cookies,Unibic,75 g,https://world.openfoodfacts.org/product/8906009077543,"OFF GTIN Record (Name: Multigrain Cookies, Brand: Unibic)",verified
+'8906009077581,Choco Kiss Cookies,Unibic,75 g,https://world.openfoodfacts.org/product/8906009077581,"OFF GTIN Record (Name: Choco Kiss Cookies, Brand: Unibic)",verified
+'8906009077802,Shortbread,Unibic,Piece,https://world.openfoodfacts.org/product/8906009077802,"OFF GTIN Record (Name: Shortbread, Brand: Unibic)",verified
+'8906009078014,Butter cookies,Unibic,1.0 nan,https://world.openfoodfacts.org/product/8906009078014,"OFF GTIN Record (Name: Butter cookies, Brand: Unibic)",verified
+'8906009078021,UNIBIC Cashew Cookies,Unibic,75 g,https://world.openfoodfacts.org/product/8906009078021,"OFF GTIN Record (Name: UNIBIC Cashew Cookies, Brand: UNIBIC)",verified
+'8906009078670,Unibic Frunit and Nut cookies,Unibic,150 g,https://world.openfoodfacts.org/product/8906009078670,"OFF GTIN Record (Name: Unibic Frunit and Nut cookies, Brand: Unibic)",verified
+'8906009078687,UNIBIC Pista Badam Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009078687,"OFF GTIN Record (Name: UNIBIC Pista Badam Cookies, Brand: unbic)",verified
+'8906009078762,Unibic oats 50,Unibic,Piece,https://world.openfoodfacts.org/product/8906009078762,"OFF GTIN Record (Name: Unibic oats 50, Brand: Unibic)",verified
+'8906009078847,Unibic Choco ripple biscuit,Unibic,100 g,https://world.openfoodfacts.org/product/8906009078847,"OFF GTIN Record (Name: Unibic Choco ripple biscuit, Brand: None)",verified
+'8906009079028,UNIBIC Splash Orange Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009079028,"OFF GTIN Record (Name: UNIBIC Splash Orange Cookies, Brand: unbic)",verified
+'8906009079073,UNIBIC Choco Ripple Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009079073,"OFF GTIN Record (Name: UNIBIC Choco Ripple Cookies, Brand: unbic)",verified
+'8906009079127,UNIBIC Milk Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009079127,"OFF GTIN Record (Name: UNIBIC Milk Cookies, Brand: Unbic)",verified
+'8906009079165,Unibic Choco Chip Cookies,Unibic,100 g,https://world.openfoodfacts.org/product/8906009079165,"OFF GTIN Record (Name: Unibic Choco Chip Cookies, Brand: Unibic)",verified
+'8906009079288,Kesar Cashew Badam Cookies,Unibic,200 g,https://world.openfoodfacts.org/product/8906009079288,"OFF GTIN Record (Name: Kesar Cashew Badam Cookies, Brand: Unibic)",verified
+'8906009079356,unibic choco nut cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906009079356,"OFF GTIN Record (Name: unibic choco nut cookies, Brand: Unbic)",verified
+'8906009079363,Fruit & nut cookis,Unibic,37.5 g,https://world.openfoodfacts.org/product/8906009079363,"OFF GTIN Record (Name: Fruit & nut cookis, Brand: Unibic)",verified
+'8906009079462,Unibic oats digestive600g,Unibic,Piece,https://world.openfoodfacts.org/product/8906009079462,"OFF GTIN Record (Name: Unibic oats digestive600g, Brand: )",verified
+'8906009079646,Unibic Sugar Free Cookies,Unibic,Piece,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906009079646,Existing verified DB entry for Unibic,single_source
+'8906009079677,unibic multigrain,Unibic,,https://world.openfoodfacts.org/product/8906009079677,"OFF GTIN Record (Name: unibic multigrain, Brand: None)",verified
+'8906009079684,Unibic choco,Unibic,Piece,https://world.openfoodfacts.org/product/8906009079684,"OFF GTIN Record (Name: Unibic choco, Brand: 1)",verified
+'8906009079813,Choco Chip Cookies,Unibic,600 g,https://world.openfoodfacts.org/product/8906009079813,"OFF GTIN Record (Name: Choco Chip Cookies, Brand: Unibic)",verified
+'8906009079844,UNIBIC Cashew Badam Cookies,Unibic,30 g,https://world.openfoodfacts.org/product/8906009079844,"OFF GTIN Record (Name: UNIBIC Cashew Badam Cookies, Brand: UNIBIC)",verified
+'8906188960018,Choco Nut Cookies,Unibic,75 g,https://world.openfoodfacts.org/product/8906188960018,"OFF GTIN Record (Name: Choco Nut Cookies, Brand: UNIBIC)",verified
+'8906188960025,Choco Chip Cookies,Unibic,67.5 g,https://world.openfoodfacts.org/product/8906188960025,"OFF GTIN Record (Name: Choco Chip Cookies, Brand: UNIBIC)",verified
+'8906188960032,unibic fruit and nut cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906188960032,"OFF GTIN Record (Name: unibic fruit and nut cookies, Brand: None)",verified
+'8906188960094,Jeera Cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906188960094,"OFF GTIN Record (Name: Jeera Cookies, Brand: Unibic)",verified
+'8906188960100,UNIBIC pista badam cookies,Unibic,Piece,https://world.openfoodfacts.org/product/8906188960100,"OFF GTIN Record (Name: UNIBIC pista badam cookies, Brand: None)",verified
+'8906188960117,Unibic Honey Oatmeal Cookies,Unibic,67.5 g,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906188960117,Existing verified DB entry for Unibic,single_source
+'8906188960131,sugar free cashew cookies,Unibic,67.5,https://world.openfoodfacts.org/product/8906188960131,"OFF GTIN Record (Name: sugar free cashew cookies, Brand: Unibic)",verified
+'8906188960155,Unibic potato,Unibic,,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906188960155,Existing verified DB entry for Unibic,single_source
+'8906188960162,8906188960162,Unibic,1.0 nan,https://world.openfoodfacts.org/product/8906188960162,"OFF GTIN Record (Name: 8906188960162, Brand: unibic)",verified
+'8906188960186,UNIBIC Wafer RICH CHOCOLATE,Unibic,60 g,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906188960186,Existing verified DB entry for Unibic,single_source
+'8906188960193,Unibic Yummy Strawberry Wafer 60 gm - Buy 1 Get 1 Free,Unibic,60 g,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906188960193,Existing verified DB entry for Unibic,single_source
+'8906188960209,Unibic Creamy Cheese Wafer 60 gm - Buy 1 Get 1 Free!,Unibic,60 g,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906188960209,Existing verified DB entry for Unibic,single_source
+'8906188960483,cookiz dates & jaggery,Unibic,Piece,https://world.openfoodfacts.org/product/8906188960483,"OFF GTIN Record (Name: cookiz dates & jaggery, Brand: Unibic)",verified
+'8906188960629,Atta Biskut,Unibic,Piece,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906188960629,Existing verified DB entry for Unibic,single_source
+'8906188960636,Unibic Swaadesi Kaju Biskut,Unibic,Piece,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906188960636,Existing verified DB entry for Unibic,single_source
+'8906188960643,unibic Swaadesi Fruit Biskut,Unibic,1.0 nan,https://pfamoxreojbejufwhgiu.supabase.co/rest/v1/products?barcode=eq.8906188960643,Existing verified DB entry for Unibic,single_source

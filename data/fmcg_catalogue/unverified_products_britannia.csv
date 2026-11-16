@@ -1,0 +1,3 @@
+barcode,brand,reason,source
+'0001001612950,Britannia,"GS1 Checksum Failure: Check digit mismatch (expected 7, got 0)",Pre-validation
+'6291007906400,Britannia,No product name found in OFF or DB,Data extraction

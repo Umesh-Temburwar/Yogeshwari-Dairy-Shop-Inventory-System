@@ -1807,15 +1807,97 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const updateBatch = async (id: string, updates: Partial<ProductBatch>) => {
     const existingBatch = batches.find(b => b.id === id);
-    const targetProd = products.find(p => p.id === existingBatch?.product_id);
+    let targetProd = products.find(p => p.id === existingBatch?.product_id);
+    if (!targetProd && existingBatch && supabase) {
+      try {
+        const { data: pDb } = await supabase.from('products').select('*').eq('id', existingBatch.product_id).maybeSingle();
+        if (pDb) targetProd = pDb as Product;
+      } catch (err) {
+        console.warn('Failed to load target product for updateBatch:', err);
+      }
+    }
+
+    // 1. Calculate stock difference if qty_remaining is changing
+    let stockDelta = 0;
+    let newProductStock: number | null = null;
+    if (updates.qty_remaining !== undefined && existingBatch) {
+      const oldQty = Number(existingBatch.qty_remaining || 0);
+      const newQty = Number(updates.qty_remaining);
+      stockDelta = Number((newQty - oldQty).toFixed(2));
+      if (stockDelta !== 0 && targetProd) {
+        newProductStock = Math.max(0, Number(((targetProd.stock_quantity || 0) + stockDelta).toFixed(2)));
+      }
+    }
+
+    // 2. Update Batches state
     setBatches(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
+
+    // 3. Update Product stock in state if quantity changed
+    if (newProductStock !== null && targetProd) {
+      const pId = targetProd.id;
+      setProducts(prev => {
+        const exists = prev.some(p => p.id === pId);
+        if (exists) {
+          return prev.map(p => p.id === pId ? { ...p, stock_quantity: newProductStock! } : p);
+        } else if (newProductStock! > 0) {
+          return [{ ...targetProd!, stock_quantity: newProductStock! }, ...prev];
+        }
+        return prev;
+      });
+    }
+
+    // 4. Synchronize with Supabase
     if (supabase) {
       try {
-        await supabase.from('batches').update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        }).eq('id', id);
+        let rpcSuccess = false;
+        // Try atomic RPC if available
+        try {
+          const { data: rpcRes, error: rpcErr } = await supabase.rpc('fn_update_batch_stock_and_details', {
+            p_batch_id: id,
+            p_qty_remaining: updates.qty_remaining !== undefined ? Number(updates.qty_remaining) : null,
+            p_qty_received: updates.qty_received !== undefined ? Number(updates.qty_received) : null,
+            p_batch_no: updates.batch_no !== undefined ? updates.batch_no.trim() : null,
+            p_mfg_date: updates.mfg_date || null,
+            p_expiry_date: updates.expiry_date || null,
+            p_purchase_price: updates.purchase_price !== undefined ? Number(updates.purchase_price) : null,
+            p_selling_price: updates.selling_price !== undefined ? Number(updates.selling_price) : null,
+            p_supplier_name: updates.supplier_name !== undefined ? updates.supplier_name.trim() : null,
+            p_notes: updates.notes !== undefined ? updates.notes.trim() : null
+          });
+          if (!rpcErr && rpcRes && rpcRes.success) {
+            rpcSuccess = true;
+          }
+        } catch (rpcEx) {
+          // Fallback to direct tables update
+        }
+
+        if (!rpcSuccess) {
+          const dbUpdates: Record<string, any> = {
+            updated_at: new Date().toISOString()
+          };
+          if (updates.batch_no !== undefined) dbUpdates.batch_no = updates.batch_no.trim();
+          if (updates.mfg_date !== undefined) dbUpdates.mfg_date = updates.mfg_date;
+          if (updates.expiry_date !== undefined) dbUpdates.expiry_date = updates.expiry_date;
+          if (updates.qty_remaining !== undefined) dbUpdates.qty_remaining = Number(updates.qty_remaining);
+          if (updates.qty_received !== undefined) dbUpdates.qty_received = Number(updates.qty_received);
+          if (updates.purchase_price !== undefined) dbUpdates.purchase_price = Number(updates.purchase_price);
+          if (updates.selling_price !== undefined) dbUpdates.selling_price = Number(updates.selling_price);
+          if (updates.supplier_name !== undefined) dbUpdates.supplier_name = updates.supplier_name ? updates.supplier_name.trim() : null;
+          if (updates.notes !== undefined) dbUpdates.notes = updates.notes ? updates.notes.trim() : null;
+
+          await supabase.from('batches').update(dbUpdates).eq('id', id);
+
+          if (newProductStock !== null && targetProd) {
+            await supabase.from('products').update({
+              stock_quantity: newProductStock,
+              updated_at: new Date().toISOString()
+            }).eq('id', targetProd.id);
+          }
+        }
+
         broadcastMutation('batches', 'update');
+        broadcastMutation('products', 'update');
+        broadcastMutation('stock', 'adjust');
       } catch (e) {
         console.error('Supabase updateBatch error:', e);
       }
@@ -1825,13 +1907,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const changes: string[] = [];
     if (existingBatch) {
       if (updates.qty_remaining !== undefined && updates.qty_remaining !== existingBatch.qty_remaining) {
-        changes.push(`शिल्लक साठा: ${existingBatch.qty_remaining} ➔ ${updates.qty_remaining}`);
+        changes.push(`शिल्लक साठा: ${existingBatch.qty_remaining} ➔ ${updates.qty_remaining} ${targetProd?.unit || 'Piece'}`);
+      }
+      if (updates.mfg_date !== undefined && updates.mfg_date !== existingBatch.mfg_date) {
+        changes.push(`आवक/Mfg: ${existingBatch.mfg_date} ➔ ${updates.mfg_date}`);
       }
       if (updates.expiry_date !== undefined && updates.expiry_date !== existingBatch.expiry_date) {
         changes.push(`मुदत समाप्ती: ${existingBatch.expiry_date} ➔ ${updates.expiry_date}`);
       }
       if (updates.purchase_price !== undefined && updates.purchase_price !== existingBatch.purchase_price) {
         changes.push(`खरेदी भाव: ₹${existingBatch.purchase_price} ➔ ₹${updates.purchase_price}`);
+      }
+      if (updates.selling_price !== undefined && updates.selling_price !== existingBatch.selling_price) {
+        changes.push(`बॅच विक्री दर: ₹${existingBatch.selling_price || 0} ➔ ₹${updates.selling_price}`);
+      }
+      if (updates.batch_no !== undefined && updates.batch_no !== existingBatch.batch_no) {
+        changes.push(`बॅच क्र: #${existingBatch.batch_no} ➔ #${updates.batch_no}`);
       }
       if (updates.notes !== undefined && updates.notes !== existingBatch.notes) {
         changes.push(`टीप: ${updates.notes}`);
@@ -1845,7 +1936,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'PRODUCT_UPDATED',
-      title: `बॅच माहिती बदल: ${targetProd?.name || 'बॅच'} (#${existingBatch?.batch_no || id})`,
+      title: `बॅच माहिती बदल: ${targetProd?.name || 'बॅच'} (#${updates.batch_no || existingBatch?.batch_no || id})`,
       details: changes.length > 0 ? changes.join(' | ') : 'बॅच माहिती अद्ययावत केली',
       reference_id: id,
       reference_table: 'batches'
@@ -1854,12 +1945,55 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const deleteBatch = async (id: string) => {
     const targetBatch = batches.find(b => b.id === id);
-    const targetProd = products.find(p => p.id === targetBatch?.product_id);
+    let targetProd = products.find(p => p.id === targetBatch?.product_id);
+    if (!targetProd && targetBatch && supabase) {
+      try {
+        const { data: pDb } = await supabase.from('products').select('*').eq('id', targetBatch.product_id).maybeSingle();
+        if (pDb) targetProd = pDb as Product;
+      } catch (err) {
+        console.warn('Failed to load target product for deleteBatch:', err);
+      }
+    }
+
+    const qtyToDeduct = targetBatch ? Number(targetBatch.qty_remaining || 0) : 0;
+    let newProductStock: number | null = null;
+    if (qtyToDeduct > 0 && targetProd) {
+      newProductStock = Math.max(0, Number(((targetProd.stock_quantity || 0) - qtyToDeduct).toFixed(2)));
+    }
+
     setBatches(prev => prev.filter(b => b.id !== id));
+    if (newProductStock !== null && targetProd) {
+      const pId = targetProd.id;
+      setProducts(prev => prev.map(p => p.id === pId ? { ...p, stock_quantity: newProductStock! } : p));
+    }
+
     if (supabase) {
       try {
-        await supabase.from('batches').delete().eq('id', id);
+        let rpcSuccess = false;
+        try {
+          const { data: rpcRes, error: rpcErr } = await supabase.rpc('fn_delete_batch_with_stock_sync', {
+            p_batch_id: id
+          });
+          if (!rpcErr && rpcRes && rpcRes.success) {
+            rpcSuccess = true;
+          }
+        } catch (rpcEx) {
+          // Fallback to direct queries
+        }
+
+        if (!rpcSuccess) {
+          await supabase.from('batches').delete().eq('id', id);
+          if (newProductStock !== null && targetProd) {
+            await supabase.from('products').update({
+              stock_quantity: newProductStock,
+              updated_at: new Date().toISOString()
+            }).eq('id', targetProd.id);
+          }
+        }
+
         broadcastMutation('batches', 'delete');
+        broadcastMutation('products', 'update');
+        broadcastMutation('stock', 'adjust');
       } catch (e) {
         console.error('Supabase deleteBatch error:', e);
       }
@@ -1874,7 +2008,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       counter_name: admin.counter,
       action_type: 'PRODUCT_UPDATED',
       title: `बॅच हटवली: ${targetProd?.name || 'उत्पादन'} (#${targetBatch?.batch_no || id})`,
-      details: `हटवलेली बॅच: #${targetBatch?.batch_no} | शिल्लक साठा: ${targetBatch?.qty_remaining ?? 0} | मुदत समाप्ती: ${targetBatch?.expiry_date || 'N/A'}`,
+      details: `हटवलेली बॅच: #${targetBatch?.batch_no} | शिल्लक साठा: ${targetBatch?.qty_remaining ?? 0} | मुदत समाप्ती: ${targetBatch?.expiry_date || 'N/A'}${newProductStock !== null ? ` | नवीन एकूण साठा: ${newProductStock}` : ''}`,
       reference_id: id,
       reference_table: 'batches'
     });

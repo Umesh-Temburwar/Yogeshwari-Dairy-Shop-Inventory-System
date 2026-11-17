@@ -1159,6 +1159,15 @@ export const ProductList: React.FC<ProductListProps> = ({
             const displayName = getProductDisplayName(prod);
 
             const prodBatches = batches.filter(b => b.product_id === prod.id && b.qty_remaining > 0);
+            const validProdBatches = prodBatches
+              .filter(b => computeExpiryStatus(b.expiry_date).status !== 'EXPIRED')
+              .sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime());
+            const earliestActiveBatch = validProdBatches[0];
+            const activeBatchSellingPrice = (earliestActiveBatch && earliestActiveBatch.selling_price && earliestActiveBatch.selling_price > 0)
+              ? earliestActiveBatch.selling_price
+              : prod.selling_price;
+            const hasCustomBatchPrice = Boolean(earliestActiveBatch && earliestActiveBatch.selling_price && earliestActiveBatch.selling_price !== prod.selling_price);
+
             const expiredBatches = prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRED');
             const expiringTodayBatches = prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRING_TODAY');
             const expiringTomorrowBatches = prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRING_TOMORROW');
@@ -1281,8 +1290,13 @@ export const ProductList: React.FC<ProductListProps> = ({
                         {language === 'mr' ? 'विक्री भाव:' : language === 'hi' ? 'बिक्री भाव:' : 'Selling Rate:'}
                       </span>
                       <span className="text-xl font-black text-emerald-700 dark:text-emerald-400">
-                        ₹{prod.selling_price}
+                        ₹{activeBatchSellingPrice}
                       </span>
+                      {hasCustomBatchPrice && (
+                        <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold block leading-none">
+                          ({language === 'mr' ? 'बॅच दर' : 'बैच दर'})
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

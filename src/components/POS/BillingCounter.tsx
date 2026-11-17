@@ -69,6 +69,15 @@ const ProductCard = React.memo<ProductCardProps>(({
     ? validBatches.reduce((sum, b) => sum + b.qty_remaining, 0)
     : prod.stock_quantity;
 
+  const earliestBatch = useMemo(() => {
+    if (validBatches.length === 0) return null;
+    return [...validBatches].sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime())[0];
+  }, [validBatches]);
+
+  const effectiveSellingPrice = (earliestBatch && earliestBatch.selling_price && earliestBatch.selling_price > 0)
+    ? earliestBatch.selling_price
+    : prod.selling_price;
+
   const isOutOfStock = availableStock <= 0;
   const isLowStock = availableStock <= prod.min_stock_alert && !isOutOfStock;
   const hasExpiredOnly = prodBatches.length > 0 && validBatches.length === 0;
@@ -155,8 +164,13 @@ const ProductCard = React.memo<ProductCardProps>(({
             {language === 'mr' ? 'दर' : language === 'hi' ? 'भाव' : 'Rate'}
           </span>
           <span className="text-sm sm:text-base font-black text-emerald-700 dark:text-emerald-400 leading-tight">
-            ₹{prod.selling_price}
+            ₹{effectiveSellingPrice}
           </span>
+          {earliestBatch && earliestBatch.selling_price && earliestBatch.selling_price !== prod.selling_price && (
+            <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold block leading-none">
+              ({language === 'mr' ? 'बॅच दर' : 'बैच दर'})
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
@@ -452,6 +466,16 @@ export const BillingCounter: React.FC = () => {
     }
 
     const displayName = getProductDisplayName(product);
+
+    // Dynamic Batch Pricing: Use earliest non-expired batch selling price if defined
+    const earliestValidBatch = [...validBatches].sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime())[0];
+    const unitPriceToUse = (earliestValidBatch && earliestValidBatch.selling_price && earliestValidBatch.selling_price > 0)
+      ? earliestValidBatch.selling_price
+      : product.selling_price;
+    const purchaseCostToUse = (earliestValidBatch && earliestValidBatch.purchase_price && earliestValidBatch.purchase_price > 0)
+      ? earliestValidBatch.purchase_price
+      : product.purchase_price;
+
     setCart(prev => {
       const existing = prev.find(item => item.product_id === product.id);
       if (existing) {
@@ -467,9 +491,9 @@ export const BillingCounter: React.FC = () => {
           product_name: displayName,
           quantity: quantityToAdd,
           unit: product.unit,
-          unit_price: product.selling_price,
-          purchase_cost: product.purchase_price,
-          total_price: Number((quantityToAdd * product.selling_price).toFixed(2))
+          unit_price: unitPriceToUse,
+          purchase_cost: purchaseCostToUse,
+          total_price: Number((quantityToAdd * unitPriceToUse).toFixed(2))
         }];
       }
     });

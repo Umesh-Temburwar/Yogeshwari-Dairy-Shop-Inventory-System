@@ -25,6 +25,7 @@ export interface PDFReportOptions {
   title: string;
   subtitle?: string;
   periodText?: string;
+  filename?: string; // Optional clean download filename without overwriting the document title
   kpis?: KPIItem[];
   tables?: {
     heading?: string;
@@ -216,9 +217,10 @@ export const getReportHTMLMarkup = (options: PDFReportOptions): string => {
           color: #0f172a;
           background: #ffffff;
           font-size: 11px;
-          line-height: 1.45;
-          padding: 12px;
+          line-height: 1.5;
+          padding: 16px 18px;
           position: relative;
+          font-variant-numeric: tabular-nums;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
@@ -226,14 +228,14 @@ export const getReportHTMLMarkup = (options: PDFReportOptions): string => {
         /* Centered Watermark Logo - Fixed across all pages in Print & PDF */
         .watermark-container {
           position: fixed;
-          top: 50%;
+          top: 52%;
           left: 50%;
           transform: translate(-50%, -50%);
-          width: 360px;
-          height: 360px;
-          max-width: 65vw;
-          max-height: 65vh;
-          opacity: 0.08;
+          width: 340px;
+          height: 340px;
+          max-width: 62vw;
+          max-height: 62vh;
+          opacity: 0.055;
           pointer-events: none;
           z-index: 0;
           display: flex;
@@ -246,141 +248,251 @@ export const getReportHTMLMarkup = (options: PDFReportOptions): string => {
           width: 100%;
           height: 100%;
           object-fit: contain;
-          filter: grayscale(10%);
+          filter: grayscale(15%);
         }
 
         /* Report Main Content - Sits cleanly above the watermark */
         .report-content-body {
           position: relative;
           z-index: 1;
+          border: 1px solid #d1fae5;
+          border-radius: 14px;
+          overflow: hidden;
+          background: rgba(255, 255, 255, 0.94);
+          box-shadow: 0 2px 12px rgba(4, 120, 87, 0.06);
+        }
+
+        /* Top Executive Brand Bar */
+        .brand-accent-bar {
+          height: 6px;
+          background: linear-gradient(90deg, #064e3b 0%, #059669 55%, #10b981 100%);
+        }
+
+        .report-inner {
+          padding: 18px 20px 20px 20px;
         }
 
         /* Header */
         .report-header {
           border-bottom: 2px solid #059669;
-          padding-bottom: 12px;
-          margin-bottom: 14px;
+          padding-bottom: 14px;
+          margin-bottom: 16px;
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
+          gap: 14px;
           position: relative;
           z-index: 1;
         }
+        .brand-logo-wrap {
+          width: 58px;
+          height: 58px;
+          border-radius: 14px;
+          border: 2px solid #059669;
+          background: #ffffff;
+          padding: 3px;
+          box-shadow: 0 3px 10px rgba(5, 150, 105, 0.14);
+          flex-shrink: 0;
+        }
+        .brand-logo-wrap img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          border-radius: 10px;
+          display: block;
+        }
         .brand-title {
-          font-size: 20px;
+          font-size: 21px;
           font-weight: 800;
-          color: #047857;
-          letter-spacing: -0.3px;
+          color: #065f46;
+          letter-spacing: -0.35px;
+          line-height: 1.2;
         }
         .brand-subtitle {
-          font-size: 11px;
+          font-size: 10.5px;
           color: #475569;
           font-weight: 600;
           margin-top: 2px;
         }
+        .title-row {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 6px;
+          margin-top: 7px;
+        }
         .report-title-badge {
           display: inline-block;
-          background: #ecfdf5;
-          color: #065f46;
-          border: 1px solid #a7f3d0;
-          padding: 4px 10px;
-          border-radius: 6px;
-          font-size: 13px;
+          background: #065f46;
+          color: #ffffff;
+          padding: 4px 11px;
+          border-radius: 7px;
+          font-size: 11.5px;
           font-weight: 800;
-          margin-top: 6px;
+          letter-spacing: 0.1px;
+        }
+        .period-pill {
+          display: inline-block;
+          background: #ecfdf5;
+          color: #047857;
+          border: 1px solid #a7f3d0;
+          padding: 3px 9px;
+          border-radius: 7px;
+          font-size: 10px;
+          font-weight: 700;
         }
         .meta-box {
           text-align: right;
           font-size: 10px;
           color: #475569;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-right: 3px solid #059669;
+          border-radius: 10px;
+          padding: 8px 12px;
+          min-width: 195px;
+          flex-shrink: 0;
+        }
+        .meta-box .meta-row {
+          margin-bottom: 2px;
         }
         .meta-box strong {
           color: #0f172a;
+          font-weight: 700;
+        }
+        .meta-audit-pill {
+          display: inline-block;
+          margin-top: 4px;
+          padding: 2px 7px;
+          border-radius: 999px;
+          background: #ecfdf5;
+          border: 1px solid #a7f3d0;
+          font-size: 8.5px;
+          color: #047857;
+          font-weight: 800;
         }
 
         /* KPI Cards */
         .kpi-grid {
           display: grid;
-          grid-template-columns: repeat(${Math.min(kpis.length, 4)}, 1fr);
-          gap: 8px;
-          margin-bottom: 14px;
+          grid-template-columns: repeat(${Math.max(1, Math.min(kpis.length, 4))}, 1fr);
+          gap: 10px;
+          margin-bottom: 16px;
         }
         .kpi-card {
-          padding: 8px 12px;
-          border-radius: 8px;
+          padding: 10px 12px;
+          border-radius: 10px;
           border: 1px solid #e2e8f0;
-          background: rgba(248, 250, 252, 0.85);
+          border-left: 3.5px solid #64748b;
+          background: #f8fafc;
         }
         .kpi-card.emerald {
-          background: rgba(240, 253, 244, 0.85);
+          background: #f0fdf4;
           border-color: #bbf7d0;
+          border-left-color: #059669;
+        }
+        .kpi-card.teal {
+          background: #f0fdfa;
+          border-color: #99f6e4;
+          border-left-color: #0d9488;
         }
         .kpi-card.blue {
-          background: rgba(239, 246, 255, 0.85);
+          background: #eff6ff;
           border-color: #bfdbfe;
+          border-left-color: #2563eb;
         }
         .kpi-card.purple {
-          background: rgba(250, 245, 255, 0.85);
+          background: #faf5ff;
           border-color: #e9d5ff;
+          border-left-color: #7c3aed;
         }
         .kpi-card.rose {
-          background: rgba(255, 241, 242, 0.85);
+          background: #fff1f2;
           border-color: #fecdd3;
+          border-left-color: #e11d48;
         }
         .kpi-card.amber {
-          background: rgba(255, 251, 235, 0.85);
+          background: #fffbeb;
           border-color: #fde68a;
+          border-left-color: #d97706;
         }
         .kpi-label {
-          font-size: 9px;
+          font-size: 8.5px;
           font-weight: 700;
           text-transform: uppercase;
           color: #64748b;
-          letter-spacing: 0.3px;
+          letter-spacing: 0.4px;
         }
         .kpi-value {
-          font-size: 16px;
+          font-size: 14.5px;
           font-weight: 800;
           color: #0f172a;
-          margin-top: 2px;
+          margin-top: 3px;
+          line-height: 1.25;
+          word-break: break-word;
+        }
+        .kpi-card.emerald .kpi-value {
+          color: #065f46;
+          font-size: 16px;
         }
 
         /* Tables */
         .table-heading {
           font-size: 12px;
-          font-weight: 700;
-          color: #1e293b;
-          margin-bottom: 6px;
+          font-weight: 800;
+          color: #065f46;
+          margin-bottom: 8px;
+          padding-left: 8px;
+          border-left: 3px solid #10b981;
         }
         .report-table {
           width: 100%;
-          border-collapse: collapse;
-          font-size: 10px;
-          margin-bottom: 8px;
+          border-collapse: separate;
+          border-spacing: 0;
+          font-size: 10.5px;
+          margin-bottom: 10px;
+          border: 1px solid #cbd5e1;
+          border-radius: 10px;
+          overflow: hidden;
         }
         .report-table th {
-          background: rgba(241, 245, 249, 0.92);
-          color: #1e293b;
+          background: #065f46;
+          color: #ffffff;
           font-weight: 700;
-          padding: 6px 8px;
-          border: 1px solid #cbd5e1;
+          padding: 8px 10px;
+          border-bottom: 1px solid #047857;
+          border-right: 1px solid rgba(255, 255, 255, 0.14);
           text-transform: uppercase;
           font-size: 9px;
-          letter-spacing: 0.2px;
+          letter-spacing: 0.35px;
+        }
+        .report-table th:last-child {
+          border-right: none;
         }
         .report-table td {
-          padding: 5px 8px;
-          border: 1px solid #e2e8f0;
-          color: #334155;
+          padding: 7.5px 10px;
+          border-bottom: 1px solid #e2e8f0;
+          border-right: 1px solid #f1f5f9;
+          color: #1e293b;
+          font-weight: 500;
+        }
+        .report-table td:last-child {
+          border-right: none;
+        }
+        .report-table tbody tr:last-child td {
+          border-bottom: none;
         }
         .report-table tr.even-row {
-          background: rgba(248, 250, 252, 0.65);
+          background: #f8fafc;
         }
-        .report-table tr.summary-row {
-          background: rgba(226, 232, 240, 0.88);
+        .report-table tr.summary-row td {
+          background: #ecfdf5;
           font-weight: 800;
-          border-top: 2px solid #94a3b8;
-          color: #0f172a;
+          border-top: 2px solid #059669;
+          border-bottom: none;
+          color: #064e3b;
+          font-size: 11.5px;
+          padding: 9px 10px;
         }
         .text-left { text-align: left; }
         .text-center { text-align: center; }
@@ -388,34 +500,45 @@ export const getReportHTMLMarkup = (options: PDFReportOptions): string => {
 
         /* Notes & Footer */
         .report-notes {
-          background: rgba(248, 250, 252, 0.85);
-          border: 1px dashed #cbd5e1;
-          padding: 8px 12px;
-          border-radius: 6px;
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+          border-left: 3.5px solid #059669;
+          padding: 9px 12px;
+          border-radius: 8px;
           font-size: 10px;
-          color: #475569;
-          margin-top: 12px;
+          color: #1e293b;
+          margin-top: 14px;
           position: relative;
           z-index: 1;
         }
+        .report-notes strong {
+          color: #065f46;
+        }
         .report-footer {
           margin-top: 24px;
-          padding-top: 12px;
-          border-top: 1px solid #e2e8f0;
+          padding-top: 14px;
+          border-top: 1.5px solid #e2e8f0;
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
-          font-size: 9px;
+          gap: 16px;
+          font-size: 9.5px;
           color: #64748b;
           position: relative;
           z-index: 1;
         }
+        .footer-brand {
+          font-weight: 700;
+          color: #334155;
+          margin-bottom: 2px;
+        }
         .signature-box {
           text-align: center;
-          min-width: 150px;
-          border-top: 1px solid #94a3b8;
-          padding-top: 4px;
-          font-weight: 600;
+          min-width: 170px;
+          border-top: 1.5px solid #64748b;
+          padding-top: 5px;
+          font-weight: 700;
+          color: #334155;
         }
 
         @media print {
@@ -479,42 +602,49 @@ export const getReportHTMLMarkup = (options: PDFReportOptions): string => {
 
       <!-- Report Content Wrapper (Sits safely above watermark) -->
       <div class="report-content-body">
-        <!-- Header -->
-        <div class="report-header">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <img src="${YDO_LOGO_BASE64}" alt="Logo" style="width: 52px; height: 52px; border-radius: 12px; object-fit: contain; border: 1.5px solid #059669; background: #ffffff; padding: 2px;" />
-            <div>
-              <div class="brand-title">${strings.brandTitle}</div>
-              <div class="brand-subtitle">${subtitle || strings.defaultSubtitle}</div>
-              <div class="report-title-badge">${title}</div>
-              ${periodText ? `<div style="font-size: 10px; color: #047857; font-weight: 700; margin-top: 4px;">${strings.periodLabel} ${periodText}</div>` : ''}
+        <div class="brand-accent-bar"></div>
+        <div class="report-inner">
+          <!-- Header -->
+          <div class="report-header">
+            <div style="display: flex; align-items: flex-start; gap: 13px; flex: 1; min-width: 0;">
+              <div class="brand-logo-wrap">
+                <img src="${YDO_LOGO_BASE64}" alt="Logo" />
+              </div>
+              <div style="min-width: 0;">
+                <div class="brand-title">${strings.brandTitle}</div>
+                <div class="brand-subtitle">${subtitle || strings.defaultSubtitle}</div>
+                <div class="title-row">
+                  <span class="report-title-badge">${title}</span>
+                  ${periodText ? `<span class="period-pill">${periodText}</span>` : ''}
+                </div>
+              </div>
+            </div>
+            <div class="meta-box">
+              <div class="meta-row">${strings.dateLabel} <strong>${dateFormatted}</strong></div>
+              <div class="meta-row">${strings.timeLabel} <strong>${timeFormatted}</strong></div>
+              <div class="meta-row">${strings.authorLabel} <strong>${author || strings.defaultAuthor}</strong></div>
+              <div class="meta-audit-pill">${strings.auditBadge}</div>
             </div>
           </div>
-          <div class="meta-box">
-            <div>${strings.dateLabel} <strong>${dateFormatted}</strong></div>
-            <div>${strings.timeLabel} <strong>${timeFormatted}</strong></div>
-            <div>${strings.authorLabel} <strong>${author || strings.defaultAuthor}</strong></div>
-            <div style="margin-top: 4px; font-size: 9px; color: #059669; font-weight: 700;">${strings.auditBadge}</div>
-          </div>
-        </div>
 
-        <!-- KPIs -->
-        ${kpiHtml}
+          <!-- KPIs -->
+          ${kpiHtml}
 
-        <!-- Tables Content -->
-        ${tablesHtml}
+          <!-- Tables Content -->
+          ${tablesHtml}
 
-        <!-- Optional Notes -->
-        ${notes ? `<div class="report-notes"><strong>${strings.notesLabel}</strong> ${notes}</div>` : ''}
+          <!-- Optional Notes -->
+          ${notes ? `<div class="report-notes"><strong>${strings.notesLabel}</strong> ${notes}</div>` : ''}
 
-        <!-- Footer & Signatures -->
-        <div class="report-footer">
-          <div>
-            <div>${strings.footerNotice}</div>
-            <div>${strings.slogan}</div>
-          </div>
-          <div class="signature-box">
-            ${strings.signatory}
+          <!-- Footer & Signatures -->
+          <div class="report-footer">
+            <div>
+              <div class="footer-brand">${strings.footerNotice}</div>
+              <div>${strings.slogan}</div>
+            </div>
+            <div class="signature-box">
+              ${strings.signatory}
+            </div>
           </div>
         </div>
       </div>
@@ -554,10 +684,10 @@ export const generateAndDownloadPDF = async (
   options: PDFReportOptions, 
   customElement?: HTMLElement | null
 ): Promise<void> => {
-  const { title, orientation = 'portrait' } = options;
+  const { title, filename, orientation = 'portrait' } = options;
 
   // Build clean, safe filename ending strictly with .pdf
-  const safeTitle = (title || 'Dairy_Report')
+  const safeTitle = (filename || title || 'Dairy_Report')
     .trim()
     .replace(/[\/\\?%*:|"<>]/g, '_')
     .replace(/\s+/g, '_');
@@ -599,9 +729,9 @@ export const generateAndDownloadPDF = async (
       await new Promise(resolve => setTimeout(resolve, 200));
     }
 
-    // High resolution retina canvas rasterization (Scale 2 = 300 DPI print clarity)
+    // High resolution retina canvas rasterization (Scale 2.5 = ultra-sharp print clarity)
     const canvas = await html2canvas(elementToCapture, {
-      scale: 2,
+      scale: 2.5,
       useCORS: true,
       allowTaint: true,
       logging: false,
@@ -617,8 +747,10 @@ export const generateAndDownloadPDF = async (
 
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = pageWidth;
-    const pxPageHeight = Math.floor((canvas.width * pageHeight) / pageWidth);
+    const marginMm = 6;
+    const imgWidth = pageWidth - marginMm * 2;
+    const usablePageHeight = pageHeight - marginMm * 2;
+    const pxPageHeight = Math.floor((canvas.width * usablePageHeight) / imgWidth);
 
     let renderedHeight = 0;
     let pageIndex = 0;
@@ -641,19 +773,18 @@ export const generateAndDownloadPDF = async (
           0, renderedHeight, canvas.width, sliceHeight,
           0, 0, canvas.width, sliceHeight
         );
-        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
+        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.98);
         const sliceMmHeight = (sliceHeight * imgWidth) / canvas.width;
-        pdf.addImage(sliceData, 'JPEG', 0, 0, imgWidth, sliceMmHeight, undefined, 'FAST');
+        pdf.addImage(sliceData, 'JPEG', marginMm, marginMm, imgWidth, sliceMmHeight, undefined, 'FAST');
       }
       renderedHeight += sliceHeight;
       pageIndex++;
     }
 
-    // 1. Direct save as authentic .pdf binary via jsPDF
-    pdf.save(cleanPdfFilename);
-
-    // 2. Blob download fallback for Capacitor WebView & mobile browsers
+    // Save once as authentic .pdf binary (avoid double-downloading on desktop browsers)
     try {
+      pdf.save(cleanPdfFilename);
+    } catch {
       const pdfBlob = pdf.output('blob');
       const blobUrl = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
@@ -665,8 +796,6 @@ export const generateAndDownloadPDF = async (
         a.remove();
         URL.revokeObjectURL(blobUrl);
       }, 1000);
-    } catch {
-      // Ignored if handled
     }
   } catch (err) {
     console.error('PDF generation error, falling back to print dialog:', err);

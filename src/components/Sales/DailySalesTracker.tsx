@@ -243,21 +243,28 @@ export const DailySalesTracker: React.FC = () => {
   const getSaleInvoicePayload = (sale: Sale) => {
     const isMr = language === 'mr';
     const isHi = language === 'hi';
-    const { dateFormatted, timeFormatted, dateTimeFormatted } = formatSaleDateTime(sale.created_at, sale.sale_date);
+    const paymentLabel =
+      sale.payment_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
+      sale.payment_mode === 'Online_UPI' ? (isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI') :
+      sale.payment_mode === 'Udhar' ? (isMr ? 'उधारी' : isHi ? 'उधार' : 'Credit') :
+      sale.payment_mode === 'Split' ? (isMr ? 'विभागून' : isHi ? 'विभाजित' : 'Split') : sale.payment_mode;
+    const customerLabel = sale.customer_phone
+      ? `${sale.customer_name || (isMr ? 'काउंटर ग्राहक' : isHi ? 'काउंटर ग्राहक' : 'Counter Customer')} (${sale.customer_phone})`
+      : (sale.customer_name || (isMr ? 'काउंटर ग्राहक' : isHi ? 'काउंटर ग्राहक' : 'Counter Customer'));
 
     return {
-      title: `${isMr ? 'विक्री पावती' : isHi ? 'बिक्री रसीद' : 'Sales Invoice'} (${sale.invoice_no})`,
-      subtitle: `${isMr ? 'योगेश्वरी डेअरी उत्पादने' : isHi ? 'योगेश्वरी डेरी उत्पाद' : 'Yogeshwari Dairy Products'} | FSSAI: 21524012000341`,
-      periodText: `${isMr ? 'बिल क्र.' : isHi ? 'बिल क्र.' : 'Invoice No.'}: ${sale.invoice_no} | ${isMr ? 'बिल दिनांक व वेळ' : isHi ? 'बिल दिनांक व समय' : 'Bill Date & Time'}: ${dateTimeFormatted}`,
+      title: isMr ? 'अधिकृत विक्री पावती' : isHi ? 'अधिकृत बिक्री रसीद' : 'Cash Memo & Sales Invoice',
+      filename: `Bill_${sale.invoice_no}`,
+      subtitle: `${isMr ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : isHi ? 'ताज़ा दूध, पनीर, दही, शुद्ध देसी घी' : 'Fresh Milk, Dairy & Sweets'} | FSSAI: 21524012000341`,
+      periodText: `${isMr ? 'बिल क्र.' : isHi ? 'बिल क्र.' : 'Invoice No.'}: ${sale.invoice_no}`,
       createdAt: sale.created_at,
+      author: sale.created_by_name || undefined,
       language,
       kpis: [
-        { label: isMr ? 'एकूण निव्वळ रक्कम' : isHi ? 'कुल देय राशि' : 'Net Amount', value: `₹${sale.net_amount.toLocaleString('en-IN')}`, color: 'emerald' },
-        { label: isMr ? 'बिल दिनांक' : isHi ? 'बिल दिनांक' : 'Bill Date', value: dateFormatted, color: 'teal' },
-        { label: isMr ? 'बिल तयार वेळ' : isHi ? 'बिल समय' : 'Bill Time', value: timeFormatted || '—', color: 'purple' },
-        { label: isMr ? 'पेमेंट पद्धत' : isHi ? 'भुगतान माध्यम' : 'Payment Mode', value: sale.payment_mode, color: 'blue' },
-        { label: isMr ? 'काऊंटर' : isHi ? 'काउंटर' : 'Counter', value: sale.counter_name || (sale.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १'), color: 'teal' },
-        { label: isMr ? 'ग्राहक नाव' : isHi ? 'ग्राहक नाम' : 'Customer Name', value: sale.customer_name, color: 'blue' }
+        { label: isMr ? 'एकूण निव्वळ रक्कम' : isHi ? 'कुल देय राशि' : 'Net Payable', value: `₹${sale.net_amount.toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: isMr ? 'पेमेंट पद्धत' : isHi ? 'भुगतान माध्यम' : 'Payment Mode', value: paymentLabel, color: 'blue' },
+        { label: isMr ? 'ग्राहक नाव' : isHi ? 'ग्राहक नाम' : 'Customer', value: customerLabel, color: 'teal' },
+        { label: isMr ? 'काऊंटर' : isHi ? 'काउंटर' : 'Counter', value: sale.counter_name || (sale.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १'), color: 'purple' }
       ],
       table: {
         headers: isMr 
@@ -880,10 +887,7 @@ export const DailySalesTracker: React.FC = () => {
                 type="button"
                 onClick={() => {
                   if (selectedSaleForView) {
-                    downloadReportPDF({
-                      ...getSaleInvoicePayload(selectedSaleForView),
-                      title: `Bill_${selectedSaleForView.invoice_no}`
-                    });
+                    downloadReportPDF(getSaleInvoicePayload(selectedSaleForView));
                   }
                 }}
                 className="py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95"

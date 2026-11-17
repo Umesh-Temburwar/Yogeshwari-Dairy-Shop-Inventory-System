@@ -1,34 +1,34 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ydoLogo from '../../assets/YDO_logo.jpg';
+import nikhilAvatar from '../../assets/nikhil_avatar.png';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { 
-  ShieldCheck, 
   Lock, 
-  Unlock, 
-  AlertTriangle, 
   Eye, 
   EyeOff, 
   LogOut, 
-  KeyRound, 
   CheckCircle2, 
   Loader2, 
   Delete, 
-  Sparkles,
-  Fingerprint
+  AlertTriangle,
+  Fingerprint,
+  ShieldCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { isBiometricSupported, authenticateNileshFingerprint } from '../../lib/biometricAuth';
+import { authenticateNileshFingerprint } from '../../lib/biometricAuth';
 
 interface MasterSecurityModalProps {
   isOpen: boolean;
 }
 
+const PASSCODE_LENGTH = 8;
+
 export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen }) => {
   const { user, role, unlockSecurity, unlockSecurityWithBiometrics, signOut } = useAuth();
   const { language } = useLanguage();
 
-  // Strictly check if active profile is Nilesh Sakhare (Admin)
+  // Check if active profile is Nilesh Sakhare (Admin)
   const isNilesh = 
     role === 'Admin' ||
     user?.email?.toLowerCase().includes('nilu') ||
@@ -40,13 +40,129 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [attemptsLeft, setAttemptsLeft] = useState<number | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [isBiometricScanning, setIsBiometricScanning] = useState(false);
   const [lockoutRemainingSec, setLockoutRemainingSec] = useState<number>(0);
   const [isShake, setIsShake] = useState(false);
-  const hasAutoTriggeredRef = useRef(false);
 
-  const handleBiometricUnlock = async (isAuto = false) => {
-    if (lockoutRemainingSec > 0 || isVerifying || isBiometricScanning) return;
+  const isVerifyingRef = useRef(false);
+  const hasAutoTriggeredBioRef = useRef(false);
+
+  // Verification execution
+  const executeVerification = useCallback(async (pinToVerify: string) => {
+    if (isVerifyingRef.current || isVerifying || lockoutRemainingSec > 0 || isSuccess) return;
+    if (pinToVerify.length !== PASSCODE_LENGTH) return;
+
+    isVerifyingRef.current = true;
+    setIsVerifying(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await unlockSecurity(pinToVerify);
+      if (res.success) {
+        setIsSuccess(true);
+        try {
+          confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+        } catch {}
+        // Allow brief moment for the cashier to see the success state before unmount
+        setTimeout(() => {
+          setPasscode('');
+        }, 320);
+      } else {
+        setIsShake(true);
+        setTimeout(() => setIsShake(false), 450);
+
+        if (res.error === 'SECURITY_LOCKED' && res.lockedUntil) {
+          const secs = Math.ceil((res.lockedUntil - Date.now()) / 1000);
+          setLockoutRemainingSec(Math.max(1, secs));
+          setErrorMsg(
+            language === 'mr'
+              ? 'अनेक अयशस्वी प्रयत्न! सुरक्षा खातर ५ मिनिटांसाठी लॉक केले गेले आहे.'
+              : language === 'hi'
+              ? 'कई असफल प्रयास! सुरक्षा कारणों से ५ मिनट के लिए लॉक किया गया है।'
+              : 'Too many failed attempts. Locked for 5 minutes for security.'
+          );
+        } else {
+          setAttemptsLeft(res.attemptsLeft);
+          setErrorMsg(
+            language === 'mr'
+              ? `अवैध पासवर्ड! आणखी ${res.attemptsLeft} प्रयत्न शिल्लक आहेत.`
+              : language === 'hi'
+              ? `अमान्य पासवर्ड! केवल ${res.attemptsLeft} प्रयास शेष हैं।`
+              : `Incorrect passcode. ${res.attemptsLeft} attempts remaining.`
+          );
+        }
+        setPasscode('');
+      }
+    } catch {
+      setErrorMsg(
+        language === 'mr' 
+          ? 'पडताळणीमध्ये त्रुटी आली. कृपया पुन्हा प्रयत्न करा.' 
+          : language === 'hi' 
+          ? 'सत्यापन में त्रुटि आई। कृपया पुनः प्रयास करें।' 
+          : 'Verification error. Please try again.'
+      );
+      setPasscode('');
+    } finally {
+      setIsVerifying(false);
+      isVerifyingRef.current = false;
+    }
+  }, [unlockSecurity, language, lockoutRemainingSec, isVerifying, isSuccess]);
+
+  // Keypad Handlers
+  const handleDigitPress = useCallback((digit: string) => {
+    if (lockoutRemainingSec > 0 || isVerifying || isSuccess) return;
+    if (passcode.length < PASSCODE_LENGTH) {
+      const next = passcode + digit;
+      setPasscode(next);
+      setErrorMsg(null);
+      setAttemptsLeft(null);
+
+      // Automatic Trigger when exactly 8 digits are entered
+      if (next.length === PASSCODE_LENGTH) {
+        executeVerification(next);
+      }
+    }
+  }, [passcode, isVerifying, isSuccess, lockoutRemainingSec, executeVerification]);
+
+  const handleBackspace = useCallback(() => {
+    if (lockoutRemainingSec > 0 || isVerifying || isSuccess) return;
+    setPasscode((prev) => prev.slice(0, -1));
+    setErrorMsg(null);
+  }, [lockoutRemainingSec, isVerifying, isSuccess]);
+
+  const handleClear = useCallback(() => {
+    if (lockoutRemainingSec > 0 || isVerifying || isSuccess) return;
+    setPasscode('');
+    setErrorMsg(null);
+  }, [lockoutRemainingSec, isVerifying, isSuccess]);
+
+  // Hardware keyboard listener for Desktop PC / POS Terminals
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (lockoutRemainingSec > 0 || isVerifying || isSuccess) return;
+
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        handleDigitPress(e.key);
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        handleBackspace();
+      } else if (e.key === 'Escape' || e.key === 'Delete') {
+        e.preventDefault();
+        handleClear();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, lockoutRemainingSec, isVerifying, isSuccess, handleDigitPress, handleBackspace, handleClear]);
+
+  // Biometric Unlock for Nilesh Sakhare
+  const handleBiometricUnlock = useCallback(async (isAuto = false) => {
+    if (lockoutRemainingSec > 0 || isVerifying || isBiometricScanning || isSuccess) return;
     setIsBiometricScanning(true);
     if (!isAuto) setErrorMsg(null);
 
@@ -55,49 +171,62 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
       if (res.success) {
         const granted = await unlockSecurityWithBiometrics();
         if (granted) {
-          confetti({ particleCount: 70, spread: 80, origin: { y: 0.6 } });
+          setIsSuccess(true);
+          try {
+            confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+          } catch {}
           setPasscode('');
         } else {
-          setErrorMsg('सुरक्षा टोकन जारी करता आले नाही. कृपया पासवर्ड वापरा.');
+          setErrorMsg(
+            language === 'mr'
+              ? 'सुरक्षा टोकन जारी करता आले नाही. कृपया पासवर्ड वापरा.'
+              : language === 'hi'
+              ? 'सुरक्षा टोकन जारी नहीं हो सका। कृपया पासवर्ड का उपयोग करें।'
+              : 'Security token issuance failed. Please use passcode.'
+          );
         }
-      } else if (res.error) {
-        // Suppress error banner on initial automatic trigger if dismissed
-        if (!isAuto) {
-          setErrorMsg(res.error);
-          setIsShake(true);
-          setTimeout(() => setIsShake(false), 500);
-        }
+      } else if (res.error && !isAuto) {
+        setErrorMsg(res.error);
+        setIsShake(true);
+        setTimeout(() => setIsShake(false), 450);
       }
-    } catch (err: any) {
-      console.error('Biometric error:', err);
+    } catch {
       if (!isAuto) {
-        setErrorMsg('फिंगरप्रिंट स्कॅनमध्ये त्रुटी आली. कृपया पासवर्ड वापरा.');
+        setErrorMsg(
+          language === 'mr'
+            ? 'फिंगरप्रिंट स्कॅनमध्ये त्रुटी आली. कृपया पासवर्ड वापरा.'
+            : language === 'hi'
+            ? 'फिंगरप्रिंट स्कैन में त्रुटि। कृपया पासवर्ड का उपयोग करें।'
+            : 'Fingerprint scan error. Please use passcode.'
+        );
       }
     } finally {
       setIsBiometricScanning(false);
     }
-  };
+  }, [lockoutRemainingSec, isVerifying, isBiometricScanning, isSuccess, unlockSecurityWithBiometrics, language]);
 
-  // Direct Auto-Trigger of Mobile Fingerprint for Nilesh Sakhare
+  // Lifecycle & Biometric Auto-Trigger
   useEffect(() => {
     if (isOpen) {
       setPasscode('');
       setErrorMsg(null);
       setAttemptsLeft(null);
+      setIsSuccess(false);
 
-      if (isNilesh && !hasAutoTriggeredRef.current) {
-        hasAutoTriggeredRef.current = true;
+      if (isNilesh && !hasAutoTriggeredBioRef.current) {
+        hasAutoTriggeredBioRef.current = true;
         const timer = setTimeout(() => {
           handleBiometricUnlock(true);
-        }, 180);
+        }, 200);
         return () => clearTimeout(timer);
       }
     } else {
-      hasAutoTriggeredRef.current = false;
+      hasAutoTriggeredBioRef.current = false;
+      setIsSuccess(false);
     }
-  }, [isOpen, isNilesh]);
+  }, [isOpen, isNilesh, handleBiometricUnlock]);
 
-  // Lockout countdown timer
+  // Lockout Countdown Timer
   useEffect(() => {
     if (lockoutRemainingSec <= 0) return;
     const interval = setInterval(() => {
@@ -114,302 +243,274 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
 
   if (!isOpen) return null;
 
-  const handleDigitPress = (digit: string) => {
-    if (lockoutRemainingSec > 0 || isVerifying) return;
-    if (passcode.length < 12) {
-      setPasscode((prev) => prev + digit);
-      setErrorMsg(null);
-    }
-  };
-
-  const handleBackspace = () => {
-    if (lockoutRemainingSec > 0 || isVerifying) return;
-    setPasscode((prev) => prev.slice(0, -1));
-    setErrorMsg(null);
-  };
-
-  const handleClear = () => {
-    if (lockoutRemainingSec > 0 || isVerifying) return;
-    setPasscode('');
-    setErrorMsg(null);
-  };
-
-  const handleVerify = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!passcode.trim() || isVerifying || lockoutRemainingSec > 0) return;
-
-    setIsVerifying(true);
-    setErrorMsg(null);
-
-    try {
-      const res = await unlockSecurity(passcode.trim());
-      if (res.success) {
-        confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
-        setPasscode('');
-      } else {
-        setIsShake(true);
-        setTimeout(() => setIsShake(false), 500);
-
-        if (res.error === 'SECURITY_LOCKED' && res.lockedUntil) {
-          const secs = Math.ceil((res.lockedUntil - Date.now()) / 1000);
-          setLockoutRemainingSec(Math.max(1, secs));
-          setErrorMsg(
-            language === 'mr'
-              ? 'अनेक अयशस्वी प्रयत्न! सुरक्षा खातर ५ मिनिटांसाठी लॉक केले गेले आहे.'
-              : language === 'hi'
-              ? 'कई असफल प्रयास! सुरक्षा कारणों से ५ मिनट के लिए लॉक किया गया है।'
-              : 'Too many failed attempts! Locked for 5 minutes for security.'
-          );
-        } else {
-          setAttemptsLeft(res.attemptsLeft);
-          setErrorMsg(
-            language === 'mr'
-              ? `अवैध सुरक्षा पासवर्ड! आणखी ${res.attemptsLeft} प्रयत्न शिल्लक आहेत.`
-              : language === 'hi'
-              ? `अमान्य सुरक्षा पासवर्ड! केवल ${res.attemptsLeft} प्रयास शेष हैं।`
-              : `Invalid Master Passcode! ${res.attemptsLeft} attempts remaining.`
-          );
-        }
-        setPasscode('');
-      }
-    } catch {
-      setErrorMsg('Verification error. Please retry.');
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
   const formatLockoutTime = (totalSec: number) => {
     const mins = Math.floor(totalSec / 60);
     const secs = totalSec % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const userName = isNilesh ? 'Nilesh Sakhare' : 'Nikhil Sakhare';
+  const roleTitle = role === 'Owner'
+    ? (language === 'mr' ? 'मालक' : language === 'hi' ? 'मालिक' : 'Owner')
+    : (language === 'mr' ? 'ॲडमिन' : language === 'hi' ? 'एडमिन' : 'Admin');
+
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#05120D]/90 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 select-none overflow-y-auto">
+    <div 
+      className="fixed inset-0 z-[9999] bg-[#070D0B]/95 flex items-center justify-center p-3 sm:p-4 select-none overflow-y-auto"
+      style={{ touchAction: 'manipulation' }}
+    >
       <div 
-        className={`bg-white dark:bg-[#131F1B] border border-emerald-500/30 dark:border-emerald-500/20 rounded-3xl max-w-md w-full shadow-2xl p-5 sm:p-7 relative overflow-y-auto max-h-[95dvh] my-auto transition-transform ${
-          isShake ? 'animate-shake' : ''
-        }`}
+        className="relative w-full max-w-[380px] bg-[#101C18] border border-[#23352E] rounded-2xl p-5 sm:p-6 shadow-2xl flex flex-col justify-between my-auto"
       >
-        {/* Ambient Top Glow */}
-        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-48 bg-gradient-to-b from-emerald-500/25 to-teal-500/0 rounded-full blur-2xl pointer-events-none" />
-
-        {/* Header: Logo + Title */}
-        <div className="text-center relative z-10 space-y-2">
-          <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 bg-gradient-to-tr from-emerald-600 to-teal-400 shadow-xl flex items-center justify-center">
-            <div className="w-full h-full rounded-full bg-white p-0.5 overflow-hidden flex items-center justify-center">
-              <img 
-                src={ydoLogo} 
-                alt="Yogeshwari Dairy" 
-                className="w-full h-full object-cover rounded-full"
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  if (!target.src.endsWith('/YDO_logo.png')) {
-                    target.src = '/YDO_logo.png';
-                  }
-                }}
-              />
-            </div>
-            <div className="absolute -bottom-1 -right-1 bg-emerald-600 text-white p-1 rounded-full shadow-md border-2 border-white dark:border-[#131F1B]">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-          </div>
-
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-700/50 text-[11px] font-black text-emerald-800 dark:text-emerald-300 mb-1">
-              <Sparkles className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-              <span>
-                {role === 'Owner'
-                  ? (language === 'mr' ? '👑 मालक पडताळणी (Owner Mode)' : language === 'hi' ? '👑 मालिक सत्यापन (Owner Mode)' : '👑 Owner Verified Profile')
-                  : (language === 'mr' ? '🛡️ ॲडमिन पडताळणी (Admin Mode)' : language === 'hi' ? '🛡️ एडमिन सत्यापन (Admin Mode)' : '🛡️ Admin Verified Profile')
-                }
-              </span>
+        {/* Top Header: Shop Branding & Verified Profile */}
+        <div>
+          <div className="flex items-center justify-between pb-3.5 border-b border-[#1E2E28]">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-10 h-10 rounded-full bg-white p-0.5 border border-emerald-500/30 overflow-hidden shrink-0 shadow-xs">
+                <img 
+                  src={ydoLogo} 
+                  alt="Yogeshwari Dairy" 
+                  className="w-full h-full object-cover rounded-full"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.src.endsWith('/YDO_logo.png')) {
+                      target.src = '/YDO_logo.png';
+                    }
+                  }}
+                />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-white tracking-tight leading-tight truncate">
+                  Yogeshwari Dairy
+                </h2>
+                <p className="text-[11px] text-slate-400 dark:text-[#8FA69C] leading-none mt-0.5 truncate">
+                  {language === 'mr' ? 'मास्टर सुरक्षा लॉक' : language === 'hi' ? 'मास्टर सुरक्षा लॉक' : 'POS Security Gate'}
+                </p>
+              </div>
             </div>
 
-            <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-[#E7F0EC] tracking-tight">
-              {language === 'mr'
-                ? 'द्वितीय स्तर सुरक्षा पासवर्ड'
-                : language === 'hi'
-                ? 'द्वितीय स्तर सुरक्षा पासवर्ड'
-                : 'Two-Step Master Security Passcode'}
-            </h3>
-
-            <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-0.5 max-w-xs mx-auto">
-              {language === 'mr'
-                ? 'दुकान व खात्याच्या सुरक्षिततेसाठी एन्क्रिप्टेड मास्टर पासवर्ड प्रविष्ट करा.'
-                : language === 'hi'
-                ? 'दुकान व खातों की सुरक्षा के लिए एन्क्रिप्टेड मास्टर पासवर्ड दर्ज करें।'
-                : 'Enter your encrypted master passcode to access shop data & POS counter.'}
-            </p>
+            {/* Profile Badge */}
+            <div className="flex items-center gap-1.5 pl-2 shrink-0">
+              <div className="w-8 h-8 rounded-full border border-emerald-500/40 p-0.5 overflow-hidden bg-slate-800 shrink-0">
+                <img 
+                  src={nikhilAvatar} 
+                  alt={userName} 
+                  className="w-full h-full object-cover rounded-full"
+                />
+              </div>
+              <div className="text-right">
+                <span className="block text-[11px] font-bold text-emerald-400 leading-none">
+                  {roleTitle}
+                </span>
+                <span className="block text-[10px] text-slate-400 leading-none mt-0.5">
+                  Verified
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Passcode Form */}
-        <form onSubmit={handleVerify} className="mt-5 space-y-4 relative z-10">
-          
-          {/* Direct Nilesh Fingerprint Status & Quick Re-scan Pill */}
-          {isNilesh && (
-            <div className="flex items-center justify-center pt-0.5 pb-1">
-              <button
-                type="button"
-                disabled={lockoutRemainingSec > 0 || isVerifying || isBiometricScanning}
-                onClick={() => handleBiometricUnlock(false)}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-2xs border ${
-                  isBiometricScanning
-                    ? 'bg-blue-100 text-blue-800 border-blue-400 dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-700 animate-pulse'
-                    : 'bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700/60 text-blue-700 dark:text-blue-300 active:scale-95'
-                }`}
-              >
-                <Fingerprint className={`w-3.5 h-3.5 ${isBiometricScanning ? 'animate-spin text-blue-600 dark:text-blue-400' : 'text-blue-600 dark:text-blue-400 animate-pulse'}`} />
+        {/* Middle Section: Status Banner & Passcode Cells */}
+        <div className="py-4 space-y-3.5">
+          {/* Dynamic Authentication State Display */}
+          <div className="text-center min-h-[22px] flex items-center justify-center">
+            {isVerifying ? (
+              <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-400">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
                 <span>
-                  {isBiometricScanning
-                    ? (language === 'mr' ? 'फिंगरप्रिंट सेन्सर सक्रिय...' : language === 'hi' ? 'फिंगरप्रिंट सेंसर सक्रिय...' : 'Scanning Fingerprint...')
-                    : (language === 'mr' ? '📲 पुन्हा फिंगरप्रिंट स्कॅन करा' : language === 'hi' ? '📲 फिर से फिंगरप्रिंट स्कैन करें' : '📲 Scan Fingerprint Again')}
+                  {language === 'mr' ? 'पासवर्ड पडताळणी सुरू आहे...' : language === 'hi' ? 'सत्यापन हो रहा है...' : 'Verifying passcode...'}
                 </span>
-              </button>
-            </div>
-          )}
+              </div>
+            ) : isSuccess ? (
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>
+                  {language === 'mr' ? 'प्रवेश मंजूर • दुकान अनलॉक झाले' : language === 'hi' ? 'प्रवेश स्वीकृत • दुकान अनलॉक हुआ' : 'Access Granted • Unlocked'}
+                </span>
+              </div>
+            ) : errorMsg ? (
+              <div className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-400 leading-tight px-1">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            ) : lockoutRemainingSec > 0 ? (
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400">
+                <Lock className="w-3.5 h-3.5 text-amber-400" />
+                <span>
+                  {language === 'mr' ? 'सुरक्षा लॉक सक्रिय:' : language === 'hi' ? 'सुरक्षा लॉक सक्रिय:' : 'Cooldown Active:'} {formatLockoutTime(lockoutRemainingSec)}
+                </span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400">
+                <Lock className="w-3.5 h-3.5 text-emerald-500/80" />
+                <span>
+                  {language === 'mr' 
+                    ? '८-अंकी मास्टर पासवर्ड टाका' 
+                    : language === 'hi' 
+                    ? '८-अंकीय मास्टर पासवर्ड दर्ज करें' 
+                    : 'Enter your 8-digit master passcode'}
+                </span>
+              </div>
+            )}
+          </div>
 
-          {/* Input field with dots and toggle */}
-          <div className="relative">
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-600 dark:text-emerald-400">
-              <KeyRound className="w-4 h-4" />
-            </div>
+          {/* 8-Digit Passcode Cells (4 + 4 layout) — Pure visual display, NO mobile keyboard */}
+          <div 
+            className={`flex items-center justify-center gap-1.5 sm:gap-2 ${isShake ? 'animate-subtle-shake' : ''}`}
+            aria-label="Passcode digits display"
+            role="group"
+          >
+            {[0, 1, 2, 3, 4, 5, 6, 7].map((idx) => {
+              const isFilled = idx < passcode.length;
+              const isCurrent = idx === passcode.length && !isVerifying && !isSuccess && lockoutRemainingSec <= 0;
+              const digitChar = passcode[idx] || '';
 
-            <input
-              type={showPasscode ? 'text' : 'password'}
-              autoFocus={!isNilesh}
-              disabled={lockoutRemainingSec > 0 || isVerifying}
-              value={passcode}
-              onChange={(e) => {
-                setPasscode(e.target.value);
-                setErrorMsg(null);
-              }}
-              placeholder={
-                isNilesh
-                  ? (language === 'mr' ? 'किंवा पासवर्ड टाइप करा' : language === 'hi' ? 'या पासवर्ड दर्ज करें' : 'or enter 8-digit passcode')
-                  : (language === 'mr' ? 'मास्टर पासवर्ड टाइप करा' : language === 'hi' ? 'मास्टर पासवर्ड दर्ज करें' : 'Enter 8-digit master passcode')
-              }
-              className="w-full pl-10 pr-11 py-3 bg-slate-50 dark:bg-[#1A2A25] border border-slate-300 dark:border-[#24352F] rounded-2xl text-slate-900 dark:text-white text-center font-mono font-black text-lg tracking-[0.25em] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:opacity-50 transition-all shadow-inner"
-            />
+              return (
+                <React.Fragment key={idx}>
+                  {idx === 4 && (
+                    <span className="text-slate-600 font-bold px-0.5 select-none text-xs">
+                      •
+                    </span>
+                  )}
+                  <div
+                    className={`w-8 h-10 sm:w-9 sm:h-11 rounded-xl flex items-center justify-center transition-all duration-150 select-none ${
+                      isSuccess
+                        ? 'border border-emerald-400 bg-emerald-500/20 text-emerald-300'
+                        : errorMsg
+                        ? 'border border-rose-500/60 bg-rose-950/25 text-rose-300'
+                        : isCurrent
+                        ? 'border border-emerald-500 bg-emerald-950/40 ring-1 ring-emerald-500/40'
+                        : isFilled
+                        ? 'border border-emerald-600/60 bg-[#14231E]'
+                        : 'border border-[#23352E] bg-[#0B1411]'
+                    }`}
+                  >
+                    {isFilled ? (
+                      showPasscode ? (
+                        <span className="text-white font-mono font-bold text-base sm:text-lg">
+                          {digitChar}
+                        </span>
+                      ) : (
+                        <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-400 shadow-xs" />
+                      )
+                    ) : isCurrent ? (
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80 animate-pulse" />
+                    ) : (
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-700/60" />
+                    )}
+                  </div>
+                </React.Fragment>
+              );
+            })}
+          </div>
 
+          {/* Quick Visibility & Biometric Options */}
+          <div className="flex items-center justify-between px-1 pt-0.5 text-xs">
             <button
               type="button"
               onClick={() => setShowPasscode(!showPasscode)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white p-1"
+              className="inline-flex items-center gap-1.5 text-slate-400 hover:text-slate-200 transition-colors py-1 cursor-pointer"
               aria-label={showPasscode ? 'Hide passcode' : 'Show passcode'}
             >
-              {showPasscode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-
-          {/* Error / Lockout Banner */}
-          {errorMsg && (
-            <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2 animate-fadeIn">
-              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
-              <span className="leading-tight">{errorMsg}</span>
-            </div>
-          )}
-
-          {/* Lockout countdown timer display */}
-          {lockoutRemainingSec > 0 && (
-            <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 text-center space-y-1">
-              <span className="text-xs font-bold text-amber-900 dark:text-amber-300 block">
-                {language === 'mr' ? 'सुरक्षा लॉक सक्रिय (Cooldown)' : language === 'hi' ? 'सुरक्षा लॉक सक्रिय' : 'Security Lock Active'}
-              </span>
-              <span className="text-xl font-black font-mono text-amber-700 dark:text-amber-400 block">
-                {formatLockoutTime(lockoutRemainingSec)}
-              </span>
-            </div>
-          )}
-
-          {/* On-Screen Touch Numeric Keypad (Ideal for POS Touch Counter & Tablet) */}
-          <div className="grid grid-cols-3 gap-2 pt-1">
-            {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
-              <button
-                key={digit}
-                type="button"
-                disabled={lockoutRemainingSec > 0 || isVerifying}
-                onClick={() => handleDigitPress(digit)}
-                className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] font-black text-base transition-all active:scale-95 disabled:opacity-40 border border-slate-200/60 dark:border-[#24352F] shadow-2xs"
-              >
-                {digit}
-              </button>
-            ))}
-            <button
-              type="button"
-              disabled={lockoutRemainingSec > 0 || isVerifying || passcode.length === 0}
-              onClick={handleClear}
-              className="py-2.5 rounded-xl bg-slate-100 hover:bg-rose-100 dark:bg-[#1A2A25] dark:hover:bg-rose-950/50 text-slate-500 hover:text-rose-600 dark:text-[#8FA69C] dark:hover:text-rose-400 font-bold text-xs transition-all active:scale-95 disabled:opacity-40 border border-slate-200/60 dark:border-[#24352F]"
-            >
-              {language === 'mr' ? 'साफ' : language === 'hi' ? 'साफ' : 'Clear'}
-            </button>
-            <button
-              type="button"
-              disabled={lockoutRemainingSec > 0 || isVerifying}
-              onClick={() => handleDigitPress('0')}
-              className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] font-black text-base transition-all active:scale-95 disabled:opacity-40 border border-slate-200/60 dark:border-[#24352F] shadow-2xs"
-            >
-              0
-            </button>
-            <button
-              type="button"
-              disabled={lockoutRemainingSec > 0 || isVerifying || passcode.length === 0}
-              onClick={handleBackspace}
-              className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-700 dark:text-[#E7F0EC] font-bold text-sm transition-all active:scale-95 disabled:opacity-40 border border-slate-200/60 dark:border-[#24352F] flex items-center justify-center"
-              aria-label="Backspace"
-            >
-              <Delete className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Action Buttons: Unlock & Sign Out */}
-          <div className="pt-2 space-y-2">
-            <button
-              type="submit"
-              disabled={!passcode.trim() || isVerifying || lockoutRemainingSec > 0}
-              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-300 dark:disabled:from-slate-700 dark:disabled:to-slate-700 text-white font-black text-sm shadow-lg shadow-emerald-600/20 active:scale-98 transition-all flex items-center justify-center gap-2"
-            >
-              {isVerifying ? (
+              {showPasscode ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>
-                    {language === 'mr' ? 'पडताळणी सुरू आहे...' : language === 'hi' ? 'सत्यापन हो रहा है...' : 'Verifying Encrypted Passcode...'}
-                  </span>
+                  <EyeOff className="w-3.5 h-3.5" />
+                  <span className="text-[11px]">{language === 'mr' ? 'लपवा' : language === 'hi' ? 'छिपाएं' : 'Hide'}</span>
                 </>
               ) : (
                 <>
-                  <Unlock className="w-4 h-4" />
-                  <span>
-                    {language === 'mr' ? 'सुरक्षा अनलॉक करा' : language === 'hi' ? 'सुरक्षा अनलॉक करें' : 'Unlock Counter'}
-                  </span>
+                  <Eye className="w-3.5 h-3.5" />
+                  <span className="text-[11px]">{language === 'mr' ? 'दाखवा' : language === 'hi' ? 'दिखाएं' : 'Show'}</span>
                 </>
               )}
             </button>
 
+            {isNilesh && (
+              <button
+                type="button"
+                disabled={lockoutRemainingSec > 0 || isVerifying || isBiometricScanning || isSuccess}
+                onClick={() => handleBiometricUnlock(false)}
+                className="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 disabled:opacity-40 transition-colors py-1 cursor-pointer"
+              >
+                <Fingerprint className={`w-3.5 h-3.5 ${isBiometricScanning ? 'animate-spin' : ''}`} />
+                <span className="text-[11px] font-medium">
+                  {isBiometricScanning
+                    ? (language === 'mr' ? 'स्कॅनिंग...' : 'Scanning...')
+                    : (language === 'mr' ? 'फिंगरप्रिंट वापरा' : language === 'hi' ? 'फिंगरप्रिंट उपयोग करें' : 'Fingerprint')}
+                </span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom Section: Custom 3-Column Numeric Keypad */}
+        <div className="pt-1 space-y-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
+              <button
+                key={digit}
+                type="button"
+                disabled={lockoutRemainingSec > 0 || isVerifying || isSuccess}
+                onClick={() => handleDigitPress(digit)}
+                className="h-12 sm:h-13 rounded-xl bg-[#15231F] hover:bg-[#1B2D27] active:bg-[#223831] active:scale-[0.98] text-white font-mono font-semibold text-lg sm:text-xl border border-[#243730] transition-all select-none disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center shadow-2xs cursor-pointer"
+                aria-label={`Digit ${digit}`}
+              >
+                {digit}
+              </button>
+            ))}
+
+            {/* Clear Button */}
+            <button
+              type="button"
+              disabled={lockoutRemainingSec > 0 || isVerifying || isSuccess || passcode.length === 0}
+              onClick={handleClear}
+              className="h-12 sm:h-13 rounded-xl bg-[#15231F] hover:bg-rose-950/40 active:bg-rose-900/50 active:scale-[0.98] text-slate-400 hover:text-rose-400 font-semibold text-xs transition-all select-none disabled:opacity-30 disabled:pointer-events-none border border-[#243730] flex items-center justify-center uppercase tracking-wider cursor-pointer"
+              aria-label="Clear passcode"
+            >
+              {language === 'mr' ? 'साफ' : language === 'hi' ? 'साफ' : 'Clear'}
+            </button>
+
+            {/* Digit 0 */}
+            <button
+              type="button"
+              disabled={lockoutRemainingSec > 0 || isVerifying || isSuccess}
+              onClick={() => handleDigitPress('0')}
+              className="h-12 sm:h-13 rounded-xl bg-[#15231F] hover:bg-[#1B2D27] active:bg-[#223831] active:scale-[0.98] text-white font-mono font-semibold text-lg sm:text-xl border border-[#243730] transition-all select-none disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center shadow-2xs cursor-pointer"
+              aria-label="Digit 0"
+            >
+              0
+            </button>
+
+            {/* Backspace Button */}
+            <button
+              type="button"
+              disabled={lockoutRemainingSec > 0 || isVerifying || isSuccess || passcode.length === 0}
+              onClick={handleBackspace}
+              className="h-12 sm:h-13 rounded-xl bg-[#15231F] hover:bg-[#1B2D27] active:bg-[#223831] active:scale-[0.98] text-slate-400 hover:text-white transition-all select-none disabled:opacity-30 disabled:pointer-events-none border border-[#243730] flex items-center justify-center cursor-pointer"
+              aria-label="Backspace"
+            >
+              <Delete className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Footer: Sign Out Link & Cryptographic Notice */}
+          <div className="pt-2 border-t border-[#1E2E28] flex items-center justify-between text-xs">
             <button
               type="button"
               onClick={() => signOut()}
-              className="w-full py-2.5 px-3 rounded-xl bg-transparent hover:bg-slate-100 dark:hover:bg-[#1A2A25] text-slate-500 hover:text-rose-600 dark:text-[#8FA69C] dark:hover:text-rose-400 font-bold text-xs transition flex items-center justify-center gap-1.5"
+              className="inline-flex items-center gap-1.5 text-slate-400 hover:text-rose-400 transition-colors py-1 cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>
-                {language === 'mr' ? 'बाहेर पडा (Sign Out)' : language === 'hi' ? 'साइन आउट करें' : 'Sign Out'}
-              </span>
+              <span>{language === 'mr' ? 'बाहेर पडा' : language === 'hi' ? 'साइन आउट' : 'Sign Out'}</span>
             </button>
-          </div>
-        </form>
 
-        {/* Cryptographic Encryption Footer */}
-        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-[#24352F] text-center">
-          <p className="text-[10px] text-slate-400 dark:text-[#8FA69C] font-mono flex items-center justify-center gap-1">
-            <Lock className="w-3 h-3 text-emerald-500" />
-            <span>SHA-256 Salted Cryptographic Zero-Knowledge Hash</span>
-          </p>
+            <span className="text-[10px] text-slate-500 font-mono inline-flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3 text-emerald-500/70" />
+              <span>SHA-256</span>
+            </span>
+          </div>
         </div>
       </div>
     </div>
   );
 };
-

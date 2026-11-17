@@ -12,9 +12,6 @@ import {
   ArrowRight,
   Sparkles
 } from 'lucide-react';
-import { AnimatedList } from '../animations/AnimatedList';
-import { AnimatedNumber } from '../animations/AnimatedNumber';
-
 
 export const MetricsOverview: React.FC = () => {
   const { metrics, setActiveView, timeFilter } = useStore();
@@ -116,18 +113,14 @@ export const MetricsOverview: React.FC = () => {
   ];
 
   return (
-    <AnimatedList
-      className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"
-      staggerMs={40}
-      maxItems={8}
-    >
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
       {cards.map((card, idx) => {
         const Icon = card.icon;
         return (
           <div
             key={idx}
             onClick={card.action}
-            className={`p-5 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] shadow-xs hover:shadow-md transition-all duration-150 flex flex-col justify-between h-full cursor-pointer group hover-lift press-scale ${
+            className={`p-5 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] shadow-xs hover:shadow-md transition-all duration-150 flex flex-col justify-between h-full cursor-pointer group ${
               card.isProfit ? 'ring-1 ring-amber-500/30 dark:ring-amber-400/20 shadow-amber-500/5' : ''
             }`}
           >
@@ -136,19 +129,14 @@ export const MetricsOverview: React.FC = () => {
               <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] line-clamp-2 min-w-0 flex-1 leading-snug">
                 {card.title}
               </span>
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${card.iconBoxClass} group-hover:scale-105 transition-transform duration-150`}>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${card.iconBoxClass} group-hover:scale-105 transition-transform`}>
                 <Icon className="w-5 h-5" />
               </div>
             </div>
 
-            {/* Big Value: AnimatedNumber for smooth transitions */}
-            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#E7F0EC] tracking-tight my-1">
-              <AnimatedNumber
-                value={typeof card.numericValue === 'number' ? card.numericValue : 0}
-                prefix={card.prefix ?? ''}
-                suffix={card.suffix ?? ''}
-                duration={700}
-              />
+            {/* Big Value: with tabular-nums */}
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#E7F0EC] tracking-tight tabular-nums my-1">
+              {card.prefix || ''}{typeof card.numericValue === 'number' ? card.numericValue.toLocaleString('en-IN') : card.numericValue}{card.suffix || ''}
             </div>
 
             {/* Helper Text */}
@@ -158,14 +146,14 @@ export const MetricsOverview: React.FC = () => {
 
             {/* Footer "View Details" link */}
             <div className="mt-auto pt-3 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between text-xs">
-              <span className="text-slate-400 dark:text-[#8FA69C] font-medium group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-150">
+              <span className="text-slate-400 dark:text-[#8FA69C] font-medium group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                 {t('viewDetails')}
               </span>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-400 dark:text-[#8FA69C] group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:translate-x-1 transition-all duration-150" />
+              <ArrowRight className="w-3.5 h-3.5 text-slate-400 dark:text-[#8FA69C] group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
             </div>
           </div>
         );
       })}
-    </AnimatedList>
+    </div>
   );
 };

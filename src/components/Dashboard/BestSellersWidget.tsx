@@ -2,7 +2,6 @@ import React from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Trophy, ArrowRight } from 'lucide-react';
-import { AnimatedList } from '../animations/AnimatedList';
 
 export const BestSellersWidget: React.FC = () => {
   const { filteredSales, setActiveView } = useStore();
@@ -60,54 +59,52 @@ export const BestSellersWidget: React.FC = () => {
       </div>
 
       {/* Scrollable Body (max-h-80) */}
-      <div className="my-4 max-h-80 overflow-y-auto pr-1">
+      <div className="my-4 space-y-2.5 max-h-80 overflow-y-auto pr-1">
         {topProducts.length > 0 ? (
-          <AnimatedList className="space-y-2.5" staggerMs={30} maxItems={5}>
-            {topProducts.map((item, index) => {
-              const percentage = Math.round((item.totalRevenue / maxRevenue) * 100);
-              return (
-                <div 
-                  key={index} 
-                  className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-[#1A2A25] hover:bg-slate-100 dark:hover:bg-[#1F332D] border border-slate-200/60 dark:border-[#24352F] hover:border-emerald-300 dark:hover:border-emerald-600/40 transition-colors space-y-2"
-                >
-                  <div className="flex items-center justify-between text-xs gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className={`w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] shrink-0 ${
-                        index === 0 
-                          ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-300 dark:ring-amber-400/50 shadow-xs' : 
-                        index === 1 
-                          ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 ring-1 ring-slate-300 dark:ring-slate-500' :
-                        index === 2 
-                          ? 'bg-amber-100 dark:bg-amber-900/70 text-amber-900 dark:text-amber-200 ring-1 ring-amber-300 dark:ring-amber-700' 
-                          : 'bg-slate-100 dark:bg-[#283C35] text-slate-600 dark:text-[#E7F0EC] ring-1 ring-slate-200 dark:ring-[#364e45]'
-                      }`}>
-                        #{index + 1}
-                      </span>
-                      <span className="font-bold text-slate-800 dark:text-[#E7F0EC] truncate">
-                        {item.name}
-                      </span>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className="font-extrabold text-slate-900 dark:text-white tabular-nums">
-                        ₹{item.totalRevenue.toLocaleString('en-IN')}
-                      </span>
-                      <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] ml-1.5 tabular-nums">
-                        ({item.quantity.toFixed(1)} {item.unit})
-                      </span>
-                    </div>
+          topProducts.map((item, index) => {
+            const percentage = Math.round((item.totalRevenue / maxRevenue) * 100);
+            return (
+              <div 
+                key={index} 
+                className="p-2.5 rounded-xl bg-slate-50/70 dark:bg-[#1A2A25] hover:bg-slate-100 dark:hover:bg-[#1F332D] border border-slate-200/60 dark:border-[#24352F] hover:border-emerald-300 dark:hover:border-emerald-600/40 transition-colors space-y-2"
+              >
+                <div className="flex items-center justify-between text-xs gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] shrink-0 ${
+                      index === 0 
+                        ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-300 dark:ring-amber-400/50 shadow-xs' : 
+                      index === 1 
+                        ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 ring-1 ring-slate-300 dark:ring-slate-500' :
+                      index === 2 
+                        ? 'bg-amber-100 dark:bg-amber-900/70 text-amber-900 dark:text-amber-200 ring-1 ring-amber-300 dark:ring-amber-700' 
+                        : 'bg-slate-100 dark:bg-[#283C35] text-slate-600 dark:text-[#E7F0EC] ring-1 ring-slate-200 dark:ring-[#364e45]'
+                    }`}>
+                      #{index + 1}
+                    </span>
+                    <span className="font-bold text-slate-800 dark:text-[#E7F0EC] truncate">
+                      {item.name}
+                    </span>
                   </div>
-
-                  {/* Progress bar with visible dark track */}
-                  <div className="h-2 w-full bg-slate-200 dark:bg-[#283C35] rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 dark:from-emerald-400 dark:to-teal-300 rounded-full transition-all duration-500 shadow-xs"
-                      style={{ width: `${Math.max(percentage, 4)}%` }}
-                    />
+                  <div className="text-right shrink-0">
+                    <span className="font-extrabold text-slate-900 dark:text-white tabular-nums">
+                      ₹{item.totalRevenue.toLocaleString('en-IN')}
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] ml-1.5 tabular-nums">
+                      ({item.quantity.toFixed(1)} {item.unit})
+                    </span>
                   </div>
                 </div>
-              );
-            })}
-          </AnimatedList>
+
+                {/* Progress bar with visible dark track */}
+                <div className="h-2 w-full bg-slate-200 dark:bg-[#283C35] rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 dark:from-emerald-400 dark:to-teal-300 rounded-full transition-all duration-500 shadow-xs"
+                    style={{ width: `${Math.max(percentage, 4)}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })
         ) : (
           <div className="text-center py-10 text-slate-400 dark:text-[#8FA69C] text-xs">
             {language === 'mr' ? 'या कालावधीत विक्री सापडली नाही' : language === 'hi' ? 'चुनी गई अवधि में कोई बिक्री नहीं मिली' : 'No sales recorded in this period'}

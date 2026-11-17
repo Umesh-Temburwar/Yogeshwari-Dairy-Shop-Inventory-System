@@ -13,12 +13,10 @@ import {
   ExternalLink,
   ShieldCheck,
   FileCode,
-  Smartphone,
-  Sparkles
+  Smartphone
 } from 'lucide-react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { isMobileDevice, requestMotionPermission } from '../../hooks/useShakeDetector';
-import { useMotionTier } from '../../animations/useMotionTier';
 
 interface SupabaseConfigModalProps {
   isOpen: boolean;
@@ -27,7 +25,6 @@ interface SupabaseConfigModalProps {
 
 export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({ isOpen, onClose }) => {
   const { isSupabaseConnected, syncWithSupabase, resetToSampleData, triggerGlobalBillingScanner } = useStore();
-  const { tier, setSetting: setMotionSetting } = useMotionTier();
 
   const currentConfig = getSupabaseConfig();
   const [url, setUrl] = useState(currentConfig.url);
@@ -360,47 +357,6 @@ CREATE TABLE IF NOT EXISTS expenses (
           <p className="text-[10px] text-slate-400 dark:text-[#8FA69C] leading-normal">
             💡 <strong>वापरण्याची पद्धत:</strong> बिलिंग, इन्व्हेंटरी, रिपोर्ट्स किंवा डॅशबोर्डवर असताना फोन १ वेळा मनगटातून सहज हलवा. थेट बिलिंग काउंटर उघडून कॅमेरा स्कॅनर सुरू होईल.
           </p>
-        </div>
-
-        {/* UI Animation & Motion System Control */}
-        <div className="bg-slate-50 dark:bg-[#1A2A25] p-3.5 rounded-2xl border border-slate-200 dark:border-[#24352F] space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC]">
-                  UI Animations & Transitions (मोशन सिस्टीम)
-                </h4>
-                <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                  पृष्ठ बदल, कार्ड्स आणि संख्यांच्या ट्रान्झिशनची गती निवडा
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-1.5 pt-1">
-            {[
-              { id: 'full', label: 'पूर्ण (Full 60fps)', desc: 'Smooth Transitions' },
-              { id: 'reduced', label: 'कमी (Reduced)', desc: 'Fast Fade Only' },
-              { id: 'none', label: 'बंद (Instant)', desc: 'Zero Animation' }
-            ].map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setMotionSetting(opt.id as any)}
-                className={`p-2 rounded-xl text-center border transition-all cursor-pointer ${
-                  tier === opt.id
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                    : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#8FA69C] hover:border-emerald-400'
-                }`}
-              >
-                <div className="text-xs font-bold leading-tight">{opt.label}</div>
-                <div className="text-[9px] opacity-75 mt-0.5">{opt.desc}</div>
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Demo Data Reset */}

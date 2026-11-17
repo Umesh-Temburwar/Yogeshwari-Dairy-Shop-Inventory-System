@@ -82,7 +82,7 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   return (
     <nav 
       aria-label="Mobile Navigation"
-      className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/98 dark:bg-[#0F1A17]/98 border-t border-slate-200/90 dark:border-[#24352F] shadow-[0_-4px_24px_rgba(0,0,0,0.08)] pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)] pt-1.5 transition-all duration-200 ${
+      className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 dark:bg-[#0F1A17]/95 backdrop-blur-xl border-t border-slate-200/90 dark:border-[#24352F] shadow-[0_-4px_24px_rgba(0,0,0,0.08)] pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)] pt-1.5 transition-all duration-200 ${
         isMobileSidebarOpen ? 'opacity-0 pointer-events-none translate-y-full' : 'opacity-100 translate-y-0'
       }`}
     >

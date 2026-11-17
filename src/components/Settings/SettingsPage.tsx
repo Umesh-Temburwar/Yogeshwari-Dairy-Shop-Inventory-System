@@ -46,12 +46,14 @@ import {
 interface SettingsPageProps {
   onOpenChangePasscode: () => void;
   onOpenPhotoDatabase: () => void;
+  onOpenImageHealth?: () => void;
   onOpenAppDownload: () => void;
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
   onOpenChangePasscode,
   onOpenPhotoDatabase,
+  onOpenImageHealth,
   onOpenAppDownload
 }) => {
   const {
@@ -458,6 +460,34 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS master_passcode_hash TEXT;`
               {language === 'mr' ? 'उघडा' : language === 'hi' ? 'खोलें' : 'Open'}
             </button>
           </div>
+
+          {/* Admin Image Health Audit Screen */}
+          {onOpenImageHealth && (role === 'Owner' || role === 'Admin') && (
+            <div className="p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/25 border border-emerald-200/80 dark:border-emerald-800/40 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
+                    {language === 'mr' ? 'इमेज हेल्थ तपासणी (Image Health)' : language === 'hi' ? 'इमेज हेल्थ जांच (Image Health)' : 'Product Image Health'}
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
+                    {language === 'mr'
+                      ? 'तुटलेले, नसलेले किंवा नॉन-स्क्वेअर फोटो शोधा व दुरुस्त करा'
+                      : language === 'hi'
+                      ? 'टूटे, गायब या नॉन-स्क्वायर फोटो खोजें व ठीक करें'
+                      : 'Fix missing, broken, or non-square product photos'}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onOpenImageHealth}
+                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shrink-0"
+              >
+                {language === 'mr' ? 'तपासा' : language === 'hi' ? 'जांचें' : 'Inspect'}
+              </button>
+            </div>
+          )}
 
           {/* Shake-to-Open Billing Scanner */}
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] space-y-2.5">

@@ -30,7 +30,8 @@ export type AppView =
   | 'reorder'
   | 'expiry'
   | 'returns'
-  | 'settings';
+  | 'settings'
+  | 'image-health';
 
 export type GlobalScannerTarget = 'billing' | 'stock_in' | 'stock_edit' | null;
 

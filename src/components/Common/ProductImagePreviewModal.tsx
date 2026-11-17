@@ -16,7 +16,10 @@ import {
 import { Product } from '../../types';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { clearFailedImageUrl } from './ProductImage';
+import { removeManagedStorageImage } from '../../lib/productImageService';
 
 interface ProductImagePreviewModalProps {
   product: Product | null;
@@ -31,6 +34,8 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
 }) => {
   const { updateProduct } = useStore();
   const { language } = useLanguage();
+  const { user, role } = useAuth();
+  const isAdmin = Boolean(user) && (role === 'Owner' || role === 'Admin');
 
   const [urlInput, setUrlInput] = useState('');
   const [copied, setCopied] = useState(false);
@@ -90,7 +95,7 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
 
   const handleSaveUrl = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSaving) return;
+    if (isSaving || !isAdmin) return;
 
     if (trimmedInput && !trimmedInput.startsWith('http://') && !trimmedInput.startsWith('https://')) {
       setFeedback({
@@ -110,9 +115,19 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
 
     try {
       const nextUrl = trimmedInput || undefined;
+      const previousUrl = currentSavedUrl;
+
+      if (nextUrl) {
+        clearFailedImageUrl(nextUrl);
+      }
 
       // Update StoreContext + Supabase
       await updateProduct(product.id, { image_url: nextUrl });
+
+      // Remove old managed storage object if replaced
+      if (previousUrl && previousUrl !== (nextUrl || '')) {
+        await removeManagedStorageImage(previousUrl);
+      }
 
       // Also stamp official verification metadata in Supabase when available
       if (supabase) {
@@ -163,6 +178,8 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
   };
 
   const handleRemoveImage = async () => {
+    if (!isAdmin) return;
+    const previousUrl = currentSavedUrl;
     setUrlInput('');
     setPreviewError(false);
     setPreviewLoaded(false);
@@ -170,6 +187,9 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
     setFeedback(null);
     try {
       await updateProduct(product.id, { image_url: undefined });
+      if (previousUrl) {
+        await removeManagedStorageImage(previousUrl);
+      }
       if (supabase) {
         try {
           await supabase

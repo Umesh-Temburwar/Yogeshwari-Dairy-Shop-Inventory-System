@@ -37,6 +37,7 @@ const SupabaseConfigModal = React.lazy(() => import('./components/Settings/Supab
 const SettingsPage = React.lazy(() => import('./components/Settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const ChangeMasterPasscodeModal = React.lazy(() => import('./components/Settings/ChangeMasterPasscodeModal').then(m => ({ default: m.ChangeMasterPasscodeModal })));
 const ProductImageManagerModal = React.lazy(() => import('./components/Admin/ProductImageManagerModal').then(m => ({ default: m.ProductImageManagerModal })));
+const ImageHealthView = React.lazy(() => import('./components/Admin/ImageHealthView').then(m => ({ default: m.ImageHealthView })));
 
 const MainContent: React.FC = () => {
   const { activeView, setActiveView, refreshData, isSyncing } = useStore();
@@ -164,6 +165,7 @@ const MainContent: React.FC = () => {
       <Navbar
         onOpenSettings={() => setActiveView('settings')}
         onOpenPhotoDatabase={() => setIsPhotoDatabaseOpen(true)}
+        onOpenImageHealth={() => setActiveView('image-health')}
         onOpenAppDownload={() => setIsAppDownloadOpen(true)}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebarCollapse={() => setIsSidebarCollapsed(prev => !prev)}
@@ -253,9 +255,12 @@ const MainContent: React.FC = () => {
                 <SettingsPage
                   onOpenChangePasscode={() => setIsChangePasscodeOpen(true)}
                   onOpenPhotoDatabase={() => setIsPhotoDatabaseOpen(true)}
+                  onOpenImageHealth={() => setActiveView('image-health')}
                   onOpenAppDownload={() => setIsAppDownloadOpen(true)}
                 />
               )}
+
+              {activeView === 'image-health' && <ImageHealthView />}
             </div>
           </Suspense>
         </main>

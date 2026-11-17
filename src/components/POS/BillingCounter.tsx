@@ -125,7 +125,7 @@ const ProductCard = React.memo<ProductCardProps>(({
           </span>
         </div>
 
-        {/* Standardized 4:3 Aspect Product Image Showcase — Click photo to view full image & update URL */}
+        {/* Standardized 1:1 Square Product Image Showcase — Click photo to view full image & update URL */}
         <div
           role="button"
           tabIndex={0}
@@ -141,14 +141,14 @@ const ProductCard = React.memo<ProductCardProps>(({
             }
           }}
           title={language === 'mr' ? 'फोटो पहा व इमेज URL बदला' : language === 'hi' ? 'फोटो देखें व इमेज URL बदलें' : 'View full image & update URL'}
-          className="group/posimg relative w-full aspect-[4/3] min-h-[124px] sm:min-h-[144px] flex justify-center items-center mb-2.5 bg-white rounded-2xl border border-slate-200/80 dark:border-[#24352F] overflow-hidden shadow-2xs cursor-pointer"
+          className="group/posimg relative w-full aspect-square flex justify-center items-center mb-2.5 bg-white rounded-2xl border border-slate-200/80 dark:border-[#24352F] overflow-hidden shadow-2xs cursor-pointer"
         >
           <ProductImage 
             src={prod.image_url} 
             alt={prod.name} 
             category={prod.category} 
             fill
-            className="group-hover/posimg:scale-105 transition-transform duration-200"
+            className="group-hover/posimg:scale-[1.03] transition-transform duration-200"
           />
           <span className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/75 text-white text-[9px] font-bold opacity-85 sm:opacity-0 sm:group-hover/posimg:opacity-100 transition-opacity">
             <Eye className="w-2.5 h-2.5" />

@@ -16,6 +16,13 @@ router.get(
 );
 
 router.get(
+  '/lookup-official-image',
+  authMiddleware,
+  requireRole('admin', 'owner'),
+  productController.lookupOfficialImage
+);
+
+router.get(
   '/:id',
   authMiddleware,
   requireRole('admin', 'owner', 'manager', 'cashier'),

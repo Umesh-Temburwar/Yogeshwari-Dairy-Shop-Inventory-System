@@ -1228,12 +1228,12 @@ export const ProductList: React.FC<ProductListProps> = ({
                     </span>
                   </div>
 
-                  {/* Product Image Showcase (4:3 Aspect Ratio) & Title — Tap Photo to View Full Image & Edit URL */}
+                  {/* Standardized 1:1 Square Product Image Showcase & Title — Tap Photo to View Full Image & Edit URL */}
                   <div className="my-2.5 space-y-2.5">
                     <button
                       type="button"
                       onClick={() => setPreviewImageProduct(prod)}
-                      className="group/img relative w-full aspect-[4/3] max-h-48 sm:max-h-52 rounded-2xl bg-white border border-slate-200/80 dark:border-[#24352F] shadow-2xs overflow-hidden flex items-center justify-center cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                      className="group/img relative w-full aspect-square rounded-2xl bg-white border border-slate-200/80 dark:border-[#24352F] shadow-2xs overflow-hidden flex items-center justify-center cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                       title={language === 'mr' ? 'फोटो पहा व इमेज URL बदला' : language === 'hi' ? 'फोटो देखें व इमेज URL बदलें' : 'View full image & edit URL'}
                     >
                       <ProductImage 
@@ -1241,7 +1241,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                         alt={prod.name} 
                         category={prod.category} 
                         fill
-                        className="group-hover/img:scale-105 transition-transform duration-200"
+                        className="group-hover/img:scale-[1.03] transition-transform duration-200"
                       />
                       <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900/75 text-white text-[10px] font-bold opacity-85 sm:opacity-0 sm:group-hover/img:opacity-100 transition-opacity backdrop-blur-xs">
                         <Eye className="w-3 h-3" />

@@ -1,11 +1,36 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import { Product, ProductCategory, ProductUnit } from '../../types';
 import { getShelfLifeNote } from '../../lib/shelfLifeUtils';
-import { X, Save, PackagePlus, Clock, Camera, Sparkles, Barcode, Mic, MicOff, Volume2, CheckCircle2, AlertCircle } from 'lucide-react';
-import { ProductPhotoModal } from '../Scanner/ProductPhotoModal';
+import {
+  X,
+  Save,
+  PackagePlus,
+  Clock,
+  Sparkles,
+  Barcode,
+  Mic,
+  CheckCircle2,
+  AlertCircle,
+  Search,
+  Upload,
+  Trash2,
+  Loader2,
+  Image as ImageIcon
+} from 'lucide-react';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
+import { ProductImage, clearFailedImageUrl } from '../Common/ProductImage';
+import { SquareImageCropperModal } from '../Common/SquareImageCropperModal';
+import {
+  lookupOfficialImages,
+  validateImageFile,
+  uploadProcessedProductImage,
+  removeManagedStorageImage,
+  OfficialImageCandidate,
+  ProcessedSquareImage
+} from '../../lib/productImageService';
 import { translateProductName, translateProductNameSync } from '../../lib/productTranslator';
 import { playBeepSound, playSuccessChime } from '../../utils/audioUtils';
 import {
@@ -14,6 +39,39 @@ import {
   processVoiceTranscriptSync,
   VoiceLanguage
 } from '../../lib/voiceProductRecognizer';
+
+interface SpeechRecognitionResultLike {
+  isFinal: boolean;
+  0: { transcript: string };
+}
+
+interface SpeechRecognitionEventLike {
+  results: ArrayLike<SpeechRecognitionResultLike>;
+}
+
+interface SpeechRecognitionErrorEventLike {
+  error: string;
+}
+
+interface SpeechRecognitionInstanceLike {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstanceLike;
+
+interface WindowWithSpeechRecognition extends Window {
+  SpeechRecognition?: SpeechRecognitionConstructor;
+  webkitSpeechRecognition?: SpeechRecognitionConstructor;
+}
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -26,10 +84,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   onClose,
   productToEdit
 }) => {
-  const { addProduct, updateProduct, products } = useStore();
+  const { addProduct, updateProduct } = useStore();
   const { t, language } = useLanguage();
+  const { user, role } = useAuth();
+  const isAdmin = Boolean(user) && (role === 'Owner' || role === 'Admin');
 
   const [name, setName] = useState('');
+  const [brand, setBrand] = useState('');
   const [hindiName, setHindiName] = useState('');
   const [marathiName, setMarathiName] = useState('');
   const [category, setCategory] = useState<ProductCategory>('Milk');
@@ -41,9 +102,22 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [barcode, setBarcode] = useState<string>('');
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
+  // Standardized Product Image states (Steps 2 & 3)
+  const [imageUrl, setImageUrl] = useState<string>('');
+  const [originalImageUrl, setOriginalImageUrl] = useState<string>('');
+  const [isLookingUpImage, setIsLookingUpImage] = useState(false);
+  const [officialCandidates, setOfficialCandidates] = useState<OfficialImageCandidate[]>([]);
+  const [lookupNotFound, setLookupNotFound] = useState(false);
+  const [imageStatusMessage, setImageStatusMessage] = useState<{ type: 'info' | 'success' | 'error'; text: string } | null>(null);
+  const [pendingOverwriteCandidate, setPendingOverwriteCandidate] = useState<OfficialImageCandidate | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   // Auto-translation states
   const [isTranslating, setIsTranslating] = useState(false);
-  const [autoTranslateEnabled, setAutoTranslateEnabled] = useState(true);
+  const [autoTranslateEnabled] = useState(true);
   const isUserTypingRef = useRef(false);
 
   // Voice recognition states
@@ -59,9 +133,9 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const isListeningRef = useRef(false);
   const userStoppedRef = useRef(false);
   const restartCountRef = useRef(0);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstanceLike | null>(null);
   const transcriptRef = useRef<string>('');
-  const silenceTimeoutRef = useRef<any>(null);
+  const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Clean up speech recognition on unmount or modal close
   useEffect(() => {
@@ -78,8 +152,16 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   useEffect(() => {
     isUserTypingRef.current = false;
     setIsTranslating(false);
+    setOfficialCandidates([]);
+    setLookupNotFound(false);
+    setImageStatusMessage(null);
+    setPendingOverwriteCandidate(null);
+    setCropFile(null);
+    setUploadError(null);
+
     if (productToEdit) {
       setName(productToEdit.name);
+      setBrand(productToEdit.brand || '');
       setHindiName(productToEdit.hindi_name || '');
       setMarathiName(productToEdit.marathi_name || '');
       setCategory(productToEdit.category);
@@ -89,8 +171,11 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       setStockQuantity(productToEdit.stock_quantity.toString());
       setMinStockAlert(productToEdit.min_stock_alert.toString());
       setBarcode(productToEdit.barcode || '');
+      setImageUrl(productToEdit.image_url || '');
+      setOriginalImageUrl(productToEdit.image_url || '');
     } else {
       setName('');
+      setBrand('');
       setHindiName('');
       setMarathiName('');
       setCategory('Milk');
@@ -100,6 +185,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       setStockQuantity('0');
       setMinStockAlert('10');
       setBarcode('');
+      setImageUrl('');
+      setOriginalImageUrl('');
     }
   }, [productToEdit, isOpen]);
 
@@ -208,7 +295,11 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     }
 
     try {
-      const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const win = window as WindowWithSpeechRecognition;
+      const SpeechRecognitionClass = win.SpeechRecognition || win.webkitSpeechRecognition;
+      if (!SpeechRecognitionClass) {
+        throw new Error('SpeechRecognition not supported');
+      }
       const recognition = new SpeechRecognitionClass();
       recognitionRef.current = recognition;
 
@@ -234,7 +325,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         setIsListening(true);
       };
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEventLike) => {
         let interim = '';
         let finalized = '';
 
@@ -264,7 +355,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         }
       };
 
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
         console.warn('Speech recognition notice:', event.error);
         if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
           userStoppedRef.current = true;
@@ -336,7 +427,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       };
 
       recognition.start();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to start speech recognition:', err);
       isListeningRef.current = false;
       setIsListening(false);
@@ -410,10 +501,111 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         setVoiceFeedback(processed.englishName);
         setTimeout(() => setVoiceFeedback(null), 4000);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.warn('Error processing voice product transcript:', e);
     } finally {
       setIsTranslating(false);
+    }
+  };
+
+  // STEP 2: Official Image Lookup (Open Food Facts via Edge Function proxy)
+  const handleFindOfficialImage = async () => {
+    if (!isAdmin || isLookingUpImage) return;
+    setIsLookingUpImage(true);
+    setLookupNotFound(false);
+    setPendingOverwriteCandidate(null);
+    setImageStatusMessage(null);
+    setOfficialCandidates([]);
+
+    try {
+      const result = await lookupOfficialImages({
+        barcode: barcode.trim() || undefined,
+        name: name.trim() || undefined,
+        brand: brand.trim() || undefined
+      });
+
+      if (result.error) {
+        setImageStatusMessage({ type: 'error', text: result.error });
+        setLookupNotFound(true);
+      } else if (result.candidates.length === 0) {
+        setLookupNotFound(true);
+      } else {
+        setOfficialCandidates(result.candidates);
+      }
+    } finally {
+      setIsLookingUpImage(false);
+    }
+  };
+
+  const applyCandidateUrl = (candidate: OfficialImageCandidate) => {
+    clearFailedImageUrl(candidate.url);
+    setImageUrl(candidate.url);
+    setOfficialCandidates([]);
+    setPendingOverwriteCandidate(null);
+    setLookupNotFound(false);
+    setImageStatusMessage({
+      type: 'success',
+      text: 'Official image selected. Click Save to persist.'
+    });
+  };
+
+  const handleCandidateClick = (candidate: OfficialImageCandidate) => {
+    if (!isAdmin) return;
+    if (imageUrl.trim() && imageUrl.trim() !== candidate.url) {
+      // Never auto-overwrite an existing image without explicit admin confirmation
+      setPendingOverwriteCandidate(candidate);
+      return;
+    }
+    applyCandidateUrl(candidate);
+  };
+
+  // STEP 3: Clean Upload (Validate -> 1:1 Square Crop -> 512x512 WebP -> Supabase Storage)
+  const handleSelectImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !isAdmin) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setImageStatusMessage({
+        type: 'error',
+        text: validation.error || 'Invalid image file.'
+      });
+      return;
+    }
+
+    setUploadError(null);
+    setImageStatusMessage(null);
+    setCropFile(file);
+  };
+
+  const handleConfirmCroppedUpload = async (processed: ProcessedSquareImage) => {
+    if (!isAdmin) return;
+    setIsUploadingImage(true);
+    setUploadError(null);
+
+    try {
+      const { publicUrl } = await uploadProcessedProductImage({
+        processed,
+        productId: productToEdit?.id,
+        oldImageUrl: imageUrl || originalImageUrl,
+        isAdmin
+      });
+
+      setImageUrl(publicUrl);
+      setCropFile(null);
+      setOfficialCandidates([]);
+      setLookupNotFound(false);
+      setPendingOverwriteCandidate(null);
+      setImageStatusMessage({
+        type: 'success',
+        text: 'Square 512×512 WebP image uploaded to Storage. Click Save to apply.'
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to upload image.';
+      setUploadError(message);
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
@@ -428,10 +620,17 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     const sPrice = Math.max(0, parseFloat(sellingPrice) || 0);
     const sQty = Math.max(0, parseFloat(stockQuantity) || 0);
     const minAlert = Math.max(0, parseFloat(minStockAlert) || 10);
+    const nextImageUrl = imageUrl.trim() || undefined;
+    const prevImageUrl = originalImageUrl.trim();
+
+    if (nextImageUrl) {
+      clearFailedImageUrl(nextImageUrl);
+    }
 
     if (productToEdit) {
       await updateProduct(productToEdit.id, {
         name: cleanName,
+        brand: brand.trim() || undefined,
         hindi_name: hindiName.trim() || undefined,
         marathi_name: marathiName.trim() || undefined,
         category,
@@ -440,11 +639,18 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         selling_price: sPrice,
         // In Edit Mode, stock_quantity is preserved and managed via Batches/Stock Inward!
         min_stock_alert: minAlert,
-        barcode: barcode.trim() || undefined
+        barcode: barcode.trim() || undefined,
+        image_url: nextImageUrl
       });
+
+      // Clean up previous managed storage file if replaced by a different URL or removed
+      if (isAdmin && prevImageUrl && prevImageUrl !== (nextImageUrl || '')) {
+        await removeManagedStorageImage(prevImageUrl);
+      }
     } else {
       await addProduct({
         name: cleanName,
+        brand: brand.trim() || undefined,
         hindi_name: hindiName.trim() || undefined,
         marathi_name: marathiName.trim() || undefined,
         category,
@@ -454,6 +660,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         stock_quantity: sQty,
         min_stock_alert: minAlert,
         barcode: barcode.trim() || undefined,
+        image_url: nextImageUrl,
         is_active: true
       });
     }
@@ -756,6 +963,210 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
             </div>
           </div>
 
+          {/* Brand (Optional — improves official image lookup) */}
+          <div>
+            <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
+              {language === 'mr' ? 'ब्रँड (Brand — ऐच्छिक)' : language === 'hi' ? 'ब्रांड (Brand — वैकल्पिक)' : 'Brand (Optional)'}
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Amul, Britannia, Parle, Cadbury, Chitale..."
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* Admin-Only Product Image Standardization Section (Steps 2 & 3) */}
+          {isAdmin && (
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-extrabold text-slate-800 dark:text-[#E7F0EC] flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>Product Image (1:1 Square)</span>
+                </span>
+                {imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageUrl('');
+                      setPendingOverwriteCandidate(null);
+                      setImageStatusMessage({ type: 'info', text: 'Image cleared. Click Save to confirm.' });
+                    }}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>Remove</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-start gap-3">
+                {/* Uniform Square Preview */}
+                <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-2xl overflow-hidden bg-white border border-slate-200 dark:border-[#24352F]">
+                  <ProductImage
+                    src={imageUrl || null}
+                    alt={name.trim() || 'Product'}
+                    category={category}
+                    fill
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={handleFindOfficialImage}
+                      disabled={isLookingUpImage || (!barcode.trim() && !name.trim() && !brand.trim())}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold shadow-xs transition active:scale-95"
+                    >
+                      {isLookingUpImage ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Search className="w-3.5 h-3.5" />
+                      )}
+                      <span>{isLookingUpImage ? 'Searching...' : 'Find official image'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-slate-100 dark:hover:bg-[#223630] border border-slate-300 dark:border-[#24352F] text-slate-800 dark:text-[#E7F0EC] text-xs font-bold transition active:scale-95"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>Upload photo</span>
+                    </button>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleSelectImageFile}
+                      className="hidden"
+                    />
+                  </div>
+
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-[#8FA69C]">
+                    Plain background, product centered, good light. (JPEG/PNG/WebP, max 5 MB)
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Feedback */}
+              {imageStatusMessage && (
+                <div
+                  className={`px-3 py-2 rounded-xl text-[11px] font-bold flex items-center gap-1.5 ${
+                    imageStatusMessage.type === 'error'
+                      ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50'
+                      : imageStatusMessage.type === 'success'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50'
+                      : 'bg-slate-100 dark:bg-[#131F1B] text-slate-700 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F]'
+                  }`}
+                >
+                  {imageStatusMessage.type === 'error' ? (
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  ) : (
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  )}
+                  <span>{imageStatusMessage.text}</span>
+                </div>
+              )}
+
+              {/* Explicit Overwrite Confirmation (never auto-overwrite existing image) */}
+              {pendingOverwriteCandidate && (
+                <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 space-y-2">
+                  <p className="text-[11px] font-bold text-amber-900 dark:text-amber-300">
+                    This product already has an image. Replace existing image with the selected official image?
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => applyCandidateUrl(pendingOverwriteCandidate)}
+                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold"
+                    >
+                      Confirm Replace
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPendingOverwriteCandidate(null)}
+                      className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] text-slate-700 dark:text-[#8FA69C] text-[11px] font-bold"
+                    >
+                      Keep Current
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Candidate Picker (up to 4 images) */}
+              {officialCandidates.length > 0 && (
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400">
+                      Select an official image ({officialCandidates.length} found)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOfficialCandidates([]);
+                        setPendingOverwriteCandidate(null);
+                      }}
+                      className="text-[11px] font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white"
+                    >
+                      Ignore
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {officialCandidates.map((cand) => {
+                      const isSelected = imageUrl.trim() === cand.url;
+                      return (
+                        <button
+                          key={cand.url}
+                          type="button"
+                          onClick={() => handleCandidateClick(cand)}
+                          className={`group flex flex-col items-center p-1.5 rounded-xl bg-white dark:bg-[#131F1B] border transition text-left ${
+                            isSelected
+                              ? 'border-emerald-500 ring-2 ring-emerald-500/30'
+                              : 'border-slate-200 dark:border-[#24352F] hover:border-emerald-400'
+                          }`}
+                        >
+                          <div className="w-full aspect-square rounded-lg bg-white overflow-hidden border border-slate-100">
+                            <ProductImage
+                              src={cand.url}
+                              alt={cand.label}
+                              category={category}
+                              fill
+                            />
+                          </div>
+                          <span className="mt-1 w-full text-[10px] font-bold text-slate-700 dark:text-[#E7F0EC] truncate">
+                            {cand.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Not Found State */}
+              {lookupNotFound && officialCandidates.length === 0 && (
+                <div className="p-2.5 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC]">
+                    No official image found, upload your own
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold"
+                  >
+                    <Upload className="w-3 h-3" />
+                    <span>Upload now</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Category & Unit */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -932,6 +1343,21 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           setBarcode(scanned);
           setShowBarcodeScanner(false);
         }}
+      />
+
+      {/* Square 1:1 Canvas Cropper Modal (Step 3) */}
+      <SquareImageCropperModal
+        file={cropFile}
+        productName={name.trim() || productToEdit?.name}
+        isUploading={isUploadingImage}
+        uploadError={uploadError}
+        onCancel={() => {
+          if (!isUploadingImage) {
+            setCropFile(null);
+            setUploadError(null);
+          }
+        }}
+        onConfirm={handleConfirmCroppedUpload}
       />
     </div>
   );

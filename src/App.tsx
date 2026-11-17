@@ -4,6 +4,9 @@ import { StoreProvider, useStore } from './context/StoreContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './motion/Toast';
+import { AnimatedPage } from './motion/AnimatedPage';
+import { useMotionTier } from './motion/useMotionTier';
 import { LoginPage } from './components/Auth/LoginPage';
 import { SplashScreen } from './components/Common/SplashScreen';
 import { Navbar } from './components/Navbar';
@@ -195,7 +198,7 @@ const MainContent: React.FC = () => {
             </div>
           )}
           <Suspense fallback={<ViewFallbackSkeleton />}>
-            <div key={activeView} className="w-full">
+            <AnimatedPage viewKey={activeView}>
               {activeView === 'dashboard' && (
                 <DashboardView 
                   onOpenAddProduct={() => {
@@ -241,7 +244,7 @@ const MainContent: React.FC = () => {
                   }} 
                 />
               )}
-            </div>
+            </AnimatedPage>
           </Suspense>
         </main>
       </div>
@@ -351,7 +354,9 @@ export function App() {
       <LanguageProvider>
         <AuthProvider>
           <StoreProvider>
-            <AppRoot />
+            <ToastProvider>
+              <AppRoot />
+            </ToastProvider>
           </StoreProvider>
         </AuthProvider>
       </LanguageProvider>

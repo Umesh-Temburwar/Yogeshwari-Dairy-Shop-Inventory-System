@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product, ProductBatch } from '../../types';
+import { useToast } from '../../motion/Toast';
 import { 
   getShelfLifeDays, 
   getSuggestedExpiryDate, 
@@ -37,6 +38,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
 }) => {
   const { batches, addBatch, updateBatch, deleteBatch, recordDamage, products } = useStore();
   const { language } = useLanguage();
+  const toast = useToast();
 
   // Keep product stock and details live in sync with central store state
   const liveProduct = products.find(p => p.id === product.id) || product;
@@ -120,7 +122,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
 
     const remainingQty = parseFloat(editQtyRemaining);
     if (isNaN(remainingQty) || remainingQty < 0) {
-      alert(language === 'mr' ? 'कृपया योग्य साठा मात्रा टाका' : 'कृपया मान्य स्टॉक मात्रा दर्ज करें');
+      toast.error(language === 'mr' ? 'कृपया योग्य साठा मात्रा टाका' : 'कृपया मान्य स्टॉक मात्रा दर्ज करें');
       return;
     }
 

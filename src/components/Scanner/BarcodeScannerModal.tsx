@@ -16,6 +16,7 @@ import { playBeepSound } from '../../utils/audioUtils';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { ProductImage } from '../Common/ProductImage';
 import { QuickProductRegisterModal } from './QuickProductRegisterModal';
+import { useToast } from '../../motion/Toast';
 import {
   Camera,
   X,
@@ -52,6 +53,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 }) => {
   const { products } = useStore();
   const { language } = useLanguage();
+  const toast = useToast();
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
@@ -417,7 +419,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         }
         handleBarcodeDetected(ocrRes.barcode);
       } else {
-        alert(
+        toast.error(
           language === 'mr'
             ? 'संख्या वाचता आली नाही. कृपया "किंवा बारकोड नंबर टाईप करा" मध्ये नंबर टाका किंवा प्रकाशात धरा.'
             : 'संख्या पहचानी नहीं जा सकी। कृपया "या बारकोड संख्या टाइप करें" में नंबर टाइप करें।'
@@ -524,11 +526,11 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       if (detected) {
         handleBarcodeDetected(detected);
       } else {
-        alert(language === 'mr' ? 'फोटोमध्ये बारकोड सापडला नाही. कृपया जवळून स्पष्ट फोटो काढा.' : 'फोटो में बारकोड नहीं मिला। कृपया स्पष्ट फोटो लें।');
+        toast.error(language === 'mr' ? 'फोटोमध्ये बारकोड सापडला नाही. कृपया जवळून स्पष्ट फोटो काढा.' : 'फोटो में बारकोड नहीं मिला। कृपया स्पष्ट फोटो लें।');
       }
       URL.revokeObjectURL(objectUrl);
     } catch (err) {
-      alert(language === 'mr' ? 'फोटोमध्ये बारकोड वाचता आला नाही. कृपया बारकोड नंबर हाताने टाका.' : 'फोटो में बारकोड नहीं पढ़ा जा सका। कृपया बारकोड संख्या टाइप करें।');
+      toast.error(language === 'mr' ? 'फोटोमध्ये बारकोड वाचता आला नाही. कृपया बारकोड नंबर हाताने टाका.' : 'फोटो में बारकोड नहीं पढ़ा जा सका। कृपया बारकोड संख्या टाइप करें।');
     }
   };
 

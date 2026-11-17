@@ -14,6 +14,7 @@ import { playBeepSound, playSuccessChime } from '../../utils/audioUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { supabase } from '../../lib/supabase';
 import { Product } from '../../types';
+import { useToast } from '../../motion/Toast';
 
 interface ProductImageManagerModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
 }) => {
   const { products, setProducts, totalCatalogCount = 46571, totalBarcodesCount = 44202 } = useStore() as any;
   const { language } = useLanguage();
+  const toast = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -605,7 +607,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
     if (cleanUrl && !cleanUrl.startsWith('data:image/')) {
       const isValid = await validateImageUrl(cleanUrl);
       if (!isValid) {
-        alert(language === 'mr' 
+        toast.error(language === 'mr' 
           ? 'हा फोटो URL उघडता येत नाही किंवा वैध फोटो फॉरमॅट नाही.' 
           : 'यह इमेज URL लोड नहीं हो सका या वैध फॉर्मेट नहीं है।');
         setIsValidatingUrl(false);

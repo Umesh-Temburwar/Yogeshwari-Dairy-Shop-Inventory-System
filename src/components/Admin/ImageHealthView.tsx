@@ -16,6 +16,7 @@ import {
 import { Product } from '../../types';
 import { useStore } from '../../context/StoreContext';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 import { ProductImage, clearFailedImageUrl } from '../Common/ProductImage';
 import { SquareImageCropperModal } from '../Common/SquareImageCropperModal';
 import {
@@ -30,7 +31,7 @@ import {
 } from '../../lib/productImageService';
 
 type HealthFilter = 'issues' | 'missing' | 'broken' | 'unofficial' | 'non_square' | 'healthy';
-type ScopeMode = 'in_stock' | 'all_loaded';
+type ScopeMode = 'in_stock' | 'out_of_stock';
 
 interface RowLookupState {
   loading: boolean;
@@ -44,9 +45,10 @@ interface RowLookupState {
 const PROBE_CONCURRENCY = 6;
 const INITIAL_VISIBLE_ROWS = 40;
 const LOAD_MORE_STEP = 40;
+const OUT_OF_STOCK_PAGE_SIZE = 60;
 
 export const ImageHealthView: React.FC = () => {
-  const { products, updateProduct } = useStore();
+  const { products, updateProduct, outOfStockCount } = useStore();
   const { user, role } = useAuth();
   const isAdmin = Boolean(user) && (role === 'Owner' || role === 'Admin');
 
@@ -54,6 +56,12 @@ export const ImageHealthView: React.FC = () => {
   const [filter, setFilter] = useState<HealthFilter>('issues');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleLimit, setVisibleLimit] = useState(INITIAL_VISIBLE_ROWS);
+
+  // Paginated out-of-stock products loaded directly from Supabase when scope === 'out_of_stock'
+  const [outOfStockProducts, setOutOfStockProducts] = useState<Product[]>([]);
+  const [outOfStockOffset, setOutOfStockOffset] = useState(0);
+  const [hasMoreOutOfStock, setHasMoreOutOfStock] = useState(true);
+  const [isLoadingOutOfStock, setIsLoadingOutOfStock] = useState(false);
 
   // Health map keyed by product.id
   const [healthMap, setHealthMap] = useState<Record<string, ImageProbeResult>>({});
@@ -76,13 +84,56 @@ export const ImageHealthView: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  // Fetch out-of-stock catalogue products directly from Supabase (paginated + searchable)
+  const fetchOutOfStockPage = useCallback(
+    async (nextOffset: number, append: boolean, term: string) => {
+      if (!supabase || !isAdmin) return;
+      setIsLoadingOutOfStock(true);
+      try {
+        let query = supabase
+          .from('products')
+          .select(
+            'id, name, hindi_name, marathi_name, brand, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, is_active, created_at'
+          )
+          .eq('stock_quantity', 0)
+          .order('selling_price', { ascending: false })
+          .order('name', { ascending: true })
+          .range(nextOffset, nextOffset + OUT_OF_STOCK_PAGE_SIZE - 1);
+
+        const cleanTerm = term.trim();
+        if (cleanTerm.length >= 2) {
+          const escaped = cleanTerm.replace(/[%_]/g, '');
+          query = query.or(`name.ilike.%${escaped}%,brand.ilike.%${escaped}%,barcode.ilike.%${escaped}%`);
+        }
+
+        const { data, error } = await query;
+        if (!error && data) {
+          const rows = data as Product[];
+          setOutOfStockProducts((prev) => (append ? [...prev, ...rows] : rows));
+          setOutOfStockOffset(nextOffset + rows.length);
+          setHasMoreOutOfStock(rows.length === OUT_OF_STOCK_PAGE_SIZE);
+        }
+      } finally {
+        setIsLoadingOutOfStock(false);
+      }
+    },
+    [isAdmin]
+  );
+
+  useEffect(() => {
+    if (scope !== 'out_of_stock' || !isAdmin) return;
+    const timer = window.setTimeout(() => {
+      fetchOutOfStockPage(0, false, searchQuery);
+    }, searchQuery.trim() ? 300 : 0);
+    return () => window.clearTimeout(timer);
+  }, [scope, searchQuery, isAdmin, fetchOutOfStockPage]);
+
   const scopedProducts = useMemo(() => {
-    const active = products.filter((p) => p.is_active !== false);
-    if (scope === 'in_stock') {
-      return active.filter((p) => (Number(p.stock_quantity) || 0) > 0);
+    if (scope === 'out_of_stock') {
+      return outOfStockProducts;
     }
-    return active;
-  }, [products, scope]);
+    return products.filter((p) => p.is_active !== false && (Number(p.stock_quantity) || 0) > 0);
+  }, [products, outOfStockProducts, scope]);
 
   const runHealthScan = useCallback(async (items: Product[]) => {
     const runId = ++scanRunIdRef.current;
@@ -247,6 +298,11 @@ export const ImageHealthView: React.FC = () => {
       const oldUrl = prod.image_url;
       clearFailedImageUrl(candidate.url);
       await updateProduct(prod.id, { image_url: candidate.url });
+      if (scope === 'out_of_stock') {
+        setOutOfStockProducts((prev) =>
+          prev.map((item) => (item.id === prod.id ? { ...item, image_url: candidate.url } : item))
+        );
+      }
 
       if (oldUrl && oldUrl.trim() !== candidate.url) {
         await removeManagedStorageImage(oldUrl);
@@ -336,6 +392,11 @@ export const ImageHealthView: React.FC = () => {
       });
 
       await updateProduct(product.id, { image_url: publicUrl });
+      if (scope === 'out_of_stock') {
+        setOutOfStockProducts((prev) =>
+          prev.map((item) => (item.id === product.id ? { ...item, image_url: publicUrl } : item))
+        );
+      }
 
       setHealthMap((prev) => ({
         ...prev,
@@ -415,18 +476,18 @@ export const ImageHealthView: React.FC = () => {
                     : 'text-slate-600 dark:text-[#8FA69C]'
                 }`}
               >
-                In-Stock
+                In-Stock ({products.filter((p) => (Number(p.stock_quantity) || 0) > 0).length})
               </button>
               <button
                 type="button"
-                onClick={() => setScope('all_loaded')}
+                onClick={() => setScope('out_of_stock')}
                 className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition ${
-                  scope === 'all_loaded'
+                  scope === 'out_of_stock'
                     ? 'bg-emerald-600 text-white shadow-2xs'
                     : 'text-slate-600 dark:text-[#8FA69C]'
                 }`}
               >
-                All Loaded ({products.length})
+                Out-of-Stock ({outOfStockCount > 0 ? outOfStockCount.toLocaleString('en-IN') : 'Catalogue'})
               </button>
             </div>
 
@@ -816,15 +877,28 @@ export const ImageHealthView: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      {filteredProducts.length > visibleLimit && (
-        <div className="flex justify-center pt-1">
-          <button
-            type="button"
-            onClick={() => setVisibleLimit((prev) => prev + LOAD_MORE_STEP)}
-            className="px-4 py-2 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
-          >
-            Load more ({filteredProducts.length - visibleLimit} remaining)
-          </button>
+      {(filteredProducts.length > visibleLimit || (scope === 'out_of_stock' && hasMoreOutOfStock)) && (
+        <div className="flex flex-wrap justify-center gap-2 pt-1">
+          {filteredProducts.length > visibleLimit && (
+            <button
+              type="button"
+              onClick={() => setVisibleLimit((prev) => prev + LOAD_MORE_STEP)}
+              className="px-4 py-2 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
+            >
+              Show more ({filteredProducts.length - visibleLimit} remaining)
+            </button>
+          )}
+          {scope === 'out_of_stock' && hasMoreOutOfStock && (
+            <button
+              type="button"
+              disabled={isLoadingOutOfStock}
+              onClick={() => fetchOutOfStockPage(outOfStockOffset, true, searchQuery)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold shadow-xs"
+            >
+              {isLoadingOutOfStock && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>{isLoadingOutOfStock ? 'Loading...' : `Load next ${OUT_OF_STOCK_PAGE_SIZE} from database`}</span>
+            </button>
+          )}
         </div>
       )}
 

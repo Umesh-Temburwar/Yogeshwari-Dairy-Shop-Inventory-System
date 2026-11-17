@@ -333,12 +333,11 @@ const AppRoot: React.FC = () => {
       {(!isLoading || isSplashComplete) && (
         !user ? (
           <LoginPage />
+        ) : !isSecurityUnlocked ? (
+          /* Dedicated secure lock screen with dairy poster background — main dashboard never renders in background */
+          <MasterSecurityModal isOpen={true} />
         ) : (
-          <>
-            <MainContent />
-            {/* Two-step Master Security Passcode Popup: pops up after login and whenever counter is locked */}
-            <MasterSecurityModal isOpen={!isSecurityUnlocked} />
-          </>
+          <MainContent />
         )
       )}
     </>

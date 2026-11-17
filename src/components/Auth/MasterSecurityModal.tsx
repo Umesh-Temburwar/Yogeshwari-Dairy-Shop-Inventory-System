@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import ydoLogo from '../../assets/YDO_logo.jpg';
+import ydoLogo from '../../assets/YDO_logo.png';
+import ydpShopBg from '../../assets/YDP.jpg';
 import nikhilAvatar from '../../assets/nikhil_avatar.png';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -13,7 +14,8 @@ import {
   Delete, 
   AlertTriangle,
   Fingerprint,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { authenticateNileshFingerprint } from '../../lib/biometricAuth';
@@ -23,6 +25,39 @@ interface MasterSecurityModalProps {
 }
 
 const PASSCODE_LENGTH = 8;
+
+// Haptic feedback trigger for mobile touch devices
+const triggerHaptic = (type: 'tap' | 'clear' | 'error' | 'success' = 'tap') => {
+  if (typeof window !== 'undefined' && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      if (type === 'tap') {
+        navigator.vibrate(28); // Crisp tactile click on digit entry
+      } else if (type === 'clear') {
+        navigator.vibrate(36);
+      } else if (type === 'error') {
+        navigator.vibrate([45, 60, 45]); // Double buzz on incorrect pin
+      } else if (type === 'success') {
+        navigator.vibrate([50, 70, 110]); // Festive pulse on access granted
+      }
+    } catch {}
+  }
+};
+
+// Official Yogeshwari Dairy Products for background poster collage
+const DAIRY_POSTER_ITEMS = [
+  { name: 'ताजे म्हशीचे दूध', sub: 'Fresh Buffalo Milk', tag: '100% Pure & Thick', icon: '🥛', color: 'from-blue-600/20 to-emerald-600/20' },
+  { name: 'शुद्ध साजूक तूप', sub: 'Pure Desi Ghee', tag: 'Aromatic & Golden', icon: '🧈', color: 'from-amber-600/20 to-yellow-600/20' },
+  { name: 'स्पेशल मलाई पनीर', sub: 'Fresh Malai Paneer', tag: 'Super Soft & Fresh', icon: '🧀', color: 'from-emerald-600/20 to-teal-600/20' },
+  { name: 'घट्ट मलई दही', sub: 'Thick Fresh Dahi', tag: 'Rich & Creamy Curd', icon: '🥣', color: 'from-cyan-600/20 to-blue-600/20' },
+  { name: 'मसाला ताक', sub: 'Spiced Buttermilk', tag: 'Cool & Digestive', icon: '🥤', color: 'from-teal-600/20 to-emerald-600/20' },
+  { name: 'केसर श्रीखंड', sub: 'Kesar Shrikhand', tag: 'Royal Festive Sweet', icon: '🍯', color: 'from-yellow-600/20 to-amber-600/20' },
+  { name: 'ताजे गावरान लोणी', sub: 'Fresh White Butter', tag: 'Traditional Taste', icon: '🧈', color: 'from-emerald-600/20 to-lime-600/20' },
+  { name: 'शुद्ध खवा / मावा', sub: 'Pure Dairy Khawa', tag: 'Rich Mawa Base', icon: '🥮', color: 'from-amber-600/20 to-orange-600/20' },
+  { name: 'मलाई पेढा', sub: 'Fresh Malai Peda', tag: 'Signature Sweet', icon: '🍬', color: 'from-yellow-600/20 to-amber-600/20' },
+  { name: 'दूध पाऊच व शीतपेये', sub: 'Daily Milk Pouches', tag: 'Cold Storage Fresh', icon: '🥛', color: 'from-blue-600/20 to-indigo-600/20' },
+  { name: 'ताजी बासुंदी', sub: 'Creamy Basundi', tag: 'Rich Milk Treat', icon: '🍨', color: 'from-amber-600/20 to-yellow-600/20' },
+  { name: 'मलाई लस्सी', sub: 'Sweet Malai Lassi', tag: 'Chilled Dairy Drink', icon: '🥤', color: 'from-teal-600/20 to-cyan-600/20' },
+];
 
 export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen }) => {
   const { user, role, unlockSecurity, unlockSecurityWithBiometrics, signOut } = useAuth();
@@ -61,15 +96,16 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
       const res = await unlockSecurity(pinToVerify);
       if (res.success) {
         setIsSuccess(true);
+        triggerHaptic('success');
         try {
           confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
         } catch {}
-        // Allow brief moment for the cashier to see the success state before unmount
         setTimeout(() => {
           setPasscode('');
-        }, 320);
+        }, 300);
       } else {
         setIsShake(true);
+        triggerHaptic('error');
         setTimeout(() => setIsShake(false), 450);
 
         if (res.error === 'SECURITY_LOCKED' && res.lockedUntil) {
@@ -95,6 +131,7 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
         setPasscode('');
       }
     } catch {
+      triggerHaptic('error');
       setErrorMsg(
         language === 'mr' 
           ? 'पडताळणीमध्ये त्रुटी आली. कृपया पुन्हा प्रयत्न करा.' 
@@ -109,10 +146,11 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
     }
   }, [unlockSecurity, language, lockoutRemainingSec, isVerifying, isSuccess]);
 
-  // Keypad Handlers
+  // Keypad Handlers with Haptic Vibration
   const handleDigitPress = useCallback((digit: string) => {
     if (lockoutRemainingSec > 0 || isVerifying || isSuccess) return;
     if (passcode.length < PASSCODE_LENGTH) {
+      triggerHaptic('tap');
       const next = passcode + digit;
       setPasscode(next);
       setErrorMsg(null);
@@ -127,12 +165,14 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
 
   const handleBackspace = useCallback(() => {
     if (lockoutRemainingSec > 0 || isVerifying || isSuccess) return;
+    triggerHaptic('tap');
     setPasscode((prev) => prev.slice(0, -1));
     setErrorMsg(null);
   }, [lockoutRemainingSec, isVerifying, isSuccess]);
 
   const handleClear = useCallback(() => {
     if (lockoutRemainingSec > 0 || isVerifying || isSuccess) return;
+    triggerHaptic('clear');
     setPasscode('');
     setErrorMsg(null);
   }, [lockoutRemainingSec, isVerifying, isSuccess]);
@@ -172,6 +212,7 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
         const granted = await unlockSecurityWithBiometrics();
         if (granted) {
           setIsSuccess(true);
+          triggerHaptic('success');
           try {
             confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
           } catch {}
@@ -186,12 +227,14 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
           );
         }
       } else if (res.error && !isAuto) {
+        triggerHaptic('error');
         setErrorMsg(res.error);
         setIsShake(true);
         setTimeout(() => setIsShake(false), 450);
       }
     } catch {
       if (!isAuto) {
+        triggerHaptic('error');
         setErrorMsg(
           language === 'mr'
             ? 'फिंगरप्रिंट स्कॅनमध्ये त्रुटी आली. कृपया पासवर्ड वापरा.'
@@ -256,17 +299,91 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
 
   return (
     <div 
-      className="fixed inset-0 z-[9999] bg-[#070D0B]/95 flex items-center justify-center p-3 sm:p-4 select-none overflow-y-auto"
+      className="fixed inset-0 z-[9999] bg-[#050D0A] overflow-hidden flex items-center justify-center p-3 sm:p-4 select-none"
       style={{ touchAction: 'manipulation' }}
     >
+      {/* ══════════════════════════════════════════════════════════════
+          BACKGROUND LAYER 1: Authentic Retail Store Photo (YDP.jpg)
+          ══════════════════════════════════════════════════════════════ */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <img 
+          src={ydpShopBg} 
+          alt="Yogeshwari Dairy Store"
+          className="w-full h-full object-cover object-center filter blur-[3px] scale-105 opacity-25"
+        />
+        {/* Dark forest green protective gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050E0A]/95 via-[#081711]/90 to-[#040A07]/96" />
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════
+          BACKGROUND LAYER 2: Official Dairy Products Poster Collage Grid
+          ══════════════════════════════════════════════════════════════ */}
       <div 
-        className="relative w-full max-w-[380px] bg-[#101C18] border border-[#23352E] rounded-2xl p-5 sm:p-6 shadow-2xl flex flex-col justify-between my-auto"
+        className="absolute inset-0 z-0 overflow-hidden pointer-events-none p-3 sm:p-6 opacity-35 dark:opacity-30 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 content-center"
+        aria-hidden="true"
+      >
+        {DAIRY_POSTER_ITEMS.map((item, idx) => (
+          <div 
+            key={idx}
+            className={`p-3 rounded-2xl bg-gradient-to-br ${item.color} border border-emerald-500/15 backdrop-blur-xs flex items-center gap-2.5 shadow-sm`}
+          >
+            <span className="text-2xl shrink-0 select-none">{item.icon}</span>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-emerald-100 truncate">{item.name}</div>
+              <div className="text-[10px] text-emerald-300/80 truncate">{item.sub}</div>
+              <div className="text-[9px] font-semibold text-amber-300/90 tracking-wide mt-0.5 truncate">★ {item.tag}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════
+          BACKGROUND LAYER 3: Large Center Logo Watermark
+          ══════════════════════════════════════════════════════════════ */}
+      <div 
+        className="absolute inset-0 z-0 flex flex-col items-center justify-center pointer-events-none select-none"
+        aria-hidden="true"
+      >
+        {/* Luminous emerald ambient halo */}
+        <div className="w-80 h-80 sm:w-96 sm:h-96 rounded-full bg-emerald-500/10 blur-3xl absolute" />
+        
+        {/* Prominent circular watermark logo */}
+        <div className="w-64 h-64 sm:w-80 sm:h-80 rounded-full border-4 border-emerald-500/20 p-2 opacity-20 flex items-center justify-center shadow-2xl">
+          <img 
+            src={ydoLogo} 
+            alt="Yogeshwari Dairy Watermark"
+            className="w-full h-full object-cover rounded-full filter contrast-125 saturate-125"
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (!target.src.endsWith('/YDO_logo.png')) {
+                target.src = '/YDO_logo.png';
+              }
+            }}
+          />
+        </div>
+
+        {/* Branded Watermark Typography */}
+        <div className="mt-3 text-center opacity-25">
+          <span className="text-[11px] sm:text-xs font-black uppercase tracking-[0.25em] text-emerald-300 block">
+            योगेश्वरी डेअरी प्रॉडक्ट्स
+          </span>
+          <span className="text-[9px] sm:text-[10px] font-bold text-slate-300 block mt-0.5 tracking-wider">
+            Purity is Our Identity • Fresh Daily Products
+          </span>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════
+          FOREGROUND: Master Passcode Security Card (Clean & Focused)
+          ══════════════════════════════════════════════════════════════ */}
+      <div 
+        className="relative z-10 w-full max-w-[380px] bg-[#0E1A16]/96 border border-emerald-500/30 rounded-3xl p-5 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.85)] backdrop-blur-md flex flex-col justify-between my-auto"
       >
         {/* Top Header: Shop Branding & Verified Profile */}
         <div>
           <div className="flex items-center justify-between pb-3.5 border-b border-[#1E2E28]">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-10 h-10 rounded-full bg-white p-0.5 border border-emerald-500/30 overflow-hidden shrink-0 shadow-xs">
+              <div className="w-10 h-10 rounded-full bg-white p-0.5 border border-emerald-500/40 overflow-hidden shrink-0 shadow-xs">
                 <img 
                   src={ydoLogo} 
                   alt="Yogeshwari Dairy" 
@@ -408,7 +525,10 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
           <div className="flex items-center justify-between px-1 pt-0.5 text-xs">
             <button
               type="button"
-              onClick={() => setShowPasscode(!showPasscode)}
+              onClick={() => {
+                triggerHaptic('tap');
+                setShowPasscode(!showPasscode);
+              }}
               className="inline-flex items-center gap-1.5 text-slate-400 hover:text-slate-200 transition-colors py-1 cursor-pointer"
               aria-label={showPasscode ? 'Hide passcode' : 'Show passcode'}
             >
@@ -429,7 +549,10 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
               <button
                 type="button"
                 disabled={lockoutRemainingSec > 0 || isVerifying || isBiometricScanning || isSuccess}
-                onClick={() => handleBiometricUnlock(false)}
+                onClick={() => {
+                  triggerHaptic('tap');
+                  handleBiometricUnlock(false);
+                }}
                 className="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 disabled:opacity-40 transition-colors py-1 cursor-pointer"
               >
                 <Fingerprint className={`w-3.5 h-3.5 ${isBiometricScanning ? 'animate-spin' : ''}`} />

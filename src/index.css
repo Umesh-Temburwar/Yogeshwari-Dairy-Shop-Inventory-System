@@ -188,3 +188,191 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   MOTION SYSTEM — Yogeshwari Dairy ERP
+   Single source of truth for all animation tokens.
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* Duration tokens */
+  --dur-instant: 80ms;
+  --dur-micro:   120ms;
+  --dur-small:   160ms;
+  --dur-medium:  220ms;
+  --dur-large:   320ms;
+  --dur-number:  600ms;
+  --dur-page:    220ms;
+
+  /* Easing tokens */
+  --ease-enter:      cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit:       cubic-bezier(0.4, 0, 1, 1);
+  --ease-standard:   cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-press:      cubic-bezier(0.2, 0, 0, 1);
+  --ease-spring:     cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* ─── Keyframes ──────────────────────────────────────────── */
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes sheet-enter {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes number-pulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+@keyframes highlight-flash {
+  0%   { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-150%) skewX(-15deg); }
+  100% { transform: translateX(200%) skewX(-15deg); }
+}
+
+/* ─── Animation Utility Classes ─────────────────────────── */
+
+.animate-toast-enter {
+  animation: toast-enter var(--dur-medium, 220ms) var(--ease-spring, cubic-bezier(0.34,1.4,0.64,1)) both;
+}
+
+.animate-modal-enter {
+  animation: modal-enter var(--dur-medium, 220ms) var(--ease-enter, cubic-bezier(0.16,1,0.3,1)) both;
+}
+
+.animate-sheet-enter {
+  animation: sheet-enter var(--dur-medium, 220ms) var(--ease-enter, cubic-bezier(0.16,1,0.3,1)) both;
+}
+
+.animate-fade-in {
+  animation: fade-in var(--dur-small, 160ms) var(--ease-enter, cubic-bezier(0.16,1,0.3,1)) both;
+}
+
+.animate-slide-up {
+  animation: slide-up var(--dur-small, 160ms) var(--ease-enter, cubic-bezier(0.16,1,0.3,1)) both;
+}
+
+.animate-number-pulse {
+  animation: number-pulse var(--dur-micro, 120ms) var(--ease-spring, cubic-bezier(0.34,1.4,0.64,1));
+}
+
+.animate-highlight-flash {
+  animation: highlight-flash 700ms var(--ease-exit, cubic-bezier(0.4,0,1,1)) forwards;
+}
+
+.animate-shimmer {
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* ─── Motion Tiers ───────────────────────────────────────── */
+
+/* Respect OS-level preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-toast-enter,
+  .animate-modal-enter,
+  .animate-sheet-enter,
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-number-pulse,
+  .animate-highlight-flash {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* data-motion="none" — instant everything */
+[data-motion="none"] *,
+[data-motion="none"] *::before,
+[data-motion="none"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0ms !important;
+}
+
+/* data-motion="reduced" — fade only, no transforms */
+[data-motion="reduced"] .animate-modal-enter,
+[data-motion="reduced"] .animate-sheet-enter,
+[data-motion="reduced"] .animate-slide-up,
+[data-motion="reduced"] .animate-toast-enter {
+  animation-name: fade-in !important;
+  animation-duration: var(--dur-micro, 120ms) !important;
+}
+
+/* ─── Interactive Micro-interaction Helpers ─────────────── */
+
+/* Tactile press — apply to buttons, cards, chips */
+.press-scale {
+  transition: transform var(--dur-instant, 80ms) var(--ease-press, cubic-bezier(0.2,0,0,1)),
+              box-shadow var(--dur-instant, 80ms) var(--ease-press, cubic-bezier(0.2,0,0,1));
+}
+.press-scale:active {
+  transform: scale(0.97);
+}
+
+/* Hover lift — apply to cards */
+.hover-lift {
+  transition: transform var(--dur-micro, 120ms) var(--ease-enter, cubic-bezier(0.16,1,0.3,1)),
+              box-shadow var(--dur-micro, 120ms) var(--ease-enter, cubic-bezier(0.16,1,0.3,1));
+}
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+/* Smooth focus ring for inputs */
+.focus-ring {
+  transition: box-shadow var(--dur-micro, 120ms) var(--ease-enter, cubic-bezier(0.16,1,0.3,1)),
+              border-color var(--dur-micro, 120ms) var(--ease-enter, cubic-bezier(0.16,1,0.3,1));
+}
+
+

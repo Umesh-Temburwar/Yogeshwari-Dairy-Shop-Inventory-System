@@ -44,6 +44,9 @@ import confetti from 'canvas-confetti';
 import { playSuccessChime, playBeepSound } from '../../utils/audioUtils';
 import { useAuth } from '../../context/AuthContext';
 import { formatSaleDateTime, formatSaleDate, formatSaleTime } from '../../lib/dateUtils';
+import { useToast } from '../../animations/useToast';
+import { AnimatedNumber } from '../animations/AnimatedNumber';
+import { SuccessCheck } from '../animations/SuccessCheck';
 
 interface ProductCardProps {
   prod: Product;
@@ -92,7 +95,7 @@ const ProductCard = React.memo<ProductCardProps>(({
           onAddToCart(prod, 1);
         }
       }}
-      className={`relative bg-white dark:bg-[#131F1B] rounded-2xl p-3 sm:p-3.5 border transition-all duration-150 flex flex-col justify-between group select-none shadow-2xs ${
+      className={`relative bg-white dark:bg-[#131F1B] rounded-2xl p-3 sm:p-3.5 border transition-all duration-150 flex flex-col justify-between group select-none shadow-2xs hover-lift press-scale ${
         isOutOfStock || hasExpiredOnly
           ? 'border-slate-200 dark:border-[#24352F] opacity-60 bg-slate-50/50 dark:bg-[#16221E]' 
           : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500 dark:hover:border-emerald-500/60 hover:shadow-md cursor-pointer'
@@ -221,6 +224,7 @@ export const BillingCounter: React.FC = () => {
   } = useStore();
   const { t, language } = useLanguage();
   const { role, adminSlot, user } = useAuth();
+  const toast = useToast();
 
   const activeOperator = useMemo(() => {
     const isMr = language === 'mr';
@@ -459,7 +463,7 @@ export const BillingCounter: React.FC = () => {
       : product.stock_quantity;
 
     if (availableNonExpiredStock <= 0) {
-      alert(language === 'mr' 
+      toast.error(language === 'mr' 
         ? 'हा माल संपला आहे किंवा मुदत संपली (Expired) आहे. बिलात जोडता येणार नाही!' 
         : language === 'hi' 
         ? 'यह माल खत्म या एक्सपायर हो चुका है, बिल में नहीं जोड़ा जा सकता!' 
@@ -561,7 +565,7 @@ export const BillingCounter: React.FC = () => {
     if (cart.length === 0 || isCheckingOut) return;
 
     if (paymentMode === 'Udhar' && !customerName.trim()) {
-      alert(language === 'mr' 
+      toast.error(language === 'mr' 
         ? 'कृपया उधार खात्यासाठी ग्राहकाचे नाव प्रविष्ट करा!' 
         : language === 'hi' 
         ? 'कृपया उधार खाते के लिए ग्राहक का नाम दर्ज करें!' 
@@ -973,7 +977,7 @@ export const BillingCounter: React.FC = () => {
                 return (
                   <div 
                     key={item.product_id}
-                    className="flex items-center gap-2.5 p-2 sm:p-2.5 rounded-2xl bg-slate-50/90 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] hover:border-emerald-500/30 transition shadow-2xs group"
+                    className="animate-slide-up flex items-center gap-2.5 p-2 sm:p-2.5 rounded-2xl bg-slate-50/90 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] hover:border-emerald-500/30 transition shadow-2xs group"
                   >
                     {/* Thumbnail Image */}
                     <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] p-0.5 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
@@ -1115,7 +1119,7 @@ export const BillingCounter: React.FC = () => {
                 </span>
               </div>
               <div className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
-                ₹{netTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <AnimatedNumber value={netTotal} prefix="₹" decimals={2} duration={350} />
               </div>
             </div>
           </div>
@@ -1644,11 +1648,11 @@ export const BillingCounter: React.FC = () => {
 
       {/* SALE SUCCESS & PRINT RECEIPT MODAL */}
       {isSuccessModalOpen && lastCompletedSale && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-[#131F1B] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-[#24352F] space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white dark:bg-[#131F1B] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-[#24352F] space-y-4 max-h-[90vh] overflow-y-auto animate-modal-enter">
           <div className="text-center space-y-2">
-            <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800/40">
-              <CheckCircle2 className="w-7 h-7" />
+            <div className="flex items-center justify-center mx-auto my-1">
+              <SuccessCheck size={48} />
             </div>
             <h3 className="text-xl font-black text-slate-900 dark:text-white">
               {language === 'mr' ? 'विक्री यशस्वीपणे नोंदवली गेली!' : language === 'hi' ? 'बिक्री सफलतापूर्वक दर्ज हुई!' : 'Sale Recorded Successfully!'}

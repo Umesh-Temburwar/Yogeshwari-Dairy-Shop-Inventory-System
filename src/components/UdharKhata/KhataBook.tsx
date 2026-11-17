@@ -17,10 +17,12 @@ import {
   Download,
   Eye
 } from 'lucide-react';
+import { useToast } from '../../animations/useToast';
 
 export const KhataBook: React.FC = () => {
   const { customers, udharTransactions, addUdharCustomer, recordUdharPayment, metrics } = useStore();
   const { t, language } = useLanguage();
+  const toast = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'cleared'>('pending');
@@ -62,7 +64,7 @@ export const KhataBook: React.FC = () => {
   const handleSendWhatsAppReminder = (customer: UdharCustomer) => {
     const cleanPhone = (customer.phone || '').replace(/[^0-9]/g, '');
     if (!cleanPhone || cleanPhone.length < 10) {
-      alert(language === 'mr' ? 'ग्राहकाचा वैध मोबाईल नंबर उपलब्ध नाही.' : 'Valid mobile number not available.');
+      toast.error(language === 'mr' ? 'ग्राहकाचा वैध मोबाईल नंबर उपलब्ध नाही.' : 'Valid mobile number not available.');
       return;
     }
     const phoneWithCode = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;

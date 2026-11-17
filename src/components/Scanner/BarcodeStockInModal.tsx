@@ -45,6 +45,7 @@ import {
   RefreshCw,
   Mic
 } from 'lucide-react';
+import { useToast } from '../../animations/useToast';
 
 interface BarcodeStockInModalProps {
   isOpen: boolean;
@@ -63,6 +64,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
 }) => {
   const { products, addProduct, addBatch } = useStore();
   const { language } = useLanguage();
+  const toast = useToast();
 
   // Step 1: Scan | Step 2: Register New (if not found) | Step 3: Enter Stock Details | Step 4: Confirm Summary | Step 5: Success
   const [step, setStep] = useState<'scan' | 'register' | 'details' | 'confirm' | 'success'>('scan');
@@ -590,7 +592,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
         }
         handleBarcodeDetected(ocrRes.barcode);
       } else {
-        alert(
+        toast.error(
           language === 'mr'
             ? 'संख्या वाचता आली नाही. कृपया खाली बारकोड नंबर टाईप करा.'
             : 'संख्या पहचानी नहीं जा सकी। कृपया नीचे बारकोड नंबर टाइप करें।'
@@ -716,11 +718,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       if (detected) {
         handleBarcodeDetected(detected);
       } else {
-        alert(language === 'mr' ? 'फोटोमध्ये बारकोड सापडला नाही. कृपया जवळून स्पष्ट फोटो काढा.' : 'फोटो में बारकोड नहीं मिला। कृपया स्पष्ट फोटो लें।');
+        toast.error(language === 'mr' ? 'फोटोमध्ये बारकोड सापडला नाही. कृपया जवळून स्पष्ट फोटो काढा.' : 'फोटो में बारकोड नहीं मिला। कृपया स्पष्ट फोटो लें।');
       }
       URL.revokeObjectURL(objectUrl);
     } catch (err) {
-      alert(language === 'mr' ? 'फोटोमध्ये बारकोड वाचता आला नाही. कृपया बारकोड नंबर हाताने टाका.' : 'फोटो में बारकोड नहीं पढ़ा जा सका। कृपया बारकोड संख्या टाइप करें।');
+      toast.error(language === 'mr' ? 'फोटोमध्ये बारकोड वाचता आला नाही. कृपया बारकोड नंबर हाताने टाका.' : 'फोटो में बारकोड नहीं पढ़ा जा सका। कृपया बारकोड संख्या टाइप करें।');
     }
   };
 

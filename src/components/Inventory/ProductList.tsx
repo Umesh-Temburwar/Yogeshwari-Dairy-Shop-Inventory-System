@@ -48,6 +48,7 @@ import { BarcodeStockInModal } from '../Scanner/BarcodeStockInModal';
 import { ProductImage } from '../Common/ProductImage';
 import { ProductImageManagerModal } from '../Admin/ProductImageManagerModal';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
+import { AnimatedList } from '../animations/AnimatedList';
 import { supabase } from '../../lib/supabase';
 import { translateProductName } from '../../lib/productTranslator';
 import { playBeepSound, playSuccessChime } from '../../utils/audioUtils';
@@ -1142,7 +1143,11 @@ export const ProductList: React.FC<ProductListProps> = ({
 
       {/* VIEW 1: ULTRA-SIMPLE LARGE TOUCH CARDS VIEW (DEFAULT) */}
       {viewMode === 'cards' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <AnimatedList
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+          staggerMs={35}
+          maxItems={8}
+        >
           {filteredProducts.length === 0 ? (
             <div className="col-span-full bg-white dark:bg-[#131F1B] rounded-2xl p-12 border border-dashed border-slate-200 dark:border-[#24352F] text-center flex flex-col items-center justify-center">
               <Package className="w-14 h-14 text-slate-300 dark:text-slate-600 mb-3" />
@@ -1185,7 +1190,7 @@ export const ProductList: React.FC<ProductListProps> = ({
             return (
               <div 
                 key={prod.id}
-                className={`bg-white dark:bg-[#131F1B] rounded-3xl p-5 border-2 transition-all duration-150 flex flex-col justify-between shadow-xs hover:shadow-md ${
+                className={`bg-white dark:bg-[#131F1B] rounded-3xl p-5 border-2 transition-all duration-150 flex flex-col justify-between shadow-xs hover:shadow-md hover-lift ${
                   isOutOfStock 
                     ? 'border-rose-300 dark:border-rose-900/60 bg-rose-50/20 dark:bg-[#1A2A25]' 
                     : isLowStock 
@@ -1393,7 +1398,7 @@ export const ProductList: React.FC<ProductListProps> = ({
             </span>
           </div>
         )}
-        </div>
+        </AnimatedList>
       )}
 
       {/* VIEW 2: TRADITIONAL DETAILED TABLE VIEW */}

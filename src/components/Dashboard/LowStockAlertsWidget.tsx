@@ -2,6 +2,7 @@ import React from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { AlertTriangle, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { AnimatedList } from '../animations/AnimatedList';
 
 export const LowStockAlertsWidget: React.FC = () => {
   const { products, setActiveView } = useStore();
@@ -41,55 +42,57 @@ export const LowStockAlertsWidget: React.FC = () => {
       </div>
 
       {/* Scrollable Body (max-h-80) */}
-      <div className="my-4 space-y-2.5 max-h-80 overflow-y-auto pr-1">
+      <div className="my-4 max-h-80 overflow-y-auto pr-1">
         {lowStockItems.length > 0 ? (
-          lowStockItems.map((item) => {
-            const deficit = Math.max(0, item.min_stock_alert * 2 - item.stock_quantity);
-            const isOutOfStock = item.stock_quantity <= 0;
-            const displayName = 
-              (language === 'mr' && item.marathi_name) ? item.marathi_name : 
-              (language === 'hi' && item.hindi_name) ? item.hindi_name : 
-              item.name;
+          <AnimatedList className="space-y-2.5" staggerMs={30} maxItems={6}>
+            {lowStockItems.map((item) => {
+              const deficit = Math.max(0, item.min_stock_alert * 2 - item.stock_quantity);
+              const isOutOfStock = item.stock_quantity <= 0;
+              const displayName = 
+                (language === 'mr' && item.marathi_name) ? item.marathi_name : 
+                (language === 'hi' && item.hindi_name) ? item.hindi_name : 
+                item.name;
 
-            return (
-              <div 
-                key={item.id} 
-                className="flex items-center justify-between p-3 rounded-xl border border-rose-200/70 dark:border-rose-900/60 bg-rose-50/50 dark:bg-[#1A2A25] hover:bg-rose-50/80 dark:hover:bg-[#1F332D] hover:border-rose-300 dark:hover:border-rose-700/60 transition-all gap-3"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="font-bold text-xs sm:text-sm text-slate-900 dark:text-[#E7F0EC] truncate">
-                    {displayName}
+              return (
+                <div 
+                  key={item.id} 
+                  className="flex items-center justify-between p-3 rounded-xl border border-rose-200/70 dark:border-rose-900/60 bg-rose-50/50 dark:bg-[#1A2A25] hover:bg-rose-50/80 dark:hover:bg-[#1F332D] hover:border-rose-300 dark:hover:border-rose-700/60 transition-all gap-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-xs sm:text-sm text-slate-900 dark:text-[#E7F0EC] truncate">
+                      {displayName}
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px] mt-0.5">
+                      <span className={`font-semibold tabular-nums ${
+                        isOutOfStock 
+                          ? 'text-rose-600 dark:text-rose-400 font-extrabold' 
+                          : 'text-amber-600 dark:text-amber-400'
+                      }`}>
+                        {language === 'mr' ? 'साठा:' : language === 'hi' ? 'स्टॉक:' : 'Stock:'} {item.stock_quantity} {item.unit}
+                      </span>
+                      <span className="text-slate-300 dark:text-slate-600">&bull;</span>
+                      <span className="text-slate-500 dark:text-[#8FA69C] tabular-nums">
+                        {language === 'mr' ? 'किमान:' : language === 'hi' ? 'न्यूनतम:' : 'Min:'} {item.min_stock_alert} {item.unit}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] mt-0.5">
-                    <span className={`font-semibold tabular-nums ${
-                      isOutOfStock 
-                        ? 'text-rose-600 dark:text-rose-400 font-extrabold' 
-                        : 'text-amber-600 dark:text-amber-400'
-                    }`}>
-                      {language === 'mr' ? 'साठा:' : language === 'hi' ? 'स्टॉक:' : 'Stock:'} {item.stock_quantity} {item.unit}
+
+                  {/* Right: Reorder chip and Buy button */}
+                  <div className="text-right shrink-0 flex flex-col items-end gap-1">
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-100 dark:bg-rose-950/90 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/70 tabular-nums shadow-xs">
+                      {deficit.toFixed(0)} {item.unit} {t('reorderUnits')}
                     </span>
-                    <span className="text-slate-300 dark:text-slate-600">&bull;</span>
-                    <span className="text-slate-500 dark:text-[#8FA69C] tabular-nums">
-                      {language === 'mr' ? 'किमान:' : language === 'hi' ? 'न्यूनतम:' : 'Min:'} {item.min_stock_alert} {item.unit}
-                    </span>
+                    <button
+                      onClick={() => setActiveView('purchases')}
+                      className="text-xs text-emerald-700 dark:text-emerald-400 font-bold hover:text-emerald-800 dark:hover:text-emerald-300 hover:underline"
+                    >
+                      + {t('addBuy')}
+                    </button>
                   </div>
                 </div>
-
-                {/* Right: Reorder chip and Buy button */}
-                <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-100 dark:bg-rose-950/90 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/70 tabular-nums shadow-xs">
-                    {deficit.toFixed(0)} {item.unit} {t('reorderUnits')}
-                  </span>
-                  <button
-                    onClick={() => setActiveView('purchases')}
-                    className="text-xs text-emerald-700 dark:text-emerald-400 font-bold hover:text-emerald-800 dark:hover:text-emerald-300 hover:underline"
-                  >
-                    + {t('addBuy')}
-                  </button>
-                </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </AnimatedList>
         ) : (
           <div className="py-10 text-center text-emerald-700 dark:text-emerald-400 text-xs font-medium bg-emerald-50/50 dark:bg-[#1A2A25] rounded-xl border border-emerald-100 dark:border-emerald-800/40">
             <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto mb-1 opacity-80" />

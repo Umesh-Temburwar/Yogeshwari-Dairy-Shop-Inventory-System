@@ -18,6 +18,10 @@ import { KeyboardShortcutsModal } from './components/Common/KeyboardShortcutsMod
 import { GlobalShakeDetector } from './components/Common/GlobalShakeDetector';
 import { RotateCw } from 'lucide-react';
 import { Product } from './types';
+// ─── Animation System ───────────────────────────────────────
+import { ToastProvider } from './animations/useToast';
+import { AnimatedPage } from './components/animations/AnimatedPage';
+import { useMotionTier } from './animations/useMotionTier';
 
 // Lazy-load secondary heavy view modules for initial bundle optimization
 const BillingCounter = React.lazy(() => import('./components/POS/BillingCounter').then(m => ({ default: m.BillingCounter })));
@@ -34,6 +38,12 @@ const ReturnsTracker = React.lazy(() => import('./components/Returns/ReturnsTrac
 const ReturnProductModal = React.lazy(() => import('./components/Returns/ReturnProductModal').then(m => ({ default: m.ReturnProductModal })));
 const SupabaseConfigModal = React.lazy(() => import('./components/Settings/SupabaseConfigModal').then(m => ({ default: m.SupabaseConfigModal })));
 const ProductImageManagerModal = React.lazy(() => import('./components/Admin/ProductImageManagerModal').then(m => ({ default: m.ProductImageManagerModal })));
+
+// Initialize motion tier at app level — sets data-motion on <html>
+const MotionInitializer: React.FC = () => {
+  useMotionTier(); // side-effect only: sets data-motion attribute
+  return null;
+};
 
 const MainContent: React.FC = () => {
   const { activeView, setActiveView, refreshData, isSyncing } = useStore();
@@ -195,7 +205,7 @@ const MainContent: React.FC = () => {
             </div>
           )}
           <Suspense fallback={<ViewFallbackSkeleton />}>
-            <div key={activeView} className="w-full">
+            <AnimatedPage key={activeView} className="w-full">
               {activeView === 'dashboard' && (
                 <DashboardView 
                   onOpenAddProduct={() => {
@@ -241,7 +251,7 @@ const MainContent: React.FC = () => {
                   }} 
                 />
               )}
-            </div>
+            </AnimatedPage>
           </Suspense>
         </main>
       </div>
@@ -351,7 +361,10 @@ export function App() {
       <LanguageProvider>
         <AuthProvider>
           <StoreProvider>
-            <AppRoot />
+            <ToastProvider>
+              <MotionInitializer />
+              <AppRoot />
+            </ToastProvider>
           </StoreProvider>
         </AuthProvider>
       </LanguageProvider>

@@ -19,6 +19,7 @@ import {
   TrendingUp, 
   Sparkles,
   ShieldAlert,
+  ShieldCheck,
   X,
   Smartphone,
   Download,
@@ -413,9 +414,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {renderSection('inventory', 'navSectionInventory', isMobileDrawer)}
           {renderSection('accounts', 'navSectionAccounts', isMobileDrawer)}
 
-          {/* SECTION 4: DEDICATED "SETTINGS" PAGE LINK */}
+          {/* SECTION 4: DEDICATED "IMAGE HEALTH" & "SETTINGS" LINKS */}
           {!isActuallyCollapsed ? (
-            <div className="pt-2 border-t border-slate-100 dark:border-[#24352F]">
+            <div className="pt-2 border-t border-slate-100 dark:border-[#24352F] space-y-1">
+              {(role === 'Owner' || role === 'Admin') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveView('image-health');
+                    if (isMobileDrawer) onCloseMobile();
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all duration-150 group cursor-pointer ${
+                    activeView === 'image-health'
+                      ? 'bg-emerald-600 text-white shadow-sm font-bold'
+                      : 'text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25] hover:text-slate-900 dark:hover:text-[#E7F0EC] font-medium'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <ShieldCheck className={`w-5 h-5 shrink-0 transition-transform ${
+                      activeView === 'image-health'
+                        ? 'text-white'
+                        : 'text-emerald-600 dark:text-emerald-400'
+                    }`} />
+                    <span className="text-sm truncate leading-tight font-semibold">
+                      {language === 'mr' ? 'इमेज हेल्थ (Image Health)' : language === 'hi' ? 'इमेज हेल्थ (Image Health)' : 'Image Health'}
+                    </span>
+                  </div>
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => {
@@ -441,8 +468,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             </div>
           ) : (
-            /* Collapsed desktop rail Settings button */
+            /* Collapsed desktop rail Image Health & Settings buttons */
             <div className="pt-2 border-t border-slate-200 dark:border-[#24352F] space-y-2">
+              {(role === 'Owner' || role === 'Admin') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveView('image-health');
+                    if (isMobileDrawer) onCloseMobile();
+                  }}
+                  title="Image Health"
+                  className={`w-10 h-10 mx-auto rounded-xl flex items-center justify-center transition cursor-pointer ${
+                    activeView === 'image-health'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'text-emerald-600 dark:text-emerald-400 hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
+                  }`}
+                >
+                  <ShieldCheck className="w-5 h-5" />
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => {

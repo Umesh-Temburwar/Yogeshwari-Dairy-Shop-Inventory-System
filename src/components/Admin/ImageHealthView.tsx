@@ -29,7 +29,7 @@ import {
   ImageProbeResult
 } from '../../lib/productImageService';
 
-type HealthFilter = 'issues' | 'missing' | 'broken' | 'non_square' | 'healthy';
+type HealthFilter = 'issues' | 'missing' | 'broken' | 'unofficial' | 'non_square' | 'healthy';
 type ScopeMode = 'in_stock' | 'all_loaded';
 
 interface RowLookupState {
@@ -146,6 +146,7 @@ export const ImageHealthView: React.FC = () => {
   const counts = useMemo(() => {
     let missing = 0;
     let broken = 0;
+    let unofficial = 0;
     let nonSquare = 0;
     let healthy = 0;
 
@@ -154,6 +155,7 @@ export const ImageHealthView: React.FC = () => {
       if (!h) continue;
       if (h.status === 'missing') missing += 1;
       else if (h.status === 'broken') broken += 1;
+      else if (h.status === 'unofficial') unofficial += 1;
       else if (h.status === 'non_square') nonSquare += 1;
       else healthy += 1;
     }
@@ -161,9 +163,10 @@ export const ImageHealthView: React.FC = () => {
     return {
       missing,
       broken,
+      unofficial,
       nonSquare,
       healthy,
-      issues: missing + broken + nonSquare
+      issues: missing + broken + unofficial + nonSquare
     };
   }, [scopedProducts, healthMap]);
 
@@ -178,6 +181,7 @@ export const ImageHealthView: React.FC = () => {
         if (filter === 'issues' && h.status === 'healthy') return false;
         if (filter === 'missing' && h.status !== 'missing') return false;
         if (filter === 'broken' && h.status !== 'broken') return false;
+        if (filter === 'unofficial' && h.status !== 'unofficial') return false;
         if (filter === 'non_square' && h.status !== 'non_square') return false;
         if (filter === 'healthy' && h.status !== 'healthy') return false;
       }
@@ -525,6 +529,7 @@ export const ImageHealthView: React.FC = () => {
           {(
             [
               { id: 'issues', label: `All Issues (${counts.issues})` },
+              { id: 'unofficial', label: `Unofficial (${counts.unofficial})` },
               { id: 'missing', label: `Missing (${counts.missing})` },
               { id: 'broken', label: `Broken (${counts.broken})` },
               { id: 'non_square', label: `Non-Square (${counts.nonSquare})` },
@@ -608,6 +613,11 @@ export const ImageHealthView: React.FC = () => {
                         {health?.status === 'broken' && (
                           <span className="px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300">
                             Broken URL
+                          </span>
+                        )}
+                        {health?.status === 'unofficial' && (
+                          <span className="px-2 py-0.5 rounded-md bg-orange-100 dark:bg-orange-950/70 text-orange-800 dark:text-orange-300">
+                            Unofficial Photo ({health.width}×{health.height})
                           </span>
                         )}
                         {health?.status === 'non_square' && (

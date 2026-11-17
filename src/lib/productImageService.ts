@@ -481,12 +481,18 @@ export const uploadProcessedProductImage = async (params: {
 };
 
 export interface ImageProbeResult {
-  status: 'missing' | 'broken' | 'non_square' | 'healthy';
+  status: 'missing' | 'broken' | 'non_square' | 'unofficial' | 'healthy';
   width: number;
   height: number;
 }
 
-/** Measure natural dimensions in the browser to classify Missing, Broken, Non-Square, or Healthy */
+export const isUnofficialCrowdsourcedUrl = (url?: string | null): boolean => {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  return lower.includes('images.openfoodfacts.org') || lower.includes('images.openfoodfacts.net');
+};
+
+/** Measure natural dimensions in the browser to classify Missing, Broken, Unofficial, Non-Square, or Healthy */
 export const probeImageHealth = async (
   url?: string | null,
   timeoutMs = 7000
@@ -519,6 +525,10 @@ export const probeImageHealth = async (
       const h = img.naturalHeight;
       if (w <= 0 || h <= 0) {
         finish({ status: 'broken', width: 0, height: 0 });
+        return;
+      }
+      if (isUnofficialCrowdsourcedUrl(normalized)) {
+        finish({ status: 'unofficial', width: w, height: h });
         return;
       }
       const ratio = w / h;

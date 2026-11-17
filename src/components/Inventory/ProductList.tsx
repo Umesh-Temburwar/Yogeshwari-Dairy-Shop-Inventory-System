@@ -1226,16 +1226,18 @@ export const ProductList: React.FC<ProductListProps> = ({
                     </span>
                   </div>
 
-                  {/* Product Image & Title */}
-                  <div className="flex items-start gap-3.5 my-2">
-                    <ProductImage 
-                      src={prod.image_url} 
-                      alt={prod.name} 
-                      category={prod.category} 
-                      size="md" 
-                      className="shadow-sm shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
+                  {/* Product Image Showcase (4:3 Aspect Ratio) & Title */}
+                  <div className="my-2.5 space-y-2.5">
+                    <div className="w-full aspect-[4/3] max-h-48 sm:max-h-52 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] shadow-2xs overflow-hidden flex items-center justify-center">
+                      <ProductImage 
+                        src={prod.image_url} 
+                        alt={prod.name} 
+                        category={prod.category} 
+                        fill
+                        className="group-hover:scale-105 transition-transform duration-200"
+                      />
+                    </div>
+                    <div className="min-w-0">
                       <h3 className="text-base font-black text-slate-900 dark:text-white leading-snug line-clamp-2">
                         {displayName}
                       </h3>
@@ -1429,7 +1431,16 @@ export const ProductList: React.FC<ProductListProps> = ({
                   return (
                     <tr key={prod.id} className="hover:bg-slate-50/80 dark:hover:bg-[#1A2A25]/60 transition-colors">
                       <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">
-                        {displayName}
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <ProductImage
+                            src={prod.image_url}
+                            alt={prod.name}
+                            category={prod.category}
+                            size="xs"
+                            className="shrink-0"
+                          />
+                          <span className="truncate">{displayName}</span>
+                        </div>
                       </td>
                       <td className="px-3 py-3 font-semibold text-slate-600 dark:text-[#8FA69C]">{prod.category}</td>
                       <td className="px-3 py-3 font-semibold text-slate-600 dark:text-[#8FA69C]">{prod.unit}</td>

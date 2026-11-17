@@ -11,6 +11,8 @@ export interface ProductImageProps {
   category?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   loading?: 'lazy' | 'eager';
+  /** Fill parent container cleanly (use inside aspect-[4/3] or custom ratio wrappers) */
+  fill?: boolean;
 }
 
 /**
@@ -22,7 +24,7 @@ export interface ProductImageProps {
  * - Low fetch priority for background/grid images
  * - Native async decoding and responsive lazy loading
  * - Category-aware graceful SVG placeholders
- * - Zero layout shift (strict aspect-square sizing)
+ * - Zero layout shift (strict aspect-square or fill sizing)
  */
 export const ProductImage: React.FC<ProductImageProps> = ({
   src,
@@ -30,7 +32,8 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   className = '',
   category = '',
   size = 'md',
-  loading = 'lazy'
+  loading = 'lazy',
+  fill = false
 }) => {
   const isPreFailed = Boolean(src && failedUrls.has(src));
   const [hasError, setHasError] = useState(isPreFailed);
@@ -47,14 +50,16 @@ export const ProductImage: React.FC<ProductImageProps> = ({
     }
   }, [src]);
 
-  const sizeClasses = {
-    xs: 'w-10 h-10 rounded-xl',
-    sm: 'w-16 h-16 sm:w-20 sm:h-20 rounded-xl',
-    md: 'w-24 h-24 sm:w-28 sm:h-28 rounded-2xl',
-    lg: 'w-32 h-32 sm:w-40 sm:h-40 rounded-2xl',
-    xl: 'w-44 h-44 sm:w-52 sm:h-52 rounded-3xl',
-    '2xl': 'w-60 h-60 sm:w-72 sm:h-72 rounded-3xl'
-  }[size];
+  const sizeClasses = fill
+    ? 'w-full h-full'
+    : {
+        xs: 'w-12 h-12 rounded-xl',
+        sm: 'w-20 h-20 sm:w-24 sm:h-24 rounded-xl',
+        md: 'w-28 h-28 sm:w-32 sm:h-32 rounded-2xl',
+        lg: 'w-36 h-36 sm:w-44 sm:h-44 rounded-2xl',
+        xl: 'w-48 h-48 sm:w-56 sm:h-56 rounded-3xl',
+        '2xl': 'w-64 h-64 sm:w-80 sm:h-80 rounded-3xl'
+      }[size];
 
   const getCategoryFallback = () => {
     const cat = (category || '').toLowerCase();
@@ -87,7 +92,9 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   if (!src || hasError) {
     return (
       <div
-        className={`flex items-center justify-center shrink-0 aspect-square border shadow-2xs overflow-hidden transition-all ${sizeClasses} ${fallback.bg} ${className}`}
+        className={`flex items-center justify-center shrink-0 overflow-hidden transition-all ${
+          fill ? 'w-full h-full' : `aspect-square border shadow-2xs ${sizeClasses}`
+        } ${fallback.bg} ${className}`}
         title={alt}
       >
         {fallback.icon}
@@ -96,10 +103,16 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   }
 
   return (
-    <div className={`relative shrink-0 aspect-square overflow-hidden border border-slate-200/70 dark:border-slate-700/60 bg-white dark:bg-slate-900 shadow-2xs flex items-center justify-center ${sizeClasses} ${className}`}>
+    <div
+      className={`relative shrink-0 overflow-hidden flex items-center justify-center ${
+        fill
+          ? 'w-full h-full bg-white dark:bg-[#131F1B]'
+          : `aspect-square border border-slate-200/70 dark:border-slate-700/60 bg-white dark:bg-slate-900 shadow-2xs ${sizeClasses}`
+      } ${className}`}
+    >
       {isLoading && (
         <div className="absolute inset-0 bg-slate-200 dark:bg-slate-800 animate-pulse flex items-center justify-center z-10">
-          <Sparkles className="w-3.5 h-3.5 text-slate-400 animate-spin" />
+          <Sparkles className="w-4 h-4 text-slate-400 animate-spin" />
         </div>
       )}
       <img
@@ -115,7 +128,7 @@ export const ProductImage: React.FC<ProductImageProps> = ({
           setIsLoading(false);
           setHasError(true);
         }}
-        className={`w-full h-full object-contain p-0.5 transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        className={`w-full h-full object-contain ${fill ? 'p-1.5' : 'p-1'} transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
       />
     </div>
   );

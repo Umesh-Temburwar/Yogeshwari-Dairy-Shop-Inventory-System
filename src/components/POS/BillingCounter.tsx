@@ -120,14 +120,14 @@ const ProductCard = React.memo<ProductCardProps>(({
           </span>
         </div>
 
-        {/* Standardized Aspect Product Image Box */}
-        <div className="w-full h-24 sm:h-28 flex justify-center items-center py-1.5 mb-2 bg-slate-50/80 dark:bg-[#1A2A25]/60 rounded-xl border border-slate-100 dark:border-[#24352F]/60 overflow-hidden">
+        {/* Standardized 4:3 Aspect Product Image Showcase */}
+        <div className="w-full aspect-[4/3] min-h-[124px] sm:min-h-[144px] flex justify-center items-center mb-2.5 bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/80 dark:border-[#24352F] overflow-hidden shadow-2xs">
           <ProductImage 
             src={prod.image_url} 
             alt={prod.name} 
             category={prod.category} 
-            size="md" 
-            className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-200"
+            fill
+            className="group-hover:scale-105 transition-transform duration-200"
           />
         </div>
 
@@ -976,13 +976,12 @@ export const BillingCounter: React.FC = () => {
                     className="flex items-center gap-2.5 p-2 sm:p-2.5 rounded-2xl bg-slate-50/90 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] hover:border-emerald-500/30 transition shadow-2xs group"
                   >
                     {/* Thumbnail Image */}
-                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] p-0.5 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
                       <ProductImage
                         src={prodThumb?.image_url}
                         alt={item.product_name}
                         category={prodThumb?.category}
-                        size="sm"
-                        className="max-w-full max-h-full object-contain"
+                        fill
                       />
                     </div>
 

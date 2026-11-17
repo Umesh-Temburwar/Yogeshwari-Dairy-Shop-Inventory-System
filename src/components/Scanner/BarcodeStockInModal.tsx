@@ -50,12 +50,16 @@ interface BarcodeStockInModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: (product: Product, batchNo: string, qtyAdded: number) => void;
+  initialBarcode?: string;
+  initialProduct?: Product | null;
 }
 
 export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   isOpen,
   onClose,
-  onSuccess
+  onSuccess,
+  initialBarcode,
+  initialProduct,
 }) => {
   const { products, addProduct, addBatch } = useStore();
   const { language } = useLanguage();
@@ -674,6 +678,23 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     setSellingPrice(product.selling_price || 0);
     setStep('details');
   };
+
+  // Auto-fill from props if initial product or initial barcode was provided
+  useEffect(() => {
+    if (isOpen) {
+      if (initialProduct) {
+        proceedWithProduct(initialProduct);
+      } else if (initialBarcode && initialBarcode.trim()) {
+        const clean = initialBarcode.trim();
+        setBarcodeInput(clean);
+        lookupBarcode(clean);
+      } else {
+        resetAll();
+      }
+    } else {
+      stopCamera();
+    }
+  }, [isOpen, initialProduct, initialBarcode]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

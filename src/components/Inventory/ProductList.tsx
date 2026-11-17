@@ -1032,7 +1032,13 @@ export const ProductList: React.FC<ProductListProps> = ({
             </div>
             <button
               type="button"
-              onClick={() => setShowBarcodeStockIn(true)}
+              onClick={() => {
+                if (filteredProducts.length > 0) {
+                  setSelectedProductForStockIn(filteredProducts[0]);
+                } else {
+                  setShowBarcodeStockIn(true);
+                }
+              }}
               className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shrink-0 shadow-2xs transition active:scale-95 flex items-center gap-1 cursor-pointer"
             >
               <span>{language === 'mr' ? '+ माल आवक' : '+ स्टॉक आवक'}</span>
@@ -1694,6 +1700,7 @@ export const ProductList: React.FC<ProductListProps> = ({
       <BarcodeStockInModal
         isOpen={showBarcodeStockIn}
         onClose={() => setShowBarcodeStockIn(false)}
+        initialBarcode={/^\d{5,}$/.test(searchQuery.trim()) ? searchQuery.trim() : undefined}
       />
 
       {/* PRODUCT IMAGE DATABASE INTEGRATION MANAGER */}

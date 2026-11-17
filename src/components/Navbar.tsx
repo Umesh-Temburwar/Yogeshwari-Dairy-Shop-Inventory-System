@@ -2,10 +2,16 @@ import React from 'react';
 import ydoLogo from '../assets/YDO_logo.jpg';
 import nikhilAvatar from '../assets/nikhil_avatar.png';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useStore } from '../context/StoreContext';
 import { 
   PanelLeftClose, 
-  PanelLeft
+  PanelLeft,
+  Sun,
+  Moon,
+  Database,
+  Smartphone
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -21,9 +27,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleSidebarCollapse,
   isSidebarCollapsed,
   onOpenMobileSidebar,
+  onOpenSettings,
+  onOpenAppDownload,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user, role } = useAuth();
+  const { resolvedTheme, toggleTheme } = useTheme();
+  const { isSupabaseConnected } = useStore();
 
   // Active User display name: Nikhil Sakhare (Owner) vs Nilesh Sakhare (Admin)
   const currentUserName = 
@@ -80,12 +90,56 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Right Controls: User Profile Photo Only (Click opens mobile drawer on touch devices) */}
+        {/* Right Controls: Quick Cloud Sync, Theme Toggle, App Install, User Profile */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Cloud Database Sync Status Pill */}
+          {onOpenSettings && (
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200/90 dark:border-[#24352F] bg-slate-50 hover:bg-slate-100 dark:bg-[#1A2A25] dark:hover:bg-[#20332D] text-xs font-bold text-slate-700 dark:text-[#8FA69C] transition active:scale-95 shadow-2xs cursor-pointer"
+              title={isSupabaseConnected ? (language === 'mr' ? 'क्लाऊड डेटाबेस जोडलेला आहे (सेटिंग्ज उघडा)' : 'क्लाउड डेटाबेस कनेक्टेड है (सेटिंग्स खोलें)') : 'Database Settings'}
+            >
+              <Database className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
+              <span className="hidden md:inline text-[11px]">
+                {isSupabaseConnected ? (language === 'mr' ? 'क्लाऊड सिंक' : 'क्लाउड सिंक') : 'Cloud Settings'}
+              </span>
+              <span className={`w-2 h-2 rounded-full ${isSupabaseConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
+            </button>
+          )}
+
+          {/* Quick App Download Button (Tablet & Desktop) */}
+          {onOpenAppDownload && (
+            <button
+              type="button"
+              onClick={onOpenAppDownload}
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-emerald-300/60 dark:border-emerald-800/60 bg-emerald-50/80 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
+              title={language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल करा' : 'मोबाइल ऐप इंस्टॉल करें'}
+            >
+              <Smartphone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-[11px]">{language === 'mr' ? 'ॲप इन्स्टॉल' : 'ऐप इंस्टॉल'}</span>
+            </button>
+          )}
+
+          {/* Quick Theme Toggle (Sun / Moon) - Works on both mobile and desktop! */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="p-2 rounded-xl text-slate-500 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25] hover:text-slate-900 dark:hover:text-[#E7F0EC] transition active:scale-95 cursor-pointer"
+            title={resolvedTheme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {resolvedTheme === 'dark' ? (
+              <Sun className="w-4 h-4 text-amber-400" />
+            ) : (
+              <Moon className="w-4 h-4 text-indigo-500" />
+            )}
+          </button>
+
+          {/* Profile Photo Button (Click opens mobile drawer on touch devices) */}
           <button
             type="button"
             onClick={onOpenMobileSidebar}
-            className="w-10 h-10 rounded-full p-0.5 bg-slate-100 hover:bg-slate-200/80 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border-2 border-amber-400/90 dark:border-amber-400 shadow-xs transition-transform hover:scale-105 active:scale-95 flex items-center justify-center overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+            className="w-10 h-10 rounded-full p-0.5 bg-slate-100 hover:bg-slate-200/80 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border-2 border-amber-400/90 dark:border-amber-400 shadow-xs transition-transform hover:scale-105 active:scale-95 flex items-center justify-center overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-500/40 cursor-pointer"
             title={`${currentUserName} (${role === 'Owner' ? 'Shop Owner' : 'Admin'})`}
           >
             {role === 'Owner' ? (

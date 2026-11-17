@@ -100,6 +100,7 @@ interface StoreContextType {
       expiry_date: string;
       quantity: number;
       purchase_price?: number;
+      selling_price?: number;
       supplier_name?: string;
       lot_type?: 'fresh_today' | 'previous_lot' | 'existing_batch';
       notes?: string;
@@ -1539,6 +1540,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       expiry_date: string;
       quantity: number;
       purchase_price?: number;
+      selling_price?: number;
       supplier_name?: string;
       lot_type?: 'fresh_today' | 'previous_lot' | 'existing_batch';
       notes?: string;
@@ -1587,6 +1589,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const shelfDays = getShelfLifeDays(prod.category, prod.name);
         const exp = entry.expiry_date || getSuggestedExpiryDate(mfg, shelfDays);
         const batchNo = entry.batch_no || generateBatchNumber(prod.name, mfg);
+        const batchSellingPrice = (entry.selling_price !== undefined && entry.selling_price > 0)
+          ? entry.selling_price
+          : (prod.selling_price || 0);
+        const batchPurchasePrice = (entry.purchase_price !== undefined && entry.purchase_price > 0)
+          ? entry.purchase_price
+          : (prod.purchase_price || 0);
 
         newBatchesToAppend.push({
           id: generateUUID(),
@@ -1597,7 +1605,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           expiry_date: exp,
           qty_received: qty,
           qty_remaining: qty,
-          purchase_price: entry.purchase_price || prod.purchase_price,
+          purchase_price: batchPurchasePrice,
+          selling_price: batchSellingPrice,
           supplier_name: entry.supplier_name,
           notes: entry.notes || (entry.lot_type === 'previous_lot' ? 'Previous stock lot entry' : "Today's fresh lot arrival"),
           created_at: new Date().toISOString()
@@ -1610,6 +1619,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     const finalProductStock = Number(((prod.stock_quantity || 0) + totalQtyAdded).toFixed(2));
+    const firstEntrySellingPrice = entries[0]?.selling_price;
+    const firstEntryPurchasePrice = entries[0]?.purchase_price;
+    const shouldUpdateProductSelling = (!prod.selling_price || prod.selling_price === 0) && (firstEntrySellingPrice !== undefined && firstEntrySellingPrice > 0);
+    const shouldUpdateProductPurchase = (!prod.purchase_price || prod.purchase_price === 0) && (firstEntryPurchasePrice !== undefined && firstEntryPurchasePrice > 0);
+
     setProducts(prev => {
       const exists = prev.some(p => p.id === productId);
       if (exists) {
@@ -1617,13 +1631,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (p.id === productId) {
             return {
               ...p,
-              stock_quantity: finalProductStock
+              stock_quantity: finalProductStock,
+              selling_price: shouldUpdateProductSelling ? firstEntrySellingPrice! : p.selling_price,
+              purchase_price: shouldUpdateProductPurchase ? firstEntryPurchasePrice! : p.purchase_price,
             };
           }
           return p;
         });
       } else {
-        return [{ ...prod!, stock_quantity: finalProductStock }, ...prev];
+        return [{
+          ...prod!,
+          stock_quantity: finalProductStock,
+          selling_price: shouldUpdateProductSelling ? firstEntrySellingPrice! : prod!.selling_price,
+          purchase_price: shouldUpdateProductPurchase ? firstEntryPurchasePrice! : prod!.purchase_price,
+        }, ...prev];
       }
     });
 
@@ -1641,7 +1662,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               p_mfg_date: singleB.mfg_date,
               p_expiry_date: singleB.expiry_date,
               p_purchase_price: singleB.purchase_price || 0,
-              p_selling_price: prod!.selling_price || 0,
+              p_selling_price: singleB.selling_price || prod!.selling_price || 0,
               p_supplier_name: singleB.supplier_name || null,
               p_notes: singleB.notes || 'Stock Inward'
             });
@@ -1665,7 +1686,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               qty_received: b.qty_received,
               qty_remaining: b.qty_remaining,
               purchase_price: b.purchase_price,
-              selling_price: prod!.selling_price || 0,
+              selling_price: b.selling_price || prod!.selling_price || 0,
               supplier_name: b.supplier_name || null,
               notes: b.notes,
               status: 'ACTIVE'
@@ -1681,10 +1702,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               updated_at: new Date().toISOString()
             }).eq('id', eb.id);
           }
-          const { error: prodErr } = await supabase.from('products').update({
+          const productDbUpdates: Record<string, any> = {
             stock_quantity: finalProductStock,
             updated_at: new Date().toISOString()
-          }).eq('id', productId);
+          };
+          if (shouldUpdateProductSelling) {
+            productDbUpdates.selling_price = firstEntrySellingPrice!;
+          }
+          if (shouldUpdateProductPurchase) {
+            productDbUpdates.purchase_price = firstEntryPurchasePrice!;
+          }
+          const { error: prodErr } = await supabase.from('products').update(productDbUpdates).eq('id', productId);
           if (prodErr) {
             console.error('Supabase product stock update error in addStockEntries:', prodErr);
           }

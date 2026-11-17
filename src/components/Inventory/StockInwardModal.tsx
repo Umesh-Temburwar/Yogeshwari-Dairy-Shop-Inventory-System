@@ -63,6 +63,8 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
 
   // Single Entry State (Fresh or Previous)
   const [quantity, setQuantity] = useState('10');
+  const [sellingPrice, setSellingPrice] = useState<string>(() => (product.selling_price > 0 ? product.selling_price.toString() : ''));
+  const [purchasePrice, setPurchasePrice] = useState<string>(() => (product.purchase_price > 0 ? product.purchase_price.toString() : ''));
   const [showOcrModal, setShowOcrModal] = useState(false);
   const [mfgDate, setMfgDate] = useState(todayStr);
   const [expiryDate, setExpiryDate] = useState('');
@@ -175,6 +177,9 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
     e.preventDefault();
     if (totalInwardQty <= 0 || isSaving) return;
 
+    const parsedSellingPrice = parseFloat(sellingPrice) || product.selling_price || 0;
+    const parsedPurchasePrice = parseFloat(purchasePrice) || product.purchase_price || 0;
+
     try {
       setIsSaving(true);
       if (inwardMode === 'multi_lot') {
@@ -185,7 +190,8 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
           expiry_date: r.expiry_date,
           quantity: parseFloat(r.quantity) || 0,
           lot_type: r.lot_type,
-          purchase_price: product.purchase_price,
+          purchase_price: parsedPurchasePrice,
+          selling_price: parsedSellingPrice,
           supplier_name: supplierName.trim() || undefined,
           notes: r.lot_type === 'fresh_today' 
             ? (language === 'mr' ? 'आजचा ताजा माल आवक' : language === 'hi' ? 'आज का ताज़ा माल' : "Today's fresh lot")
@@ -206,7 +212,8 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
           expiry_date: expiryDate || getSuggestedExpiryDate(mfgDate, shelfDays),
           quantity: totalInwardQty,
           lot_type: inwardMode,
-          purchase_price: product.purchase_price,
+          purchase_price: parsedPurchasePrice,
+          selling_price: parsedSellingPrice,
           supplier_name: supplierName.trim() || undefined,
           notes: inwardMode === 'fresh_today'
             ? (language === 'mr' ? 'आजचा ताजा माल आवक' : language === 'hi' ? 'आज का ताज़ा माल' : "Today's fresh lot")
@@ -442,6 +449,52 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
                       +{num}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Instant Selling & Purchase Rates (Allows instant pricing without separate Edit modal) */}
+              <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/30">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC]">
+                      {language === 'mr' ? 'विक्री दर' : language === 'hi' ? 'बिक्री दर' : 'Selling Rate'} (₹)
+                    </label>
+                    {(!product.selling_price || product.selling_price === 0) && (
+                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                        {language === 'mr' ? 'नवीन दर' : 'नया रेट'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">₹</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={sellingPrice}
+                      onChange={(e) => setSellingPrice(e.target.value)}
+                      placeholder={product.selling_price > 0 ? product.selling_price.toString() : '0.00'}
+                      className="w-full pl-7 pr-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white text-xs font-black focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC] block mb-1">
+                    {language === 'mr' ? 'खरेदी दर' : language === 'hi' ? 'खरीद दर' : 'Purchase Cost'} (₹)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-xs font-bold text-slate-400">₹</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={purchasePrice}
+                      onChange={(e) => setPurchasePrice(e.target.value)}
+                      placeholder={product.purchase_price > 0 ? product.purchase_price.toString() : '0.00'}
+                      className="w-full pl-7 pr-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white text-xs font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 

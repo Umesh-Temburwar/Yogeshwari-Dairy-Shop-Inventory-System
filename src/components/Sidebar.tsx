@@ -34,7 +34,8 @@ import {
   Loader2,
   ChevronDown,
   Power,
-  Activity
+  Activity,
+  Database
 } from 'lucide-react';
 import { 
   isRegistrationAllowedSync, 
@@ -659,6 +660,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </div>
                   )}
 
+                  {/* 7. Database & Cloud Sync Settings Button */}
+                  {onOpenSettings && (
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isMobileDrawer) onCloseMobile();
+                          onOpenSettings();
+                        }}
+                        className="w-full flex items-center justify-between p-2 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/70 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/50 text-blue-900 dark:text-blue-300 font-extrabold text-xs transition shadow-2xs cursor-pointer"
+                        title={language === 'mr' ? 'क्लाऊड डेटाबेस सेटिंग्ज (Supabase Cloud)' : 'क्लाउड डेटाबेस सेटिंग्स (Supabase Cloud)'}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <Database className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                          <span className="truncate text-[11px]">
+                            {language === 'mr' ? 'डेटाबेस व क्लाऊड सिंक' : language === 'hi' ? 'डेटाबेस व क्लाउड सिंक' : 'Database & Cloud Sync'}
+                          </span>
+                        </div>
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      </button>
+                    </div>
+                  )}
+
                 </div>
               )}
             </div>
@@ -667,9 +691,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="pt-2 border-t border-slate-200 dark:border-[#24352F] space-y-2">
               <button
                 type="button"
-                onClick={() => setIsSettingsExpanded(prev => !prev)}
-                title={language === 'mr' ? 'सेटिंग्ज (Settings)' : 'Settings'}
-                className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center text-slate-500 hover:text-emerald-600 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition"
+                onClick={() => {
+                  if (onOpenSettings) onOpenSettings();
+                  else setIsSettingsExpanded(prev => !prev);
+                }}
+                title={language === 'mr' ? 'सेटिंग्ज व क्लाऊड सिंक' : 'Settings & Cloud Sync'}
+                className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center text-slate-500 hover:text-emerald-600 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition cursor-pointer"
               >
                 <Settings className="w-5 h-5" />
               </button>

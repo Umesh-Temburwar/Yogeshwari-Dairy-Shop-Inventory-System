@@ -29,7 +29,8 @@ export type AppView =
   | 'analytics' 
   | 'reorder'
   | 'expiry'
-  | 'returns';
+  | 'returns'
+  | 'settings';
 
 export type GlobalScannerTarget = 'billing' | 'stock_in' | 'stock_edit' | null;
 

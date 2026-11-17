@@ -34,6 +34,7 @@ const DailySalesTracker = React.lazy(() => import('./components/Sales/DailySales
 const ReturnsTracker = React.lazy(() => import('./components/Returns/ReturnsTracker').then(m => ({ default: m.ReturnsTracker })));
 const ReturnProductModal = React.lazy(() => import('./components/Returns/ReturnProductModal').then(m => ({ default: m.ReturnProductModal })));
 const SupabaseConfigModal = React.lazy(() => import('./components/Settings/SupabaseConfigModal').then(m => ({ default: m.SupabaseConfigModal })));
+const SettingsPage = React.lazy(() => import('./components/Settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const ChangeMasterPasscodeModal = React.lazy(() => import('./components/Settings/ChangeMasterPasscodeModal').then(m => ({ default: m.ChangeMasterPasscodeModal })));
 const ProductImageManagerModal = React.lazy(() => import('./components/Admin/ProductImageManagerModal').then(m => ({ default: m.ProductImageManagerModal })));
 
@@ -161,7 +162,8 @@ const MainContent: React.FC = () => {
 
       {/* Top Header (Fixed 64px, nothing clipped or overflowing) */}
       <Navbar
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenSettings={() => setActiveView('settings')}
+        onOpenPhotoDatabase={() => setIsPhotoDatabaseOpen(true)}
         onOpenAppDownload={() => setIsAppDownloadOpen(true)}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebarCollapse={() => setIsSidebarCollapsed(prev => !prev)}
@@ -177,7 +179,7 @@ const MainContent: React.FC = () => {
           isMobileOpen={isMobileSidebarOpen}
           onCloseMobile={() => setIsMobileSidebarOpen(false)}
           onOpenAppDownload={() => setIsAppDownloadOpen(true)}
-          onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenSettings={() => setActiveView('settings')}
           onOpenPhotoDatabase={() => setIsPhotoDatabaseOpen(true)}
           onOpenChangePasscode={() => setIsChangePasscodeOpen(true)}
         />
@@ -244,6 +246,14 @@ const MainContent: React.FC = () => {
                     setReturnPrefill({});
                     setIsReturnModalOpen(true);
                   }}
+                />
+              )}
+
+              {activeView === 'settings' && (
+                <SettingsPage
+                  onOpenChangePasscode={() => setIsChangePasscodeOpen(true)}
+                  onOpenPhotoDatabase={() => setIsPhotoDatabaseOpen(true)}
+                  onOpenAppDownload={() => setIsAppDownloadOpen(true)}
                 />
               )}
             </div>

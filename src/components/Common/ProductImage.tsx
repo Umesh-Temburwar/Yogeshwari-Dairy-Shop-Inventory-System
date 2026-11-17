@@ -106,8 +106,8 @@ export const ProductImage: React.FC<ProductImageProps> = ({
     <div
       className={`relative shrink-0 overflow-hidden flex items-center justify-center ${
         fill
-          ? 'w-full h-full bg-white dark:bg-[#131F1B]'
-          : `aspect-square border border-slate-200/70 dark:border-slate-700/60 bg-white dark:bg-slate-900 shadow-2xs ${sizeClasses}`
+          ? 'w-full h-full bg-white'
+          : `aspect-square border border-slate-200/70 dark:border-slate-700/60 bg-white shadow-2xs ${sizeClasses}`
       } ${className}`}
     >
       {isLoading && (

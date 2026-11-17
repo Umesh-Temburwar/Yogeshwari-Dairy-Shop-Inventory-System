@@ -46,6 +46,7 @@ import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF, expor
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { BarcodeStockInModal } from '../Scanner/BarcodeStockInModal';
 import { ProductImage } from '../Common/ProductImage';
+import { ProductImagePreviewModal } from '../Common/ProductImagePreviewModal';
 import { ProductImageManagerModal } from '../Admin/ProductImageManagerModal';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { supabase } from '../../lib/supabase';
@@ -100,6 +101,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [showBarcodeStockIn, setShowBarcodeStockIn] = useState(false);
   const [showImageManager, setShowImageManager] = useState(false);
+  const [previewImageProduct, setPreviewImageProduct] = useState<Product | null>(null);
   const [inventoryViewTab, setInventoryViewTab] = useState<'IN_STOCK' | 'CATALOGUE' | 'OUT_OF_STOCK' | 'LOW_STOCK'>('IN_STOCK');
   const [onlineSearchedProduct, setOnlineSearchedProduct] = useState<Product | null>(null);
   const [onlineSearchResults, setOnlineSearchResults] = useState<Product[]>([]);
@@ -1226,17 +1228,26 @@ export const ProductList: React.FC<ProductListProps> = ({
                     </span>
                   </div>
 
-                  {/* Product Image Showcase (4:3 Aspect Ratio) & Title */}
+                  {/* Product Image Showcase (4:3 Aspect Ratio) & Title — Tap Photo to View Full Image & Edit URL */}
                   <div className="my-2.5 space-y-2.5">
-                    <div className="w-full aspect-[4/3] max-h-48 sm:max-h-52 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] shadow-2xs overflow-hidden flex items-center justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewImageProduct(prod)}
+                      className="group/img relative w-full aspect-[4/3] max-h-48 sm:max-h-52 rounded-2xl bg-white border border-slate-200/80 dark:border-[#24352F] shadow-2xs overflow-hidden flex items-center justify-center cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                      title={language === 'mr' ? 'फोटो पहा व इमेज URL बदला' : language === 'hi' ? 'फोटो देखें व इमेज URL बदलें' : 'View full image & edit URL'}
+                    >
                       <ProductImage 
                         src={prod.image_url} 
                         alt={prod.name} 
                         category={prod.category} 
                         fill
-                        className="group-hover:scale-105 transition-transform duration-200"
+                        className="group-hover/img:scale-105 transition-transform duration-200"
                       />
-                    </div>
+                      <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900/75 text-white text-[10px] font-bold opacity-85 sm:opacity-0 sm:group-hover/img:opacity-100 transition-opacity backdrop-blur-xs">
+                        <Eye className="w-3 h-3" />
+                        <span>{language === 'mr' ? 'फोटो / URL' : language === 'hi' ? 'फोटो / URL' : 'Photo / URL'}</span>
+                      </span>
+                    </button>
                     <div className="min-w-0">
                       <h3 className="text-base font-black text-slate-900 dark:text-white leading-snug line-clamp-2">
                         {displayName}
@@ -1432,13 +1443,20 @@ export const ProductList: React.FC<ProductListProps> = ({
                     <tr key={prod.id} className="hover:bg-slate-50/80 dark:hover:bg-[#1A2A25]/60 transition-colors">
                       <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <ProductImage
-                            src={prod.image_url}
-                            alt={prod.name}
-                            category={prod.category}
-                            size="xs"
-                            className="shrink-0"
-                          />
+                          <button
+                            type="button"
+                            onClick={() => setPreviewImageProduct(prod)}
+                            className="shrink-0 rounded-xl overflow-hidden cursor-pointer hover:ring-2 hover:ring-emerald-500 transition"
+                            title={language === 'mr' ? 'फोटो पहा व इमेज URL बदला' : language === 'hi' ? 'फोटो देखें व इमेज URL बदलें' : 'View image & edit URL'}
+                          >
+                            <ProductImage
+                              src={prod.image_url}
+                              alt={prod.name}
+                              category={prod.category}
+                              size="xs"
+                              className="shrink-0"
+                            />
+                          </button>
                           <span className="truncate">{displayName}</span>
                         </div>
                       </td>
@@ -1723,6 +1741,19 @@ export const ProductList: React.FC<ProductListProps> = ({
       <ProductImageManagerModal
         isOpen={showImageManager}
         onClose={() => setShowImageManager(false)}
+      />
+
+      {/* CLICK-ON-PHOTO LIGHTBOX + IMAGE URL VIEWER & UPDATER */}
+      <ProductImagePreviewModal
+        product={previewImageProduct}
+        onClose={() => setPreviewImageProduct(null)}
+        onImageUpdated={(productId, newUrl) => {
+          const nextImg = newUrl || undefined;
+          setCatalogueItems(prev => prev.map(p => p.id === productId ? { ...p, image_url: nextImg } : p));
+          setOnlineSearchResults(prev => prev.map(p => p.id === productId ? { ...p, image_url: nextImg } : p));
+          setOnlineSearchedProduct(prev => prev && prev.id === productId ? { ...prev, image_url: nextImg } : prev);
+          setPreviewImageProduct(prev => prev && prev.id === productId ? { ...prev, image_url: nextImg } : prev);
+        }}
       />
 
     </div>

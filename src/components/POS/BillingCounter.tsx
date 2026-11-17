@@ -31,12 +31,15 @@ import {
   ArrowLeft,
   RotateCcw,
   Eye,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { QuickProductRegisterModal } from '../Scanner/QuickProductRegisterModal';
 import { ProductImage } from '../Common/ProductImage';
+import { ProductImagePreviewModal } from '../Common/ProductImagePreviewModal';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { requestMotionPermission, isMobileDevice } from '../../hooks/useShakeDetector';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
@@ -53,6 +56,7 @@ interface ProductCardProps {
   t: (key: string) => string;
   onAddToCart: (prod: Product, qty?: number) => void;
   onQuickCalc: (prod: Product) => void;
+  onPreviewImage: (prod: Product) => void;
 }
 
 const ProductCard = React.memo<ProductCardProps>(({
@@ -62,7 +66,8 @@ const ProductCard = React.memo<ProductCardProps>(({
   language,
   t,
   onAddToCart,
-  onQuickCalc
+  onQuickCalc,
+  onPreviewImage
 }) => {
   const prodBatches = useMemo(() => batches.filter(b => b.product_id === prod.id && b.qty_remaining > 0), [batches, prod.id]);
   const validBatches = useMemo(() => prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status !== 'EXPIRED'), [prodBatches]);
@@ -120,15 +125,35 @@ const ProductCard = React.memo<ProductCardProps>(({
           </span>
         </div>
 
-        {/* Standardized 4:3 Aspect Product Image Showcase */}
-        <div className="w-full aspect-[4/3] min-h-[124px] sm:min-h-[144px] flex justify-center items-center mb-2.5 bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/80 dark:border-[#24352F] overflow-hidden shadow-2xs">
+        {/* Standardized 4:3 Aspect Product Image Showcase — Click photo to view full image & update URL */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={(e) => {
+            e.stopPropagation();
+            onPreviewImage(prod);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              onPreviewImage(prod);
+            }
+          }}
+          title={language === 'mr' ? 'फोटो पहा व इमेज URL बदला' : language === 'hi' ? 'फोटो देखें व इमेज URL बदलें' : 'View full image & update URL'}
+          className="group/posimg relative w-full aspect-[4/3] min-h-[124px] sm:min-h-[144px] flex justify-center items-center mb-2.5 bg-white rounded-2xl border border-slate-200/80 dark:border-[#24352F] overflow-hidden shadow-2xs cursor-pointer"
+        >
           <ProductImage 
             src={prod.image_url} 
             alt={prod.name} 
             category={prod.category} 
             fill
-            className="group-hover:scale-105 transition-transform duration-200"
+            className="group-hover/posimg:scale-105 transition-transform duration-200"
           />
+          <span className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/75 text-white text-[9px] font-bold opacity-85 sm:opacity-0 sm:group-hover/posimg:opacity-100 transition-opacity">
+            <Eye className="w-2.5 h-2.5" />
+            <span>URL</span>
+          </span>
         </div>
 
         {/* Product Title */}
@@ -221,6 +246,7 @@ export const BillingCounter: React.FC = () => {
   } = useStore();
   const { t, language } = useLanguage();
   const { role, adminSlot, user } = useAuth();
+  const [previewImageProduct, setPreviewImageProduct] = useState<Product | null>(null);
 
   const activeOperator = useMemo(() => {
     const isMr = language === 'mr';
@@ -323,7 +349,7 @@ export const BillingCounter: React.FC = () => {
               setOnlineSearchResults([]);
             }
           }
-        } else if (q.length >= 2) {
+        } else if (q.length >= 2 && supabase) {
           const { data, error } = await supabase
             .from('products')
             .select('id, name, hindi_name, marathi_name, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, brand, pack_size, is_active')
@@ -915,6 +941,7 @@ export const BillingCounter: React.FC = () => {
                 t={t}
                 onAddToCart={addToCart}
                 onQuickCalc={handleQuickCalc}
+                onPreviewImage={setPreviewImageProduct}
               />
             ))
           )}
@@ -1850,6 +1877,18 @@ export const BillingCounter: React.FC = () => {
           }}
         />
       )}
+
+      {/* Click-on-Photo Lightbox + Image URL Viewer & Updater */}
+      <ProductImagePreviewModal
+        product={previewImageProduct}
+        onClose={() => setPreviewImageProduct(null)}
+        onImageUpdated={(productId, newUrl) => {
+          const nextImg = newUrl || undefined;
+          setOnlineSearchResults(prev => prev.map(p => p.id === productId ? { ...p, image_url: nextImg } : p));
+          setOnlineSearchedProduct(prev => prev && prev.id === productId ? { ...prev, image_url: nextImg } : prev);
+          setPreviewImageProduct(prev => prev && prev.id === productId ? { ...prev, image_url: nextImg } : prev);
+        }}
+      />
 
     </div>
   );

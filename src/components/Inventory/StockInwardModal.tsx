@@ -234,20 +234,20 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
                       product.name;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200/90 dark:border-[#24352F] my-8 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white dark:bg-[#131F1B] rounded-2xl sm:rounded-3xl max-w-xl w-full max-h-[92dvh] flex flex-col shadow-2xl border border-slate-200/90 dark:border-[#24352F] overflow-hidden animate-in fade-in duration-200">
         
         {/* HEADER */}
-        <div className="flex items-start justify-between border-b border-slate-100 dark:border-[#24352F] pb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
+        <div className="shrink-0 flex items-start justify-between border-b border-slate-100 dark:border-[#24352F] p-4 sm:p-6 pb-3.5">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2.5 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 shrink-0">
               <ArrowUpCircle className="w-6 h-6" />
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                 {t('stockInModalTitle')}
               </span>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white leading-tight">
+              <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-tight truncate">
                 {displayName}
               </h3>
               <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
@@ -260,19 +260,19 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
           <button 
             type="button" 
             onClick={onClose} 
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2A25] shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* VARIETY SHELF-LIFE HELPER TIP */}
-        <div className="my-3.5 p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/40 flex items-center gap-2.5 text-xs text-emerald-900 dark:text-emerald-200 font-semibold">
-          <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span className="flex-1">{shelfLifeTip}</span>
-        </div>
-
-        <form onSubmit={handleFormSubmit} className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 py-3.5 space-y-4">
+            {/* VARIETY SHELF-LIFE HELPER TIP */}
+            <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/40 flex items-center gap-2.5 text-xs text-emerald-900 dark:text-emerald-200 font-semibold">
+              <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="flex-1">{shelfLifeTip}</span>
+            </div>
           
           {/* SELECT LOT TYPE: "PAHALE KA THA YA ABHI KA THA?" */}
           <div>
@@ -676,51 +676,56 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
             </div>
           )}
 
-          {/* TOTAL PREVIEW CARD */}
-          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/90 dark:border-[#24352F] flex items-center justify-between text-xs">
-            <div>
-              <span className="font-semibold text-slate-500 dark:text-[#8FA69C] block">
-                {language === 'mr' ? 'एकूण नवीन शिल्लक साठा होईल:' : language === 'hi' ? 'नया कुल स्टॉक बनेगा:' : 'New Total Shop Stock:'}
-              </span>
-              <span className="text-lg font-black text-emerald-700 dark:text-emerald-400">
-                {product.stock_quantity + totalInwardQty} {product.unit}
-              </span>
-            </div>
-
-            <div className="text-right">
-              <span className="font-semibold text-slate-500 dark:text-[#8FA69C] block">
-                {language === 'mr' ? 'एकूण आवक साठा:' : language === 'hi' ? 'कुल आवक:' : 'Total Inward:'}
-              </span>
-              <span className="text-base font-black text-slate-900 dark:text-white">
-                +{totalInwardQty} {product.unit}
-              </span>
-            </div>
           </div>
 
-          {/* ACTIONS */}
-          <div className="flex gap-2.5 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-1/2 py-2.5 rounded-2xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] font-bold text-xs transition-all"
-            >
-              {t('cancel')}
-            </button>
+          {/* STICKY FOOTER: TOTAL PREVIEW + ACTIONS */}
+          <div className="shrink-0 px-4 sm:px-6 py-3.5 border-t border-slate-100 dark:border-[#24352F] bg-white dark:bg-[#131F1B] space-y-2.5">
+            {/* TOTAL PREVIEW CARD */}
+            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/90 dark:border-[#24352F] flex items-center justify-between text-xs">
+              <div>
+                <span className="font-semibold text-slate-500 dark:text-[#8FA69C] block">
+                  {language === 'mr' ? 'एकूण नवीन शिल्लक साठा होईल:' : language === 'hi' ? 'नया कुल स्टॉक बनेगा:' : 'New Total Shop Stock:'}
+                </span>
+                <span className="text-base sm:text-lg font-black text-emerald-700 dark:text-emerald-400">
+                  {product.stock_quantity + totalInwardQty} {product.unit}
+                </span>
+              </div>
 
-            <button
-              type="submit"
-              disabled={totalInwardQty <= 0 || isSaving}
-              className="w-1/2 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
-            >
-              {isSaving ? (
-                <>
-                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>{language === 'mr' ? 'साठा नोंद होत आहे...' : language === 'hi' ? 'स्टॉक दर्ज हो रहा है...' : 'Recording Stock In...'}</span>
-                </>
-              ) : (
-                <span>{language === 'mr' ? 'होय, साठा जमा करा' : language === 'hi' ? 'हाँ, स्टॉक दर्ज करें' : 'Confirm Stock In'}</span>
-              )}
-            </button>
+              <div className="text-right">
+                <span className="font-semibold text-slate-500 dark:text-[#8FA69C] block">
+                  {language === 'mr' ? 'एकूण आवक साठा:' : language === 'hi' ? 'कुल आवक:' : 'Total Inward:'}
+                </span>
+                <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                  +{totalInwardQty} {product.unit}
+                </span>
+              </div>
+            </div>
+
+            {/* ACTIONS */}
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-1/2 py-2.5 rounded-2xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] font-bold text-xs transition-all"
+              >
+                {t('cancel')}
+              </button>
+
+              <button
+                type="submit"
+                disabled={totalInwardQty <= 0 || isSaving}
+                className="w-1/2 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>{language === 'mr' ? 'साठा नोंद होत आहे...' : language === 'hi' ? 'स्टॉक दर्ज हो रहा है...' : 'Recording Stock In...'}</span>
+                  </>
+                ) : (
+                  <span>{language === 'mr' ? 'होय, साठा जमा करा' : language === 'hi' ? 'हाँ, स्टॉक दर्ज करें' : 'Confirm Stock In'}</span>
+                )}
+              </button>
+            </div>
           </div>
 
         </form>

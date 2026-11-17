@@ -915,19 +915,19 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4">
+      <div className="relative w-full max-w-xl max-h-[92dvh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         {/* Top Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-md">
-              <PackagePlus className="w-6 h-6 text-white" />
+        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2 sm:p-2.5 bg-white/20 rounded-xl backdrop-blur-md shrink-0">
+              <PackagePlus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div>
-              <h2 className="text-lg font-bold">
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-bold truncate">
                 {language === 'mr' ? 'बारकोड द्वारे साठा आवक (Stock-In)' : 'बारकोड द्वारा स्टॉक आवक'}
               </h2>
-              <p className="text-xs text-emerald-100">
+              <p className="text-xs text-emerald-100 truncate">
                 {step === 'scan' && (language === 'mr' ? 'पायरी १: बारकोड स्कॅन किंवा सर्च करा' : 'चरण १: बारकोड स्कैन या खोजें')}
                 {step === 'register' && (language === 'mr' ? 'पायरी २: नवीन उत्पादन नोंदणी (कॅटलॉग)' : 'चरण २: नया उत्पाद पंजीकरण')}
                 {step === 'details' && (language === 'mr' ? 'पायरी ३: साठा, बॅच व किमतीची नोंद' : 'चरण ३: स्टॉक, बैच एवं मूल्य विवरण')}
@@ -938,7 +938,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/20 transition-all"
+            className="p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/20 transition-all shrink-0"
           >
             <X className="w-6 h-6" />
           </button>
@@ -946,14 +946,14 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
 
         {/* Error Alert Box */}
         {errorMessage && (
-          <div className="mx-6 mt-4 p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-xl flex items-center gap-2 text-sm">
+          <div className="shrink-0 mx-4 sm:mx-6 mt-3 p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-xl flex items-center gap-2 text-sm">
             <AlertCircle className="w-5 h-5 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {/* Modal Body */}
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
           {/* STEP 1: SCAN OR MANUAL SEARCH */}
           {step === 'scan' && (
             <div className="space-y-5">

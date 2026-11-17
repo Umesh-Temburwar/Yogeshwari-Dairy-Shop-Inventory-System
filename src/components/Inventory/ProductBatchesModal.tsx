@@ -203,8 +203,8 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl space-y-4 border border-slate-200/90 dark:border-[#24352F] my-6 max-h-[92vh] flex flex-col justify-between">
+    <div className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white dark:bg-[#131F1B] rounded-2xl sm:rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl space-y-4 border border-slate-200/90 dark:border-[#24352F] max-h-[92dvh] flex flex-col justify-between overflow-hidden">
         
         {/* Modal Header */}
         <div className="flex items-start justify-between border-b border-slate-100 dark:border-[#24352F] pb-3 shrink-0">

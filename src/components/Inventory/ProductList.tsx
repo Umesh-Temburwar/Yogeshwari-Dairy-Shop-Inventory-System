@@ -659,7 +659,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   ];
 
   return (
-    <div className="space-y-3 px-1 sm:px-0 pb-32 sm:pb-8 max-w-5xl mx-auto">
+    <div className="space-y-3 px-1 sm:px-0 pb-36 sm:pb-8 max-w-5xl mx-auto">
       
       {/* 1. COMPACT PAGE HEADER (ONE ROW) */}
       <div className="flex items-center justify-between gap-3 bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors">
@@ -939,8 +939,8 @@ export const ProductList: React.FC<ProductListProps> = ({
         })}
       </div>
 
-      {/* STICKY SEARCH & FILTERS HEADER AREA */}
-      <div className="sticky top-0 z-20 bg-[#f8fafc] dark:bg-[#0B1210] pt-1 pb-2 space-y-2 -mx-1 px-1 transition-colors">
+      {/* STICKY SEARCH & FILTERS HEADER AREA (sticky on tablet/desktop; scrolls freely on mobile so full In-Stock list is visible) */}
+      <div className="sm:sticky sm:top-0 z-20 bg-[#f8fafc] dark:bg-[#0B1210] pt-1 pb-2 space-y-2 -mx-1 px-1 transition-colors">
         
         {/* 5. LOW-STOCK SLIM ALERT STRIP (ONLY IF lowStockCount > 0) */}
         {lowStockCount > 0 && (
@@ -1525,8 +1525,8 @@ export const ProductList: React.FC<ProductListProps> = ({
 
       {/* QUICK STOCK IN / OUT MODAL (TAP ANY CARD BUTTON) */}
       {adjustModalProduct && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-200/80 dark:border-[#24352F]">
+        <div className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white dark:bg-[#131F1B] rounded-2xl sm:rounded-3xl max-w-sm w-full max-h-[90dvh] overflow-y-auto overscroll-contain p-5 sm:p-6 shadow-2xl space-y-4 border border-slate-200/80 dark:border-[#24352F]">
             
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
               <div>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import { UserRole } from '../types';
@@ -6,7 +6,8 @@ import {
   verifyMasterPasscode, 
   isSessionSecurityValid, 
   revokeSessionSecurity,
-  grantBiometricSecurityUnlock
+  grantBiometricSecurityUnlock,
+  syncMasterPasscodeHashFromCloud
 } from '../lib/security';
 import { 
   isRegistrationAllowedSync, 
@@ -23,13 +24,14 @@ interface AuthContextType {
   setRole: (role: UserRole, slot?: 1 | 2 | null) => void;
   defaultRedirectView: 'dashboard' | 'pos' | 'inventory';
   isSecurityUnlocked: boolean;
-  unlockSecurity: (passcode: string) => Promise<{
+  unlockSecurity: (passcode: string, deferReveal?: boolean) => Promise<{
     success: boolean;
     attemptsLeft: number;
     lockedUntil: number | null;
     error?: string;
   }>;
-  unlockSecurityWithBiometrics: () => Promise<boolean>;
+  unlockSecurityWithBiometrics: (deferReveal?: boolean) => Promise<boolean>;
+  confirmSecurityUnlock: () => void;
   lockSecurity: () => void;
   signInWithEmail: (email: string, password: string) => Promise<{ error: any; redirectView?: 'dashboard' | 'pos' | 'inventory' }>;
   signUpWithEmail: (
@@ -83,6 +85,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Second-factor Master Security Passcode verification state
   const [isSecurityUnlocked, setIsSecurityUnlocked] = useState<boolean>(false);
+  const pendingUnlockVerifiedRef = useRef<boolean>(false);
 
   const setRole = (newRole: UserRole, slot: 1 | 2 | null = null) => {
     // Access control enforcement: Admin account can ONLY use Admin profile
@@ -111,25 +114,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const lockSecurity = () => {
     revokeSessionSecurity();
+    pendingUnlockVerifiedRef.current = false;
     setIsSecurityUnlocked(false);
   };
 
-  const unlockSecurity = async (passcode: string) => {
+  const unlockSecurity = async (passcode: string, deferReveal = false) => {
     const res = await verifyMasterPasscode(passcode);
     if (res.success) {
-      setIsSecurityUnlocked(true);
+      if (deferReveal) {
+        pendingUnlockVerifiedRef.current = true;
+      } else {
+        pendingUnlockVerifiedRef.current = false;
+        setIsSecurityUnlocked(true);
+      }
     }
     return res;
   };
 
-  const unlockSecurityWithBiometrics = async (): Promise<boolean> => {
+  const unlockSecurityWithBiometrics = async (deferReveal = false): Promise<boolean> => {
     const granted = await grantBiometricSecurityUnlock();
     if (granted) {
-      setIsSecurityUnlocked(true);
+      if (deferReveal) {
+        pendingUnlockVerifiedRef.current = true;
+      } else {
+        pendingUnlockVerifiedRef.current = false;
+        setIsSecurityUnlocked(true);
+      }
       return true;
     }
     return false;
   };
+
+  const confirmSecurityUnlock = useCallback(() => {
+    if (pendingUnlockVerifiedRef.current) {
+      pendingUnlockVerifiedRef.current = false;
+      setIsSecurityUnlocked(true);
+    }
+  }, []);
 
   // Helper to determine role, admin slot, and redirect destination based on email/profile
   const detectRoleAndSlot = (email: string) => {
@@ -182,8 +203,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         } catch {}
 
-        // 3. Sync registration configuration from cloud in background
+        // 3. Sync registration configuration & master passcode hash from cloud in background
         syncRegistrationSettingFromCloud().catch(() => {});
+        syncMasterPasscodeHashFromCloud().catch(() => {});
 
         if (!supabase) {
           if (mounted) setIsLoading(false);
@@ -600,6 +622,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isSecurityUnlocked,
         unlockSecurity,
         unlockSecurityWithBiometrics,
+        confirmSecurityUnlock,
         lockSecurity,
         signInWithEmail,
         signUpWithEmail,

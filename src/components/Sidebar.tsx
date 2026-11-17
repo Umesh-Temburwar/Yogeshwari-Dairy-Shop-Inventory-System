@@ -34,7 +34,8 @@ import {
   Loader2,
   ChevronDown,
   Power,
-  Activity
+  Activity,
+  KeyRound
 } from 'lucide-react';
 import { 
   isRegistrationAllowedSync, 
@@ -55,6 +56,7 @@ interface SidebarProps {
   onOpenAppDownload?: () => void;
   onOpenSettings?: () => void;
   onOpenPhotoDatabase?: () => void;
+  onOpenChangePasscode?: () => void;
 }
 
 interface NavItem {
@@ -73,6 +75,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenAppDownload,
   onOpenSettings,
   onOpenPhotoDatabase,
+  onOpenChangePasscode,
 }) => {
   const { activeView, setActiveView, metrics, products, totalCatalogCount } = useStore();
   const { t, language, setLanguage } = useLanguage();
@@ -516,6 +519,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </button>
                   </div>
 
+                  {/* 3. Change Master Security Passcode (Requires Current Passcode Verification) */}
+                  {onOpenChangePasscode && (
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isMobileDrawer) onCloseMobile();
+                          onOpenChangePasscode();
+                        }}
+                        className="w-full flex items-center justify-between p-2 rounded-xl bg-emerald-50/90 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-200/90 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-300 font-bold text-xs transition shadow-2xs cursor-pointer"
+                        title={language === 'mr' ? 'मास्टर सुरक्षा पासवर्ड बदला' : language === 'hi' ? 'मास्टर सुरक्षा पासवर्ड बदलें' : 'Change Master Security Passcode'}
+                      >
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <KeyRound className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span className="truncate text-[11px]">
+                            {language === 'mr'
+                              ? 'मास्टर पासवर्ड बदला'
+                              : language === 'hi'
+                              ? 'मास्टर पासवर्ड बदलें'
+                              : 'Change Master Passcode'}
+                          </span>
+                        </div>
+                        <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-white/80 dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 shrink-0">
+                          PIN
+                        </span>
+                      </button>
+                    </div>
+                  )}
 
                   {/* 4. Operator Registration Control (Shop Owner Nikhil Sakhare) */}
                   <div>

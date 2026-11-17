@@ -13,7 +13,8 @@ import {
   ExternalLink,
   ShieldCheck,
   FileCode,
-  Smartphone
+  Smartphone,
+  KeyRound
 } from 'lucide-react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { isMobileDevice, requestMotionPermission } from '../../hooks/useShakeDetector';
@@ -21,9 +22,10 @@ import { isMobileDevice, requestMotionPermission } from '../../hooks/useShakeDet
 interface SupabaseConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenChangePasscode?: () => void;
 }
 
-export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({ isOpen, onClose }) => {
+export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({ isOpen, onClose, onOpenChangePasscode }) => {
   const { isSupabaseConnected, syncWithSupabase, resetToSampleData, triggerGlobalBillingScanner } = useStore();
 
   const currentConfig = getSupabaseConfig();
@@ -162,8 +164,8 @@ CREATE TABLE IF NOT EXISTS expenses (
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border border-transparent dark:border-[#24352F] rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4">
+      <div className="bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border border-transparent dark:border-[#24352F] rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl space-y-5 max-h-[92dvh] overflow-y-auto overscroll-contain">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
@@ -291,6 +293,35 @@ CREATE TABLE IF NOT EXISTS expenses (
             इसे Supabase Dashboard में <b className="text-slate-700 dark:text-[#E7F0EC]">SQL Editor</b> में पेस्ट करके "Run" दबाएं।
           </p>
         </div>
+
+        {/* Master Security Passcode Change Section */}
+        {onOpenChangePasscode && (
+          <div className="bg-emerald-50/70 dark:bg-emerald-950/25 p-3.5 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/40 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 shrink-0">
+                <KeyRound className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-xs font-extrabold text-slate-900 dark:text-[#E7F0EC] truncate">
+                  मास्टर सुरक्षा पासवर्ड बदला (Master Passcode)
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
+                  वर्तमान ८-अंकी पासवर्ड सत्यापित करून नवीन पासवर्ड सेट करा
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onOpenChangePasscode();
+              }}
+              className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shrink-0 shadow-xs transition active:scale-95 cursor-pointer"
+            >
+              पासवर्ड बदला
+            </button>
+          </div>
+        )}
 
         {/* Shake to Open Billing Scanner Setting */}
         <div className="bg-slate-50 dark:bg-[#1A2A25] p-3.5 rounded-2xl border border-slate-200 dark:border-[#24352F] space-y-3">

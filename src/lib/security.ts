@@ -8,15 +8,69 @@
  * 3. Session security token generation and validation.
  */
 
-const SALT = 'YDO_MASTER_PASSCODE_SALT_v1_2026';
-// Pre-computed SHA-256 cryptographic salt-hash of the secret master passcode
-const MASTER_HASH = '4b73c8ea67ccf828b42b2eed3ab6ac8fab85e62667607c1a572c044fa196cef1';
+import { supabase } from './supabase';
 
+const SALT = 'YDO_MASTER_PASSCODE_SALT_v1_2026';
+// Default pre-computed SHA-256 cryptographic salt-hash (used until user changes master passcode)
+const DEFAULT_MASTER_HASH = '4b73c8ea67ccf828b42b2eed3ab6ac8fab85e62667607c1a572c044fa196cef1';
+
+const STORAGE_MASTER_HASH = 'ydo_sec_master_hash_v1';
 const STORAGE_SESSION_TOKEN = 'ydo_sec_session_token_v1';
 const STORAGE_FAILED_ATTEMPTS = 'ydo_sec_failed_attempts';
 const STORAGE_LOCKOUT_UNTIL = 'ydo_sec_lockout_until';
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+const PASSCODE_REGEX = /^\d{8}$/;
+
+function isValidSha256Hex(value: unknown): value is string {
+  return typeof value === 'string' && /^[0-9a-f]{64}$/i.test(value.trim());
+}
+
+/**
+ * Returns the active salted SHA-256 master passcode hash (custom if changed, else default).
+ */
+export function getActiveMasterHash(): string {
+  try {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(STORAGE_MASTER_HASH);
+      if (isValidSha256Hex(stored)) {
+        return stored.trim().toLowerCase();
+      }
+    }
+  } catch {}
+  return DEFAULT_MASTER_HASH;
+}
+
+/**
+ * Syncs custom master passcode SHA-256 hash from Supabase cloud (`public.profiles.master_passcode_hash`),
+ * if the database migration has been applied and Supabase is connected.
+ * Fails silently when offline or when column is not yet added.
+ */
+export async function syncMasterPasscodeHashFromCloud(): Promise<string> {
+  if (!supabase) return getActiveMasterHash();
+
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('master_passcode_hash')
+      .eq('role', 'Owner')
+      .limit(1);
+
+    if (!error && data && data.length > 0 && isValidSha256Hex(data[0].master_passcode_hash)) {
+      const cloudHash = data[0].master_passcode_hash.trim().toLowerCase();
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_MASTER_HASH, cloudHash);
+        }
+      } catch {}
+      return cloudHash;
+    }
+  } catch {
+    // Graceful fallback to local hash when offline or column not yet created
+  }
+
+  return getActiveMasterHash();
+}
 
 /**
  * Computes SHA-256 hash in hex format using Web Crypto API
@@ -59,8 +113,9 @@ export async function verifyMasterPasscode(enteredPin: string): Promise<{
     };
   }
 
+  const activeHash = getActiveMasterHash();
   const computed = await computeSha256Hex(SALT + enteredPin.trim());
-  const isValid = computed.toLowerCase() === MASTER_HASH.toLowerCase();
+  const isValid = computed.length === 64 && computed.toLowerCase() === activeHash.toLowerCase();
 
   if (isValid) {
     // Reset failed counter and lockout
@@ -94,6 +149,180 @@ export async function verifyMasterPasscode(enteredPin: string): Promise<{
       error: 'INVALID_PASSCODE'
     };
   }
+}
+
+/**
+ * Step 1 of Master Passcode Change:
+ * Verifies the user's current 8-digit master passcode with full lockout protection
+ * before unlocking the new passcode entry step.
+ */
+export async function verifyCurrentMasterPasscodeForChange(currentPin: string): Promise<{
+  success: boolean;
+  attemptsLeft: number;
+  lockedUntil: number | null;
+  error?: 'SECURITY_LOCKED' | 'INVALID_FORMAT' | 'INVALID_CURRENT_PASSCODE';
+}> {
+  const now = Date.now();
+  const lockoutUntil = getLockoutTimestamp();
+
+  if (lockoutUntil && now < lockoutUntil) {
+    return {
+      success: false,
+      attemptsLeft: 0,
+      lockedUntil: lockoutUntil,
+      error: 'SECURITY_LOCKED'
+    };
+  }
+
+  const trimmed = currentPin.trim();
+  if (!PASSCODE_REGEX.test(trimmed)) {
+    return {
+      success: false,
+      attemptsLeft: Math.max(0, MAX_ATTEMPTS - getFailedAttempts()),
+      lockedUntil: null,
+      error: 'INVALID_FORMAT'
+    };
+  }
+
+  // Pull latest cloud hash if available before verifying
+  const activeHash = await syncMasterPasscodeHashFromCloud();
+  const computed = await computeSha256Hex(SALT + trimmed);
+  const isValid = computed.length === 64 && computed.toLowerCase() === activeHash.toLowerCase();
+
+  if (isValid) {
+    clearFailedAttempts();
+    return { success: true, attemptsLeft: MAX_ATTEMPTS, lockedUntil: null };
+  }
+
+  const failed = incrementFailedAttempts();
+  const attemptsLeft = Math.max(0, MAX_ATTEMPTS - failed);
+
+  if (attemptsLeft === 0) {
+    const lockTime = now + LOCKOUT_DURATION_MS;
+    setLockoutTimestamp(lockTime);
+    return {
+      success: false,
+      attemptsLeft: 0,
+      lockedUntil: lockTime,
+      error: 'SECURITY_LOCKED'
+    };
+  }
+
+  return {
+    success: false,
+    attemptsLeft,
+    lockedUntil: null,
+    error: 'INVALID_CURRENT_PASSCODE'
+  };
+}
+
+/**
+ * Step 2 of Master Passcode Change:
+ * Defense-in-depth re-verification of the current passcode, validation of the new 8-digit passcode,
+ * salted SHA-256 hashing (plain text is NEVER stored), local persistence, optional Supabase cloud sync,
+ * and security audit logging.
+ */
+export async function changeMasterPasscode(
+  currentPin: string,
+  newPin: string,
+  confirmPin: string,
+  actor?: { name?: string; email?: string; role?: string }
+): Promise<{
+  success: boolean;
+  cloudSynced?: boolean;
+  attemptsLeft?: number;
+  lockedUntil?: number | null;
+  error?:
+    | 'SECURITY_LOCKED'
+    | 'INVALID_CURRENT_PASSCODE'
+    | 'INVALID_NEW_FORMAT'
+    | 'PASSCODE_MISMATCH'
+    | 'SAME_AS_CURRENT'
+    | 'CRYPTO_UNAVAILABLE';
+}> {
+  const cleanCurrent = currentPin.trim();
+  const cleanNew = newPin.trim();
+  const cleanConfirm = confirmPin.trim();
+
+  if (!PASSCODE_REGEX.test(cleanNew)) {
+    return { success: false, error: 'INVALID_NEW_FORMAT' };
+  }
+
+  if (cleanNew !== cleanConfirm) {
+    return { success: false, error: 'PASSCODE_MISMATCH' };
+  }
+
+  if (cleanNew === cleanCurrent) {
+    return { success: false, error: 'SAME_AS_CURRENT' };
+  }
+
+  // Always re-verify the current passcode cryptographically before saving any new hash
+  const verifyRes = await verifyCurrentMasterPasscodeForChange(cleanCurrent);
+  if (!verifyRes.success) {
+    return {
+      success: false,
+      attemptsLeft: verifyRes.attemptsLeft,
+      lockedUntil: verifyRes.lockedUntil,
+      error: verifyRes.error === 'SECURITY_LOCKED' ? 'SECURITY_LOCKED' : 'INVALID_CURRENT_PASSCODE'
+    };
+  }
+
+  const newHash = (await computeSha256Hex(SALT + cleanNew)).toLowerCase();
+  if (!isValidSha256Hex(newHash)) {
+    return { success: false, error: 'CRYPTO_UNAVAILABLE' };
+  }
+
+  // 1. Persist salted SHA-256 hash locally
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_MASTER_HASH, newHash);
+    }
+  } catch {}
+
+  // 2. Refresh active session token so current unlocked session remains valid
+  try {
+    const token = await generateSessionToken();
+    sessionStorage.setItem(STORAGE_SESSION_TOKEN, token);
+  } catch {}
+
+  // 3. Best-effort sync to Supabase cloud (when column is available) + audit log
+  let cloudSynced = false;
+  if (supabase) {
+    try {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          master_passcode_hash: newHash,
+          updated_at: new Date().toISOString()
+        })
+        .eq('role', 'Owner');
+
+      if (!updateError) {
+        cloudSynced = true;
+      }
+    } catch {
+      // Column not yet migrated or offline — local hash still protects this device immediately
+    }
+
+    // Write security audit log (never log any passcode or hash)
+    try {
+      await supabase
+        .from('admin_audit_logs')
+        .insert({
+          admin_name: actor?.name || 'Counter User',
+          admin_email: actor?.email || 'yogeshwaridairy9896@gmail.com',
+          admin_role: actor?.role || 'Owner',
+          action_type: 'PRODUCT_UPDATED',
+          title: 'मास्टर सुरक्षा पासवर्ड बदलला (Master Passcode Changed)',
+          details: 'डॅशबोर्ड सेटिंग्जमधून वर्तमान पासवर्ड पडताळणीनंतर ८-अंकी मास्टर सुरक्षा पासवर्ड यशस्वीरित्या अद्यतनित केला.',
+          counter_name: actor?.role === 'Admin' ? 'बिलिंग काउंटर' : 'मुख्य मालक काउंटर'
+        });
+    } catch {
+      // Non-blocking audit log
+    }
+  }
+
+  return { success: true, cloudSynced };
 }
 
 /**

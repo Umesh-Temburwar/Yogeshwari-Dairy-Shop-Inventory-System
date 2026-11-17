@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { ViewFallbackSkeleton } from './components/ui/Skeleton';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -12,6 +12,7 @@ import { MobileActionBar } from './components/MobileActionBar';
 import { DashboardView } from './components/Dashboard/DashboardView';
 import { AddProductModal } from './components/Inventory/AddProductModal';
 import { MasterSecurityModal } from './components/Auth/MasterSecurityModal';
+import { useUnlockTransition, UnlockOverlay } from './components/security/UnlockTransition';
 import { AppDownloadModal } from './components/Common/AppDownloadModal';
 import { NetworkStatusBanner } from './components/Common/NetworkStatusBanner';
 import { KeyboardShortcutsModal } from './components/Common/KeyboardShortcutsModal';
@@ -33,6 +34,7 @@ const DailySalesTracker = React.lazy(() => import('./components/Sales/DailySales
 const ReturnsTracker = React.lazy(() => import('./components/Returns/ReturnsTracker').then(m => ({ default: m.ReturnsTracker })));
 const ReturnProductModal = React.lazy(() => import('./components/Returns/ReturnProductModal').then(m => ({ default: m.ReturnProductModal })));
 const SupabaseConfigModal = React.lazy(() => import('./components/Settings/SupabaseConfigModal').then(m => ({ default: m.SupabaseConfigModal })));
+const ChangeMasterPasscodeModal = React.lazy(() => import('./components/Settings/ChangeMasterPasscodeModal').then(m => ({ default: m.ChangeMasterPasscodeModal })));
 const ProductImageManagerModal = React.lazy(() => import('./components/Admin/ProductImageManagerModal').then(m => ({ default: m.ProductImageManagerModal })));
 
 const MainContent: React.FC = () => {
@@ -41,6 +43,7 @@ const MainContent: React.FC = () => {
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isChangePasscodeOpen, setIsChangePasscodeOpen] = useState(false);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [returnPrefill, setReturnPrefill] = useState<{ productId?: string; invoiceNo?: string; customerName?: string; customerPhone?: string }>({});
   const [isPhotoDatabaseOpen, setIsPhotoDatabaseOpen] = useState(false);
@@ -50,8 +53,8 @@ const MainContent: React.FC = () => {
   // Automatically trigger Mobile Application Download popup after website login
   useEffect(() => {
     // Check if running in standalone mode (already installed PWA)
-    const isStandalone = 
-      typeof window !== 'undefined' && 
+    const isStandalone =
+      typeof window !== 'undefined' &&
       (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true);
 
     const alreadyShown = sessionStorage.getItem('ydo_app_download_prompt_shown');
@@ -100,13 +103,14 @@ const MainContent: React.FC = () => {
 
   // Handle hardware / browser Back button when modals or mobile drawers are open
   useEffect(() => {
-    const isAnyModalOpen = isAddProductOpen || isSettingsOpen || isReturnModalOpen || isMobileSidebarOpen || isAppDownloadOpen;
+    const isAnyModalOpen = isAddProductOpen || isSettingsOpen || isChangePasscodeOpen || isReturnModalOpen || isMobileSidebarOpen || isAppDownloadOpen;
     if (isAnyModalOpen) {
       window.history.pushState({ modalOpen: true }, '');
       const handleModalPop = () => {
         if (isMobileSidebarOpen) setIsMobileSidebarOpen(false);
         if (isAddProductOpen) { setIsAddProductOpen(false); setProductToEdit(null); }
         if (isSettingsOpen) setIsSettingsOpen(false);
+        if (isChangePasscodeOpen) setIsChangePasscodeOpen(false);
         if (isReturnModalOpen) setIsReturnModalOpen(false);
         if (isAppDownloadOpen) setIsAppDownloadOpen(false);
       };
@@ -115,7 +119,7 @@ const MainContent: React.FC = () => {
         window.removeEventListener('popstate', handleModalPop);
       };
     }
-  }, [isAddProductOpen, isSettingsOpen, isReturnModalOpen, isMobileSidebarOpen, isAppDownloadOpen]);
+  }, [isAddProductOpen, isSettingsOpen, isChangePasscodeOpen, isReturnModalOpen, isMobileSidebarOpen, isAppDownloadOpen]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const mainEl = e.currentTarget;
@@ -156,7 +160,7 @@ const MainContent: React.FC = () => {
       <GlobalShakeDetector />
 
       {/* Top Header (Fixed 64px, nothing clipped or overflowing) */}
-      <Navbar 
+      <Navbar
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenAppDownload={() => setIsAppDownloadOpen(true)}
         isSidebarCollapsed={isSidebarCollapsed}
@@ -168,17 +172,18 @@ const MainContent: React.FC = () => {
       {/* Main Workspace with Sidebar & Content */}
       <div className="flex-1 flex overflow-hidden max-w-[1440px] w-full mx-auto min-h-0">
         {/* Sidebar: 264px / 72px rail on desktop, drawer on mobile */}
-        <Sidebar 
+        <Sidebar
           isCollapsed={isSidebarCollapsed}
           isMobileOpen={isMobileSidebarOpen}
           onCloseMobile={() => setIsMobileSidebarOpen(false)}
           onOpenAppDownload={() => setIsAppDownloadOpen(true)}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenPhotoDatabase={() => setIsPhotoDatabaseOpen(true)}
+          onOpenChangePasscode={() => setIsChangePasscodeOpen(true)}
         />
 
         {/* Main Content Area - pb-28 on mobile prevents bottom nav & floating POS button overlap */}
-        <main 
+        <main
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -186,8 +191,8 @@ const MainContent: React.FC = () => {
         >
           {/* Mobile Pull-to-Refresh Indicator */}
           {(isPulling || (isSyncing && pullY > 0)) && (
-            <div 
-              style={{ height: `${pullY}px` }} 
+            <div
+              style={{ height: `${pullY}px` }}
               className="sm:hidden flex items-center justify-center overflow-hidden transition-all duration-150 text-emerald-700 dark:text-emerald-400 font-bold text-xs gap-2 bg-emerald-50/80 dark:bg-emerald-950/30 rounded-xl mb-2"
             >
               <RotateCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -197,7 +202,7 @@ const MainContent: React.FC = () => {
           <Suspense fallback={<ViewFallbackSkeleton />}>
             <div key={activeView} className="w-full">
               {activeView === 'dashboard' && (
-                <DashboardView 
+                <DashboardView
                   onOpenAddProduct={() => {
                     setProductToEdit(null);
                     setIsAddProductOpen(true);
@@ -210,7 +215,7 @@ const MainContent: React.FC = () => {
               {activeView === 'sales' && <DailySalesTracker />}
 
               {activeView === 'inventory' && (
-                <ProductList 
+                <ProductList
                   onOpenAddProduct={() => {
                     setProductToEdit(null);
                     setIsAddProductOpen(true);
@@ -234,11 +239,11 @@ const MainContent: React.FC = () => {
               {activeView === 'analytics' && <ProfitReport />}
 
               {activeView === 'returns' && (
-                <ReturnsTracker 
+                <ReturnsTracker
                   onOpenReturnModal={() => {
                     setReturnPrefill({});
                     setIsReturnModalOpen(true);
-                  }} 
+                  }}
                 />
               )}
             </div>
@@ -247,7 +252,7 @@ const MainContent: React.FC = () => {
       </div>
 
       {/* Mobile Bottom Navigation Bar (PWA / App Navigation) */}
-      <MobileActionBar 
+      <MobileActionBar
         onOpenAddProduct={() => {
           setProductToEdit(null);
           setIsAddProductOpen(true);
@@ -257,7 +262,7 @@ const MainContent: React.FC = () => {
       />
 
       {/* Modals with Suspense */}
-      <AddProductModal 
+      <AddProductModal
         isOpen={isAddProductOpen}
         onClose={() => {
           setIsAddProductOpen(false);
@@ -268,16 +273,26 @@ const MainContent: React.FC = () => {
 
       <Suspense fallback={null}>
         {isSettingsOpen && (
-          <SupabaseConfigModal 
+          <SupabaseConfigModal
             isOpen={isSettingsOpen}
             onClose={() => setIsSettingsOpen(false)}
+            onOpenChangePasscode={() => setIsChangePasscodeOpen(true)}
+          />
+        )}
+      </Suspense>
+
+      <Suspense fallback={null}>
+        {isChangePasscodeOpen && (
+          <ChangeMasterPasscodeModal
+            isOpen={isChangePasscodeOpen}
+            onClose={() => setIsChangePasscodeOpen(false)}
           />
         )}
       </Suspense>
 
       <Suspense fallback={null}>
         {isPhotoDatabaseOpen && (
-          <ProductImageManagerModal 
+          <ProductImageManagerModal
             isOpen={isPhotoDatabaseOpen}
             onClose={() => setIsPhotoDatabaseOpen(false)}
           />
@@ -297,13 +312,13 @@ const MainContent: React.FC = () => {
       </Suspense>
 
       {/* Mobile Application Download & PWA Install Popup */}
-      <AppDownloadModal 
+      <AppDownloadModal
         isOpen={isAppDownloadOpen}
         onClose={() => setIsAppDownloadOpen(false)}
       />
 
       {/* Keyboard Shortcuts Helper Modal (F1) */}
-      <KeyboardShortcutsModal 
+      <KeyboardShortcutsModal
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
       />
@@ -312,8 +327,20 @@ const MainContent: React.FC = () => {
 };
 
 const AppRoot: React.FC = () => {
-  const { user, isSecurityUnlocked, isLoading } = useAuth();
+  const { user, isSecurityUnlocked, isLoading, confirmSecurityUnlock } = useAuth();
   const [isSplashComplete, setIsSplashComplete] = useState(false);
+
+  const { phase, play, reset } = useUnlockTransition(() => {
+    confirmSecurityUnlock();
+  });
+
+  const prevUnlockedRef = useRef(isSecurityUnlocked);
+  useEffect(() => {
+    if (!user || (prevUnlockedRef.current && !isSecurityUnlocked)) {
+      reset();
+    }
+    prevUnlockedRef.current = isSecurityUnlocked;
+  }, [user, isSecurityUnlocked, reset]);
 
   return (
     <>
@@ -333,11 +360,18 @@ const AppRoot: React.FC = () => {
       {(!isLoading || isSplashComplete) && (
         !user ? (
           <LoginPage />
-        ) : !isSecurityUnlocked ? (
-          /* Dedicated secure lock screen with dairy poster background — main dashboard never renders in background */
-          <MasterSecurityModal isOpen={true} />
         ) : (
-          <MainContent />
+          <>
+            {isSecurityUnlocked ? (
+              <div className={phase === 'exiting' ? 'pos-dash-enter h-dvh w-full' : 'h-dvh w-full'}>
+                <MainContent />
+              </div>
+            ) : (
+              /* Dedicated secure lock screen — main dashboard never renders underneath while locked */
+              <MasterSecurityModal isOpen={true} onVerified={play} />
+            )}
+            <UnlockOverlay phase={phase} />
+          </>
         )
       )}
     </>

@@ -30,7 +30,8 @@ import {
   ArrowRight,
   ArrowLeft,
   RotateCcw,
-  Eye
+  Eye,
+  Loader2
 } from 'lucide-react';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
@@ -266,6 +267,7 @@ export const BillingCounter: React.FC = () => {
   const [splitCashAmount, setSplitCashAmount] = useState<number>(0);
   const [splitOnlineAmount, setSplitOnlineAmount] = useState<number>(0);
   const [showCustomerDetails, setShowCustomerDetails] = useState<boolean>(false);
+  const [isCheckingOut, setIsCheckingOut] = useState<boolean>(false);
 
   // Modals & Confirmation
   const [showQrModal, setShowQrModal] = useState(false);
@@ -554,9 +556,9 @@ export const BillingCounter: React.FC = () => {
     setCalcRupees('');
   };
 
-  // Process checkout
+  // Process checkout with double-submit guard & atomic transaction
   const handleCheckout = async () => {
-    if (cart.length === 0) return;
+    if (cart.length === 0 || isCheckingOut) return;
 
     if (paymentMode === 'Udhar' && !customerName.trim()) {
       alert(language === 'mr' 
@@ -567,57 +569,65 @@ export const BillingCounter: React.FC = () => {
       return;
     }
 
-    let cashAmount = 0;
-    let onlineAmount = 0;
-    let udharAmount = 0;
+    setIsCheckingOut(true);
 
-    if (paymentMode === 'Cash') {
-      cashAmount = netTotal;
-    } else if (paymentMode === 'Online_UPI') {
-      onlineAmount = netTotal;
-    } else if (paymentMode === 'Udhar') {
-      udharAmount = netTotal;
-    } else if (paymentMode === 'Split') {
-      cashAmount = splitCashAmount;
-      onlineAmount = splitOnlineAmount || (netTotal - splitCashAmount);
+    try {
+      let cashAmount = 0;
+      let onlineAmount = 0;
+      let udharAmount = 0;
+
+      if (paymentMode === 'Cash') {
+        cashAmount = netTotal;
+      } else if (paymentMode === 'Online_UPI') {
+        onlineAmount = netTotal;
+      } else if (paymentMode === 'Udhar') {
+        udharAmount = netTotal;
+      } else if (paymentMode === 'Split') {
+        cashAmount = splitCashAmount;
+        onlineAmount = splitOnlineAmount || (netTotal - splitCashAmount);
+      }
+
+      const defaultCustomerName = language === 'mr' ? 'थेट ग्राहक' : language === 'hi' ? 'काउंटर ग्राहक' : 'Counter Customer';
+
+      const sale = await createSale({
+        customer_name: customerName.trim() || defaultCustomerName,
+        customer_phone: customerPhone.trim() || undefined,
+        customer_gender: customerGender,
+        customer_age_group: customerAgeGroup,
+        customer_age: customerAge ? parseInt(customerAge) : undefined,
+        total_amount: subtotal,
+        discount,
+        net_amount: netTotal,
+        payment_mode: paymentMode,
+        cash_amount: cashAmount,
+        online_amount: onlineAmount,
+        udhar_amount: udharAmount,
+        created_by_name: activeOperator.name,
+        created_by_email: activeOperator.email,
+        created_by_role: activeOperator.role,
+        admin_slot: activeOperator.slot,
+        counter_name: activeOperator.counter,
+        items: cart
+      });
+
+      setLastCompletedSale(sale);
+      setIsSuccessModalOpen(true);
+      playSuccessChime();
+      confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
+
+      // Reset Form
+      clearCart();
+      setMobileTab('products');
+      setCustomerName('');
+      setCustomerPhone('');
+      setCustomerGender('Male');
+      setCustomerAgeGroup('Adults (26-45)');
+      setCustomerAge('');
+    } catch (err) {
+      console.error('Checkout error:', err);
+    } finally {
+      setIsCheckingOut(false);
     }
-
-    const defaultCustomerName = language === 'mr' ? 'थेट ग्राहक' : language === 'hi' ? 'काउंटर ग्राहक' : 'Counter Customer';
-
-    const sale = await createSale({
-      customer_name: customerName.trim() || defaultCustomerName,
-      customer_phone: customerPhone.trim() || undefined,
-      customer_gender: customerGender,
-      customer_age_group: customerAgeGroup,
-      customer_age: customerAge ? parseInt(customerAge) : undefined,
-      total_amount: subtotal,
-      discount,
-      net_amount: netTotal,
-      payment_mode: paymentMode,
-      cash_amount: cashAmount,
-      online_amount: onlineAmount,
-      udhar_amount: udharAmount,
-      created_by_name: activeOperator.name,
-      created_by_email: activeOperator.email,
-      created_by_role: activeOperator.role,
-      admin_slot: activeOperator.slot,
-      counter_name: activeOperator.counter,
-      items: cart
-    });
-
-    setLastCompletedSale(sale);
-    setIsSuccessModalOpen(true);
-    playSuccessChime();
-    confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
-
-    // Reset Form
-    clearCart();
-    setMobileTab('products');
-    setCustomerName('');
-    setCustomerPhone('');
-    setCustomerGender('Male');
-    setCustomerAgeGroup('Adults (26-45)');
-    setCustomerAge('');
   };
 
   const getInvoiceReportPayload = (sale: any) => {
@@ -1397,12 +1407,21 @@ export const BillingCounter: React.FC = () => {
         {/* Big Complete Sale / Checkout Button */}
         <div className="pt-4 border-t border-slate-100 dark:border-[#24352F]">
           <button
-            disabled={cart.length === 0}
+            disabled={cart.length === 0 || isCheckingOut}
             onClick={handleCheckout}
-            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-300 text-white font-black text-base shadow-lg shadow-emerald-600/20 active:scale-98 transition-all flex items-center justify-center gap-2"
+            className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:from-slate-300 disabled:to-slate-300 dark:disabled:from-slate-700 dark:disabled:to-slate-700 text-white font-black text-base shadow-lg shadow-emerald-600/20 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
           >
-            <Printer className="w-5 h-5" />
-            <span>{t('completeAndPrint')} (Pay ₹{netTotal.toFixed(2)})</span>
+            {isCheckingOut ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>{language === 'mr' ? 'बिलिंग नोंदवत आहे...' : language === 'hi' ? 'बिलिंग हो रहा है...' : 'Processing Sale...'}</span>
+              </>
+            ) : (
+              <>
+                <Printer className="w-5 h-5" />
+                <span>{t('completeAndPrint')} (Pay ₹{netTotal.toFixed(2)})</span>
+              </>
+            )}
           </button>
         </div>
 

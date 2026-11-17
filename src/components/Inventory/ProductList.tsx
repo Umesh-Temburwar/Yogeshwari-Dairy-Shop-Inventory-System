@@ -71,6 +71,9 @@ export const ProductList: React.FC<ProductListProps> = ({
     setActiveView,
     totalCatalogCount = 33518,
     totalBarcodesCount = 23320,
+    inStockCount: storeInStockCount,
+    lowStockCount: storeLowStockCount,
+    outOfStockCount: storeOutOfStockCount,
     setIsBarcodeScannerOpen
   } = useStore();
   const { t, language } = useLanguage();
@@ -324,10 +327,10 @@ export const ProductList: React.FC<ProductListProps> = ({
     });
   }, [products, searchQuery, selectedCategory, selectedExpiryFilter, batches, inventoryViewTab, onlineSearchedProduct, onlineSearchResults, catalogueItems]);
 
-  const inStockCount = useMemo(() => products.filter(p => p.stock_quantity > 0).length, [products]);
-  const lowStockCount = useMemo(() => products.filter(p => p.stock_quantity <= p.min_stock_alert && p.stock_quantity > 0).length, [products]);
+  const inStockCount = storeInStockCount ?? useMemo(() => products.filter(p => p.stock_quantity > 0).length, [products]);
+  const lowStockCount = storeLowStockCount ?? useMemo(() => products.filter(p => p.stock_quantity <= p.min_stock_alert && p.stock_quantity > 0).length, [products]);
   const totalCatalogueCount = Math.max(totalCatalogCount || 0, products.length);
-  const outOfStockCount = useMemo(() => products.filter(p => p.stock_quantity <= 0).length, [products]);
+  const outOfStockCount = storeOutOfStockCount ?? useMemo(() => products.filter(p => p.stock_quantity <= 0).length, [products]);
 
   const totalStockCostValuation = useMemo(() => {
     return products.reduce((sum, p) => sum + (p.stock_quantity * p.purchase_price), 0);
@@ -1660,16 +1663,18 @@ export const ProductList: React.FC<ProductListProps> = ({
         <StockInwardModal 
           product={selectedProductForStockIn} 
           onClose={() => {
+            const closedProd = selectedProductForStockIn;
             setSelectedProductForStockIn(null);
-            // Re-fetch online search result to guarantee immediate fresh state
-            const q = searchQuery.trim();
-            if (q.length >= 2 && /^\d{5,}$/.test(q)) {
-              searchProductByBarcodeOnline(q).then(res => {
-                if (res.found && res.product) {
-                  setOnlineSearchedProduct(res.product);
-                  setOnlineSearchResults([res.product]);
-                }
-              });
+            if (closedProd) {
+              // Immediately sync searched card with latest in-memory product state
+              const fresh = products.find(p => p.id === closedProd.id);
+              if (fresh) {
+                setOnlineSearchedProduct(fresh);
+                setOnlineSearchResults(prev => {
+                  const exists = prev.some(p => p.id === fresh.id);
+                  return exists ? prev.map(p => p.id === fresh.id ? fresh : p) : [fresh, ...prev];
+                });
+              }
             }
           }} 
         />

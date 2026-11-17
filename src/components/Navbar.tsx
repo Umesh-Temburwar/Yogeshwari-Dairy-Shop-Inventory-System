@@ -4,6 +4,7 @@ import nikhilAvatar from '../assets/nikhil_avatar.png';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useRealtimeStatus } from '../hooks/useRealtimeStatus';
 import { 
   PanelLeftClose, 
   PanelLeft,
@@ -30,6 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { t, language } = useLanguage();
   const { user, role } = useAuth();
   const { resolvedTheme, toggleTheme } = useTheme();
+  const realtimeStatus = useRealtimeStatus();
 
   // Active User display name: Nikhil Sakhare (Owner) vs Nilesh Sakhare (Admin)
   const currentUserName = 
@@ -100,6 +102,35 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-[11px]">{language === 'mr' ? 'ॲप इन्स्टॉल' : 'ऐप इंस्टॉल'}</span>
             </button>
           )}
+
+          {/* Realtime Live Sync Status Indicator (Subtle & Non-blocking) */}
+          <div 
+            className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-black tracking-tight"
+            title={
+              realtimeStatus === 'CONNECTED' ? 'Realtime Database Synced (सर्व टर्मिनल जोडलेले आहेत)' :
+              realtimeStatus === 'CONNECTING' || realtimeStatus === 'RECONNECTING' ? 'Reconnecting to Realtime... (पुन्हा जोडत आहे...)' :
+              'Offline mode (ऑफलाइन मोड)'
+            }
+          >
+            <span className="relative flex h-2 w-2">
+              {realtimeStatus === 'CONNECTED' ? (
+                <>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </>
+              ) : realtimeStatus === 'CONNECTING' || realtimeStatus === 'RECONNECTING' ? (
+                <>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </>
+              ) : (
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-400"></span>
+              )}
+            </span>
+            <span className="hidden sm:inline text-slate-500 dark:text-[#8FA69C]">
+              {realtimeStatus === 'CONNECTED' ? 'Live' : realtimeStatus === 'RECONNECTING' ? 'Sync...' : 'Offline'}
+            </span>
+          </div>
 
           {/* Quick Theme Toggle (Sun / Moon) - Works on both mobile and desktop! */}
           <button

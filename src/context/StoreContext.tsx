@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
   Product, Sale, SaleItem, Purchase, DamageRecord, UdharCustomer, 
   UdharTransaction, Expense, TimeRangeFilter, PaymentMode,
@@ -14,6 +14,7 @@ import {
 } from '../lib/mockInitialData';
 import { getShelfLifeDays, getSuggestedExpiryDate, generateBatchNumber, computeExpiryStatus } from '../lib/shelfLifeUtils';
 import { supabase, getSupabaseConfig, generateUUID } from '../lib/supabase';
+import { realtimeManager } from '../services/realtime/realtimeManager';
 import { startOfDay, startOfWeek, startOfMonth, startOfYear, isWithinInterval, parseISO } from 'date-fns';
 
 export type AppView = 
@@ -57,6 +58,10 @@ interface StoreContextType {
   products: Product[];
   totalCatalogCount: number;
   totalBarcodesCount: number;
+  inStockCount: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+  refreshInventoryCounts: () => Promise<void>;
   batches: ProductBatch[];
   sales: Sale[];
   purchases: Purchase[];
@@ -139,6 +144,7 @@ interface StoreContextType {
       purchase_cost: number;
       total_price: number;
     }>;
+    idempotency_key?: string;
   }) => Promise<Sale>;
 
   createPurchase: (purchaseData: Omit<Purchase, 'id' | 'created_at'>) => Promise<void>;
@@ -438,6 +444,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [totalCatalogCount, setTotalCatalogCount] = useState<number>(33518);
   const [totalBarcodesCount, setTotalBarcodesCount] = useState<number>(23320);
+  const [inStockCount, setInStockCount] = useState<number>(() => {
+    return products.filter(p => p.stock_quantity > 0).length;
+  });
+  const [lowStockCount, setLowStockCount] = useState<number>(() => {
+    return products.filter(p => p.stock_quantity > 0 && p.stock_quantity <= (p.min_stock_alert || 5)).length;
+  });
+  const [outOfStockCount, setOutOfStockCount] = useState<number>(() => {
+    return products.filter(p => p.stock_quantity <= 0).length;
+  });
 
   const [batches, setBatches] = useState<ProductBatch[]>(() => {
     const saved = localStorage.getItem('yd_batches');
@@ -579,6 +594,54 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, []);
 
+  // Fast Server Aggregate Inventory Counts (Throttled with single-query RPC)
+  const refreshInventoryCounts = useCallback(async () => {
+    if (!supabase) return;
+    try {
+      const { data, error } = await supabase.rpc('fn_get_inventory_counts');
+      if (!error && data) {
+        if (typeof data.in_stock_count === 'number') setInStockCount(data.in_stock_count);
+        if (typeof data.low_stock_count === 'number') setLowStockCount(data.low_stock_count);
+        if (typeof data.out_of_stock_count === 'number') setOutOfStockCount(data.out_of_stock_count);
+        if (typeof data.total_catalogue_count === 'number') setTotalCatalogCount(data.total_catalogue_count);
+        if (typeof data.total_barcodes_count === 'number') setTotalBarcodesCount(data.total_barcodes_count);
+        return;
+      }
+    } catch {
+      // Fallback if RPC is not installed in database yet
+    }
+
+    // Fallback: fast count queries
+    try {
+      const { count: inStock } = await supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true })
+        .gt('stock_quantity', 0);
+      if (inStock !== null && inStock !== undefined) setInStockCount(inStock);
+
+      const { count: outOfStock } = await supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true })
+        .lte('stock_quantity', 0);
+      if (outOfStock !== null && outOfStock !== undefined) setOutOfStockCount(outOfStock);
+
+      const { count: totalCat } = await supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true });
+      if (totalCat !== null && totalCat !== undefined) setTotalCatalogCount(totalCat);
+    } catch (e) {
+      console.warn('Fallback inventory counts notice:', e);
+    }
+  }, []);
+
+  const countThrottleRef = useRef<any>(null);
+  const scheduleCountsRefresh = useCallback(() => {
+    if (countThrottleRef.current) clearTimeout(countThrottleRef.current);
+    countThrottleRef.current = setTimeout(() => {
+      refreshInventoryCounts();
+    }, 800);
+  }, [refreshInventoryCounts]);
+
   // Centralized Supabase Sync: Single Source of Truth for all devices
   const syncWithSupabase = useCallback(async () => {
     if (!supabase) return;
@@ -609,6 +672,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } catch (bcErr) {
         console.warn('Barcode count fetch error:', bcErr);
       }
+
+      // Refresh aggregate server counts
+      void refreshInventoryCounts();
 
       // 2. Fetch actual store inventory: Only load items currently carried or in stock (stock_quantity > 0)
       // This strictly isolates 13 store inventory items from 46,559 catalogue items, saving 1.5MB+ memory & preventing UI lag
@@ -772,64 +838,188 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, []);
 
-  // Multi-Device Realtime Synchronization via Supabase WebSocket
+  // Central Realtime Synchronization Layer (Ref-Counted & Leak-Proof)
   useEffect(() => {
     if (!supabase) return;
 
-    // 1. Join realtime channel
-    const syncChannel = supabase.channel('dairy-shop-live-sync', {
-      config: {
-        broadcast: { self: false }
+    // 1. Initial database hydration on mount
+    syncWithSupabase();
+    refreshInventoryCounts();
+
+    // 2. Track connection status
+    const statusUnsub = realtimeManager.onStatusChange((status) => {
+      setIsSupabaseConnected(status === 'CONNECTED');
+    });
+
+    // 3. Subscribe to Inventory Channel (Batches, Barcodes, In-Stock Products)
+    const inventoryUnsub = realtimeManager.subscribeToInventory('store-context', (payload) => {
+      // Deduplicate own client mutations
+      if (payload.clientMutationId && realtimeManager.isOwnMutation(payload.clientMutationId)) {
+        return;
       }
-    });
 
-    // Handle peer broadcasts when Device 1 or Device 2 performs an action
-    syncChannel.on('broadcast', { event: 'STORE_MUTATION' }, (msg) => {
-      console.log('📡 Realtime update received from peer terminal:', msg);
-      syncWithSupabase();
-    });
-
-    // Handle direct Postgres logical replication changes
-    const tablesToWatch = [
-      'products', 'batches', 'sales', 'sale_items', 'purchases', 
-      'damage_records', 'udhar_customers', 'udhar_transactions', 
-      'expenses', 'product_returns', 'supplier_returns', 'admin_audit_logs'
-    ];
-
-    tablesToWatch.forEach((tbl) => {
-      syncChannel.on(
-        'postgres_changes', 
-        { event: '*', schema: 'public', table: tbl }, 
-        () => {
-          syncWithSupabase();
+      if (payload.table === 'batches') {
+        const row = payload.new as ProductBatch;
+        if (payload.eventType === 'INSERT' && row?.id) {
+          setBatches(prev => {
+            if (prev.some(b => b.id === row.id)) return prev;
+            return [row, ...prev];
+          });
+        } else if (payload.eventType === 'UPDATE' && row?.id) {
+          setBatches(prev => prev.map(b => b.id === row.id ? { ...b, ...row } : b));
+        } else if (payload.eventType === 'DELETE' && payload.old?.id) {
+          setBatches(prev => prev.filter(b => b.id !== payload.old!.id));
         }
-      );
-    });
+        scheduleCountsRefresh();
+      } else if (payload.table === 'products') {
+        const row = payload.new as Product;
+        if (!row || !row.id) return;
 
-    syncChannel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        setIsSupabaseConnected(true);
+        setProducts(prev => {
+          const index = prev.findIndex(p => p.id === row.id);
+          if (index !== -1) {
+            const existing = prev[index];
+            // Out of order protection: check updated_at if both are available
+            if (row.updated_at && existing.updated_at && new Date(row.updated_at).getTime() < new Date(existing.updated_at).getTime()) {
+              return prev;
+            }
+            const updated = [...prev];
+            updated[index] = { ...existing, ...row };
+            return updated;
+          } else {
+            // New in-stock product transitioned from 0 to >0
+            if (row.stock_quantity > 0) {
+              return [row, ...prev];
+            }
+            return prev;
+          }
+        });
+        scheduleCountsRefresh();
+      } else if (payload.table === 'product_barcodes') {
+        scheduleCountsRefresh();
       }
     });
 
-    // 2. Refetch on tab focus or visibility change (e.g., unlocking phone or switching windows)
+    // 4. Subscribe to Sales & Accounts Channel (Sales, Khata, Damages, Returns)
+    const salesUnsub = realtimeManager.subscribeToSales('store-context', (payload) => {
+      if (payload.clientMutationId && realtimeManager.isOwnMutation(payload.clientMutationId)) {
+        return;
+      }
+
+      if (payload.table === 'sales') {
+        const row = payload.new as Sale;
+        if (payload.eventType === 'INSERT' && row?.id) {
+          setSales(prev => {
+            if (prev.some(s => s.id === row.id || (row.idempotency_key && s.idempotency_key === row.idempotency_key))) return prev;
+            return [row, ...prev];
+          });
+        } else if (payload.eventType === 'UPDATE' && row?.id) {
+          setSales(prev => prev.map(s => s.id === row.id ? { ...s, ...row } : s));
+        } else if (payload.eventType === 'DELETE' && payload.old?.id) {
+          setSales(prev => prev.filter(s => s.id !== payload.old!.id));
+        }
+      } else if (payload.table === 'sale_items') {
+        const item = payload.new as SaleItem;
+        if (item?.sale_id) {
+          setSales(prev => prev.map(s => {
+            if (s.id === item.sale_id) {
+              const items = s.items || [];
+              if (items.some(i => i.id === item.id)) {
+                return { ...s, items: items.map(i => i.id === item.id ? { ...i, ...item } : i) };
+              }
+              return { ...s, items: [...items, item] };
+            }
+            return s;
+          }));
+        }
+      } else if (payload.table === 'udhar_customers') {
+        const cust = payload.new as UdharCustomer;
+        if (cust?.id) {
+          setCustomers(prev => {
+            const exists = prev.some(c => c.id === cust.id);
+            if (exists) {
+              return prev.map(c => c.id === cust.id ? { ...c, ...cust } : c);
+            }
+            return [cust, ...prev];
+          });
+        }
+      } else if (payload.table === 'udhar_transactions') {
+        const tx = payload.new as UdharTransaction;
+        if (payload.eventType === 'INSERT' && tx?.id) {
+          setUdharTransactions(prev => {
+            if (prev.some(t => t.id === tx.id)) return prev;
+            return [tx, ...prev];
+          });
+        }
+      } else if (payload.table === 'damage_records') {
+        const dmg = payload.new as DamageRecord;
+        if (payload.eventType === 'INSERT' && dmg?.id) {
+          setDamages(prev => {
+            if (prev.some(d => d.id === dmg.id)) return prev;
+            return [dmg, ...prev];
+          });
+        }
+      } else if (payload.table === 'product_returns') {
+        const ret = payload.new as ProductReturn;
+        if (payload.eventType === 'INSERT' && ret?.id) {
+          setReturns(prev => {
+            if (prev.some(r => r.id === ret.id)) return prev;
+            return [ret, ...prev];
+          });
+        }
+      } else if (payload.table === 'supplier_returns') {
+        const sRet = payload.new as SupplierReturn;
+        if (payload.eventType === 'INSERT' && sRet?.id) {
+          setSupplierReturns(prev => {
+            if (prev.some(r => r.id === sRet.id)) return prev;
+            return [sRet, ...prev];
+          });
+        }
+      } else if (payload.table === 'expenses') {
+        const exp = payload.new as Expense;
+        if (payload.eventType === 'INSERT' && exp?.id) {
+          setExpenses(prev => {
+            if (prev.some(e => e.id === exp.id)) return prev;
+            return [exp, ...prev];
+          });
+        }
+      } else if (payload.table === 'purchases') {
+        const pur = payload.new as Purchase;
+        if (payload.eventType === 'INSERT' && pur?.id) {
+          setPurchases(prev => {
+            if (prev.some(p => p.id === pur.id)) return prev;
+            return [pur, ...prev];
+          });
+        }
+      }
+    });
+
+    // 5. Subscribe to Catalogue Signals (lightweight broadcasts)
+    const signalUnsub = realtimeManager.subscribeToSignals('store-context', (signal) => {
+      if (signal.type === 'CATALOGUE_ITEM_CHANGED' || signal.type === 'CATALOGUE_BULK_CHANGED') {
+        scheduleCountsRefresh();
+      }
+    });
+
+    // 6. Gentle Reconnection on Focus / Visibility
     const handleFocusOrVisible = () => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-        syncWithSupabase();
+        scheduleCountsRefresh();
       }
     };
     window.addEventListener('focus', handleFocusOrVisible);
     document.addEventListener('visibilitychange', handleFocusOrVisible);
 
-    // Initial database pull on mount
-    syncWithSupabase();
-
     return () => {
       window.removeEventListener('focus', handleFocusOrVisible);
       document.removeEventListener('visibilitychange', handleFocusOrVisible);
-      syncChannel.unsubscribe();
+      statusUnsub();
+      inventoryUnsub();
+      salesUnsub();
+      signalUnsub();
+      if (countThrottleRef.current) clearTimeout(countThrottleRef.current);
     };
-  }, [syncWithSupabase]);
+  }, [syncWithSupabase, refreshInventoryCounts, scheduleCountsRefresh]);
 
   const refreshData = async () => {
     setIsSyncing(true);
@@ -2069,9 +2259,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       purchase_cost: number;
       total_price: number;
     }>;
+    idempotency_key?: string;
   }): Promise<Sale> => {
     const saleId = generateUUID();
     const todayFormatted = new Date().toISOString().split('T')[0];
+    const idempotencyKey = saleData.idempotency_key || generateUUID();
+
+    // Register own mutation for deduplication across websocket echoes
+    realtimeManager.registerOwnMutation(idempotencyKey);
 
     const adminInfo = getActiveAdminInfo();
     const createdByName = saleData.created_by_name || adminInfo.name;
@@ -2118,7 +2313,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       created_by_email: createdByEmail,
       created_by_role: createdByRole,
       admin_slot: adminSlot,
-      counter_name: counterName
+      counter_name: counterName,
+      idempotency_key: idempotencyKey
     };
 
     // 1. Deduct stock for sold items using FEFO across active batches
@@ -2170,6 +2366,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
 
     // 3. If Udhar is involved and customer phone/name matches or new customer
+    let updatedCustRecord: UdharCustomer | undefined;
+    let isNewCustomer = false;
+    let targetCustId = generateUUID();
+    let newTx: UdharTransaction | undefined;
+
     if (saleData.udhar_amount > 0) {
       const cleanCustomerName = (saleData.customer_name || 'Counter Customer').trim();
       const cleanCustomerPhone = saleData.customer_phone?.trim() || '';
@@ -2179,9 +2380,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         c.name.trim().toLowerCase() === cleanCustomerName.toLowerCase()
       );
 
-      const targetCustId = existingCust ? existingCust.id : generateUUID();
-      const isNewCustomer = !existingCust;
-      let updatedCustRecord: UdharCustomer;
+      targetCustId = existingCust ? existingCust.id : generateUUID();
+      isNewCustomer = !existingCust;
 
       if (existingCust) {
         const newCredit = Number((existingCust.total_credit + saleData.udhar_amount).toFixed(2));
@@ -2194,7 +2394,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           last_transaction_date: todayFormatted,
           status: 'Active'
         };
-        setCustomers(prev => prev.map(c => c.id === existingCust.id ? updatedCustRecord : c));
+        setCustomers(prev => prev.map(c => c.id === existingCust.id ? updatedCustRecord! : c));
       } else {
         updatedCustRecord = {
           id: targetCustId,
@@ -2207,10 +2407,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           last_transaction_date: todayFormatted,
           created_at: new Date().toISOString()
         };
-        setCustomers(prev => [updatedCustRecord, ...prev]);
+        setCustomers(prev => [updatedCustRecord!, ...prev]);
       }
 
-      const newTx: UdharTransaction = {
+      newTx = {
         id: generateUUID(),
         customer_id: targetCustId,
         type: 'Credit_Given',
@@ -2220,39 +2420,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         transaction_date: todayFormatted,
         created_at: new Date().toISOString()
       };
-      setUdharTransactions(prev => [newTx, ...prev]);
-
-      if (supabase) {
-        (async () => {
-          try {
-            if (isNewCustomer) {
-              await supabase.from('udhar_customers').insert([{
-                id: updatedCustRecord.id,
-                name: updatedCustRecord.name,
-                phone: updatedCustRecord.phone,
-                total_credit: updatedCustRecord.total_credit,
-                total_paid: updatedCustRecord.total_paid,
-                current_balance: updatedCustRecord.current_balance,
-                status: updatedCustRecord.status,
-                last_transaction_date: updatedCustRecord.last_transaction_date,
-                created_at: updatedCustRecord.created_at
-              }]);
-            } else {
-              await supabase.from('udhar_customers').update({
-                total_credit: updatedCustRecord.total_credit,
-                current_balance: updatedCustRecord.current_balance,
-                phone: updatedCustRecord.phone,
-                status: 'Active',
-                last_transaction_date: todayFormatted
-              }).eq('id', targetCustId);
-            }
-            await supabase.from('udhar_transactions').insert([newTx]);
-            broadcastMutation('udhar', 'credit');
-          } catch (e) {
-            console.error('Udhar async sync notice:', e);
-          }
-        })();
-      }
+      setUdharTransactions(prev => [newTx!, ...prev]);
     }
 
     setSales(prev => [newSale, ...prev]);
@@ -2261,77 +2429,147 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // 4. Centralized Supabase Persistence (Single Source of Truth)
     if (supabase) {
       try {
-        const saleInsertPayload: Record<string, any> = {
-          id: newSale.id,
-          invoice_no: newSale.invoice_no,
-          customer_name: newSale.customer_name,
-          customer_phone: newSale.customer_phone || null,
-          customer_gender: newSale.customer_gender || null,
-          customer_age_group: newSale.customer_age_group || null,
-          total_amount: newSale.total_amount,
-          discount: newSale.discount,
-          net_amount: newSale.net_amount,
-          payment_mode: newSale.payment_mode,
-          cash_amount: newSale.cash_amount,
-          online_amount: newSale.online_amount,
-          udhar_amount: newSale.udhar_amount,
-          sale_date: newSale.sale_date,
-          created_at: newSale.created_at,
-          created_by_name: newSale.created_by_name,
-          created_by_email: newSale.created_by_email,
-          created_by_role: newSale.created_by_role,
-          admin_slot: newSale.admin_slot,
-          counter_name: newSale.counter_name
-        };
-        if (newSale.customer_age !== undefined && newSale.customer_age !== null) {
-          saleInsertPayload.customer_age = newSale.customer_age;
+        let atomicRpcHandled = false;
+        try {
+          const { data: rpcRes, error: rpcErr } = await supabase.rpc('fn_complete_sale_atomic', {
+            p_sale_id: saleId,
+            p_invoice_no: invoiceNo,
+            p_idempotency_key: idempotencyKey,
+            p_customer_name: saleData.customer_name || 'Counter Customer',
+            p_customer_phone: saleData.customer_phone || null,
+            p_customer_gender: saleData.customer_gender || null,
+            p_customer_age_group: saleData.customer_age_group || null,
+            p_customer_age: saleData.customer_age || null,
+            p_total_amount: saleData.total_amount,
+            p_discount: saleData.discount,
+            p_net_amount: saleData.net_amount,
+            p_payment_mode: saleData.payment_mode,
+            p_cash_amount: saleData.cash_amount,
+            p_online_amount: saleData.online_amount,
+            p_udhar_amount: saleData.udhar_amount,
+            p_sale_date: todayFormatted,
+            p_created_by_name: createdByName,
+            p_created_by_email: createdByEmail,
+            p_created_by_role: createdByRole,
+            p_admin_slot: adminSlot,
+            p_counter_name: counterName,
+            p_items: saleData.items.map(it => ({
+              id: generateUUID(),
+              product_id: it.product_id,
+              product_name: it.product_name,
+              quantity: it.quantity,
+              unit: it.unit || 'Piece',
+              unit_price: it.unit_price,
+              purchase_cost: it.purchase_cost || 0,
+              total_price: it.total_price
+            }))
+          });
+
+          if (!rpcErr && rpcRes && rpcRes.success) {
+            atomicRpcHandled = true;
+          }
+        } catch (eRpc) {
+          // Fallback to direct tables below
         }
 
-        const { error: saleErr } = await supabase.from('sales').insert([saleInsertPayload]);
-
-        if (!saleErr) {
-          // Insert line items
-          const { error: itemsErr } = await supabase.from('sale_items').insert(saleItems.map(si => ({
-            id: si.id,
-            sale_id: newSale.id,
-            product_id: (si.product_id && si.product_id.length === 36 && !si.product_id.startsWith('item-') && !si.product_id.startsWith('prod-')) ? si.product_id : null,
-            product_name: si.product_name,
-            quantity: si.quantity,
-            unit: si.unit,
-            unit_price: si.unit_price,
-            purchase_cost: si.purchase_cost || 0,
-            total_price: si.total_price
-          })));
-
-          if (itemsErr) {
-            console.error('Failed to insert sale_items to Supabase:', itemsErr);
-          }
-
-          // Synchronize stock deduction directly in Central Database
-          for (const item of saleData.items) {
-            const currentProd = products.find(p => p.id === item.product_id);
-            if (currentProd) {
-              const updatedStock = Math.max(0, Number((currentProd.stock_quantity - item.quantity).toFixed(2)));
-              await supabase.from('products').update({
-                stock_quantity: updatedStock,
-                updated_at: new Date().toISOString()
-              }).eq('id', item.product_id);
+        if (!atomicRpcHandled) {
+          // Direct tables fallback
+          if (saleData.udhar_amount > 0 && updatedCustRecord && newTx) {
+            try {
+              if (isNewCustomer) {
+                await supabase.from('udhar_customers').insert([{
+                  id: updatedCustRecord.id,
+                  name: updatedCustRecord.name,
+                  phone: updatedCustRecord.phone,
+                  total_credit: updatedCustRecord.total_credit,
+                  total_paid: updatedCustRecord.total_paid,
+                  current_balance: updatedCustRecord.current_balance,
+                  status: updatedCustRecord.status,
+                  last_transaction_date: updatedCustRecord.last_transaction_date,
+                  created_at: updatedCustRecord.created_at
+                }]);
+              } else {
+                await supabase.from('udhar_customers').update({
+                  total_credit: updatedCustRecord.total_credit,
+                  current_balance: updatedCustRecord.current_balance,
+                  phone: updatedCustRecord.phone,
+                  status: 'Active',
+                  last_transaction_date: todayFormatted
+                }).eq('id', targetCustId);
+              }
+              await supabase.from('udhar_transactions').insert([newTx]);
+            } catch (e) {
+              console.error('Udhar fallback sync notice:', e);
             }
           }
 
-          // Synchronize batch deductions directly in Central Database
-          for (const bd of batchDeductionsToSync) {
-            await supabase.from('batches').update({
-              qty_remaining: bd.qty_remaining,
-              updated_at: new Date().toISOString()
-            }).eq('id', bd.id);
+          const saleInsertPayload: Record<string, any> = {
+            id: newSale.id,
+            invoice_no: newSale.invoice_no,
+            idempotency_key: idempotencyKey,
+            customer_name: newSale.customer_name,
+            customer_phone: newSale.customer_phone || null,
+            customer_gender: newSale.customer_gender || null,
+            customer_age_group: newSale.customer_age_group || null,
+            total_amount: newSale.total_amount,
+            discount: newSale.discount,
+            net_amount: newSale.net_amount,
+            payment_mode: newSale.payment_mode,
+            cash_amount: newSale.cash_amount,
+            online_amount: newSale.online_amount,
+            udhar_amount: newSale.udhar_amount,
+            sale_date: newSale.sale_date,
+            created_at: newSale.created_at,
+            created_by_name: newSale.created_by_name,
+            created_by_email: newSale.created_by_email,
+            created_by_role: newSale.created_by_role,
+            admin_slot: newSale.admin_slot,
+            counter_name: newSale.counter_name
+          };
+          if (newSale.customer_age !== undefined && newSale.customer_age !== null) {
+            saleInsertPayload.customer_age = newSale.customer_age;
           }
 
-          // Broadcast to Device 2
-          broadcastMutation('sales', 'create');
-        } else {
-          console.error('Error saving sale to Supabase:', saleErr);
+          const { error: saleErr } = await supabase.from('sales').insert([saleInsertPayload]);
+
+          if (!saleErr) {
+            // Insert line items
+            await supabase.from('sale_items').insert(saleItems.map(si => ({
+              id: si.id,
+              sale_id: newSale.id,
+              product_id: (si.product_id && si.product_id.length === 36 && !si.product_id.startsWith('item-') && !si.product_id.startsWith('prod-')) ? si.product_id : null,
+              product_name: si.product_name,
+              quantity: si.quantity,
+              unit: si.unit,
+              unit_price: si.unit_price,
+              purchase_cost: si.purchase_cost || 0,
+              total_price: si.total_price
+            })));
+
+            // Synchronize stock deduction directly in Central Database
+            for (const item of saleData.items) {
+              const currentProd = products.find(p => p.id === item.product_id);
+              if (currentProd) {
+                const updatedStock = Math.max(0, Number((currentProd.stock_quantity - item.quantity).toFixed(2)));
+                await supabase.from('products').update({
+                  stock_quantity: updatedStock,
+                  updated_at: new Date().toISOString()
+                }).eq('id', item.product_id);
+              }
+            }
+
+            // Synchronize batch deductions directly in Central Database
+            for (const bd of batchDeductionsToSync) {
+              await supabase.from('batches').update({
+                qty_remaining: bd.qty_remaining,
+                updated_at: new Date().toISOString()
+              }).eq('id', bd.id);
+            }
+          }
         }
+
+        // Schedule throttled aggregate recount
+        scheduleCountsRefresh();
       } catch (err) {
         console.error('Error saving sale to Supabase:', err);
       }
@@ -3610,6 +3848,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       products,
       totalCatalogCount,
       totalBarcodesCount,
+      inStockCount,
+      lowStockCount,
+      outOfStockCount,
+      refreshInventoryCounts,
       batches,
       sales,
       purchases,

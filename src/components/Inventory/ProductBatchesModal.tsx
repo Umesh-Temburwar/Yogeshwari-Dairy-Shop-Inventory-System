@@ -513,7 +513,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
                           <span>{badge.iconEmoji}</span>
                           <span>{badge.label}</span>
                         </span>
-                        {b.selling_price && b.selling_price !== liveProduct.selling_price && (
+                        {Boolean(b.selling_price && b.selling_price > 0 && b.selling_price !== liveProduct.selling_price) && (
                           <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 flex items-center gap-0.5">
                             <Tag className="w-3 h-3" />
                             <span>खास दर: ₹{b.selling_price}</span>

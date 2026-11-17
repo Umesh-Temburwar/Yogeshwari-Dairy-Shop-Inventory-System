@@ -166,7 +166,7 @@ const ProductCard = React.memo<ProductCardProps>(({
           <span className="text-sm sm:text-base font-black text-emerald-700 dark:text-emerald-400 leading-tight">
             ₹{effectiveSellingPrice}
           </span>
-          {earliestBatch && earliestBatch.selling_price && earliestBatch.selling_price !== prod.selling_price && (
+          {Boolean(earliestBatch && earliestBatch.selling_price && earliestBatch.selling_price > 0 && earliestBatch.selling_price !== prod.selling_price) && (
             <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold block leading-none">
               ({language === 'mr' ? 'बॅच दर' : 'बैच दर'})
             </span>

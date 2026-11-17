@@ -1166,7 +1166,7 @@ export const ProductList: React.FC<ProductListProps> = ({
             const activeBatchSellingPrice = (earliestActiveBatch && earliestActiveBatch.selling_price && earliestActiveBatch.selling_price > 0)
               ? earliestActiveBatch.selling_price
               : prod.selling_price;
-            const hasCustomBatchPrice = Boolean(earliestActiveBatch && earliestActiveBatch.selling_price && earliestActiveBatch.selling_price !== prod.selling_price);
+            const hasCustomBatchPrice = Boolean(earliestActiveBatch && earliestActiveBatch.selling_price && earliestActiveBatch.selling_price > 0 && earliestActiveBatch.selling_price !== prod.selling_price);
 
             const expiredBatches = prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRED');
             const expiringTodayBatches = prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRING_TODAY');

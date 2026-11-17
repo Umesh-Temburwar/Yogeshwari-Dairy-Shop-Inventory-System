@@ -27,10 +27,11 @@ import {
   probeImageHealth,
   OfficialImageCandidate,
   ProcessedSquareImage,
-  ImageProbeResult
+  ImageProbeResult,
+  ImageHealthStatus
 } from '../../lib/productImageService';
 
-type HealthFilter = 'issues' | 'missing' | 'broken' | 'unofficial' | 'non_square' | 'healthy';
+type HealthFilter = 'issues' | ImageHealthStatus;
 type ScopeMode = 'in_stock' | 'out_of_stock';
 
 interface RowLookupState {

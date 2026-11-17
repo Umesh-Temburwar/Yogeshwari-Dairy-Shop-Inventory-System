@@ -480,8 +480,15 @@ export const uploadProcessedProductImage = async (params: {
   return { publicUrl, storagePath };
 };
 
+export type ImageHealthStatus =
+  | 'missing'
+  | 'broken'
+  | 'non_square'
+  | 'unofficial'
+  | 'healthy';
+
 export interface ImageProbeResult {
-  status: 'missing' | 'broken' | 'non_square' | 'unofficial' | 'healthy';
+  status: ImageHealthStatus;
   width: number;
   height: number;
 }

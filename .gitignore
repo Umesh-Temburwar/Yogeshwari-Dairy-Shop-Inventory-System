@@ -101,3 +101,6 @@ parle/
 rambandhu/
 suhana/
 temptin/
+
+# Local database safety backups (never push to GitHub)
+data/backups/

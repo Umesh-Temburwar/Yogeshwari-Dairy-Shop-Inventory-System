@@ -17,8 +17,6 @@ import {
 } from 'lucide-react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { isMobileDevice, requestMotionPermission } from '../../hooks/useShakeDetector';
-import { useMotionTier } from '../../motion/useMotionTier';
-import { Sparkles } from 'lucide-react';
 
 interface SupabaseConfigModalProps {
   isOpen: boolean;
@@ -36,7 +34,6 @@ export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({ isOpen
   });
   const [copiedSql, setCopiedSql] = useState(false);
   const [shakeToScanEnabled, setShakeToScanEnabled] = useLocalStorage<boolean>('ydo_shake_to_scan_enabled', true);
-  const { setting: motionSetting, setSetting: setMotionSetting } = useMotionTier();
 
   if (!isOpen) return null;
 
@@ -360,61 +357,6 @@ CREATE TABLE IF NOT EXISTS expenses (
           <p className="text-[10px] text-slate-400 dark:text-[#8FA69C] leading-normal">
             💡 <strong>वापरण्याची पद्धत:</strong> बिलिंग, इन्व्हेंटरी, रिपोर्ट्स किंवा डॅशबोर्डवर असताना फोन १ वेळा मनगटातून सहज हलवा. थेट बिलिंग काउंटर उघडून कॅमेरा स्कॅनर सुरू होईल.
           </p>
-        </div>
-
-        {/* Motion / Animation Accessibility Controls */}
-        <div className="bg-slate-50 dark:bg-[#1A2A25] p-3.5 rounded-2xl border border-slate-200 dark:border-[#24352F] space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC]">
-                  UI Animations & Transitions (ऍनिमेशन्स)
-                </h4>
-                <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                  कमी रॅम किंवा जुन्या मोबाईलसाठी ऍनिमेशन्स बंद किंवा कमी करा
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center bg-white dark:bg-[#131F1B] p-0.5 rounded-xl border border-slate-200 dark:border-[#24352F]">
-              <button
-                type="button"
-                onClick={() => setMotionSetting('auto')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  motionSetting === 'auto'
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900'
-                }`}
-              >
-                Auto
-              </button>
-              <button
-                type="button"
-                onClick={() => setMotionSetting('off')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  motionSetting === 'off'
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900'
-                }`}
-              >
-                Full
-              </button>
-              <button
-                type="button"
-                onClick={() => setMotionSetting('on')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  motionSetting === 'on'
-                    ? 'bg-rose-600 text-white'
-                    : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900'
-                }`}
-              >
-                Reduced
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Demo Data Reset */}

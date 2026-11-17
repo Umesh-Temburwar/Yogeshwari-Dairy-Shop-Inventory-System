@@ -32,14 +32,12 @@ import {
 import { formatSaleDateTime, formatSaleDate, formatSaleTime } from '../../lib/dateUtils';
 import { ReturnProductModal } from '../Returns/ReturnProductModal';
 import { useAuth } from '../../context/AuthContext';
-import { useToast } from '../../motion/Toast';
 import { CustomerGender, CustomerAgeGroup, PaymentMode, SaleItem } from '../../types';
 
 export const DailySalesTracker: React.FC = () => {
   const { filteredSales, metrics, setActiveView, returns, deleteSale, updateSale } = useStore();
   const { t, language } = useLanguage();
   const { role } = useAuth();
-  const toast = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPaymentMode, setSelectedPaymentMode] = useState<string>('All');
@@ -92,7 +90,7 @@ export const DailySalesTracker: React.FC = () => {
       setEditingSale(null);
     } catch (err) {
       console.error('Failed to update sale:', err);
-      toast.error(language === 'mr' ? 'बिल अपडेट करताना त्रुटी आली!' : 'बिल अपडेट करने में त्रुटि!');
+      alert(language === 'mr' ? 'बिल अपडेट करताना त्रुटी आली!' : 'बिल अपडेट करने में त्रुटि!');
     } finally {
       setIsSavingEdit(false);
     }
@@ -106,7 +104,7 @@ export const DailySalesTracker: React.FC = () => {
       setSaleToDelete(null);
     } catch (err) {
       console.error('Failed to delete sale:', err);
-      toast.error(language === 'mr' ? 'बिल डिलीट करताना त्रुटी आली!' : 'बिल डिलीट करने में त्रुटि!');
+      alert(language === 'mr' ? 'बिल डिलीट करताना त्रुटी आली!' : 'बिल डिलीट करने में त्रुटि!');
     } finally {
       setIsDeleting(false);
     }

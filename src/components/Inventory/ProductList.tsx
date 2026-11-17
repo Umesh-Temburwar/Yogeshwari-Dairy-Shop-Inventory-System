@@ -52,8 +52,6 @@ import { supabase } from '../../lib/supabase';
 import { translateProductName } from '../../lib/productTranslator';
 import { playBeepSound, playSuccessChime } from '../../utils/audioUtils';
 import { isSpeechRecognitionSupported, processVoiceTranscript } from '../../lib/voiceProductRecognizer';
-import { AnimatedNumber } from '../../motion/AnimatedNumber';
-import { MOTION_CLASSES } from '../../motion/tokens';
 
 interface ProductListProps {
   onOpenAddProduct: () => void;
@@ -934,7 +932,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                     : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-slate-300'
                 }`}
               >
-                <AnimatedNumber value={typeof tab.count === 'number' ? tab.count : 0} />
+                {tab.count}
               </span>
             </button>
           );

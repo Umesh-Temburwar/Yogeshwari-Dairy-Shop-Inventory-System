@@ -43,7 +43,6 @@ import { useLocalStorage } from '../../hooks/useLocalStorage';
 import confetti from 'canvas-confetti';
 import { playSuccessChime, playBeepSound } from '../../utils/audioUtils';
 import { useAuth } from '../../context/AuthContext';
-import { useToast } from '../../motion/Toast';
 import { formatSaleDateTime, formatSaleDate, formatSaleTime } from '../../lib/dateUtils';
 
 interface ProductCardProps {
@@ -222,7 +221,6 @@ export const BillingCounter: React.FC = () => {
   } = useStore();
   const { t, language } = useLanguage();
   const { role, adminSlot, user } = useAuth();
-  const toast = useToast();
 
   const activeOperator = useMemo(() => {
     const isMr = language === 'mr';
@@ -461,7 +459,7 @@ export const BillingCounter: React.FC = () => {
       : product.stock_quantity;
 
     if (availableNonExpiredStock <= 0) {
-      toast.error(language === 'mr' 
+      alert(language === 'mr' 
         ? 'हा माल संपला आहे किंवा मुदत संपली (Expired) आहे. बिलात जोडता येणार नाही!' 
         : language === 'hi' 
         ? 'यह माल खत्म या एक्सपायर हो चुका है, बिल में नहीं जोड़ा जा सकता!' 
@@ -563,7 +561,7 @@ export const BillingCounter: React.FC = () => {
     if (cart.length === 0 || isCheckingOut) return;
 
     if (paymentMode === 'Udhar' && !customerName.trim()) {
-      toast.error(language === 'mr' 
+      alert(language === 'mr' 
         ? 'कृपया उधार खात्यासाठी ग्राहकाचे नाव प्रविष्ट करा!' 
         : language === 'hi' 
         ? 'कृपया उधार खाते के लिए ग्राहक का नाम दर्ज करें!' 

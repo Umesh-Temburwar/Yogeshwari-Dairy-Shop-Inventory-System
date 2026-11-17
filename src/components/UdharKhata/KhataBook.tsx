@@ -3,7 +3,6 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { UdharCustomer } from '../../types';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
-import { useToast } from '../../motion/Toast';
 import {
   BookOpen,
   Search,
@@ -22,7 +21,6 @@ import {
 export const KhataBook: React.FC = () => {
   const { customers, udharTransactions, addUdharCustomer, recordUdharPayment, metrics } = useStore();
   const { t, language } = useLanguage();
-  const toast = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'cleared'>('pending');
@@ -64,7 +62,7 @@ export const KhataBook: React.FC = () => {
   const handleSendWhatsAppReminder = (customer: UdharCustomer) => {
     const cleanPhone = (customer.phone || '').replace(/[^0-9]/g, '');
     if (!cleanPhone || cleanPhone.length < 10) {
-      toast.error(language === 'mr' ? 'ग्राहकाचा वैध मोबाईल नंबर उपलब्ध नाही.' : 'Valid mobile number not available.');
+      alert(language === 'mr' ? 'ग्राहकाचा वैध मोबाईल नंबर उपलब्ध नाही.' : 'Valid mobile number not available.');
       return;
     }
     const phoneWithCode = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;

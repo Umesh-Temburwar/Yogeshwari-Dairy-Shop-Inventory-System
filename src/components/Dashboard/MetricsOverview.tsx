@@ -12,7 +12,6 @@ import {
   ArrowRight,
   Sparkles
 } from 'lucide-react';
-import { AnimatedNumber } from '../../motion/AnimatedNumber';
 
 export const MetricsOverview: React.FC = () => {
   const { metrics, setActiveView, timeFilter } = useStore();
@@ -135,17 +134,9 @@ export const MetricsOverview: React.FC = () => {
               </div>
             </div>
 
-            {/* Big Value: with tabular-nums & smooth tweening */}
+            {/* Big Value: with tabular-nums */}
             <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#E7F0EC] tracking-tight tabular-nums my-1">
-              {typeof card.numericValue === 'number' ? (
-                <AnimatedNumber 
-                  value={card.numericValue} 
-                  prefix={card.prefix || ''} 
-                  suffix={card.suffix || ''} 
-                />
-              ) : (
-                <span>{card.prefix || ''}{card.numericValue}{card.suffix || ''}</span>
-              )}
+              {card.prefix || ''}{typeof card.numericValue === 'number' ? card.numericValue.toLocaleString('en-IN') : card.numericValue}{card.suffix || ''}
             </div>
 
             {/* Helper Text */}

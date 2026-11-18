@@ -484,11 +484,10 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
         }
 
         case 'translations': {
-          // If user speaks a correction or says next
-          if (cmd === 'next' || cmd === 'yes') {
+          // If user confirms or speaks a correction
+          if (cmd === 'yes') {
             goToNextStep();
           } else {
-            // Update marathi/hindi if specified
             setMarathiName(spoken);
             playBeepSound();
             goToNextStep();
@@ -497,11 +496,6 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
         }
 
         case 'barcode': {
-          if (cmd === 'skip') {
-            handleSkipStep();
-            break;
-          }
-
           const parsedCode = parseSpokenBarcode(spoken);
           if (parsedCode) {
             // Check for duplicate barcode
@@ -570,10 +564,6 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
         }
 
         case 'stock_quantity': {
-          if (cmd === 'skip') {
-            handleSkipStep();
-            break;
-          }
           const num = parseSpokenNumber(spoken);
           if (num !== null && num >= 0) {
             setStockQuantity(String(num));
@@ -586,10 +576,6 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
         }
 
         case 'min_stock_alert': {
-          if (cmd === 'skip') {
-            handleSkipStep();
-            break;
-          }
           const num = parseSpokenNumber(spoken);
           if (num !== null && num >= 0) {
             setMinStockAlert(String(num));

@@ -10,7 +10,6 @@ import {
   Sun,
   Moon,
   Smartphone,
-  Camera,
   Settings,
   LogOut,
   ChevronDown
@@ -259,25 +258,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </span>
                   </button>
 
-                  {/* 2. Photo Database */}
-                  {onOpenPhotoDatabase && (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setIsProfileMenuOpen(false);
-                        onOpenPhotoDatabase();
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left text-xs font-bold text-slate-700 dark:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition cursor-pointer"
-                    >
-                      <Camera className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <span>
-                        {'Photo Database'}
-                      </span>
-                    </button>
-                  )}
-
-                  {/* 3. Settings Page */}
+                  {/* 2. Settings Page */}
                   {onOpenSettings && (
                     <button
                       type="button"

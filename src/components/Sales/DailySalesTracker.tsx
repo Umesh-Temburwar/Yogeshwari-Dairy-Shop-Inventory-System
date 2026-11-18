@@ -253,20 +253,28 @@ export const DailySalesTracker: React.FC = () => {
         { label: 'Customer Name', value: sale.customer_name, color: 'blue' }
       ],
       table: {
-        headers: ['Sr.', 'Item Description', 'Qty', 'Rate (₹)', 'Total (₹)'],
-        alignments: ['center', 'left', 'right', 'right', 'right'] as ('center' | 'left' | 'right' | 'right' | 'right')[],
-        rows: sale.items?.map((i, idx) => [
-          idx + 1, 
-          i.product_name, 
-          `${i.quantity} ${i.unit}`, 
-          `₹${i.unit_price}`, 
-          `₹${i.total_price.toLocaleString('en-IN')}`
-        ]) || [],
+        headers: ['Sr.', 'Item Description', 'Qty', 'Rate (₹)', 'Disc (₹)', 'Total (₹)'],
+        alignments: ['center', 'left', 'right', 'right', 'right', 'right'] as ('center' | 'left' | 'right' | 'right' | 'right' | 'right')[],
+        rows: sale.items?.map((i, idx) => {
+          const gross = Number(((Number(i.quantity) || 0) * (Number(i.unit_price) || 0)).toFixed(2));
+          const itemDisc = typeof i.discount === 'number'
+            ? i.discount
+            : Math.max(0, Number((gross - (Number(i.total_price) || 0)).toFixed(2)));
+          return [
+            idx + 1, 
+            i.product_name, 
+            `${i.quantity} ${i.unit}`, 
+            `₹${i.unit_price}`, 
+            itemDisc > 0 ? `-₹${itemDisc.toLocaleString('en-IN')}` : '—',
+            `₹${i.total_price.toLocaleString('en-IN')}`
+          ];
+        }) || [],
         summaryRow: [
           'Net Total', 
           `${sale.items?.length || 0} Items`, 
           '', 
-          sale.discount > 0 ? `${'Discount'}: ₹${sale.discount}` : '', 
+          '',
+          sale.discount > 0 ? `-₹${sale.discount.toLocaleString('en-IN')}` : '—', 
           `₹${sale.net_amount.toLocaleString('en-IN')}`
         ]
       },
@@ -641,14 +649,27 @@ export const DailySalesTracker: React.FC = () => {
                         <span className="text-emerald-700 dark:text-emerald-400 font-black">₹{sale.net_amount}</span>
                       </div>
                       
-                      {sale.items?.map((it, idx) => (
-                        <div key={idx} className="flex justify-between items-center text-slate-700 dark:text-[#8FA69C]">
-                          <span className="font-medium">{it.product_name}</span>
-                          <span className="font-semibold text-slate-900 dark:text-white">
-                            {it.quantity} {it.unit} &times; ₹{it.unit_price} = <b className="text-emerald-700 dark:text-emerald-400">₹{it.total_price}</b>
-                          </span>
-                        </div>
-                      ))}
+                      {sale.items?.map((it, idx) => {
+                        const gross = Number(((Number(it.quantity) || 0) * (Number(it.unit_price) || 0)).toFixed(2));
+                        const itemDisc = typeof it.discount === 'number'
+                          ? it.discount
+                          : Math.max(0, Number((gross - (Number(it.total_price) || 0)).toFixed(2)));
+                        return (
+                          <div key={idx} className="flex justify-between items-center gap-2 text-slate-700 dark:text-[#8FA69C]">
+                            <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+                              <span className="font-medium text-slate-800 dark:text-[#E7F0EC]">{it.product_name}</span>
+                              {itemDisc > 0 && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                                  Disc -₹{itemDisc}
+                                </span>
+                              )}
+                            </div>
+                            <span className="font-semibold text-slate-900 dark:text-white shrink-0">
+                              {it.quantity} {it.unit} &times; ₹{it.unit_price} = <b className="text-emerald-700 dark:text-emerald-400">₹{it.total_price}</b>
+                            </span>
+                          </div>
+                        );
+                      })}
 
                       {/* Returned Items Box */}
                       {saleReturns.length > 0 && (
@@ -731,12 +752,25 @@ export const DailySalesTracker: React.FC = () => {
 
               <div className="border-t border-b border-slate-200 dark:border-[#24352F] py-1.5 space-y-1">
                 {selectedSaleForView.items && selectedSaleForView.items.length > 0 ? (
-                  selectedSaleForView.items.map((it, i) => (
-                    <div key={i} className="flex justify-between text-[11px] text-slate-800 dark:text-[#E7F0EC]">
-                      <span className="truncate max-w-[150px] font-semibold">{it.product_name}</span>
-                      <span className="font-mono">{it.quantity} {it.unit} &times; ₹{it.unit_price} = ₹{it.total_price}</span>
-                    </div>
-                  ))
+                  selectedSaleForView.items.map((it, i) => {
+                    const gross = Number(((Number(it.quantity) || 0) * (Number(it.unit_price) || 0)).toFixed(2));
+                    const itemDisc = typeof it.discount === 'number'
+                      ? it.discount
+                      : Math.max(0, Number((gross - (Number(it.total_price) || 0)).toFixed(2)));
+                    return (
+                      <div key={i} className="space-y-0.5 text-[11px] text-slate-800 dark:text-[#E7F0EC]">
+                        <div className="flex justify-between gap-2">
+                          <span className="truncate max-w-[150px] font-semibold">{it.product_name}</span>
+                          <span className="font-mono">{it.quantity} {it.unit} &times; ₹{it.unit_price} = ₹{it.total_price}</span>
+                        </div>
+                        {itemDisc > 0 && (
+                          <div className="text-[10px] text-emerald-700 dark:text-emerald-400 text-right font-semibold">
+                            Item Disc: -₹{itemDisc}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                 ) : (
                   <div className="text-center text-[11px] text-slate-500 py-1">
                     {'Dairy Products'} &bull; ₹{selectedSaleForView.net_amount}

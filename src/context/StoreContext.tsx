@@ -58,6 +58,52 @@ export type HistoryEntity =
   | 'supplierReturns'
   | 'udharTransactions';
 
+const normalizeSaleItem = (item: SaleItem): SaleItem => {
+  const qty = Number(item.quantity) || 0;
+  const unitPrice = Number(item.unit_price) || 0;
+  const totalPrice = Number(item.total_price) || 0;
+  const gross = Number((qty * unitPrice).toFixed(2));
+  const derivedDiscount = Math.max(0, Number((gross - totalPrice).toFixed(2)));
+  const explicitDiscount =
+    typeof item.discount === 'number' && Number.isFinite(item.discount)
+      ? Math.max(0, Number(item.discount.toFixed(2)))
+      : derivedDiscount;
+  return {
+    ...item,
+    discount: explicitDiscount
+  };
+};
+
+const normalizeSale = (sale: Sale): Sale => ({
+  ...sale,
+  items: Array.isArray(sale.items) ? sale.items.map(normalizeSaleItem) : []
+});
+
+const insertSaleItemsWithDiscountFallback = async (
+  rows: Array<{
+    id: string;
+    sale_id: string;
+    product_id: string | null;
+    product_name: string;
+    quantity: number;
+    unit: string;
+    unit_price: number;
+    purchase_cost: number;
+    discount: number;
+    total_price: number;
+  }>
+): Promise<void> => {
+  if (!supabase || rows.length === 0) return;
+  const { error } = await supabase.from('sale_items').insert(rows);
+  if (error) {
+    const msg = (error.message || '').toLowerCase();
+    if (error.code === '42703' || msg.includes('discount') || msg.includes('column')) {
+      const fallbackRows = rows.map(({ discount: _ignored, ...rest }) => rest);
+      await supabase.from('sale_items').insert(fallbackRows);
+    }
+  }
+};
+
 export interface HistoryPaginationMeta {
   hasMore: boolean;
   isLoading: boolean;
@@ -168,6 +214,7 @@ interface StoreContextType {
   historyPagination: Record<HistoryEntity, HistoryPaginationMeta>;
   loadOlderHistory: (entity: HistoryEntity) => Promise<void>;
   logAdminActivity: (activity: Omit<AdminActivity, 'id' | 'created_at'>) => Promise<AdminActivity>;
+  clearAdminActivities: () => Promise<{ success: boolean; deletedCount: number; error?: string }>;
   
   // Receipt
   currentReceipt: Sale | null;
@@ -801,7 +848,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .maybeSingle();
 
       if (!error && data) {
-        const refreshed = data as unknown as Sale;
+        const refreshed = normalizeSale(data as unknown as Sale);
         setSales((prev) => prev.map((s) => (s.id === saleId ? refreshed : s)));
       }
     } catch {
@@ -834,7 +881,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           .order('id', { ascending: false })
           .range(from, to);
         if (!error && data) {
-          const rows = data as unknown as Sale[];
+          const rows = (data as unknown as Sale[]).map(normalizeSale);
           fetchedLength = rows.length;
           setSales((prev) => mergeUniqueById(prev, rows));
         }
@@ -1070,7 +1117,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const nextPagination = createInitialPaginationState();
 
         if (!salesRes.error && salesRes.data) {
-          const rows = salesRes.data as unknown as Sale[];
+          const rows = (salesRes.data as unknown as Sale[]).map(normalizeSale);
           setSales(rows);
           nextPagination.sales = { offset: rows.length, hasMore: rows.length === HISTORY_PAGE_SIZE, isLoading: false };
         }
@@ -1273,8 +1320,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
           return;
         }
-        const item = payload.new as SaleItem | undefined;
-        if (item?.sale_id) {
+        const rawItem = payload.new as SaleItem | undefined;
+        if (rawItem?.sale_id) {
+          const item = normalizeSaleItem(rawItem);
           setSales((prev) =>
             prev.map((s) => {
               if (s.id === item.sale_id) {
@@ -1759,6 +1807,45 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     return newActivity;
   }, [broadcastMutation]);
+
+  const clearAdminActivities = useCallback(async (): Promise<{
+    success: boolean;
+    deletedCount: number;
+    error?: string;
+  }> => {
+    const prevCount = adminActivities.length;
+    setAdminActivities([]);
+    try {
+      localStorage.removeItem('yd_admin_activities');
+    } catch {
+      // ignore storage errors
+    }
+
+    if (supabase) {
+      try {
+        const { error } = await supabase
+          .from('admin_audit_logs')
+          .delete()
+          .not('id', 'is', null);
+
+        if (error) {
+          console.warn('Failed to delete admin_audit_logs in Supabase:', error.message);
+          return {
+            success: true,
+            deletedCount: prevCount,
+            error: `Cleared locally (cloud warning: ${error.message})`
+          };
+        }
+        broadcastMutation('audit', 'clear');
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Cloud delete failed';
+        console.warn('Failed to clear admin_audit_logs in Supabase:', msg);
+        return { success: true, deletedCount: prevCount, error: msg };
+      }
+    }
+
+    return { success: true, deletedCount: prevCount };
+  }, [adminActivities.length, broadcastMutation]);
 
   // Actions
   const addProduct = async (productData: Omit<Product, 'id' | 'created_at'>): Promise<Product> => {
@@ -2741,12 +2828,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const entropy = Math.floor(100 + Math.random() * 900);
     const invoiceNo = `YD-${dateCompact}-${counterTag}-${seqStr}-${entropy}`;
 
-    const saleItems: SaleItem[] = saleData.items.map((item) => ({
-      ...item,
-      id: generateUUID(),
-      sale_id: saleId,
-      product_id: item.product_id || generateUUID()
-    }));
+    const saleItems: SaleItem[] = saleData.items.map((item) =>
+      normalizeSaleItem({
+        ...item,
+        id: generateUUID(),
+        sale_id: saleId,
+        product_id: item.product_id || generateUUID()
+      })
+    );
 
     const newSale: Sale = {
       id: saleId,
@@ -2910,14 +2999,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             p_created_by_role: createdByRole,
             p_admin_slot: adminSlot,
             p_counter_name: counterName,
-            p_items: saleData.items.map(it => ({
-              id: generateUUID(),
+            p_items: saleItems.map(it => ({
+              id: it.id,
               product_id: it.product_id,
               product_name: it.product_name,
               quantity: it.quantity,
               unit: it.unit || 'Piece',
               unit_price: it.unit_price,
               purchase_cost: it.purchase_cost || 0,
+              discount: it.discount || 0,
               total_price: it.total_price
             }))
           });
@@ -2991,7 +3081,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
           if (!saleErr) {
             // Insert line items
-            await supabase.from('sale_items').insert(saleItems.map(si => ({
+            await insertSaleItemsWithDiscountFallback(saleItems.map(si => ({
               id: si.id,
               sale_id: newSale.id,
               product_id: (si.product_id && si.product_id.length === 36 && !si.product_id.startsWith('item-') && !si.product_id.startsWith('prod-')) ? si.product_id : null,
@@ -3000,6 +3090,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               unit: si.unit,
               unit_price: si.unit_price,
               purchase_cost: si.purchase_cost || 0,
+              discount: si.discount || 0,
               total_price: si.total_price
             })));
 
@@ -3553,7 +3644,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (updates.items) {
           await supabase.from('sale_items').delete().eq('sale_id', saleId);
           if (newItems.length > 0) {
-            await supabase.from('sale_items').insert(newItems.map(si => ({
+            await insertSaleItemsWithDiscountFallback(newItems.map(si => ({
               id: si.id && si.id.length === 36 ? si.id : generateUUID(),
               sale_id: saleId,
               product_id: (si.product_id && si.product_id.length === 36 && !si.product_id.startsWith('item-') && !si.product_id.startsWith('prod-')) ? si.product_id : null,
@@ -3562,6 +3653,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               unit: si.unit,
               unit_price: si.unit_price,
               purchase_cost: si.purchase_cost || 0,
+              discount: si.discount || 0,
               total_price: si.total_price
             })));
           }
@@ -4320,6 +4412,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       historyPagination,
       loadOlderHistory,
       logAdminActivity,
+      clearAdminActivities,
       currentReceipt,
       setCurrentReceipt,
       addProduct,

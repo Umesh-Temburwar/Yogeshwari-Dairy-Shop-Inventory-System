@@ -27,18 +27,17 @@ const STORAGE_UNLOCK_METHOD = 'ydo_sec_unlock_method_v1';
 const SECURITY_SETTINGS_EVENT = 'ydo_security_settings_changed';
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+const PASSCODE_REGEX = /^\d{1,16}$/;
 export const MIN_PASSCODE_LENGTH = 1;
-export const MAX_PASSCODE_LENGTH = 64;
+export const MAX_PASSCODE_LENGTH = 16;
 
 export type MasterUnlockMethod = 'both' | 'password' | 'fingerprint';
 
 /**
- * Validates flexible master passcode: any digits, text, symbols, or emojis (1 to 64 chars).
+ * Validates numeric digits-only master passcode of any length (1 to 16 digits).
  */
 export function isValidMasterPasscodeFormat(value: string): boolean {
-  const trimmed = value.trim();
-  const charCount = Array.from(trimmed).length;
-  return charCount >= MIN_PASSCODE_LENGTH && charCount <= MAX_PASSCODE_LENGTH;
+  return PASSCODE_REGEX.test(value.trim());
 }
 
 /** Whether Master Password lock screen is enabled (defaults to ON / true) */

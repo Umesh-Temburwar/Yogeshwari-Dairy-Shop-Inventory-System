@@ -17,7 +17,6 @@ import {
   verifyCurrentMasterPasscodeForChange,
   changeMasterPasscode,
   getLockoutTimestamp,
-  isValidMasterPasscodeFormat,
   MAX_PASSCODE_LENGTH
 } from '../../lib/security';
 
@@ -96,23 +95,22 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
 
   if (!isOpen) return null;
 
+  const sanitizeDigits = (value: string) => value.replace(/\D/g, '').slice(0, MAX_PASSCODE_LENGTH);
+
   const formatLockout = (sec: number) => {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  const countChars = (val: string) => Array.from(val.trim()).length;
-
-  // Step 1: Verify current master password (supports any digits, text, symbols, emojis)
+  // Step 1: Verify current numeric master passcode (any digit length)
   const handleVerifyCurrent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting || lockoutRemainingSec > 0) return;
 
-    const cleanCurrent = currentPin.trim();
-    if (!isValidMasterPasscodeFormat(cleanCurrent)) {
+    if (currentPin.length === 0) {
       triggerHaptic([40, 45, 40]);
-      setErrorMsg('Please enter your current master password.');
+      setErrorMsg('Please enter your current numeric master passcode.');
       return;
     }
 
@@ -120,10 +118,10 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
     setErrorMsg(null);
 
     try {
-      const res = await verifyCurrentMasterPasscodeForChange(cleanCurrent);
+      const res = await verifyCurrentMasterPasscodeForChange(currentPin);
       if (res.success) {
         triggerHaptic([20, 35, 45]);
-        setVerifiedCurrentPin(cleanCurrent);
+        setVerifiedCurrentPin(currentPin);
         setCurrentPin('');
         setStep('new');
       } else {
@@ -133,7 +131,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
           setLockoutRemainingSec(secs);
           setErrorMsg('Too many failed attempts. Locked for 5 minutes.');
         } else {
-          setErrorMsg(`Incorrect current password. ${res.attemptsLeft} attempts remaining.`);
+          setErrorMsg(`Incorrect current passcode. ${res.attemptsLeft} attempts remaining.`);
         }
         setCurrentPin('');
       }
@@ -142,29 +140,26 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
     }
   };
 
-  // Step 2: Save new flexible master password (any digits, text, symbols, emojis)
+  // Step 2: Save new numeric master passcode (any length 1 to 16 digits)
   const handleSaveNewPasscode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
 
-    const cleanNew = newPin.trim();
-    const cleanConfirm = confirmPin.trim();
-
-    if (!isValidMasterPasscodeFormat(cleanNew)) {
+    if (newPin.length === 0 || newPin.length > MAX_PASSCODE_LENGTH) {
       triggerHaptic([40, 45, 40]);
-      setErrorMsg(`New password must be 1 to ${MAX_PASSCODE_LENGTH} characters (digits, text, symbols, or emojis).`);
+      setErrorMsg(`New master passcode must be 1 to ${MAX_PASSCODE_LENGTH} numeric digits.`);
       return;
     }
 
-    if (cleanNew !== cleanConfirm) {
+    if (newPin !== confirmPin) {
       triggerHaptic([40, 45, 40]);
-      setErrorMsg('New password and confirmation do not match.');
+      setErrorMsg('New passcode and confirmation do not match.');
       return;
     }
 
-    if (cleanNew === verifiedCurrentPin) {
+    if (newPin === verifiedCurrentPin) {
       triggerHaptic([40, 45, 40]);
-      setErrorMsg('New password must be different from your current password.');
+      setErrorMsg('New passcode must be different from your current passcode.');
       return;
     }
 
@@ -172,7 +167,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
     setErrorMsg(null);
 
     try {
-      const res = await changeMasterPasscode(verifiedCurrentPin, cleanNew, cleanConfirm, {
+      const res = await changeMasterPasscode(verifiedCurrentPin, newPin, confirmPin, {
         name:
           (typeof user?.user_metadata?.full_name === 'string' && user.user_metadata.full_name) ||
           (role === 'Owner' ? 'Nikhil Sakhare' : 'Nilesh Sakhare'),
@@ -196,20 +191,32 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
             setLockoutRemainingSec(Math.max(1, Math.ceil((res.lockedUntil - Date.now()) / 1000)));
           }
         }
-        setErrorMsg('Could not update password. Please try again.');
+        setErrorMsg('Could not update passcode. Please try again.');
       }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const newPinTrimmed = newPin.trim();
-  const confirmPinTrimmed = confirmPin.trim();
-  const canSaveNew =
-    isValidMasterPasscodeFormat(newPinTrimmed) &&
-    confirmPinTrimmed.length > 0 &&
-    newPinTrimmed === confirmPinTrimmed &&
-    !isSubmitting;
+  const renderDigitDots = (value: string, accent: 'emerald' | 'amber' = 'emerald') => (
+    <div className="flex items-center justify-between gap-1.5 mt-2 px-0.5" aria-hidden="true">
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((idx) => {
+        const filled = idx < value.length;
+        return (
+          <div
+            key={idx}
+            className={`h-1.5 flex-1 rounded-full transition-colors duration-150 ${
+              filled
+                ? accent === 'emerald'
+                  ? 'bg-emerald-500'
+                  : 'bg-amber-500'
+                : 'bg-slate-200 dark:bg-[#24352F]'
+            }`}
+          />
+        );
+      })}
+    </div>
+  );
 
   return (
     <div
@@ -230,10 +237,10 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                 id="change-passcode-title"
                 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate"
               >
-                Change Master Password
+                Change Master Passcode
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] truncate">
-                Digits, text, symbols or emojis (any length)
+                Numeric POS security lock code (any digits, SHA-256)
               </p>
             </div>
           </div>
@@ -263,7 +270,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                 <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-black flex items-center justify-center shrink-0">
                   {step === 'new' ? '✓' : '1'}
                 </span>
-                <span className="truncate text-[11px]">Current Password</span>
+                <span className="truncate text-[11px]">Current Code</span>
               </div>
 
               <div
@@ -282,7 +289,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                 >
                   2
                 </span>
-                <span className="truncate text-[11px]">New Password</span>
+                <span className="truncate text-[11px]">New Passcode</span>
               </div>
             </div>
           )}
@@ -305,11 +312,11 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
             </div>
           )}
 
-          {/* STEP 1: VERIFY CURRENT MASTER PASSWORD */}
+          {/* STEP 1: VERIFY CURRENT 8-DIGIT PASSCODE */}
           {step === 'verify' && (
             <form onSubmit={handleVerifyCurrent} className="space-y-4">
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] text-xs text-slate-600 dark:text-[#9DB5AA] leading-relaxed">
-                For security, verify your current master password before setting a new one.
+                For security, verify your current numeric master passcode before setting a new one.
               </div>
 
               <div>
@@ -318,37 +325,39 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                     htmlFor="current-master-pin"
                     className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
                   >
-                    Current Master Password
+                    Current Master Passcode
                   </label>
-                  <span className="text-[11px] font-mono text-slate-400">
-                    {countChars(currentPin)} chars
+                  <span className="text-[11px] font-mono font-bold text-slate-400">
+                    {currentPin.length} digits
                   </span>
                 </div>
 
                 <div className="relative">
                   <input
                     id="current-master-pin"
-                    name="current_master_password"
+                    name="current_master_pin"
                     type={showCurrent ? 'text' : 'password'}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     maxLength={MAX_PASSCODE_LENGTH}
                     autoComplete="current-password"
-                    autoCapitalize="off"
-                    autoCorrect="off"
                     autoFocus
                     disabled={lockoutRemainingSec > 0 || isSubmitting}
                     value={currentPin}
                     onChange={(e) => {
-                      setCurrentPin(e.target.value);
+                      const next = sanitizeDigits(e.target.value);
+                      if (next.length > currentPin.length) triggerHaptic(14);
+                      setCurrentPin(next);
                       setErrorMsg(null);
                     }}
-                    placeholder="Enter current master password"
-                    className="w-full h-12 pl-4 pr-11 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-[16px] font-semibold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none disabled:opacity-50"
+                    placeholder="Enter digits"
+                    className="w-full h-12 pl-4 pr-11 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white font-mono text-lg tracking-[0.25em] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none disabled:opacity-50"
                   />
                   <button
                     type="button"
                     onClick={() => setShowCurrent((prev) => !prev)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
-                    aria-label={showCurrent ? 'Hide current password' : 'Show current password'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                    aria-label={showCurrent ? 'Hide current passcode' : 'Show current passcode'}
                   >
                     {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -365,7 +374,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                 </button>
                 <button
                   type="submit"
-                  disabled={!isValidMasterPasscodeFormat(currentPin) || lockoutRemainingSec > 0 || isSubmitting}
+                  disabled={currentPin.length === 0 || lockoutRemainingSec > 0 || isSubmitting}
                   className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-45 text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5 transition active:scale-[0.99] cursor-pointer"
                 >
                   {isSubmitting ? (
@@ -384,76 +393,78 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
             </form>
           )}
 
-          {/* STEP 2: ENTER & CONFIRM NEW MASTER PASSWORD */}
+          {/* STEP 2: ENTER & CONFIRM NEW NUMERIC PASSCODE */}
           {step === 'new' && (
             <form onSubmit={handleSaveNewPasscode} className="space-y-4">
               <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/35 border border-emerald-200 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>Verified! Set any digits, text, symbols, or emoji password.</span>
+                <span>Verified! Enter any numeric digits (1–{MAX_PASSCODE_LENGTH} digits).</span>
               </div>
 
-              {/* New Password Field */}
+              {/* New Passcode Field */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label
                     htmlFor="new-master-pin"
                     className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
                   >
-                    New Master Password
+                    New Numeric Passcode
                   </label>
-                  <span className="text-[11px] font-mono text-slate-400">
-                    {countChars(newPin)}/{MAX_PASSCODE_LENGTH}
+                  <span className="text-[11px] font-mono font-bold text-slate-400">
+                    {newPin.length} digits
                   </span>
                 </div>
 
                 <div className="relative">
                   <input
                     id="new-master-pin"
-                    name="new_master_password"
+                    name="new_master_pin"
                     type={showNew ? 'text' : 'password'}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     maxLength={MAX_PASSCODE_LENGTH}
                     autoComplete="new-password"
-                    autoCapitalize="off"
-                    autoCorrect="off"
                     autoFocus
                     disabled={isSubmitting}
                     value={newPin}
                     onChange={(e) => {
-                      setNewPin(e.target.value);
+                      const next = sanitizeDigits(e.target.value);
+                      if (next.length > newPin.length) triggerHaptic(14);
+                      setNewPin(next);
                       setErrorMsg(null);
                     }}
-                    placeholder="e.g. 1234, Dairy@2026, 🥛99"
-                    className="w-full h-12 pl-4 pr-11 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-[16px] font-semibold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none"
+                    placeholder="e.g. 1234 or 89997498"
+                    className="w-full h-12 pl-4 pr-11 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white font-mono text-lg tracking-[0.25em] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNew((prev) => !prev)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
-                    aria-label={showNew ? 'Hide new password' : 'Show new password'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                    aria-label={showNew ? 'Hide new passcode' : 'Show new passcode'}
                   >
                     {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
 
-              {/* Confirm New Password Field */}
+              {/* Confirm New Passcode Field */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label
                     htmlFor="confirm-master-pin"
                     className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
                   >
-                    Confirm New Password
+                    Confirm New Passcode
                   </label>
-                  {confirmPinTrimmed.length > 0 && (
+                  {confirmPin.length > 0 && (
                     <span
                       className={`text-[11px] font-bold ${
-                        confirmPinTrimmed === newPinTrimmed
+                        confirmPin === newPin
                           ? 'text-emerald-600 dark:text-emerald-400'
                           : 'text-rose-600 dark:text-rose-400'
                       }`}
                     >
-                      {confirmPinTrimmed === newPinTrimmed ? 'Matched ✓' : 'Mismatch'}
+                      {confirmPin === newPin ? 'Matched ✓' : 'Mismatch'}
                     </span>
                   )}
                 </div>
@@ -461,26 +472,28 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                 <div className="relative">
                   <input
                     id="confirm-master-pin"
-                    name="confirm_master_password"
+                    name="confirm_master_pin"
                     type={showConfirm ? 'text' : 'password'}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     maxLength={MAX_PASSCODE_LENGTH}
                     autoComplete="new-password"
-                    autoCapitalize="off"
-                    autoCorrect="off"
                     disabled={isSubmitting}
                     value={confirmPin}
                     onChange={(e) => {
-                      setConfirmPin(e.target.value);
+                      const next = sanitizeDigits(e.target.value);
+                      if (next.length > confirmPin.length) triggerHaptic(14);
+                      setConfirmPin(next);
                       setErrorMsg(null);
                     }}
-                    placeholder="Re-enter new master password"
-                    className="w-full h-12 pl-4 pr-11 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-[16px] font-semibold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none"
+                    placeholder="Re-enter digits"
+                    className="w-full h-12 pl-4 pr-11 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white font-mono text-lg tracking-[0.25em] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirm((prev) => !prev)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
-                    aria-label={showConfirm ? 'Hide confirmation password' : 'Show confirmation password'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                    aria-label={showConfirm ? 'Hide confirmation passcode' : 'Show confirmation passcode'}
                   >
                     {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -503,7 +516,12 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                 </button>
                 <button
                   type="submit"
-                  disabled={!canSaveNew}
+                  disabled={
+                    newPin.length === 0 ||
+                    confirmPin.length === 0 ||
+                    newPin !== confirmPin ||
+                    isSubmitting
+                  }
                   className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-45 text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5 transition active:scale-[0.99] cursor-pointer"
                 >
                   {isSubmitting ? (
@@ -514,7 +532,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                   ) : (
                     <>
                       <ShieldCheck className="w-4 h-4" />
-                      <span>Save New Password</span>
+                      <span>Save New Passcode</span>
                     </>
                   )}
                 </button>
@@ -531,10 +549,10 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
 
               <div className="space-y-1">
                 <h4 className="text-base font-extrabold text-slate-900 dark:text-white">
-                  Master Password Updated!
+                  Master Passcode Updated!
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-[#8FA69C] leading-relaxed">
-                  Use your new master password the next time you unlock the POS counter.
+                  Use your new 8-digit master passcode the next time you unlock the POS counter.
                 </p>
               </div>
 

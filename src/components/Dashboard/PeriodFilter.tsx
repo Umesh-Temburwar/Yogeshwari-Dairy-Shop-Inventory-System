@@ -8,12 +8,12 @@ export const PeriodFilter: React.FC = () => {
   const { timeFilter, setTimeFilter } = useStore();
   const { t } = useLanguage();
 
-  const options: Array<{ id: TimeRangeFilter; key: string }> = [
-    { id: 'today', key: 'today' },
-    { id: 'week', key: 'thisWeek' },
-    { id: 'month', key: 'thisMonth' },
-    { id: 'year', key: 'thisYear' },
-    { id: 'all', key: 'allTime' }
+  const options: Array<{ id: TimeRangeFilter; label: string }> = [
+    { id: 'all', label: 'All' },
+    { id: 'today', label: t('today') },
+    { id: 'week', label: t('thisWeek') },
+    { id: 'month', label: t('thisMonth') },
+    { id: 'year', label: t('thisYear') }
   ];
 
   return (
@@ -45,7 +45,7 @@ export const PeriodFilter: React.FC = () => {
                       : 'bg-white dark:bg-[#131F1B] text-slate-700 dark:text-[#C4D4CE] border-slate-200 dark:border-[#24352F] hover:border-emerald-500/50'
                   }`}
                 >
-                  {t(opt.key)}
+                  {opt.label}
                 </button>
               );
             })}

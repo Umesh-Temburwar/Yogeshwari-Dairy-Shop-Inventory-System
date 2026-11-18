@@ -74,6 +74,7 @@ interface AuthContextType {
   hasCustomAvatar: boolean;
   ownerAvatarUrl: string;
   updateProfileAvatar: (nextUrl: string | null) => Promise<void>;
+  refreshProfileAvatars: () => Promise<void>;
   masterLockEnabled: boolean;
   setMasterLockEnabled: (enabled: boolean) => void;
   unlockMethod: MasterUnlockMethod;
@@ -795,7 +796,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Hydrate user & owner avatars from cache, user_metadata, and Supabase profiles
+  const refreshProfileAvatars = useCallback(async () => {
+    const email = user?.email || null;
+    try {
+      const { byEmail, ownerAvatar, authUserAvatar, authUserEmail } = await syncProfileAvatarsFromCloud();
+      const cleanEmail = (email || authUserEmail || '').trim().toLowerCase();
+      const cloudForUser =
+        (cleanEmail && byEmail[cleanEmail]) ||
+        authUserAvatar ||
+        (role === 'Owner' ? ownerAvatar : null);
+
+      if (cloudForUser) {
+        setCustomAvatarUrl(cloudForUser);
+        setCachedProfileAvatar(cloudForUser, email || authUserEmail, role);
+      }
+      if (ownerAvatar) {
+        setCustomOwnerAvatarUrl(ownerAvatar);
+      }
+    } catch {
+      // Non-blocking cloud sync
+    }
+  }, [user?.email, role]);
+
+  // Hydrate user & owner avatars from cache, fresh cloud metadata, focus events, and Realtime profiles updates
   useEffect(() => {
     const email = user?.email || null;
     const metaAvatar =
@@ -803,38 +826,52 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         ? user.user_metadata.avatar_url.trim()
         : null;
     const cached = getCachedProfileAvatar(email, role);
-    const resolved = cached || metaAvatar || null;
+    // Prefer fresh cloud user_metadata over older localStorage cache
+    const resolved = metaAvatar || cached || null;
     setCustomAvatarUrl(resolved);
-    if (metaAvatar && !cached) {
+    if (metaAvatar && metaAvatar !== cached) {
       setCachedProfileAvatar(metaAvatar, email, role);
     }
 
     const cachedOwner = getCachedOwnerAvatar();
-    if (cachedOwner) {
-      setCustomOwnerAvatarUrl(cachedOwner);
-    } else if (role === 'Owner' && metaAvatar) {
+    if (role === 'Owner' && metaAvatar) {
       setCustomOwnerAvatarUrl(metaAvatar);
+    } else if (cachedOwner) {
+      setCustomOwnerAvatarUrl(cachedOwner);
     }
 
-    let active = true;
-    syncProfileAvatarsFromCloud()
-      .then(({ byEmail, ownerAvatar }) => {
-        if (!active) return;
-        const cleanEmail = (email || '').trim().toLowerCase();
-        const cloudForUser = (cleanEmail && byEmail[cleanEmail]) || (role === 'Owner' ? ownerAvatar : null);
-        if (cloudForUser) {
-          setCustomAvatarUrl(cloudForUser);
-        }
-        if (ownerAvatar) {
-          setCustomOwnerAvatarUrl(ownerAvatar);
-        }
-      })
-      .catch(() => {});
+    void refreshProfileAvatars();
+
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshProfileAvatars();
+      }
+    };
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+
+    // Realtime subscription on public.profiles so avatar changes on one device appear instantly on other devices
+    const channel = supabase
+      ? supabase
+          .channel('profiles-avatar-sync')
+          .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'profiles' },
+            () => {
+              void refreshProfileAvatars();
+            }
+          )
+          .subscribe()
+      : null;
 
     return () => {
-      active = false;
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      if (channel && supabase) {
+        void supabase.removeChannel(channel);
+      }
     };
-  }, [user?.email, user?.user_metadata?.avatar_url, role]);
+  }, [user?.email, user?.user_metadata?.avatar_url, role, refreshProfileAvatars]);
 
   const updateProfileAvatar = useCallback(
     async (nextUrl: string | null) => {
@@ -888,6 +925,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         hasCustomAvatar,
         ownerAvatarUrl,
         updateProfileAvatar,
+        refreshProfileAvatars,
         masterLockEnabled,
         setMasterLockEnabled,
         unlockMethod,

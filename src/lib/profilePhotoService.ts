@@ -30,6 +30,7 @@ export interface ProfilePhotoUploadResult {
   avatarUrl: string;
   compressed: CompressedProfilePhoto;
   storedInCloud: boolean;
+  syncedAcrossDevices: boolean;
 }
 
 type AvatarCacheMap = Record<string, string>;
@@ -405,8 +406,8 @@ export const uploadUserProfilePhoto = async (params: {
     finalUrl = await blobToDataUrl(compressed.blob);
   }
 
-  // Persist URL to Supabase Auth user_metadata & public.profiles (best-effort)
-  await persistProfileAvatarUrl({
+  // Persist URL to Supabase Auth user_metadata & public.profiles (so ALL devices sync immediately)
+  const syncRes = await persistProfileAvatarUrl({
     avatarUrl: finalUrl,
     userEmail: params.userEmail,
     userRole: params.userRole,
@@ -418,7 +419,8 @@ export const uploadUserProfilePhoto = async (params: {
   return {
     avatarUrl: finalUrl,
     compressed,
-    storedInCloud
+    storedInCloud,
+    syncedAcrossDevices: storedInCloud && (syncRes.profileUpdated || syncRes.authMetaUpdated)
   };
 };
 
@@ -427,101 +429,186 @@ export const persistProfileAvatarUrl = async (params: {
   userEmail?: string | null;
   userRole: 'Owner' | 'Admin';
   userId?: string | null;
-}): Promise<void> => {
-  if (!supabase) return;
+}): Promise<{ profileUpdated: boolean; authMetaUpdated: boolean }> => {
+  if (!supabase) return { profileUpdated: false, authMetaUpdated: false };
+
+  let profileUpdated = false;
+  let authMetaUpdated = false;
 
   try {
     const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) return;
+    const sessionUser = sessionData.session?.user;
+    const isHttpOrNull = !params.avatarUrl || /^https?:\/\//i.test(params.avatarUrl);
 
-    // 1. Save in Supabase Auth user_metadata (only for cloud URLs so JWT stays tiny)
-    if (!params.avatarUrl || /^https?:\/\//i.test(params.avatarUrl)) {
-      await supabase.auth
-        .updateUser({ data: { avatar_url: params.avatarUrl } })
-        .catch(() => {});
+    // 1. Save in Supabase Auth user_metadata (works across devices even before Phase 75 SQL)
+    if (sessionUser && isHttpOrNull) {
+      const { error: metaErr } = await supabase.auth.updateUser({
+        data: { avatar_url: params.avatarUrl }
+      });
+      if (!metaErr) {
+        authMetaUpdated = true;
+      }
     }
 
-    // 2. Save in public.profiles.avatar_url (if Phase 75 column exists)
-    const cleanEmail = (params.userEmail || '').trim().toLowerCase();
+    // 2. Save in public.profiles.avatar_url (case-insensitive email / auth_user_id / Owner role fallback)
+    const cleanEmail = (params.userEmail || sessionUser?.email || '').trim().toLowerCase();
+    const nowIso = new Date().toISOString();
+
     if (cleanEmail) {
-      await supabase
+      const { data: updatedRows, error: updErr } = await supabase
         .from('profiles')
-        .update({
-          avatar_url: params.avatarUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('email', cleanEmail);
-    } else if (params.userId) {
-      await supabase
+        .update({ avatar_url: params.avatarUrl, updated_at: nowIso })
+        .ilike('email', cleanEmail)
+        .select('id');
+
+      if (!updErr && Array.isArray(updatedRows) && updatedRows.length > 0) {
+        profileUpdated = true;
+      }
+    }
+
+    if (!profileUpdated && (params.userId || sessionUser?.id)) {
+      const targetUid = params.userId || sessionUser?.id;
+      const { data: updatedById, error: idErr } = await supabase
         .from('profiles')
-        .update({
-          avatar_url: params.avatarUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('auth_user_id', params.userId);
+        .update({ avatar_url: params.avatarUrl, updated_at: nowIso })
+        .eq('auth_user_id', targetUid)
+        .select('id');
+
+      if (!idErr && Array.isArray(updatedById) && updatedById.length > 0) {
+        profileUpdated = true;
+      }
+    }
+
+    if (!profileUpdated && params.userRole === 'Owner') {
+      const { data: updatedOwner, error: ownerErr } = await supabase
+        .from('profiles')
+        .update({ avatar_url: params.avatarUrl, updated_at: nowIso })
+        .eq('role', 'Owner')
+        .select('id');
+
+      if (!ownerErr && Array.isArray(updatedOwner) && updatedOwner.length > 0) {
+        profileUpdated = true;
+      }
     }
   } catch {
-    // Non-blocking: local cache & user_metadata still preserve the avatar
+    // Non-blocking fallback
   }
+
+  return { profileUpdated, authMetaUpdated };
 };
 
 export const syncProfileAvatarsFromCloud = async (): Promise<{
   byEmail: Record<string, string>;
   ownerAvatar: string | null;
+  authUserAvatar: string | null;
+  authUserEmail: string | null;
 }> => {
   const byEmail: Record<string, string> = {};
-  let ownerAvatar = getCachedOwnerAvatar();
+  let ownerAvatar: string | null = null;
+  let authUserAvatar: string | null = null;
+  let authUserEmail: string | null = null;
 
   if (!supabase) {
-    return { byEmail, ownerAvatar };
+    return {
+      byEmail,
+      ownerAvatar: getCachedOwnerAvatar(),
+      authUserAvatar: null,
+      authUserEmail: null
+    };
   }
 
+  const cache = readAvatarCache();
+  let changed = false;
+
+  // 1. Fetch fresh Supabase Auth user metadata directly from server (avoids stale JWT cache across devices)
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData.session) {
+      const { data: userData } = await supabase.auth.getUser();
+      const freshUser = userData?.user;
+      if (freshUser) {
+        const email = (freshUser.email || '').trim().toLowerCase();
+        authUserEmail = email || null;
+        const metaUrl =
+          typeof freshUser.user_metadata?.avatar_url === 'string'
+            ? freshUser.user_metadata.avatar_url.trim()
+            : '';
+        if (metaUrl) {
+          authUserAvatar = metaUrl;
+          if (email) {
+            byEmail[email] = metaUrl;
+            if (cache[email] !== metaUrl) {
+              cache[email] = metaUrl;
+              changed = true;
+            }
+          }
+          const isAdminEmail = email === 'nilusakhare2003@gmail.com' || email.includes('nilu');
+          if (!isAdminEmail) {
+            ownerAvatar = metaUrl;
+            if (cache['role:owner'] !== metaUrl) {
+              cache['role:owner'] = metaUrl;
+              changed = true;
+            }
+          } else if (cache['role:admin'] !== metaUrl) {
+            cache['role:admin'] = metaUrl;
+            changed = true;
+          }
+        }
+      }
+    }
+  } catch {
+    // Non-blocking auth metadata fetch
+  }
+
+  // 2. Query public.profiles.avatar_url (source of truth across ALL devices when Phase 75 SQL is applied)
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('email, role, avatar_url')
-      .not('avatar_url', 'is', null);
+      .select('email, role, avatar_url');
 
     if (!error && Array.isArray(data)) {
-      const cache = readAvatarCache();
-      let changed = false;
-
       for (const row of data as Array<{
         email?: string | null;
         role?: string | null;
         avatar_url?: string | null;
       }>) {
         const url = (row.avatar_url || '').trim();
-        if (!url) continue;
         const email = (row.email || '').trim().toLowerCase();
-        if (email) {
-          byEmail[email] = url;
-          if (cache[email] !== url) {
-            cache[email] = url;
-            changed = true;
+        if (url) {
+          if (email) {
+            byEmail[email] = url;
+            if (cache[email] !== url) {
+              cache[email] = url;
+              changed = true;
+            }
+          }
+          if (row.role === 'Owner') {
+            ownerAvatar = url;
+            if (cache['role:owner'] !== url) {
+              cache['role:owner'] = url;
+              changed = true;
+            }
+          } else if (row.role === 'Admin') {
+            if (cache['role:admin'] !== url) {
+              cache['role:admin'] = url;
+              changed = true;
+            }
           }
         }
-        if (row.role === 'Owner') {
-          ownerAvatar = url;
-          if (cache['role:owner'] !== url) {
-            cache['role:owner'] = url;
-            changed = true;
-          }
-        } else if (row.role === 'Admin') {
-          if (cache['role:admin'] !== url) {
-            cache['role:admin'] = url;
-            changed = true;
-          }
-        }
-      }
-
-      if (changed) {
-        writeAvatarCache(cache);
       }
     }
   } catch {
-    // Graceful fallback if avatar_url column is not yet created on older DB
+    // Graceful fallback if avatar_url column is not yet created
   }
 
-  return { byEmail, ownerAvatar };
+  if (changed) {
+    writeAvatarCache(cache);
+  }
+
+  return {
+    byEmail,
+    ownerAvatar: ownerAvatar || getCachedOwnerAvatar(),
+    authUserAvatar,
+    authUserEmail
+  };
 };

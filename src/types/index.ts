@@ -60,6 +60,7 @@ export interface SaleItem {
   unit: string;
   unit_price: number;
   purchase_cost: number;
+  discount?: number;
   total_price: number;
   subtotal?: number;
 }

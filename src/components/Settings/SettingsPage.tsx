@@ -18,7 +18,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  Fingerprint
+  Fingerprint,
+  Trash2
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -61,6 +62,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 }) => {
   const {
     products,
+    adminActivities,
+    clearAdminActivities,
     refreshData,
     isSyncing,
     triggerGlobalBillingScanner
@@ -74,12 +77,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     avatarUrl,
     hasCustomAvatar,
     updateProfileAvatar,
+    refreshProfileAvatars,
     masterLockEnabled,
     setMasterLockEnabled,
     unlockMethod,
     setUnlockMethod
   } = useAuth();
   const [biometricSupported, setBiometricSupported] = useState(false);
+  const [confirmClearAudit, setConfirmClearAudit] = useState(false);
+  const [isClearingAudit, setIsClearingAudit] = useState(false);
+  const [auditClearFeedback, setAuditClearFeedback] = useState<string | null>(null);
 
   // Profile Photo Upload State (any raw size -> strictly <= 20 KB compressed)
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -194,7 +201,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       const fmtLabel = result.compressed.extension.toUpperCase();
       setAvatarStatus({
         type: 'success',
-        message: `Profile photo updated (${origLabel} → ${finalLabel} ${fmtLabel})`
+        message: result.syncedAcrossDevices
+          ? `Synced across devices (${origLabel} → ${finalLabel} ${fmtLabel})`
+          : `Updated (${origLabel} → ${finalLabel} ${fmtLabel})`
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Could not update profile photo. Please try another image.';
@@ -221,6 +230,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       });
     } finally {
       setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleClearAuditStream = async () => {
+    if (role !== 'Owner' || isClearingAudit) return;
+    setIsClearingAudit(true);
+    setAuditClearFeedback(null);
+    try {
+      const res = await clearAdminActivities();
+      setConfirmClearAudit(false);
+      setAuditClearFeedback(
+        res.error
+          ? res.error
+          : `Cleared ${res.deletedCount} audit log${res.deletedCount === 1 ? '' : 's'}`
+      );
+    } finally {
+      setIsClearingAudit(false);
     }
   };
 
@@ -267,7 +293,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             type="button"
             disabled={isSyncing}
             onClick={() => {
-              if (!isSyncing) refreshData();
+              if (!isSyncing) {
+                refreshData();
+                void refreshProfileAvatars();
+              }
             }}
             aria-label="Sync Database"
             className="h-9 px-3.5 rounded-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-xs transition active:scale-95 shrink-0 cursor-pointer"
@@ -505,8 +534,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           <SettingRow
             icon={<KeyRound className="w-5 h-5" />}
             tone="emerald"
-            title="Change Master Password"
-            subtitle="Digits, text, symbols or emojis (any length)"
+            title="Change Master Passcode"
+            subtitle="Numeric digits passcode (any length)"
             onClick={onOpenChangePasscode}
             showChevron
           />
@@ -544,6 +573,74 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               />
             }
           />
+
+          {/* Delete / Clear Live Audit Stream Data (Owner only) */}
+          {role === 'Owner' && (
+            <div className="px-4 py-3.5 bg-white dark:bg-[#131F1B] space-y-2.5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-red-50 dark:bg-rose-950/50 text-red-600 dark:text-rose-400">
+                    <Trash2 className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[14px] font-semibold text-slate-900 dark:text-[#E7F0EC] leading-snug">
+                      Delete Live Audit Stream Data
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-[#8FA69C] leading-snug">
+                      {auditClearFeedback
+                        ? auditClearFeedback
+                        : `${adminActivities.length} audit log${adminActivities.length === 1 ? '' : 's'} currently stored`}
+                    </div>
+                  </div>
+                </div>
+
+                {!confirmClearAudit && (
+                  <button
+                    type="button"
+                    disabled={isClearingAudit}
+                    onClick={() => {
+                      setAuditClearFeedback(null);
+                      setConfirmClearAudit(true);
+                    }}
+                    className="min-h-[36px] px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/70 border border-red-200 dark:border-rose-800/60 text-red-700 dark:text-rose-300 text-xs font-bold transition active:scale-95 shrink-0 cursor-pointer disabled:opacity-50"
+                  >
+                    Clear Data
+                  </button>
+                )}
+              </div>
+
+              {confirmClearAudit && (
+                <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-red-50/80 dark:bg-rose-950/35 border border-red-200 dark:border-rose-800/60">
+                  <span className="text-[11px] font-semibold text-red-800 dark:text-rose-200">
+                    Permanently delete all live audit logs?
+                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      disabled={isClearingAudit}
+                      onClick={() => setConfirmClearAudit(false)}
+                      className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-slate-200 text-xs font-bold cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isClearingAudit}
+                      onClick={() => void handleClearAuditStream()}
+                      className="px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold inline-flex items-center gap-1 cursor-pointer disabled:opacity-60"
+                    >
+                      {isClearingAudit ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </SettingSection>
 
         {/* SECTION 2: PREFERENCES */}

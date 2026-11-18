@@ -233,6 +233,8 @@ export const BillingCounter: React.FC = () => {
   const { 
     products, 
     batches, 
+    customers,
+    sales,
     createSale, 
     setActiveView,
     globalScannerRequest,
@@ -278,8 +280,10 @@ export const BillingCounter: React.FC = () => {
 
   // Cart state
   const [cart, setCart] = useState<SaleItem[]>([]);
+  const [lastAddedHistory, setLastAddedHistory] = useState<Array<{ productId: string; qty: number }>>([]);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
   const [customerGender, setCustomerGender] = useState<CustomerGender>('Male');
   const [customerAgeGroup, setCustomerAgeGroup] = useState<CustomerAgeGroup>('Adults (26-45)');
   const [customerAge, setCustomerAge] = useState<string>('');
@@ -514,8 +518,15 @@ export const BillingCounter: React.FC = () => {
       const existing = prev.find(item => item.product_id === product.id);
       if (existing) {
         const newQty = Number((existing.quantity + quantityToAdd).toFixed(2));
+        const gross = Number((newQty * existing.unit_price).toFixed(2));
+        const clampedDisc = Math.min(gross, Math.max(0, Number(existing.discount || 0)));
         return prev.map(item => item.product_id === product.id 
-          ? { ...item, quantity: newQty, total_price: Number((newQty * item.unit_price).toFixed(2)) }
+          ? {
+              ...item,
+              quantity: newQty,
+              discount: clampedDisc,
+              total_price: Number((gross - clampedDisc).toFixed(2))
+            }
           : item
         );
       } else {
@@ -527,10 +538,12 @@ export const BillingCounter: React.FC = () => {
           unit: product.unit,
           unit_price: unitPriceToUse,
           purchase_cost: purchaseCostToUse,
+          discount: 0,
           total_price: Number((quantityToAdd * unitPriceToUse).toFixed(2))
         }];
       }
     });
+    setLastAddedHistory(prev => [...prev, { productId: product.id, qty: quantityToAdd }]);
   }, [batches, language, getProductDisplayName]);
 
   const handleQuickCalc = useCallback((product: Product) => {
@@ -545,10 +558,30 @@ export const BillingCounter: React.FC = () => {
     }
     setCart(prev => prev.map(item => {
       if (item.product_id === productId) {
+        const cleanQty = Number(newQty.toFixed(2));
+        const gross = Number((cleanQty * item.unit_price).toFixed(2));
+        const clampedDisc = Math.min(gross, Math.max(0, Number(item.discount || 0)));
         return {
           ...item,
-          quantity: Number(newQty.toFixed(2)),
-          total_price: Number((newQty * item.unit_price).toFixed(2))
+          quantity: cleanQty,
+          discount: clampedDisc,
+          total_price: Number((gross - clampedDisc).toFixed(2))
+        };
+      }
+      return item;
+    }));
+  };
+
+  const updateItemDiscount = (productId: string, rawDiscount: number) => {
+    setCart(prev => prev.map(item => {
+      if (item.product_id === productId) {
+        const gross = Number((item.quantity * item.unit_price).toFixed(2));
+        const safeDisc = Number.isFinite(rawDiscount) ? rawDiscount : 0;
+        const clampedDisc = Math.max(0, Math.min(gross, Number(safeDisc.toFixed(2))));
+        return {
+          ...item,
+          discount: clampedDisc,
+          total_price: Number((gross - clampedDisc).toFixed(2))
         };
       }
       return item;
@@ -557,22 +590,159 @@ export const BillingCounter: React.FC = () => {
 
   const removeFromCart = (productId: string) => {
     setCart(prev => prev.filter(item => item.product_id !== productId));
+    setLastAddedHistory(prev => prev.filter(entry => entry.productId !== productId));
+  };
+
+  const decrementLastAddedProduct = () => {
+    if (cart.length === 0) return;
+
+    let targetProductId: string | null = null;
+    let decrementStep: number | null = null;
+    let nextHistory = [...lastAddedHistory];
+
+    while (nextHistory.length > 0) {
+      const last = nextHistory.pop()!;
+      if (cart.some(item => item.product_id === last.productId)) {
+        targetProductId = last.productId;
+        decrementStep = last.qty;
+        break;
+      }
+    }
+
+    const fallbackItem = cart[cart.length - 1];
+    const resolvedItem = targetProductId
+      ? cart.find(item => item.product_id === targetProductId) || fallbackItem
+      : fallbackItem;
+
+    if (!resolvedItem) return;
+
+    const step = decrementStep && decrementStep > 0
+      ? decrementStep
+      : (isFractionalUnit(resolvedItem.unit) ? 0.5 : 1);
+    const nextQty = Number((resolvedItem.quantity - step).toFixed(2));
+
+    setLastAddedHistory(nextHistory);
+    updateQuantity(resolvedItem.product_id, nextQty);
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(10);
+      } catch {
+        // Ignore haptics unsupported
+      }
+    }
   };
 
   const clearCart = () => {
     setCart([]);
+    setLastAddedHistory([]);
     setDiscount(0);
     setTenderedCash(0);
   };
 
+  // Saved credit & historical customers for quick Udhar/Billing autocomplete search
+  const savedCustomerSuggestions = useMemo(() => {
+    const map = new Map<string, { name: string; phone: string; currentBalance: number; isCreditCustomer: boolean }>();
+
+    customers.forEach((cust) => {
+      const cleanName = (cust.name || '').trim();
+      if (!cleanName) return;
+      const key = cleanName.toLowerCase();
+      map.set(key, {
+        name: cleanName,
+        phone: (cust.phone || '').trim(),
+        currentBalance: Number(cust.current_balance || 0),
+        isCreditCustomer: true
+      });
+    });
+
+    sales.forEach((s) => {
+      const cleanName = (s.customer_name || '').trim();
+      if (!cleanName) return;
+      const lower = cleanName.toLowerCase();
+      if (lower === 'counter customer' || lower === 'walk-in customer') return;
+      const phone = (s.customer_phone || '').trim();
+      const existing = map.get(lower);
+      if (existing) {
+        if (!existing.phone && phone) {
+          existing.phone = phone;
+        }
+        if ((s.udhar_amount || 0) > 0) {
+          existing.isCreditCustomer = true;
+        }
+      } else {
+        map.set(lower, {
+          name: cleanName,
+          phone,
+          currentBalance: 0,
+          isCreditCustomer: (s.udhar_amount || 0) > 0
+        });
+      }
+    });
+
+    return Array.from(map.values()).sort((a, b) => {
+      if (a.currentBalance !== b.currentBalance) return b.currentBalance - a.currentBalance;
+      if (a.isCreditCustomer !== b.isCreditCustomer) return a.isCreditCustomer ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [customers, sales]);
+
+  const matchedCustomers = useMemo(() => {
+    const nameQ = customerName.trim().toLowerCase();
+    const phoneQ = customerPhone.trim().toLowerCase();
+
+    if (!nameQ && !phoneQ) {
+      return savedCustomerSuggestions.slice(0, 6);
+    }
+
+    return savedCustomerSuggestions
+      .filter((c) => {
+        const matchesName = nameQ
+          ? c.name.toLowerCase().includes(nameQ) || c.phone.toLowerCase().includes(nameQ)
+          : true;
+        const matchesPhone = phoneQ
+          ? c.phone.toLowerCase().includes(phoneQ) || c.name.toLowerCase().includes(phoneQ)
+          : true;
+        return matchesName && matchesPhone;
+      })
+      .slice(0, 6);
+  }, [savedCustomerSuggestions, customerName, customerPhone]);
+
   // Calculations
-  const subtotal = useMemo(() => {
-    return cart.reduce((acc, item) => acc + item.total_price, 0);
+  const grossSubtotal = useMemo(() => {
+    return Number(cart.reduce((acc, item) => acc + item.quantity * item.unit_price, 0).toFixed(2));
   }, [cart]);
 
-  const netTotal = useMemo(() => {
-    return Math.max(0, subtotal - discount);
+  const itemDiscountsTotal = useMemo(() => {
+    return Number(cart.reduce((acc, item) => acc + (item.discount || 0), 0).toFixed(2));
+  }, [cart]);
+
+  const subtotal = useMemo(() => {
+    return Number(cart.reduce((acc, item) => acc + item.total_price, 0).toFixed(2));
+  }, [cart]);
+
+  const extraBillDiscount = useMemo(() => {
+    return Math.max(0, Math.min(subtotal, Number((discount || 0).toFixed(2))));
   }, [subtotal, discount]);
+
+  const totalCombinedDiscount = useMemo(() => {
+    return Number((itemDiscountsTotal + extraBillDiscount).toFixed(2));
+  }, [itemDiscountsTotal, extraBillDiscount]);
+
+  const netTotal = useMemo(() => {
+    return Math.max(0, Number((subtotal - extraBillDiscount).toFixed(2)));
+  }, [subtotal, extraBillDiscount]);
+
+  const totalCartUnits = useMemo(() => {
+    return Number(cart.reduce((acc, item) => acc + item.quantity, 0).toFixed(2));
+  }, [cart]);
+
+  const lastAddedItemName = useMemo(() => {
+    for (let i = lastAddedHistory.length - 1; i >= 0; i--) {
+      const found = cart.find(item => item.product_id === lastAddedHistory[i].productId);
+      if (found) return found.product_name;
+    }
+    return cart.length > 0 ? cart[cart.length - 1].product_name : '';
+  }, [lastAddedHistory, cart]);
 
   const cashChange = Math.max(0, (tenderedCash || 0) - netTotal);
 
@@ -623,8 +793,8 @@ export const BillingCounter: React.FC = () => {
         customer_gender: customerGender,
         customer_age_group: customerAgeGroup,
         customer_age: customerAge ? parseInt(customerAge) : undefined,
-        total_amount: subtotal,
-        discount,
+        total_amount: grossSubtotal,
+        discount: totalCombinedDiscount,
         net_amount: netTotal,
         payment_mode: paymentMode,
         cash_amount: cashAmount,
@@ -686,21 +856,29 @@ export const BillingCounter: React.FC = () => {
         { label: 'Customer Name', value: sale.customer_name || ('Counter Customer'), color: 'blue' }
       ],
       table: {
-        headers: ['Sr.', 'Item Description', 'Qty', 'Rate (₹)', 'Total (₹)'],
-        alignments: ['center', 'left', 'right', 'right', 'right'] as ('center' | 'left' | 'right' | 'right' | 'right')[],
-        rows: (sale.items || []).map((it: any, idx: number) => [
-          idx + 1,
-          it.product_name,
-          `${it.quantity} ${it.unit}`,
-          `₹${it.unit_price}`,
-          `₹${it.total_price.toLocaleString('en-IN')}`
-        ]),
+        headers: ['Sr.', 'Item Description', 'Qty', 'Rate (₹)', 'Disc (₹)', 'Total (₹)'],
+        alignments: ['center', 'left', 'right', 'right', 'right', 'right'] as ('center' | 'left' | 'right' | 'right' | 'right' | 'right')[],
+        rows: (sale.items || []).map((it: SaleItem, idx: number) => {
+          const gross = Number(((Number(it.quantity) || 0) * (Number(it.unit_price) || 0)).toFixed(2));
+          const itemDisc = typeof it.discount === 'number'
+            ? it.discount
+            : Math.max(0, Number((gross - (Number(it.total_price) || 0)).toFixed(2)));
+          return [
+            idx + 1,
+            it.product_name,
+            `${it.quantity} ${it.unit}`,
+            `₹${it.unit_price}`,
+            itemDisc > 0 ? `-₹${itemDisc.toLocaleString('en-IN')}` : '—',
+            `₹${Number(it.total_price || 0).toLocaleString('en-IN')}`
+          ];
+        }),
         summaryRow: [
           'Net Total',
           `${sale.items?.length || 0} ${'Items'}`,
           '',
-          sale.discount > 0 ? `${'Discount'}: ₹${sale.discount}` : '',
-          `₹${sale.net_amount.toLocaleString('en-IN')}`
+          '',
+          sale.discount > 0 ? `-₹${Number(sale.discount).toLocaleString('en-IN')}` : '—',
+          `₹${Number(sale.net_amount || 0).toLocaleString('en-IN')}`
         ]
       },
       notes: `${'Thank you! Visit again • Purity is our identity'} | UPI ID: Q226038088@ybl (IDFC FIRST Bank)`
@@ -980,7 +1158,7 @@ export const BillingCounter: React.FC = () => {
                   {t('currentBill')}
                 </h3>
                 <span className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                  {cart.length} {'items added'}
+                  {cart.length} {cart.length === 1 ? 'product' : 'products'} &bull; {totalCartUnits} {'qty'}
                 </span>
               </div>
             </div>
@@ -1003,74 +1181,138 @@ export const BillingCounter: React.FC = () => {
                 const prodThumb = productThumbMap.get(item.product_id);
                 const isFractional = isFractionalUnit(item.unit);
                 const step = isFractional ? 0.5 : 1;
+                const itemGross = Number((item.quantity * item.unit_price).toFixed(2));
+                const itemDisc = Number(item.discount || 0);
 
                 return (
                   <div 
                     key={item.product_id}
-                    className="flex items-center gap-2.5 p-2 sm:p-2.5 rounded-2xl bg-slate-50/90 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] hover:border-emerald-500/30 transition shadow-2xs group"
+                    className="p-2 sm:p-2.5 rounded-2xl bg-slate-50/90 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] hover:border-emerald-500/30 transition shadow-2xs group space-y-1.5"
                   >
-                    {/* Thumbnail Image */}
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
-                      <ProductImage
-                        src={prodThumb?.image_url}
-                        alt={item.product_name}
-                        category={prodThumb?.category}
-                        fill
-                      />
-                    </div>
-
-                    {/* Name & Rate */}
-                    <div className="min-w-0 flex-1">
-                      <h5 className="text-xs font-bold text-slate-900 dark:text-[#E7F0EC] truncate leading-tight">
-                        {item.product_name}
-                      </h5>
-                      <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-semibold mt-0.5 flex items-center gap-1">
-                        <span>₹{item.unit_price}</span>
-                        <span>&times;</span>
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{item.quantity} {item.unit}</span>
-                      </div>
-                    </div>
-
-                    {/* Quantity Controls & Line Total */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className="flex items-center bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] rounded-xl p-0.5 shadow-2xs">
-                        <button
-                          type="button"
-                          onClick={() => updateQuantity(item.product_id, Number((item.quantity - step).toFixed(2)))}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] active:scale-90 transition cursor-pointer"
-                          title={'Decrease'}
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <input
-                          type="number"
-                          step={isFractional ? "0.1" : "1"}
-                          value={item.quantity}
-                          onChange={(e) => updateQuantity(item.product_id, parseFloat(e.target.value) || 0)}
-                          className="w-11 text-center text-xs font-black text-slate-900 dark:text-white bg-transparent focus:outline-none"
+                    <div className="flex items-center gap-2.5">
+                      {/* Thumbnail Image */}
+                      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                        <ProductImage
+                          src={prodThumb?.image_url}
+                          alt={item.product_name}
+                          category={prodThumb?.category}
+                          fill
                         />
+                      </div>
+
+                      {/* Name & Rate */}
+                      <div className="min-w-0 flex-1">
+                        <h5 className="text-xs font-bold text-slate-900 dark:text-[#E7F0EC] truncate leading-tight">
+                          {item.product_name}
+                        </h5>
+                        <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-semibold mt-0.5 flex items-center gap-1 flex-wrap">
+                          <span>₹{item.unit_price}</span>
+                          <span>&times;</span>
+                          <span className="font-bold text-slate-700 dark:text-slate-300">{item.quantity} {item.unit}</span>
+                          {itemDisc > 0 && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                              -₹{itemDisc}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Quantity Controls & Line Total */}
+                      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                        <div className="flex items-center bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] rounded-xl p-0.5 shadow-2xs">
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(item.product_id, Number((item.quantity - step).toFixed(2)))}
+                            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] active:scale-90 transition cursor-pointer"
+                            title={'Decrease'}
+                            aria-label={`Decrease quantity for ${item.product_name}`}
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                          <input
+                            type="number"
+                            step={isFractional ? "0.1" : "1"}
+                            value={item.quantity}
+                            onChange={(e) => updateQuantity(item.product_id, parseFloat(e.target.value) || 0)}
+                            aria-label={`Quantity for ${item.product_name}`}
+                            className="w-10 text-center text-xs font-black text-slate-900 dark:text-white bg-transparent focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(item.product_id, Number((item.quantity + step).toFixed(2)))}
+                            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] active:scale-90 transition cursor-pointer"
+                            title={'Increase'}
+                            aria-label={`Increase quantity for ${item.product_name}`}
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <div className="w-14 sm:w-16 text-right tabular-nums leading-tight">
+                          {itemDisc > 0 && (
+                            <div className="text-[10px] text-slate-400 dark:text-slate-500 line-through font-semibold">
+                              ₹{itemGross.toLocaleString('en-IN')}
+                            </div>
+                          )}
+                          <div className="font-black text-xs text-slate-900 dark:text-white">
+                            ₹{item.total_price.toLocaleString('en-IN')}
+                          </div>
+                        </div>
+
                         <button
                           type="button"
-                          onClick={() => updateQuantity(item.product_id, Number((item.quantity + step).toFixed(2)))}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] active:scale-90 transition cursor-pointer"
-                          title={'Increase'}
+                          onClick={() => removeFromCart(item.product_id)}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                          title={'Remove'}
+                          aria-label={`Remove ${item.product_name}`}
                         >
-                          <Plus className="w-3.5 h-3.5" />
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
+                    </div>
 
-                      <div className="w-14 sm:w-16 text-right font-black text-xs text-slate-900 dark:text-white tabular-nums">
-                        ₹{item.total_price.toLocaleString('en-IN')}
+                    {/* Per-Product Discount Row */}
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-200/70 dark:border-[#24352F]/80">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C]">
+                        Item Discount (₹)
+                      </span>
+                      <div className="flex items-center gap-1">
+                        {[5, 10].map((quickDisc) => (
+                          <button
+                            key={quickDisc}
+                            type="button"
+                            disabled={itemGross < quickDisc}
+                            onClick={() => updateItemDiscount(item.product_id, quickDisc)}
+                            className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-white dark:bg-[#131F1B] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-600 dark:text-[#8FA69C] hover:text-emerald-700 dark:hover:text-emerald-300 border border-slate-200 dark:border-[#24352F] disabled:opacity-40 cursor-pointer"
+                          >
+                            -₹{quickDisc}
+                          </button>
+                        ))}
+                        {itemDisc > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => updateItemDiscount(item.product_id, 0)}
+                            className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 cursor-pointer"
+                            title="Clear item discount"
+                          >
+                            0
+                          </button>
+                        )}
+                        <div className="flex items-center gap-0.5 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-lg px-1.5 py-0.5">
+                          <span className="text-[10px] font-bold text-slate-500">₹</span>
+                          <input
+                            type="number"
+                            min={0}
+                            max={itemGross}
+                            step="1"
+                            value={itemDisc || ''}
+                            placeholder="0"
+                            aria-label={`Discount in rupees for ${item.product_name}`}
+                            onChange={(e) => updateItemDiscount(item.product_id, parseFloat(e.target.value) || 0)}
+                            className="w-11 text-right text-[11px] font-bold text-slate-900 dark:text-white bg-transparent focus:outline-none tabular-nums"
+                          />
+                        </div>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => removeFromCart(item.product_id)}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                        title={'Remove'}
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
                     </div>
                   </div>
                 );
@@ -1097,12 +1339,19 @@ export const BillingCounter: React.FC = () => {
           <div className="pt-3 border-t border-slate-200 dark:border-[#24352F] space-y-2 text-xs">
             <div className="flex justify-between items-center text-slate-600 dark:text-[#8FA69C]">
               <span className="font-semibold">{t('subtotal')}</span>
-              <span className="font-bold text-slate-900 dark:text-white">₹{subtotal.toFixed(2)}</span>
+              <span className="font-bold text-slate-900 dark:text-white tabular-nums">₹{grossSubtotal.toFixed(2)}</span>
             </div>
+
+            {itemDiscountsTotal > 0 && (
+              <div className="flex justify-between items-center text-emerald-700 dark:text-emerald-400">
+                <span className="font-semibold">Product Discounts</span>
+                <span className="font-bold tabular-nums">-₹{itemDiscountsTotal.toFixed(2)}</span>
+              </div>
+            )}
 
             <div className="flex items-center justify-between text-slate-600 dark:text-[#8FA69C] gap-2">
               <span className="font-semibold flex items-center gap-1 shrink-0">
-                <span>{t('discount')}</span>
+                <span>{itemDiscountsTotal > 0 ? 'Extra Bill Discount' : t('discount')}</span>
               </span>
               <div className="flex items-center gap-1.5">
                 {[5, 10, 20].map(disc => (
@@ -1144,10 +1393,11 @@ export const BillingCounter: React.FC = () => {
                   {'Net Payable Amount'}
                 </span>
                 <span className="text-[10px] text-slate-500 dark:text-[#8FA69C]">
-                  {cart.length} {'items'}
+                  {cart.length} {cart.length === 1 ? 'product' : 'products'} &bull; {totalCartUnits} {'qty'}
+                  {totalCombinedDiscount > 0 ? ` • Saved ₹${totalCombinedDiscount.toFixed(0)}` : ''}
                 </span>
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
+              <div className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight tabular-nums">
                 ₹{netTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
@@ -1304,9 +1554,9 @@ export const BillingCounter: React.FC = () => {
             </div>
           )}
 
-          {/* Udhar / Credit Customer Input */}
+          {/* Udhar / Credit Customer Input with Repeat Customer Auto-Search */}
           {paymentMode === 'Udhar' && (
-            <div className="bg-amber-50/80 dark:bg-amber-950/25 p-3 rounded-2xl border border-amber-300 dark:border-amber-700/50 space-y-2">
+            <div className="bg-amber-50/80 dark:bg-amber-950/25 p-3 rounded-2xl border border-amber-300 dark:border-amber-700/50 space-y-2 relative">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-amber-950 dark:text-amber-200">
                   {'Customer Name for Credit / Udhar'}
@@ -1319,18 +1569,69 @@ export const BillingCounter: React.FC = () => {
                 <input
                   type="text"
                   value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder={'e.g. Ramesh Patil'}
+                  onFocus={() => setShowCustomerSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowCustomerSuggestions(false), 160)}
+                  onChange={(e) => {
+                    setCustomerName(e.target.value);
+                    setShowCustomerSuggestions(true);
+                  }}
+                  placeholder={'Search or enter name'}
+                  autoComplete="off"
                   className="w-full px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700/60 bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500"
                 />
                 <input
                   type="tel"
                   value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  placeholder={'Phone (Optional)'}
+                  onFocus={() => setShowCustomerSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowCustomerSuggestions(false), 160)}
+                  onChange={(e) => {
+                    setCustomerPhone(e.target.value);
+                    setShowCustomerSuggestions(true);
+                  }}
+                  placeholder={'Phone Number'}
+                  autoComplete="off"
                   className="w-full px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700/60 bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500"
                 />
               </div>
+
+              {showCustomerSuggestions && matchedCustomers.length > 0 && (
+                <div className="mt-1 rounded-xl border border-amber-300/80 dark:border-amber-700/60 bg-white dark:bg-[#131F1B] shadow-lg overflow-hidden divide-y divide-slate-100 dark:divide-[#24352F] max-h-48 overflow-y-auto">
+                  <div className="px-2.5 py-1 bg-amber-50/90 dark:bg-amber-950/40 text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                    Saved Customers ({matchedCustomers.length})
+                  </div>
+                  {matchedCustomers.map((cust) => (
+                    <button
+                      key={`${cust.name}-${cust.phone}`}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setCustomerName(cust.name);
+                        setCustomerPhone(cust.phone);
+                        setShowCustomerSuggestions(false);
+                      }}
+                      className="w-full px-2.5 py-2 text-left hover:bg-amber-50 dark:hover:bg-[#1A2A25] transition flex items-center justify-between gap-2 cursor-pointer"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                          {cust.name}
+                        </div>
+                        <div className="text-[10px] text-slate-500 dark:text-[#8FA69C] font-mono">
+                          {cust.phone || 'No phone saved'}
+                        </div>
+                      </div>
+                      {cust.currentBalance > 0 ? (
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 shrink-0 tabular-nums">
+                          Due ₹{cust.currentBalance.toLocaleString('en-IN')}
+                        </span>
+                      ) : cust.isCreditCustomer ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 shrink-0">
+                          Cleared
+                        </span>
+                      ) : null}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -1356,23 +1657,66 @@ export const BillingCounter: React.FC = () => {
 
             {showCustomerDetails && (
               <div className="p-3 pt-2 border-t border-slate-200/80 dark:border-[#24352F] space-y-2.5 bg-white dark:bg-[#131F1B]">
-                {/* Customer Name & Phone (Optional for Cash/Online) */}
+                {/* Customer Name & Phone (Optional for Cash/Online, with Auto-Search) */}
                 {paymentMode !== 'Udhar' && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder={'Customer Name'}
-                      className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-slate-50 dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                    <input
-                      type="tel"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
-                      placeholder={'Phone Number'}
-                      className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-slate-50 dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={customerName}
+                        onFocus={() => setShowCustomerSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowCustomerSuggestions(false), 160)}
+                        onChange={(e) => {
+                          setCustomerName(e.target.value);
+                          setShowCustomerSuggestions(true);
+                        }}
+                        placeholder={'Customer Name'}
+                        autoComplete="off"
+                        className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-slate-50 dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                      <input
+                        type="tel"
+                        value={customerPhone}
+                        onFocus={() => setShowCustomerSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowCustomerSuggestions(false), 160)}
+                        onChange={(e) => {
+                          setCustomerPhone(e.target.value);
+                          setShowCustomerSuggestions(true);
+                        }}
+                        placeholder={'Phone Number'}
+                        autoComplete="off"
+                        className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-slate-50 dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
+                    {showCustomerSuggestions && (customerName.trim() || customerPhone.trim()) && matchedCustomers.length > 0 && (
+                      <div className="rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] shadow-md overflow-hidden divide-y divide-slate-100 dark:divide-[#24352F] max-h-40 overflow-y-auto">
+                        {matchedCustomers.map((cust) => (
+                          <button
+                            key={`${cust.name}-${cust.phone}`}
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setCustomerName(cust.name);
+                              setCustomerPhone(cust.phone);
+                              setShowCustomerSuggestions(false);
+                            }}
+                            className="w-full px-2.5 py-1.5 text-left hover:bg-emerald-50 dark:hover:bg-[#223630] transition flex items-center justify-between gap-2 cursor-pointer"
+                          >
+                            <div className="min-w-0">
+                              <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{cust.name}</div>
+                              <div className="text-[10px] text-slate-500 dark:text-[#8FA69C] font-mono">
+                                {cust.phone || 'No phone saved'}
+                              </div>
+                            </div>
+                            {cust.currentBalance > 0 && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 shrink-0 tabular-nums">
+                                Due ₹{cust.currentBalance.toLocaleString('en-IN')}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1465,30 +1809,49 @@ export const BillingCounter: React.FC = () => {
       {/* Floating Bottom Cart Bar on Mobile (Appears when products are selected on phone) */}
       {cart.length > 0 && mobileTab === 'products' && (
         <div className="lg:hidden fixed bottom-20 left-3 right-3 z-30 animate-fadeIn">
-          <button
-            type="button"
-            onClick={() => setMobileTab('cart')}
-            className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-xl shadow-emerald-600/30 flex items-center justify-between border border-white/20 active:scale-98 transition-all"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-black">
-                {cart.length}
+          <div className="w-full py-2.5 px-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xl shadow-emerald-600/30 flex items-center justify-between gap-2 border border-white/20">
+            <button
+              type="button"
+              onClick={() => setMobileTab('cart')}
+              className="flex items-center gap-2.5 min-w-0 flex-1 text-left active:scale-98 transition-transform cursor-pointer"
+            >
+              <div className="min-w-[30px] h-[30px] px-1.5 rounded-full bg-white/20 flex items-center justify-center text-xs font-black shrink-0 tabular-nums">
+                {totalCartUnits}
               </div>
-              <div className="text-left">
-                <span className="text-[10px] text-emerald-100 font-bold block leading-tight">
-                  {'Cart Ready'}
+              <div className="min-w-0">
+                <span className="text-[10px] text-emerald-100 font-bold block leading-tight truncate">
+                  Cart Ready &bull; {cart.length} {cart.length === 1 ? 'product' : 'products'} ({totalCartUnits} qty)
                 </span>
-                <span className="text-sm font-black leading-tight">
+                <span className="text-sm font-black leading-tight tabular-nums">
                   ₹{netTotal.toFixed(2)}
                 </span>
               </div>
-            </div>
+            </button>
 
-            <div className="flex items-center gap-1.5 text-xs font-black bg-white/20 px-3 py-1.5 rounded-xl">
-              <span>{'View Bill & Pay'}</span>
-              <ArrowRight className="w-4 h-4" />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  decrementLastAddedProduct();
+                }}
+                aria-label={lastAddedItemName ? `Remove last added ${lastAddedItemName}` : 'Remove last added product'}
+                title={lastAddedItemName ? `Undo last: ${lastAddedItemName}` : 'Decrease last added product'}
+                className="w-9 h-9 rounded-xl bg-white/20 hover:bg-white/30 active:scale-90 text-white flex items-center justify-center border border-white/25 transition cursor-pointer"
+              >
+                <Minus className="w-4 h-4 stroke-[2.5]" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMobileTab('cart')}
+                className="flex items-center gap-1.5 text-xs font-black bg-white/20 hover:bg-white/30 active:scale-95 px-3 py-2 rounded-xl transition cursor-pointer"
+              >
+                <span>{'View Bill'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
-          </button>
+          </div>
         </div>
       )}
 
@@ -1715,12 +2078,25 @@ export const BillingCounter: React.FC = () => {
             </div>
 
             <div className="border-t border-b border-slate-200 dark:border-[#24352F] py-1.5 space-y-1">
-              {lastCompletedSale?.items?.map((it: any, i: number) => (
-                <div key={i} className="flex justify-between text-[11px] text-slate-800 dark:text-[#E7F0EC]">
-                  <span className="truncate max-w-[170px]">{it.product_name}</span>
-                  <span>{it.quantity} {it.unit} &times; ₹{it.unit_price} = ₹{it.total_price}</span>
-                </div>
-              ))}
+              {lastCompletedSale?.items?.map((it: SaleItem, i: number) => {
+                const gross = Number(((Number(it.quantity) || 0) * (Number(it.unit_price) || 0)).toFixed(2));
+                const itemDisc = typeof it.discount === 'number'
+                  ? it.discount
+                  : Math.max(0, Number((gross - (Number(it.total_price) || 0)).toFixed(2)));
+                return (
+                  <div key={i} className="space-y-0.5 text-[11px] text-slate-800 dark:text-[#E7F0EC]">
+                    <div className="flex justify-between gap-2">
+                      <span className="truncate max-w-[165px]">{it.product_name}</span>
+                      <span>{it.quantity} {it.unit} &times; ₹{it.unit_price} = ₹{it.total_price}</span>
+                    </div>
+                    {itemDisc > 0 && (
+                      <div className="text-[10px] text-emerald-700 dark:text-emerald-400 text-right font-semibold">
+                        Item Disc: -₹{itemDisc}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <div className="space-y-0.5 text-right font-bold text-xs pt-1 text-slate-900 dark:text-white">

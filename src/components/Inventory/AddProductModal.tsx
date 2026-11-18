@@ -27,7 +27,8 @@ import {
   lookupOfficialImages,
   validateImageFile,
   uploadProcessedProductImage,
-  removeManagedStorageImage,
+  ALLOWED_IMAGE_ACCEPT,
+  formatFileSize,
   OfficialImageCandidate,
   ProcessedSquareImage
 } from '../../lib/productImageService';
@@ -114,7 +115,16 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [pendingOverwriteCandidate, setPendingOverwriteCandidate] = useState<OfficialImageCandidate | null>(null);
   const [cropFile, setCropFile] = useState<File | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [lastCompressionStats, setLastCompressionStats] = useState<{
+    originalBytes: number;
+    compressedBytes: number;
+    savedPercent: number;
+    width: number;
+    height: number;
+    extension: string;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Auto-translation states
@@ -160,6 +170,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     setPendingOverwriteCandidate(null);
     setCropFile(null);
     setUploadError(null);
+    setUploadProgress(0);
+    setLastCompressionStats(null);
 
     if (productToEdit) {
       setName(productToEdit.name);
@@ -596,6 +608,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const handleConfirmCroppedUpload = async (processed: ProcessedSquareImage) => {
     if (!isAdmin) return;
     setIsUploadingImage(true);
+    setUploadProgress(10);
     setUploadError(null);
 
     try {
@@ -603,23 +616,42 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         processed,
         productId: productToEdit?.id,
         oldImageUrl: imageUrl || originalImageUrl,
-        isAdmin
+        isAdmin,
+        onProgress: setUploadProgress
       });
 
       setImageUrl(publicUrl);
+      if (productToEdit) {
+        await updateProduct(productToEdit.id, { image_url: publicUrl });
+        setOriginalImageUrl(publicUrl);
+      }
+
+      setLastCompressionStats({
+        originalBytes: processed.originalBytes,
+        compressedBytes: processed.compressedBytes,
+        savedPercent: processed.savedPercent,
+        width: processed.width,
+        height: processed.height,
+        extension: processed.extension
+      });
       setCropFile(null);
       setOfficialCandidates([]);
       setLookupNotFound(false);
       setPendingOverwriteCandidate(null);
       setImageStatusMessage({
         type: 'success',
-        text: tr('Square 512×512 WebP image uploaded to Storage. Click Save to apply.', 'स्क्वायर 512×512 WebP इमेज अपलोड हो गई। लागू करने के लिए सेव दबाएं।', 'स्क्वेअर 512×512 WebP फोटो अपलोड झाला. लागू करण्यासाठी सेव्ह दाबा.')
+        text: tr(
+          `Uploaded ${processed.extension.toUpperCase()} (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)}, saved ${processed.savedPercent}%).`,
+          `${processed.extension.toUpperCase()} अपलोड हो गया (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)}, बचत ${processed.savedPercent}%)।`,
+          `${processed.extension.toUpperCase()} अपलोड झाला (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)}, बचत ${processed.savedPercent}%).`
+        )
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : tr('Failed to upload image.', 'इमेज अपलोड करने में विफल।', 'फोटो अपलोड करण्यात अयशस्वी.');
       setUploadError(message);
     } finally {
       setIsUploadingImage(false);
+      setUploadProgress(0);
     }
   };
 
@@ -635,7 +667,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     const sQty = Math.max(0, parseFloat(stockQuantity) || 0);
     const minAlert = Math.max(0, parseFloat(minStockAlert) || 10);
     const nextImageUrl = imageUrl.trim() || undefined;
-    const prevImageUrl = originalImageUrl.trim();
 
     if (nextImageUrl) {
       clearFailedImageUrl(nextImageUrl);
@@ -656,11 +687,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         barcode: barcode.trim() || undefined,
         image_url: nextImageUrl
       });
-
-      // Clean up previous managed storage file if replaced by a different URL or removed
-      if (isAdmin && prevImageUrl && prevImageUrl !== (nextImageUrl || '')) {
-        await removeManagedStorageImage(prevImageUrl);
-      }
     } else {
       await addProduct({
         name: cleanName,
@@ -1050,24 +1076,63 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-slate-100 dark:hover:bg-[#223630] border border-slate-300 dark:border-[#24352F] text-slate-800 dark:text-[#E7F0EC] text-xs font-bold transition active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-slate-100 dark:hover:bg-[#223630] border border-slate-300 dark:border-[#24352F] text-slate-800 dark:text-[#E7F0EC] text-xs font-bold transition active:scale-95 cursor-pointer"
                     >
                       <Upload className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>{tr('Upload photo', 'फोटो अपलोड करें', 'फोटो अपलोड करा')}</span>
+                      <span>
+                        {imageUrl
+                          ? tr('Replace photo', 'फोटो बदलें', 'फोटो बदला')
+                          : tr('Upload photo', 'फोटो अपलोड करें', 'फोटो अपलोड करा')}
+                      </span>
                     </button>
+
+                    {imageUrl && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setImageUrl('');
+                          setLastCompressionStats(null);
+                          if (productToEdit) {
+                            await updateProduct(productToEdit.id, { image_url: undefined });
+                          }
+                          setImageStatusMessage({
+                            type: 'info',
+                            text: tr('Product image removed.', 'उत्पाद की फोटो हटाई गई।', 'उत्पादनाचा फोटो काढला गेला.')
+                          });
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-950/60 border border-rose-200 dark:border-rose-800/50 text-rose-700 dark:text-rose-300 text-xs font-bold transition active:scale-95 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>{tr('Remove', 'हटाएं', 'काढा')}</span>
+                      </button>
+                    )}
 
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/jpeg,image/png,image/webp"
+                      accept={ALLOWED_IMAGE_ACCEPT}
                       onChange={handleSelectImageFile}
                       className="hidden"
                     />
                   </div>
 
                   <p className="text-[11px] font-medium text-slate-500 dark:text-[#8FA69C]">
-                    {tr('Plain background, product centered, good light. (JPEG/PNG/WebP, max 5 MB)', 'साफ़ बैकग्राउंड, उत्पाद बीच में, अच्छी रोशनी। (JPEG/PNG/WebP, अधिकतम 5 MB)', 'स्वच्छ पार्श्वभूमी, उत्पादन मध्यभागी, चांगला प्रकाश. (JPEG/PNG/WebP, कमाल 5 MB)')}
+                    {tr(
+                      'Auto-compressed to ~20 KB WebP (max 800×800 px) before upload. Accepts JPEG/PNG/WebP up to 15 MB.',
+                      'अपलोड से पहले ऑटो-कंप्रेस होकर ~20 KB WebP (अधिकतम 800×800 px) बनता है। 15 MB तक JPEG/PNG/WebP।',
+                      'अपलोडपूर्वी आपोआप ~20 KB WebP (कमाल 800×800 px) मध्ये कॉम्प्रेस होते. 15 MB पर्यंत JPEG/PNG/WebP.'
+                    )}
                   </p>
+
+                  {lastCompressionStats && (
+                    <div className="inline-flex flex-wrap items-center gap-2 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/40 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 tabular-nums">
+                      <span>{tr('Original:', 'मूल:', 'मूळ:')} {formatFileSize(lastCompressionStats.originalBytes)}</span>
+                      <span>•</span>
+                      <span>{tr('Compressed:', 'कंप्रेस्ड:', 'कॉम्प्रेस्ड:')} {formatFileSize(lastCompressionStats.compressedBytes)}</span>
+                      <span>•</span>
+                      <span>{tr('Saved:', 'बचत:', 'बचत:')} {lastCompressionStats.savedPercent}%</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1363,16 +1428,22 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         }}
       />
 
-      {/* Square 1:1 Canvas Cropper Modal (Step 3) */}
+      {/* Automatic Compression Preview & Upload Modal */}
       <SquareImageCropperModal
         file={cropFile}
         productName={name.trim() || productToEdit?.name}
         isUploading={isUploadingImage}
+        uploadProgress={uploadProgress}
         uploadError={uploadError}
+        onReplaceFile={(nextFile) => {
+          setUploadError(null);
+          setCropFile(nextFile);
+        }}
         onCancel={() => {
           if (!isUploadingImage) {
             setCropFile(null);
             setUploadError(null);
+            setUploadProgress(0);
           }
         }}
         onConfirm={handleConfirmCroppedUpload}

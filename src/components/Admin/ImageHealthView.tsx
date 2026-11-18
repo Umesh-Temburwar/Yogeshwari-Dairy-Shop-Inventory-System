@@ -25,8 +25,9 @@ import {
   lookupOfficialImages,
   validateImageFile,
   uploadProcessedProductImage,
-  removeManagedStorageImage,
   probeImageHealth,
+  ALLOWED_IMAGE_ACCEPT,
+  formatFileSize,
   OfficialImageCandidate,
   ProcessedSquareImage,
   ImageProbeResult,
@@ -87,6 +88,7 @@ export const ImageHealthView: React.FC = () => {
   const [cropTarget, setCropTarget] = useState<{ product: Product; file: File } | null>(null);
   const [previewProduct, setPreviewProduct] = useState<Product | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Fetch out-of-stock catalogue products directly from Supabase (paginated + searchable)
@@ -323,17 +325,12 @@ export const ImageHealthView: React.FC = () => {
     }));
 
     try {
-      const oldUrl = prod.image_url;
       clearFailedImageUrl(candidate.url);
       await updateProduct(prod.id, { image_url: candidate.url });
       if (scope === 'out_of_stock') {
         setOutOfStockProducts((prev) =>
           prev.map((item) => (item.id === prod.id ? { ...item, image_url: candidate.url } : item))
         );
-      }
-
-      if (oldUrl && oldUrl.trim() !== candidate.url) {
-        await removeManagedStorageImage(oldUrl);
       }
 
       const recheck = await probeImageHealth(candidate.url);
@@ -409,6 +406,7 @@ export const ImageHealthView: React.FC = () => {
     if (!cropTarget || !isAdmin) return;
     const { product } = cropTarget;
     setIsUploading(true);
+    setUploadProgress(10);
     setUploadError(null);
 
     try {
@@ -416,7 +414,8 @@ export const ImageHealthView: React.FC = () => {
         processed,
         productId: product.id,
         oldImageUrl: product.image_url,
-        isAdmin
+        isAdmin,
+        onProgress: setUploadProgress
       });
 
       await updateProduct(product.id, { image_url: publicUrl });
@@ -442,7 +441,7 @@ export const ImageHealthView: React.FC = () => {
       setRowMessage({
         productId: product.id,
         type: 'success',
-        text: `Uploaded ${processed.width}×${processed.height} WebP image.`
+        text: `Uploaded ${processed.extension.toUpperCase()} (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)}, saved ${processed.savedPercent}%).`
       });
       setCropTarget(null);
     } catch (err: unknown) {
@@ -450,6 +449,7 @@ export const ImageHealthView: React.FC = () => {
       setUploadError(msg);
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -471,7 +471,7 @@ export const ImageHealthView: React.FC = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept={ALLOWED_IMAGE_ACCEPT}
         onChange={handleFileChange}
         className="hidden"
       />
@@ -957,16 +957,24 @@ export const ImageHealthView: React.FC = () => {
         }}
       />
 
-      {/* Square 1:1 Cropper Modal */}
+      {/* Automatic Compression Preview & Upload Modal */}
       <SquareImageCropperModal
         file={cropTarget?.file || null}
         productName={cropTarget?.product.name}
         isUploading={isUploading}
+        uploadProgress={uploadProgress}
         uploadError={uploadError}
+        onReplaceFile={(nextFile) => {
+          if (cropTarget) {
+            setUploadError(null);
+            setCropTarget({ product: cropTarget.product, file: nextFile });
+          }
+        }}
         onCancel={() => {
           if (!isUploading) {
             setCropTarget(null);
             setUploadError(null);
+            setUploadProgress(0);
           }
         }}
         onConfirm={handleConfirmCroppedUpload}

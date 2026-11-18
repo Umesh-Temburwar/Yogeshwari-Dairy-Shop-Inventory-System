@@ -7,7 +7,17 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { ProductImage } from '../Common/ProductImage';
+import { useAuth } from '../../context/AuthContext';
+import { ProductImage, clearFailedImageUrl } from '../Common/ProductImage';
+import { SquareImageCropperModal } from '../Common/SquareImageCropperModal';
+import {
+  ALLOWED_IMAGE_ACCEPT,
+  validateImageFile,
+  uploadProcessedProductImage,
+  formatFileSize,
+  isBase64ImageDataUrl,
+  ProcessedSquareImage
+} from '../../lib/productImageService';
 import { globalImageManager, ImageFetchProgress, validateImageUrl, lookupProductImageByBarcode } from '../../utils/imageFetchingEngine';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { playBeepSound, playSuccessChime } from '../../utils/audioUtils';
@@ -37,6 +47,8 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
 }) => {
   const { products, setProducts, totalCatalogCount = 46571, totalBarcodesCount = 44202 } = useStore() as any;
   const { language, tr } = useLanguage();
+  const { user, role } = useAuth();
+  const isAdmin = Boolean(user) && (role === 'Owner' || role === 'Admin');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -68,8 +80,13 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
   const [previewImage, setPreviewImage] = useState<{ url: string; name: string } | null>(null);
   const [saveSuccessToast, setSaveSuccessToast] = useState<string | null>(null);
 
-  // Hidden File input for direct camera photo capture
+  // Hidden File input & automatic WebP compression modal state
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   // Debounce search query (300ms) for high performance across 46k records
   useEffect(() => {
@@ -449,41 +466,92 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
     }
   };
 
-  // Direct File / Mobile Camera Photo Upload
+  // Direct File / Mobile Camera Photo Upload -> Automatic client-side WebP compression & Storage upload
   const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const rawDataUrl = ev.target?.result as string;
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-        const maxDim = 1000;
-        if (width > maxDim || height > maxDim) {
-          if (width > height) {
-            height = Math.round((height * maxDim) / width);
-            width = maxDim;
-          } else {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setFileError(validation.error || tr('Unsupported or corrupted image file.', 'अमान्य या खराब इमेज फ़ाइल।', 'अवैध किंवा खराब फोटो फाईल.'));
+      return;
+    }
+
+    setFileError(null);
+    setUploadError(null);
+    setCropFile(file);
+  };
+
+  const handleConfirmCompressedStorageUpload = async (processed: ProcessedSquareImage) => {
+    if (!editingProduct) return;
+    setIsUploadingPhoto(true);
+    setUploadProgress(10);
+    setUploadError(null);
+
+    try {
+      const { publicUrl } = await uploadProcessedProductImage({
+        processed,
+        productId: editingProduct.id,
+        oldImageUrl: editingProduct.image_url,
+        isAdmin,
+        onProgress: setUploadProgress
+      });
+
+      clearFailedImageUrl(publicUrl);
+
+      if (supabase) {
+        const { error: dbErr } = await supabase
+          .from('products')
+          .update({
+            image_url: publicUrl,
+            image_status: 'official_verified',
+            image_source: 'STORAGE_WEBP',
+            image_fetched_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingProduct.id);
+
+        if (dbErr) {
+          throw new Error(dbErr.message || 'Failed to update product image URL.');
         }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, width, height);
-          const compressed = canvas.toDataURL('image/jpeg', 0.85);
-          setEditUrlInput(compressed);
-        }
-      };
-      img.src = rawDataUrl;
-    };
-    reader.readAsDataURL(file);
+      }
+
+      if (setProducts) {
+        setProducts((prev: Product[]) =>
+          prev.map((p) =>
+            p.id === editingProduct.id
+              ? { ...p, image_url: publicUrl, image_status: 'official_verified', image_source: 'STORAGE_WEBP' }
+              : p
+          )
+        );
+      }
+      setModalProducts((prev: Product[]) =>
+        prev.map((p) =>
+          p.id === editingProduct.id
+            ? { ...p, image_url: publicUrl, image_status: 'official_verified', image_source: 'STORAGE_WEBP' }
+            : p
+        )
+      );
+
+      setEditUrlInput(publicUrl);
+      setEditingProduct((prev) => (prev ? { ...prev, image_url: publicUrl } : prev));
+      setCropFile(null);
+      setSaveSuccessToast(
+        tr(
+          `Uploaded WebP (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)}, saved ${processed.savedPercent}%)`,
+          `WebP अपलोड हुआ (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)}, बचत ${processed.savedPercent}%)`,
+          `WebP अपलोड झाला (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)}, बचत ${processed.savedPercent}%)`
+        )
+      );
+      setTimeout(() => setSaveSuccessToast(null), 4000);
+      playSuccessChime();
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : tr('Upload failed.', 'अपलोड विफल।', 'अपलोड अयशस्वी.'));
+    } finally {
+      setIsUploadingPhoto(false);
+      setUploadProgress(0);
+    }
   };
 
   // Start Batch Image Fetching (Database-backed across 34,600+ catalogue items)
@@ -597,13 +665,25 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
     }
   };
 
-  // Save manual or scanned image URL
+  // Save manual or scanned image URL (strictly blocks base64 data URLs from PostgreSQL)
   const handleSaveManualUrl = async () => {
     if (!editingProduct) return;
     setIsValidatingUrl(true);
     const cleanUrl = editUrlInput.trim();
 
-    if (cleanUrl && !cleanUrl.startsWith('data:image/')) {
+    if (isBase64ImageDataUrl(cleanUrl)) {
+      setFileError(
+        tr(
+          'Base64 image data cannot be stored in the database. Use "Upload Photo" to compress and upload to Storage.',
+          'डेटाबेस में Base64 इमेज सेव नहीं की जा सकती। कृपया "फोटो चुनें" से कंप्रेस कर Storage में अपलोड करें।',
+          'डेटाबेसमध्ये Base64 फोटो सेव्ह करता येत नाही. कृपया "फोटो निवडा" वापरून Storage वर अपलोड करा.'
+        )
+      );
+      setIsValidatingUrl(false);
+      return;
+    }
+
+    if (cleanUrl) {
       const isValid = await validateImageUrl(cleanUrl);
       if (!isValid) {
         alert(
@@ -620,10 +700,8 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
 
     try {
       const newStatus = cleanUrl ? 'official_verified' : 'not_found';
-      const newSource = cleanUrl 
-        ? (cleanUrl.startsWith('data:') 
-            ? 'CAMERA_UPLOAD' 
-            : (onlineSuggestedImage?.url === cleanUrl ? onlineSuggestedImage.source : 'MANUAL_URL'))
+      const newSource = cleanUrl
+        ? (onlineSuggestedImage?.url === cleanUrl ? onlineSuggestedImage.source : 'MANUAL_URL')
         : null;
 
       if (supabase) {
@@ -1288,12 +1366,16 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                     <input
                       type="file"
                       ref={fileInputRef}
-                      accept="image/*"
-                      capture="environment"
+                      accept={ALLOWED_IMAGE_ACCEPT}
                       onChange={handleImageFileUpload}
                       className="hidden"
                     />
                   </div>
+                  {fileError && (
+                    <div className="mb-2 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50 text-[11px] font-bold text-rose-700 dark:text-rose-300">
+                      {fileError}
+                    </div>
+                  )}
                   <input
                     type="url"
                     placeholder={tr(
@@ -1401,6 +1483,27 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
         )}
 
       </div>
+
+      {/* Automatic Compression Preview & Storage Upload Modal */}
+      <SquareImageCropperModal
+        file={cropFile}
+        productName={editingProduct?.name}
+        isUploading={isUploadingPhoto}
+        uploadProgress={uploadProgress}
+        uploadError={uploadError}
+        onReplaceFile={(nextFile) => {
+          setUploadError(null);
+          setCropFile(nextFile);
+        }}
+        onCancel={() => {
+          if (!isUploadingPhoto) {
+            setCropFile(null);
+            setUploadError(null);
+            setUploadProgress(0);
+          }
+        }}
+        onConfirm={handleConfirmCompressedStorageUpload}
+      />
     </div>
   );
 };

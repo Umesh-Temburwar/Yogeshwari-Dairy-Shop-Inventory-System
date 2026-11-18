@@ -1,5 +1,4 @@
 import React, { Suspense } from 'react';
-import ydoLogo from '../../assets/YDO_logo.jpg';
 import { PeriodFilter } from './PeriodFilter';
 import { MetricsOverview } from './MetricsOverview';
 import { Skeleton } from '../ui/Skeleton';
@@ -9,7 +8,7 @@ import { OwnerAdminCounterWidget } from './OwnerAdminCounterWidget';
 import { CompactPageHeader } from '../Common/CompactPageHeader';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { ShoppingCart, Plus } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Plus } from 'lucide-react';
 
 const SalesProfitChart = React.lazy(() =>
   import('./SalesProfitChart').then((m) => ({ default: m.SalesProfitChart }))
@@ -38,13 +37,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddProduct }
       {/* Compact 1-Row Header (Matches Inventory Mobile-First System) */}
       <CompactPageHeader
         title={title}
-        icon={
-          <img
-            src={ydoLogo}
-            alt="Yogeshwari Dairy"
-            className="w-8 h-8 rounded-xl object-cover"
-          />
-        }
+        icon={<LayoutDashboard className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />}
         secondaryAction={{
           label: language === 'mr' ? 'जोडा' : language === 'hi' ? 'जोड़ें' : 'Add',
           icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,

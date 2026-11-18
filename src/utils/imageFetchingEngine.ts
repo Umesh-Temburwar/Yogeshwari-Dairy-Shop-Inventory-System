@@ -39,6 +39,7 @@ export interface BulkProcessOptions {
   products?: Array<{ id: string; name: string; barcode?: string | null; image_url?: string | null; image_status?: string | null }>;
   batchSize?: number;
   delayMs?: number;
+  maxItemsPerRun?: number;
   useDatabase?: boolean;
   onProgress?: (progress: ImageFetchProgress) => void;
   onProductUpdated?: (updated: {
@@ -204,9 +205,13 @@ export class BulkImageProcessingManager {
       productsList = opts.products;
     }
 
+    // Guard against concurrent duplicate loops if Start is clicked twice
+    if (this.isRunning) return;
+
     const {
       batchSize = 20,
       delayMs = 250,
+      maxItemsPerRun = 200,
       useDatabase = false,
       onProgress,
       onProductUpdated
@@ -323,8 +328,8 @@ export class BulkImageProcessingManager {
       return;
     }
 
-    // MODE 2: Database-Backed Batch Processing (Directly from 34,600+ Supabase items)
-    let totalDbMissing = 34614;
+    // MODE 2: Database-Backed Batch Processing (Strictly bounded, cursor-paginated, infinite-loop proof)
+    let totalDbPending = 0;
     try {
       if (supabase) {
         const { count: pendingCount } = await supabase
@@ -336,36 +341,42 @@ export class BulkImageProcessingManager {
           .or('image_status.is.null,image_status.eq.pending');
 
         if (pendingCount && pendingCount > 0) {
-          totalDbMissing = pendingCount;
-        } else {
-          const { count: allMissing } = await supabase
-            .from('products')
-            .select('id', { count: 'exact', head: true })
-            .not('barcode', 'is', null)
-            .neq('barcode', '')
-            .is('image_url', null);
-          if (allMissing && allMissing > 0) {
-            totalDbMissing = allMissing;
-          }
+          totalDbPending = pendingCount;
         }
       }
     } catch {
-      // Fallback estimate
+      totalDbPending = 0;
     }
 
-    report(undefined, undefined, totalDbMissing);
+    const effectiveCap = Math.max(1, Math.min(maxItemsPerRun, 500));
+    const effectiveTotal = totalDbPending > 0 ? Math.min(totalDbPending, effectiveCap) : 0;
 
-    while (this.isRunning) {
+    if (effectiveTotal === 0) {
+      this.isRunning = false;
+      this.isPaused = false;
+      report(undefined, undefined, 0);
+      return;
+    }
+
+    report(undefined, undefined, effectiveTotal);
+
+    const visitedIds = new Set<string>();
+    let lastId: string | null = null;
+
+    while (this.isRunning && processed < effectiveCap) {
       while (this.isPaused) {
         await new Promise(r => setTimeout(r, 400));
         if (!this.isRunning) break;
       }
       if (!this.isRunning) break;
-
       if (!supabase) break;
 
-      // Query next batch of pending missing items
-      let { data: batch, error } = await supabase
+      const remaining = effectiveCap - processed;
+      const pageLimit = Math.min(batchSize, remaining);
+      if (pageLimit <= 0) break;
+
+      // Deterministic cursor query strictly scoped to pending/null status (never re-fetches `not_found`)
+      let query = supabase
         .from('products')
         .select('id, name, barcode, image_url, image_status')
         .not('barcode', 'is', null)
@@ -373,37 +384,38 @@ export class BulkImageProcessingManager {
         .is('image_url', null)
         .or('image_status.is.null,image_status.eq.pending')
         .order('id', { ascending: true })
-        .limit(batchSize);
+        .limit(pageLimit);
 
-      if (error || !batch || batch.length === 0) {
-        // Fallback: check if any missing products exist regardless of status
-        const { data: remBatch } = await supabase
-          .from('products')
-          .select('id, name, barcode, image_url, image_status')
-          .not('barcode', 'is', null)
-          .neq('barcode', '')
-          .is('image_url', null)
-          .order('id', { ascending: true })
-          .limit(batchSize);
-
-        if (!remBatch || remBatch.length === 0) {
-          break; // Completed all missing products in database!
-        }
-        batch = remBatch;
+      if (lastId) {
+        query = query.gt('id', lastId);
       }
 
-      for (const prod of batch) {
-        if (!this.isRunning) break;
+      const { data: batch, error } = await query;
+
+      if (error || !batch || batch.length === 0) {
+        break; // No remaining pending products (stops cleanly; never re-loops over `not_found`)
+      }
+
+      const unseenBatch = batch.filter((item) => item?.id && !visitedIds.has(item.id));
+      if (unseenBatch.length === 0) {
+        break; // Hard loop breaker: guarantees forward progress even if cursor stalls
+      }
+
+      for (const prod of unseenBatch) {
+        if (!this.isRunning || processed >= effectiveCap) break;
         while (this.isPaused) {
           await new Promise(r => setTimeout(r, 400));
           if (!this.isRunning) break;
         }
         if (!this.isRunning) break;
 
+        visitedIds.add(prod.id);
+        lastId = prod.id;
+
         const bcode = prod.barcode ? prod.barcode.trim() : '';
         if (!bcode) continue;
 
-        report(bcode, prod.name, totalDbMissing);
+        report(bcode, prod.name, effectiveTotal);
 
         try {
           const res = await lookupProductImageByBarcode(bcode);
@@ -434,7 +446,6 @@ export class BulkImageProcessingManager {
             }
           } else {
             missing++;
-            // Update image_status to 'not_found' so this product won't be re-fetched in this run
             await supabase
               .from('products')
               .update({
@@ -448,7 +459,7 @@ export class BulkImageProcessingManager {
           failed++;
         }
 
-        report(bcode, prod.name, totalDbMissing);
+        report(bcode, prod.name, effectiveTotal);
         if (delayMs > 0) {
           await new Promise(r => setTimeout(r, delayMs));
         }
@@ -457,7 +468,7 @@ export class BulkImageProcessingManager {
 
     this.isRunning = false;
     this.isPaused = false;
-    report(undefined, undefined, totalDbMissing);
+    report(undefined, undefined, effectiveTotal);
   }
 
   public pause(): void {

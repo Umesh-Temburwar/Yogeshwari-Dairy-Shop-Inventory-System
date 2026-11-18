@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import ydoLogo from '../../assets/YDO_logo.jpg';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product, ExpiryStatus } from '../../types';
@@ -781,14 +780,12 @@ export const ProductList: React.FC<ProductListProps> = ({
     <div className="max-w-7xl mx-auto pb-28 lg:pb-10 space-y-2">
       {/* 1. COMPACT SCROLL-AWAY HEADER (Row 1 + Slim 3-Stat Strip + Dismissible Low Stock Alert) */}
       <div className="space-y-1.5">
-        {/* Row 1: Logo + Title + More (⋮) + Round "+ Add" Button */}
+        {/* Row 1: Icon + Title + More (⋮) + Round "+ Add" Button */}
         <div className="flex items-center justify-between gap-2 px-0.5">
           <div className="flex items-center gap-2 min-w-0">
-            <img
-              src={ydoLogo}
-              alt="Yogeshwari Dairy"
-              className="w-8 h-8 rounded-full object-cover border border-emerald-500/40 shrink-0"
-            />
+            <div className="w-8 h-8 rounded-xl bg-emerald-100/90 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/40 flex items-center justify-center shrink-0">
+              <Package className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+            </div>
             <h1 className="text-[16px] sm:text-lg font-bold text-slate-900 dark:text-[#E7F0EC] tracking-tight truncate">
               {language === 'mr'
                 ? 'साठा व इन्व्हेंटरी'

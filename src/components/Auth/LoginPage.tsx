@@ -461,35 +461,8 @@ export const LoginPage: React.FC = () => {
       {/* ============================================================ */}
       <div className="w-full lg:w-[48%] flex flex-col justify-between h-full bg-[#f8fafc] dark:bg-[#0B1210] relative overflow-y-auto lg:overflow-y-hidden">
         
-        {/* Top Controls Bar (Language Switcher on Left, Theme Toggle on Right) */}
-        <div className="p-6 pb-2 sm:pb-4 flex items-center justify-between gap-3 shrink-0">
-          
-          {/* Segmented Language Switcher (Plain text labels: मराठी | हिंदी | English) */}
-          <div
-            role="group"
-            aria-label="Language selector"
-            className="inline-flex items-center bg-slate-200/80 dark:bg-[#1A2A25] p-1 rounded-xl border border-slate-300/60 dark:border-[#24352F]"
-          >
-            {(['mr', 'hi', 'en'] as const).map((code) => {
-              const label = code === 'mr' ? 'मराठी' : code === 'hi' ? 'हिंदी' : 'English';
-              const isActive = language === code;
-              return (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() => setLanguage(code)}
-                  className={`px-3 py-1.5 rounded-lg text-xs transition-all font-semibold select-none ${
-                    isActive
-                      ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 shadow-xs font-bold border border-slate-200/50 dark:border-[#24352F]'
-                      : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                  aria-pressed={isActive}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+        {/* Top Controls Bar (Theme Toggle on Right — English-only app) */}
+        <div className="p-6 pb-2 sm:pb-4 flex items-center justify-end gap-3 shrink-0">
 
           {/* Theme Toggle Button */}
           <button

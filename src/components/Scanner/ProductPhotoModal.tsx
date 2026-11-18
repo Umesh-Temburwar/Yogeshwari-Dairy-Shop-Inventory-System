@@ -302,32 +302,6 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
                 />
               </div>
 
-              {/* Marathi & Hindi Names */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
-                    {tr('Marathi Name:', 'मराठी नाम:', 'मराठी नाव:')}
-                  </label>
-                  <input
-                    type="text"
-                    value={identifiedData.marathi_name}
-                    onChange={(e) => setIdentifiedData(prev => prev ? { ...prev, marathi_name: e.target.value } : null)}
-                    className="w-full px-2.5 py-1.5 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-lg text-xs font-bold text-slate-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
-                    {tr('Hindi Name:', 'हिंदी नाम:', 'हिंदी नाव:')}
-                  </label>
-                  <input
-                    type="text"
-                    value={identifiedData.hindi_name}
-                    onChange={(e) => setIdentifiedData(prev => prev ? { ...prev, hindi_name: e.target.value } : null)}
-                    className="w-full px-2.5 py-1.5 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-lg text-xs font-bold text-slate-900 dark:text-white"
-                  />
-                </div>
-              </div>
-
               {/* Prices & Shelf Life */}
               <div className="grid grid-cols-3 gap-2">
                 <div>

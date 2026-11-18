@@ -1943,22 +1943,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         changes.push(`साठा: ${existingProd.stock_quantity} ➔ ${updates.stock_quantity} ${existingProd.unit}`);
       }
       if (updates.min_stock_alert !== undefined && updates.min_stock_alert !== existingProd.min_stock_alert) {
-        changes.push(`किमान साठा इशारा: ${existingProd.min_stock_alert} ➔ ${updates.min_stock_alert} ${existingProd.unit}`);
+        changes.push(`Min Stock Alert: ${existingProd.min_stock_alert} -> ${updates.min_stock_alert} ${existingProd.unit}`);
       }
       if (updates.name && updates.name !== existingProd.name) {
-        changes.push(`नाव: ${existingProd.name} ➔ ${updates.name}`);
+        changes.push(`Name: ${existingProd.name} -> ${updates.name}`);
       }
       if (updates.category && updates.category !== existingProd.category) {
-        changes.push(`प्रवर्ग: ${existingProd.category} ➔ ${updates.category}`);
-      }
-      if (updates.marathi_name && updates.marathi_name !== existingProd.marathi_name) {
-        changes.push(`मराठी नाव: ${existingProd.marathi_name} ➔ ${updates.marathi_name}`);
+        changes.push(`Category: ${existingProd.category} -> ${updates.category}`);
       }
       if (updates.brand && updates.brand !== existingProd.brand) {
-        changes.push(`ब्रँड: ${existingProd.brand || 'काही नाही'} ➔ ${updates.brand}`);
+        changes.push(`Brand: ${existingProd.brand || 'None'} -> ${updates.brand}`);
       }
       if (updates.barcode !== undefined && updates.barcode !== existingProd.barcode) {
-        changes.push(`बारकोड: ${existingProd.barcode || 'काही नाही'} ➔ ${updates.barcode || 'काही नाही'}`);
+        changes.push(`Barcode: ${existingProd.barcode || 'None'} -> ${updates.barcode || 'None'}`);
       }
     }
 

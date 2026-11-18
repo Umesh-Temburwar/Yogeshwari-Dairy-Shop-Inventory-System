@@ -43,13 +43,7 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
   const [isVoiceListening, setIsVoiceListening] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [voiceError, setVoiceError] = useState<string | null>(null);
-  const [voiceLang, setVoiceLang] = useState<VoiceLanguage>(() => {
-    try {
-      const saved = localStorage.getItem('ydo_voice_lang');
-      if (saved === 'en-IN' || saved === 'mr-IN' || saved === 'hi-IN') return saved;
-    } catch {}
-    return 'en-IN';
-  });
+  const voiceLang: VoiceLanguage = 'en-IN';
   const voiceControllerRef = useRef<MobileVoiceController | null>(null);
 
   const cleanBarcode = barcode.trim();
@@ -271,33 +265,8 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
           <div>
             <div className="flex items-center justify-between gap-1.5 mb-1">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">
-                {tr('Product Name (English)', 'उत्पाद का नाम (अंग्रेजी)', 'उत्पादनाचे नाव (इंग्रजी)')} <span className="text-rose-500">*</span>
+                Product Name <span className="text-rose-500">*</span>
               </label>
-              <div className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-[#1A2A25] p-0.5 border border-slate-200 dark:border-[#24352F]">
-                {(
-                  [
-                    { code: 'en-IN', label: 'EN' },
-                    { code: 'mr-IN', label: 'मराठी' },
-                    { code: 'hi-IN', label: 'हिंदी' }
-                  ] as Array<{ code: VoiceLanguage; label: string }>
-                ).map((opt) => (
-                  <button
-                    key={opt.code}
-                    type="button"
-                    onClick={() => {
-                      setVoiceLang(opt.code);
-                      try { localStorage.setItem('ydo_voice_lang', opt.code); } catch {}
-                    }}
-                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                      voiceLang === opt.code
-                        ? 'bg-emerald-600 text-white'
-                        : 'text-slate-600 dark:text-[#8FA69C]'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
             </div>
             <div className="relative">
               <input
@@ -334,23 +303,6 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
             {voiceError && !isVoiceListening && (
               <p className="mt-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400">{voiceError}</p>
             )}
-          </div>
-
-          {/* Marathi Name (Auto-Transliterated) */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1 flex items-center justify-between">
-              <span>{tr('Marathi / Regional Name', 'मराठी / प्रादेशिक नाम', 'मराठी नाव (आपोआप भाषांतर)')}</span>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> {tr('Auto-Translated', 'ऑटो-अनुवादित', 'आपोआप भाषांतर')}
-              </span>
-            </label>
-            <input
-              type="text"
-              value={marathiName}
-              onChange={(e) => setMarathiName(e.target.value)}
-              placeholder={tr('e.g. Parle Monaco 50g (Regional)', 'उदा. पार्ले मोनाको 50 ग्राम', 'उदा. पार्ले मोनाको ५० ग्रॅम')}
-              className="w-full h-10 px-3 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
           </div>
 
           {/* Category & Unit Grid */}

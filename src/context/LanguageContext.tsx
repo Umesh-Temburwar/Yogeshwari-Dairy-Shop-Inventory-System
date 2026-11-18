@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 
 export type Language = 'en' | 'hi' | 'mr';
 
@@ -1348,60 +1348,44 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>(() => {
-    try {
-      const stored = localStorage.getItem('dairy_language') as Language;
-      if (stored === 'en' || stored === 'hi' || stored === 'mr') {
-        return stored;
-      }
-    } catch { }
-    return 'mr'; // Default to Marathi as requested
-  });
+  // Strictly English-only application
+  const language: Language = 'en';
 
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
+  const setLanguage = (_lang: Language) => {
     try {
-      localStorage.setItem('dairy_language', lang);
-      document.documentElement.setAttribute('lang', lang);
-    } catch { }
+      localStorage.setItem('dairy_language', 'en');
+      document.documentElement.setAttribute('lang', 'en');
+    } catch {
+      // Ignore storage access errors
+    }
   };
 
   useEffect(() => {
-    document.documentElement.setAttribute('lang', language);
-  }, [language]);
-
-  // Cross-tab language synchronization
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'dairy_language' && (e.newValue === 'en' || e.newValue === 'hi' || e.newValue === 'mr')) {
-        setLanguageState(e.newValue);
-      }
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    try {
+      localStorage.setItem('dairy_language', 'en');
+      document.documentElement.setAttribute('lang', 'en');
+    } catch {
+      // Ignore storage access errors
+    }
   }, []);
 
   const t = (key: string): string => {
-    if (TRANSLATIONS[key] && TRANSLATIONS[key][language]) {
-      return TRANSLATIONS[key][language];
+    if (TRANSLATIONS[key]?.en) {
+      return TRANSLATIONS[key].en;
     }
     return key;
   };
 
-  const tText = (obj: { en: string; hi: string; mr: string }): string => {
-    return obj[language] || obj.en || '';
+  const tText = (obj: { en: string; hi?: string; mr?: string }): string => {
+    return obj.en || '';
   };
 
-  const tr = (en: string, hi: string, mr: string): string => {
-    if (language === 'mr') return mr;
-    if (language === 'hi') return hi;
+  const tr = (en: string, _hi?: string, _mr?: string): string => {
     return en;
   };
 
-  const getProductDisplayName = (prod: any): string => {
+  const getProductDisplayName = (prod: { name?: string } | null | undefined): string => {
     if (!prod) return '';
-    if (language === 'mr' && prod.marathi_name) return prod.marathi_name;
-    if (language === 'hi' && prod.hindi_name) return prod.hindi_name;
     return prod.name || '';
   };
 

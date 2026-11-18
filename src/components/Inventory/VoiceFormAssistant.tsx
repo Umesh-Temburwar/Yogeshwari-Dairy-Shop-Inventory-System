@@ -119,10 +119,8 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState<boolean>(() => ttsService.getMuted());
 
-  // Recognition language: 'mr-IN', 'hi-IN', 'en-IN'
-  const [voiceLang, setVoiceLang] = useState<VoiceLanguage>(
-    language === 'hi' ? 'hi-IN' : language === 'en' ? 'en-IN' : 'mr-IN'
-  );
+  // Recognition language locked to English ('en-IN')
+  const voiceLang: VoiceLanguage = 'en-IN';
 
   const recognitionRef = useRef<any>(null);
   const isSpeakingRef = useRef<boolean>(false);
@@ -219,10 +217,10 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
     }
   };
 
-  // Speaks prompt and then starts listening automatically
+  // Speaks prompt and then starts listening automatically (English only)
   const promptAndListen = async (step: VoiceStep) => {
     const prompt = getStepPrompt(step);
-    const textToSpeak = voiceLang === 'hi-IN' ? prompt.hi : voiceLang === 'en-IN' ? prompt.en : prompt.mr;
+    const textToSpeak = prompt.en;
     setAssistantMessage(textToSpeak);
     setErrorMessage(null);
     setInterimTranscript('');
@@ -714,31 +712,8 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
           </div>
         </div>
 
-        {/* Controls: Language Pills, Sound Mute & Close */}
+        {/* Controls: Sound Mute & Close (English-only voice recognition) */}
         <div className="flex items-center gap-1.5 self-end sm:self-auto">
-          {/* Spoken Language Selector */}
-          <div className="flex items-center gap-0.5 bg-black/40 p-0.5 rounded-xl border border-emerald-500/30">
-            {(['mr-IN', 'hi-IN', 'en-IN'] as VoiceLanguage[]).map((langCode) => {
-              const isActive = voiceLang === langCode;
-              const label = langCode === 'mr-IN' ? 'मराठी' : langCode === 'hi-IN' ? 'हिंदी' : 'English';
-              return (
-                <button
-                  key={langCode}
-                  type="button"
-                  onClick={() => setVoiceLang(langCode)}
-                  className={`px-2 py-1 text-[11px] font-black rounded-lg transition ${
-                    isActive 
-                      ? 'bg-emerald-500 text-slate-900 shadow-xs font-extrabold' 
-                      : 'text-emerald-200/80 hover:text-white'
-                  }`}
-                  title={`Speak in ${label}`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-
           {/* Sound Mute Toggle */}
           <button
             type="button"

@@ -100,7 +100,7 @@ export const ImageHealthView: React.FC = () => {
         let query = supabase
           .from('products')
           .select(
-            'id, name, hindi_name, marathi_name, brand, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, is_active, created_at'
+            'id, name, brand, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, is_active, created_at'
           )
           .eq('stock_quantity', 0)
           .order('selling_price', { ascending: false })

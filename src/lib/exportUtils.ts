@@ -127,14 +127,7 @@ const safeReportText = (value: string | number | null | undefined): string => {
   return escapeHtml(stripEmojisForPDF(value));
 };
 
-const resolveLanguage = (explicitLang?: 'mr' | 'hi' | 'en'): 'mr' | 'hi' | 'en' => {
-  if (explicitLang === 'mr' || explicitLang === 'hi' || explicitLang === 'en') {
-    return explicitLang;
-  }
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem('dairy_language');
-    if (stored === 'mr' || stored === 'hi' || stored === 'en') return stored;
-  }
+const resolveLanguage = (_explicitLang?: 'mr' | 'hi' | 'en'): 'en' => {
   return 'en';
 };
 
@@ -915,7 +908,7 @@ export const getReportHTMLMarkup = (options: PDFReportOptions): string => {
   <title>${safeReportText(options.title)} - ${escapeHtml(strings.brandTitle)}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>${buildReportStylesheet(orientation, strings, generatedStamp)}</style>
 </head>
 <body>
@@ -1633,37 +1626,39 @@ export const exportReportToPDF = (options: PDFReportOptions): void => {
     ${sortRowHtml}
   `;
 
-  // Scrollable A4 Preview Viewport (allows pinch-zoom, scales A4 sheet cleanly to screen width)
+  // Scrollable A4 Preview Viewport (allows pinch-zoom, scales A4 sheet cleanly to full screen width)
   const previewViewport = document.createElement('div');
   previewViewport.style.cssText = `
     flex: 1;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x pan-y pinch-zoom;
-    padding: 14px 8px calc(env(safe-area-inset-bottom, 0px) + 28px) 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    padding: 12px 8px calc(env(safe-area-inset-bottom, 0px) + 28px) 8px;
   `;
 
   const scaleHolder = document.createElement('div');
   scaleHolder.style.cssText = `
     position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    margin: 0 auto;
+    overflow: hidden;
+    background: #ffffff;
+    border-radius: 6px;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.16), 0 4px 10px -2px rgba(15, 23, 42, 0.08);
   `;
 
   const a4Frame = document.createElement('iframe');
   a4Frame.title = stripEmojisForPDF(options.title);
+  a4Frame.setAttribute('scrolling', 'no');
   a4Frame.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
     width: ${docWidthPx}px;
-    min-height: ${orientation === 'landscape' ? 794 : 1123}px;
+    min-width: ${docWidthPx}px;
+    height: ${orientation === 'landscape' ? 794 : 1123}px;
     border: none;
     background: #ffffff;
-    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.16), 0 4px 10px -2px rgba(15, 23, 42, 0.08);
-    border-radius: 4px;
-    transform-origin: top center;
+    transform-origin: top left;
     display: block;
   `;
 
@@ -1846,6 +1841,7 @@ export const exportToCSV = (
 
 interface CSVProductLike {
   name: string;
+  brand?: string;
   marathi_name?: string;
   hindi_name?: string;
   category: string;
@@ -1858,30 +1854,50 @@ interface CSVProductLike {
 }
 
 /**
- * High-level helper: Export Product Catalog to CSV / Excel
+ * High-level helper: Export Product Catalog to English-only CSV (legacy fallback)
  */
 export const exportProductsToCSV = (
   products: CSVProductLike[],
-  lang: 'mr' | 'hi' | 'en' = 'mr'
+  _lang: 'mr' | 'hi' | 'en' = 'en'
 ): void => {
-  const isMr = lang === 'mr';
-  const headers = isMr
-    ? ['उत्पादनाचे नाव', 'मराठी नाव', 'प्रवर्ग', 'एकक', 'खरेदी दर', 'विक्री दर', 'उपलब्ध साठा', 'किमान साठा अलर्ट', 'बारकोड']
-    : ['Product Name', 'Regional Name', 'Category', 'Unit', 'Purchase Price', 'Selling Price', 'Current Stock', 'Min Stock Alert', 'Barcode'];
+  const headers = [
+    'Sr. No.',
+    'Product Name',
+    'Brand',
+    'Category',
+    'Barcode',
+    'Current Stock',
+    'Unit',
+    'Min Alert',
+    'Purchase Rate (Rs)',
+    'Selling Rate (Rs)',
+    'Cost Value (Rs)',
+    'Retail Value (Rs)',
+    'Status'
+  ];
 
-  const rows = products.map((p) => [
-    p.name,
-    p.marathi_name || p.hindi_name || '',
-    p.category,
-    p.unit,
-    p.purchase_price,
-    p.selling_price,
-    p.stock_quantity,
-    p.min_stock_alert,
-    p.barcode || ''
-  ]);
+  const rows = products.map((p, idx) => {
+    const costVal = Math.round(p.stock_quantity * p.purchase_price * 100) / 100;
+    const retailVal = Math.round(p.stock_quantity * p.selling_price * 100) / 100;
+    const status = p.stock_quantity <= 0 ? 'OUT' : p.stock_quantity <= p.min_stock_alert ? 'LOW' : 'OK';
+    return [
+      idx + 1,
+      stripEmojisForPDF(p.name),
+      stripEmojisForPDF(p.brand || 'Generic'),
+      stripEmojisForPDF(p.category),
+      p.barcode ? `="${p.barcode}"` : '-',
+      p.stock_quantity,
+      abbreviateUnitForPDF(p.unit),
+      p.min_stock_alert,
+      p.purchase_price,
+      p.selling_price,
+      costVal,
+      retailVal,
+      status
+    ];
+  });
 
-  exportToCSV('Yogeshwari_Dairy_Products', headers, rows);
+  exportToCSV('Yogeshwari_Dairy_Inventory', headers, rows);
 };
 
 interface CSVSaleLike {

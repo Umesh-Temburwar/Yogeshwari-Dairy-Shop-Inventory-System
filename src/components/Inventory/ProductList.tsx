@@ -33,12 +33,12 @@ import {
   printReport,
   downloadReportPDF,
   viewReportPDF,
-  exportProductsToCSV,
   abbreviateUnitForPDF,
   stripEmojisForPDF,
   PDFReportOptions,
   PDFSortOption
 } from '../../lib/exportUtils';
+import { exportInventoryToExcel } from '../../lib/excelExport';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { BarcodeStockInModal } from '../Scanner/BarcodeStockInModal';
 import { ProductImage } from '../Common/ProductImage';
@@ -71,7 +71,7 @@ interface StockBatchInput {
 const PAGE_SIZE = 50;
 const LOW_STOCK_DISMISS_KEY = 'ydo_low_stock_banner_dismissed';
 const PRODUCT_SELECT_COLS =
-  'id, name, hindi_name, marathi_name, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, brand, pack_size, is_active, created_at';
+  'id, name, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, brand, pack_size, is_active, created_at';
 
 export const ProductList: React.FC<ProductListProps> = ({
   onOpenAddProduct,
@@ -1073,7 +1073,10 @@ export const ProductList: React.FC<ProductListProps> = ({
         <div className="relative flex items-center">
           <Search className="w-4 h-4 absolute left-3 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />
           <input
+            id="inventory-search-input"
+            name="inventorySearch"
             type="text"
+            autoComplete="off"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={
@@ -1535,7 +1538,23 @@ export const ProductList: React.FC<ProductListProps> = ({
         onDownloadPDF={() => downloadReportPDF(getStockReportPayload())}
         onViewPDF={() => viewReportPDF(getStockReportPayload())}
         onPrintPDF={() => printReport(getStockReportPayload())}
-        onExportCSV={() => exportProductsToCSV(filteredProducts, language)}
+        onExportCSV={() => {
+          const scopeParts: string[] = [];
+          if (activeTab === 'LOW_STOCK') scopeParts.push('Low Stock Items');
+          else if (activeTab === 'OUT_OF_STOCK') scopeParts.push('Out of Stock');
+          else if (activeTab === 'EXPIRING') scopeParts.push('Expiring Soon');
+          else if (activeTab === 'ALL') scopeParts.push('All Loaded Catalog');
+          else scopeParts.push('Current Stock');
+
+          if (selectedCategory !== 'All') scopeParts.push(`Category: ${selectedCategory}`);
+          if (debouncedQuery.length > 0) scopeParts.push(`Search: ${debouncedQuery}`);
+
+          exportInventoryToExcel({
+            products: filteredProducts,
+            scopeLabel: scopeParts.join(' | '),
+            filenamePrefix: 'Yogeshwari_Dairy_Inventory'
+          });
+        }}
         onOpenPhotoDatabase={() => setShowImageManager(true)}
       />
 

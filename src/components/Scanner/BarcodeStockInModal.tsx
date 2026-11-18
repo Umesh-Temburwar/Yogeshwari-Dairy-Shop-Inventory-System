@@ -145,27 +145,13 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     }
   };
 
-  // Mobile-Hardened Voice-to-Text Recognition for Barcode Product Registration
+  // English-only Voice-to-Text Recognition for Barcode Product Registration
   const [isVoiceListening, setIsVoiceListening] = useState(false);
   const [voiceLiveTranscript, setVoiceLiveTranscript] = useState('');
   const [voiceErrorMsg, setVoiceErrorMsg] = useState<string | null>(null);
-  const [voiceLang, setVoiceLang] = useState<VoiceLanguage>(() => {
-    try {
-      const saved = localStorage.getItem('ydo_voice_lang');
-      if (saved === 'en-IN' || saved === 'mr-IN' || saved === 'hi-IN') return saved;
-    } catch {}
-    // Default en-IN recognizes English FMCG brands + Hinglish/Marathi dairy terms cleanly on mobile
-    return 'en-IN';
-  });
+  const voiceLang: VoiceLanguage = 'en-IN';
   const voiceControllerRef = useRef<MobileVoiceController | null>(null);
   const voiceSessionSeqRef = useRef<number>(0);
-
-  const handleSelectVoiceLang = (nextLang: VoiceLanguage) => {
-    setVoiceLang(nextLang);
-    try {
-      localStorage.setItem('ydo_voice_lang', nextLang);
-    } catch {}
-  };
 
   // Stop voice recognition cleanly when modal closes or step changes
   useEffect(() => {
@@ -843,10 +829,9 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     const cleanBc = barcodeInput.trim();
 
     try {
-      // 1. Add product to StoreContext & Supabase products table
+      // 1. Add product to StoreContext & Supabase products table (English only)
       const createdProd = await addProduct({
         name: cleanName,
-        marathi_name: newProdMarathiName.trim() || undefined,
         category: newProdCategory || 'Bakery & Extras',
         unit: newProdUnit || 'Piece',
         brand: newProdBrand.trim() || undefined,
@@ -889,7 +874,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
             qty_remaining: qtyToAdd,
             purchase_price: pPrice,
             selling_price: sPrice,
-            notes: 'बारकोड आवक द्वारे नोंदणी'
+            notes: 'Registered via Barcode Stock-In'
           }, createdProd);
         } catch (batchErr) {
           console.warn('Batch creation error:', batchErr);
@@ -959,7 +944,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
             p_expiry_date: expiryDate,
             p_mfg_date: mfgDate,
             p_supplier_name: supplierName.trim() || null,
-            p_notes: notes.trim() || 'बारकोड द्वारे साठा आवक'
+            p_notes: notes.trim() || 'Stock added via Barcode Stock-In'
           });
 
           if (!rpcErr && rpcRes && rpcRes.success) {
@@ -1298,31 +1283,8 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                 <div>
                   <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1.5">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                      {tr('Product Name *', 'उत्पाद का नाम *', 'उत्पादनाचे नाव *')}
+                      Product Name *
                     </label>
-                    {/* Compact Voice Language Switcher (EN / मराठी / हिंदी) */}
-                    <div className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-[#1A2A25] p-0.5 border border-slate-200 dark:border-[#24352F]">
-                      {(
-                        [
-                          { code: 'en-IN', label: 'EN' },
-                          { code: 'mr-IN', label: 'मराठी' },
-                          { code: 'hi-IN', label: 'हिंदी' }
-                        ] as Array<{ code: VoiceLanguage; label: string }>
-                      ).map((opt) => (
-                        <button
-                          key={opt.code}
-                          type="button"
-                          onClick={() => handleSelectVoiceLang(opt.code)}
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                            voiceLang === opt.code
-                              ? 'bg-emerald-600 text-white shadow-2xs'
-                              : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
                   </div>
                   <div className="relative">
                     <input
@@ -1385,34 +1347,9 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
 
                   {!isSpeechRecognitionSupported() && !voiceErrorMsg && (
                     <p className="mt-1 text-[10px] text-slate-500 dark:text-[#8FA69C]">
-                      {tr(
-                        'Tip: You can also tap the 🎤 mic on your mobile keyboard.',
-                        'टिप: आप अपने मोबाइल कीबोर्ड पर 🎤 माइक भी दबा सकते हैं।',
-                        'टीप: मोबाईल कीबोर्डवरील 🎤 माइक देखील वापरता येतो.'
-                      )}
+                      Tip: You can also tap the mic on your mobile keyboard.
                     </p>
                   )}
-                </div>
-
-                {/* Marathi Name (Auto-Translated) */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                      {tr('Marathi / Regional Name', 'मराठी / हिंदी नाम', 'मराठी नाव (आपोआप भाषांतर)')}
-                    </label>
-                    {newProdMarathiName && (
-                      <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/40">
-                        {tr('✓ Auto-Marathi', '✓ ऑटो-मराठी', '✓ ऑटो-मराठी')}
-                      </span>
-                    )}
-                  </div>
-                  <input
-                    type="text"
-                    value={newProdMarathiName}
-                    onChange={(e) => setNewProdMarathiName(e.target.value)}
-                    placeholder={tr('e.g. Parle Monaco 50g (Regional)', 'उदा. पार्ले मोनाको 50 ग्राम', 'उदा. पार्ले मोनाको ५० ग्रॅम')}
-                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
                 </div>
               </div>
 

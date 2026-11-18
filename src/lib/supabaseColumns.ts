@@ -5,10 +5,10 @@
  */
 
 export const PRODUCT_SELECT_COLS =
-  'id, name, hindi_name, marathi_name, brand, category, unit, pack_size, purchase_price, selling_price, stock_quantity, min_stock_alert, shelf_life_days, barcode, image_url, image_source, image_status, is_active, created_at, updated_at';
+  'id, name, brand, category, unit, pack_size, purchase_price, selling_price, stock_quantity, min_stock_alert, shelf_life_days, barcode, image_url, image_source, image_status, is_active, created_at, updated_at';
 
 export const PRODUCT_BARCODE_SELECT_COLS =
-  'id, name, hindi_name, marathi_name, brand, category, unit, pack_size, purchase_price, selling_price, stock_quantity, min_stock_alert, shelf_life_days, barcode, image_url, is_active, created_at';
+  'id, name, brand, category, unit, pack_size, purchase_price, selling_price, stock_quantity, min_stock_alert, shelf_life_days, barcode, image_url, is_active, created_at';
 
 export const PRODUCT_CATALOGUE_SELECT_COLS =
   'id, barcode, product_name, brand, category, quantity_unit, mrp, selling_price, image_url, created_at';

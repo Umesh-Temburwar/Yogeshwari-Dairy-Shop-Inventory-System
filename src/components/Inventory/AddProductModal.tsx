@@ -126,11 +126,9 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [autoTranslateEnabled] = useState(true);
   const isUserTypingRef = useRef(false);
 
-  // Voice recognition states
+  // Voice recognition state (English only)
   const [isListening, setIsListening] = useState(false);
-  const [voiceLang, setVoiceLang] = useState<VoiceLanguage>(
-    language === 'hi' ? 'hi-IN' : language === 'en' ? 'en-IN' : 'mr-IN'
-  );
+  const [voiceLang] = useState<VoiceLanguage>('en-IN');
   const [interimTranscript, setInterimTranscript] = useState('');
   const [voiceFeedback, setVoiceFeedback] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
@@ -655,8 +653,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       await updateProduct(productToEdit.id, {
         name: cleanName,
         brand: brand.trim() || undefined,
-        hindi_name: hindiName.trim() || undefined,
-        marathi_name: marathiName.trim() || undefined,
         category,
         unit,
         purchase_price: pPrice,
@@ -670,8 +666,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       await addProduct({
         name: cleanName,
         brand: brand.trim() || undefined,
-        hindi_name: hindiName.trim() || undefined,
-        marathi_name: marathiName.trim() || undefined,
         category,
         unit,
         purchase_price: pPrice,
@@ -724,32 +718,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          {/* Trilingual Names: English, Marathi, Hindi with Automatic Translation */}
+          {/* Product Name (English) + Voice Input */}
           <div className="space-y-2">
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] flex items-center gap-1.5">
-                  <span>{language === 'mr' ? 'इंग्रजी नाव (English Name)' : language === 'hi' ? 'अंग्रेजी नाम (English Name)' : 'English Name'} *</span>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-normal">
-                    ({language === 'mr' ? 'येथे टाईप करताच मराठी व हिंदी आपोआप भरेल' : language === 'hi' ? 'यहाँ टाइप करते ही मराठी व हिंदी अपने आप भरेगा' : 'Auto-fills Marathi & Hindi'})
-                  </span>
+                  <span>Product Name *</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={handleManualTranslateTrigger}
-                  disabled={(isTranslating && Boolean(name.trim())) || !name.trim()}
-                  className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 flex items-center gap-1 transition active:scale-95 disabled:opacity-50"
-                  title={tr('Auto-fill Marathi & Hindi names (Re-translate)', 'मराठी और हिंदी नाम अपने आप भरें (पुनः अनुवाद)', 'मराठी आणि हिंदी नाव आपोआप भरा (Re-translate)')}
-                >
-                  <Sparkles className={`w-3.5 h-3.5 ${isTranslating && Boolean(name.trim()) ? 'animate-spin text-amber-500' : 'text-emerald-500'}`} />
-                  <span>
-                    {isTranslating && Boolean(name.trim())
-                      ? tr('Translating...', 'अनुवाद कर रहे हैं...', 'अनुवाद करत आहे...')
-                      : name.trim()
-                        ? tr('✨ Re-translate', '✨ पुनः अनुवाद करें', '✨ पुन्हा भाषांतर करा')
-                        : tr('✨ Auto-translate', '✨ ऑटो ट्रांसलेट', '✨ ऑटो भाषांतर')}
-                  </span>
-                </button>
               </div>
               <div className="relative">
                 <input
@@ -769,13 +744,11 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                       ? 'bg-rose-600 hover:bg-rose-700 text-white animate-pulse shadow-rose-500/40 ring-2 ring-rose-400'
                       : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
                       }`}
-                    title={isListening ? tr('Stop Mic', 'माइक रोकें', 'माईक थांबवा') : tr('Voice to Text', 'बोलकर नाम डालें', 'बोलून नाव टाका')}
+                    title={isListening ? 'Stop Mic' : 'Voice to Text'}
                   >
                     <Mic className={`w-3.5 h-3.5 ${isListening ? 'animate-bounce text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
                     <span className="text-[11px] font-black">
-                      {isListening
-                        ? tr('Listening...', 'सुन रहा है...', 'ऐकत आहे...')
-                        : tr('🎤 Voice', '🎤 बोलें', '🎤 बोला')}
+                      {isListening ? 'Listening...' : 'Voice'}
                     </span>
                   </button>
                 </div>
@@ -798,33 +771,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                         <span className="w-1 bg-rose-500 rounded-full animate-bounce h-1.5" style={{ animationDelay: '75ms' }}></span>
                       </div>
                       <span className="text-xs font-black text-slate-800 dark:text-white flex items-center gap-1">
-                        <span>{language === 'mr' ? 'माईक चालू आहे... कृपया बोला:' : language === 'hi' ? 'माइक चालू है... कृपया बोलें:' : 'Listening... Speak clearly:'}</span>
+                        <span>Listening... Speak clearly (English):</span>
                       </span>
-                    </div>
-
-                    {/* Spoken Language Switcher */}
-                    <div className="flex items-center gap-0.5 bg-white dark:bg-[#131F1B] p-0.5 rounded-lg border border-slate-200 dark:border-[#24352F]">
-                      {(['mr-IN', 'hi-IN', 'en-IN'] as VoiceLanguage[]).map((langCode) => {
-                        const isActive = voiceLang === langCode;
-                        const label = langCode === 'mr-IN' ? 'मराठी' : langCode === 'hi-IN' ? 'हिंदी' : 'English';
-                        return (
-                          <button
-                            key={langCode}
-                            type="button"
-                            onClick={() => {
-                              setVoiceLang(langCode);
-                              stopVoiceListening();
-                              setTimeout(() => startVoiceListening(langCode), 150);
-                            }}
-                            className={`px-2 py-0.5 text-[10px] font-black rounded-md transition ${isActive
-                              ? 'bg-emerald-600 text-white shadow-2xs font-extrabold'
-                              : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
-                              }`}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
                     </div>
                   </div>
 
@@ -916,47 +864,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   <span>{voiceError}</span>
                 </div>
               )}
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C]">
-                    {language === 'mr' ? 'मराठी नाव (Marathi)' : language === 'hi' ? 'मराठी नाम (Marathi)' : 'Marathi Name'}
-                  </label>
-                  {marathiName && (
-                    <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/40">
-                      ✓ {tr('Auto-Marathi', 'ऑटो-मराठी', 'ऑटो-मराठी')}
-                    </span>
-                  )}
-                </div>
-                <input
-                  type="text"
-                  placeholder={tr('e.g. ताजे म्हशीचे दूध १ लिटर', 'उदा. ताजे म्हशीचे दूध १ लिटर', 'उदा. ताजे म्हशीचे दूध १ लिटर')}
-                  value={marathiName}
-                  onChange={(e) => setMarathiName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C]">
-                    {language === 'mr' ? 'हिंदी नाव (Hindi)' : language === 'hi' ? 'हिंदी नाम (Hindi)' : 'Hindi Name'}
-                  </label>
-                  {hindiName && (
-                    <span className="text-[10px] font-extrabold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-200 dark:border-teal-800/40">
-                      ✓ {tr('Auto-Hindi', 'ऑटो-हिंदी', 'ऑटो-हिंदी')}
-                    </span>
-                  )}
-                </div>
-                <input
-                  type="text"
-                  placeholder={tr('e.g. ताज़ा भैंस का दूध 1 लीटर', 'उदा. ताज़ा भैंस का दूध 1 लीटर', 'उदा. ताज़ा भैंस का दूध 1 लीटर')}
-                  value={hindiName}
-                  onChange={(e) => setHindiName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
             </div>
           </div>
 

@@ -121,20 +121,20 @@ export const OwnerAdminCounterWidget: React.FC = () => {
     return { count: sales.length, totalSales, cash, online, udhar };
   }, [sales]);
 
-  // Combine and deduplicate activities from adminActivities, sales, purchases, damages (strictly within last 7 days)
+  // Combine and deduplicate activities from adminActivities, sales, purchases, damages (strictly within last 1 day / 24h)
   const allActivitiesStream = useMemo(() => {
-    const sevenDaysAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const oneDayAgoMs = Date.now() - 24 * 60 * 60 * 1000;
 
-    // Filter adminActivities to strictly within last 7 days
+    // Filter adminActivities to strictly within last 1 day (auto-removed on Day 2)
     const list: AdminActivity[] = adminActivities.filter(
-      a => new Date(a.created_at).getTime() >= sevenDaysAgoMs
+      a => new Date(a.created_at).getTime() >= oneDayAgoMs
     );
 
-    // Ensure every sale in sales list from the last 7 days is also represented in the stream
+    // Ensure every sale in sales list from the last 1 day is also represented in the stream
     sales.forEach(s => {
       const saleTime = new Date(s.created_at).getTime();
-      // Enforce 7-day retention: auto-exclude any sales older than 7 days from the audit stream
-      if (saleTime < sevenDaysAgoMs) return;
+      // Enforce 1-day retention: auto-exclude any sales older than 1 day from the audit stream
+      if (saleTime < oneDayAgoMs) return;
 
       const alreadyLogged = list.some(a => a.reference_id === s.invoice_no);
       if (!alreadyLogged) {
@@ -163,10 +163,10 @@ export const OwnerAdminCounterWidget: React.FC = () => {
       }
     });
 
-    // Ensure every purchase from the last 7 days is represented in the inventory stream
+    // Ensure every purchase from the last 1 day is represented in the inventory stream
     (purchases || []).forEach(p => {
       const purTime = new Date(p.created_at).getTime();
-      if (purTime < sevenDaysAgoMs) return;
+      if (purTime < oneDayAgoMs) return;
 
       const alreadyLogged = list.some(a => a.reference_id === p.id || (a.action_type === 'STOCK_INWARD' && a.title?.includes(p.product_name) && Math.abs(new Date(a.created_at).getTime() - purTime) < 5000));
       if (!alreadyLogged) {
@@ -187,10 +187,10 @@ export const OwnerAdminCounterWidget: React.FC = () => {
       }
     });
 
-    // Ensure every damage record from the last 7 days is represented in the inventory stream
+    // Ensure every damage record from the last 1 day is represented in the inventory stream
     (damages || []).forEach(d => {
       const dmgTime = new Date(d.created_at).getTime();
-      if (dmgTime < sevenDaysAgoMs) return;
+      if (dmgTime < oneDayAgoMs) return;
 
       const alreadyLogged = list.some(a => a.action_type === 'DAMAGE_RECORDED' && a.title?.includes(d.product_name) && Math.abs(new Date(a.created_at).getTime() - dmgTime) < 5000);
       if (!alreadyLogged) {
@@ -248,14 +248,14 @@ export const OwnerAdminCounterWidget: React.FC = () => {
     });
   }, [allActivitiesStream, activeTabFilter, searchQuery]);
 
-  // Granular sales list for the "काऊंटर विक्री तपशील" tab (strictly within last 7 days)
+  // Granular sales list for the "काऊंटर विक्री तपशील" tab (strictly within last 1 day / 24h)
   const itemizedSales = useMemo(() => {
-    const sevenDaysAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const oneDayAgoMs = Date.now() - 24 * 60 * 60 * 1000;
     return sales
       .filter(s => {
-        // Enforce 7-day retention: records older than 7 days are automatically excluded
+        // Enforce 1-day retention: records older than 1 day are automatically excluded
         const saleTime = new Date(s.created_at).getTime();
-        if (saleTime < sevenDaysAgoMs) return false;
+        if (saleTime < oneDayAgoMs) return false;
 
         if (!searchQuery.trim()) return true;
         const q = searchQuery.toLowerCase();
@@ -555,11 +555,11 @@ export const OwnerAdminCounterWidget: React.FC = () => {
               </h4>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/60 flex items-center gap-1 shrink-0">
                 <span>⏱️</span>
-                <span>{isMr ? '७ दिवस डेटा' : isHi ? '७ दिन डेटा' : '7-Day Retention'}</span>
+                <span>{isMr ? '१ दिवस डेटा' : isHi ? '१ दिन डेटा' : '1-Day Retention'}</span>
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-0.5">
-              {isMr ? 'निलेश सखारे व निखिल सखारे यांनी केलेल्या मागील ७ दिवसांमधील सर्व विक्री, साठा बदल, इन्व्हेंटरी अपडेट, खर्च व नुकसानीच्या थेट नोंदी.' : isHi ? 'निलेश सखारे और निखिल सखारे द्वारा पिछले ७ दिनों में की गई सभी बिक्री, स्टॉक अपडेट, इन्वेंट्री बदलाव और खर्च का ब्यौरा।' : 'Live 7-day activity stream of sales and inventory changes by Nilesh Sakhare and Nikhil Sakhare.'}
+              {isMr ? 'निलेश सखारे व निखिल सखारे यांनी केलेल्या मागील १ दिवसामधील (२४ तास) सर्व विक्री, साठा बदल, इन्व्हेंटरी अपडेट व नुकसानीच्या थेट नोंदी (दुसऱ्या दिवशी आपोआप हटवले जातात).' : isHi ? 'निलेश सखारे और निखिल सखारे द्वारा पिछले १ दिन (२४ घंटे) में की गई सभी बिक्री, स्टॉक अपडेट और इन्वेंट्री बदलाव (दूसरे दिन स्वतः हट जाते हैं)।' : 'Live 1-day activity stream of sales and inventory changes by Nilesh Sakhare and Nikhil Sakhare (auto-removed on Day 2).'}
             </p>
           </div>
 

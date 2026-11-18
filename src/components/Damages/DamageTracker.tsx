@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
+import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
 import { DamageReason } from '../../types';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import {
@@ -140,104 +141,65 @@ export const DamageTracker: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto pb-32 sm:pb-8">
+    <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-28 lg:pb-8">
+      {/* 1. Compact Header + More (⋮) Reports Sheet + Round Log Damage CTA */}
+      <CompactPageHeader
+        title={t('damageTitle')}
+        icon={<PackageX className="w-4 h-4 text-rose-600 dark:text-rose-400" />}
+        primaryAction={{
+          label: language === 'mr' ? 'नुकसान' : language === 'hi' ? 'नुकसान' : 'Log',
+          icon: <Plus className="w-4 h-4 stroke-[2.5]" />,
+          onClick: () => setIsModalOpen(true),
+          ariaLabel: 'Log damaged stock',
+          className: '!bg-rose-600 hover:!bg-rose-700'
+        }}
+        moreTitle={language === 'mr' ? 'नुकसान अहवाल' : language === 'hi' ? 'नुकसान रिपोर्ट' : 'Spoilage Reports'}
+        moreActions={[
+          {
+            id: 'view-pdf',
+            label: language === 'mr' ? 'अहवाल पहा (View PDF)' : language === 'hi' ? 'रिपोर्ट देखें (View PDF)' : 'View Damage PDF',
+            icon: <Eye className="w-4 h-4 text-rose-500" />,
+            onClick: handleViewDamagePDF
+          },
+          {
+            id: 'print',
+            label: language === 'mr' ? 'प्रिंट करा' : language === 'hi' ? 'प्रिंट करें' : 'Print Report',
+            icon: <Printer className="w-4 h-4 text-slate-500 dark:text-[#8FA69C]" />,
+            onClick: handlePrintDamagePDF
+          },
+          {
+            id: 'download-pdf',
+            label: language === 'mr' ? 'नुकसान PDF डाउनलोड' : language === 'hi' ? 'नुकसान PDF डाउनलोड' : 'Download PDF',
+            icon: <Download className="w-4 h-4" />,
+            onClick: handleDownloadDamagePDF,
+            tone: 'primary'
+          }
+        ]}
+      />
 
-      {/* 1. Compact Page Header */}
-      <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
-            <PackageX className="w-5 h-5 sm:w-6 sm:h-6 text-rose-600 dark:text-rose-400 shrink-0" />
-            <span className="truncate">{t('damageTitle')}</span>
-          </h2>
-          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 hidden sm:block truncate">
-            {language === 'mr'
-              ? 'नासलेले दूध, लिकेज, मुदत संपलेली उत्पादने व आर्थिक नुकसानीचा हिशोब'
-              : language === 'hi'
-                ? 'फटा दूध, पाउच लीकेज, दही की एक्सपायरी व नुकसान का वित्तीय हिसाब'
-                : 'Curdled milk, packet leakage, expired goods, and financial loss tracking'}
-          </p>
-        </div>
+      {/* 2. Slim 3-Stat Summary Strip */}
+      <CompactStatStrip
+        columns={3}
+        items={[
+          {
+            label: language === 'mr' ? 'एकूण नुकसान' : language === 'hi' ? 'कुल नुकसान' : 'Total Loss',
+            value: `₹${metrics.totalDamagesLoss.toLocaleString('en-IN')}`,
+            valueClassName: 'text-rose-600 dark:text-rose-400'
+          },
+          {
+            label: language === 'mr' ? 'घटना' : language === 'hi' ? 'घटनाएं' : 'Incidents',
+            value: `${filteredDamages.length}`
+          },
+          {
+            label: language === 'mr' ? 'नासाडी %' : language === 'hi' ? 'खराबी %' : 'Spoilage %',
+            value: `${((metrics.totalDamagesLoss / (metrics.totalPurchasesAmount || 1)) * 100).toFixed(1)}%`,
+            valueClassName: 'text-amber-600 dark:text-amber-400'
+          }
+        ]}
+      />
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="h-10 px-3.5 sm:px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center gap-1.5 shrink-0 min-h-[40px]"
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>{language === 'mr' ? '+ नुकसान नोंदवा' : language === 'hi' ? '+ नुकसान दर्ज करें' : '+ Log Damage'}</span>
-        </button>
-      </div>
-
-      {/* 2. Quick Actions Row (Horizontally Scrollable) */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x">
-        <button
-          onClick={handleViewDamagePDF}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title="View Spoilage & Loss Report PDF"
-        >
-          <Eye className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-          <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
-        </button>
-
-        <button
-          onClick={handlePrintDamagePDF}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title="Print Spoilage & Loss Report"
-        >
-          <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-          <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-        </button>
-
-        <button
-          onClick={handleDownloadDamagePDF}
-          className="h-10 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-xs min-h-[40px]"
-          title="Download Spoilage & Loss PDF Report"
-        >
-          <Download className="w-4 h-4" />
-          <span>{language === 'mr' ? 'नुकसान PDF' : language === 'hi' ? 'नुकसान PDF' : 'Download PDF'}</span>
-        </button>
-      </div>
-
-      {/* 3. Time Filter */}
+      {/* 3. Sticky Time Period Filter */}
       <PeriodFilter />
-
-      {/* 4. Balanced Summary KPI Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
-        <div className="col-span-2 sm:col-span-1 bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
-            {language === 'mr' ? 'एकूण नुकसान' : language === 'hi' ? 'कुल नुकसान' : 'Total Loss'}
-          </span>
-          <span className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-1 block tracking-tight">
-            ₹{metrics.totalDamagesLoss.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 truncate">
-            {language === 'mr' ? 'नफ्यामधून वजा' : language === 'hi' ? 'मुनाफे से घटाया' : 'Deducted from profit'}
-          </span>
-        </div>
-
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
-            {language === 'mr' ? 'नुकसान घटना' : language === 'hi' ? 'डैमेज घटनाएं' : 'Incidents'}
-          </span>
-          <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1 block tracking-tight">
-            {filteredDamages.length} {language === 'mr' ? 'वेळा' : language === 'hi' ? 'बार' : 'times'}
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 truncate">
-            {language === 'mr' ? 'एकूण नासाडी नोंदी' : language === 'hi' ? 'कुल खराबी प्रविष्टियां' : 'Logged entries'}
-          </span>
-        </div>
-
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
-            {language === 'mr' ? 'नासाडीचे प्रमाण' : language === 'hi' ? 'खराबी प्रतिशत' : 'Spoilage %'}
-          </span>
-          <span className="text-xl sm:text-2xl font-black text-amber-700 dark:text-amber-400 mt-1 block tracking-tight">
-            {((metrics.totalDamagesLoss / (metrics.totalPurchasesAmount || 1)) * 100).toFixed(1)}%
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 truncate">
-            {language === 'mr' ? 'खरेदीवर प्रमाण' : language === 'hi' ? 'खरीद पर' : 'on purchases'}
-          </span>
-        </div>
-      </div>
 
       {/* Damage History Table */}
       <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs overflow-hidden">

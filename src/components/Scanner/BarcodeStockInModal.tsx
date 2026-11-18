@@ -52,6 +52,7 @@ interface BarcodeStockInModalProps {
   onSuccess?: (product: Product, batchNo: string, qtyAdded: number) => void;
   initialBarcode?: string;
   initialProduct?: Product | null;
+  forceRegisterNew?: boolean;
 }
 
 export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
@@ -60,6 +61,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   onSuccess,
   initialBarcode,
   initialProduct,
+  forceRegisterNew = false,
 }) => {
   const { products, addProduct, addBatch } = useStore();
   const { language } = useLanguage();
@@ -87,13 +89,14 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   const [validationResult, setValidationResult] = useState<BarcodeValidationResult | null>(null);
   const [matchedSource, setMatchedSource] = useState<'product_barcodes' | 'products' | 'rpc' | 'local' | 'catalogue' | null>(null);
 
-  // Auto-search when user types complete barcode digits
+  // Auto-search when user types complete barcode digits on the scan step
   useEffect(() => {
+    if (step !== 'scan') return;
     const clean = barcodeInput.trim();
     if ((clean.length === 12 || clean.length === 13) && /^\d+$/.test(clean)) {
       lookupBarcode(clean);
     }
-  }, [barcodeInput]);
+  }, [barcodeInput, step]);
 
   // Matched / Selected Product
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -604,7 +607,8 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   };
 
   useEffect(() => {
-    if (isOpen && step === 'scan') {
+    const shouldSkipCamera = Boolean(initialProduct || (initialBarcode && forceRegisterNew));
+    if (isOpen && step === 'scan' && !shouldSkipCamera) {
       setShowOcrButton(true);
       const timer = setTimeout(() => {
         startCamera();
@@ -619,7 +623,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     return () => {
       stopCamera();
     };
-  }, [isOpen, step, facingMode]);
+  }, [isOpen, step, facingMode, initialProduct, initialBarcode, forceRegisterNew]);
 
   const handleBarcodeDetected = (code: string) => {
     const clean = code.trim();
@@ -687,14 +691,27 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       } else if (initialBarcode && initialBarcode.trim()) {
         const clean = initialBarcode.trim();
         setBarcodeInput(clean);
-        lookupBarcode(clean);
+        setValidationResult(validateBarcode(clean));
+        if (forceRegisterNew) {
+          // Redirected directly from top search scanner for an unknown barcode -> open New Product Name entry step immediately
+          stopCamera();
+          setMatchedSource(null);
+          setSelectedProduct(null);
+          setErrorMessage(null);
+          setNewProdName('');
+          setNewProdMarathiName('');
+          setBatchNo(generateBatchNumber());
+          setStep('register');
+        } else {
+          lookupBarcode(clean);
+        }
       } else {
         resetAll();
       }
     } else {
       stopCamera();
     }
-  }, [isOpen, initialProduct, initialBarcode]);
+  }, [isOpen, initialProduct, initialBarcode, forceRegisterNew]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

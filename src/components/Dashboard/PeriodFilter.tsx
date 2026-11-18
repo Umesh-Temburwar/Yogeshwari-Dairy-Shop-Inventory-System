@@ -13,33 +13,48 @@ export const PeriodFilter: React.FC = () => {
     { id: 'week', key: 'thisWeek' },
     { id: 'month', key: 'thisMonth' },
     { id: 'year', key: 'thisYear' },
-    { id: 'all', key: 'allTime' },
+    { id: 'all', key: 'allTime' }
   ];
 
   return (
-    <div className="sticky top-0 z-20 flex items-center justify-between gap-3 bg-white/95 dark:bg-[#131F1B]/95 backdrop-blur-md p-2 rounded-2xl border border-slate-200/80 dark:border-[#24352F] shadow-xs transition-colors duration-150">
-      <div className="hidden sm:flex items-center gap-2 px-2 text-slate-500 dark:text-[#8FA69C] text-xs font-semibold uppercase tracking-wider shrink-0">
-        <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-        <span>{t('timePeriodSelect')}</span>
-      </div>
+    <div className="sticky top-0 z-20 -mx-2.5 sm:-mx-6 px-2.5 sm:px-6 py-1.5 bg-[#f8fafc] dark:bg-[#0B1210] border-b border-slate-200/70 dark:border-[#1E2E28]">
+      <div className="flex items-center justify-between gap-2 max-w-7xl mx-auto">
+        <div className="hidden sm:flex items-center gap-1.5 text-slate-500 dark:text-[#8FA69C] text-[11px] font-bold uppercase tracking-wider shrink-0">
+          <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+          <span>{t('timePeriodSelect')}</span>
+        </div>
 
-      <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl w-full sm:w-auto overflow-x-auto no-scrollbar shrink-0 relative">
-        {options.map((opt) => {
-          const isActive = timeFilter === opt.id;
-          return (
-            <button
-              key={opt.id}
-              onClick={() => setTimeFilter(opt.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${
-                isActive
-                  ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 font-bold shadow-xs'
-                  : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-[#E7F0EC]'
-              }`}
-            >
-              {t(opt.key)}
-            </button>
-          );
-        })}
+        <div className="relative flex-1 sm:flex-initial min-w-0">
+          <div
+            role="tablist"
+            aria-label="Time period filter"
+            className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5"
+          >
+            {options.map((opt) => {
+              const isActive = timeFilter === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setTimeFilter(opt.id)}
+                  className={`snap-start shrink-0 h-8 px-3 rounded-full text-xs font-semibold border transition-colors duration-150 active:scale-[0.97] whitespace-nowrap cursor-pointer ${
+                    isActive
+                      ? 'bg-emerald-600 text-white border-emerald-600'
+                      : 'bg-white dark:bg-[#131F1B] text-slate-700 dark:text-[#C4D4CE] border-slate-200 dark:border-[#24352F] hover:border-emerald-500/50'
+                  }`}
+                >
+                  {t(opt.key)}
+                </button>
+              );
+            })}
+          </div>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0 top-0 bottom-0 w-7 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent sm:hidden"
+          />
+        </div>
       </div>
     </div>
   );

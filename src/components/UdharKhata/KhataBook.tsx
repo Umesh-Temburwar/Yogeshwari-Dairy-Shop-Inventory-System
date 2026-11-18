@@ -3,6 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { UdharCustomer } from '../../types';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
+import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
 import {
   BookOpen,
   Search,
@@ -255,141 +256,125 @@ export const KhataBook: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto pb-32 sm:pb-8">
+    <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-28 lg:pb-8">
+      {/* 1. Compact Header + More (⋮) Exports Sheet + Round Add Customer CTA */}
+      <CompactPageHeader
+        title={t('khataTitle')}
+        icon={<BookOpen className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />}
+        primaryAction={{
+          label: language === 'mr' ? 'ग्राहक' : language === 'hi' ? 'ग्राहक' : 'Add',
+          icon: <UserPlus className="w-4 h-4 stroke-[2.5]" />,
+          onClick: () => setIsAddCustModalOpen(true),
+          ariaLabel: 'Add new customer'
+        }}
+        moreTitle={language === 'mr' ? 'खातेवही अहवाल' : language === 'hi' ? 'खाता-बही रिपोर्ट' : 'Khata Reports'}
+        moreActions={[
+          {
+            id: 'view-pdf',
+            label: language === 'mr' ? 'अहवाल पहा (View PDF)' : language === 'hi' ? 'रिपोर्ट देखें (View PDF)' : 'View Khata PDF',
+            icon: <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
+            onClick: handleViewKhataBookPDF
+          },
+          {
+            id: 'print',
+            label: language === 'mr' ? 'प्रिंट करा' : language === 'hi' ? 'प्रिंट करें' : 'Print Report',
+            icon: <Printer className="w-4 h-4 text-slate-500 dark:text-[#8FA69C]" />,
+            onClick: handlePrintKhataBookPDF
+          },
+          {
+            id: 'download-pdf',
+            label: language === 'mr' ? 'खातेवही PDF डाउनलोड' : language === 'hi' ? 'खाता-बही PDF डाउनलोड' : 'Download PDF',
+            icon: <Download className="w-4 h-4" />,
+            onClick: handleDownloadKhataBookPDF,
+            tone: 'primary'
+          }
+        ]}
+      />
 
-      {/* 1. Compact Page Header */}
-      <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
-            <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span className="truncate">{t('khataTitle')}</span>
-          </h2>
-          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 hidden sm:block truncate">
-            {language === 'mr'
-              ? 'नियमित ग्राहक, मिठाईवाले आणि हॉटेलांचे उधारी व जमा खातेवही'
-              : language === 'hi'
-                ? 'नियमित ग्राहकों, हलवाइयों व होटलों का उधारी व जमा हिसाब-किताब'
-                : 'Customer credit ledger for retail clients, halwais, and hotels'}
-          </p>
-        </div>
+      {/* 2. Slim 3-Stat Summary Strip */}
+      <CompactStatStrip
+        columns={3}
+        items={[
+          {
+            label: language === 'mr' ? 'येणे बाकी' : language === 'hi' ? 'बकाया' : 'Due',
+            value: `₹${metrics.totalOutstandingUdhar.toLocaleString('en-IN')}`,
+            valueClassName: 'text-amber-600 dark:text-amber-400',
+            onClick: () => setFilterStatus('pending')
+          },
+          {
+            label: language === 'mr' ? 'एकूण उधारी' : language === 'hi' ? 'कुल उधारी' : 'Given',
+            value: `₹${customers.reduce((acc, c) => acc + c.total_credit, 0).toLocaleString('en-IN')}`
+          },
+          {
+            label: language === 'mr' ? 'वसुली जमा' : language === 'hi' ? 'वसूली' : 'Recovered',
+            value: `₹${customers.reduce((acc, c) => acc + c.total_paid, 0).toLocaleString('en-IN')}`,
+            valueClassName: 'text-emerald-700 dark:text-emerald-400',
+            onClick: () => setFilterStatus('cleared')
+          }
+        ]}
+      />
 
-        <button
-          onClick={() => setIsAddCustModalOpen(true)}
-          className="h-10 px-3.5 sm:px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center gap-1.5 shrink-0 min-h-[40px]"
-          title={language === 'mr' ? 'नवीन ग्राहक खाते जोडा' : language === 'hi' ? 'नया खाता खोलें' : 'Add New Customer'}
-        >
-          <UserPlus className="w-4 h-4 stroke-[2.5]" />
-          <span>{language === 'mr' ? '+ नवीन ग्राहक' : language === 'hi' ? '+ नया ग्राहक' : '+ New Customer'}</span>
-        </button>
-      </div>
-
-      {/* 2. Quick Actions Row (Horizontally Scrollable) */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x">
-        <button
-          onClick={handleViewKhataBookPDF}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title="View Udhar Khata Book PDF Report"
-        >
-          <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-          <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
-        </button>
-
-        <button
-          onClick={handlePrintKhataBookPDF}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title="Print Udhar Khata Book Report"
-        >
-          <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-          <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-        </button>
-
-        <button
-          onClick={handleDownloadKhataBookPDF}
-          className="h-10 px-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-xs min-h-[40px]"
-          title="Download Udhar Khata Book PDF Report"
-        >
-          <Download className="w-4 h-4" />
-          <span>{language === 'mr' ? 'खातेवही PDF' : language === 'hi' ? 'खाता-बही PDF' : 'Download PDF'}</span>
-        </button>
-      </div>
-
-      {/* 3. Balanced Summary KPI Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
-        <div className="col-span-2 sm:col-span-1 bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-amber-200/90 dark:border-amber-900/40 shadow-xs flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs font-semibold text-amber-800 dark:text-amber-400 block truncate">
-            {t('totalUdharDue')}
-          </span>
-          <span className="text-xl sm:text-2xl font-black text-amber-700 dark:text-amber-400 mt-1 block tracking-tight">
-            ₹{metrics.totalOutstandingUdhar.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 truncate">
-            {customers.filter(c => c.current_balance > 0).length} {language === 'mr' ? 'ग्राहकांकडून येणे बाकी' : language === 'hi' ? 'ग्राहकों से बकाया' : 'customers with dues'}
-          </span>
-        </div>
-
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
-            {language === 'mr' ? 'एकूण उधारी' : language === 'hi' ? 'कुल उधारी' : 'Credit Given'}
-          </span>
-          <span className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white mt-1 block tracking-tight">
-            ₹{customers.reduce((acc, c) => acc + c.total_credit, 0).toLocaleString('en-IN')}
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 truncate">
-            {language === 'mr' ? 'एकूण दिलेली' : language === 'hi' ? 'दी गई उधारी' : 'Total extended'}
-          </span>
-        </div>
-
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
-            {language === 'mr' ? 'एकूण वसुली' : language === 'hi' ? 'कुल जमा (वसूली)' : 'Total Recovered'}
-          </span>
-          <span className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1 block tracking-tight">
-            ₹{customers.reduce((acc, c) => acc + c.total_paid, 0).toLocaleString('en-IN')}
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 truncate">
-            {language === 'mr' ? 'जमा झालेली' : language === 'hi' ? 'प्राप्त रकम' : 'Successfully received'}
-          </span>
-        </div>
-      </div>
-
-      {/* 4. Search & Filter Controls */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+      {/* 3. Sticky Search + One-Row Snap Filter Chips with Scroll Fade */}
+      <div className="sticky top-0 z-20 -mx-2.5 sm:-mx-6 px-2.5 sm:px-6 pt-1 pb-2 bg-[#f8fafc] dark:bg-[#0B1210] border-b border-slate-200/70 dark:border-[#1E2E28] space-y-1.5">
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />
           <input
             type="text"
-            placeholder={language === 'mr' ? 'ग्राहकाचे नाव किंवा मोबाईल क्रमांक शोधा...' : language === 'hi' ? 'ग्राहक का नाम या मोबाइल नंबर खोजें...' : 'Search customer by name or phone...'}
+            placeholder={language === 'mr' ? 'ग्राहकाचे नाव किंवा मोबाईल नंबर शोधा...' : language === 'hi' ? 'ग्राहक का नाम या मोबाइल नंबर खोजें...' : 'Search customer by name or phone...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+            aria-label="Search customer"
+            className="w-full h-10 pl-9 pr-9 rounded-xl border border-slate-300/90 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
-        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl shrink-0 overflow-x-auto no-scrollbar">
-          <button
-            onClick={() => setFilterStatus('pending')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap min-h-[36px] flex items-center justify-center ${
-              filterStatus === 'pending' ? 'bg-amber-600 text-white font-bold shadow-xs' : 'text-slate-600 dark:text-[#8FA69C]'
-            }`}
-          >
-            {t('debtorsOnly')} ({customers.filter(c => c.current_balance > 0).length})
-          </button>
-          <button
-            onClick={() => setFilterStatus('cleared')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap min-h-[36px] flex items-center justify-center ${
-              filterStatus === 'cleared' ? 'bg-emerald-600 text-white font-bold shadow-xs' : 'text-slate-600 dark:text-[#8FA69C]'
-            }`}
-          >
-            {t('clearedAccounts')} ({customers.filter(c => c.current_balance <= 0).length})
-          </button>
-          <button
-            onClick={() => setFilterStatus('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap min-h-[36px] flex items-center justify-center ${
-              filterStatus === 'all' ? 'bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white shadow-xs font-bold border border-slate-200 dark:border-[#24352F]' : 'text-slate-600 dark:text-[#8FA69C]'
-            }`}
-          >
-            {t('allAccounts')} ({customers.length})
-          </button>
+        <div className="relative">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5">
+            {(
+              [
+                { id: 'pending' as const, label: t('debtorsOnly'), count: customers.filter(c => c.current_balance > 0).length },
+                { id: 'cleared' as const, label: t('clearedAccounts'), count: customers.filter(c => c.current_balance <= 0).length },
+                { id: 'all' as const, label: language === 'mr' ? 'सर्व खाती' : language === 'hi' ? 'सभी खाते' : 'All Accounts', count: customers.length }
+              ]
+            ).map((chip) => {
+              const active = filterStatus === chip.id;
+              return (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => setFilterStatus(chip.id)}
+                  className={`snap-start shrink-0 h-8 px-3 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 border transition-colors active:scale-[0.97] cursor-pointer ${
+                    active
+                      ? 'bg-emerald-600 text-white border-emerald-600'
+                      : 'bg-white dark:bg-[#131F1B] text-slate-700 dark:text-[#C4D4CE] border-slate-200 dark:border-[#24352F]'
+                  }`}
+                >
+                  <span>{chip.label}</span>
+                  <span
+                    className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                      active ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-[#1E2E28] text-slate-600 dark:text-[#8FA69C]'
+                    }`}
+                  >
+                    {chip.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0 top-0 bottom-0 w-7 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"
+          />
         </div>
       </div>
 

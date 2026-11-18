@@ -752,21 +752,21 @@ export const BillingCounter: React.FC = () => {
       </div>
 
       {/* Active Counter & Operator Badge Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl bg-gradient-to-r from-slate-50 via-emerald-50/40 to-teal-50/30 dark:from-[#131F1B] dark:via-[#16221E] dark:to-[#1A2A25] border border-slate-200/90 dark:border-[#24352F] text-xs mb-3 shadow-2xs">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-          <span className="font-semibold text-slate-600 dark:text-[#8FA69C]">
-            {language === 'mr' ? 'सक्रिय बिलिंग काऊंटर:' : language === 'hi' ? 'सक्रिय बिलिंग काउंटर:' : 'Active Billing Counter:'}
+      <div className="flex flex-wrap items-center justify-between gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/90 dark:border-[#24352F] text-xs mb-2.5 shadow-2xs">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+          <span className="font-semibold text-slate-600 dark:text-[#8FA69C] hidden sm:inline">
+            {language === 'mr' ? 'सक्रिय काऊंटर:' : language === 'hi' ? 'सक्रिय काउंटर:' : 'Counter:'}
           </span>
-          <span className="font-bold text-slate-900 dark:text-white px-2.5 py-0.5 rounded-lg bg-white dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] shadow-2xs">
+          <span className="font-bold text-slate-900 dark:text-white px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-[11px]">
             📍 {activeOperator.counter}
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-slate-600 dark:text-[#8FA69C]">
-            {language === 'mr' ? 'ऑपरेटर:' : language === 'hi' ? 'ऑपरेटर:' : 'Billing Operator:'}
+        <div className="flex items-center gap-1.5">
+          <span className="font-semibold text-slate-600 dark:text-[#8FA69C] hidden sm:inline">
+            {language === 'mr' ? 'ऑपरेटर:' : language === 'hi' ? 'ऑपरेटर:' : 'Operator:'}
           </span>
-          <span className={`inline-flex items-center gap-1.5 font-bold px-2.5 py-0.5 rounded-lg shadow-2xs ${
+          <span className={`inline-flex items-center gap-1.5 font-bold px-2 py-0.5 rounded-lg text-[11px] ${
             activeOperator.slot === 1 
               ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200 dark:border-blue-900/40' 
               : activeOperator.slot === 2 
@@ -784,16 +784,16 @@ export const BillingCounter: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:min-h-[calc(100vh-8rem)]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 lg:min-h-[calc(100vh-8rem)]">
         
         {/* LEFT COLUMN: Product Catalog & Fast Selection */}
-        <div className={`lg:col-span-7 flex flex-col space-y-3 sm:space-y-4 ${mobileTab === 'cart' ? 'hidden lg:flex' : 'flex'}`}>
+        <div className={`lg:col-span-7 flex flex-col space-y-2.5 sm:space-y-3 ${mobileTab === 'cart' ? 'hidden lg:flex' : 'flex'}`}>
         
-        {/* Search & Category Filter Pills */}
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-3 transition-colors">
-          <div className="flex items-center gap-2">
+        {/* Sticky Search & Category Filter Pills */}
+        <div className="sticky top-0 z-20 -mx-3 px-3 pt-1.5 pb-2 bg-[#f8fafc] dark:bg-[#0B1210] border-b border-slate-200/70 dark:border-[#1E2E28] lg:static lg:mx-0 lg:bg-white lg:dark:bg-[#131F1B] lg:p-3.5 lg:rounded-2xl lg:border lg:border-slate-200/90 lg:dark:border-[#24352F] lg:shadow-xs space-y-2 transition-colors">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <div className="relative flex-1 min-w-0">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />
               <input
                 type="text"
                 placeholder={t('searchPlaceholder')}
@@ -811,12 +811,14 @@ export const BillingCounter: React.FC = () => {
                     }
                   }
                 }}
-                className="w-full h-11 pl-9 pr-8 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm font-semibold"
+                className="w-full h-10 pl-9 pr-8 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] lg:dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] focus:outline-none focus:ring-2 focus:ring-emerald-500/70 focus:border-transparent text-xs sm:text-sm font-medium"
               />
               {searchQuery && (
                 <button 
+                  type="button"
                   onClick={() => setSearchQuery('')}
-                  className="w-8 h-8 absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white"
+                  aria-label="Clear search"
+                  className="w-7 h-7 absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -826,12 +828,12 @@ export const BillingCounter: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowBarcodeScanner(true)}
-              className="w-11 sm:w-auto h-11 px-0 sm:px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 text-xs font-black shadow-md shadow-emerald-600/30 active:scale-95 transition-all shrink-0 cursor-pointer"
+              aria-label="Camera Barcode Scanner"
+              className="w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs active:scale-[0.97] transition-all shrink-0 cursor-pointer"
               title="Camera Barcode Scanner"
             >
-              <Barcode className="w-5 h-5 text-white" />
-              <span className="hidden sm:inline">{language === 'mr' ? 'बारकोड स्कॅन' : 'बारकोड स्कैन'}</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping hidden sm:inline-block" />
+              <Barcode className="w-4 h-4 text-white" />
+              <span className="hidden sm:inline">{language === 'mr' ? 'स्कॅन' : 'स्कैन'}</span>
             </button>
 
             {isMobileDevice() && (
@@ -841,16 +843,17 @@ export const BillingCounter: React.FC = () => {
                   await requestMotionPermission();
                   setShakeToScanEnabled(!shakeToScanEnabled);
                 }}
-                className={`w-11 sm:w-auto h-11 px-0 sm:px-3 rounded-xl border text-xs font-black flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs shrink-0 cursor-pointer ${
+                aria-label="Toggle Shake to Scan"
+                className={`w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-[0.97] shrink-0 cursor-pointer ${
                   shakeToScanEnabled
                     ? 'bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-400'
-                    : 'bg-slate-100 dark:bg-[#1A2A25] border-slate-200 dark:border-[#24352F] text-slate-500 dark:text-slate-400'
+                    : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-500 dark:text-slate-400'
                 }`}
                 title={language === 'mr' ? 'फोन हलवून स्कॅन (Global Shake to Scan)' : 'फोन हिलाकर स्कैन (Global Shake to Scan)'}
               >
-                <Smartphone className={`w-4 h-4 ${shakeToScanEnabled ? 'animate-bounce text-amber-500' : ''}`} />
+                <Smartphone className={`w-4 h-4 ${shakeToScanEnabled ? 'text-amber-500' : ''}`} />
                 <span className="hidden sm:inline">
-                  {language === 'mr' ? 'शेक स्कॅन' : 'शेक स्कैन'}: {shakeToScanEnabled ? 'चालू' : 'बंद'}
+                  {language === 'mr' ? 'शेक' : 'शेक'}: {shakeToScanEnabled ? 'चालू' : 'बंद'}
                 </span>
               </button>
             )}
@@ -858,7 +861,8 @@ export const BillingCounter: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveView('returns')}
-              className="w-11 sm:w-auto h-11 px-0 sm:px-3 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800/40 text-purple-700 dark:text-purple-300 flex items-center justify-center gap-1.5 text-xs font-bold shrink-0 transition shadow-2xs active:scale-95"
+              aria-label="Customer Returns"
+              className="w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800/40 text-purple-700 dark:text-purple-300 flex items-center justify-center gap-1.5 text-xs font-bold shrink-0 transition active:scale-[0.97]"
               title="माल परतावा (Customer Returns)"
             >
               <RotateCcw className="w-4 h-4 text-purple-600 dark:text-purple-400" />
@@ -866,20 +870,27 @@ export const BillingCounter: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`h-9 px-3 rounded-xl text-xs font-semibold whitespace-nowrap transition-all min-h-[36px] flex items-center justify-center ${
-                  selectedCategory === cat.id
-                    ? 'bg-emerald-600 text-white shadow-xs font-bold'
-                    : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#223630]'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+          <div className="relative">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5">
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`h-8 px-3 rounded-full border text-xs font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0 snap-start transition-all duration-150 active:scale-[0.97] ${
+                    selectedCategory === cat.id
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                      : 'bg-white dark:bg-[#131F1B] lg:bg-slate-50 lg:dark:bg-[#1A2A25] border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#A3B8AF] hover:border-slate-300 dark:hover:border-[#324A42]'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] lg:from-white lg:dark:from-[#131F1B] to-transparent"
+            />
           </div>
         </div>
 

@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { formatSaleDateTime, formatSaleDate, formatSaleTime } from '../../lib/dateUtils';
 import { ReturnProductModal } from '../Returns/ReturnProductModal';
+import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { CustomerGender, CustomerAgeGroup, PaymentMode, SaleItem } from '../../types';
 
@@ -290,133 +291,78 @@ export const DailySalesTracker: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto pb-32 sm:pb-8">
-      
-      {/* 1. Compact Page Header */}
-      <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
-            <ReceiptIndianRupee className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span className="truncate">
-              {language === 'mr' ? 'दैनिक विक्री व लेजर' : language === 'hi' ? 'दैनिक बिक्री व लेजर' : 'Daily Sales Ledger'}
-            </span>
-          </h2>
-          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 hidden sm:block truncate">
-            {language === 'mr' 
-              ? 'किती माल गेला, काय गेला, रोख किती आली आणि ऑनलाईन UPI किती आले याचा हिशोब' 
-              : language === 'hi'
-              ? 'कितना माल बिका, क्या बिका, कैश कितना आया और ऑनलाइन UPI कितना आया'
-              : 'Detailed tracking of items sold, cash inflow, and online UPI collections'}
-          </p>
-        </div>
+    <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-28 lg:pb-8">
+      {/* 1. Compact Header + More (⋮) Exports Sheet + Round New Bill CTA */}
+      <CompactPageHeader
+        title={language === 'mr' ? 'दैनिक विक्री व लेजर' : language === 'hi' ? 'दैनिक बिक्री व लेजर' : 'Daily Sales'}
+        icon={<ReceiptIndianRupee className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />}
+        primaryAction={{
+          label: language === 'mr' ? 'नवीन बिल' : language === 'hi' ? 'नया बिल' : 'New Bill',
+          icon: <Plus className="w-4 h-4 stroke-[2.5]" />,
+          onClick: () => setActiveView('pos'),
+          ariaLabel: 'New Bill in POS'
+        }}
+        moreTitle={language === 'mr' ? 'विक्री अहवाल व निर्यात' : language === 'hi' ? 'बिक्री रिपोर्ट व निर्यात' : 'Sales Reports & Export'}
+        moreActions={[
+          {
+            id: 'view-pdf',
+            label: language === 'mr' ? 'अहवाल पहा (View PDF)' : language === 'hi' ? 'रिपोर्ट देखें (View PDF)' : 'View Sales PDF',
+            icon: <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
+            onClick: handleViewSalesPDF
+          },
+          {
+            id: 'print',
+            label: language === 'mr' ? 'प्रिंट करा' : language === 'hi' ? 'प्रिंट करें' : 'Print Report',
+            icon: <Printer className="w-4 h-4 text-slate-500 dark:text-[#8FA69C]" />,
+            onClick: handlePrintSalesPDF
+          },
+          {
+            id: 'csv',
+            label: 'Export CSV / Excel',
+            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
+            onClick: () => exportSalesToCSV(filteredSales, language)
+          },
+          {
+            id: 'download-pdf',
+            label: language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF',
+            icon: <Download className="w-4 h-4" />,
+            onClick: handleDownloadSalesPDF,
+            tone: 'primary'
+          }
+        ]}
+      />
 
-        <button
-          onClick={() => setActiveView('billing')}
-          className="h-10 px-3.5 sm:px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center gap-1.5 shrink-0 min-h-[40px]"
-          title={language === 'mr' ? 'नवीन बिल बनवा' : language === 'hi' ? 'नया बिल बनाएं' : 'New Bill (POS)'}
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>{language === 'mr' ? '+ नवीन बिल' : language === 'hi' ? '+ नया बिल' : '+ New Bill'}</span>
-        </button>
-      </div>
+      {/* 2. Slim 4-Stat Summary Strip */}
+      <CompactStatStrip
+        columns={4}
+        items={[
+          {
+            label: t('totalSales'),
+            value: `₹${filteredKpis.totalRevenue.toLocaleString('en-IN')}`,
+            sublabel: `${filteredKpis.billCount} ${language === 'mr' ? 'बिले' : language === 'hi' ? 'बिल' : 'bills'}`
+          },
+          {
+            label: t('cashCollected'),
+            value: `₹${filteredKpis.cashInflow.toLocaleString('en-IN')}`,
+            valueClassName: 'text-emerald-700 dark:text-emerald-400'
+          },
+          {
+            label: t('onlineCollected'),
+            value: `₹${filteredKpis.onlineInflow.toLocaleString('en-IN')}`,
+            valueClassName: 'text-sky-700 dark:text-sky-400'
+          },
+          {
+            label: t('udharPay'),
+            value: `₹${filteredKpis.udharGiven.toLocaleString('en-IN')}`,
+            valueClassName: 'text-amber-700 dark:text-amber-400'
+          }
+        ]}
+      />
 
-      {/* 2. Quick Actions Row (Horizontally Scrollable) */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x">
-        <button
-          onClick={handleViewSalesPDF}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View Sales PDF'}
-        >
-          <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
-        </button>
-
-        <button
-          onClick={handlePrintSalesPDF}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title={language === 'mr' ? 'अहवाल थेट प्रिंट करा' : language === 'hi' ? 'रिपोर्ट प्रिंट करें' : 'Print Sales Report'}
-        >
-          <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-          <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-        </button>
-
-        <button
-          onClick={() => exportSalesToCSV(filteredSales, language as any)}
-          className="h-10 px-3.5 rounded-xl border border-teal-200 dark:border-teal-800/40 bg-teal-50 dark:bg-teal-950/30 hover:bg-teal-100 dark:hover:bg-teal-900/40 text-teal-800 dark:text-teal-300 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title={language === 'mr' ? 'अहवाल Excel/CSV डाउनलोड करा' : 'Download Sales CSV / Excel'}
-        >
-          <FileSpreadsheet className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-          <span>CSV / Excel</span>
-        </button>
-
-        <button
-          onClick={handleDownloadSalesPDF}
-          className="h-10 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-xs min-h-[40px]"
-          title={language === 'mr' ? 'अहवाल PDF फाईल डाउनलोड करा' : language === 'hi' ? 'रिपोर्ट PDF डाउनलोड करें' : 'Download Sales PDF'}
-        >
-          <Download className="w-4 h-4" />
-          <span>{language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
-        </button>
-      </div>
-
-      {/* 3. Time Filter */}
+      {/* 3. Sticky Time Period Filter */}
       <PeriodFilter />
 
-      {/* 4. Equal-Size 2x2 Summary KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
-            {t('totalSales')}
-          </span>
-          <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1 block tracking-tight">
-            ₹{filteredKpis.totalRevenue.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 truncate">
-            {filteredKpis.billCount} {language === 'mr' ? 'बिले फाडली' : language === 'hi' ? 'बिल काटे गए' : 'invoices'}
-          </span>
-        </div>
-
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex flex-col justify-between">
-          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-blue-700 dark:text-blue-400 truncate">
-            <Banknote className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-            <span className="truncate">{t('cashCollected')}</span>
-          </div>
-          <span className="text-xl sm:text-2xl font-black text-blue-900 dark:text-blue-200 mt-1 block tracking-tight">
-            ₹{filteredKpis.cashInflow.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-0.5 truncate">
-            {language === 'mr' ? 'गल्ल्यातील रोख' : language === 'hi' ? 'रोकड़ गल्ला' : 'Cash Inflow'}
-          </span>
-        </div>
-
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex flex-col justify-between">
-          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-purple-700 dark:text-purple-400 truncate">
-            <Smartphone className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-            <span className="truncate">{t('onlineCollected')}</span>
-          </div>
-          <span className="text-xl sm:text-2xl font-black text-purple-900 dark:text-purple-200 mt-1 block tracking-tight">
-            ₹{filteredKpis.onlineInflow.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-purple-600 dark:text-purple-400 font-medium mt-0.5 truncate">
-            UPI, QR, Cards
-          </span>
-        </div>
-
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex flex-col justify-between">
-          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-orange-700 dark:text-amber-400 truncate">
-            <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-            <span className="truncate">{language === 'mr' ? 'उधार माल' : language === 'hi' ? 'उधार दिया' : 'Credit Given'}</span>
-          </div>
-          <span className="text-xl sm:text-2xl font-black text-orange-900 dark:text-amber-200 mt-1 block tracking-tight">
-            ₹{filteredKpis.udharGiven.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-orange-600 dark:text-amber-400 font-medium mt-0.5 truncate">
-            {language === 'mr' ? 'खात्यावर नोंद' : language === 'hi' ? 'खाते में दर्ज' : 'Recorded in Khata'}
-          </span>
-        </div>
-      </div>
-
-      {/* 5. Search & Mode + Demographic Filters */}
+      {/* 4. Search & Mode + Demographic Filters */}
       <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-3 transition-colors">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <div className="relative flex-1">

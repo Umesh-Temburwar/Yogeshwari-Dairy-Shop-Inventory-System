@@ -15,6 +15,7 @@ import {
 import { getShelfLifeDays, getSuggestedExpiryDate, generateBatchNumber, computeExpiryStatus } from '../lib/shelfLifeUtils';
 import { supabase, getSupabaseConfig, generateUUID } from '../lib/supabase';
 import { realtimeManager } from '../services/realtime/realtimeManager';
+import { useAuth } from './AuthContext';
 import { startOfDay, startOfWeek, startOfMonth, startOfYear, isWithinInterval, parseISO } from 'date-fns';
 
 export type AppView = 
@@ -311,6 +312,7 @@ const getInitialAppView = (): AppView => {
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user: authUser, isLoading: isAuthLoading } = useAuth();
   const [activeView, setActiveViewState] = useState<AppView>(getInitialAppView);
 
   const setActiveView = useCallback((newView: AppView, pushHistory = true) => {
@@ -524,7 +526,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!saved) return [];
     try {
       const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) ? parsed : [];
+      if (!Array.isArray(parsed)) return [];
+      const oneDayAgoMs = Date.now() - 24 * 60 * 60 * 1000;
+      return parsed.filter((a: AdminActivity) => new Date(a.created_at).getTime() >= oneDayAgoMs);
     } catch {
       return [];
     }
@@ -808,15 +812,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setUdharTransactions(utData);
       }
 
-      // 11. Purge & Fetch admin audit logs (Strict 7-Day Retention: auto-deleted on 8th day)
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      // 11. Purge & Fetch admin audit logs (Strict 1-Day Retention: auto-deleted on Day 2)
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
       try {
-        // Automatically purge records older than 7 days from Supabase
+        // Automatically purge records older than 1 day (24h) from Supabase
         await supabase
           .from('admin_audit_logs')
           .delete()
-          .lt('created_at', sevenDaysAgo);
+          .lt('created_at', oneDayAgo);
       } catch (purgeErr) {
         console.warn('Auto-purge expired audit logs notice:', purgeErr);
       }
@@ -824,7 +828,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const { data: auditData, error: auditErr } = await supabase
         .from('admin_audit_logs')
         .select('*')
-        .gte('created_at', sevenDaysAgo)
+        .gte('created_at', oneDayAgo)
         .order('created_at', { ascending: false })
         .limit(500);
 
@@ -841,8 +845,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   // Central Realtime Synchronization Layer (Ref-Counted & Leak-Proof)
+  // Waits for AuthContext initial session restoration/recovery so REST & Realtime never race token refresh
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase || isAuthLoading || !authUser) return;
 
     // 1. Initial database hydration on mount
     syncWithSupabase();
@@ -1021,7 +1026,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       signalUnsub();
       if (countThrottleRef.current) clearTimeout(countThrottleRef.current);
     };
-  }, [syncWithSupabase, refreshInventoryCounts, scheduleCountsRefresh]);
+  }, [isAuthLoading, authUser?.id, syncWithSupabase, refreshInventoryCounts, scheduleCountsRefresh]);
 
   const refreshData = async () => {
     setIsSyncing(true);
@@ -1259,8 +1264,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       created_at: new Date().toISOString()
     };
 
-    const sevenDaysAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    setAdminActivities(prev => [newActivity, ...prev].filter(a => new Date(a.created_at).getTime() >= sevenDaysAgoMs));
+    const oneDayAgoMs = Date.now() - 24 * 60 * 60 * 1000;
+    setAdminActivities(prev => [newActivity, ...prev].filter(a => new Date(a.created_at).getTime() >= oneDayAgoMs));
 
     if (supabase) {
       try {
@@ -1281,13 +1286,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }]);
         broadcastMutation('audit', 'log');
 
-        // Opportunistic background auto-purge of expired logs (> 7 days)
+        // Opportunistic background auto-purge of expired logs (> 1 day / Day 2)
         void (async () => {
           try {
             await supabase
               .from('admin_audit_logs')
               .delete()
-              .lt('created_at', new Date(sevenDaysAgoMs).toISOString());
+              .lt('created_at', new Date(oneDayAgoMs).toISOString());
           } catch {
             // non-blocking background cleanup
           }

@@ -112,6 +112,8 @@ export const ProductList: React.FC<ProductListProps> = ({
   const [selectedProductForStockIn, setSelectedProductForStockIn] = useState<Product | null>(null);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [showBarcodeStockIn, setShowBarcodeStockIn] = useState(false);
+  const [pendingNewBarcode, setPendingNewBarcode] = useState<string | undefined>(undefined);
+  const [forceRegisterNewBarcode, setForceRegisterNewBarcode] = useState(false);
   const [showImageManager, setShowImageManager] = useState(false);
   const [previewImageProduct, setPreviewImageProduct] = useState<Product | null>(null);
 
@@ -1035,7 +1037,27 @@ export const ProductList: React.FC<ProductListProps> = ({
           <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-1 mb-4 max-w-xs">
             Try clearing your search or filters, or add a new product to your shop inventory.
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {/^\d{5,}$/.test(searchQuery.trim()) && !isSearchingOnline && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPendingNewBarcode(searchQuery.trim());
+                  setForceRegisterNewBarcode(true);
+                  setShowBarcodeStockIn(true);
+                }}
+                className="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5 transition active:scale-[0.97] cursor-pointer shadow-xs"
+              >
+                <Barcode className="w-4 h-4" />
+                <span>
+                  {language === 'mr'
+                    ? 'नवीन बारकोड नोंदवा'
+                    : language === 'hi'
+                    ? 'नया बारकोड दर्ज करें'
+                    : 'Register New Barcode'}
+                </span>
+              </button>
+            )}
             {(searchQuery || hasSecondaryFilters || activeTab !== 'IN_STOCK') && (
               <button
                 type="button"
@@ -1349,12 +1371,26 @@ export const ProductList: React.FC<ProductListProps> = ({
         mode="lookup"
         onProductSelected={(prod) => setSelectedProductForStockIn(prod)}
         onBarcodeScanned={(code) => setSearchQuery(code)}
+        onBarcodeNotFound={(code) => {
+          setSearchQuery(code);
+          setPendingNewBarcode(code);
+          setForceRegisterNewBarcode(true);
+          setShowBarcodeScanner(false);
+          setShowBarcodeStockIn(true);
+        }}
       />
 
       <BarcodeStockInModal
         isOpen={showBarcodeStockIn}
-        onClose={() => setShowBarcodeStockIn(false)}
-        initialBarcode={/^\d{5,}$/.test(searchQuery.trim()) ? searchQuery.trim() : undefined}
+        onClose={() => {
+          setShowBarcodeStockIn(false);
+          setPendingNewBarcode(undefined);
+          setForceRegisterNewBarcode(false);
+        }}
+        initialBarcode={
+          pendingNewBarcode || (/^\d{5,}$/.test(searchQuery.trim()) ? searchQuery.trim() : undefined)
+        }
+        forceRegisterNew={forceRegisterNewBarcode}
       />
 
       <ProductImageManagerModal

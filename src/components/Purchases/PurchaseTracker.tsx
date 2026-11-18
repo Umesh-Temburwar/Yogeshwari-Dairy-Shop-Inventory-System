@@ -27,6 +27,7 @@ import {
   Eye
 } from 'lucide-react';
 import { SupplierReturnModal } from '../Returns/SupplierReturnModal';
+import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
 
 export const PurchaseTracker: React.FC = () => {
   const { products, filteredPurchases, createPurchase, metrics } = useStore();
@@ -225,128 +226,81 @@ export const PurchaseTracker: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto pb-32 sm:pb-8">
-      
-      {/* 1. Compact Page Header */}
-      <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
-            <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600 dark:text-sky-400 shrink-0" />
-            <span className="truncate">
-              {language === 'mr' ? 'दूध व माल खरेदी (Purchases)' : language === 'hi' ? 'दुकान माल खरीद (Purchases)' : 'Purchases & Suppliers'}
-            </span>
-          </h2>
-          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 hidden sm:block truncate">
-            {language === 'mr' ? 'शेतकरी, डेअरी संस्था आणि पुरवठादारांकडून कच्चा माल खरेदी' : language === 'hi' ? 'किसान, डेयरी संस्था और सप्लायर्स से कच्चा माल खरीद' : 'Raw milk & wholesale inventory purchase tracking from farmers and plants'}
-          </p>
-        </div>
-
-        <button
-          onClick={() => {
+    <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-28 lg:pb-8">
+      {/* 1. Compact Header + More (⋮) Actions Sheet + Round Record CTA */}
+      <CompactPageHeader
+        title={language === 'mr' ? 'दूध व माल खरेदी' : language === 'hi' ? 'माल खरीद (Purchases)' : 'Purchases'}
+        icon={<Truck className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />}
+        primaryAction={{
+          label: language === 'mr' ? 'खरेदी' : language === 'hi' ? 'खरीद' : 'Record',
+          icon: <Plus className="w-4 h-4 stroke-[2.5]" />,
+          onClick: () => {
             if (selectedProduct) setPurchasePrice(selectedProduct.purchase_price.toString());
             setIsModalOpen(true);
-          }}
-          className="h-10 px-3.5 sm:px-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center gap-1.5 shrink-0 min-h-[40px]"
-          title={language === 'mr' ? 'नवीन खरेदी नोंदवा' : language === 'hi' ? 'नई खरीद दर्ज करें' : 'Record Purchase'}
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>{language === 'mr' ? '+ नवीन खरेदी' : language === 'hi' ? '+ नई खरीद' : '+ Record'}</span>
-        </button>
-      </div>
+          },
+          ariaLabel: 'Record new purchase'
+        }}
+        moreTitle={language === 'mr' ? 'खरेदी साधने व अहवाल' : language === 'hi' ? 'खरीद टूल्स व रिपोर्ट' : 'Purchase Tools & Reports'}
+        moreActions={[
+          {
+            id: 'fat-calc',
+            label: language === 'mr' ? 'फॅट / SNF कॅल्क्युलेटर' : language === 'hi' ? 'फैट / SNF कैलकुलेटर' : 'Milk Fat / SNF Calculator',
+            icon: <Calculator className="w-4 h-4 text-amber-500" />,
+            onClick: () => setIsFatCalcOpen(true)
+          },
+          {
+            id: 'view-pdf',
+            label: language === 'mr' ? 'अहवाल पहा (View PDF)' : language === 'hi' ? 'रिपोर्ट देखें (View PDF)' : 'View Purchases PDF',
+            icon: <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
+            onClick: handleViewPurchasePDF
+          },
+          {
+            id: 'print',
+            label: language === 'mr' ? 'प्रिंट करा' : language === 'hi' ? 'प्रिंट करें' : 'Print Report',
+            icon: <Printer className="w-4 h-4 text-slate-500 dark:text-[#8FA69C]" />,
+            onClick: handlePrintPurchasePDF
+          },
+          {
+            id: 'csv',
+            label: 'Export Excel CSV',
+            icon: <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
+            onClick: handleExportCSV
+          },
+          {
+            id: 'download-pdf',
+            label: language === 'mr' ? 'खरेदी PDF डाउनलोड' : language === 'hi' ? 'खरीद PDF डाउनलोड' : 'Download PDF',
+            icon: <Download className="w-4 h-4" />,
+            onClick: handleDownloadPurchasePDF,
+            tone: 'primary'
+          }
+        ]}
+      />
 
-      {/* 2. Quick Actions Row (Horizontally Scrollable) */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x">
-        {/* Milk Fat/SNF Calculator Trigger Button */}
-        <button
-          onClick={() => setIsFatCalcOpen(true)}
-          className="h-10 px-3.5 rounded-xl border border-amber-300 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title="Milk Fat & SNF Testing Rate Calculator"
-        >
-          <Calculator className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-          <span>{language === 'mr' ? 'फॅट कॅल्क्युलेटर' : language === 'hi' ? 'फैट कैलकुलेटर' : 'Fat Calc'}</span>
-        </button>
+      {/* 2. Slim 3-Stat Summary Strip */}
+      <CompactStatStrip
+        columns={3}
+        items={[
+          {
+            label: t('totalPurchases'),
+            value: `₹${metrics.totalPurchasesAmount.toLocaleString('en-IN')}`,
+            sublabel: `${filteredPurchases.length} ${language === 'mr' ? 'बिले' : language === 'hi' ? 'बिल' : 'bills'}`,
+            valueClassName: 'text-sky-700 dark:text-sky-400'
+          },
+          {
+            label: t('totalSales'),
+            value: `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`,
+            valueClassName: 'text-emerald-700 dark:text-emerald-400'
+          },
+          {
+            label: t('grossProfit'),
+            value: `₹${metrics.grossProfit.toLocaleString('en-IN')}`,
+            valueClassName: 'text-amber-600 dark:text-amber-400'
+          }
+        ]}
+      />
 
-        {/* View PDF Button */}
-        <button
-          onClick={handleViewPurchasePDF}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title="View Purchases PDF Report"
-        >
-          <Eye className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-          <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
-        </button>
-
-        {/* Print PDF Button */}
-        <button
-          onClick={handlePrintPurchasePDF}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title="Print Purchases Report"
-        >
-          <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-          <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-        </button>
-
-        {/* PDF Report Download Button */}
-        <button
-          onClick={handleDownloadPurchasePDF}
-          className="h-10 px-3.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-xs min-h-[40px]"
-          title="Download Purchases PDF Report"
-        >
-          <Download className="w-4 h-4" />
-          <span>{language === 'mr' ? 'खरेदी PDF' : language === 'hi' ? 'खरीद PDF' : 'Download PDF'}</span>
-        </button>
-
-        <button
-          onClick={handleExportCSV}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title="Export to Excel CSV"
-        >
-          <Download className="w-4 h-4 text-slate-600 dark:text-[#8FA69C]" />
-          <span>Excel CSV</span>
-        </button>
-      </div>
-
-      {/* 3. Time Filter */}
+      {/* 3. Sticky Time Period Filter */}
       <PeriodFilter />
-
-      {/* 4. Balanced Summary KPI Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
-        <div className="col-span-2 sm:col-span-1 bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-sky-200/90 dark:border-sky-900/40 shadow-xs flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
-            {t('totalPurchases')}
-          </span>
-          <span className="text-xl sm:text-2xl font-black text-sky-900 dark:text-sky-400 mt-1 block tracking-tight">
-            ₹{metrics.totalPurchasesAmount.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 truncate">
-            {filteredPurchases.length} {language === 'mr' ? 'खरेदी पावत्या' : language === 'hi' ? 'इनवॉइस / बिल' : 'invoices'}
-          </span>
-        </div>
-
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
-            {t('totalSales')}
-          </span>
-          <span className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1 block tracking-tight">
-            ₹{metrics.totalSalesRevenue.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 truncate">
-            {((metrics.totalSalesRevenue / (metrics.totalPurchasesAmount || 1)) * 100).toFixed(0)}% {language === 'mr' ? 'विक्री प्रमाण' : language === 'hi' ? 'बिक्री अनुपात' : 'sales ratio'}
-          </span>
-        </div>
-
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
-            {t('grossProfit')}
-          </span>
-          <span className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-1 block tracking-tight">
-            ₹{metrics.grossProfit.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 truncate">
-            {language === 'mr' ? 'खर्च वजा नफा' : language === 'hi' ? 'खर्च बाद मुनाफा' : 'Gross profit'}
-          </span>
-        </div>
-      </div>
 
       {/* Purchases History Table */}
       <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs overflow-hidden">

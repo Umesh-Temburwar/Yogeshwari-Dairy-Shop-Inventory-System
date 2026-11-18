@@ -20,6 +20,7 @@ import { supabase } from '../../lib/supabase';
 import { ProductImage, clearFailedImageUrl } from '../Common/ProductImage';
 import { ProductImagePreviewModal } from '../Common/ProductImagePreviewModal';
 import { SquareImageCropperModal } from '../Common/SquareImageCropperModal';
+import { CompactPageHeader } from '../Common/CompactPageHeader';
 import {
   lookupOfficialImages,
   validateImageFile,
@@ -465,7 +466,7 @@ export const ImageHealthView: React.FC = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-4 pb-28 sm:pb-10">
+    <div className="max-w-5xl mx-auto space-y-3 pb-28 lg:pb-8">
       {/* Shared Hidden File Input */}
       <input
         ref={fileInputRef}
@@ -475,178 +476,180 @@ export const ImageHealthView: React.FC = () => {
         className="hidden"
       />
 
-      {/* Page Header */}
-      <div className="bg-white dark:bg-[#131F1B] p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2.5 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 shrink-0">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-base sm:text-xl font-black text-slate-900 dark:text-white truncate">
-                Product Image Health
-              </h1>
-              <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                Fix missing, broken, or non-square images one by one. Nothing is modified automatically.
-              </p>
-            </div>
-          </div>
+      {/* 1. Compact Header */}
+      <CompactPageHeader
+        icon={<ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
+        title="Product Image Health"
+        subtitle="Fix missing, broken, or non-square images one by one. Nothing is modified automatically."
+        primaryAction={{
+          label: isScanning || isLoadingOutOfStock ? 'Scanning...' : 'Re-scan',
+          icon: <RefreshCw className={`w-4 h-4 ${isScanning || isLoadingOutOfStock ? 'animate-spin' : ''}`} />,
+          onClick: () => {
+            if (!isScanning && !isLoadingOutOfStock) handleRescan();
+          },
+          ariaLabel: 'Re-scan product images',
+        }}
+      />
 
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="inline-flex p-0.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F]">
-              <button
-                type="button"
-                onClick={() => setScope('in_stock')}
-                className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition ${
-                  scope === 'in_stock'
-                    ? 'bg-emerald-600 text-white shadow-2xs'
-                    : 'text-slate-600 dark:text-[#8FA69C]'
-                }`}
-              >
-                In-Stock ({products.filter((p) => (Number(p.stock_quantity) || 0) > 0).length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setScope('out_of_stock')}
-                className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition ${
-                  scope === 'out_of_stock'
-                    ? 'bg-emerald-600 text-white shadow-2xs'
-                    : 'text-slate-600 dark:text-[#8FA69C]'
-                }`}
-              >
-                Out-of-Stock ({outOfStockCount > 0 ? outOfStockCount.toLocaleString('en-IN') : 'Catalogue'})
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleRescan}
-              disabled={isScanning || isLoadingOutOfStock}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition disabled:opacity-50 cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isScanning || isLoadingOutOfStock ? 'animate-spin' : ''}`} />
-              <span>{isScanning || isLoadingOutOfStock ? 'Scanning...' : 'Re-scan'}</span>
-            </button>
-          </div>
+      {/* Scope Switcher + Progress / Tip Strip */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="inline-flex p-0.5 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F]">
+          <button
+            type="button"
+            onClick={() => setScope('in_stock')}
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition ${
+              scope === 'in_stock'
+                ? 'bg-emerald-600 text-white shadow-2xs'
+                : 'text-slate-600 dark:text-[#8FA69C]'
+            }`}
+          >
+            In-Stock ({products.filter((p) => (Number(p.stock_quantity) || 0) > 0).length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setScope('out_of_stock')}
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition ${
+              scope === 'out_of_stock'
+                ? 'bg-emerald-600 text-white shadow-2xs'
+                : 'text-slate-600 dark:text-[#8FA69C]'
+            }`}
+          >
+            Out-of-Stock ({outOfStockCount > 0 ? outOfStockCount.toLocaleString('en-IN') : 'Catalogue'})
+          </button>
         </div>
 
-        {/* Tip Banner */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/40 text-[11px] font-semibold text-emerald-900 dark:text-emerald-300">
-          <span className="inline-flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span>Upload tip: Plain background, product centered, good light.</span>
+        {isScanning && scanProgress.total > 0 ? (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            Checking {scanProgress.done} / {scanProgress.total}...
           </span>
-          {isScanning && scanProgress.total > 0 && (
-            <span className="font-bold text-emerald-700 dark:text-emerald-400">
-              Checking {scanProgress.done} / {scanProgress.total}...
-            </span>
-          )}
-        </div>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-[#8FA69C]">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            Tap any photo to preview
+          </span>
+        )}
       </div>
 
-      {/* KPI Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+      {/* Slim 4-Col Interactive KPI Strip */}
+      <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
         <button
           type="button"
           onClick={() => setFilter('missing')}
-          className={`p-3 rounded-2xl border text-left transition ${
+          className={`px-2.5 py-2 rounded-xl border text-left transition active:scale-[0.97] ${
             filter === 'missing'
               ? 'bg-slate-900 text-white border-emerald-500 dark:bg-[#1A2A25]'
               : 'bg-white dark:bg-[#131F1B] border-slate-200/90 dark:border-[#24352F]'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-[#8FA69C]">Missing</span>
-            <ImageOff className="w-4 h-4 text-slate-400" />
-          </div>
-          <div className="mt-1 text-xl font-black text-slate-900 dark:text-white">{counts.missing}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#8FA69C] truncate">Missing</div>
+          <div className={`text-base sm:text-lg font-extrabold tabular-nums leading-tight mt-0.5 ${filter === 'missing' ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{counts.missing}</div>
         </button>
 
         <button
           type="button"
           onClick={() => setFilter('broken')}
-          className={`p-3 rounded-2xl border text-left transition ${
+          className={`px-2.5 py-2 rounded-xl border text-left transition active:scale-[0.97] ${
             filter === 'broken'
               ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-400'
               : 'bg-white dark:bg-[#131F1B] border-slate-200/90 dark:border-[#24352F]'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400">Broken URL</span>
-            <AlertTriangle className="w-4 h-4 text-rose-500" />
-          </div>
-          <div className="mt-1 text-xl font-black text-rose-700 dark:text-rose-300">{counts.broken}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-rose-600 dark:text-rose-400 truncate">Broken</div>
+          <div className="text-base sm:text-lg font-extrabold tabular-nums leading-tight mt-0.5 text-rose-700 dark:text-rose-300">{counts.broken}</div>
         </button>
 
         <button
           type="button"
           onClick={() => setFilter('non_square')}
-          className={`p-3 rounded-2xl border text-left transition ${
+          className={`px-2.5 py-2 rounded-xl border text-left transition active:scale-[0.97] ${
             filter === 'non_square'
               ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400'
               : 'bg-white dark:bg-[#131F1B] border-slate-200/90 dark:border-[#24352F]'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400">Non-Square</span>
-            <Maximize2 className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="mt-1 text-xl font-black text-amber-700 dark:text-amber-300">{counts.nonSquare}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400 truncate">Ratio</div>
+          <div className="text-base sm:text-lg font-extrabold tabular-nums leading-tight mt-0.5 text-amber-700 dark:text-amber-300">{counts.nonSquare}</div>
         </button>
 
         <button
           type="button"
           onClick={() => setFilter('healthy')}
-          className={`p-3 rounded-2xl border text-left transition ${
+          className={`px-2.5 py-2 rounded-xl border text-left transition active:scale-[0.97] ${
             filter === 'healthy'
               ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500'
               : 'bg-white dark:bg-[#131F1B] border-slate-200/90 dark:border-[#24352F]'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">Square OK</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-          </div>
-          <div className="mt-1 text-xl font-black text-emerald-700 dark:text-emerald-400">{counts.healthy}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400 truncate">OK</div>
+          <div className="text-base sm:text-lg font-extrabold tabular-nums leading-tight mt-0.5 text-emerald-700 dark:text-emerald-400">{counts.healthy}</div>
         </button>
       </div>
 
-      {/* Filter Bar & Search */}
-      <div className="bg-white dark:bg-[#131F1B] p-3 rounded-2xl border border-slate-200/90 dark:border-[#24352F] flex flex-col sm:flex-row gap-2.5 sm:items-center justify-between">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
-          {(
-            [
-              { id: 'issues', label: `All Issues (${counts.issues})` },
-              { id: 'unofficial', label: `Unofficial (${counts.unofficial})` },
-              { id: 'missing', label: `Missing (${counts.missing})` },
-              { id: 'broken', label: `Broken (${counts.broken})` },
-              { id: 'non_square', label: `Non-Square (${counts.nonSquare})` },
-              { id: 'healthy', label: `Healthy (${counts.healthy})` }
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
-                filter === tab.id
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="relative sm:w-64">
+      {/* Sticky Search + Single-Row Snap Filter Chips */}
+      <div className="sticky top-0 z-20 -mx-3 px-3 pt-1.5 pb-2 bg-[#f8fafc] dark:bg-[#0B1210] space-y-2 border-b border-slate-200/70 dark:border-[#1E2E28] transition-colors">
+        <div className="relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search name, brand, barcode..."
-            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-semibold text-slate-900 dark:text-[#E7F0EC] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full h-10 pl-9 pr-8 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] text-xs sm:text-sm font-medium text-slate-900 dark:text-[#E7F0EC] focus:outline-none focus:ring-2 focus:ring-emerald-500/70"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
+              className="w-7 h-7 absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        <div className="relative">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5">
+            {(
+              [
+                { id: 'issues', label: 'All Issues', count: counts.issues },
+                { id: 'unofficial', label: 'Unofficial', count: counts.unofficial },
+                { id: 'missing', label: 'Missing', count: counts.missing },
+                { id: 'broken', label: 'Broken', count: counts.broken },
+                { id: 'non_square', label: 'Non-Square', count: counts.nonSquare },
+                { id: 'healthy', label: 'Healthy', count: counts.healthy }
+              ] as const
+            ).map((tab) => {
+              const isActive = filter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setFilter(tab.id)}
+                  className={`h-8 px-3 rounded-full border text-xs font-semibold whitespace-nowrap inline-flex items-center gap-1.5 shrink-0 snap-start transition-all duration-150 active:scale-[0.97] ${
+                    isActive
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                      : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#A3B8AF] hover:border-slate-300 dark:hover:border-[#324A42]'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums ${
+                      isActive
+                        ? 'bg-white/20 text-white'
+                        : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"
           />
         </div>
       </div>

@@ -32,7 +32,14 @@ import {
 } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
-  const { signInWithEmail, signUpWithEmail, continueAsGuest, resetPassword } = useAuth();
+  const {
+    signInWithEmail,
+    signUpWithEmail,
+    continueAsGuest,
+    resetPassword,
+    sessionExpiredNotice,
+    clearSessionExpiredNotice
+  } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const { resolvedTheme, setTheme } = useTheme();
 
@@ -150,6 +157,7 @@ export const LoginPage: React.FC = () => {
   const onSignIn = async (data: SignInFormData) => {
     setFormError(null);
     setFormSuccess(null);
+    clearSessionExpiredNotice();
     setIsSubmitting(true);
     try {
       const { error, redirectView } = await signInWithEmail(data.email.trim(), data.password);
@@ -579,6 +587,18 @@ export const LoginPage: React.FC = () => {
                   </button>
                 </div>
               )}
+
+            {/* Session Expired Recovery Notice */}
+            {sessionExpiredNotice && !formError && (
+              <div
+                role="status"
+                aria-live="polite"
+                className="mb-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 flex items-start gap-2.5 text-xs text-amber-800 dark:text-amber-300 font-semibold"
+              >
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <span>{sessionExpiredNotice}</span>
+              </div>
+            )}
 
             {/* Form-Level Error Banner */}
             {formError && (

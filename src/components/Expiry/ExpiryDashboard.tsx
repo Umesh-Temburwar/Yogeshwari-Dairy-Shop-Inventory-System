@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { computeExpiryStatus, ExpiryStatus } from '../../lib/shelfLifeUtils';
 import { ProductBatch, DamageReason } from '../../types';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
+import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
 import {
   AlertTriangle,
   Clock,
@@ -302,179 +303,162 @@ export const ExpiryDashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto pb-32 sm:pb-8">
+    <div className="space-y-3 max-w-5xl mx-auto pb-28 lg:pb-8">
 
-      {/* 1. Compact Page Header */}
-      <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
-            <ShieldAlert className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500 shrink-0" />
-            <span className="truncate">
-              {language === 'mr' ? 'मुदत समाप्ती डॅशबोर्ड (Expiry)' : language === 'hi' ? 'एक्सपायरी डेट प्रबंधन (Expiry)' : 'Expiry Dashboard'}
-            </span>
-          </h2>
-          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 hidden sm:block truncate">
-            {language === 'mr'
-              ? 'बॅचनिहाय एक्सपायरी ट्रॅकिंग, मुदत संपलेला माल तात्काळ ब्लॉक करणे, आणि नुकसान अहवाल'
-              : language === 'hi'
-                ? 'बैच-वाइज एक्सपायरी ट्रैकिंग, एक्सपायर्ड स्टॉक की बिक्री ब्लॉक करना और नुकसान नियंत्रण'
-                : 'Batch-wise expiry monitoring, auto-blocking expired products from billing, and write-off loss tracking'}
-          </p>
-        </div>
+      {/* 1. Compact Header + Overflow Export Sheet */}
+      <CompactPageHeader
+        icon={<ShieldAlert className="w-4 h-4 text-rose-500" />}
+        title={language === 'mr' ? 'मुदत समाप्ती (Expiry)' : language === 'hi' ? 'एक्सपायरी प्रबंधन' : 'Expiry Dashboard'}
+        subtitle={
+          language === 'mr'
+            ? 'बॅचनिहाय एक्सपायरी ट्रॅकिंग, मुदत संपलेला माल तात्काळ ब्लॉक करणे आणि नुकसान अहवाल'
+            : language === 'hi'
+              ? 'बैच-वाइज एक्सपायरी ट्रैकिंग, एक्सपायर्ड स्टॉक की बिक्री ब्लॉक करना और नुकसान नियंत्रण'
+              : 'Batch-wise expiry monitoring, auto-blocking expired products from billing, and write-off loss tracking'
+        }
+        primaryAction={{
+          label: copiedAlert
+            ? language === 'mr' ? 'कॉपी!' : 'कॉपी!'
+            : language === 'mr' ? 'रिस्क कॉपी' : language === 'hi' ? 'रिस्क कॉपी' : 'WhatsApp',
+          icon: copiedAlert ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />,
+          onClick: handleCopyWhatsAppAlert,
+          ariaLabel: 'Copy WhatsApp Expiry Risk Alert',
+        }}
+        moreTitle={language === 'mr' ? 'एक्सपायरी अहवाल पर्याय' : language === 'hi' ? 'एक्सपायरी रिपोर्ट विकल्प' : 'Expiry Report Actions'}
+        moreActions={[
+          {
+            id: 'view-pdf',
+            label: language === 'mr' ? 'अहवाल पहा (View PDF)' : language === 'hi' ? 'रिपोर्ट देखें (View PDF)' : 'View Expiry PDF',
+            description: language === 'mr' ? 'ब्राउझरमध्ये प्रीव्ह्यू पहा' : language === 'hi' ? 'ब्राउज़र में प्रीव्यू देखें' : 'Preview expiry batch report',
+            icon: <Eye className="w-4 h-4 text-rose-500" />,
+            onClick: handleViewExpiryPDF,
+          },
+          {
+            id: 'print',
+            label: language === 'mr' ? 'प्रिंट करा' : language === 'hi' ? 'प्रिंट करें' : 'Print Report',
+            description: language === 'mr' ? 'एक्सपायरी यादी प्रिंट करा' : language === 'hi' ? 'एक्सपायरी सूची प्रिंट करें' : 'Send expiry report to printer',
+            icon: <Printer className="w-4 h-4 text-slate-600 dark:text-slate-300" />,
+            onClick: handlePrintExpiryPDF,
+          },
+          {
+            id: 'download-pdf',
+            label: language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF',
+            description: language === 'mr' ? 'PDF फाइल सेव्ह करा' : language === 'hi' ? 'PDF फाइल सेव करें' : 'Save expiry risk report PDF',
+            icon: <Download className="w-4 h-4 text-rose-500" />,
+            onClick: handleDownloadExpiryPDF,
+          },
+        ]}
+      />
 
-        <button
-          onClick={handleCopyWhatsAppAlert}
-          className="h-10 px-3.5 sm:px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center gap-1.5 shrink-0 min-h-[40px]"
-        >
-          {copiedAlert ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-          <span>{copiedAlert ? (language === 'mr' ? 'कॉपी झाला!' : 'कॉपी हुआ!') : (language === 'mr' ? 'व्हाट्सॲप रिस्क' : 'व्हाट्सएप रिस्क')}</span>
-        </button>
-      </div>
+      {/* 2. Slim 4-Stat Summary Strip */}
+      <CompactStatStrip
+        columns={4}
+        items={[
+          {
+            label: language === 'mr' ? 'मुदत संपली' : 'एक्सपायर्ड',
+            value: `₹${kpis.expiredCostLoss.toLocaleString('en-IN')}`,
+            sublabel: `${kpis.expiredCount} ${language === 'mr' ? 'बॅचेस' : 'बैचेस'}`,
+            tone: 'rose',
+          },
+          {
+            label: language === 'mr' ? 'धोक्यातील' : 'जोखिम में',
+            value: `₹${kpis.nearExpiryRiskTotal.toLocaleString('en-IN')}`,
+            sublabel: `${kpis.todayCount + kpis.tomorrowCount + kpis.threeDaysCount} ${language === 'mr' ? 'आधी विका' : 'पहले बेचें'}`,
+            tone: 'amber',
+          },
+          {
+            label: language === 'mr' ? 'ताजा माल' : 'ताज़ा स्टॉक',
+            value: kpis.freshCount,
+            sublabel: language === 'mr' ? '७+ दिवस सुरक्षित' : '7+ दिन सुरक्षित',
+            tone: 'emerald',
+          },
+          {
+            label: language === 'mr' ? 'सक्रिय बॅचेस' : 'सक्रिय बैचेस',
+            value: kpis.totalActiveBatches,
+            sublabel: `₹${kpis.totalStockCost.toLocaleString('en-IN')}`,
+            tone: 'neutral',
+          },
+        ]}
+      />
 
-      {/* 2. Quick Actions Row (Horizontally Scrollable) */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x">
-        <button
-          onClick={handleViewExpiryPDF}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title="View Expiry Report PDF"
-        >
-          <Eye className="w-4 h-4 text-rose-500" />
-          <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
-        </button>
-
-        <button
-          onClick={handlePrintExpiryPDF}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title="Print Expiry Report"
-        >
-          <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-          <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-        </button>
-
-        <button
-          onClick={handleDownloadExpiryPDF}
-          className="h-10 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-xs min-h-[40px]"
-          title="Download PDF Report"
-        >
-          <Download className="w-4 h-4" />
-          <span>{language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
-        </button>
-      </div>
-
-      {/* 3. 4 Equal-Size KPI Summary Cards (2x2 Grid on Mobile) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
-        {/* Expired Loss Card */}
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-rose-200 dark:border-rose-950/60 shadow-xs transition-colors flex flex-col justify-between">
-          <div className="flex items-center justify-between text-rose-600 dark:text-rose-400">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate">{language === 'mr' ? 'मुदत संपलेला माल' : 'एक्सपायर्ड माल'}</span>
-            <AlertOctagon className="w-3.5 h-3.5 shrink-0" />
-          </div>
-          <span className="text-xl sm:text-2xl font-black text-rose-700 dark:text-rose-400 mt-1 block tabular-nums tracking-tight">
-            ₹{kpis.expiredCostLoss.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[10px] sm:text-[11px] font-semibold text-rose-600/80 dark:text-rose-400/80 truncate">
-            {kpis.expiredCount} {language === 'mr' ? 'बॅचेस (विक्री बंद)' : 'बैचेस (ब्लॉक)'}
-          </span>
-        </div>
-
-        {/* Near Expiry at Risk Card */}
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-amber-200 dark:border-amber-950/60 shadow-xs transition-colors flex flex-col justify-between">
-          <div className="flex items-center justify-between text-amber-600 dark:text-amber-400">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate">{language === 'mr' ? 'धोक्यातील माल' : 'जोखिम में'}</span>
-            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-          </div>
-          <span className="text-xl sm:text-2xl font-black text-amber-700 dark:text-amber-400 mt-1 block tabular-nums tracking-tight">
-            ₹{kpis.nearExpiryRiskTotal.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[10px] sm:text-[11px] font-semibold text-amber-600/80 dark:text-amber-400/80 truncate">
-            {kpis.todayCount + kpis.tomorrowCount + kpis.threeDaysCount} {language === 'mr' ? 'बॅचेस आधी विका' : 'बैचेस पहले बेचें'}
-          </span>
-        </div>
-
-        {/* Fresh Stock Safe Card */}
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-emerald-200 dark:border-emerald-950/60 shadow-xs transition-colors flex flex-col justify-between">
-          <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate">{language === 'mr' ? 'ताजा माल' : 'ताज़ा स्टॉक'}</span>
-            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-          </div>
-          <span className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1 block tabular-nums tracking-tight">
-            {kpis.freshCount} {language === 'mr' ? 'बॅचेस' : 'बैचेस'}
-          </span>
-          <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-600/80 dark:text-emerald-400/80 truncate">
-            {language === 'mr' ? '७ दिवसांपेक्षा जास्त' : '7 दिन से सुरक्षित'}
-          </span>
-        </div>
-
-        {/* Total Monitored Batches */}
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate">{language === 'mr' ? 'सक्रिय बॅचेस' : 'सक्रिय बैचेस'}</span>
-            <Layers className="w-3.5 h-3.5 shrink-0" />
-          </div>
-          <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1 block tabular-nums tracking-tight">
-            {kpis.totalActiveBatches}
-          </span>
-          <span className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C] truncate">
-            ₹{kpis.totalStockCost.toLocaleString('en-IN')} {language === 'mr' ? 'खरेदी मूल्य' : 'लागत'}
-          </span>
-        </div>
-      </div>
-
-      {/* 6 EXPIRY CATEGORY TABS */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-        {[
-          { id: 'ALL', label: language === 'mr' ? 'सर्व बॅचेस' : 'सभी बैचेस', count: enrichedBatches.length, color: 'bg-slate-900 text-white dark:bg-emerald-600' },
-          { id: 'EXPIRED', label: language === 'mr' ? '🔴 मुदत संपली' : '🔴 एक्सपायर्ड', count: kpis.expiredCount, color: 'bg-rose-600 text-white' },
-          { id: 'EXPIRING_TODAY', label: language === 'mr' ? '🟠 आज संपत आहे' : '🟠 आज एक्सपायर', count: kpis.todayCount, color: 'bg-orange-600 text-white' },
-          { id: 'EXPIRING_TOMORROW', label: language === 'mr' ? '🟡 उद्या संपणार' : '🟡 कल एक्सपायर', count: kpis.tomorrowCount, color: 'bg-amber-600 text-white' },
-          { id: 'EXPIRING_IN_3_DAYS', label: language === 'mr' ? '🔵 ३ दिवसात' : '🔵 3 दिन में', count: kpis.threeDaysCount, color: 'bg-blue-600 text-white' },
-          { id: 'EXPIRING_IN_7_DAYS', label: language === 'mr' ? '🟣 ७ दिवसात' : '🟣 7 दिन में', count: kpis.sevenDaysCount, color: 'bg-purple-600 text-white' },
-          { id: 'FRESH', label: language === 'mr' ? '🟢 ताजा माल' : '🟢 ताजा स्टॉक', count: kpis.freshCount, color: 'bg-emerald-600 text-white' }
-        ].map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${isActive
-                ? `${tab.color} shadow-sm scale-102`
-                : 'bg-white dark:bg-[#131F1B] border border-slate-200/90 dark:border-[#24352F] text-slate-700 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]'
-                }`}
-            >
-              <span>{tab.label}</span>
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${isActive ? 'bg-white/25 text-white' : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
-                }`}>
-                {tab.count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* FILTER BAR: Search & Category */}
-      <div className="flex flex-col sm:flex-row gap-3 bg-white dark:bg-[#131F1B] p-3 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={language === 'mr' ? 'उत्पादन नाव, बॅच नंबर, पुरवठादार शोधा...' : 'उत्पाद का नाम, बैच नंबर, सप्लायर खोजें...'}
-            className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
-        </div>
-
+      {/* 3. Sticky Search + Single-Row Snap Expiry Filter Chips */}
+      <div className="sticky top-0 z-20 -mx-3 px-3 pt-1.5 pb-2 bg-[#f8fafc] dark:bg-[#0B1210] space-y-2 border-b border-slate-200/70 dark:border-[#1E2E28] transition-colors">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+          <div className="relative flex-1 min-w-0">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={language === 'mr' ? 'उत्पादन किंवा बॅच शोधा...' : language === 'hi' ? 'उत्पाद या बैच खोजें...' : 'Search product or batch...'}
+              className="w-full h-10 pl-9 pr-8 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/70"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+                className="w-7 h-7 absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            aria-label="Filter by category"
+            className="h-10 px-2.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-700 dark:text-[#E7F0EC] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/70 max-w-[130px] sm:max-w-none shrink-0"
           >
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.label}</option>
             ))}
           </select>
+        </div>
+
+        <div className="relative">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5">
+            {(
+              [
+                { id: 'ALL', label: language === 'mr' ? 'सर्व' : 'सभी', count: enrichedBatches.length, color: 'bg-emerald-600 text-white border-emerald-600' },
+                { id: 'EXPIRED', label: language === 'mr' ? '🔴 संपली' : '🔴 एक्सपायर्ड', count: kpis.expiredCount, color: 'bg-rose-600 text-white border-rose-600' },
+                { id: 'EXPIRING_TODAY', label: language === 'mr' ? '🟠 आज' : '🟠 आज', count: kpis.todayCount, color: 'bg-orange-600 text-white border-orange-600' },
+                { id: 'EXPIRING_TOMORROW', label: language === 'mr' ? '🟡 उद्या' : '🟡 कल', count: kpis.tomorrowCount, color: 'bg-amber-600 text-white border-amber-600' },
+                { id: 'EXPIRING_IN_3_DAYS', label: language === 'mr' ? '🔵 ३ दिवस' : '🔵 3 दिन', count: kpis.threeDaysCount, color: 'bg-blue-600 text-white border-blue-600' },
+                { id: 'EXPIRING_IN_7_DAYS', label: language === 'mr' ? '🟣 ७ दिवस' : '🟣 7 दिन', count: kpis.sevenDaysCount, color: 'bg-purple-600 text-white border-purple-600' },
+                { id: 'FRESH', label: language === 'mr' ? '🟢 ताजा' : '🟢 ताजा', count: kpis.freshCount, color: 'bg-emerald-600 text-white border-emerald-600' }
+              ] as Array<{ id: ExpiryStatus | 'ALL'; label: string; count: number; color: string }>
+            ).map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`h-8 px-3 rounded-full border text-xs font-semibold whitespace-nowrap inline-flex items-center gap-1.5 shrink-0 snap-start transition-all duration-150 active:scale-[0.97] ${
+                    isActive
+                      ? `${tab.color} shadow-xs`
+                      : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#A3B8AF] hover:border-slate-300 dark:hover:border-[#324A42]'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums ${
+                      isActive
+                        ? 'bg-white/20 text-white'
+                        : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"
+          />
         </div>
       </div>
 

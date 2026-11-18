@@ -38,6 +38,7 @@ interface BarcodeScannerModalProps {
   onClose: () => void;
   onProductSelected?: (product: Product) => void;
   onBarcodeScanned?: (barcode: string) => void;
+  onBarcodeNotFound?: (barcode: string) => void;
   mode?: 'pos' | 'stock_inward' | 'lookup';
   zIndex?: string;
 }
@@ -47,6 +48,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   onClose,
   onProductSelected,
   onBarcodeScanned,
+  onBarcodeNotFound,
   mode = 'lookup',
   zIndex = 'z-[120]'
 }) => {
@@ -485,6 +487,13 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
     setMatchedProduct(null);
     setMatchedSource(null);
+
+    // If caller handles unknown barcodes directly (e.g. redirect to New Barcode product registration page)
+    if (onBarcodeNotFound) {
+      stopCamera();
+      onBarcodeNotFound(clean);
+      onClose();
+    }
   };
 
   const handleManualSearch = (e: React.FormEvent) => {

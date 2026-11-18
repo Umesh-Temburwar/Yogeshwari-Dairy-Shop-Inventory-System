@@ -1,4 +1,8 @@
-import { supabase } from './supabase';
+import {
+  supabase,
+  isInvalidRefreshTokenError,
+  clearStaleSupabaseAuthSession
+} from './supabase';
 import { clearFailedImageUrl } from '../components/Common/ProductImage';
 
 export const PRODUCT_IMAGES_BUCKET = 'product-images';
@@ -438,7 +442,11 @@ export const uploadProcessedProductImage = async (params: {
     throw new Error('Supabase cloud connection is not configured.');
   }
 
-  const { data: sessionData } = await supabase.auth.getSession();
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError && isInvalidRefreshTokenError(sessionError)) {
+    await clearStaleSupabaseAuthSession();
+    throw new Error('Your session expired. Please sign in again to upload product images.');
+  }
   if (!sessionData.session) {
     throw new Error('Please sign in as Owner/Admin to upload product images.');
   }

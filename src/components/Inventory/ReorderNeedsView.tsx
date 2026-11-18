@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { computeExpiryStatus } from '../../lib/shelfLifeUtils';
+import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
 
 export const ReorderNeedsView: React.FC = () => {
   const { products, batches, sales, returns, supplierReturns, metrics, setActiveView } = useStore();
@@ -196,93 +197,70 @@ export const ReorderNeedsView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto pb-32 sm:pb-8">
+    <div className="space-y-3 max-w-5xl mx-auto pb-28 lg:pb-8">
 
-      {/* 1. Compact Page Header */}
-      <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
-            <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 shrink-0" />
-            <span className="truncate">{t('reorderTitle')}</span>
-          </h2>
-          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 hidden sm:block truncate">
-            {t('reorderDesc')}
-          </p>
-        </div>
+      {/* 1. Compact Header + Overflow Export Sheet */}
+      <CompactPageHeader
+        icon={<AlertTriangle className="w-4 h-4 text-amber-500" />}
+        title={t('reorderTitle')}
+        subtitle={t('reorderDesc')}
+        primaryAction={{
+          label: language === 'mr' ? 'खरेदी' : language === 'hi' ? 'खरीद' : 'Purchase',
+          icon: <Truck className="w-4 h-4" />,
+          onClick: () => setActiveView('purchases'),
+          ariaLabel: 'Record Purchase',
+        }}
+        moreTitle={language === 'mr' ? 'ऑर्डर यादी पर्याय' : language === 'hi' ? 'ऑर्डर सूची विकल्प' : 'Reorder Actions'}
+        moreActions={[
+          {
+            id: 'whatsapp-copy',
+            label: copied ? t('orderCopied') : t('copyWhatsAppOrder'),
+            description: language === 'mr' ? 'सप्लायरला पाठवण्यासाठी यादी कॉपी करा' : language === 'hi' ? 'सप्लायर को भेजने के लिए सूची कॉपी करें' : 'Copy restock list for WhatsApp',
+            icon: copied ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
+            onClick: handleCopyWhatsAppList,
+          },
+          {
+            id: 'view-pdf',
+            label: language === 'mr' ? 'अहवाल पहा (View PDF)' : language === 'hi' ? 'रिपोर्ट देखें (View PDF)' : 'View Order PDF',
+            description: language === 'mr' ? 'ब्राउझरमध्ये प्रीव्ह्यू पहा' : language === 'hi' ? 'ब्राउज़र में प्रीव्यू देखें' : 'Preview reorder sheet',
+            icon: <Eye className="w-4 h-4 text-amber-500" />,
+            onClick: handleViewReorderPDF,
+          },
+          {
+            id: 'print',
+            label: language === 'mr' ? 'प्रिंट करा' : language === 'hi' ? 'प्रिंट करें' : 'Print Order Sheet',
+            description: language === 'mr' ? 'ऑर्डर यादी प्रिंट करा' : language === 'hi' ? 'ऑर्डर शीट प्रिंट करें' : 'Send order sheet to printer',
+            icon: <Printer className="w-4 h-4 text-slate-600 dark:text-slate-300" />,
+            onClick: handlePrintReorderPDF,
+          },
+          {
+            id: 'download-pdf',
+            label: language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF',
+            description: language === 'mr' ? 'PDF ऑर्डर शीट सेव्ह करा' : language === 'hi' ? 'PDF ऑर्डर शीट सेव करें' : 'Save reorder PDF sheet',
+            icon: <Download className="w-4 h-4 text-amber-600 dark:text-amber-400" />,
+            onClick: handleDownloadReorderPDF,
+          },
+        ]}
+      />
 
-        <button
-          onClick={() => setActiveView('purchases')}
-          className="h-10 px-3.5 sm:px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center gap-1.5 shrink-0 min-h-[40px]"
-        >
-          <Truck className="w-4 h-4" />
-          <span>{language === 'mr' ? '+ खरेदी नोंदवा' : language === 'hi' ? '+ खरीद दर्ज करें' : '+ Record Purchase'}</span>
-        </button>
-      </div>
-
-      {/* 2. Quick Actions Row (Horizontally Scrollable) */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x">
-        <button
-          onClick={handleCopyWhatsAppList}
-          className="h-10 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 min-h-[40px]"
-        >
-          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-          <span>{copied ? t('orderCopied') : t('copyWhatsAppOrder')}</span>
-        </button>
-
-        <button
-          onClick={handleViewReorderPDF}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 font-bold text-xs transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title="View Reorder PDF Sheet"
-        >
-          <Eye className="w-4 h-4 text-amber-500" />
-          <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
-        </button>
-
-        <button
-          onClick={handlePrintReorderPDF}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 font-bold text-xs transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title="Print Reorder Sheet"
-        >
-          <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-          <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-        </button>
-
-        <button
-          onClick={handleDownloadReorderPDF}
-          className="h-10 px-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 min-h-[40px]"
-          title="Download PDF Order Sheet"
-        >
-          <Download className="w-4 h-4" />
-          <span>{language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF'}</span>
-        </button>
-      </div>
-
-      {/* 3. Balanced Summary KPI Stats */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-4">
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
-            {language === 'mr' ? 'एकूण संपलेली उत्पादने' : language === 'hi' ? 'कुल खत्म / कम स्टॉक' : 'Low / Out of Stock'}
-          </span>
-          <span className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-1 block tracking-tight">
-            {itemsNeedingRestock.length} {language === 'mr' ? 'उत्पादने' : language === 'hi' ? 'आइटम्स' : 'items'}
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 truncate">
-            {itemsNeedingRestock.filter(i => i.isCritical).length} {language === 'mr' ? 'शून्य साठा' : language === 'hi' ? 'पूरी तरह शून्य' : 'completely empty'}
-          </span>
-        </div>
-
-        <div className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex flex-col justify-between">
-          <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block truncate">
-            {language === 'mr' ? 'अंदाजे खरेदी बजेट' : language === 'hi' ? 'अनुमानित खरीद बजट' : 'Estimated Budget'}
-          </span>
-          <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1 block tracking-tight">
-            ₹{totalEstimatedCost.toLocaleString('en-IN')}
-          </span>
-          <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 truncate">
-            {language === 'mr' ? 'घाऊक खरेदी दराने' : language === 'hi' ? 'थोक भाव से' : 'Wholesale rate'}
-          </span>
-        </div>
-      </div>
+      {/* 2. Slim 2-Stat Summary Strip */}
+      <CompactStatStrip
+        columns={2}
+        items={[
+          {
+            label: language === 'mr' ? 'कमी / शून्य स्टॉक' : language === 'hi' ? 'कम / शून्य स्टॉक' : 'Low / Out of Stock',
+            value: `${itemsNeedingRestock.length}`,
+            sublabel: `${itemsNeedingRestock.filter(i => i.isCritical).length} ${language === 'mr' ? 'शून्य साठा' : language === 'hi' ? 'शून्य स्टॉक' : 'empty'}`,
+            tone: 'rose',
+          },
+          {
+            label: language === 'mr' ? 'अंदाजे खरेदी बजेट' : language === 'hi' ? 'अनुमानित बजट' : 'Estimated Budget',
+            value: `₹${totalEstimatedCost.toLocaleString('en-IN')}`,
+            sublabel: language === 'mr' ? 'घाऊक खरेदी दराने' : language === 'hi' ? 'थोक भाव से' : 'Wholesale rate',
+            tone: 'amber',
+          },
+        ]}
+      />
 
       {/* Pending Supplier Refund Recovery Alert Banner */}
       {metrics.pendingSupplierRefundAmount > 0 && (

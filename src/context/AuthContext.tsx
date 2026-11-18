@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
-import { supabase } from '../lib/supabase';
+import {
+  supabase,
+  isInvalidRefreshTokenError,
+  clearStaleSupabaseAuthSession
+} from '../lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import { UserRole } from '../types';
 import { 
@@ -50,6 +54,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   continueAsGuest: () => void;
   resetPassword: (email: string) => Promise<{ error: any }>;
+  sessionExpiredNotice: string | null;
+  clearSessionExpiredNotice: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -85,7 +91,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Second-factor Master Security Passcode verification state
   const [isSecurityUnlocked, setIsSecurityUnlocked] = useState<boolean>(false);
+  const [sessionExpiredNotice, setSessionExpiredNotice] = useState<string | null>(null);
   const pendingUnlockVerifiedRef = useRef<boolean>(false);
+  // Tracks whether a genuine Supabase cloud session was active in this tab
+  const hadCloudSessionRef = useRef<boolean>(false);
+  // Single-flight circuit breaker to prevent infinite refresh/recovery loops
+  const hasRecoveredInvalidSessionRef = useRef<boolean>(false);
+
+  const clearSessionExpiredNotice = useCallback(() => {
+    setSessionExpiredNotice(null);
+  }, []);
+
+  const applyRoleForUser = useCallback((authUser: User) => {
+    const userEmail = authUser.email?.trim().toLowerCase() || '';
+    const isAdmin = userEmail === 'nilusakhare2003@gmail.com' || userEmail.includes('nilu');
+    const nextRole: UserRole = isAdmin
+      ? 'Admin'
+      : authUser.user_metadata?.role === 'Admin' || authUser.user_metadata?.role === 'Owner'
+      ? (authUser.user_metadata.role as UserRole)
+      : 'Owner';
+    const nextSlot: 1 | 2 | null = nextRole === 'Admin' ? 1 : null;
+
+    setRoleState(nextRole);
+    setAdminSlotState(nextSlot);
+    try {
+      localStorage.setItem(ROLE_STORAGE_KEY, nextRole);
+      if (nextRole === 'Admin') {
+        localStorage.setItem(ADMIN_SLOT_STORAGE_KEY, String(nextSlot || 1));
+      } else {
+        localStorage.removeItem(ADMIN_SLOT_STORAGE_KEY);
+      }
+    } catch {}
+  }, []);
 
   const setRole = (newRole: UserRole, slot: 1 | 2 | null = null) => {
     // Access control enforcement: Admin account can ONLY use Admin profile
@@ -112,11 +149,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const defaultRedirectView: 'dashboard' | 'pos' | 'inventory' = 
     role === 'Owner' ? 'dashboard' : 'pos';
 
-  const lockSecurity = () => {
+  const lockSecurity = useCallback(() => {
     revokeSessionSecurity();
     pendingUnlockVerifiedRef.current = false;
     setIsSecurityUnlocked(false);
-  };
+  }, []);
 
   const unlockSecurity = async (passcode: string, deferReveal = false) => {
     const res = await verifyMasterPasscode(passcode);
@@ -186,85 +223,151 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     let mounted = true;
 
-    async function initializeAuth() {
+    const recoverFromUnrecoverableSession = async () => {
+      if (hasRecoveredInvalidSessionRef.current) return;
+      hasRecoveredInvalidSessionRef.current = true;
+      hadCloudSessionRef.current = false;
+
+      console.warn('Supabase session expired or refresh token invalid; clearing local auth session.');
+      await clearStaleSupabaseAuthSession();
+
       try {
-        // 1. Verify if the session was already unlocked via cryptographic token
-        const secValid = await isSessionSecurityValid();
-        if (mounted) {
-          setIsSecurityUnlocked(secValid);
-        }
+        localStorage.removeItem(LOCAL_USER_STORAGE_KEY);
+      } catch {}
 
-        // 2. Check local stored user (for offline shop counter operations)
-        try {
-          const storedLocal = localStorage.getItem(LOCAL_USER_STORAGE_KEY);
-          if (storedLocal) {
-            const parsed = JSON.parse(storedLocal);
-            if (mounted) setUser(parsed);
-          }
-        } catch {}
+      if (mounted) {
+        setSession(null);
+        setUser(null);
+        lockSecurity();
+        setSessionExpiredNotice(
+          'Your session has expired. Please sign in again to continue.'
+        );
+      }
+    };
 
-        // 3. Sync registration configuration & master passcode hash from cloud in background
-        syncRegistrationSettingFromCloud().catch(() => {});
-        syncMasterPasscodeHashFromCloud().catch(() => {});
+    // 1. Register onAuthStateChange SYNCHRONOUSLY so cleanup always unsubscribes (React StrictMode / HMR safe)
+    const authSubscription = supabase
+      ? supabase.auth.onAuthStateChange((event, nextSession) => {
+          if (!mounted) return;
 
-        if (!supabase) {
-          if (mounted) setIsLoading(false);
-          return;
-        }
-
-        // 3. Get initial Supabase session
-        const { data: { session } } = await supabase.auth.getSession();
-        if (mounted) {
-          if (session?.user) {
-            setSession(session);
-            setUser(session.user);
-            // Default detected role
-            const userEmail = session.user.email?.trim().toLowerCase() || '';
-            const isAdmin = userEmail === 'nilusakhare2003@gmail.com' || userEmail.includes('nilu');
-            if (isAdmin) {
-              setRole('Admin', 1);
+          if (event === 'SIGNED_OUT') {
+            setSession(null);
+            if (hadCloudSessionRef.current) {
+              // Live cloud session ended unexpectedly (e.g. unrecoverable mid-session refresh failure)
+              hadCloudSessionRef.current = false;
+              try {
+                localStorage.removeItem(LOCAL_USER_STORAGE_KEY);
+              } catch {}
+              setUser(null);
+              lockSecurity();
+              setSessionExpiredNotice(
+                'Your session has expired. Please sign in again to continue.'
+              );
             } else {
-              const metaRole = session.user.user_metadata?.role;
-              if (metaRole === 'Admin' || metaRole === 'Owner') {
-                setRole(metaRole);
-              }
-            }
-          }
-          setIsLoading(false);
-        }
-
-        // 4. Listen for auth state changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-          if (mounted) {
-            setSession(session);
-            if (session?.user) {
-              setUser(session.user);
-              const userEmail = session.user.email?.trim().toLowerCase() || '';
-              const isAdmin = userEmail === 'nilusakhare2003@gmail.com' || userEmail.includes('nilu');
-              if (isAdmin) {
-                setRole('Admin', 1);
-              } else {
-                const metaRole = session.user.user_metadata?.role;
-                if (metaRole === 'Admin' || metaRole === 'Owner') {
-                  setRole(metaRole);
-                }
-              }
-            } else {
-              // Only reset user if there wasn't a local offline authenticated user
+              // Preserve intentional offline counter session only if no cloud session was active
               const storedLocal = localStorage.getItem(LOCAL_USER_STORAGE_KEY);
               if (!storedLocal) {
                 setUser(null);
               }
             }
             setIsLoading(false);
+            return;
           }
-        });
 
-        return () => {
-          subscription.unsubscribe();
-        };
+          if (nextSession?.user) {
+            hadCloudSessionRef.current = true;
+            hasRecoveredInvalidSessionRef.current = false;
+            setSessionExpiredNotice(null);
+            setSession(nextSession);
+            setUser(nextSession.user);
+            applyRoleForUser(nextSession.user);
+            setIsLoading(false);
+          } else if (event === 'INITIAL_SESSION') {
+            setSession(null);
+            // Only clear user if there is no intentional offline counter user
+            const storedLocal = localStorage.getItem(LOCAL_USER_STORAGE_KEY);
+            if (!storedLocal) {
+              setUser(null);
+            }
+          }
+        }).data.subscription
+      : null;
+
+    async function initializeAuth() {
+      try {
+        // 1. Verify if the counter was already unlocked via cryptographic passcode token
+        const secValid = await isSessionSecurityValid();
+        if (mounted) {
+          setIsSecurityUnlocked(secValid);
+        }
+
+        if (!supabase) {
+          try {
+            const storedLocal = localStorage.getItem(LOCAL_USER_STORAGE_KEY);
+            if (storedLocal && mounted) {
+              setUser(JSON.parse(storedLocal));
+            }
+          } catch {}
+          if (mounted) setIsLoading(false);
+          return;
+        }
+
+        // 2. Restore initial Supabase session ONCE and handle invalid refresh tokens gracefully
+        const {
+          data: { session: initialSession },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        if (sessionError) {
+          if (isInvalidRefreshTokenError(sessionError)) {
+            await recoverFromUnrecoverableSession();
+          } else {
+            // Transient network/offline error — do NOT clear storage or force logout
+            try {
+              const storedLocal = localStorage.getItem(LOCAL_USER_STORAGE_KEY);
+              if (storedLocal) {
+                setUser(JSON.parse(storedLocal));
+              }
+            } catch {}
+          }
+        } else if (initialSession?.user) {
+          hadCloudSessionRef.current = true;
+          hasRecoveredInvalidSessionRef.current = false;
+          setSession(initialSession);
+          setUser(initialSession.user);
+          applyRoleForUser(initialSession.user);
+          try {
+            supabase.auth.startAutoRefresh();
+          } catch {}
+        } else {
+          // No active Supabase session — restore offline counter session if present
+          try {
+            const storedLocal = localStorage.getItem(LOCAL_USER_STORAGE_KEY);
+            if (storedLocal) {
+              setUser(JSON.parse(storedLocal));
+            } else {
+              setUser(null);
+            }
+          } catch {
+            setUser(null);
+          }
+        }
+
+        if (mounted) {
+          setIsLoading(false);
+        }
+
+        // 3. Run background cloud config sync AFTER session restoration settles so queries never race token refresh
+        syncRegistrationSettingFromCloud().catch(() => {});
+        syncMasterPasscodeHashFromCloud().catch(() => {});
       } catch (err) {
-        console.error('Auth initialization error:', err);
+        if (isInvalidRefreshTokenError(err)) {
+          await recoverFromUnrecoverableSession();
+        } else {
+          console.warn('Auth initialization warning:', err instanceof Error ? err.message : 'Unknown error');
+        }
         if (mounted) setIsLoading(false);
       }
     }
@@ -273,8 +376,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     return () => {
       mounted = false;
+      authSubscription?.unsubscribe();
     };
-  }, []);
+  }, [applyRoleForUser, lockSecurity]);
 
   // Inactivity Auto-Lock: Automatically lock counter after 15 minutes of idle time
   useEffect(() => {
@@ -303,140 +407,153 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Sign In with Email with Role-Based Redirection
   const signInWithEmail = async (email: string, password: string) => {
     setIsLoading(true);
+    setSessionExpiredNotice(null);
     const cleanEmail = email.trim().toLowerCase();
 
     // Recognized 1 Owner & 2 Admin credentials
     const { role: assignedRole, slot: assignedSlot, redirectView: initialRedirect, fullName: defaultFullName } = detectRoleAndSlot(cleanEmail);
     let targetRedirect: 'dashboard' | 'pos' | 'inventory' = initialRedirect;
 
-    // 1. Try Supabase Auth
-    if (supabase) {
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password,
-        });
+    try {
+      // 1. Try Supabase Auth
+      if (supabase) {
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: cleanEmail,
+            password,
+          });
 
-        if (!error && data.user) {
-          setUser(data.user);
-          setSession(data.session);
+          if (!error && data.user) {
+            hadCloudSessionRef.current = true;
+            hasRecoveredInvalidSessionRef.current = false;
+            try {
+              localStorage.removeItem(LOCAL_USER_STORAGE_KEY);
+              supabase.auth.startAutoRefresh();
+            } catch {}
 
-          // Update profiles with auth_user_id if not linked
-          try {
-            await supabase
-              .from('profiles')
-              .update({ auth_user_id: data.user.id, is_active: true })
-              .eq('email', cleanEmail);
-          } catch {}
+            setUser(data.user);
+            setSession(data.session);
 
-          // Fetch profile configuration if profiles table exists in Supabase
-          try {
-            const { data: prof } = await supabase
-              .from('profiles')
-              .select('role, admin_slot, default_redirect_view')
-              .eq('email', cleanEmail)
-              .maybeSingle();
+            // Update profiles with auth_user_id if not linked
+            try {
+              await supabase
+                .from('profiles')
+                .update({ auth_user_id: data.user.id, is_active: true })
+                .eq('email', cleanEmail);
+            } catch {}
 
-            if (prof?.role) {
-              setRole(prof.role as UserRole, prof.admin_slot as 1 | 2 | null);
-            } else {
+            // Fetch profile configuration if profiles table exists in Supabase
+            try {
+              const { data: prof } = await supabase
+                .from('profiles')
+                .select('role, admin_slot, default_redirect_view')
+                .eq('email', cleanEmail)
+                .maybeSingle();
+
+              if (prof?.role) {
+                setRole(prof.role as UserRole, prof.admin_slot as 1 | 2 | null);
+              } else {
+                setRole(assignedRole, assignedSlot);
+              }
+
+              if (prof?.default_redirect_view) {
+                const cleanView = prof.default_redirect_view.split(':')[0].trim();
+                if (cleanView === 'dashboard' || cleanView === 'pos' || cleanView === 'inventory') {
+                  targetRedirect = cleanView;
+                }
+              }
+            } catch {
               setRole(assignedRole, assignedSlot);
             }
 
-            if (prof?.default_redirect_view) {
-              const cleanView = prof.default_redirect_view.split(':')[0].trim();
-              if (cleanView === 'dashboard' || cleanView === 'pos' || cleanView === 'inventory') {
-                targetRedirect = cleanView;
+            // Execute Role-Based Redirection
+            try {
+              localStorage.setItem('yd_active_view', targetRedirect);
+              if (typeof window !== 'undefined') {
+                window.location.hash = `#/${targetRedirect}`;
               }
+            } catch {}
+
+            // Always lock security initially after sign in so Master Passcode popup is triggered
+            lockSecurity();
+            return { error: null, redirectView: targetRedirect };
+          } else if (error) {
+            // If specific Supabase error
+            if (error.message?.includes('Email not confirmed')) {
+              return { 
+                error: { 
+                  message: 'ईमेल पडताळणी प्रलंबित आहे (Email not confirmed). कृपया तुमचा ईमेल इनबॉक्स तपासा किंवा Supabase Dashboard मधील Authentication -> Users मध्ये Confirm User करा.' 
+                } 
+              };
             }
-          } catch {
-            setRole(assignedRole, assignedSlot);
-          }
 
-          // Execute Role-Based Redirection
-          try {
-            localStorage.setItem('yd_active_view', targetRedirect);
-            if (typeof window !== 'undefined') {
-              window.location.hash = `#/${targetRedirect}`;
+            const isDbError = error.message?.toLowerCase().includes('database error') || error.message?.toLowerCase().includes('finding user');
+            const isNetworkError = error.message?.toLowerCase().includes('failed to fetch') || error.message?.toLowerCase().includes('network');
+            const isOfficial = 
+              cleanEmail === 'yogeshwaridairy9896@gmail.com' ||
+              cleanEmail === 'nilusakhare2003@gmail.com' ||
+              cleanEmail.includes('nilu') ||
+              cleanEmail.includes('yogeshwari');
+
+            // If official shop account and there's a network issue or database error, proceed to fallback!
+            if (isOfficial && (isNetworkError || isDbError)) {
+              console.warn('Falling back to local authorized session due to auth issue:', error.message);
+            } else {
+              return { error };
             }
-          } catch {}
-
-          // Always lock security initially after sign in so Master Passcode popup is triggered
-          lockSecurity();
-          return { error: null, redirectView: targetRedirect };
-        } else if (error) {
-          // If specific Supabase error
-          if (error.message?.includes('Email not confirmed')) {
-            return { 
-              error: { 
-                message: 'ईमेल पडताळणी प्रलंबित आहे (Email not confirmed). कृपया तुमचा ईमेल इनबॉक्स तपासा किंवा Supabase Dashboard मधील Authentication -> Users मध्ये Confirm User करा.' 
-              } 
-            };
           }
-
-          const isDbError = error.message?.toLowerCase().includes('database error') || error.message?.toLowerCase().includes('finding user');
-          const isNetworkError = error.message?.toLowerCase().includes('failed to fetch') || error.message?.toLowerCase().includes('network');
-          const isOfficial = 
-            cleanEmail === 'yogeshwaridairy9896@gmail.com' ||
-            cleanEmail === 'nilusakhare2003@gmail.com' ||
-            cleanEmail.includes('nilu') ||
-            cleanEmail.includes('yogeshwari');
-
-          // If official shop account and there's a network issue or database error, proceed to fallback!
-          if (isOfficial && (isNetworkError || isDbError)) {
-            console.warn('Falling back to local authorized session due to auth issue:', error.message);
-          } else {
-            return { error };
-          }
+        } catch (err: any) {
+          console.warn('Supabase auth sign in failed:', err instanceof Error ? err.message : 'Unknown error');
         }
-      } catch (err: any) {
-        console.error('Supabase auth sign in error:', err);
       }
+
+      // 2. Offline Emergency / Local Shop Counter Auth for 1 Owner and 1 Admin (Nilesh Sakhare)
+      if (
+        cleanEmail === 'yogeshwaridairy9896@gmail.com' ||
+        cleanEmail === 'nilusakhare2003@gmail.com' ||
+        cleanEmail === 'owner@yogeshwaridairy.com' || 
+        cleanEmail === 'admin1@yogeshwaridairy.com' ||
+        cleanEmail === 'admin@yogeshwaridairy.com' ||
+        cleanEmail.includes('nilu') ||
+        cleanEmail.includes('yogeshwari') ||
+        cleanEmail.includes('owner') ||
+        cleanEmail.includes('admin') ||
+        cleanEmail.includes('umesh')
+      ) {
+        const localUser: any = {
+          id: `ydo-${assignedRole.toLowerCase()}${assignedSlot ? assignedSlot : ''}-counter`,
+          email: cleanEmail,
+          user_metadata: {
+            full_name: defaultFullName,
+            role: assignedRole,
+            admin_slot: assignedSlot,
+            default_redirect_view: targetRedirect,
+          },
+          aud: 'authenticated',
+          created_at: new Date().toISOString(),
+        };
+
+        hadCloudSessionRef.current = false;
+        setUser(localUser);
+        setSession(null);
+        setRole(assignedRole, assignedSlot);
+        try {
+          localStorage.setItem(LOCAL_USER_STORAGE_KEY, JSON.stringify(localUser));
+          localStorage.setItem('yd_active_view', targetRedirect);
+          if (typeof window !== 'undefined') {
+            window.location.hash = `#/${targetRedirect}`;
+          }
+        } catch {}
+
+        // Always require Master Passcode immediately after login!
+        lockSecurity();
+        return { error: null, redirectView: targetRedirect };
+      }
+
+      return { error: { message: 'Invalid credentials. Only verified 1 Owner and 2 Admin profiles are permitted.' } };
+    } finally {
+      setIsLoading(false);
     }
-
-    // 2. Offline Emergency / Local Shop Counter Auth for 1 Owner and 1 Admin (Nilesh Sakhare)
-    if (
-      cleanEmail === 'yogeshwaridairy9896@gmail.com' ||
-      cleanEmail === 'nilusakhare2003@gmail.com' ||
-      cleanEmail === 'owner@yogeshwaridairy.com' || 
-      cleanEmail === 'admin1@yogeshwaridairy.com' ||
-      cleanEmail === 'admin@yogeshwaridairy.com' ||
-      cleanEmail.includes('nilu') ||
-      cleanEmail.includes('yogeshwari') ||
-      cleanEmail.includes('owner') ||
-      cleanEmail.includes('admin') ||
-      cleanEmail.includes('umesh')
-    ) {
-      const localUser: any = {
-        id: `ydo-${assignedRole.toLowerCase()}${assignedSlot ? assignedSlot : ''}-counter`,
-        email: cleanEmail,
-        user_metadata: {
-          full_name: defaultFullName,
-          role: assignedRole,
-          admin_slot: assignedSlot,
-          default_redirect_view: targetRedirect,
-        },
-        aud: 'authenticated',
-        created_at: new Date().toISOString(),
-      };
-
-      setUser(localUser);
-      setSession(null);
-      setRole(assignedRole, assignedSlot);
-      try {
-        localStorage.setItem(LOCAL_USER_STORAGE_KEY, JSON.stringify(localUser));
-        localStorage.setItem('yd_active_view', targetRedirect);
-        if (typeof window !== 'undefined') {
-          window.location.hash = `#/${targetRedirect}`;
-        }
-      } catch {}
-
-      // Always require Master Passcode immediately after login!
-      lockSecurity();
-      return { error: null, redirectView: targetRedirect };
-    }
-
-    return { error: { message: 'Invalid credentials. Only verified 1 Owner and 2 Admin profiles are permitted.' } };
   };
 
   // Sign Up with Email (Supports Owner & Admin registration with auto-linking)
@@ -568,12 +685,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Sign Out
+  // Sign Out (local scope so signing out on one counter/browser does not invalidate other shop devices' refresh tokens)
   const signOut = async () => {
     setIsLoading(true);
+    hadCloudSessionRef.current = false;
+    setSessionExpiredNotice(null);
     try {
       if (supabase) {
-        await supabase.auth.signOut();
+        try {
+          await supabase.auth.signOut({ scope: 'local' });
+        } catch (signOutErr) {
+          // If the token was already invalid/expired, ensure local auth storage is cleanly cleared
+          if (isInvalidRefreshTokenError(signOutErr)) {
+            await clearStaleSupabaseAuthSession();
+          }
+        }
       }
       setUser(null);
       setSession(null);
@@ -584,7 +710,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.removeItem('yd_auth_guest_mode');
       } catch {}
     } catch (err) {
-      console.error('Sign out error:', err);
+      console.warn('Sign out warning:', err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsLoading(false);
     }
@@ -629,6 +755,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         signOut,
         continueAsGuest,
         resetPassword,
+        sessionExpiredNotice,
+        clearSessionExpiredNotice,
       }}
     >
       {children}

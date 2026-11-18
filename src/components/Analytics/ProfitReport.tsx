@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
+import { CompactPageHeader } from '../Common/CompactPageHeader';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import {
   Sparkles,
@@ -296,58 +297,52 @@ export const ProfitReport: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto pb-32 sm:pb-8">
+    <div className="space-y-3 max-w-5xl mx-auto pb-28 lg:pb-8">
 
-      {/* 1. Compact Page Header */}
-      <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs transition-colors flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
-            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 shrink-0" />
-            <span className="truncate">
-              {language === 'mr' ? 'नफा व तोटा अहवाल (P&L)' : language === 'hi' ? 'लाभ और हानि रिपोर्ट (P&L)' : 'Profit & Loss Statement'}
-            </span>
-          </h2>
-          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5 hidden sm:block truncate">
-            {language === 'mr'
-              ? 'निव्वळ नफा आणि कोणत्या मालातून सर्वाधिक नफा मिळतो याचे संपूर्ण विश्लेषण'
-              : language === 'hi'
-                ? 'शुद्ध मुनाफा एवं कौनसे माल से सर्वाधिक लाभ मिलता है उसका पूरा विश्लेषण'
-                : 'Comprehensive Net Profit analysis and product-level margin breakdown'}
-          </p>
-        </div>
+      {/* 1. Compact Header + Overflow Export Sheet */}
+      <CompactPageHeader
+        icon={<Sparkles className="w-4 h-4 text-amber-500" />}
+        title={language === 'mr' ? 'नफा व तोटा (P&L)' : language === 'hi' ? 'लाभ और हानि (P&L)' : 'Profit & Loss'}
+        subtitle={
+          language === 'mr'
+            ? 'निव्वळ नफा आणि कोणत्या मालातून सर्वाधिक नफा मिळतो याचे संपूर्ण विश्लेषण'
+            : language === 'hi'
+              ? 'शुद्ध मुनाफा एवं कौनसे माल से सर्वाधिक लाभ मिलता है उसका पूरा विश्लेषण'
+              : 'Comprehensive Net Profit analysis and product-level margin breakdown'
+        }
+        primaryAction={{
+          label: language === 'mr' ? 'PDF' : language === 'hi' ? 'PDF' : 'PDF',
+          icon: <Download className="w-4 h-4" />,
+          onClick: handleDownloadPLPDF,
+          ariaLabel: 'Download Official P&L Statement PDF',
+        }}
+        moreTitle={language === 'mr' ? 'नफा-तोटा अहवाल पर्याय' : language === 'hi' ? 'P&L रिपोर्ट विकल्प' : 'P&L Report Actions'}
+        moreActions={[
+          {
+            id: 'view-pdf',
+            label: language === 'mr' ? 'अहवाल पहा (View PDF)' : language === 'hi' ? 'रिपोर्ट देखें (View PDF)' : 'View P&L PDF',
+            description: language === 'mr' ? 'ब्राउझरमध्ये प्रीव्ह्यू पहा' : language === 'hi' ? 'ब्राउज़र में प्रीव्यू देखें' : 'Preview official P&L statement',
+            icon: <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
+            onClick: handleViewPLPDF,
+          },
+          {
+            id: 'print',
+            label: language === 'mr' ? 'प्रिंट करा' : language === 'hi' ? 'प्रिंट करें' : 'Print Statement',
+            description: language === 'mr' ? 'अधिकृत P&L प्रिंट करा' : language === 'hi' ? 'आधिकारिक P&L प्रिंट करें' : 'Send statement to printer',
+            icon: <Printer className="w-4 h-4 text-slate-600 dark:text-slate-300" />,
+            onClick: handlePrintPLPDF,
+          },
+          {
+            id: 'download-pdf',
+            label: language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF',
+            description: language === 'mr' ? 'अधिकृत P&L PDF सेव्ह करा' : language === 'hi' ? 'आधिकारिक P&L PDF सेव करें' : 'Save official P&L statement PDF',
+            icon: <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
+            onClick: handleDownloadPLPDF,
+          },
+        ]}
+      />
 
-        <button
-          onClick={handleDownloadPLPDF}
-          className="h-10 px-3.5 sm:px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center gap-1.5 shrink-0 min-h-[40px]"
-          title="Download Official P&L Statement PDF"
-        >
-          <Download className="w-4 h-4" />
-          <span>{language === 'mr' ? 'नफा-तोटा PDF' : language === 'hi' ? 'P&L PDF' : 'Download PDF'}</span>
-        </button>
-      </div>
-
-      {/* 2. Quick Actions Row (Horizontally Scrollable) */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 snap-x">
-        <button
-          onClick={handleViewPLPDF}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title={language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View P&L Statement PDF'}
-        >
-          <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          <span>{language === 'mr' ? 'अहवाल पहा' : language === 'hi' ? 'रिपोर्ट देखें' : 'View PDF'}</span>
-        </button>
-
-        <button
-          onClick={handlePrintPLPDF}
-          className="h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] hover:bg-slate-50 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 shrink-0 snap-start active:scale-95 shadow-2xs min-h-[40px]"
-          title="Print Official P&L Statement"
-        >
-          <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-          <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
-        </button>
-      </div>
-
-      {/* 3. Time Filter */}
+      {/* 2. Sticky Time Filter */}
       <PeriodFilter />
 
       {/* 4. PROFIT & LOSS STATEMENT CARD */}

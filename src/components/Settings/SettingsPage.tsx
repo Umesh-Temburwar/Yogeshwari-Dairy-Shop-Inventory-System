@@ -34,6 +34,7 @@ import {
   setAuditStreamEnabled,
   subscribeToAuditStreamSetting
 } from '../../lib/auditStreamConfig';
+import { CompactPageHeader } from '../Common/CompactPageHeader';
 
 interface SettingsPageProps {
   onOpenChangePasscode: () => void;
@@ -125,41 +126,29 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-5 pb-28 sm:pb-8">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#131F1B] p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="p-2.5 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 shrink-0">
-            <SettingsIcon className="w-6 h-6" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight truncate">
-              {language === 'mr' ? 'अ‍ॅप सेटिंग्ज व सुरक्षा' : language === 'hi' ? 'ऐप सेटिंग्स व सुरक्षा' : 'Settings & Security'}
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-[#8FA69C] truncate">
-              {language === 'mr'
-                ? 'मास्टर पासवर्ड, थीम, भाषा, फोटो डेटाबेस आणि क्लाउड सिंक नियंत्रणे'
-                : language === 'hi'
-                ? 'मास्टर पासवर्ड, थीम, भाषा, फोटो डेटाबेस और क्लाउड सिंक नियंत्रण'
-                : 'Manage master passcode, theme, language, photo database, and cloud sync'}
-            </p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => refreshData()}
-          disabled={isSyncing}
-          className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition cursor-pointer shrink-0 disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-          <span>
-            {isSyncing
-              ? language === 'mr' ? 'सिंक होत आहे...' : 'सिंक हो रहा है...'
-              : language === 'mr' ? 'डेटाबेस सिंक करा' : language === 'hi' ? 'डेटाबेस सिंक करें' : 'Sync Database'}
-          </span>
-        </button>
-      </div>
+    <div className="max-w-5xl mx-auto space-y-3.5 pb-28 lg:pb-8">
+      {/* Compact Page Header */}
+      <CompactPageHeader
+        icon={<SettingsIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
+        title={language === 'mr' ? 'सेटिंग्ज व सुरक्षा' : language === 'hi' ? 'सेटिंग्स व सुरक्षा' : 'Settings & Security'}
+        subtitle={
+          language === 'mr'
+            ? 'मास्टर पासवर्ड, थीम, भाषा, फोटो डेटाबेस आणि क्लाउड सिंक नियंत्रणे'
+            : language === 'hi'
+              ? 'मास्टर पासवर्ड, थीम, भाषा, फोटो डेटाबेस और क्लाउड सिंक नियंत्रण'
+              : 'Manage master passcode, theme, language, photo database, and cloud sync'
+        }
+        primaryAction={{
+          label: isSyncing
+            ? language === 'mr' ? 'सिंक...' : 'सिंक...'
+            : language === 'mr' ? 'सिंक' : language === 'hi' ? 'सिंक' : 'Sync',
+          icon: <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />,
+          onClick: () => {
+            if (!isSyncing) refreshData();
+          },
+          ariaLabel: 'Sync Database',
+        }}
+      />
 
       {/* Main 2-Column Settings Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">

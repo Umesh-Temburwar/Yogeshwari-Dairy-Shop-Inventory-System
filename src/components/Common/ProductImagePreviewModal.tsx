@@ -1,19 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   X,
-  Copy,
   Check,
-  ClipboardPaste,
-  ExternalLink,
+  Clipboard,
   Image as ImageIcon,
-  Save,
   Trash2,
   Loader2,
-  CheckCircle2,
   AlertTriangle,
   Search,
   Barcode,
-  Upload,
   Camera,
   Crop
 } from 'lucide-react';
@@ -39,6 +34,11 @@ interface ProductImagePreviewModalProps {
   onImageUpdated?: (productId: string, newUrl: string | null) => void;
 }
 
+interface ToastState {
+  type: 'success' | 'error';
+  text: string;
+}
+
 export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> = ({
   product,
   onClose,
@@ -49,13 +49,12 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
   const { user, role } = useAuth();
   const isAdmin = Boolean(user) && (role === 'Owner' || role === 'Admin');
 
+  // Image URL lives strictly in state — never rendered on screen
   const [urlInput, setUrlInput] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [pasted, setPasted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [previewError, setPreviewError] = useState(false);
-  const [previewLoaded, setPreviewLoaded] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
+  const [erroredUrl, setErroredUrl] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
   const [cropFile, setCropFile] = useState<File | null>(null);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -64,23 +63,41 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
   const [isLoadingCropCurrent, setIsLoadingCropCurrent] = useState(false);
   const [isLiveCameraOpen, setIsLiveCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
+
+  const previewImgRef = useRef<HTMLImageElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastProductIdRef = useRef<string | null>(null);
 
-  const stopLiveCamera = () => {
+  const showToast = useCallback((type: 'success' | 'error', text: string) => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    setToast({ type, text });
+    toastTimerRef.current = setTimeout(() => {
+      setToast(null);
+      toastTimerRef.current = null;
+    }, 3000);
+  }, []);
+
+  const stopLiveCamera = useCallback(() => {
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach((track) => track.stop());
       mediaStreamRef.current = null;
     }
     setIsLiveCameraOpen(false);
     setCameraError(null);
-  };
+  }, []);
 
   useEffect(() => {
     return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach((track) => track.stop());
         mediaStreamRef.current = null;
@@ -88,22 +105,44 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
     };
   }, []);
 
+  const productId = product?.id ?? null;
+  const productImageUrl = (product?.image_url || '').trim();
+
   useEffect(() => {
-    if (product) {
-      const currentUrl = (product.image_url || '').trim();
-      setUrlInput(currentUrl);
-      setCopied(false);
-      setPasted(false);
-      setPreviewError(false);
-      setPreviewLoaded(false);
-      setFeedback(null);
+    if (!productId) {
+      lastProductIdRef.current = null;
+      return;
+    }
+    const isSwitchingProduct = lastProductIdRef.current !== productId;
+    lastProductIdRef.current = productId;
+
+    setUrlInput(productImageUrl);
+    if (isSwitchingProduct) {
       setCropFile(null);
       setUploadError(null);
       setUploadProgress(0);
       setShowSourceChooser(false);
+      setConfirmingRemove(false);
       stopLiveCamera();
     }
-  }, [product]);
+  }, [productId, productImageUrl, stopLiveCamera]);
+
+  const trimmedInput = urlInput.trim();
+  const activePreviewUrl = /^https?:\/\//i.test(trimmedInput) ? trimmedInput : '';
+  const previewLoaded = Boolean(activePreviewUrl) && loadedUrl === activePreviewUrl;
+  const previewError = Boolean(activePreviewUrl) && erroredUrl === activePreviewUrl;
+
+  // Callback ref handles already-cached images synchronously on mount without race conditions
+  const handlePreviewImgRef = useCallback((el: HTMLImageElement | null) => {
+    previewImgRef.current = el;
+    if (el && el.complete && el.naturalWidth > 0) {
+      const currentSrc = el.getAttribute('src');
+      if (currentSrc) {
+        setLoadedUrl(currentSrc);
+        setErroredUrl(null);
+      }
+    }
+  }, []);
 
   // Attach live camera MediaStream to video element when live camera modal opens
   useEffect(() => {
@@ -161,14 +200,43 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [product, cropFile, isLiveCameraOpen, onClose]);
 
-  if (!product) return null;
+  const toastPortal = toast ? (
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[160] max-w-[calc(100vw-2rem)] pointer-events-none"
+    >
+      <div
+        className={`pointer-events-auto flex items-center gap-2 px-4 py-2.5 rounded-2xl shadow-xl border text-xs font-bold ${
+          toast.type === 'success'
+            ? 'bg-emerald-900 text-white border-emerald-700'
+            : 'bg-rose-700 text-white border-rose-600'
+        }`}
+      >
+        {toast.type === 'success' ? (
+          <Check className="w-4 h-4 shrink-0 text-emerald-300" />
+        ) : (
+          <AlertTriangle className="w-4 h-4 shrink-0 text-rose-200" />
+        )}
+        <span className="truncate">{toast.text}</span>
+      </div>
+    </div>
+  ) : null;
 
-  const trimmedInput = urlInput.trim();
-  const activePreviewUrl = trimmedInput.startsWith('http://') || trimmedInput.startsWith('https://')
-    ? trimmedInput
-    : '';
+  if (!product) {
+    return toastPortal;
+  }
+
   const currentSavedUrl = (product.image_url || '').trim();
-  const hasChanges = trimmedInput !== currentSavedUrl;
+  const isDirty = trimmedInput !== currentSavedUrl;
+  const isPreviewLoading = Boolean(activePreviewUrl) && !previewLoaded && !previewError;
+  const canSave =
+    isAdmin &&
+    isDirty &&
+    !isSaving &&
+    !isUploadingFile &&
+    !previewError &&
+    (!activePreviewUrl || previewLoaded);
 
   const displayName =
     language === 'mr' && product.marathi_name
@@ -177,6 +245,11 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
       ? product.hindi_name
       : product.name;
 
+  const brandForQuery =
+    product.brand && product.brand !== 'Generic' ? product.brand.trim() : '';
+  const packshotQuery = `${brandForQuery ? `${brandForQuery} ` : ''}${product.name.trim()} packshot`;
+  const googleImageSearchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(packshotQuery)}`;
+
   const handleSelectDeviceFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -184,15 +257,12 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
 
     const validation = validateImageFile(file);
     if (!validation.valid) {
-      setFeedback({
-        type: 'error',
-        text: validation.error || 'Unsupported or corrupted image file.'
-      });
+      showToast('error', validation.error || 'Unsupported or corrupted image file.');
       return;
     }
 
     setShowSourceChooser(false);
-    setFeedback(null);
+    setConfirmingRemove(false);
     setUploadError(null);
     setCropFile(file);
   };
@@ -233,7 +303,6 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
         if (!blob) return;
         const captured = new File([blob], `camera_${Date.now()}.jpg`, { type: 'image/jpeg' });
         stopLiveCamera();
-        setFeedback(null);
         setUploadError(null);
         setCropFile(captured);
       },
@@ -243,26 +312,21 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
   };
 
   const handleCropCurrentPhoto = async () => {
-    if (!activePreviewUrl || !isAdmin || isLoadingCropCurrent) return;
+    if (!activePreviewUrl || !isAdmin || isLoadingCropCurrent || previewError) return;
     setIsLoadingCropCurrent(true);
-    setFeedback(null);
     setShowSourceChooser(false);
+    setConfirmingRemove(false);
     try {
       const fetchedFile = await fetchImageUrlAsFile(activePreviewUrl, product.name);
       setUploadError(null);
       setCropFile(fetchedFile);
     } catch (err: unknown) {
-      setFeedback({
-        type: 'error',
-        text:
-          err instanceof Error
-            ? err.message
-            : language === 'mr'
-            ? 'या फोटोवर थेट क्रॉप करता आले नाही. कृपया गॅलरी किंवा कॅमेरा निवडा.'
-            : language === 'hi'
-            ? 'इस फोटो को सीधे क्रॉप नहीं किया जा सका। कृपया गैलरी या कैमरा चुनें।'
-            : 'Could not crop this external URL directly. Please choose from Gallery or Camera.'
-      });
+      showToast(
+        'error',
+        err instanceof Error
+          ? err.message
+          : 'Could not crop this external photo directly. Upload from Gallery or Camera instead.'
+      );
     } finally {
       setIsLoadingCropCurrent(false);
     }
@@ -303,19 +367,13 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
       }
 
       setUrlInput(publicUrl);
-      setPreviewError(false);
-      setPreviewLoaded(false);
+      setErroredUrl(null);
       onImageUpdated?.(product.id, publicUrl);
       setCropFile(null);
-      setFeedback({
-        type: 'success',
-        text:
-          language === 'mr'
-            ? `WebP अपलोड झाला (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)}, बचत ${processed.savedPercent}%).`
-            : language === 'hi'
-            ? `WebP अपलोड हुआ (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)}, बचत ${processed.savedPercent}%)।`
-            : `Uploaded WebP (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)}, saved ${processed.savedPercent}%).`
-      });
+      showToast(
+        'success',
+        `Photo saved (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)})`
+      );
     } catch (err: unknown) {
       setUploadError(err instanceof Error ? err.message : 'Upload failed.');
     } finally {
@@ -324,75 +382,34 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
     }
   };
 
-  const handleCopyUrl = async () => {
-    const textToCopy = trimmedInput || currentSavedUrl;
-    if (!textToCopy) return;
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Fallback copy
-    }
-  };
-
-  const handlePasteUrl = async () => {
+  const handlePasteFromClipboard = async () => {
+    if (!isAdmin) return;
+    setConfirmingRemove(false);
+    setShowSourceChooser(false);
     try {
       if (!navigator.clipboard || typeof navigator.clipboard.readText !== 'function') {
-        throw new Error('Clipboard read unsupported');
-      }
-      const clipText = (await navigator.clipboard.readText()).trim();
-      if (!clipText) {
-        setFeedback({
-          type: 'error',
-          text:
-            language === 'mr'
-              ? 'क्लिपबोर्डवर कोणतीही लिंक कॉपी केलेली नाही.'
-              : language === 'hi'
-              ? 'क्लिपबोर्ड पर कोई लिंक कॉपी नहीं है।'
-              : 'Clipboard is empty. Copy an image URL first.'
-        });
+        showToast('error', 'Copy an image link first');
         return;
       }
+      const clipText = (await navigator.clipboard.readText()).trim();
+      if (!/^https?:\/\//i.test(clipText)) {
+        showToast('error', 'Copy an image link first');
+        return;
+      }
+      clearFailedImageUrl(clipText);
       setUrlInput(clipText);
-      setPreviewError(false);
-      setPreviewLoaded(false);
-      setFeedback(null);
-      setPasted(true);
-      setTimeout(() => setPasted(false), 2000);
+      setErroredUrl(null);
+      showToast('success', 'Photo pasted');
     } catch {
-      textareaRef.current?.focus();
-      setFeedback({
-        type: 'error',
-        text:
-          language === 'mr'
-            ? 'ब्राउझरने क्लिपबोर्ड परवानगी नाकारली — कृपया बॉक्समध्ये लाँग-प्रेस करून Paste करा.'
-            : language === 'hi'
-            ? 'ब्राउज़र ने क्लिपबोर्ड अनुमति रोकी — कृपया बॉक्स में लॉन्ग-प्रेस करके Paste करें।'
-            : 'Clipboard permission blocked — long-press or Ctrl+V inside the URL box to paste.'
-      });
+      showToast('error', 'Copy an image link first');
     }
   };
 
-  const handleSaveUrl = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSaving || !isAdmin) return;
-
-    if (trimmedInput && !trimmedInput.startsWith('http://') && !trimmedInput.startsWith('https://')) {
-      setFeedback({
-        type: 'error',
-        text:
-          language === 'mr'
-            ? 'कृपया वैध https:// किंवा http:// इमेज URL टाका.'
-            : language === 'hi'
-            ? 'कृपया वैध https:// या http:// इमेज URL दर्ज करें।'
-            : 'Please enter a valid http:// or https:// image URL.'
-      });
-      return;
-    }
+  const handleSavePhoto = async () => {
+    if (!canSave) return;
 
     setIsSaving(true);
-    setFeedback(null);
+    setConfirmingRemove(false);
 
     try {
       const nextUrl = trimmedInput || undefined;
@@ -401,10 +418,9 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
         clearFailedImageUrl(nextUrl);
       }
 
-      // Update StoreContext + Supabase (existing Storage files are never deleted)
+      // Reuse existing StoreContext + Supabase save flow (never deletes existing Storage files)
       await updateProduct(product.id, { image_url: nextUrl });
 
-      // Also stamp official verification metadata in Supabase when available
       if (supabase) {
         try {
           await supabase
@@ -422,524 +438,380 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
       }
 
       onImageUpdated?.(product.id, nextUrl || null);
-
-      setFeedback({
-        type: 'success',
-        text: nextUrl
-          ? language === 'mr'
-            ? 'उत्पादनाची अधिकृत इमेज URL यशस्वीरित्या अपडेट झाली!'
-            : language === 'hi'
-            ? 'उत्पाद का आधिकारिक इमेज URL सफलतापूर्वक अपडेट हो गया!'
-            : 'Official product image URL updated successfully!'
-          : language === 'mr'
-          ? 'उत्पादनाची इमेज काढली गेली.'
-          : language === 'hi'
-          ? 'उत्पाद की इमेज हटा दी गई।'
-          : 'Product image removed.'
-      });
+      showToast('success', nextUrl ? 'Photo saved' : 'Photo removed');
+      onClose();
     } catch {
-      setFeedback({
-        type: 'error',
-        text:
-          language === 'mr'
-            ? 'URL सेव्ह करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.'
-            : language === 'hi'
-            ? 'URL सेव करने में त्रुटि हुई। कृपया पुनः प्रयास करें।'
-            : 'Failed to save image URL. Please try again.'
-      });
+      showToast('error', 'Failed to save photo. Please try again.');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleRemoveImage = async () => {
-    if (!isAdmin) return;
-    setUrlInput('');
-    setPreviewError(false);
-    setPreviewLoaded(false);
+  const handleConfirmRemoveImage = async () => {
+    if (!isAdmin || isSaving) return;
+    setConfirmingRemove(false);
     setIsSaving(true);
-    setFeedback(null);
     try {
+      setUrlInput('');
+      setLoadedUrl(null);
+      setErroredUrl(null);
       await updateProduct(product.id, { image_url: undefined });
       if (supabase) {
         try {
           await supabase
             .from('products')
-            .update({ image_url: null, image_status: 'missing', updated_at: new Date().toISOString() })
+            .update({
+              image_url: null,
+              image_status: 'missing',
+              updated_at: new Date().toISOString()
+            })
             .eq('id', product.id);
-        } catch {}
+        } catch {
+          // Non-blocking metadata update
+        }
       }
       onImageUpdated?.(product.id, null);
-      setFeedback({
-        type: 'success',
-        text:
-          language === 'mr'
-            ? 'इमेज यशस्वीरित्या काढली गेली.'
-            : language === 'hi'
-            ? 'इमेज सफलतापूर्वक हटाई गई।'
-            : 'Image removed successfully.'
-      });
+      showToast('success', 'Photo removed');
+    } catch {
+      showToast('error', 'Failed to remove photo. Please try again.');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const googleImageSearchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(
-    `${product.brand && product.brand !== 'Generic' && product.brand !== 'Yogeshwari Dairy' ? product.brand + ' ' : ''}${product.name} official packshot white background`
-  )}`;
+  const handleOpenPackshotSearch = () => {
+    setShowSourceChooser(false);
+    window.open(googleImageSearchUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const hasPhotoToRemove = Boolean(currentSavedUrl || activePreviewUrl);
 
   return (
     <>
+      {toastPortal}
+
       <div
-        className="fixed inset-0 z-[110] bg-black/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4"
+        className="fixed inset-0 z-[110] bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4"
         onClick={onClose}
         role="dialog"
         aria-modal="true"
         aria-labelledby="product-image-modal-title"
       >
-      <div
-        className="bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border border-slate-200/90 dark:border-[#24352F] rounded-2xl sm:rounded-3xl max-w-lg w-full max-h-[92dvh] flex flex-col shadow-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="shrink-0 flex items-start justify-between gap-3 px-4 sm:px-6 py-4 border-b border-slate-100 dark:border-[#24352F]">
-          <div className="min-w-0">
-            <h3
-              id="product-image-modal-title"
-              className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white leading-tight truncate"
-            >
-              {displayName}
-            </h3>
-            <div className="flex items-center flex-wrap gap-2 mt-1 text-[11px] text-slate-500 dark:text-[#8FA69C]">
-              {product.brand && (
-                <span className="font-bold text-emerald-700 dark:text-emerald-400">
-                  {product.brand}
-                </span>
-              )}
-              {product.barcode && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1A2A25] font-mono font-semibold text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-[#24352F]">
-                  <Barcode className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                  {product.barcode}
-                </span>
-              )}
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition shrink-0 cursor-pointer"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4">
-          {/* Pure-White Official Studio Photo Stage — Click Photo for Gallery / Camera / Crop */}
-          <div
-            role={isAdmin ? 'button' : undefined}
-            tabIndex={isAdmin ? 0 : undefined}
-            onClick={() => {
-              if (isAdmin && !isUploadingFile && !isLoadingCropCurrent) {
-                setShowSourceChooser((prev) => !prev);
-              }
-            }}
-            onKeyDown={(e) => {
-              if (isAdmin && (e.key === 'Enter' || e.key === ' ')) {
-                e.preventDefault();
-                setShowSourceChooser((prev) => !prev);
-              }
-            }}
-            aria-label={
-              isAdmin
-                ? language === 'mr'
-                  ? 'फोटो अपलोड किंवा बदलण्यासाठी क्लिक करा (गॅलरी / कॅमेरा)'
-                  : language === 'hi'
-                  ? 'फोटो अपलोड या बदलने के लिए क्लिक करें (गैलरी / कैमरा)'
-                  : 'Click photo to upload or change (Gallery / Camera)'
-                : undefined
-            }
-            className={`group relative w-full aspect-[4/3] rounded-2xl bg-white border border-slate-200/90 dark:border-[#24352F] shadow-inner flex items-center justify-center overflow-hidden p-3 ${
-              isAdmin ? 'cursor-pointer hover:border-emerald-500/70 transition-colors' : ''
-            }`}
-          >
-            {activePreviewUrl && !previewError ? (
-              <img
-                key={activePreviewUrl}
-                src={activePreviewUrl}
-                alt={product.name}
-                referrerPolicy="no-referrer"
-                onLoad={() => {
-                  setPreviewLoaded(true);
-                  setPreviewError(false);
-                }}
-                onError={() => {
-                  setPreviewLoaded(false);
-                  setPreviewError(true);
-                }}
-                className="w-full h-full object-contain"
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center text-center text-slate-400 p-4 space-y-2">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-600 flex items-center justify-center">
-                  <Camera className="w-6 h-6" />
-                </div>
-                <p className="text-xs font-bold text-slate-600">
-                  {previewError
-                    ? language === 'mr'
-                      ? 'इमेज लोड झाली नाही — गॅलरी किंवा कॅमेरासाठी येथे क्लिक करा'
-                      : language === 'hi'
-                      ? 'इमेज लोड नहीं हुई — गैलरी या कैमरा के लिए यहाँ क्लिक करें'
-                      : 'Image failed to load — Tap here for Gallery or Camera'
-                    : language === 'mr'
-                    ? 'फोटो अपलोड करण्यासाठी येथे क्लिक करा (गॅलरी / कॅमेरा)'
-                    : language === 'hi'
-                    ? 'फोटो अपलोड करने के लिए यहाँ क्लिक करें (गैलरी / कैमरा)'
-                    : 'Tap here to upload photo (Gallery / Camera)'}
-                </p>
-              </div>
-            )}
-
-            {/* Status Pill */}
-            {activePreviewUrl && previewLoaded && !previewError && !showSourceChooser && (
-              <span className="absolute top-2.5 right-2.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold shadow-2xs">
-                <CheckCircle2 className="w-3 h-3" />
-                <span>Preview Ready</span>
-              </span>
-            )}
-
-            {/* Subtle Tap-to-Change / Crop Bottom Bar (always visible on mobile & desktop) */}
-            {isAdmin && !showSourceChooser && (
-              <div className="absolute inset-x-2.5 bottom-2.5 flex items-center justify-between gap-2 pointer-events-none">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/75 text-white text-[10px] font-bold">
-                  <Camera className="w-3 h-3 text-emerald-400" />
-                  <span>
-                    {language === 'mr'
-                      ? 'फोटो बदलण्यासाठी क्लिक करा'
-                      : language === 'hi'
-                      ? 'फोटो बदलने के लिए क्लिक करें'
-                      : 'Tap photo: Gallery / Camera'}
-                  </span>
-                </span>
-
-                {activePreviewUrl && !previewError && (
-                  <button
-                    type="button"
-                    disabled={isLoadingCropCurrent}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void handleCropCurrentPhoto();
-                    }}
-                    className="pointer-events-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-sm transition cursor-pointer disabled:opacity-50"
-                  >
-                    {isLoadingCropCurrent ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <Crop className="w-3 h-3" />
-                    )}
-                    <span>{language === 'mr' ? 'क्रॉप' : language === 'hi' ? 'क्रॉप' : 'Crop'}</span>
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Gallery / Camera Chooser Overlay when Photo is Clicked */}
-            {isAdmin && showSourceChooser && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className="absolute inset-0 bg-slate-950/80 flex flex-col items-center justify-center p-3 gap-2 overflow-y-auto"
+        <div
+          className="bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border border-slate-200/90 dark:border-[#24352F] rounded-3xl max-w-md w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Fixed Header */}
+          <div className="shrink-0 flex items-start justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-slate-100 dark:border-[#24352F] bg-white dark:bg-[#131F1B]">
+            <div className="min-w-0 flex-1">
+              <h3
+                id="product-image-modal-title"
+                className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white leading-tight truncate"
               >
-                <div className="flex items-center justify-between w-full max-w-[260px]">
-                  <span className="text-xs font-extrabold text-white">
-                    {language === 'mr'
-                      ? 'फोटो स्रोत निवडा'
-                      : language === 'hi'
-                      ? 'फोटो स्रोत चुनें'
-                      : 'Choose Photo Source'}
+                {displayName}
+              </h3>
+              <div className="flex items-center flex-wrap gap-2 mt-1 text-xs">
+                {product.brand && (
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400 truncate max-w-[160px]">
+                    {product.brand}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowSourceChooser(false)}
-                    className="w-7 h-7 rounded-lg bg-white/15 hover:bg-white/25 text-white flex items-center justify-center cursor-pointer"
-                    aria-label="Close source chooser"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 w-full max-w-[260px]">
-                  <button
-                    type="button"
-                    onClick={handleChooseGallery}
-                    className="flex flex-col items-center justify-center gap-1 py-2.5 px-2.5 rounded-xl bg-white hover:bg-emerald-50 text-slate-900 font-extrabold text-xs shadow-lg active:scale-[0.98] transition cursor-pointer"
-                  >
-                    <span className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                      <ImageIcon className="w-4 h-4" />
-                    </span>
-                    <span>{language === 'mr' ? 'गॅलरी' : language === 'hi' ? 'गैलरी' : 'Gallery'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleChooseCamera}
-                    className="flex flex-col items-center justify-center gap-1 py-2.5 px-2.5 rounded-xl bg-white hover:bg-emerald-50 text-slate-900 font-extrabold text-xs shadow-lg active:scale-[0.98] transition cursor-pointer"
-                  >
-                    <span className="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
-                      <Camera className="w-4 h-4" />
-                    </span>
-                    <span>{language === 'mr' ? 'कॅमेरा' : language === 'hi' ? 'कैमरा' : 'Camera'}</span>
-                  </button>
-                </div>
-
-                {activePreviewUrl && !previewError && (
-                  <button
-                    type="button"
-                    disabled={isLoadingCropCurrent}
-                    onClick={() => void handleCropCurrentPhoto()}
-                    className="w-full max-w-[260px] py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow cursor-pointer disabled:opacity-50"
-                  >
-                    {isLoadingCropCurrent ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Crop className="w-3.5 h-3.5" />
-                    )}
-                    <span>
-                      {language === 'mr'
-                        ? 'सध्याचा फोटो क्रॉप करा'
-                        : language === 'hi'
-                        ? 'मौजूदा फोटो क्रॉप करें'
-                        : 'Crop Current Photo'}
-                    </span>
-                  </button>
                 )}
-              </div>
-            )}
-          </div>
-
-          {/* Current Image URL Display + Copy & Open Actions */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC]">
-                {language === 'mr'
-                  ? 'उत्पादनाची अधिकृत इमेज URL'
-                  : language === 'hi'
-                  ? 'उत्पाद का आधिकारिक इमेज URL'
-                  : 'Product Official Image URL'}
-              </span>
-
-              <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                {activePreviewUrl && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={handleCopyUrl}
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-slate-200 text-[11px] font-bold transition cursor-pointer"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="w-3 h-3 text-emerald-600" />
-                          <span>{language === 'mr' ? 'कॉपी झाले' : language === 'hi' ? 'कॉपी हुआ' : 'Copied'}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3 h-3" />
-                          <span>{language === 'mr' ? 'URL कॉपी' : language === 'hi' ? 'कॉपी' : 'Copy'}</span>
-                        </>
-                      )}
-                    </button>
-
-                    <a
-                      href={activePreviewUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-slate-200 text-[11px] font-bold transition"
-                      title="Open image in new tab"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                      <span>{language === 'mr' ? 'उघडा' : language === 'hi' ? 'खोलें' : 'Open'}</span>
-                    </a>
-                  </>
-                )}
-
-                {isAdmin && (
-                  <button
-                    type="button"
-                    onClick={handlePasteUrl}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200/80 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold transition cursor-pointer"
-                    title="Paste copied image URL from clipboard"
-                  >
-                    {pasted ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                        <span>{language === 'mr' ? 'पेस्ट झाले' : language === 'hi' ? 'पेस्ट हुआ' : 'Pasted'}</span>
-                      </>
-                    ) : (
-                      <>
-                        <ClipboardPaste className="w-3 h-3" />
-                        <span>{language === 'mr' ? 'पेस्ट' : language === 'hi' ? 'पेस्ट' : 'Paste'}</span>
-                      </>
-                    )}
-                  </button>
+                {product.barcode && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#1A2A25] font-mono text-[11px] font-semibold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#24352F]">
+                    <Barcode className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span className="truncate">{product.barcode}</span>
+                  </span>
                 )}
               </div>
             </div>
 
-            {/* Editable Image URL Form */}
-            <form onSubmit={handleSaveUrl} className="space-y-3">
-              <textarea
-                ref={textareaRef}
-                rows={2}
-                value={urlInput}
-                onChange={(e) => {
-                  setUrlInput(e.target.value);
-                  setPreviewError(false);
-                  setPreviewLoaded(false);
-                  setFeedback(null);
-                }}
-                placeholder="https://..."
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-slate-50 dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-mono leading-relaxed focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none break-all"
-              />
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close product image modal"
+              className="w-10 h-10 -mr-1 rounded-2xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2A25] flex items-center justify-center transition active:scale-95 shrink-0 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
-              {/* Quick Google Official Image Search Helper + Direct Compressed Device Upload */}
-              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
-                <a
-                  href={googleImageSearchUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 hover:underline font-bold"
-                >
-                  <Search className="w-3.5 h-3.5" />
-                  <span>
-                    {language === 'mr'
-                      ? 'Google वर फोटो शोधा →'
-                      : language === 'hi'
-                      ? 'Google पर फोटो खोजें →'
-                      : 'Search Official Packshot →'}
-                  </span>
-                </a>
-
-                {isAdmin && (
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {activePreviewUrl && !previewError && (
-                      <button
-                        type="button"
-                        disabled={isSaving || isUploadingFile || isLoadingCropCurrent}
-                        onClick={() => void handleCropCurrentPhoto()}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1A2A25] hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-slate-700 dark:text-[#E7F0EC] hover:text-emerald-700 dark:hover:text-emerald-300 border border-slate-200 dark:border-[#24352F] font-bold transition cursor-pointer disabled:opacity-40"
-                      >
-                        {isLoadingCropCurrent ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Crop className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                        )}
-                        <span>{language === 'mr' ? 'क्रॉप करा' : language === 'hi' ? 'क्रॉप करें' : 'Crop Photo'}</span>
-                      </button>
-                    )}
-
-                    <button
-                      type="button"
-                      disabled={isSaving || isUploadingFile}
-                      onClick={() => setShowSourceChooser(true)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 font-bold transition cursor-pointer disabled:opacity-40"
-                    >
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>
-                        {currentSavedUrl
-                          ? language === 'mr'
-                            ? 'फोटो बदला / अपलोड'
-                            : language === 'hi'
-                            ? 'फोटो बदलें / अपलोड'
-                            : 'Upload / Replace Photo'
-                          : language === 'mr'
-                          ? 'फोटो अपलोड करा'
-                          : language === 'hi'
-                          ? 'फोटो अपलोड करें'
-                          : 'Upload Photo'}
-                      </span>
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept={ALLOWED_IMAGE_ACCEPT}
-                      onChange={handleSelectDeviceFile}
-                      className="hidden"
-                    />
-                    <input
-                      ref={cameraInputRef}
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handleSelectDeviceFile}
-                      className="hidden"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {feedback && (
-                <div
-                  className={`p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 ${
-                    feedback.type === 'success'
-                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50'
-                      : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50'
+          {/* Scrollable Body */}
+          <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-5 py-4 space-y-3.5">
+            {/* Large Square Image Preview */}
+            <div
+              role={isAdmin ? 'button' : undefined}
+              tabIndex={isAdmin ? 0 : undefined}
+              onClick={() => {
+                if (isAdmin && !isUploadingFile && !isLoadingCropCurrent) {
+                  setConfirmingRemove(false);
+                  setShowSourceChooser((prev) => !prev);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (isAdmin && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  setConfirmingRemove(false);
+                  setShowSourceChooser((prev) => !prev);
+                }
+              }}
+              aria-label={isAdmin ? 'Tap photo to open Gallery or Camera' : product.name}
+              className={`relative aspect-square w-full rounded-2xl border border-slate-200 dark:border-[#24352F] bg-white p-4 overflow-hidden flex items-center justify-center ${
+                isAdmin ? 'cursor-pointer hover:border-emerald-500/70 transition-colors' : ''
+              }`}
+            >
+              {/* Actual Image Element (mounted while loading or loaded so onLoad/onError fire cleanly) */}
+              {activePreviewUrl && !previewError && (
+                <img
+                  ref={handlePreviewImgRef}
+                  key={activePreviewUrl}
+                  src={activePreviewUrl}
+                  alt={product.name}
+                  referrerPolicy="no-referrer"
+                  onLoad={() => {
+                    setLoadedUrl(activePreviewUrl);
+                    setErroredUrl(null);
+                  }}
+                  onError={() => {
+                    setLoadedUrl((prev) => (prev === activePreviewUrl ? null : prev));
+                    setErroredUrl(activePreviewUrl);
+                  }}
+                  className={`w-full h-full object-contain transition-opacity duration-200 ${
+                    previewLoaded ? 'opacity-100' : 'opacity-0'
                   }`}
-                >
-                  {feedback.type === 'success' ? (
-                    <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  ) : (
-                    <AlertTriangle className="w-4 h-4 shrink-0" />
-                  )}
-                  <span>{feedback.text}</span>
+                />
+              )}
+
+              {/* Loading Skeleton + Spinner */}
+              {isPreviewLoading && !showSourceChooser && (
+                <div className="absolute inset-4 rounded-xl bg-slate-100 animate-pulse flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="w-7 h-7 text-emerald-600 animate-spin" />
+                  <span className="text-xs font-semibold text-slate-500">Loading photo...</span>
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2 pt-1">
-                {currentSavedUrl && (
+              {/* Error State */}
+              {previewError && !showSourceChooser && (
+                <div className="flex flex-col items-center justify-center text-center p-4 space-y-2.5">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+                    <AlertTriangle className="w-6 h-6" />
+                  </div>
+                  <p className="text-sm font-bold text-rose-700">Image could not be loaded</p>
+                  {isAdmin && (
+                    <p className="text-xs text-slate-500">
+                      Tap here to choose from Gallery or Camera
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Empty Placeholder */}
+              {!activePreviewUrl && !previewError && !showSourceChooser && (
+                <div className="flex flex-col items-center justify-center text-center p-4 space-y-2.5">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-600 flex items-center justify-center">
+                    <Camera className="w-7 h-7" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-700">No product photo yet</p>
+                  {isAdmin && (
+                    <p className="text-xs text-slate-500">Tap to add from Gallery or Camera</p>
+                  )}
+                </div>
+              )}
+
+              {/* Preview Ready Badge — Top-Right, ONLY when image loaded successfully */}
+              {activePreviewUrl && previewLoaded && !previewError && !showSourceChooser && (
+                <span className="absolute top-3 right-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold shadow-xs">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Preview Ready</span>
+                </span>
+              )}
+
+              {/* Gallery / Camera Source Chooser Overlay */}
+              {isAdmin && showSourceChooser && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute inset-0 bg-slate-950/80 backdrop-blur-[2px] flex flex-col items-center justify-center p-4 gap-3"
+                >
+                  <div className="flex items-center justify-between w-full max-w-[260px]">
+                    <span className="text-xs font-extrabold text-white">Choose Photo Source</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowSourceChooser(false)}
+                      aria-label="Close photo source chooser"
+                      className="w-8 h-8 rounded-xl bg-white/15 hover:bg-white/25 text-white flex items-center justify-center active:scale-95 transition cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5 w-full max-w-[260px]">
+                    <button
+                      type="button"
+                      onClick={handleChooseGallery}
+                      className="flex flex-col items-center justify-center gap-1.5 py-3.5 px-3 rounded-2xl bg-white hover:bg-emerald-50 text-slate-900 font-extrabold text-xs shadow-lg active:scale-95 transition cursor-pointer"
+                    >
+                      <span className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                        <ImageIcon className="w-5 h-5" />
+                      </span>
+                      <span>Gallery</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleChooseCamera}
+                      className="flex flex-col items-center justify-center gap-1.5 py-3.5 px-3 rounded-2xl bg-white hover:bg-emerald-50 text-slate-900 font-extrabold text-xs shadow-lg active:scale-95 transition cursor-pointer"
+                    >
+                      <span className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
+                        <Camera className="w-5 h-5" />
+                      </span>
+                      <span>Camera</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Hidden Native File & Camera Inputs */}
+            {isAdmin && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ALLOWED_IMAGE_ACCEPT}
+                  onChange={handleSelectDeviceFile}
+                  className="hidden"
+                />
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleSelectDeviceFile}
+                  className="hidden"
+                />
+              </>
+            )}
+
+            {/* 2x2 Action Grid */}
+            {isAdmin && (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={isSaving || isUploadingFile}
+                  onClick={() => {
+                    setConfirmingRemove(false);
+                    setShowSourceChooser(true);
+                  }}
+                  className="min-h-[48px] px-3 py-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold inline-flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-45 cursor-pointer"
+                >
+                  <Camera className="w-4 h-4 shrink-0 text-emerald-700 dark:text-emerald-400" />
+                  <span className="truncate">Upload</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={
+                    isSaving ||
+                    isUploadingFile ||
+                    isLoadingCropCurrent ||
+                    !activePreviewUrl ||
+                    previewError
+                  }
+                  onClick={() => void handleCropCurrentPhoto()}
+                  className="min-h-[48px] px-3 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#1A2A25] hover:bg-slate-100 dark:hover:bg-[#22352E] border border-slate-200 dark:border-[#24352F] text-slate-800 dark:text-[#E7F0EC] text-xs font-bold inline-flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-45 cursor-pointer"
+                >
+                  {isLoadingCropCurrent ? (
+                    <Loader2 className="w-4 h-4 shrink-0 animate-spin text-emerald-600" />
+                  ) : (
+                    <Crop className="w-4 h-4 shrink-0 text-emerald-700 dark:text-emerald-400" />
+                  )}
+                  <span className="truncate">Crop</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleOpenPackshotSearch}
+                  className="min-h-[48px] px-3 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#1A2A25] hover:bg-slate-100 dark:hover:bg-[#22352E] border border-slate-200 dark:border-[#24352F] text-slate-800 dark:text-[#E7F0EC] text-xs font-bold inline-flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
+                >
+                  <Search className="w-4 h-4 shrink-0 text-emerald-700 dark:text-emerald-400" />
+                  <span className="truncate">Packshot</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isSaving || isUploadingFile}
+                  onClick={() => void handlePasteFromClipboard()}
+                  className="min-h-[48px] px-3 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#1A2A25] hover:bg-slate-100 dark:hover:bg-[#22352E] border border-slate-200 dark:border-[#24352F] text-slate-800 dark:text-[#E7F0EC] text-xs font-bold inline-flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-45 cursor-pointer"
+                >
+                  <Clipboard className="w-4 h-4 shrink-0 text-emerald-700 dark:text-emerald-400" />
+                  <span className="truncate">Paste</span>
+                </button>
+              </div>
+            )}
+
+            {/* Inline Remove Confirmation */}
+            {isAdmin && confirmingRemove && (
+              <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/35 border border-rose-200 dark:border-rose-800/60 flex items-center justify-between gap-2">
+                <span className="text-xs font-bold text-rose-800 dark:text-rose-200">
+                  Remove this product photo?
+                </span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingRemove(false)}
+                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-slate-200 text-xs font-bold active:scale-95 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
                   <button
                     type="button"
                     disabled={isSaving}
-                    onClick={handleRemoveImage}
-                    className="px-3 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/35 hover:bg-rose-100 dark:hover:bg-rose-900/45 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50 text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer disabled:opacity-40"
+                    onClick={() => void handleConfirmRemoveImage()}
+                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold active:scale-95 transition disabled:opacity-50 cursor-pointer"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>{language === 'mr' ? 'काढा' : language === 'hi' ? 'हटाएं' : 'Remove'}</span>
+                    Remove
                   </button>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isSaving || !hasChanges}
-                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-45 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 inline-flex items-center justify-center gap-1.5 transition active:scale-[0.99] cursor-pointer"
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{language === 'mr' ? 'अपडेट होत आहे...' : language === 'hi' ? 'अपडेट हो रहा है...' : 'Updating...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      <span>
-                        {language === 'mr'
-                          ? 'नवीन इमेज URL सेव्ह करा'
-                          : language === 'hi'
-                          ? 'नया इमेज URL सेव करें'
-                          : 'Update Image URL'}
-                      </span>
-                    </>
-                  )}
-                </button>
+                </div>
               </div>
-            </form>
+            )}
           </div>
+
+          {/* Sticky Footer */}
+          {isAdmin && (
+            <div className="shrink-0 border-t border-slate-200/90 dark:border-[#24352F] bg-white dark:bg-[#131F1B] px-4 sm:px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] flex items-center gap-2.5">
+              <button
+                type="button"
+                disabled={!hasPhotoToRemove || isSaving || isUploadingFile}
+                onClick={() => setConfirmingRemove((prev) => !prev)}
+                aria-label="Remove product photo"
+                className="w-12 h-12 shrink-0 rounded-2xl bg-rose-50 dark:bg-rose-950/35 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60 flex items-center justify-center transition active:scale-95 disabled:opacity-40 cursor-pointer"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+
+              <button
+                type="button"
+                disabled={!canSave}
+                onClick={() => void handleSavePhoto()}
+                className="flex-1 min-h-[48px] px-4 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 disabled:bg-emerald-700/45 text-white font-extrabold text-sm shadow-sm inline-flex items-center justify-center gap-2 transition active:scale-95 disabled:active:scale-100 cursor-pointer"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Save Photo</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
-      </div>
 
-      {/* Built-in Desktop Live Camera Viewfinder (Sibling modal so clicks never bubble to preview backdrop) */}
+      {/* Desktop Live Camera Viewfinder (Sibling modal so clicks never bubble to preview backdrop) */}
       {isLiveCameraOpen && (
         <div
           className="fixed inset-0 z-[125] bg-black/80 flex items-center justify-center p-3"
@@ -950,17 +822,17 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200 dark:border-[#24352F] max-w-sm w-full overflow-hidden shadow-2xl"
+            className="bg-white dark:bg-[#131F1B] rounded-3xl border border-slate-200 dark:border-[#24352F] max-w-sm w-full overflow-hidden shadow-2xl"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-[#24352F]">
               <span className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
                 <Camera className="w-4 h-4 text-emerald-600" />
-                <span>{language === 'mr' ? 'कॅमेरा फोटो काढा' : language === 'hi' ? 'कैमरा से फोटो लें' : 'Take Product Photo'}</span>
+                <span>Take Product Photo</span>
               </span>
               <button
                 type="button"
                 onClick={stopLiveCamera}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white active:scale-95 transition cursor-pointer"
                 aria-label="Close camera"
               >
                 <X className="w-4 h-4" />
@@ -969,7 +841,7 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
 
             <div className="p-3 space-y-3">
               {cameraError ? (
-                <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50 text-xs font-bold text-rose-700 dark:text-rose-300 text-center space-y-2">
+                <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50 text-xs font-bold text-rose-700 dark:text-rose-300 text-center space-y-2.5">
                   <p>{cameraError}</p>
                   <button
                     type="button"
@@ -977,13 +849,13 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
                       stopLiveCamera();
                       fileInputRef.current?.click();
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-emerald-700 text-white text-xs font-bold active:scale-95 transition cursor-pointer"
                   >
-                    {language === 'mr' ? 'गॅलरी उघडा' : language === 'hi' ? 'गैलरी खोलें' : 'Open Gallery'}
+                    Open Gallery
                   </button>
                 </div>
               ) : (
-                <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-black">
+                <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-black">
                   <video
                     ref={videoRef}
                     autoPlay
@@ -995,21 +867,21 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
               )}
 
               {!cameraError && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 pb-[env(safe-area-inset-bottom)]">
                   <button
                     type="button"
                     onClick={stopLiveCamera}
-                    className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] text-xs font-bold cursor-pointer"
+                    className="flex-1 min-h-[44px] py-2.5 rounded-2xl bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] text-xs font-bold active:scale-95 transition cursor-pointer"
                   >
-                    {language === 'mr' ? 'रद्द करा' : language === 'hi' ? 'रद्द करें' : 'Cancel'}
+                    Cancel
                   </button>
                   <button
                     type="button"
                     onClick={handleSnapLiveCamera}
-                    className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                    className="flex-1 min-h-[44px] py-2.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 active:scale-95 transition cursor-pointer shadow-sm"
                   >
                     <Camera className="w-4 h-4" />
-                    <span>{language === 'mr' ? 'फोटो काढा' : language === 'hi' ? 'फोटो क्लिक करें' : 'Capture Photo'}</span>
+                    <span>Capture Photo</span>
                   </button>
                 </div>
               )}

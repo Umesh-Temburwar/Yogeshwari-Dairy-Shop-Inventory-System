@@ -3,10 +3,7 @@ import { DecodeHintType } from '@zxing/library';
 import {
   applyGrayscaleAndContrast,
   applyAdaptiveBinarization,
-  applySharpenKernel,
-  applyBrightnessContrast,
-  applyAutoContrastStretch,
-  applyBarcodeEdgeEnhancement
+  applySharpenKernel
 } from './imageEnhancement';
 import { validateBarcode, BarcodeValidationResult } from './barcodeChecksum';
 
@@ -181,16 +178,91 @@ export class BarcodeConfirmationTracker {
 }
 
 /**
- * High-performance Multi-Pass AI & Computer Vision Barcode Decoder:
- * 
- * 1. Reticle Normal (0°)
- * 2. Reticle Inverted (180° - upside down products)
- * 3. Reticle Vertical (90° - sideways products)
- * 4. Image Sharpening (Unsharp Mask - recovers blurry / soft focus)
- * 5. Contrast & Grayscale Boost (recovers dim / poorly lit scenes)
- * 6. Adaptive Otsu Binarization (recovers reflections & plastic glare)
- * 7. Digital Zoom Center Crop (recovers small or distant barcodes)
- * 8. Full-Frame Fallback
+ * Non-blocking Time-Sliced Video Barcode Decoder (1 lightweight pass per tick).
+ * Cycles across 6 passes so each call stays within ~5-15ms on mobile CPUs,
+ * keeping camera video playback and CSS laser animation locked at 60fps.
+ */
+export const VIDEO_DECODE_PASS_COUNT = 6;
+
+export function decodeVideoSingleStep(
+  video: HTMLVideoElement,
+  reader: BrowserMultiFormatReader,
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  stepIndex: number
+): string | null {
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  if (!vw || !vh || video.readyState < 2) return null;
+
+  const targetW = 480;
+  const targetH = Math.round((480 * vh) / vw) || 270;
+  if (canvas.width !== targetW || canvas.height !== targetH) {
+    canvas.width = targetW;
+    canvas.height = targetH;
+  }
+
+  // Viewfinder center region (68% width, 56% height) matching the on-screen reticle
+  const cropW = Math.round(vw * 0.68);
+  const cropH = Math.round(vh * 0.56);
+  const cropX = Math.round((vw - cropW) / 2);
+  const cropY = Math.round((vh - cropH) / 2);
+
+  const pass = ((stepIndex % VIDEO_DECODE_PASS_COUNT) + VIDEO_DECODE_PASS_COUNT) % VIDEO_DECODE_PASS_COUNT;
+
+  ctx.clearRect(0, 0, targetW, targetH);
+
+  switch (pass) {
+    case 0:
+      // Center Crop 0° Normal (fastest, handles 80%+ of scans)
+      ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
+      break;
+    case 1:
+      // Center Crop 180° Inverted (upside-down products)
+      ctx.save();
+      ctx.translate(targetW, targetH);
+      ctx.rotate(Math.PI);
+      ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
+      ctx.restore();
+      break;
+    case 2:
+      // Center Crop 0° + Contrast Boost (dim lighting / shadows)
+      ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
+      applyGrayscaleAndContrast(ctx, targetW, targetH, 55);
+      break;
+    case 3:
+      // Center Crop 90° Vertical (sideways barcodes)
+      ctx.save();
+      ctx.translate(targetW / 2, targetH / 2);
+      ctx.rotate(Math.PI / 2);
+      ctx.drawImage(video, cropX, cropY, cropW, cropH, -targetH / 2, -targetW / 2, targetH, targetW);
+      ctx.restore();
+      break;
+    case 4:
+      // Center Crop 0° + Sharpen (soft focus / slight motion blur)
+      ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
+      applySharpenKernel(ctx, targetW, targetH, 0.55);
+      break;
+    default:
+      // Full Frame 0° (distant or off-center barcodes)
+      ctx.drawImage(video, 0, 0, vw, vh, 0, 0, targetW, targetH);
+      break;
+  }
+
+  try {
+    const res = reader.decodeFromCanvas(canvas);
+    if (res?.getText()) return res.getText();
+  } catch {
+    // No barcode detected in this frame pass
+  }
+
+  return null;
+}
+
+let legacyPassCounter = 0;
+
+/**
+ * Legacy wrapper kept for backwards compatibility — delegates to non-blocking single-step decode.
  */
 export function decodeVideoMultiAngle(
   video: HTMLVideoElement,
@@ -198,124 +270,9 @@ export function decodeVideoMultiAngle(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D
 ): string | null {
-  const vw = video.videoWidth;
-  const vh = video.videoHeight;
-  if (!vw || !vh || video.readyState < 2) return null;
-
-  const targetW = 640;
-  const targetH = Math.round((640 * vh) / vw) || 360;
-  if (canvas.width !== targetW || canvas.height !== targetH) {
-    canvas.width = targetW;
-    canvas.height = targetH;
-  }
-
-  // Viewfinder center region (65% width, 55% height) - matches the on-screen green reticle
-  const cropW = Math.round(vw * 0.65);
-  const cropH = Math.round(vh * 0.55);
-  const cropX = Math.round((vw - cropW) / 2);
-  const cropY = Math.round((vh - cropH) / 2);
-
-  // PASS 1: Center Crop (0° Normal)
-  ctx.clearRect(0, 0, targetW, targetH);
-  ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
-  try {
-    const res = reader.decodeFromCanvas(canvas);
-    if (res?.getText()) return res.getText();
-  } catch {}
-
-  // PASS 2: Center Crop (180° Inverted / Upside Down)
-  ctx.clearRect(0, 0, targetW, targetH);
-  ctx.save();
-  ctx.translate(targetW, targetH);
-  ctx.rotate(Math.PI);
-  ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
-  ctx.restore();
-  try {
-    const res = reader.decodeFromCanvas(canvas);
-    if (res?.getText()) return res.getText();
-  } catch {}
-
-  // PASS 3: Center Crop (90° Vertical Rotation) - For barcodes held sideways
-  ctx.clearRect(0, 0, targetW, targetH);
-  ctx.save();
-  ctx.translate(targetW / 2, targetH / 2);
-  ctx.rotate(Math.PI / 2);
-  ctx.drawImage(video, cropX, cropY, cropW, cropH, -targetH / 2, -targetW / 2, targetH, targetW);
-  ctx.restore();
-  try {
-    const res = reader.decodeFromCanvas(canvas);
-    if (res?.getText()) return res.getText();
-  } catch {}
-
-  // PASS 4: Computer Vision - Image Sharpening (for blurry/unfocused cameras)
-  ctx.clearRect(0, 0, targetW, targetH);
-  ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
-  applySharpenKernel(ctx, targetW, targetH, 0.6);
-  try {
-    const res = reader.decodeFromCanvas(canvas);
-    if (res?.getText()) return res.getText();
-  } catch {}
-
-  // PASS 4b: Computer Vision - Horizontal Barcode Edge Derivative (boosts vertical bars on blurred 1D barcodes)
-  ctx.clearRect(0, 0, targetW, targetH);
-  ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
-  applyBarcodeEdgeEnhancement(ctx, targetW, targetH);
-  try {
-    const res = reader.decodeFromCanvas(canvas);
-    if (res?.getText()) return res.getText();
-  } catch {}
-
-  // PASS 5: Computer Vision - Contrast Enhancement & Grayscale (for poor lighting/shadows)
-  ctx.clearRect(0, 0, targetW, targetH);
-  ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
-  applyGrayscaleAndContrast(ctx, targetW, targetH, 60);
-  try {
-    const res = reader.decodeFromCanvas(canvas);
-    if (res?.getText()) return res.getText();
-  } catch {}
-
-  // PASS 6: Computer Vision - Adaptive Otsu Binarization (for glare on glossy pouches)
-  ctx.clearRect(0, 0, targetW, targetH);
-  ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
-  applyAdaptiveBinarization(ctx, targetW, targetH);
-  try {
-    const res = reader.decodeFromCanvas(canvas);
-    if (res?.getText()) return res.getText();
-  } catch {}
-
-  // PASS 7: Digital Zoom 1.7x (for small barcodes or greater distance)
-  const zoomW = Math.round(cropW * 0.60);
-  const zoomH = Math.round(cropH * 0.60);
-  const zoomX = cropX + Math.round((cropW - zoomW) / 2);
-  const zoomY = cropY + Math.round((cropH - zoomH) / 2);
-  ctx.clearRect(0, 0, targetW, targetH);
-  ctx.drawImage(video, zoomX, zoomY, zoomW, zoomH, 0, 0, targetW, targetH);
-  try {
-    const res = reader.decodeFromCanvas(canvas);
-    if (res?.getText()) return res.getText();
-  } catch {}
-
-  // PASS 8: Full Frame (0° Normal)
-  ctx.clearRect(0, 0, targetW, targetH);
-  ctx.drawImage(video, 0, 0, vw, vh, 0, 0, targetW, targetH);
-  try {
-    const res = reader.decodeFromCanvas(canvas);
-    if (res?.getText()) return res.getText();
-  } catch {}
-
-  // PASS 9: Full Frame (180° Inverted)
-  ctx.clearRect(0, 0, targetW, targetH);
-  ctx.save();
-  ctx.translate(targetW, targetH);
-  ctx.rotate(Math.PI);
-  ctx.drawImage(video, 0, 0, vw, vh, 0, 0, targetW, targetH);
-  ctx.restore();
-  try {
-    const res = reader.decodeFromCanvas(canvas);
-    if (res?.getText()) return res.getText();
-  } catch {}
-
-  return null;
+  const step = legacyPassCounter;
+  legacyPassCounter = (legacyPassCounter + 1) % VIDEO_DECODE_PASS_COUNT;
+  return decodeVideoSingleStep(video, reader, canvas, ctx, step);
 }
 
 /**

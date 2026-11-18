@@ -2,9 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import {
   createBarcodeReader,
-  decodeVideoMultiAngle,
+  decodeVideoSingleStep,
   decodeImageMultiAngle,
   detectWithNativeBarcodeDetector,
+  isNativeBarcodeDetectorSupported,
   BarcodeConfirmationTracker
 } from '../../utils/barcodeScannerEngine';
 import { performBarcodeOcrFallback } from '../../utils/barcodeOcrFallback';
@@ -60,6 +61,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   const scannerControlsRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraSessionRef = useRef(0);
 
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   const [matchedProduct, setMatchedProduct] = useState<Product | null>(null);
@@ -89,6 +91,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
   // Stop camera tracks cleanly
   const stopCamera = () => {
+    cameraSessionRef.current += 1;
     try {
       if (scannerControlsRef.current) {
         scannerControlsRef.current.stop();
@@ -112,13 +115,14 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   // Start Camera with back-camera (environment) preference
   const startCamera = async () => {
     stopCamera();
+    const sessionId = ++cameraSessionRef.current;
     setIsScanning(true);
     setCameraError(null);
 
-    // Wait a brief tick for DOM to attach video ref if needed
+    // Wait one animation frame for DOM to attach video ref if needed
     let videoElement = videoRef.current;
     if (!videoElement) {
-      await new Promise(r => setTimeout(r, 150));
+      await new Promise<void>(r => requestAnimationFrame(() => r()));
       videoElement = videoRef.current;
     }
 
@@ -136,9 +140,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
     const diag: string[] = [];
     const logD = (msg: string) => {
-      console.info(`[CameraDiagnostics] ${msg}`);
       diag.push(msg);
-      setDiagnosticsLogs([...diag]);
     };
 
     try {
@@ -150,21 +152,9 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       logD(`Origin: ${typeof window !== 'undefined' ? window.location.origin : ''} (${isSecure ? 'Secure Context' : 'Insecure Context'})`);
       logD(`MediaDevices API: ${Boolean(navigator?.mediaDevices)}, getUserMedia: ${Boolean(navigator?.mediaDevices?.getUserMedia)}`);
 
-      if (navigator?.permissions?.query) {
-        navigator.permissions.query({ name: 'camera' as any }).then(p => {
-          logD(`Camera Permission State: ${p.state}`);
-        }).catch(() => {});
-      }
-
-      if (navigator?.mediaDevices?.enumerateDevices) {
-        navigator.mediaDevices.enumerateDevices().then(devs => {
-          const v = devs.filter(d => d.kind === 'videoinput');
-          logD(`Cameras Found: ${v.length} (${v.map(d => d.label || 'camera').join(', ') || 'unlabeled'})`);
-        }).catch(() => {});
-      }
-
       if (!isSecure && (!navigator?.mediaDevices || !navigator?.mediaDevices?.getUserMedia)) {
         logD('Insecure context without getUserMedia. Falling back to native camera.');
+        setDiagnosticsLogs([...diag]);
         setCameraError(
           tr(
             'Mobile browser blocks live video camera on insecure (HTTP) Wi-Fi addresses. Opening native mobile camera photo scanner for you...',
@@ -188,13 +178,14 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
       let stream: MediaStream | null = null;
 
-      // Tier 1: Ideal rear camera with HD resolution
+      // Tier 1: Ideal rear camera with smooth 30fps HD resolution
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: facingMode === 'environment' ? { ideal: 'environment' } : 'user',
             width: { ideal: 1280, max: 1920 },
-            height: { ideal: 720, max: 1080 }
+            height: { ideal: 720, max: 1080 },
+            frameRate: { ideal: 30 }
           },
           audio: false
         });
@@ -239,6 +230,12 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         throw new Error('Failed to acquire video stream');
       }
 
+      // Guard against modal closing or camera switching while getUserMedia was pending
+      if (sessionId !== cameraSessionRef.current) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+
       streamRef.current = stream;
       videoElement.srcObject = stream;
       videoElement.setAttribute('playsinline', 'true');
@@ -276,7 +273,8 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       const capabilities: any = track?.getCapabilities ? track.getCapabilities() : {};
       setHasTorch(Boolean(capabilities?.torch));
 
-      // 2. High-Performance Multi-Pass AI & Multi-Angle Computer Vision Decoder
+      // 2. Smooth Non-Blocking Time-Sliced Scanner Loop (Zero Main-Thread Hang)
+      const hasNativeDetector = await isNativeBarcodeDetectorSupported();
       const codeReader = createBarcodeReader();
       codeReaderRef.current = codeReader;
 
@@ -284,93 +282,102 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
 
       let isLoopRunning = true;
-      let isDecodingFrame = false;
-      let isAutoOcrRunning = false;
+      let nextTickTimer: ReturnType<typeof setTimeout> | null = null;
+      let nextRafId: number | null = null;
+      let tickCounter = 0;
+      let zxingPassIndex = 0;
       const tracker = new BarcodeConfirmationTracker();
 
-      // Show OCR fallback button immediately so user can tap it anytime
       setShowOcrButton(true);
 
-      // Continuous Auto-OCR loop: Automatically reads human-readable numbers for blurry/worn barcodes!
-      const autoOcrInterval = setInterval(async () => {
-        if (!isLoopRunning || isAutoOcrRunning) return;
-        if (!videoElement || videoElement.readyState < 2 || videoElement.videoWidth === 0) return;
-
-        isAutoOcrRunning = true;
-        try {
-          const ocrRes = await performBarcodeOcrFallback(videoElement, 'strip');
-          if (ocrRes.found && ocrRes.barcode && isLoopRunning) {
-            // Verify checksum before killing the primary video scanner loop
-            const check = validateBarcode(ocrRes.barcode);
-            if (check.isValid) {
-              isLoopRunning = false;
-              clearInterval(scanInterval);
-              clearInterval(autoOcrInterval);
-              handleBarcodeDetected(ocrRes.barcode);
-            }
-          }
-        } catch (e) {
-          // silent fallback
-        } finally {
-          isAutoOcrRunning = false;
+      const stopLoop = () => {
+        isLoopRunning = false;
+        if (nextTickTimer !== null) {
+          clearTimeout(nextTickTimer);
+          nextTickTimer = null;
         }
-      }, 1000);
+        if (nextRafId !== null) {
+          cancelAnimationFrame(nextRafId);
+          nextRafId = null;
+        }
+      };
 
-      const scanInterval = setInterval(async () => {
-        if (!isLoopRunning || isDecodingFrame) return;
-        if (!videoElement || videoElement.readyState < 2 || videoElement.videoWidth === 0) return;
+      const scheduleNextTick = (delayMs: number) => {
+        if (!isLoopRunning) return;
+        nextTickTimer = setTimeout(() => {
+          if (!isLoopRunning) return;
+          // Yield to animation frame so browser paints smooth video + laser before next decode
+          nextRafId = requestAnimationFrame(() => {
+            void runScanStep();
+          });
+        }, delayMs);
+      };
 
-        isDecodingFrame = true;
+      const runScanStep = async () => {
+        if (!isLoopRunning) return;
+        if (!videoElement || videoElement.readyState < 2 || videoElement.videoWidth === 0) {
+          scheduleNextTick(120);
+          return;
+        }
+
         try {
-          // 1. First Priority: Native Android/Chromium BarcodeDetector (Hardware Accelerated ML Kit)
-          // Instantly resolves curved, crinkled, shiny, and rotated retail barcodes (e.g. Parle cookies, pouches)
-          const nativeCode = await detectWithNativeBarcodeDetector(videoElement);
-          if (nativeCode && isLoopRunning) {
-            const confirmed = tracker.evaluateCandidate(nativeCode);
-            if (confirmed && isLoopRunning) {
-              isLoopRunning = false;
-              clearInterval(scanInterval);
-              clearInterval(autoOcrInterval);
-              handleBarcodeDetected(confirmed.text);
-              return;
-            }
-          }
+          tickCounter++;
 
-          // 2. Second Priority: Multi-Angle Computer Vision Decoder (ZXing)
-          if (scanCtx) {
-            const rawText = decodeVideoMultiAngle(videoElement, codeReader, scanCanvas, scanCtx);
-            if (rawText && isLoopRunning) {
-              const confirmed = tracker.evaluateCandidate(rawText);
+          // 1. Hardware-Accelerated Native BarcodeDetector (async on GPU/NPU, < 15ms)
+          if (hasNativeDetector) {
+            const nativeCode = await detectWithNativeBarcodeDetector(videoElement);
+            if (nativeCode && isLoopRunning) {
+              const confirmed = tracker.evaluateCandidate(nativeCode);
               if (confirmed && isLoopRunning) {
-                isLoopRunning = false;
-                clearInterval(scanInterval);
-                clearInterval(autoOcrInterval);
+                stopLoop();
                 handleBarcodeDetected(confirmed.text);
                 return;
               }
             }
           }
-        } catch (frameErr) {
+
+          // 2. Time-Sliced Single-Pass ZXing Fallback (only 1 lightweight pass per tick)
+          // When native detector is active, run ZXing backup only every 5th tick
+          const shouldRunZxing = !hasNativeDetector || tickCounter % 5 === 0;
+          if (shouldRunZxing && scanCtx && isLoopRunning) {
+            const rawText = decodeVideoSingleStep(
+              videoElement,
+              codeReader,
+              scanCanvas,
+              scanCtx,
+              zxingPassIndex++
+            );
+            if (rawText && isLoopRunning) {
+              const confirmed = tracker.evaluateCandidate(rawText);
+              if (confirmed && isLoopRunning) {
+                stopLoop();
+                handleBarcodeDetected(confirmed.text);
+                return;
+              }
+            }
+          }
+        } catch {
           // ignore transient frame capture glitches
-        } finally {
-          isDecodingFrame = false;
         }
-      }, 90);
+
+        // Smooth cadence: 100ms with hardware detector, 120ms for single-pass ZXing
+        scheduleNextTick(hasNativeDetector ? 100 : 120);
+      };
 
       scannerControlsRef.current = {
-        stop: () => {
-          isLoopRunning = false;
-          clearInterval(scanInterval);
-          clearInterval(autoOcrInterval);
-        }
+        stop: stopLoop
       };
 
       setIsCameraActive(true);
       setIsScanning(false);
       setCameraError(null);
+
+      // Start scanning after first video frame renders smoothly
+      scheduleNextTick(80);
     } catch (err: any) {
       console.error('Camera access error:', err);
       logD(`Camera Error: [${err?.name || 'Error'}] ${err?.message || ''}`);
+      setDiagnosticsLogs([...diag]);
       const isPermissionDenied = err?.name === 'NotAllowedError' || err?.message?.includes('Permission');
       setCameraError(
         isPermissionDenied
@@ -615,15 +622,23 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
             </div>
           )}
 
-          {/* Active Scanning Box: Clean Minimalist Frame with Smooth Glowing Laser */}
+          {/* Active Scanning Box: Clean Minimalist Frame with 60fps GPU-Composited Laser */}
           {isCameraActive && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-64 h-36 border-2 border-emerald-400/90 rounded-2xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] overflow-hidden">
-                {/* Ultra-Smooth Glowing Neon Laser Beam */}
-                <div className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-300 to-transparent shadow-[0_0_15px_#10b981,0_0_30px_#34d399] animate-scanner-sweep pointer-events-none">
-                  <div className="absolute -top-2 left-4 right-4 h-5 bg-gradient-to-b from-emerald-400/25 to-transparent blur-[2px] pointer-events-none" />
+              <div className="w-64 h-36 border border-emerald-400/70 rounded-2xl relative shadow-[0_0_0_100vmax_rgba(0,0,0,0.48)] overflow-hidden">
+                {/* Crisp Corner Brackets */}
+                <span className="absolute top-0 left-0 w-5 h-5 border-t-[3px] border-l-[3px] border-emerald-400 rounded-tl-xl" />
+                <span className="absolute top-0 right-0 w-5 h-5 border-t-[3px] border-r-[3px] border-emerald-400 rounded-tr-xl" />
+                <span className="absolute bottom-0 left-0 w-5 h-5 border-b-[3px] border-l-[3px] border-emerald-400 rounded-bl-xl" />
+                <span className="absolute bottom-0 right-0 w-5 h-5 border-b-[3px] border-r-[3px] border-emerald-400 rounded-br-xl" />
+
+                {/* 60fps GPU-Composited Laser Beam */}
+                <div className="absolute inset-0 animate-scanner-sweep pointer-events-none">
+                  <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-emerald-300 to-transparent shadow-[0_0_12px_#10b981,0_0_24px_#34d399]" />
+                  <div className="mx-3 h-5 bg-gradient-to-b from-emerald-400/25 to-transparent" />
                 </div>
-                <div className="absolute top-2 left-0 right-0 text-center text-[10px] font-bold text-white tracking-wider uppercase bg-emerald-800/90 rounded-md py-0.5 px-2.5 max-w-fit mx-auto shadow-sm">
+
+                <div className="absolute top-2 left-0 right-0 text-center text-[10px] font-bold text-white tracking-wider uppercase bg-emerald-900/85 rounded-md py-0.5 px-2.5 max-w-fit mx-auto shadow-sm">
                   {tr('Hold barcode inside frame', 'बारकोड फ्रेम में रखें', 'बारकोड चौकटीत धरा')}
                 </div>
               </div>

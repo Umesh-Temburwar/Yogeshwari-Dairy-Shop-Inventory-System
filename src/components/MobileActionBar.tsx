@@ -16,6 +16,17 @@ interface MobileActionBarProps {
   isMobileSidebarOpen?: boolean;
 }
 
+// Crisp WhatsApp-style light tactile feedback on mobile bottom navigation taps
+const triggerNavHaptic = () => {
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    try {
+      navigator.vibrate(12);
+    } catch {
+      // Ignore unsupported or blocked vibration calls
+    }
+  }
+};
+
 export const MobileActionBar: React.FC<MobileActionBarProps> = ({ 
   onOpenMobileSidebar,
   isMobileSidebarOpen = false,
@@ -97,6 +108,8 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
               key={tab.id}
               type="button"
               onClick={() => {
+                triggerNavHaptic();
+
                 if (tab.id === 'menu') {
                   const isMenuPageActive = [
                     'purchases',

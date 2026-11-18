@@ -17,19 +17,17 @@ import {
   Search,
   Upload,
   Trash2,
-  Loader2,
+  Clipboard,
   Image as ImageIcon
 } from 'lucide-react';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { ProductImage, clearFailedImageUrl } from '../Common/ProductImage';
 import { SquareImageCropperModal } from '../Common/SquareImageCropperModal';
 import {
-  lookupOfficialImages,
   validateImageFile,
   uploadProcessedProductImage,
   ALLOWED_IMAGE_ACCEPT,
   formatFileSize,
-  OfficialImageCandidate,
   ProcessedSquareImage
 } from '../../lib/productImageService';
 import { translateProductName, translateProductNameSync } from '../../lib/productTranslator';
@@ -105,14 +103,10 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [barcode, setBarcode] = useState<string>('');
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
-  // Standardized Product Image states (Steps 2 & 3)
+  // Standardized Product Image states
   const [imageUrl, setImageUrl] = useState<string>('');
   const [originalImageUrl, setOriginalImageUrl] = useState<string>('');
-  const [isLookingUpImage, setIsLookingUpImage] = useState(false);
-  const [officialCandidates, setOfficialCandidates] = useState<OfficialImageCandidate[]>([]);
-  const [lookupNotFound, setLookupNotFound] = useState(false);
   const [imageStatusMessage, setImageStatusMessage] = useState<{ type: 'info' | 'success' | 'error'; text: string } | null>(null);
-  const [pendingOverwriteCandidate, setPendingOverwriteCandidate] = useState<OfficialImageCandidate | null>(null);
   const [cropFile, setCropFile] = useState<File | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -164,10 +158,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   useEffect(() => {
     isUserTypingRef.current = false;
     setIsTranslating(false);
-    setOfficialCandidates([]);
-    setLookupNotFound(false);
     setImageStatusMessage(null);
-    setPendingOverwriteCandidate(null);
     setCropFile(null);
     setUploadError(null);
     setUploadProgress(0);
@@ -534,55 +525,46 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     }
   };
 
-  // STEP 2: Official Image Lookup (Open Food Facts via Edge Function proxy)
-  const handleFindOfficialImage = async () => {
-    if (!isAdmin || isLookingUpImage) return;
-    setIsLookingUpImage(true);
-    setLookupNotFound(false);
-    setPendingOverwriteCandidate(null);
-    setImageStatusMessage(null);
-    setOfficialCandidates([]);
-
-    try {
-      const result = await lookupOfficialImages({
-        barcode: barcode.trim() || undefined,
-        name: name.trim() || undefined,
-        brand: brand.trim() || undefined
-      });
-
-      if (result.error) {
-        setImageStatusMessage({ type: 'error', text: result.error });
-        setLookupNotFound(true);
-      } else if (result.candidates.length === 0) {
-        setLookupNotFound(true);
-      } else {
-        setOfficialCandidates(result.candidates);
-      }
-    } finally {
-      setIsLookingUpImage(false);
-    }
+  // Search Official Packshot on Google Images in a new tab
+  const handleSearchOfficialPackshot = () => {
+    const cleanBrand = brand.trim() && brand.trim() !== 'Generic' ? brand.trim() : '';
+    const cleanName = name.trim() || barcode.trim();
+    const query = `${cleanBrand ? `${cleanBrand} ` : ''}${cleanName} packshot`.trim();
+    const url = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  const applyCandidateUrl = (candidate: OfficialImageCandidate) => {
-    clearFailedImageUrl(candidate.url);
-    setImageUrl(candidate.url);
-    setOfficialCandidates([]);
-    setPendingOverwriteCandidate(null);
-    setLookupNotFound(false);
-    setImageStatusMessage({
-      type: 'success',
-      text: tr('Official image selected. Click Save to persist.', 'आधिकारिक इमेज चुनी गई। सहेजने के लिए सेव दबाएं।', 'अधिकृत फोटो निवडला. जतन करण्यासाठी सेव्ह दाबा.')
-    });
-  };
-
-  const handleCandidateClick = (candidate: OfficialImageCandidate) => {
+  // Paste copied packshot image link from clipboard
+  const handlePastePackshotUrl = async () => {
     if (!isAdmin) return;
-    if (imageUrl.trim() && imageUrl.trim() !== candidate.url) {
-      // Never auto-overwrite an existing image without explicit admin confirmation
-      setPendingOverwriteCandidate(candidate);
-      return;
+    try {
+      if (!navigator.clipboard || typeof navigator.clipboard.readText !== 'function') {
+        setImageStatusMessage({
+          type: 'error',
+          text: tr('Copy an image link first', 'पहले इमेज लिंक कॉपी करें', 'आधी फोटोची लिंक कॉपी करा')
+        });
+        return;
+      }
+      const clipText = (await navigator.clipboard.readText()).trim();
+      if (!/^https?:\/\//i.test(clipText)) {
+        setImageStatusMessage({
+          type: 'error',
+          text: tr('Copy an image link first', 'पहले इमेज लिंक कॉपी करें', 'आधी फोटोची लिंक कॉपी करा')
+        });
+        return;
+      }
+      clearFailedImageUrl(clipText);
+      setImageUrl(clipText);
+      setImageStatusMessage({
+        type: 'success',
+        text: tr('Photo pasted. Click Save to persist.', 'फोटो पेस्ट हो गया। सहेजने के लिए सेव दबाएं।', 'फोटो पेस्ट झाला. जतन करण्यासाठी सेव्ह दाबा.')
+      });
+    } catch {
+      setImageStatusMessage({
+        type: 'error',
+        text: tr('Copy an image link first', 'पहले इमेज लिंक कॉपी करें', 'आधी फोटोची लिंक कॉपी करा')
+      });
     }
-    applyCandidateUrl(candidate);
   };
 
   // STEP 3: Clean Upload (Validate -> 1:1 Square Crop -> 512x512 WebP -> Supabase Storage)
@@ -635,9 +617,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         extension: processed.extension
       });
       setCropFile(null);
-      setOfficialCandidates([]);
-      setLookupNotFound(false);
-      setPendingOverwriteCandidate(null);
       setImageStatusMessage({
         type: 'success',
         text: tr(
@@ -1034,7 +1013,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                     type="button"
                     onClick={() => {
                       setImageUrl('');
-                      setPendingOverwriteCandidate(null);
                       setImageStatusMessage({ type: 'info', text: tr('Image cleared. Click Save to confirm.', 'फोटो हटाया गया। सहेजने के लिए सेव दबाएं।', 'फोटो काढला. जतन करण्यासाठी सेव्ह दाबा.') });
                     }}
                     className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
@@ -1061,16 +1039,21 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={handleFindOfficialImage}
-                      disabled={isLookingUpImage || (!barcode.trim() && !name.trim() && !brand.trim())}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold shadow-xs transition active:scale-95"
+                      onClick={handleSearchOfficialPackshot}
+                      disabled={!barcode.trim() && !name.trim() && !brand.trim()}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer"
                     >
-                      {isLookingUpImage ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Search className="w-3.5 h-3.5" />
-                      )}
-                      <span>{isLookingUpImage ? tr('Searching...', 'खोज रहे हैं...', 'शोधत आहे...') : tr('Find official image', 'आधिकारिक फोटो खोजें', 'अधिकृत फोटो शोधा')}</span>
+                      <Search className="w-3.5 h-3.5" />
+                      <span>{tr('Search Official Packshot', 'ऑफिशियल पैकशॉट खोजें', 'ऑफिशियल पॅकशॉट शोधा')}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => void handlePastePackshotUrl()}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-emerald-50 dark:hover:bg-[#223630] border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition active:scale-95 cursor-pointer"
+                    >
+                      <Clipboard className="w-3.5 h-3.5" />
+                      <span>{tr('Paste', 'पेस्ट', 'पेस्ट')}</span>
                     </button>
 
                     <button
@@ -1153,98 +1136,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                   )}
                   <span>{imageStatusMessage.text}</span>
-                </div>
-              )}
-
-              {/* Explicit Overwrite Confirmation (never auto-overwrite existing image) */}
-              {pendingOverwriteCandidate && (
-                <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 space-y-2">
-                  <p className="text-[11px] font-bold text-amber-900 dark:text-amber-300">
-                    {tr('This product already has an image. Replace existing image with the selected official image?', 'इस उत्पाद की पहले से एक फोटो है। क्या इसे चुनी गई आधिकारिक फोटो से बदलें?', 'या उत्पादनाला आधीच फोटो आहे. निवडलेल्या अधिकृत फोटोने जुना फोटो बदलायचा का?')}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => applyCandidateUrl(pendingOverwriteCandidate)}
-                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold"
-                    >
-                      {tr('Confirm Replace', 'बदल की पुष्टि करें', 'बदल निश्चित करा')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPendingOverwriteCandidate(null)}
-                      className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] text-slate-700 dark:text-[#8FA69C] text-[11px] font-bold"
-                    >
-                      {tr('Keep Current', 'मौजूदा रखें', 'सध्याचा ठेवा')}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Candidate Picker (up to 4 images) */}
-              {officialCandidates.length > 0 && (
-                <div className="space-y-2 pt-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400">
-                      {tr(`Select an official image (${officialCandidates.length} found)`, `आधिकारिक फोटो चुनें (${officialCandidates.length} मिले)`, `अधिकृत फोटो निवडा (${officialCandidates.length} सापडले)`)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOfficialCandidates([]);
-                        setPendingOverwriteCandidate(null);
-                      }}
-                      className="text-[11px] font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white"
-                    >
-                      {tr('Ignore', 'छोड़ें', 'दुर्लक्ष करा')}
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {officialCandidates.map((cand) => {
-                      const isSelected = imageUrl.trim() === cand.url;
-                      return (
-                        <button
-                          key={cand.url}
-                          type="button"
-                          onClick={() => handleCandidateClick(cand)}
-                          className={`group flex flex-col items-center p-1.5 rounded-xl bg-white dark:bg-[#131F1B] border transition text-left ${
-                            isSelected
-                              ? 'border-emerald-500 ring-2 ring-emerald-500/30'
-                              : 'border-slate-200 dark:border-[#24352F] hover:border-emerald-400'
-                          }`}
-                        >
-                          <div className="w-full aspect-square rounded-lg bg-white overflow-hidden border border-slate-100">
-                            <ProductImage
-                              src={cand.url}
-                              alt={cand.label}
-                              category={category}
-                              fill
-                            />
-                          </div>
-                          <span className="mt-1 w-full text-[10px] font-bold text-slate-700 dark:text-[#E7F0EC] truncate">
-                            {cand.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Not Found State */}
-              {lookupNotFound && officialCandidates.length === 0 && (
-                <div className="p-2.5 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC]">
-                    {tr('No official image found, upload your own', 'कोई आधिकारिक फोटो नहीं मिली, अपनी फोटो अपलोड करें', 'अधिकृत फोटो सापडला नाही, स्वतःचा फोटो अपलोड करा')}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold"
-                  >
-                    <Upload className="w-3 h-3" />
-                    <span>{tr('Upload now', 'अभी अपलोड करें', 'आता अपलोड करा')}</span>
-                  </button>
                 </div>
               )}
             </div>

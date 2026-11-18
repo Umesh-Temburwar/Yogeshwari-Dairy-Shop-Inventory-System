@@ -482,7 +482,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (error.message?.includes('Email not confirmed')) {
               return { 
                 error: { 
-                  message: 'ईमेल पडताळणी प्रलंबित आहे (Email not confirmed). कृपया तुमचा ईमेल इनबॉक्स तपासा किंवा Supabase Dashboard मधील Authentication -> Users मध्ये Confirm User करा.' 
+                  message: 'Email not confirmed. Please check your inbox or confirm the user in Supabase Dashboard -> Authentication -> Users.' 
                 } 
               };
             }
@@ -568,7 +568,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!isRegistrationAllowedSync()) {
       return { 
         error: { 
-          message: 'नवीन ऑपरेटर नोंदणी सध्या दुकान मालक निखिल सखारे यांच्याद्वारे बंद करण्यात आली आहे. (New operator registration is currently disabled by Shop Owner Nikhil Sakhare).' 
+          message: 'New operator registration is currently disabled by Shop Owner Nikhil Sakhare.' 
         } 
       };
     }

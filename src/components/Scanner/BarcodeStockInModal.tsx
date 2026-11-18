@@ -16,7 +16,6 @@ import { Product, ProductCategory, ProductUnit } from '../../types';
 import { playBeepSound } from '../../utils/audioUtils';
 import { supabase } from '../../lib/supabase';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
-import { translateProductName, translateProductNameSync } from '../../lib/productTranslator';
 import { playSuccessChime } from '../../utils/audioUtils';
 import {
   isSpeechRecognitionSupported,
@@ -81,6 +80,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraSessionRef = useRef(0);
   const [barcodeInput, setBarcodeInput] = useState('');
+  const [isStartingCamera, setIsStartingCamera] = useState(false);
   const [isScanningCamera, setIsScanningCamera] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
@@ -108,41 +108,14 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
 
   // New Product Registration Form (Catalogue only, stock = 0)
   const [newProdName, setNewProdName] = useState('');
-  const [newProdMarathiName, setNewProdMarathiName] = useState('');
   const [newProdBrand, setNewProdBrand] = useState('Yogeshwari Dairy');
   const [newProdCategory, setNewProdCategory] = useState<ProductCategory>('Bakery & Extras');
   const [newProdUnit, setNewProdUnit] = useState<ProductUnit>('Piece');
   const [newProdPackSize, setNewProdPackSize] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
 
-  // Auto-translate English to Marathi for newly registered products
-  useEffect(() => {
-    if (!newProdName.trim() || newProdName.trim().length < 2) return;
-    let cancelled = false;
-    const timer = setTimeout(async () => {
-      try {
-        const res = await translateProductName(newProdName);
-        if (!cancelled && res.marathi) {
-          setNewProdMarathiName(res.marathi);
-        }
-      } catch (e) {
-        // ignore
-      }
-    }, 300);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [newProdName]);
-
   const handleNewProdNameChange = (val: string) => {
     setNewProdName(val);
-    if (val.trim().length >= 2) {
-      const instant = translateProductNameSync(val);
-      setNewProdMarathiName(instant.marathi);
-    } else if (!val.trim()) {
-      setNewProdMarathiName('');
-    }
   };
 
   // English-only Voice-to-Text Recognition for Barcode Product Registration
@@ -205,7 +178,6 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
         setVoiceLiveTranscript(raw);
         if (processed.englishName) {
           setNewProdName(processed.englishName);
-          if (processed.marathiName) setNewProdMarathiName(processed.marathiName);
           if (processed.detectedBrand) setNewProdBrand(processed.detectedBrand);
           if (processed.detectedCategory) setNewProdCategory(processed.detectedCategory);
           if (processed.detectedUnit) setNewProdUnit(processed.detectedUnit);
@@ -217,19 +189,16 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
         setVoiceLiveTranscript(raw);
         if (processed.englishName) {
           setNewProdName(processed.englishName);
-          if (processed.marathiName) setNewProdMarathiName(processed.marathiName);
           if (processed.detectedBrand) setNewProdBrand(processed.detectedBrand);
           if (processed.detectedCategory) setNewProdCategory(processed.detectedCategory);
           if (processed.detectedUnit) setNewProdUnit(processed.detectedUnit);
           if (processed.packSize) setNewProdPackSize(processed.packSize);
         }
         playSuccessChime();
-        // Optional async enrichment guarded by sequence ID (prevents race overwrites)
         try {
           const enriched = await processVoiceTranscript(raw, voiceLang);
           if (voiceSessionSeqRef.current === seqId && enriched.englishName) {
             setNewProdName(enriched.englishName);
-            if (enriched.marathiName) setNewProdMarathiName(enriched.marathiName);
           }
         } catch {
           // Synchronous result already applied
@@ -291,7 +260,6 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     setBarcodeInput('');
     setSelectedProduct(null);
     setNewProdName('');
-    setNewProdMarathiName('');
     setNewProdBrand('Yogeshwari Dairy');
     setQuantity('');
     setPurchasePrice('');
@@ -300,6 +268,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     setSupplierName('');
     setNotes('');
     setErrorMessage(null);
+    setCameraError(null);
     setIsSubmitting(false);
     setIsRegistering(false);
   };
@@ -321,6 +290,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     } catch (e) {
       console.warn('stopCamera error:', e);
     }
+    setIsStartingCamera(false);
     setIsScanningCamera(false);
     setTorchEnabled(false);
   };
@@ -328,26 +298,24 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   const startCamera = async () => {
     stopCamera();
     const sessionId = ++cameraSessionRef.current;
+    setIsStartingCamera(true);
     setIsScanningCamera(false);
     setCameraError(null);
 
-    // Robust video element check with retry polling
+    // Wait briefly for DOM to attach video ref if needed
     let videoElement = videoRef.current;
     let attempts = 0;
     while (!videoElement && attempts < 15) {
-      await new Promise(r => setTimeout(r, 50));
+      await new Promise<void>((r) => requestAnimationFrame(() => r()));
+      if (sessionId !== cameraSessionRef.current) return;
       videoElement = videoRef.current;
       attempts++;
     }
 
     if (!videoElement) {
-      setCameraError(
-        tr(
-          'Press the button below to start camera.',
-          'कैमरा शुरू करने के लिए नीचे दिए बटन को दबाएं।',
-          'कॅमेरा सुरू करण्यासाठी खालील बटण दाबा.'
-        )
-      );
+      if (sessionId !== cameraSessionRef.current) return;
+      setCameraError('Could not initialize camera preview. Please tap "Try Again" or use the Photo button below.');
+      setIsStartingCamera(false);
       setIsScanningCamera(false);
       return;
     }
@@ -369,18 +337,9 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       if (!isSecure && (!navigator?.mediaDevices || !navigator?.mediaDevices?.getUserMedia)) {
         logD('Insecure context without getUserMedia. Falling back to native camera.');
         setDiagnosticsLogs([...diag]);
-        setCameraError(
-          tr(
-            'Mobile browser blocks live video camera on insecure (HTTP) Wi-Fi addresses. Opening native mobile camera photo scanner for you...',
-            'मोबाइल ब्राउज़र HTTP पते पर लाइव कैमरा ब्लॉक करता है। आपके लिए सीधे मोबाइल कैमरा फोटो स्कैनर खोला जा रहा है...',
-            'मोबाईल ब्राऊझर सुरक्षित नसलेल्या (HTTP) वायफाय पत्त्यावर थेट व्हिडिओ कॅमेरा ब्लॉक करतो. आम्ही तुमच्यासाठी थेट मोबाईल कॅमेरा फोटो स्कॅनर उघडत आहोत...'
-          )
-        );
+        setCameraError('Live camera requires HTTPS on mobile browsers. Use the Photo button below to scan with your phone camera.');
+        setIsStartingCamera(false);
         setIsScanningCamera(false);
-        // Automatically launch native phone camera intent so user is never stuck
-        setTimeout(() => {
-          fileInputRef.current?.click();
-        }, 150);
         return;
       }
 
@@ -577,32 +536,34 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
         scheduleNextTick(hasNativeDetector ? 100 : 120);
       };
 
+      if (sessionId !== cameraSessionRef.current) {
+        stopLoop();
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+
       scannerControlsRef.current = {
         stop: stopLoop
       };
 
       setIsScanningCamera(true);
+      setIsStartingCamera(false);
       setCameraError(null);
 
       scheduleNextTick(80);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      if (sessionId !== cameraSessionRef.current) return;
+      const errObj = err instanceof Error ? err : { name: 'Error', message: String(err) };
       console.error('Camera access error:', err);
-      logD(`Camera Error: [${err?.name || 'Error'}] ${err?.message || ''}`);
+      logD(`Camera Error: [${errObj.name || 'Error'}] ${errObj.message || ''}`);
       setDiagnosticsLogs([...diag]);
-      const isPermissionDenied = err?.name === 'NotAllowedError' || err?.message?.includes('Permission');
+      const isPermissionDenied = errObj.name === 'NotAllowedError' || errObj.message?.includes('Permission');
       setCameraError(
         isPermissionDenied
-          ? tr(
-              'Camera permission denied. Please click the lock icon in the browser address bar to allow camera access.',
-              'कैमरा अनुमति अस्वीकृत। कृपया ब्राउज़र में कैमरा एक्सेस दें।',
-              'कॅमेरा परवानगी नाकारली गेली. कृपया ब्राऊझर पत्त्याजवळ (Address bar) कुलूपावर क्लिक करून कॅमेरा सुरू करा.'
-            )
-          : tr(
-              `Could not start camera (${err?.name || 'Error'}). Please press "Try Again" or type the barcode.`,
-              `कैमरा शुरू नहीं हो सका (${err?.name || 'Error'})। कृपया "कैमरा शुरू करें" बटन दबाएं।`,
-              `कॅमेरा सुरू करता आला नाही (${err?.name || 'Error'}). कृपया "कॅमेरा सुरू करा" बटण दाबा किंवा बारकोड टाईप करा.`
-            )
+          ? 'Camera permission denied. Please allow camera access in your browser settings and tap Try Again.'
+          : `Could not start camera (${errObj.name || 'Error'}). Tap Try Again or use the Photo button below.`
       );
+      setIsStartingCamera(false);
       setIsScanningCamera(false);
     }
   };
@@ -658,16 +619,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   };
 
   useEffect(() => {
-    const shouldSkipCamera = Boolean(initialProduct || (initialBarcode && forceRegisterNew));
+    const shouldSkipCamera = Boolean(initialProduct || (initialBarcode && initialBarcode.trim()));
     if (isOpen && step === 'scan' && !shouldSkipCamera) {
       setShowOcrButton(true);
-      const timer = setTimeout(() => {
-        startCamera();
-      }, 50);
-      return () => {
-        clearTimeout(timer);
-        stopCamera();
-      };
+      setCameraError(null);
+      void startCamera();
     } else {
       stopCamera();
     }
@@ -723,7 +679,6 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     stopCamera();
     setStep('register');
     setNewProdName('');
-    setNewProdMarathiName('');
   };
 
   const proceedWithProduct = (product: Product) => {
@@ -750,7 +705,6 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
           setSelectedProduct(null);
           setErrorMessage(null);
           setNewProdName('');
-          setNewProdMarathiName('');
           setBatchNo(generateBatchNumber());
           setStep('register');
         } else {
@@ -1123,81 +1077,52 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                 )}
               </div>
 
-              {!isScanningCamera && (
-                <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10 animate-fadeIn">
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-1">
-                    <Camera className="w-7 h-7" />
-                  </div>
-                  <p className="text-xs text-slate-300 max-w-xs">
-                    {cameraError || tr('Press the button below to start camera.', 'कैमरा शुरू करने के लिए नीचे दिए बटन को दबाएं।', 'कॅमेरा सुरू करण्यासाठी खालील बटण दाबा.')}
+              {/* Clean Camera Starting Spinner — never flashes idle/error popup on open */}
+              {!isScanningCamera && (isStartingCamera || !cameraError) && (
+                <div className="absolute inset-0 bg-slate-950/85 flex flex-col items-center justify-center text-white space-y-3 z-10">
+                  <RefreshCw className="w-7 h-7 text-emerald-400 animate-spin" />
+                  <p className="text-xs font-bold text-slate-200">
+                    Starting camera...
                   </p>
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-1 w-full max-w-sm">
-                    <label className="w-full sm:w-auto cursor-pointer px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2 active:scale-95 transition">
-                      <Camera className="w-4 h-4 text-white" />
-                      <span>{tr('📷 Take Photo with Mobile Camera', '📷 मोबाइल कैमरे से फोटो लें', '📷 मोबाईल कॅमेऱ्याने फोटो काढा')}</span>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        className="hidden"
-                        onChange={handleImageUpload}
-                      />
-                    </label>
+                </div>
+              )}
 
+              {/* Camera Error Fallback — shown ONLY when an actual camera error occurs */}
+              {!isScanningCamera && !isStartingCamera && Boolean(cameraError) && (
+                <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10 animate-fadeIn">
+                  <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400">
+                    <AlertCircle className="w-6 h-6" />
+                  </div>
+                  <p className="text-xs text-slate-200 max-w-xs leading-relaxed">
+                    {cameraError}
+                  </p>
+                  <div className="flex items-center justify-center gap-2.5 pt-1 w-full max-w-xs">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex-1 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition cursor-pointer"
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span>Use Photo</span>
+                    </button>
                     <button
                       type="button"
                       onClick={startCamera}
-                      className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 shadow-md flex items-center justify-center gap-2 active:scale-95 transition"
+                      className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold text-xs border border-slate-700 shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition cursor-pointer"
                     >
                       <Video className="w-4 h-4 text-emerald-400" />
-                      <span>{tr('🎥 Try Again', '🎥 पुनः प्रयास करें', '🎥 पुन्हा प्रयत्न करा')}</span>
+                      <span>Try Again</span>
                     </button>
                   </div>
-
-                  {cameraError && (
-                    <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[11px] text-amber-200 max-w-sm text-left space-y-1.5 leading-relaxed">
-                      <p className="font-bold text-amber-300">
-                        {tr(
-                          '💡 Why is camera permission not showing on mobile?',
-                          '💡 मोबाइल पर कैमरा अनुमति क्यों नहीं आ रही है?',
-                          '💡 मोबाईलवर कॅमेरा परवानगी का येत नाही?'
-                        )}
-                      </p>
-                      <p>
-                        {tr(
-                          'Mobile browsers (Chrome/Safari) block live video over insecure HTTP (10.63.238.67) for security.',
-                          'मोबाइल ब्राउज़र (Chrome/Safari) सुरक्षा के लिए HTTP (10.63.238.67) पर लाइव वीडियो बंद रखते हैं।',
-                          'मोबाईल ब्राउझर (Chrome/Safari) सुरक्षेसाठी HTTP (10.63.238.67) वर थेट व्हिडिओ बंद ठेवतो.'
-                        )}
-                      </p>
-                      <p className="font-semibold text-emerald-300">
-                        {tr(
-                          '✓ Option 1: Use the "Take Photo with Mobile Camera" button above (works instantly without any settings).',
-                          '✓ उपाय 1: ऊपर दिए "मोबाइल कैमरे से फोटो लें" बटन का उपयोग करें (यह बिना किसी सेटिंग के तुरंत काम करता है)।',
-                          '✓ उपाय १: वरील "मोबाईल कॅमेऱ्याने फोटो काढा" बटण वापरा (हे कोणत्याही सेटिंगशिवाय लगेच काम करते).'
-                        )}
-                      </p>
-                      <p className="font-semibold text-sky-300">
-                        {tr(
-                          '✓ Option 2: Open chrome://flags in mobile Chrome, add http://10.63.238.67:5173 in unsafely-treat-insecure-origin-as-secure and enable it.',
-                          '✓ उपाय 2: मोबाइल Chrome में chrome://flags खोलें, unsafely-treat-insecure-origin-as-secure में http://10.63.238.67:5173 जोड़ें और Enable करें।',
-                          '✓ उपाय २: मोबाईल Chrome मध्ये chrome://flags उघडून unsafely-treat-insecure-origin-as-secure मध्ये http://10.63.238.67:5173 टाका आणि Enable करा.'
-                        )}
-                      </p>
-                    </div>
-                  )}
 
                   {diagnosticsLogs.length > 0 && (
                     <div className="w-full max-w-sm pt-1">
                       <button
                         type="button"
                         onClick={() => setShowDiagnostics(!showDiagnostics)}
-                        className="text-[10px] text-slate-400 hover:text-slate-200 underline"
+                        className="text-[10px] text-slate-400 hover:text-slate-200 underline cursor-pointer"
                       >
-                        {showDiagnostics
-                          ? tr('Hide technical details', 'तकनीकी जानकारी छुपाएं', 'तांत्रिक माहिती लपवा')
-                          : tr('🛠️ Technical Details (Diagnostics)', '🛠️ तकनीकी जानकारी (Diagnostics)', '🛠️ तांत्रिक माहिती (Diagnostics)')}
+                        {showDiagnostics ? 'Hide technical details' : 'Technical Details'}
                       </button>
                       {showDiagnostics && (
                         <div className="w-full mt-1 p-2 bg-black/80 border border-slate-800 rounded-lg text-[9px] text-left font-mono text-emerald-400 max-h-24 overflow-y-auto whitespace-pre-wrap select-all">
@@ -1220,19 +1145,22 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                 className="flex gap-2"
               >
                 <input
+                  id="barcode-stock-in-input"
+                  name="barcode_stock_in_input"
                   type="text"
                   value={barcodeInput}
                   onChange={(e) => setBarcodeInput(e.target.value)}
-                  placeholder={tr('Or type barcode number...', 'या बारकोड संख्या टाइप करें...', 'किंवा बारकोड नंबर टाईप करा...')}
+                  placeholder="Or type barcode number..."
                   className="flex-1 min-w-0 px-3 py-2 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 <label
-                  title={tr('Take photo with mobile camera to scan', 'मोबाइल कैमरे से फोटो खींचकर स्कैन करें', 'मोबाईल कॅमेऱ्याने फोटो काढून स्कॅन करा')}
+                  title="Take photo with mobile camera to scan"
                   className="px-3 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition active:scale-95 shadow-xs cursor-pointer shrink-0"
                 >
                   <Camera className="w-4 h-4" />
-                  <span>{tr('Photo', 'फोटो', 'फोटो')}</span>
+                  <span>Photo</span>
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     capture="environment"
@@ -1243,10 +1171,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                 <button
                   type="submit"
                   disabled={!barcodeInput.trim()}
+                  aria-label="Search barcode"
                   className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition active:scale-95 shrink-0 cursor-pointer"
                 >
                   <Search className="w-4 h-4" />
-                  <span className="hidden sm:inline">{tr('Search', 'खोजें', 'शोधा')}</span>
+                  <span className="hidden sm:inline">Search</span>
                 </button>
               </form>
             </div>

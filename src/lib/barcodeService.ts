@@ -72,8 +72,6 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
         products (
           id,
           name,
-          hindi_name,
-          marathi_name,
           category,
           unit,
           purchase_price,
@@ -98,8 +96,6 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
         const prod: Product = {
           id: p.id,
           name: p.name,
-          hindi_name: p.hindi_name || undefined,
-          marathi_name: p.marathi_name || undefined,
           category: (p.category as ProductCategory) || 'Bakery & Extras',
           unit: (p.unit as ProductUnit) || 'Piece',
           purchase_price: Number(p.purchase_price || 0),
@@ -133,8 +129,6 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
       const prod: Product = {
         id: p.id,
         name: p.name,
-        hindi_name: p.hindi_name || undefined,
-        marathi_name: p.marathi_name || undefined,
         category: (p.category as ProductCategory) || 'Bakery & Extras',
         unit: (p.unit as ProductUnit) || 'Piece',
         purchase_price: Number(p.purchase_price || 0),
@@ -166,7 +160,6 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
       const prod: Product = {
         id: row.product_id,
         name: row.product_name,
-        marathi_name: row.marathi_name || undefined,
         category: (row.category as ProductCategory) || 'Bakery & Extras',
         unit: (row.unit as ProductUnit) || 'Piece',
         brand: row.brand || undefined,
@@ -228,7 +221,7 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
       const { data: partData, error: partErr } = await supabase
         .from('products')
         .select(PRODUCT_BARCODE_SELECT_COLS)
-        .or(`barcode.ilike.%${clean}%,name.ilike.%${clean}%,marathi_name.ilike.%${clean}%`)
+        .or(`barcode.ilike.%${clean}%,name.ilike.%${clean}%`)
         .limit(1);
 
       if (!partErr && partData && partData.length > 0) {
@@ -236,8 +229,6 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
         const prod: Product = {
           id: p.id,
           name: p.name,
-          hindi_name: p.hindi_name || undefined,
-          marathi_name: p.marathi_name || undefined,
           category: (p.category as ProductCategory) || 'Bakery & Extras',
           unit: (p.unit as ProductUnit) || 'Piece',
           purchase_price: Number(p.purchase_price || 0),

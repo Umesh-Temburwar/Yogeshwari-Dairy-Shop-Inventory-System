@@ -120,8 +120,8 @@ const ProductCard = React.memo<ProductCardProps>(({
             )}
             <span>
               {hasExpiredOnly 
-                ? (language === 'mr' ? 'मुदत संपली' : language === 'hi' ? 'एक्सपायर्ड' : 'Expired')
-                : `${availableStock} ${language === 'mr' ? 'शिल्लक' : language === 'hi' ? 'बचे' : 'left'}`}
+                ? ('Expired')
+                : `${availableStock} ${'left'}`}
             </span>
           </span>
         </div>
@@ -129,7 +129,7 @@ const ProductCard = React.memo<ProductCardProps>(({
         {/* Standardized 1:1 Square Product Image Showcase — Hold image to change URL, tap card to add */}
         <HoldableImageBox
           onHold={() => onPreviewImage(prod)}
-          title={language === 'mr' ? 'इमेज URL बदलण्यासाठी फोटोवर होल्ड करा' : language === 'hi' ? 'इमेज URL बदलने के लिए फोटो पर होल्ड करें' : 'Hold image to view & update URL'}
+          title={'Hold image to view & update URL'}
           className="group/posimg relative w-full aspect-square flex justify-center items-center mb-2.5 bg-white rounded-2xl border border-slate-200/80 dark:border-[#24352F] overflow-hidden shadow-2xs cursor-pointer"
         >
           <ProductImage 
@@ -145,7 +145,7 @@ const ProductCard = React.memo<ProductCardProps>(({
               e.stopPropagation();
               onPreviewImage(prod);
             }}
-            title={language === 'mr' ? 'इमेज URL बदला' : language === 'hi' ? 'इमेज URL बदलें' : 'Edit image URL'}
+            title={'Edit image URL'}
             className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/75 hover:bg-emerald-700 text-white text-[9px] font-bold opacity-85 sm:opacity-0 sm:group-hover/posimg:opacity-100 transition-opacity cursor-pointer"
           >
             <Eye className="w-2.5 h-2.5" />
@@ -170,13 +170,13 @@ const ProductCard = React.memo<ProductCardProps>(({
           <div className="mt-1 flex items-center gap-1 text-[10px] font-extrabold text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-2 py-0.5 rounded-md border border-orange-200 dark:border-orange-900/50">
             <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
             <Clock className="w-3 h-3 text-orange-600 dark:text-orange-400 shrink-0" />
-            <span className="truncate">{language === 'mr' ? 'आज संपत आहे' : language === 'hi' ? 'आज एक्सपायर' : 'Exp. Today'}</span>
+            <span className="truncate">{'Exp. Today'}</span>
           </div>
         )}
         {hasExpiringTomorrow && !hasExpiringToday && !hasExpiredOnly && (
           <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900/50">
             <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span className="truncate">{language === 'mr' ? 'उद्या एक्सपायर' : language === 'hi' ? 'कल एक्सपायर' : 'Exp. Tomorrow'}</span>
+            <span className="truncate">{'Exp. Tomorrow'}</span>
           </div>
         )}
       </div>
@@ -184,14 +184,14 @@ const ProductCard = React.memo<ProductCardProps>(({
       <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between gap-1">
         <div className="min-w-0">
           <span className="text-[10px] text-slate-400 dark:text-[#8FA69C] block leading-none font-semibold">
-            {language === 'mr' ? 'दर' : language === 'hi' ? 'भाव' : 'Rate'}
+            {'Rate'}
           </span>
           <span className="text-sm sm:text-base font-black text-emerald-700 dark:text-emerald-400 leading-tight">
             ₹{effectiveSellingPrice}
           </span>
           {Boolean(earliestBatch && earliestBatch.selling_price && earliestBatch.selling_price > 0 && earliestBatch.selling_price !== prod.selling_price) && (
             <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold block leading-none">
-              ({language === 'mr' ? 'बॅच दर' : language === 'hi' ? 'बैच दर' : 'Batch Rate'})
+              ({'Batch Rate'})
             </span>
           )}
         </div>
@@ -219,10 +219,10 @@ const ProductCard = React.memo<ProductCardProps>(({
               onAddToCart(prod, 1);
             }}
             className="h-8 px-2.5 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs disabled:bg-slate-300 dark:disabled:bg-slate-800 transition active:scale-95 flex items-center gap-1 shadow-xs cursor-pointer"
-            title={hasExpiredOnly ? (language === 'mr' ? 'मुदत संपलेली बॅच ब्लॉक' : language === 'hi' ? 'एक्सपायर्ड बैच ब्लॉक' : 'Expired Batch Blocked') : (language === 'mr' ? '१ नग जोडा' : language === 'hi' ? '१ नग जोड़ें' : 'Add 1 Unit')}
+            title={hasExpiredOnly ? ('Expired Batch Blocked') : ('Add 1 Unit')}
           >
             <Plus className="w-3.5 h-3.5" />
-            <span className="hidden xs:inline">{language === 'mr' ? 'जोडा' : language === 'hi' ? 'जोड़ें' : 'Add'}</span>
+            <span className="hidden xs:inline">{'Add'}</span>
           </button>
         </div>
       </div>
@@ -255,8 +255,8 @@ export const BillingCounter: React.FC = () => {
         role: 'Admin' as const,
         slot: 1 as const,
         email: 'nilusakhare2003@gmail.com',
-        name: isMr ? 'निलेश सखारे' : isHi ? 'निलेश सखारे' : 'Nilesh Sakhare',
-        counter: isMr ? 'काऊंटर १ - मुख्य बिलिंग' : isHi ? 'काउंटर १ - मुख्य बिलिंग' : 'Counter 1 - Main Billing'
+        name: 'Nilesh Sakhare',
+        counter: 'Counter 1 - Main Billing'
       };
     }
 
@@ -264,8 +264,8 @@ export const BillingCounter: React.FC = () => {
       role: 'Owner' as const,
       slot: null,
       email: 'yogeshwaridairy9896@gmail.com',
-      name: isMr ? 'निखिल सखारे' : isHi ? 'निखिल सखारे' : 'Nikhil Sakhare',
-      counter: isMr ? 'मुख्य मालक काऊंटर' : isHi ? 'मुख्य मालिक काउंटर' : 'Owner Master Counter'
+      name: 'Nikhil Sakhare',
+      counter: 'Owner Master Counter'
     };
   }, [role, adminSlot, user?.email, language]);
 
@@ -353,7 +353,7 @@ export const BillingCounter: React.FC = () => {
           const safeQ = q.replace(/[%_]/g, '');
           const { data, error } = await supabase
             .from('products')
-            .select('id, name, hindi_name, marathi_name, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, brand, pack_size, is_active')
+            .select('id, name, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, brand, pack_size, is_active')
             .or(`name.ilike.%${safeQ}%,brand.ilike.%${safeQ}%`)
             .limit(20)
             .abortSignal(controller.signal);
@@ -400,7 +400,7 @@ export const BillingCounter: React.FC = () => {
   const [calcRupees, setCalcRupees] = useState<string>('');
 
   const categories = [
-    { id: 'All', label: language === 'mr' ? 'सर्व' : language === 'hi' ? 'सभी' : 'All' },
+    { id: 'All', label: 'All' },
     { id: 'Milk', label: t('catMilk') },
     { id: 'Paneer & Butter', label: t('catPaneer') },
     { id: 'Curd & Chaas', label: t('catCurd') },
@@ -447,9 +447,7 @@ export const BillingCounter: React.FC = () => {
       );
 
       const matchesSearch = !q ||
-        p.name.toLowerCase().includes(q) || 
-        (p.hindi_name && p.hindi_name.toLowerCase().includes(q)) ||
-        (p.marathi_name && p.marathi_name.toLowerCase().includes(q)) ||
+        p.name.toLowerCase().includes(q) ||
         barcodeMatches;
       const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
       return matchesSearch && matchesCategory;
@@ -481,15 +479,13 @@ export const BillingCounter: React.FC = () => {
   // Unit helper for fractional vs discrete item quantities
   const isFractionalUnit = useCallback((unit?: string) => {
     const u = (unit || '').toLowerCase().trim();
-    return ['kg', 'gm', 'g', 'l', 'litre', 'ltr', 'ml', 'किलो', 'ग्रॅम', 'लिटर'].includes(u);
+    return ['kg', 'gm', 'g', 'l', 'litre', 'ltr', 'ml'].includes(u);
   }, []);
 
   // Helper display name
   const getProductDisplayName = useCallback((prod: Product) => {
-    if (language === 'mr' && prod.marathi_name) return prod.marathi_name;
-    if (language === 'hi' && prod.hindi_name) return prod.hindi_name;
     return prod.name;
-  }, [language]);
+  }, []);
 
   // Add item to cart (with FEFO non-expired safety check)
   const addToCart = useCallback((product: Product, quantityToAdd: number = 1) => {
@@ -500,11 +496,7 @@ export const BillingCounter: React.FC = () => {
       : product.stock_quantity;
 
     if (availableNonExpiredStock <= 0) {
-      alert(language === 'mr' 
-        ? 'हा माल संपला आहे किंवा मुदत संपली (Expired) आहे. बिलात जोडता येणार नाही!' 
-        : language === 'hi' 
-        ? 'यह माल खत्म या एक्सपायर हो चुका है, बिल में नहीं जोड़ा जा सकता!' 
-        : 'This item is out of stock or expired and cannot be billed!');
+      alert('This item is out of stock or expired and cannot be billed!');
       return;
     }
 
@@ -602,11 +594,7 @@ export const BillingCounter: React.FC = () => {
     if (cart.length === 0 || isCheckingOut) return;
 
     if (paymentMode === 'Udhar' && !customerName.trim()) {
-      alert(language === 'mr' 
-        ? 'कृपया उधार खात्यासाठी ग्राहकाचे नाव प्रविष्ट करा!' 
-        : language === 'hi' 
-        ? 'कृपया उधार खाते के लिए ग्राहक का नाम दर्ज करें!' 
-        : 'Please enter customer name for credit/udhar sale!');
+      alert('Please enter customer name for credit/udhar sale!');
       return;
     }
 
@@ -628,7 +616,7 @@ export const BillingCounter: React.FC = () => {
         onlineAmount = splitOnlineAmount || (netTotal - splitCashAmount);
       }
 
-      const defaultCustomerName = language === 'mr' ? 'थेट ग्राहक' : language === 'hi' ? 'काउंटर ग्राहक' : 'Counter Customer';
+      const defaultCustomerName = 'Counter Customer';
 
       const sale = await createSale({
         customer_name: customerName.trim() || defaultCustomerName,
@@ -677,33 +665,29 @@ export const BillingCounter: React.FC = () => {
     const { dateFormatted, timeFormatted, dateTimeFormatted } = formatSaleDateTime(sale.created_at, sale.sale_date);
 
     return {
-      title: `${t('shopName')} - ${isMr ? 'अधिकृत विक्री पावती' : isHi ? 'अधिकृत बिक्री रसीद' : 'Cash Memo & Tax Invoice'}`,
-      subtitle: `${isMr ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : isHi ? 'ताज़ा दूध, पनीर, दही, शुद्ध देसी घी' : 'Fresh Milk, Dairy & Sweets'} | FSSAI: 21524012000341`,
-      periodText: `${isMr ? 'बिल क्र.' : isHi ? 'बिल क्र.' : 'Invoice No.'}: ${sale.invoice_no} | ${isMr ? 'बिल तयार दिनांक व वेळ' : isHi ? 'बिल दिनांक व समय' : 'Bill Date & Time'}: ${dateTimeFormatted}`,
+      title: `${t('shopName')} - ${'Cash Memo & Tax Invoice'}`,
+      subtitle: `${'Fresh Milk, Dairy & Sweets'} | FSSAI: 21524012000341`,
+      periodText: `${'Invoice No.'}: ${sale.invoice_no} | ${'Bill Date & Time'}: ${dateTimeFormatted}`,
       createdAt: sale.created_at,
       language,
       kpis: [
-        { label: isMr ? 'निव्वळ देय रक्कम' : isHi ? 'कुल देय राशि' : 'Net Payable', value: `₹${sale.net_amount.toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: 'Net Payable', value: `₹${sale.net_amount.toLocaleString('en-IN')}`, color: 'emerald' },
         { 
-          label: isMr ? 'पेमेंट पद्धत' : isHi ? 'भुगतान माध्यम' : 'Payment Mode', 
-          value: sale.payment_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
-                 sale.payment_mode === 'Online_UPI' ? (isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI') :
-                 sale.payment_mode === 'Udhar' ? (isMr ? 'उधारी' : isHi ? 'उधार' : 'Credit') :
-                 sale.payment_mode === 'Split' ? (isMr ? 'विभागून' : isHi ? 'विभाजित' : 'Split') : sale.payment_mode, 
+          label: 'Payment Mode', 
+          value: sale.payment_mode === 'Cash' ? ('Cash') :
+                 sale.payment_mode === 'Online_UPI' ? ('Online UPI') :
+                 sale.payment_mode === 'Udhar' ? ('Credit') :
+                 sale.payment_mode === 'Split' ? ('Split') : sale.payment_mode, 
           color: 'blue' 
         },
-        { label: isMr ? 'बिल दिनांक' : isHi ? 'बिल दिनांक' : 'Bill Date', value: dateFormatted, color: 'teal' },
-        { label: isMr ? 'बिल तयार वेळ' : isHi ? 'बिल समय' : 'Bill Time', value: timeFormatted || '—', color: 'purple' },
-        { label: isMr ? 'काऊंटर' : isHi ? 'काउंटर' : 'Counter', value: sale.counter_name || (sale.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १'), color: 'teal' },
-        { label: isMr ? 'बिलिंग ऑपरेटर' : isHi ? 'बिलिंग ऑपरेटर' : 'Operator', value: sale.created_by_name || 'Admin 1', color: 'purple' },
-        { label: isMr ? 'ग्राहक नाव' : isHi ? 'ग्राहक नाम' : 'Customer Name', value: sale.customer_name || (isMr ? 'काउंटर ग्राहक' : isHi ? 'काउंटर ग्राहक' : 'Counter Customer'), color: 'blue' }
+        { label: 'Bill Date', value: dateFormatted, color: 'teal' },
+        { label: 'Bill Time', value: timeFormatted || '—', color: 'purple' },
+        { label: 'Counter', value: sale.counter_name || (sale.admin_slot === 2 ? 'Counter 2' : 'Counter 1'), color: 'teal' },
+        { label: 'Operator', value: sale.created_by_name || 'Admin 1', color: 'purple' },
+        { label: 'Customer Name', value: sale.customer_name || ('Counter Customer'), color: 'blue' }
       ],
       table: {
-        headers: isMr 
-          ? ['अ.क्र.', 'मालाचे नाव / तपशील', 'प्रमाण', 'दर (₹)', 'एकूण रक्कम (₹)']
-          : isHi
-          ? ['क्र.', 'सामान का नाम / विवरण', 'मात्रा', 'दर (₹)', 'कुल राशि (₹)']
-          : ['Sr.', 'Item Description', 'Qty', 'Rate (₹)', 'Total (₹)'],
+        headers: ['Sr.', 'Item Description', 'Qty', 'Rate (₹)', 'Total (₹)'],
         alignments: ['center', 'left', 'right', 'right', 'right'] as ('center' | 'left' | 'right' | 'right' | 'right')[],
         rows: (sale.items || []).map((it: any, idx: number) => [
           idx + 1,
@@ -713,14 +697,14 @@ export const BillingCounter: React.FC = () => {
           `₹${it.total_price.toLocaleString('en-IN')}`
         ]),
         summaryRow: [
-          isMr ? 'एकूण निव्वळ रक्कम' : isHi ? 'कुल देय राशि' : 'Net Total',
-          `${sale.items?.length || 0} ${isMr ? 'वस्तू' : isHi ? 'सामान' : 'Items'}`,
+          'Net Total',
+          `${sale.items?.length || 0} ${'Items'}`,
           '',
-          sale.discount > 0 ? `${isMr ? 'सवलत' : isHi ? 'छूट' : 'Discount'}: ₹${sale.discount}` : '',
+          sale.discount > 0 ? `${'Discount'}: ₹${sale.discount}` : '',
           `₹${sale.net_amount.toLocaleString('en-IN')}`
         ]
       },
-      notes: `${isMr ? 'धन्यवाद! पुन्हा भेट द्या • शुद्धता हीच आमची ओळख' : isHi ? 'धन्यवाद! फिर पधारें • शुद्धता ही हमारी पहचान है' : 'Thank you! Visit again • Purity is our identity'} | UPI ID: Q226038088@ybl (IDFC FIRST Bank)`
+      notes: `${'Thank you! Visit again • Purity is our identity'} | UPI ID: Q226038088@ybl (IDFC FIRST Bank)`
     };
   };
 
@@ -753,7 +737,7 @@ export const BillingCounter: React.FC = () => {
           }`}
         >
           <Package className="w-4 h-4" />
-          <span>{language === 'mr' ? '१. माल निवडा' : language === 'hi' ? '१. सामान चुनें' : '1. Products'}</span>
+          <span>{'1. Products'}</span>
         </button>
         <button
           type="button"
@@ -765,7 +749,7 @@ export const BillingCounter: React.FC = () => {
           }`}
         >
           <ShoppingCart className="w-4 h-4" />
-          <span>{language === 'mr' ? '२. बिल' : language === 'hi' ? '२. बिल' : '2. Bill'} ({cart.length}) {netTotal > 0 ? `• ₹${netTotal.toFixed(0)}` : ''}</span>
+          <span>{'2. Bill'} ({cart.length}) {netTotal > 0 ? `• ₹${netTotal.toFixed(0)}` : ''}</span>
         </button>
       </div>
 
@@ -774,7 +758,7 @@ export const BillingCounter: React.FC = () => {
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
           <span className="font-semibold text-slate-600 dark:text-[#8FA69C] hidden sm:inline">
-            {language === 'mr' ? 'सक्रिय काऊंटर:' : language === 'hi' ? 'सक्रिय काउंटर:' : 'Counter:'}
+            {'Counter:'}
           </span>
           <span className="font-bold text-slate-900 dark:text-white px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-[11px]">
             📍 {activeOperator.counter}
@@ -782,7 +766,7 @@ export const BillingCounter: React.FC = () => {
         </div>
         <div className="flex items-center gap-1.5">
           <span className="font-semibold text-slate-600 dark:text-[#8FA69C] hidden sm:inline">
-            {language === 'mr' ? 'ऑपरेटर:' : language === 'hi' ? 'ऑपरेटर:' : 'Operator:'}
+            {'Operator:'}
           </span>
           <span className={`inline-flex items-center gap-1.5 font-bold px-2 py-0.5 rounded-lg text-[11px] ${
             activeOperator.slot === 1 
@@ -848,10 +832,10 @@ export const BillingCounter: React.FC = () => {
               onClick={() => setShowBarcodeScanner(true)}
               aria-label="Camera Barcode Scanner"
               className="w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs active:scale-[0.97] transition-all shrink-0 cursor-pointer"
-              title={tr('Camera Barcode Scanner', 'कैमरा बारकोड स्कैनर', 'कॅमेरा बारकोड स्कॅनर')}
+              title={'Camera Barcode Scanner'}
             >
               <Barcode className="w-4 h-4 text-white" />
-              <span className="hidden sm:inline">{tr('Scan', 'स्कैन', 'स्कॅन')}</span>
+              <span className="hidden sm:inline">{'Scan'}</span>
             </button>
 
             {isMobileDevice() && (
@@ -867,11 +851,11 @@ export const BillingCounter: React.FC = () => {
                     ? 'bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-400'
                     : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-500 dark:text-slate-400'
                 }`}
-                title={tr('Global Shake to Scan', 'फोन हिलाकर स्कैन (Global Shake to Scan)', 'फोन हलवून स्कॅन (Global Shake to Scan)')}
+                title={'Global Shake to Scan'}
               >
                 <Smartphone className={`w-4 h-4 ${shakeToScanEnabled ? 'text-amber-500' : ''}`} />
                 <span className="hidden sm:inline">
-                  {tr('Shake', 'शेक', 'शेक')}: {shakeToScanEnabled ? tr('ON', 'चालू', 'चालू') : tr('OFF', 'बंद', 'बंद')}
+                  {'Shake'}: {shakeToScanEnabled ? 'ON' : 'OFF'}
                 </span>
               </button>
             )}
@@ -881,10 +865,10 @@ export const BillingCounter: React.FC = () => {
               onClick={() => setActiveView('returns')}
               aria-label="Customer Returns"
               className="w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800/40 text-purple-700 dark:text-purple-300 flex items-center justify-center gap-1.5 text-xs font-bold shrink-0 transition active:scale-[0.97]"
-              title={tr('Customer Returns', 'माल वापसी (Customer Returns)', 'माल परतावा (Customer Returns)')}
+              title={'Customer Returns'}
             >
               <RotateCcw className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-              <span className="hidden sm:inline">{language === 'mr' ? 'माल परत' : language === 'hi' ? 'माल वापसी' : 'Return'}</span>
+              <span className="hidden sm:inline">{'Return'}</span>
             </button>
           </div>
 
@@ -922,17 +906,13 @@ export const BillingCounter: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm sm:text-base text-slate-800 dark:text-white">
-                    {tr('New Barcode Found!', 'नया बारकोड मिला!', 'नवीन बारकोड सापडला!')}
+                    {'New Barcode Found!'}
                   </h3>
                   <p className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">
                     {searchQuery.trim()}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-1 max-w-sm">
-                    {tr(
-                      'This barcode is not in the system. Enter name and price to add it to the bill in 1 second.',
-                      'यह बारकोड सिस्टम में नहीं है। तुरंत नाम और मूल्य दर्ज कर 1 सेकंड में बिल में लें।',
-                      'हा बारकोड सिस्टिममध्ये नाही. त्वरित नाव आणि दर भरून १ सेकंदात बिलात जोडा.'
-                    )}
+                    {'This barcode is not in the system. Enter name and price to add it to the bill in 1 second.'}
                   </p>
                 </div>
                 <button
@@ -944,17 +924,17 @@ export const BillingCounter: React.FC = () => {
                   className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-emerald-600/30 active:scale-95 transition-all cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4 text-amber-200" />
-                  <span>{tr('⚡ Quick Add to Catalog & Bill', '⚡ तुरंत कैटलॉग में जोड़ें और बिल में लें', '⚡ त्वरित कॅटलॉगमध्ये जोडा आणि बिलात घ्या')}</span>
+                  <span>{'⚡ Quick Add to Catalog & Bill'}</span>
                 </button>
               </div>
             ) : (
               <div className="col-span-full py-16 px-4 bg-white dark:bg-[#131F1B] rounded-2xl border border-dashed border-slate-200 dark:border-[#24352F] text-center flex flex-col items-center justify-center">
                 <Package className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-2" />
                 <p className="font-bold text-sm text-slate-700 dark:text-slate-300">
-                  {language === 'mr' ? 'कोणतेही उत्पादन उपलब्ध नाही' : language === 'hi' ? 'कोई उत्पाद उपलब्ध नहीं है' : 'No Products Available for Billing'}
+                  {'No Products Available for Billing'}
                 </p>
                 <p className="text-xs text-slate-400 dark:text-[#8FA69C] mt-1">
-                  {language === 'mr' ? 'प्रथम "Products & Stock" मध्ये माल किंवा उत्पादन जोडा.' : language === 'hi' ? 'पहले "Products & Stock" में जाकर उत्पाद जोड़ें।' : 'Add your products in "Products & Stock" first.'}
+                  {'Add your products in "Products & Stock" first.'}
                 </p>
               </div>
             )
@@ -987,10 +967,10 @@ export const BillingCounter: React.FC = () => {
                 type="button"
                 onClick={() => setMobileTab('products')}
                 className="lg:hidden p-1.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] hover:text-slate-900 flex items-center gap-1 text-xs font-bold"
-                title={tr('Back to products', 'सामान सूची पर लौटें', 'मालाच्या यादीवर जा')}
+                title={'Back to products'}
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">{tr('Products', 'सामान', 'माल')}</span>
+                <span className="hidden sm:inline">{'Products'}</span>
               </button>
 
               <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400">
@@ -1001,7 +981,7 @@ export const BillingCounter: React.FC = () => {
                   {t('currentBill')}
                 </h3>
                 <span className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                  {cart.length} {language === 'mr' ? 'वस्तू जोडल्या आहेत' : language === 'hi' ? 'प्रकार के सामान जुड़े हैं' : 'items added'}
+                  {cart.length} {'items added'}
                 </span>
               </div>
             </div>
@@ -1059,7 +1039,7 @@ export const BillingCounter: React.FC = () => {
                           type="button"
                           onClick={() => updateQuantity(item.product_id, Number((item.quantity - step).toFixed(2)))}
                           className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] active:scale-90 transition cursor-pointer"
-                          title={tr('Decrease', 'कम करें', 'कमी करा')}
+                          title={'Decrease'}
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
@@ -1074,7 +1054,7 @@ export const BillingCounter: React.FC = () => {
                           type="button"
                           onClick={() => updateQuantity(item.product_id, Number((item.quantity + step).toFixed(2)))}
                           className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] active:scale-90 transition cursor-pointer"
-                          title={tr('Increase', 'बढ़ाएं', 'वाढवा')}
+                          title={'Increase'}
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>
@@ -1088,7 +1068,7 @@ export const BillingCounter: React.FC = () => {
                         type="button"
                         onClick={() => removeFromCart(item.product_id)}
                         className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                        title={tr('Remove', 'हटाएं', 'काढून टाका')}
+                        title={'Remove'}
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -1108,7 +1088,7 @@ export const BillingCounter: React.FC = () => {
                   className="lg:hidden inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition active:scale-95"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>{language === 'mr' ? 'बिलामध्ये माल जोडा' : language === 'hi' ? 'बिल में सामान जोड़ें' : 'Add Products'}</span>
+                  <span>{'Add Products'}</span>
                 </button>
               </div>
             )}
@@ -1162,10 +1142,10 @@ export const BillingCounter: React.FC = () => {
             <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 dark:from-emerald-950/40 dark:via-[#1A2A25] dark:to-emerald-950/40 border border-emerald-500/30 flex items-center justify-between shadow-2xs">
               <div>
                 <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 block leading-tight">
-                  {language === 'mr' ? 'एकूण देय रक्कम' : language === 'hi' ? 'कुल देय राशि' : 'Net Payable Amount'}
+                  {'Net Payable Amount'}
                 </span>
                 <span className="text-[10px] text-slate-500 dark:text-[#8FA69C]">
-                  {cart.length} {language === 'mr' ? 'वस्तूंचे बिल' : language === 'hi' ? 'सामान का बिल' : 'items'}
+                  {cart.length} {'items'}
                 </span>
               </div>
               <div className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
@@ -1219,7 +1199,7 @@ export const BillingCounter: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-xs font-bold text-purple-950 dark:text-purple-200 block">
-                      {language === 'mr' ? 'QR कोड पेमेंट तयार' : language === 'hi' ? 'QR कोड पेमेंट तैयार' : 'QR Payment Ready'}
+                      {'QR Payment Ready'}
                     </span>
                     <span className="text-[11px] font-mono font-bold text-purple-700 dark:text-purple-400 block">
                       UPI: Q226038088@ybl
@@ -1232,7 +1212,7 @@ export const BillingCounter: React.FC = () => {
                   className="px-2.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer"
                 >
                   <QrCode className="w-3.5 h-3.5" />
-                  <span>{language === 'mr' ? 'QR उघडा' : language === 'hi' ? 'QR खोलें' : 'View QR'}</span>
+                  <span>{'View QR'}</span>
                 </button>
               </div>
             </div>
@@ -1262,7 +1242,7 @@ export const BillingCounter: React.FC = () => {
                   onClick={() => setTenderedCash(Math.round(netTotal))}
                   className="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 active:scale-95 transition cursor-pointer shadow-2xs"
                 >
-                  {language === 'mr' ? 'बरोबर (Exact)' : language === 'hi' ? 'सटीक (Exact)' : 'Exact'}
+                  {'Exact'}
                 </button>
                 {[50, 100, 200, 500].map(val => (
                   <button
@@ -1290,7 +1270,7 @@ export const BillingCounter: React.FC = () => {
             <div className="grid grid-cols-2 gap-2 bg-teal-50/70 dark:bg-[#1A2A25] p-3 rounded-2xl border border-teal-200/80 dark:border-teal-500/30">
               <div>
                 <label className="text-[11px] font-bold text-teal-900 dark:text-teal-300 block mb-1">
-                  {language === 'mr' ? 'रोख रक्कम:' : language === 'hi' ? 'रोकड़ राशि:' : 'Cash Amount:'}
+                  {'Cash Amount:'}
                 </label>
                 <input
                   type="number"
@@ -1305,7 +1285,7 @@ export const BillingCounter: React.FC = () => {
               </div>
               <div>
                 <label className="text-[11px] font-bold text-teal-900 dark:text-teal-300 block mb-1">
-                  {language === 'mr' ? 'ऑनलाईन UPI रक्कम:' : language === 'hi' ? 'ऑनलाइन UPI राशि:' : 'UPI Online Amount:'}
+                  {'UPI Online Amount:'}
                 </label>
                 <input
                   type="number"
@@ -1319,7 +1299,7 @@ export const BillingCounter: React.FC = () => {
                   className="mt-1 text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
                 >
                   <QrCode className="w-3 h-3" />
-                  <span>{language === 'mr' ? 'ऑनलाइन QR कोड उघडा' : language === 'hi' ? 'ऑनलाइन QR कोड देखें' : 'View Online QR'}</span>
+                  <span>{'View Online QR'}</span>
                 </button>
               </div>
             </div>
@@ -1330,10 +1310,10 @@ export const BillingCounter: React.FC = () => {
             <div className="bg-amber-50/80 dark:bg-amber-950/25 p-3 rounded-2xl border border-amber-300 dark:border-amber-700/50 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-amber-950 dark:text-amber-200">
-                  {language === 'mr' ? 'उधार खाते / ग्राहकाचे नाव' : language === 'hi' ? 'उधार खाता / ग्राहक का नाम' : 'Customer Name for Credit / Udhar'}
+                  {'Customer Name for Credit / Udhar'}
                 </span>
                 <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
-                  {language === 'mr' ? '* नाव आवश्यक' : language === 'hi' ? '* नाम आवश्यक' : '* Name Required'}
+                  {'* Name Required'}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -1341,14 +1321,14 @@ export const BillingCounter: React.FC = () => {
                   type="text"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder={language === 'mr' ? 'उदा. रमेश पाटील' : language === 'hi' ? 'उदा. रमेश वर्मा' : 'e.g. Ramesh Patil'}
+                  placeholder={'e.g. Ramesh Patil'}
                   className="w-full px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700/60 bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500"
                 />
                 <input
                   type="tel"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
-                  placeholder={language === 'mr' ? 'मोबाईल क्र. (ऐच्छिक)' : language === 'hi' ? 'मोबाइल नंबर (वैकल्पिक)' : 'Phone (Optional)'}
+                  placeholder={'Phone (Optional)'}
                   className="w-full px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700/60 bg-white dark:bg-[#131F1B] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-amber-500"
                 />
               </div>
@@ -1364,13 +1344,13 @@ export const BillingCounter: React.FC = () => {
             >
               <div className="flex items-center gap-1.5 min-w-0">
                 <span className="text-emerald-600 dark:text-emerald-400">👤</span>
-                <span className="truncate">{language === 'mr' ? 'ग्राहक माहिती (ऐच्छिक)' : language === 'hi' ? 'ग्राहक जानकारी (वैकल्पिक)' : 'Customer Info (Optional)'}</span>
+                <span className="truncate">{'Customer Info (Optional)'}</span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] text-slate-500 font-semibold shrink-0">
                   {customerGender === 'Male' ? '👨' : customerGender === 'Female' ? '👩' : '🧑'} {customerAgeGroup.split(' ')[0]}
                 </span>
               </div>
               <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold shrink-0">
-                <span>{showCustomerDetails ? tr('Hide', 'छुपाएं', 'लपवा') : tr('Edit', 'बदलें', 'बदला')}</span>
+                <span>{showCustomerDetails ? 'Hide' : 'Edit'}</span>
                 <span className="text-xs transition-transform duration-200" style={{ transform: showCustomerDetails ? 'rotate(180deg)' : 'none' }}>▼</span>
               </div>
             </button>
@@ -1384,14 +1364,14 @@ export const BillingCounter: React.FC = () => {
                       type="text"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder={language === 'mr' ? 'ग्राहकाचे नाव (ऐच्छिक)' : language === 'hi' ? 'ग्राहक का नाम (वैकल्पिक)' : 'Customer Name'}
+                      placeholder={'Customer Name'}
                       className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-slate-50 dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     />
                     <input
                       type="tel"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
-                      placeholder={language === 'mr' ? 'मोबाईल नंबर' : language === 'hi' ? 'मोबाइल नंबर' : 'Phone Number'}
+                      placeholder={'Phone Number'}
                       className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#24352F] bg-slate-50 dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     />
                   </div>
@@ -1400,13 +1380,13 @@ export const BillingCounter: React.FC = () => {
                 {/* Gender Selector */}
                 <div>
                   <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
-                    {language === 'mr' ? 'लिंग:' : language === 'hi' ? 'लिंग:' : 'Gender:'}
+                    {'Gender:'}
                   </label>
                   <div className="flex gap-1.5">
                     {([
-                      { value: 'Male',   emoji: '👨', labelMr: 'पुरुष',  labelHi: 'पुरुष',  labelEn: 'Male'   },
-                      { value: 'Female', emoji: '👩', labelMr: 'महिला',  labelHi: 'महिला',  labelEn: 'Female' },
-                      { value: 'Other',  emoji: '🧑', labelMr: 'इतर',    labelHi: 'अन्य',   labelEn: 'Other'  },
+                      { value: 'Male',   emoji: '👨',  labelEn: 'Male'   },
+                      { value: 'Female', emoji: '👩',  labelEn: 'Female' },
+                      { value: 'Other',  emoji: '🧑',   labelEn: 'Other'  },
                     ] as { value: CustomerGender; emoji: string; labelMr: string; labelHi: string; labelEn: string }[]).map((g) => (
                       <button
                         key={g.value}
@@ -1419,7 +1399,7 @@ export const BillingCounter: React.FC = () => {
                         }`}
                       >
                         <span>{g.emoji}</span>
-                        <span>{language === 'mr' ? g.labelMr : language === 'hi' ? g.labelHi : g.labelEn}</span>
+                        <span>{g.labelEn}</span>
                       </button>
                     ))}
                   </div>
@@ -1428,7 +1408,7 @@ export const BillingCounter: React.FC = () => {
                 {/* Age Group Selector */}
                 <div>
                   <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
-                    {language === 'mr' ? 'वयोगट:' : language === 'hi' ? 'आयु वर्ग:' : 'Age Group:'}
+                    {'Age Group:'}
                   </label>
                   <div className="grid grid-cols-4 gap-1">
                     {([
@@ -1447,7 +1427,7 @@ export const BillingCounter: React.FC = () => {
                             : 'border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-500 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#223630]'
                         }`}
                       >
-                        {language === 'mr' ? ag.labelMr : language === 'hi' ? ag.labelHi : ag.labelEn}
+                        {ag.labelEn}
                       </button>
                     ))}
                   </div>
@@ -1468,12 +1448,12 @@ export const BillingCounter: React.FC = () => {
             {isCheckingOut ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span>{language === 'mr' ? 'बिलिंग नोंदवत आहे...' : language === 'hi' ? 'बिलिंग हो रहा है...' : 'Processing Sale...'}</span>
+                <span>{'Processing Sale...'}</span>
               </>
             ) : (
               <>
                 <Printer className="w-5 h-5" />
-                <span>{t('completeAndPrint')} ({tr('Pay', 'भुगतान', 'देय')} ₹{netTotal.toFixed(2)})</span>
+                <span>{t('completeAndPrint')} ({'Pay'} ₹{netTotal.toFixed(2)})</span>
               </>
             )}
           </button>
@@ -1497,7 +1477,7 @@ export const BillingCounter: React.FC = () => {
               </div>
               <div className="text-left">
                 <span className="text-[10px] text-emerald-100 font-bold block leading-tight">
-                  {language === 'mr' ? 'बिल तयार आहे' : language === 'hi' ? 'बिल तैयार है' : 'Cart Ready'}
+                  {'Cart Ready'}
                 </span>
                 <span className="text-sm font-black leading-tight">
                   ₹{netTotal.toFixed(2)}
@@ -1506,7 +1486,7 @@ export const BillingCounter: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-1.5 text-xs font-black bg-white/20 px-3 py-1.5 rounded-xl">
-              <span>{language === 'mr' ? 'बिल पहा व भरा' : language === 'hi' ? 'बिल देखें व भुगतान करें' : 'View Bill & Pay'}</span>
+              <span>{'View Bill & Pay'}</span>
               <ArrowRight className="w-4 h-4" />
             </div>
           </button>
@@ -1612,7 +1592,7 @@ export const BillingCounter: React.FC = () => {
             {/* Bill Net Amount Card */}
             <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-[#1A2A25] dark:to-[#131F1B] p-3 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/50">
               <span className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 block">
-                {language === 'mr' ? 'एकूण देय रक्कम (Total Bill Amount)' : language === 'hi' ? 'कुल देय राशि (Total Bill Amount)' : 'Total Bill Payable'}
+                {'Total Bill Payable'}
               </span>
               <div className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
                 ₹{(paymentMode === 'Split' ? (splitOnlineAmount || netTotal) : netTotal).toFixed(2)}
@@ -1635,7 +1615,7 @@ export const BillingCounter: React.FC = () => {
             <div className="bg-slate-50 dark:bg-[#1A2A25] p-2.5 rounded-2xl border border-slate-200 dark:border-[#24352F] flex items-center justify-between gap-2 text-left">
               <div className="min-w-0">
                 <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-[#8FA69C] block leading-tight">
-                  {language === 'mr' ? 'अधिकृत UPI आयडी:' : language === 'hi' ? 'अधिकृत UPI आईडी:' : 'Official UPI ID:'}
+                  {'Official UPI ID:'}
                 </span>
                 <span className="text-xs sm:text-sm font-black font-mono text-purple-700 dark:text-purple-300 truncate select-all block">
                   Q226038088@ybl
@@ -1658,12 +1638,12 @@ export const BillingCounter: React.FC = () => {
                 {copiedUpi ? (
                   <>
                     <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                    <span>{language === 'mr' ? 'कॉपी झाले!' : language === 'hi' ? 'कॉपी हुआ!' : 'Copied!'}</span>
+                    <span>{'Copied!'}</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5" />
-                    <span>{language === 'mr' ? 'UPI कॉपी' : language === 'hi' ? 'UPI कॉपी' : 'Copy'}</span>
+                    <span>{'Copy'}</span>
                   </>
                 )}
               </button>
@@ -1671,11 +1651,7 @@ export const BillingCounter: React.FC = () => {
 
             {/* Instruction Footer */}
             <p className="text-xs text-slate-600 dark:text-[#8FA69C] font-medium leading-relaxed">
-              {language === 'mr'
-                ? 'ग्राहक कोणत्याही UPI ॲपवरून हा QR स्कॅन करून थेट पेमेंट करू शकतात.'
-                : language === 'hi'
-                ? 'ग्राहक किसी भी UPI ऐप से यह QR स्कैन करके भुगतान कर सकते हैं।'
-                : 'Customer can scan this merchant QR code with any UPI app to pay.'}
+              {'Customer can scan this merchant QR code with any UPI app to pay.'}
             </p>
 
             {/* Confirmation & Done Button */}
@@ -1685,11 +1661,7 @@ export const BillingCounter: React.FC = () => {
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>
-                {language === 'mr'
-                  ? 'पेमेंट मिळाले (Payment Received ✓)'
-                  : language === 'hi'
-                  ? 'भुगतान प्राप्त हुआ (Payment Received ✓)'
-                  : 'Payment Received ✓'}
+                {'Payment Received ✓'}
               </span>
             </button>
           </div>
@@ -1705,10 +1677,10 @@ export const BillingCounter: React.FC = () => {
               <CheckCircle2 className="w-7 h-7" />
             </div>
             <h3 className="text-xl font-black text-slate-900 dark:text-white">
-              {language === 'mr' ? 'विक्री यशस्वीपणे नोंदवली गेली!' : language === 'hi' ? 'बिक्री सफलतापूर्वक दर्ज हुई!' : 'Sale Recorded Successfully!'}
+              {'Sale Recorded Successfully!'}
             </h3>
             <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-              {language === 'mr' ? 'बिल क्रमांक:' : language === 'hi' ? 'बिल क्रमांक:' : 'Invoice:'} <b className="text-slate-800 dark:text-white">{lastCompletedSale?.invoice_no}</b>
+              {'Invoice:'} <b className="text-slate-800 dark:text-white">{lastCompletedSale?.invoice_no}</b>
             </p>
           </div>
 
@@ -1717,17 +1689,17 @@ export const BillingCounter: React.FC = () => {
             <div className="text-center border-b border-slate-200 dark:border-[#24352F] pb-2">
               <div className="font-bold text-sm text-slate-900 dark:text-white">{t('shopName')}</div>
               <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">
-                {language === 'mr' ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : language === 'hi' ? 'ताज़ा दूध, पनीर, दही, शुद्ध देसी घी' : 'Fresh Milk, Paneer, Curd, Pure Ghee'}
+                {'Fresh Milk, Paneer, Curd, Pure Ghee'}
               </div>
               <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">FSSAI Lic: 21524012000341 &bull; Mo: 9823XXXXXX</div>
             </div>
 
             <div className="flex justify-between items-center text-[11px] text-slate-700 dark:text-[#E7F0EC] pt-1">
-              <span>{language === 'mr' ? 'बिल:' : language === 'hi' ? 'बिल:' : 'Bill:'} <b className="font-mono text-slate-900 dark:text-white">{lastCompletedSale?.invoice_no}</b></span>
+              <span>{'Bill:'} <b className="font-mono text-slate-900 dark:text-white">{lastCompletedSale?.invoice_no}</b></span>
               <span className="font-bold">{formatSaleDate(lastCompletedSale?.created_at, lastCompletedSale?.sale_date)}</span>
             </div>
             <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-[#8FA69C]">
-              <span>{tr('Counter:', 'काउंटर:', 'काऊंटर:')} {lastCompletedSale?.counter_name || (lastCompletedSale?.admin_slot === 2 ? tr('Counter 2', 'काउंटर २', 'काऊंटर २') : tr('Counter 1', 'काउंटर १', 'काऊंटर १'))}</span>
+              <span>{'Counter:'} {lastCompletedSale?.counter_name || (lastCompletedSale?.admin_slot === 2 ? 'Counter 2' : 'Counter 1')}</span>
               <span className="inline-flex items-center gap-1 font-mono font-bold text-emerald-700 dark:text-emerald-400">
                 <Clock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                 <span>{formatSaleTime(lastCompletedSale?.created_at) || '—'}</span>
@@ -1766,7 +1738,7 @@ export const BillingCounter: React.FC = () => {
             </div>
 
             <div className="text-center text-[10px] text-slate-500 dark:text-[#8FA69C] pt-2 border-t border-slate-200 dark:border-[#24352F]">
-              {tr('Thank you! Visit again • Purity is our identity', 'धन्यवाद! फिर पधारें • शुद्धता ही हमारी पहचान है', 'धन्यवाद! पुन्हा भेट द्या • शुद्धता हीच आमची ओळख')}
+              {'Thank you! Visit again • Purity is our identity'}
             </div>
           </div>
 
@@ -1778,7 +1750,7 @@ export const BillingCounter: React.FC = () => {
               title="View Invoice PDF"
             >
               <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
+              <span>{'View'}</span>
             </button>
             <button
               type="button"
@@ -1787,7 +1759,7 @@ export const BillingCounter: React.FC = () => {
               title="Print Invoice"
             >
               <Printer className="w-4 h-4 text-emerald-400" />
-              <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+              <span>{'Print'}</span>
             </button>
             <button
               type="button"
@@ -1796,7 +1768,7 @@ export const BillingCounter: React.FC = () => {
               title="Download Bill as PDF"
             >
               <Download className="w-4 h-4" />
-              <span>{language === 'mr' ? 'बिल PDF' : language === 'hi' ? 'बिल PDF' : 'Bill PDF'}</span>
+              <span>{'Bill PDF'}</span>
             </button>
             <button
               type="button"
@@ -1822,11 +1794,7 @@ export const BillingCounter: React.FC = () => {
             setShowBarcodeScanner(false);
           } else {
             const confirmBill = confirm(
-              tr(
-                `Product found: "${prod.name}", but stock is 0 in system. Add 1 unit to the bill anyway?`,
-                `यह उत्पाद मिला: "${prod.name}", लेकिन सिस्टम में स्टॉक 0 है। क्या बिल में 1 नग जोड़ना है?`,
-                `हा माल सापडला: "${prod.name}", पण सिस्टिममध्ये शिल्लक साठा ० आहे. तरीही बिलात १ नग जोडू का?`
-              )
+              `Product found: "${prod.name}", but stock is 0 in system. Add 1 unit to the bill anyway?`
             );
             if (confirmBill) {
               addToCart({ ...prod, stock_quantity: 999 }, 1);
@@ -1849,11 +1817,7 @@ export const BillingCounter: React.FC = () => {
               return;
             } else {
               const confirmBill = confirm(
-                tr(
-                  `Product found: "${localMatch.name}", but stock is 0 in system. Add 1 unit to the bill anyway?`,
-                  `यह उत्पाद मिला: "${localMatch.name}", लेकिन सिस्टम में स्टॉक 0 है। क्या बिल में 1 नग जोड़ना है?`,
-                  `हा माल सापडला: "${localMatch.name}", पण सिस्टिममध्ये शिल्लक साठा ० आहे. तरीही बिलात १ नग जोडू का?`
-                )
+                `Product found: "${localMatch.name}", but stock is 0 in system. Add 1 unit to the bill anyway?`
               );
               if (confirmBill) {
                 addToCart({ ...localMatch, stock_quantity: 999 }, 1);
@@ -1872,11 +1836,7 @@ export const BillingCounter: React.FC = () => {
                 setShowBarcodeScanner(false);
               } else {
                 const confirmBill = confirm(
-                  tr(
-                    `Product found: "${res.product.name}", but stock is 0 in system. Add 1 unit to the bill anyway?`,
-                    `यह उत्पाद मिला: "${res.product.name}", लेकिन सिस्टम में स्टॉक 0 है। क्या बिल में 1 नग जोड़ना है?`,
-                    `हा माल सापडला: "${res.product.name}", पण सिस्टिममध्ये शिल्लक साठा ० आहे. तरीही बिलात १ नग जोडू का?`
-                  )
+                  `Product found: "${res.product.name}", but stock is 0 in system. Add 1 unit to the bill anyway?`
                 );
                 if (confirmBill) {
                   addToCart({ ...res.product, stock_quantity: 999 }, 1);

@@ -105,29 +105,14 @@ export const ReorderNeedsView: React.FC = () => {
 
   // Copy WhatsApp format procurement list based on active language
   const handleCopyWhatsAppList = () => {
-    const locale = language === 'mr' ? 'mr-IN' : language === 'hi' ? 'hi-IN' : 'en-IN';
+    const locale = 'en-IN';
     const dateStr = new Date().toLocaleDateString(locale);
 
-    let text = '';
-    if (language === 'mr') {
-      text = `🥛 *योगेश्वरी डेअरी - आजची माल खरेदी गरज / ऑर्डर यादी* 🥛\nतारीख: ${dateStr}\n\n`;
-      itemsNeedingRestock.forEach((it, idx) => {
-        text += `${idx + 1}. *${getDisplayName(it)}*\n   👉 आवश्यक मागणी: *${it.recommendedOrderQty} ${it.unit}* (सध्याचा साठा: ${it.stock_quantity})\n\n`;
-      });
-      text += `एकूण अंदाजे बजेट: ₹${totalEstimatedCost.toLocaleString('en-IN')}\nकृपया लवकरात लवकर माल पाठवून द्यावा. धन्यवाद!`;
-    } else if (language === 'hi') {
-      text = `🥛 *योगेश्वरी डेरी - आज का आर्डर / माल की ज़रूरत* 🥛\nदिनांक: ${dateStr}\n\n`;
-      itemsNeedingRestock.forEach((it, idx) => {
-        text += `${idx + 1}. *${getDisplayName(it)}*\n   👉 मंगाना है: *${it.recommendedOrderQty} ${it.unit}* (वर्तमान स्टॉक: ${it.stock_quantity})\n\n`;
-      });
-      text += `कुल अनुमानित बजट: ₹${totalEstimatedCost.toLocaleString('en-IN')}\nकृपया जल्दी डिलीवरी भिजवाएं। धन्यवाद!`;
-    } else {
-      text = `🥛 *Yogeshwari Dairy Farm - Reorder Requirement Sheet* 🥛\nDate: ${dateStr}\n\n`;
-      itemsNeedingRestock.forEach((it, idx) => {
-        text += `${idx + 1}. *${it.name}*\n   👉 Reorder Quantity: *${it.recommendedOrderQty} ${it.unit}* (Current Stock: ${it.stock_quantity})\n\n`;
-      });
-      text += `Total Estimated Cost: ₹${totalEstimatedCost.toLocaleString('en-IN')}\nPlease deliver as early as possible. Thank you!`;
-    }
+    let text = `🥛 *Yogeshwari Dairy Farm - Reorder Requirement Sheet* 🥛\nDate: ${dateStr}\n\n`;
+    itemsNeedingRestock.forEach((it, idx) => {
+      text += `${idx + 1}. *${it.name}*\n   👉 Reorder Quantity: *${it.recommendedOrderQty} ${it.unit}* (Current Stock: ${it.stock_quantity})\n\n`;
+    });
+    text += `Total Estimated Cost: ₹${totalEstimatedCost.toLocaleString('en-IN')}\nPlease deliver as early as possible. Thank you!`;
 
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -139,21 +124,17 @@ export const ReorderNeedsView: React.FC = () => {
     const isHi = language === 'hi';
 
     return {
-      title: isMr ? 'माल खरेदी मागणी पत्रक' : isHi ? 'सामान खरीद मांग पत्रक' : 'Procurement & Reorder Requirements Sheet',
-      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
-      periodText: isMr ? 'तात्काळ आवश्यक माल मागणी' : isHi ? 'तत्काल आवश्यक सामान मांग' : 'Immediate Restock Requirements',
+      title: 'Procurement & Reorder Requirements Sheet',
+      subtitle: 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: 'Immediate Restock Requirements',
       language,
       kpis: [
-        { label: isMr ? 'एकूण आवश्यक उत्पादने' : isHi ? 'कुल आवश्यक उत्पाद' : 'Total Items Needed', value: `${itemsNeedingRestock.length}`, color: 'rose' },
-        { label: isMr ? 'शून्य साठा (संपलेला माल)' : isHi ? 'स्टॉक समाप्त उत्पाद' : 'Out of Stock Items', value: `${itemsNeedingRestock.filter(i => i.isCritical).length}`, color: 'rose' },
-        { label: isMr ? 'अंदाजे खरेदी बजेट' : isHi ? 'अनुमानित खरीद बजट' : 'Estimated Restock Budget', value: `₹${totalEstimatedCost.toLocaleString('en-IN')}`, color: 'amber' }
+        { label: 'Total Items Needed', value: `${itemsNeedingRestock.length}`, color: 'rose' },
+        { label: 'Out of Stock Items', value: `${itemsNeedingRestock.filter(i => i.isCritical).length}`, color: 'rose' },
+        { label: 'Estimated Restock Budget', value: `₹${totalEstimatedCost.toLocaleString('en-IN')}`, color: 'amber' }
       ],
       table: {
-        headers: isMr 
-          ? ['अ.क्र.', 'उत्पादनाचे नाव', 'प्रवर्ग', 'सध्याचा साठा', 'किमान मर्यादा', 'मागणी प्रमाण', 'अंदाजे दर (₹)', 'एकूण रक्कम (₹)']
-          : isHi
-          ? ['क्र.सं.', 'सामान का नाम', 'वर्ग', 'वर्तमान स्टॉक', 'न्यूनतम सीमा', 'मांग मात्रा', 'अनुमानित दर (₹)', 'कुल राशि (₹)']
-          : ['Sr.No.', 'Product Name', 'Category', 'Current Stock', 'Min Alert', 'Order Qty', 'Unit Price (₹)', 'Est. Total (₹)'],
+        headers: ['Sr.No.', 'Product Name', 'Category', 'Current Stock', 'Min Alert', 'Order Qty', 'Unit Price (₹)', 'Est. Total (₹)'],
         alignments: ['center', 'left', 'center', 'right', 'right', 'right', 'right', 'right'] as ('center' | 'left' | 'center' | 'right' | 'right' | 'right' | 'right' | 'right')[],
         rows: itemsNeedingRestock.length > 0 ? itemsNeedingRestock.map((it, idx) => [
           idx + 1,
@@ -165,11 +146,11 @@ export const ReorderNeedsView: React.FC = () => {
           `₹${it.purchase_price}`,
           `₹${it.estimatedCost.toLocaleString('en-IN')}`
         ]) : [
-          [1, isMr ? 'सर्व उत्पादने पुरेशा साठ्यात उपलब्ध आहेत (साठा सुरक्षित)' : isHi ? 'सभी उत्पाद पर्याप्त स्टॉक में उपलब्ध हैं (सुरक्षित)' : 'All products are sufficiently stocked (Safe inventory)', '—', '—', '—', '—', '—', '₹0']
+          [1, 'All products are sufficiently stocked (Safe inventory)', '—', '—', '—', '—', '—', '₹0']
         ],
         summaryRow: [
-          isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
-          `${itemsNeedingRestock.length} ${isMr ? 'उत्पादने' : isHi ? 'उत्पाद' : 'Products'}`,
+          'Total',
+          `${itemsNeedingRestock.length} ${'Products'}`,
           '',
           '',
           '',
@@ -179,8 +160,8 @@ export const ReorderNeedsView: React.FC = () => {
         ]
       },
       notes: itemsNeedingRestock.length > 0 
-        ? (isMr ? 'सदर माल लवकरात लवकर पुरवठादार/सप्लायरकडून मागवून घ्यावा.' : isHi ? 'यह माल जल्द से जल्द सप्लायर या किसान से मंगा लें।' : 'Please issue purchase orders for these items to suppliers promptly.')
-        : (isMr ? 'सध्या दुकानातील सर्व साठा सुरक्षित मर्यादेत आहे. कोणत्याही तात्काळ मागणीची गरज नाही.' : isHi ? 'वर्तमान में दुकान का पूरा स्टॉक सुरक्षित है। तत्काल मांग की आवश्यकता नहीं है।' : 'All dairy inventory is currently at safe stock levels. No immediate procurement needed.')
+        ? ('Please issue purchase orders for these items to suppliers promptly.')
+        : ('All dairy inventory is currently at safe stock levels. No immediate procurement needed.')
     };
   };
 
@@ -205,38 +186,38 @@ export const ReorderNeedsView: React.FC = () => {
         title={t('reorderTitle')}
         subtitle={t('reorderDesc')}
         primaryAction={{
-          label: language === 'mr' ? 'खरेदी' : language === 'hi' ? 'खरीद' : 'Purchase',
+          label: 'Purchase',
           icon: <Truck className="w-4 h-4" />,
           onClick: () => setActiveView('purchases'),
           ariaLabel: 'Record Purchase',
         }}
-        moreTitle={language === 'mr' ? 'ऑर्डर यादी पर्याय' : language === 'hi' ? 'ऑर्डर सूची विकल्प' : 'Reorder Actions'}
+        moreTitle={'Reorder Actions'}
         moreActions={[
           {
             id: 'whatsapp-copy',
             label: copied ? t('orderCopied') : t('copyWhatsAppOrder'),
-            description: language === 'mr' ? 'सप्लायरला पाठवण्यासाठी यादी कॉपी करा' : language === 'hi' ? 'सप्लायर को भेजने के लिए सूची कॉपी करें' : 'Copy restock list for WhatsApp',
+            description: 'Copy restock list for WhatsApp',
             icon: copied ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
             onClick: handleCopyWhatsAppList,
           },
           {
             id: 'view-pdf',
-            label: language === 'mr' ? 'अहवाल पहा (View PDF)' : language === 'hi' ? 'रिपोर्ट देखें (View PDF)' : 'View Order PDF',
-            description: language === 'mr' ? 'ब्राउझरमध्ये प्रीव्ह्यू पहा' : language === 'hi' ? 'ब्राउज़र में प्रीव्यू देखें' : 'Preview reorder sheet',
+            label: 'View Order PDF',
+            description: 'Preview reorder sheet',
             icon: <Eye className="w-4 h-4 text-amber-500" />,
             onClick: handleViewReorderPDF,
           },
           {
             id: 'print',
-            label: language === 'mr' ? 'प्रिंट करा' : language === 'hi' ? 'प्रिंट करें' : 'Print Order Sheet',
-            description: language === 'mr' ? 'ऑर्डर यादी प्रिंट करा' : language === 'hi' ? 'ऑर्डर शीट प्रिंट करें' : 'Send order sheet to printer',
+            label: 'Print Order Sheet',
+            description: 'Send order sheet to printer',
             icon: <Printer className="w-4 h-4 text-slate-600 dark:text-slate-300" />,
             onClick: handlePrintReorderPDF,
           },
           {
             id: 'download-pdf',
-            label: language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF',
-            description: language === 'mr' ? 'PDF ऑर्डर शीट सेव्ह करा' : language === 'hi' ? 'PDF ऑर्डर शीट सेव करें' : 'Save reorder PDF sheet',
+            label: 'Download PDF',
+            description: 'Save reorder PDF sheet',
             icon: <Download className="w-4 h-4 text-amber-600 dark:text-amber-400" />,
             onClick: handleDownloadReorderPDF,
           },
@@ -248,15 +229,15 @@ export const ReorderNeedsView: React.FC = () => {
         columns={2}
         items={[
           {
-            label: language === 'mr' ? 'कमी / शून्य स्टॉक' : language === 'hi' ? 'कम / शून्य स्टॉक' : 'Low / Out of Stock',
+            label: 'Low / Out of Stock',
             value: `${itemsNeedingRestock.length}`,
-            sublabel: `${itemsNeedingRestock.filter(i => i.isCritical).length} ${language === 'mr' ? 'शून्य साठा' : language === 'hi' ? 'शून्य स्टॉक' : 'empty'}`,
+            sublabel: `${itemsNeedingRestock.filter(i => i.isCritical).length} ${'empty'}`,
             tone: 'rose',
           },
           {
-            label: language === 'mr' ? 'अंदाजे खरेदी बजेट' : language === 'hi' ? 'अनुमानित बजट' : 'Estimated Budget',
+            label: 'Estimated Budget',
             value: `₹${totalEstimatedCost.toLocaleString('en-IN')}`,
-            sublabel: language === 'mr' ? 'घाऊक खरेदी दराने' : language === 'hi' ? 'थोक भाव से' : 'Wholesale rate',
+            sublabel: 'Wholesale rate',
             tone: 'amber',
           },
         ]}
@@ -271,15 +252,11 @@ export const ReorderNeedsView: React.FC = () => {
             </div>
             <div>
               <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                {tr('💰 Pending Supplier Refund: ', '💰 सप्लायर से बाकी रिफंड: ', '💰 सप्लायरकडे अडकलेला रिफंड: ')}
+                {'💰 Pending Supplier Refund: '}
                 <span className="text-rose-600 dark:text-rose-400">₹{metrics.pendingSupplierRefundAmount.toLocaleString('en-IN')}</span>
               </h4>
               <p className="text-[11px] text-slate-600 dark:text-[#8FA69C]">
-                {tr(
-                  'Refund is pending for damaged/expired stock from previous deliveries. Deduct this amount from your next supplier bill!',
-                  'पिछली खेप में खराब/एक्सपायर निकले माल का रिफंड बाकी है। नए बिल से यह रकम काटकर भुगतान करें!',
-                  'मागील खेपेत खराब/एक्सपायर निघालेल्या मालाचा परतावा येणे बाकी आहे. नवीन खरेदीच्या बिलातून ही रक्कम वजा करून घ्या!'
-                )}
+                {'Refund is pending for damaged/expired stock from previous deliveries. Deduct this amount from your next supplier bill!'}
               </p>
             </div>
           </div>
@@ -287,7 +264,7 @@ export const ReorderNeedsView: React.FC = () => {
             onClick={() => setActiveView('returns')}
             className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 shadow-xs transition active:scale-95"
           >
-            {tr('View Refund Ledger', 'रिफंड हिसाब देखें', 'रिफंड हिशोब पहा')}
+            {'View Refund Ledger'}
           </button>
         </div>
       )}
@@ -298,11 +275,11 @@ export const ReorderNeedsView: React.FC = () => {
           <h3 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
             <Truck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             <span>
-              {language === 'mr' ? 'आजचे खरेदी मागणी पत्रक' : language === 'hi' ? 'आज का आर्डर मांग पत्र' : "Today's Restock Order Sheet"}
+              {"Today's Restock Order Sheet"}
             </span>
           </h3>
           <span className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
-            {language === 'mr' ? 'किमान मर्यादेपेक्षा कमी माल' : language === 'hi' ? 'न्यूनतम अलर्ट से कम उत्पाद' : 'Products below minimum alert threshold'}
+            {'Products below minimum alert threshold'}
           </span>
         </div>
 
@@ -314,10 +291,10 @@ export const ReorderNeedsView: React.FC = () => {
                   <th className="px-4 py-3">{t('productNameCol')}</th>
                   <th className="px-3 py-3">{t('categoryCol')}</th>
                   <th className="px-3 py-3 text-center">{t('currentStockCol')}</th>
-                  <th className="px-3 py-3 text-center">{language === 'mr' ? 'किमान मर्यादा' : language === 'hi' ? 'न्यूनतम सीमा' : 'Min Alert'}</th>
+                  <th className="px-3 py-3 text-center">{'Min Alert'}</th>
                   <th className="px-3 py-3 text-center">{t('recommendedOrderQty')}</th>
                   <th className="px-3 py-3 text-right">{t('costPriceCol')}</th>
-                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'अंदाजे खर्च' : language === 'hi' ? 'अनुमानित लागत' : 'Est Cost'}</th>
+                  <th className="px-3 py-3 text-right">{'Est Cost'}</th>
                   <th className="px-4 py-3 text-right">{t('actionsCol')}</th>
                 </tr>
               </thead>
@@ -329,22 +306,22 @@ export const ReorderNeedsView: React.FC = () => {
                         <span>{getDisplayName(item)}</span>
                         {item.isFastMover && (
                           <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300">
-                            🔥 {language === 'mr' ? 'जलद खप' : language === 'hi' ? 'तेज़ बिक्री' : 'Fast Mover'}
+                            🔥 {'Fast Mover'}
                           </span>
                         )}
                         {item.hasNearExpiryBatch && (
                           <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
-                            ⚠️ {language === 'mr' ? 'बॅच आधी विका' : language === 'hi' ? 'बैच पहले बेचें' : 'Sell batch first'}
+                            ⚠️ {'Sell batch first'}
                           </span>
                         )}
                         {item.totalReturned > 0 && (
                           <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300">
-                            ↩️ {item.totalReturned} {item.unit} {tr('returned', 'वापस', 'परत')}
+                            ↩️ {item.totalReturned} {item.unit} {'returned'}
                           </span>
                         )}
                         {item.vendorReturnedQty > 0 && (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300" title={tr('Damaged/expired stock received from supplier!', 'सप्लायर से खराब/एक्सपायर्ड माल आया था!', 'सप्लायरकडून खराब/कालबाह्य माल आला होता!')}>
-                            🚚 {tr('Supplier Defect', 'सप्लायर डिफेक्ट', 'सप्लायर डिफेक्ट')} ({item.vendorReturnedQty} {item.unit})
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300" title={'Damaged/expired stock received from supplier!'}>
+                            🚚 {'Supplier Defect'} ({item.vendorReturnedQty} {item.unit})
                           </span>
                         )}
                       </div>
@@ -387,7 +364,7 @@ export const ReorderNeedsView: React.FC = () => {
                         onClick={() => setActiveView('purchases')}
                         className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-2xs"
                       >
-                        + {language === 'mr' ? 'माल खरेदी' : language === 'hi' ? 'माल खरीदें' : 'Buy Stock'}
+                        + {'Buy Stock'}
                       </button>
                     </td>
                   </tr>
@@ -399,10 +376,10 @@ export const ReorderNeedsView: React.FC = () => {
           <div className="p-12 text-center space-y-2">
             <CheckCircle2 className="w-12 h-12 text-emerald-600 dark:text-emerald-400 mx-auto" />
             <h4 className="font-bold text-slate-900 dark:text-white text-base">
-              {language === 'mr' ? 'दुकानातील कोणताही माल संपलेला नाही!' : language === 'hi' ? 'दुकान का कोई भी माल खत्म नहीं है!' : 'All dairy items are well stocked!'}
+              {'All dairy items are well stocked!'}
             </h4>
             <p className="text-xs text-slate-500 dark:text-[#8FA69C] max-w-sm mx-auto">
-              {language === 'mr' ? 'दूध, पनीर, दही, तूप आणि मिठाई पुरेशा साठ्यात उपलब्ध आहे.' : language === 'hi' ? 'सभी डेरी उत्पाद, दूध, पनीर, दही व घी पर्याप्त स्टॉक में उपलब्ध हैं।' : 'Fresh milk, paneer, curd, ghee, and sweets are available in sufficient quantities.'}
+              {'Fresh milk, paneer, curd, ghee, and sweets are available in sufficient quantities.'}
             </p>
           </div>
         )}

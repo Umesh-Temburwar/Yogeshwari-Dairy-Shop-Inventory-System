@@ -104,7 +104,7 @@ export const PurchaseTracker: React.FC = () => {
     const qty = parseFloat(quantity);
     const price = parseFloat(purchasePrice) || selectedProduct.purchase_price;
     const total = qty * price;
-    const defaultSupplier = language === 'mr' ? 'स्थानिक दुग्ध उत्पादक शेतकरी' : language === 'hi' ? 'स्थानीय डेयरी किसान' : 'Local Dairy Farmer';
+    const defaultSupplier = 'Local Dairy Farmer';
 
     await createPurchase({
       product_id: selectedProduct.id,
@@ -165,22 +165,18 @@ export const PurchaseTracker: React.FC = () => {
     const udharAmt = filteredPurchases.filter(p => p.payment_mode === 'Udhar').reduce((acc, p) => acc + p.total_amount, 0);
 
     return {
-      title: isMr ? 'दूध व माल खरेदी लेजर अहवाल' : isHi ? 'दूध व सामान खरीद लेजर रिपोर्ट' : 'Dairy Purchases & Supplier Procurement Ledger Report',
-      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
-      periodText: isMr ? 'निवडलेला खरेदी कालावधी' : isHi ? 'चुनी गई खरीद अवधि' : 'Selected Procurement Period',
+      title: 'Dairy Purchases & Supplier Procurement Ledger Report',
+      subtitle: 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: 'Selected Procurement Period',
       language,
       kpis: [
-        { label: isMr ? 'एकूण खरेदी खर्च' : isHi ? 'कुल खरीद खर्च' : 'Total Purchase Spend', value: `₹${totalAmt.toLocaleString('en-IN')}`, color: 'blue' },
-        { label: isMr ? 'एकूण माल आवक' : isHi ? 'कुल आवक मात्रा' : 'Total Inward Qty', value: `${totalQty.toLocaleString('en-IN')} ${isMr ? 'लिटर/नग' : isHi ? 'लीटर/नग' : 'Units'}`, color: 'emerald' },
-        { label: isMr ? 'रोख/ऑनलाइन अदा' : isHi ? 'नकद/ऑनलाइन भुगतान' : 'Paid (Cash/Online)', value: `₹${(cashAmt + onlineAmt).toLocaleString('en-IN')}`, color: 'purple' },
-        { label: isMr ? 'बाकी देणे (उधार)' : isHi ? 'देय बाकी (उधार)' : 'Payable Due (Credit)', value: `₹${udharAmt.toLocaleString('en-IN')}`, color: 'amber' }
+        { label: 'Total Purchase Spend', value: `₹${totalAmt.toLocaleString('en-IN')}`, color: 'blue' },
+        { label: 'Total Inward Qty', value: `${totalQty.toLocaleString('en-IN')} ${'Units'}`, color: 'emerald' },
+        { label: 'Paid (Cash/Online)', value: `₹${(cashAmt + onlineAmt).toLocaleString('en-IN')}`, color: 'purple' },
+        { label: 'Payable Due (Credit)', value: `₹${udharAmt.toLocaleString('en-IN')}`, color: 'amber' }
       ],
       table: {
-        headers: isMr 
-          ? ['तारीख', 'पुरवठादार / शेतकरी', 'उत्पादन', 'नग / प्रमाण', 'खरेदी दर (₹)', 'एकूण रक्कम (₹)', 'पेमेंट पद्धत', 'नोंद']
-          : isHi
-          ? ['दिनांक', 'सप्लायर / किसान', 'सामान', 'मात्रा', 'खरीद दर (₹)', 'कुल राशि (₹)', 'भुगतान माध्यम', 'नोट']
-          : ['Date', 'Supplier / Farmer', 'Product', 'Quantity', 'Rate (₹)', 'Total Amount (₹)', 'Payment Mode', 'Notes'],
+        headers: ['Date', 'Supplier / Farmer', 'Product', 'Quantity', 'Rate (₹)', 'Total Amount (₹)', 'Payment Mode', 'Notes'],
         alignments: ['center', 'left', 'left', 'right', 'right', 'right', 'center', 'left'] as ('center' | 'left' | 'left' | 'right' | 'right' | 'right' | 'center' | 'left')[],
         rows: filteredPurchases.map(p => [
           p.purchase_date,
@@ -189,28 +185,24 @@ export const PurchaseTracker: React.FC = () => {
           `${p.quantity} ${p.unit}`,
           `₹${p.purchase_price}`,
           `₹${p.total_amount.toLocaleString('en-IN')}`,
-          p.payment_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
-          p.payment_mode === 'Online_UPI' ? (isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI') :
-          p.payment_mode === 'Bank_Transfer' ? (isMr ? 'बँक ट्रान्सफर' : isHi ? 'बैंक ट्रांसफर' : 'Bank Transfer') :
-          p.payment_mode === 'Udhar' ? (isMr ? 'उधारी' : isHi ? 'उधार' : 'Credit') : p.payment_mode,
+          p.payment_mode === 'Cash' ? ('Cash') :
+          p.payment_mode === 'Online_UPI' ? ('Online UPI') :
+          p.payment_mode === 'Bank_Transfer' ? ('Bank Transfer') :
+          p.payment_mode === 'Udhar' ? ('Credit') : p.payment_mode,
           p.notes || '—'
         ]),
         summaryRow: [
-          isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
-          `${filteredPurchases.length} ${isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'Entries'}`,
+          'Total',
+          `${filteredPurchases.length} ${'Entries'}`,
           '',
-          `${totalQty} ${isMr ? 'युनिट्स' : isHi ? 'यूनिट' : 'Units'}`,
+          `${totalQty} ${'Units'}`,
           '',
           `₹${totalAmt.toLocaleString('en-IN')}`,
           '',
           ''
         ]
       },
-      notes: isMr 
-        ? 'डेअरी संकलन व कच्चा माल आवक तपशील. सर्व पावत्या तपासून बिल पास करावे.'
-        : isHi
-        ? 'डेरी दूध संकलन व कच्चा माल आवक विवरण। सभी रसीदें जांचकर बिल पास करें।'
-        : 'Dairy procurement & raw milk inward ledger. Verify lab tests and gate passes before approving payout.'
+      notes: 'Dairy procurement & raw milk inward ledger. Verify lab tests and gate passes before approving payout.'
     };
   };
 
@@ -230,10 +222,10 @@ export const PurchaseTracker: React.FC = () => {
     <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-28 lg:pb-8">
       {/* 1. Compact Header + More (⋮) Actions Sheet + Round Record CTA */}
       <CompactPageHeader
-        title={language === 'mr' ? 'दूध व माल खरेदी' : language === 'hi' ? 'माल खरीद (Purchases)' : 'Purchases'}
+        title={'Purchases'}
         icon={<Truck className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />}
         primaryAction={{
-          label: language === 'mr' ? 'खरेदी' : language === 'hi' ? 'खरीद' : 'Record',
+          label: 'Record',
           icon: <Plus className="w-4 h-4 stroke-[2.5]" />,
           onClick: () => {
             if (selectedProduct) setPurchasePrice(selectedProduct.purchase_price.toString());
@@ -241,35 +233,35 @@ export const PurchaseTracker: React.FC = () => {
           },
           ariaLabel: 'Record new purchase'
         }}
-        moreTitle={language === 'mr' ? 'खरेदी साधने व अहवाल' : language === 'hi' ? 'खरीद टूल्स व रिपोर्ट' : 'Purchase Tools & Reports'}
+        moreTitle={'Purchase Tools & Reports'}
         moreActions={[
           {
             id: 'fat-calc',
-            label: language === 'mr' ? 'फॅट / SNF कॅल्क्युलेटर' : language === 'hi' ? 'फैट / SNF कैलकुलेटर' : 'Milk Fat / SNF Calculator',
+            label: 'Milk Fat / SNF Calculator',
             icon: <Calculator className="w-4 h-4 text-amber-500" />,
             onClick: () => setIsFatCalcOpen(true)
           },
           {
             id: 'view-pdf',
-            label: language === 'mr' ? 'अहवाल पहा (View PDF)' : language === 'hi' ? 'रिपोर्ट देखें (View PDF)' : 'View Purchases PDF',
+            label: 'View Purchases PDF',
             icon: <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
             onClick: handleViewPurchasePDF
           },
           {
             id: 'print',
-            label: language === 'mr' ? 'प्रिंट करा' : language === 'hi' ? 'प्रिंट करें' : 'Print Report',
+            label: 'Print Report',
             icon: <Printer className="w-4 h-4 text-slate-500 dark:text-[#8FA69C]" />,
             onClick: handlePrintPurchasePDF
           },
           {
             id: 'csv',
-            label: tr('Export Excel CSV', 'एक्सेल CSV एक्सपोर्ट', 'एक्सेल CSV एक्सपोर्ट'),
+            label: 'Export Excel CSV',
             icon: <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
             onClick: handleExportCSV
           },
           {
             id: 'download-pdf',
-            label: language === 'mr' ? 'खरेदी PDF डाउनलोड' : language === 'hi' ? 'खरीद PDF डाउनलोड' : 'Download PDF',
+            label: 'Download PDF',
             icon: <Download className="w-4 h-4" />,
             onClick: handleDownloadPurchasePDF,
             tone: 'primary'
@@ -284,7 +276,7 @@ export const PurchaseTracker: React.FC = () => {
           {
             label: t('totalPurchases'),
             value: `₹${metrics.totalPurchasesAmount.toLocaleString('en-IN')}`,
-            sublabel: `${filteredPurchases.length} ${language === 'mr' ? 'बिले' : language === 'hi' ? 'बिल' : 'bills'}`,
+            sublabel: `${filteredPurchases.length} ${'bills'}`,
             valueClassName: 'text-sky-700 dark:text-sky-400'
           },
           {
@@ -307,10 +299,10 @@ export const PurchaseTracker: React.FC = () => {
       <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs overflow-hidden">
         <div className="p-4 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between">
           <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-            {language === 'mr' ? 'खरेदी तपशील यादी (Purchases History)' : language === 'hi' ? 'खरीद विवरण लेजर (Purchases History)' : 'Purchases Ledger History'}
+            {'Purchases Ledger History'}
           </h3>
           <span className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
-            {filteredPurchases.length} {language === 'mr' ? 'नोंदी' : language === 'hi' ? 'रिकॉर्ड' : 'records'}
+            {filteredPurchases.length} {'records'}
           </span>
         </div>
 
@@ -319,15 +311,15 @@ export const PurchaseTracker: React.FC = () => {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] font-bold uppercase">
                 <tr>
-                  <th className="px-4 py-3">{language === 'mr' ? 'तारीख' : language === 'hi' ? 'दिनांक' : 'Date'}</th>
-                  <th className="px-3 py-3">{language === 'mr' ? 'शेतकरी / पुरवठादार' : language === 'hi' ? 'सप्लायर / किसान' : 'Supplier / Farmer'}</th>
+                  <th className="px-4 py-3">{'Date'}</th>
+                  <th className="px-3 py-3">{'Supplier / Farmer'}</th>
                   <th className="px-4 py-3">{t('productNameCol')}</th>
-                  <th className="px-3 py-3 text-center">{language === 'mr' ? 'प्रमाण (Quantity)' : language === 'hi' ? 'मात्रा (Quantity)' : 'Quantity'}</th>
-                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'दर (Rate)' : language === 'hi' ? 'दर (Rate)' : 'Rate'}</th>
-                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'एकूण रक्कम' : language === 'hi' ? 'कुल रकम' : 'Total Amount'}</th>
+                  <th className="px-3 py-3 text-center">{'Quantity'}</th>
+                  <th className="px-3 py-3 text-right">{'Rate'}</th>
+                  <th className="px-3 py-3 text-right">{'Total Amount'}</th>
                   <th className="px-3 py-3 text-center">{t('paymentMethod')}</th>
-                  <th className="px-4 py-3">{language === 'mr' ? 'शेरा / फॅट' : language === 'hi' ? 'रिमार्क / नोट्स' : 'Notes / Remarks'}</th>
-                  <th className="px-3 py-3 text-right">{tr('Supplier Return', 'वापसी', 'खराब माल परतावा')}</th>
+                  <th className="px-4 py-3">{'Notes / Remarks'}</th>
+                  <th className="px-3 py-3 text-right">{'Supplier Return'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
@@ -397,10 +389,10 @@ export const PurchaseTracker: React.FC = () => {
                           setIsSupplierReturnOpen(true);
                         }}
                         className="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold text-[10px] border border-amber-200 dark:border-amber-800/40 transition flex items-center gap-1 active:scale-95 ml-auto whitespace-nowrap shadow-2xs"
-                        title={tr('Return damaged/expired stock to supplier for refund', 'सप्लायर को खराब/एक्सपायर्ड माल वापस कर रिफंड मांगें', 'सप्लायरला खराब/कालबाह्य माल परत पाठवून रिफंड मागा')}
+                        title={'Return damaged/expired stock to supplier for refund'}
                       >
                         <RotateCcw className="w-3 h-3 text-amber-600" />
-                        <span>{tr('Return', 'वापस करें', 'परत करा')}</span>
+                        <span>{'Return'}</span>
                       </button>
                     </td>
                   </tr>
@@ -410,7 +402,7 @@ export const PurchaseTracker: React.FC = () => {
           </div>
         ) : (
           <div className="p-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs">
-            {language === 'mr' ? 'या कालावधीत कोणतीही खरेदी नोंदवलेली नाही.' : language === 'hi' ? 'इस चुनी गई अवधि में कोई खरीद दर्ज नहीं है।' : 'No purchases recorded for this selected period.'}
+            {'No purchases recorded for this selected period.'}
           </div>
         )}
         <LoadOlderHistoryButton entity="purchases" className="pb-4" />
@@ -435,10 +427,10 @@ export const PurchaseTracker: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                    {language === 'mr' ? 'नवीन माल खरेदी नोंदवा (Add Purchase)' : language === 'hi' ? 'नई खरीद दर्ज करें (Add Purchase Entry)' : 'Record New Purchase Entry'}
+                    {'Record New Purchase Entry'}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                    {language === 'mr' ? 'खरेदी करताच शिल्लक साठा आपोआप वाढेल' : language === 'hi' ? 'माल आते ही स्टॉक अपने आप बढ़ जाएगा' : 'Stock quantity increases automatically upon purchase'}
+                    {'Stock quantity increases automatically upon purchase'}
                   </p>
                 </div>
               </div>
@@ -455,7 +447,7 @@ export const PurchaseTracker: React.FC = () => {
               {/* Product Selection */}
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'कोणता माल खरेदी केला?' : language === 'hi' ? 'कौनसा माल खरीदा?' : 'Select Product Purchased'} *
+                  {'Select Product Purchased'} *
                 </label>
                 <select
                   value={selectedProductId}
@@ -464,7 +456,7 @@ export const PurchaseTracker: React.FC = () => {
                 >
                   {products.map(p => (
                     <option key={p.id} value={p.id}>
-                      {getProductDisplayName(p)} ({p.name}) - {tr('Stock', 'स्टॉक', 'साठा')}: {p.stock_quantity} {p.unit}
+                      {getProductDisplayName(p)} ({p.name}) - {'Stock'}: {p.stock_quantity} {p.unit}
                     </option>
                   ))}
                 </select>
@@ -478,14 +470,14 @@ export const PurchaseTracker: React.FC = () => {
                     <span className="truncate">{shelfLifeTip}</span>
                   </div>
                   <span className="px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900/60 text-emerald-950 dark:text-emerald-200 text-[10px] font-extrabold shrink-0">
-                    +{shelfDays} {language === 'mr' ? 'दिवस शेल्फ लाईफ' : language === 'hi' ? 'दिन शेल्फ लाइफ' : 'days shelf-life'}
+                    +{shelfDays} {'days shelf-life'}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 pt-1 text-xs">
                   <div>
                     <label className="text-[10px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-0.5">
-                      {language === 'mr' ? 'आवक तारीख' : language === 'hi' ? 'खरीद तारीख' : 'Purchase Date'}
+                      {'Purchase Date'}
                     </label>
                     <input
                       type="date"
@@ -498,7 +490,7 @@ export const PurchaseTracker: React.FC = () => {
 
                   <div>
                     <label className="text-[10px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-0.5">
-                      {language === 'mr' ? 'बॅच क्र. (Batch #)' : language === 'hi' ? 'बैच नंबर (Batch #)' : 'Batch Number'}
+                      {'Batch Number'}
                     </label>
                     <input
                       type="text"
@@ -511,7 +503,7 @@ export const PurchaseTracker: React.FC = () => {
 
                   <div>
                     <label className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 block mb-0.5 flex items-center gap-0.5">
-                      <span>{language === 'mr' ? 'मुदत तारीख ✨' : language === 'hi' ? 'एक्सपायरी तारीख ✨' : 'Expiry Date ✨'}</span>
+                      <span>{'Expiry Date ✨'}</span>
                     </label>
                     <input
                       type="date"
@@ -526,12 +518,12 @@ export const PurchaseTracker: React.FC = () => {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'शेतकरी किंवा पुरवठादाराचे नाव *' : language === 'hi' ? 'सप्लायर या किसान का नाम *' : 'Farmer / Supplier Name *'}
+                  {'Farmer / Supplier Name *'}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder={language === 'mr' ? 'उदा. विलास पाटील (शेतकरी) / वारणा डेअरी' : language === 'hi' ? 'उदा. रामपाल गुर्जर (किसान) / बनास डेरी' : 'e.g. Rampal Dairy Farmer / Local Dairy'}
+                  placeholder={'e.g. Rampal Dairy Farmer / Local Dairy'}
                   value={supplierName}
                   onChange={(e) => setSupplierName(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-sky-500 focus:outline-none"
@@ -541,7 +533,7 @@ export const PurchaseTracker: React.FC = () => {
               <div className="grid grid-cols-2 gap-3 bg-sky-50/60 dark:bg-[#1A2A25] p-3 rounded-2xl border border-sky-100 dark:border-[#24352F]">
                 <div>
                   <label className="text-xs font-bold text-sky-900 dark:text-sky-300 block mb-1">
-                    {language === 'mr' ? `खरेदी प्रमाण (${selectedProduct?.unit}) *` : language === 'hi' ? `कितनी मात्रा खरीदी? (${selectedProduct?.unit}) *` : `Purchase Quantity (${selectedProduct?.unit}) *`}
+                    {`Purchase Quantity (${selectedProduct?.unit}) *`}
                   </label>
                   <input
                     type="number"
@@ -556,7 +548,7 @@ export const PurchaseTracker: React.FC = () => {
 
                 <div>
                   <label className="text-xs font-bold text-sky-900 dark:text-sky-300 block mb-1">
-                    {language === 'mr' ? `खरेदी दर प्रति ${selectedProduct?.unit} (₹) *` : language === 'hi' ? `खरीद भाव प्रति ${selectedProduct?.unit} (₹) *` : `Purchase Rate per ${selectedProduct?.unit} (₹) *`}
+                    {`Purchase Rate per ${selectedProduct?.unit} (₹) *`}
                   </label>
                   <input
                     type="number"
@@ -569,7 +561,7 @@ export const PurchaseTracker: React.FC = () => {
                 </div>
 
                 <div className="col-span-2 flex justify-between items-center pt-2 border-t border-sky-200 dark:border-[#24352F] text-xs font-bold text-sky-950 dark:text-sky-300">
-                  <span>{language === 'mr' ? 'एकूण देय रक्कम:' : language === 'hi' ? 'कुल भुगतान राशि:' : 'Total Payable Amount:'}</span>
+                  <span>{'Total Payable Amount:'}</span>
                   <span className="text-base font-black text-sky-900 dark:text-sky-400">
                     ₹{calculatedTotal.toLocaleString('en-IN')}
                   </span>
@@ -588,14 +580,14 @@ export const PurchaseTracker: React.FC = () => {
                   >
                     <option value="Cash">{t('cash')}</option>
                     <option value="Online_UPI">{t('onlineUpi')}</option>
-                    <option value="Bank_Transfer">{language === 'mr' ? 'बँक ट्रान्सफर (NEFT)' : language === 'hi' ? 'बैंक ट्रांसफर (NEFT)' : 'Bank Transfer (NEFT)'}</option>
-                    <option value="Udhar">{language === 'mr' ? 'पुरवठादार उधारी' : language === 'hi' ? 'सप्लायर उधारी' : 'Supplier Credit'}</option>
+                    <option value="Bank_Transfer">{'Bank Transfer (NEFT)'}</option>
+                    <option value="Udhar">{'Supplier Credit'}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                    {language === 'mr' ? 'पावती / बिल क्रमांक' : language === 'hi' ? 'बिल नंबर' : 'Bill / Invoice Number'}
+                    {'Bill / Invoice Number'}
                   </label>
                   <input
                     type="text"
@@ -609,11 +601,11 @@ export const PurchaseTracker: React.FC = () => {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? 'शेरा / फॅट किंवा इतर नोंद' : language === 'hi' ? 'रिमार्क / फैट या विवरण' : 'Notes / Fat Test details'}
+                  {'Notes / Fat Test details'}
                 </label>
                 <input
                   type="text"
-                  placeholder={language === 'mr' ? 'उदा. सकाळची खेप, फॅट ७.२, म्हशीचे ताजे दूध' : language === 'hi' ? 'उदा. सुबह की खेप, फैट 7.1' : 'e.g. Morning batch, 7.2 fat buffalo milk'}
+                  placeholder={'e.g. Morning batch, 7.2 fat buffalo milk'}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -632,7 +624,7 @@ export const PurchaseTracker: React.FC = () => {
                   type="submit"
                   className="w-1/2 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs shadow-md shadow-sky-600/20"
                 >
-                  {t('save')} &amp; {language === 'mr' ? 'साठा वाढवा' : language === 'hi' ? 'स्टॉक बढ़ाएं' : 'Update Stock'}
+                  {t('save')} &amp; {'Update Stock'}
                 </button>
               </div>
 

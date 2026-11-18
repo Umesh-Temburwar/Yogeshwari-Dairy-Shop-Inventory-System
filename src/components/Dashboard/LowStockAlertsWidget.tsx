@@ -66,11 +66,11 @@ export const LowStockAlertsWidget: React.FC = () => {
                         ? 'text-rose-600 dark:text-rose-400 font-extrabold' 
                         : 'text-amber-600 dark:text-amber-400'
                     }`}>
-                      {language === 'mr' ? 'साठा:' : language === 'hi' ? 'स्टॉक:' : 'Stock:'} {item.stock_quantity} {item.unit}
+                      {'Stock:'} {item.stock_quantity} {item.unit}
                     </span>
                     <span className="text-slate-300 dark:text-slate-600">&bull;</span>
                     <span className="text-slate-500 dark:text-[#8FA69C] tabular-nums">
-                      {language === 'mr' ? 'किमान:' : language === 'hi' ? 'न्यूनतम:' : 'Min:'} {item.min_stock_alert} {item.unit}
+                      {'Min:'} {item.min_stock_alert} {item.unit}
                     </span>
                   </div>
                 </div>
@@ -93,7 +93,7 @@ export const LowStockAlertsWidget: React.FC = () => {
         ) : (
           <div className="py-10 text-center text-emerald-700 dark:text-emerald-400 text-xs font-medium bg-emerald-50/50 dark:bg-[#1A2A25] rounded-xl border border-emerald-100 dark:border-emerald-800/40">
             <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto mb-1 opacity-80" />
-            {language === 'mr' ? 'दुकानातील सर्व माल पुरेशा प्रमाणात उपलब्ध आहे!' : language === 'hi' ? 'दुकान में सभी माल पर्याप्त मात्रा में उपलब्ध है!' : 'All inventory stock is healthy and sufficient!'}
+            {'All inventory stock is healthy and sufficient!'}
           </div>
         )}
       </div>
@@ -101,7 +101,7 @@ export const LowStockAlertsWidget: React.FC = () => {
       {/* Fixed Footer */}
       <div className="pt-3 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between text-xs">
         <span className="text-slate-500 dark:text-[#8FA69C] flex items-center">
-          {language === 'mr' ? 'कमी साठा उत्पादने:' : language === 'hi' ? 'कुल कम स्टॉक:' : 'Low Stock Items:'} 
+          {'Low Stock Items:'} 
           <b className="text-slate-900 dark:text-white font-extrabold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-[#1A2A25] border border-slate-200/60 dark:border-[#24352F] ml-1.5">
             {lowStockItems.length}
           </b>

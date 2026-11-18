@@ -90,9 +90,9 @@ export const LoginPage: React.FC = () => {
     fullName: z.string().min(1, { message: t('authFullNameRequired') }),
     email: z.string().min(1, { message: t('authEmailRequired') }).email({ message: t('authEmailInvalid') }),
     password: z.string().min(1, { message: t('authPasswordRequired') }).min(6, { message: t('authPasswordMinLength') }),
-    confirmPassword: z.string().min(1, { message: language === 'mr' ? 'पासवर्ड पुष्टी आवश्यक आहे' : language === 'hi' ? 'पासवर्ड पुष्टि आवश्यक है' : 'Confirm password is required' })
+    confirmPassword: z.string().min(1, { message: 'Confirm password is required' })
   }).refine((data) => data.password === data.confirmPassword, {
-    message: language === 'mr' ? 'पासवर्ड जुळत नाही' : language === 'hi' ? 'पासवर्ड मेल नहीं खा रहे हैं' : 'Passwords do not match',
+    message: 'Passwords do not match',
     path: ['confirmPassword']
   });
 
@@ -174,17 +174,13 @@ export const LoginPage: React.FC = () => {
         }
       } else if (redirectView) {
         const viewLabel = redirectView === 'dashboard' 
-          ? (language === 'mr' ? 'डॅशबोर्ड' : language === 'hi' ? 'डैशबोर्ड' : 'Dashboard')
+          ? ('Dashboard')
           : redirectView === 'pos'
-          ? (language === 'mr' ? 'काऊंटर बिलिंग' : language === 'hi' ? 'काउंटर बिलिंग' : 'Billing Counter')
-          : (language === 'mr' ? 'इन्व्हेंटरी व साठा' : language === 'hi' ? 'इन्वेंट्री व स्टॉक' : 'Inventory');
+          ? ('Billing Counter')
+          : ('Inventory');
 
         setFormSuccess(
-          language === 'mr'
-            ? `प्रवेश प्रमाणित! ${viewLabel} कडे जात आहे...`
-            : language === 'hi'
-            ? `प्रवेश प्रमाणित! ${viewLabel} की ओर जा रहे हैं...`
-            : `Authorized! Redirecting to ${viewLabel}...`
+          `Authorized! Redirecting to ${viewLabel}...`
         );
       }
     } catch {
@@ -205,44 +201,28 @@ export const LoginPage: React.FC = () => {
         const msg = res.error.message || '';
         if (msg.includes('already registered') || msg.includes('user_already_exists')) {
           setFormError(
-            language === 'mr'
-              ? 'हा ईमेल आधीच नोंदणीकृत आहे. कृपया लॉगिन करा.'
-              : language === 'hi'
-              ? 'यह ईमेल पहले से पंजीकृत है। कृपया लॉगिन करें।'
-              : 'This email is already registered. Please sign in.'
+            'This email is already registered. Please sign in.'
           );
         } else if (msg.includes('Database error') || msg.includes('finding user')) {
           setFormError(
-            language === 'mr'
-              ? 'सर्व्हर डेटाबेस त्रुटी आली. कृपया "Sign In" टॅबमधून थेट लॉगिन करा (Owner: 04092026@Nikhil / Admin: 04092026@Nilesh).'
-              : language === 'hi'
-              ? 'सर्वर डेटाबेस त्रुटि आई। कृपया "Sign In" टैब से सीधा लॉगिन करें (Owner: 04092026@Nikhil / Admin: 04092026@Nilesh)।'
-              : 'Server database error. Please sign in directly from the "Sign In" tab (Owner: 04092026@Nikhil / Admin: 04092026@Nilesh).'
+            'Server database error. Please sign in directly from the "Sign In" tab (Owner: 04092026@Nikhil / Admin: 04092026@Nilesh).'
           );
         } else {
           setFormError(msg || t('authInvalidCredentials'));
         }
       } else if (res.redirectView) {
         const viewLabel = res.redirectView === 'dashboard' 
-          ? (language === 'mr' ? 'डॅशबोर्ड' : language === 'hi' ? 'डैशबोर्ड' : 'Dashboard')
+          ? ('Dashboard')
           : res.redirectView === 'pos'
-          ? (language === 'mr' ? 'काऊंटर बिलिंग' : language === 'hi' ? 'काउंटर बिलिंग' : 'Billing Counter')
-          : (language === 'mr' ? 'इन्व्हेंटरी व साठा' : language === 'hi' ? 'इन्वेंट्री व स्टॉक' : 'Inventory');
+          ? ('Billing Counter')
+          : ('Inventory');
 
         setFormSuccess(
-          language === 'mr'
-            ? `नोंदणी व प्रवेश प्रमाणित! ${viewLabel} कडे जात आहे...`
-            : language === 'hi'
-            ? `पंजीकरण व प्रवेश प्रमाणित! ${viewLabel} की ओर जा रहे हैं...`
-            : `Account authorized! Redirecting to ${viewLabel}...`
+          `Account authorized! Redirecting to ${viewLabel}...`
         );
       } else if (res.needsEmailConfirmation) {
         setFormSuccess(
-          language === 'mr'
-            ? 'नोंदणी यशस्वी! तुमचे खाते तयार झाले आहे. कृपया खालील पासवर्डने थेट लॉगिन करा.'
-            : language === 'hi'
-            ? 'पंजीकरण सफल! आपका खाता बन गया है। कृपया पासवर्ड दर्ज करके लॉगिन करें।'
-            : 'Registration successful! Please sign in with your credentials.'
+          'Registration successful! Please sign in with your credentials.'
         );
         resetSignIn({
           email: data.email.trim(),
@@ -525,9 +505,9 @@ export const LoginPage: React.FC = () => {
                   {t('shopSubtitle')}
                 </span>
                 <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-1 font-medium">
-                  {mode === 'signin' && (language === 'mr' ? 'कृपया खात्यात लॉगिन करा' : language === 'hi' ? 'कृपया खाते में लॉगिन करें' : 'Sign in to continue')}
-                  {mode === 'signup' && (language === 'mr' ? 'नवीन ऑपरेटर नोंदणी' : language === 'hi' ? 'नया ऑपरेटर पंजीकरण' : 'Create new operator account')}
-                  {mode === 'forgot' && (language === 'mr' ? 'पासवर्ड रीसेट करा' : language === 'hi' ? 'पासवर्ड रीसेट करें' : 'Reset your password')}
+                  {mode === 'signin' && ('Sign in to continue')}
+                  {mode === 'signup' && ('Create new operator account')}
+                  {mode === 'forgot' && ('Reset your password')}
                 </p>
               </div>
 
@@ -544,7 +524,7 @@ export const LoginPage: React.FC = () => {
                     }`}
                   >
                     <span>🔑</span>
-                    <span>{language === 'mr' ? 'लॉगिन करा' : language === 'hi' ? 'लॉगिन करें' : 'Sign In'}</span>
+                    <span>{'Sign In'}</span>
                   </button>
                   <button
                     type="button"
@@ -556,7 +536,7 @@ export const LoginPage: React.FC = () => {
                     }`}
                   >
                     <span>📝</span>
-                    <span>{language === 'mr' ? 'नोंदणी' : language === 'hi' ? 'पंजीकरण' : 'Register'}</span>
+                    <span>{'Register'}</span>
                   </button>
                 </div>
               )}
@@ -752,7 +732,7 @@ export const LoginPage: React.FC = () => {
                 ) : (
                   <div className="text-center text-[11px] text-slate-400 dark:text-[#8FA69C]/80 pt-2 flex items-center justify-center gap-1.5 font-semibold">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span>{language === 'mr' ? 'केवळ अधिकृत कर्मचारी लॉगिन (नोंदणी बंद)' : language === 'hi' ? 'केवल अधिकृत कर्मचारी लॉगिन (पंजीकरण बंद)' : 'Authorized Personnel Only'}</span>
+                    <span>{'Authorized Personnel Only'}</span>
                   </div>
                 )}
               </div>
@@ -886,7 +866,7 @@ export const LoginPage: React.FC = () => {
                     htmlFor="signup-confirm-password"
                     className="block text-xs font-bold text-slate-700 dark:text-[#E7F0EC] mb-1.5"
                   >
-                    {language === 'mr' ? 'पासवर्डची पुष्टी करा' : language === 'hi' ? 'पासवर्ड की पुष्टि करें' : 'Confirm Password'}
+                    {'Confirm Password'}
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />

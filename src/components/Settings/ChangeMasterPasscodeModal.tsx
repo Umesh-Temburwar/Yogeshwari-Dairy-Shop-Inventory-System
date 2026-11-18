@@ -116,11 +116,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
     if (currentPin.length !== PASSCODE_LENGTH) {
       triggerHaptic([40, 45, 40]);
       setErrorMsg(
-        language === 'mr'
-          ? 'कृपया सध्याचा पूर्ण ८-अंकी मास्टर पासवर्ड टाका.'
-          : language === 'hi'
-          ? 'कृपया वर्तमान पूरा ८-अंकीय मास्टर पासवर्ड दर्ज करें।'
-          : 'Please enter your complete 8-digit current master passcode.'
+        'Please enter your complete 8-digit current master passcode.'
       );
       return;
     }
@@ -141,19 +137,11 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
           const secs = Math.max(1, Math.ceil((res.lockedUntil - Date.now()) / 1000));
           setLockoutRemainingSec(secs);
           setErrorMsg(
-            language === 'mr'
-              ? 'अनेक चुकीचे प्रयत्न! ५ मिनिटांसाठी सुरक्षा लॉक सक्रिय झाले आहे.'
-              : language === 'hi'
-              ? 'कई गलत प्रयास! ५ मिनट के लिए सुरक्षा लॉक सक्रिय हो गया है।'
-              : 'Too many failed attempts. Locked for 5 minutes.'
+            'Too many failed attempts. Locked for 5 minutes.'
           );
         } else {
           setErrorMsg(
-            language === 'mr'
-              ? `सध्याचा पासवर्ड चुकीचा आहे! आणखी ${res.attemptsLeft} प्रयत्न शिल्लक.`
-              : language === 'hi'
-              ? `वर्तमान पासवर्ड गलत है! केवल ${res.attemptsLeft} प्रयास शेष हैं।`
-              : `Incorrect current passcode. ${res.attemptsLeft} attempts remaining.`
+            `Incorrect current passcode. ${res.attemptsLeft} attempts remaining.`
           );
         }
         setCurrentPin('');
@@ -171,11 +159,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
     if (newPin.length !== PASSCODE_LENGTH) {
       triggerHaptic([40, 45, 40]);
       setErrorMsg(
-        language === 'mr'
-          ? 'नवीन मास्टर पासवर्ड बरोबर ८ अंकांचा (0-9) असणे आवश्यक आहे.'
-          : language === 'hi'
-          ? 'नया मास्टर पासवर्ड ठीक ८ अंकों (0-9) का होना चाहिए।'
-          : 'New master passcode must be exactly 8 numeric digits.'
+        'New master passcode must be exactly 8 numeric digits.'
       );
       return;
     }
@@ -183,11 +167,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
     if (newPin !== confirmPin) {
       triggerHaptic([40, 45, 40]);
       setErrorMsg(
-        language === 'mr'
-          ? 'दोन्ही नवीन पासवर्ड जुळत नाहीत. कृपया पुन्हा तपासा.'
-          : language === 'hi'
-          ? 'दोनों नए पासवर्ड मेल नहीं खाते। कृपया फिर से जांचें।'
-          : 'New passcode and confirmation do not match.'
+        'New passcode and confirmation do not match.'
       );
       return;
     }
@@ -195,11 +175,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
     if (newPin === verifiedCurrentPin) {
       triggerHaptic([40, 45, 40]);
       setErrorMsg(
-        language === 'mr'
-          ? 'नवीन पासवर्ड सध्याच्या पासवर्डपेक्षा वेगळा असावा.'
-          : language === 'hi'
-          ? 'नया पासवर्ड वर्तमान पासवर्ड से अलग होना चाहिए।'
-          : 'New passcode must be different from your current passcode.'
+        'New passcode must be different from your current passcode.'
       );
       return;
     }
@@ -231,11 +207,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
           }
         }
         setErrorMsg(
-          language === 'mr'
-            ? 'पासवर्ड बदलता आला नाही. कृपया पुन्हा प्रयत्न करा.'
-            : language === 'hi'
-            ? 'पासवर्ड बदला नहीं जा सका। कृपया पुनः प्रयास करें।'
-            : 'Could not update passcode. Please try again.'
+          'Could not update passcode. Please try again.'
         );
       }
     } finally {
@@ -282,18 +254,10 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                 id="change-passcode-title"
                 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate"
               >
-                {language === 'mr'
-                  ? 'मास्टर पासवर्ड बदला'
-                  : language === 'hi'
-                  ? 'मास्टर पासवर्ड बदलें'
-                  : 'Change Master Passcode'}
+                {'Change Master Passcode'}
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] truncate">
-                {language === 'mr'
-                  ? '८-अंकी सुरक्षा लॉक कोड (SHA-256 सुरक्षित)'
-                  : language === 'hi'
-                  ? '८-अंकीय सुरक्षा लॉक कोड (SHA-256 सुरक्षित)'
-                  : '8-digit POS security lock code (SHA-256 protected)'}
+                {'8-digit POS security lock code (SHA-256 protected)'}
               </p>
             </div>
           </div>
@@ -324,11 +288,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                   {step === 'new' ? '✓' : '1'}
                 </span>
                 <span className="truncate text-[11px]">
-                  {language === 'mr'
-                    ? 'सध्याचा पासवर्ड'
-                    : language === 'hi'
-                    ? 'वर्तमान पासवर्ड'
-                    : 'Current Code'}
+                  {'Current Code'}
                 </span>
               </div>
 
@@ -349,11 +309,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                   2
                 </span>
                 <span className="truncate text-[11px]">
-                  {language === 'mr'
-                    ? 'नवीन पासवर्ड'
-                    : language === 'hi'
-                    ? 'नया पासवर्ड'
-                    : 'New Passcode'}
+                  {'New Passcode'}
                 </span>
               </div>
             </div>
@@ -372,11 +328,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
               <span className="flex items-center gap-1.5">
                 <Lock className="w-4 h-4" />
                 <span>
-                  {language === 'mr'
-                    ? 'सुरक्षा कूलडाऊन सक्रिय'
-                    : language === 'hi'
-                    ? 'सुरक्षा कूलडाउन सक्रिय'
-                    : 'Security Cooldown Active'}
+                  {'Security Cooldown Active'}
                 </span>
               </span>
               <span className="font-mono">{formatLockout(lockoutRemainingSec)}</span>
@@ -387,11 +339,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
           {step === 'verify' && (
             <form onSubmit={handleVerifyCurrent} className="space-y-4">
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] text-xs text-slate-600 dark:text-[#9DB5AA] leading-relaxed">
-                {language === 'mr'
-                  ? 'सुरक्षेसाठी, नवीन मास्टर पासवर्ड सेट करण्यापूर्वी तुमचा सध्याचा ८-अंकी मास्टर पासवर्ड टाकून पडताळणी करणे आवश्यक आहे.'
-                  : language === 'hi'
-                  ? 'सुरक्षा के लिए, नया मास्टर पासवर्ड सेट करने से पहले आपका वर्तमान ८-अंकीय मास्टर पासवर्ड सत्यापित करना आवश्यक है।'
-                  : 'For security, you must verify your current 8-digit master passcode before setting a new one.'}
+                {'For security, you must verify your current 8-digit master passcode before setting a new one.'}
               </div>
 
               <div>
@@ -400,11 +348,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                     htmlFor="current-master-pin"
                     className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
                   >
-                    {language === 'mr'
-                      ? 'सध्याचा ८-अंकी मास्टर पासवर्ड'
-                      : language === 'hi'
-                      ? 'वर्तमान ८-अंकीय मास्टर पासवर्ड'
-                      : 'Current 8-Digit Master Passcode'}
+                    {'Current 8-Digit Master Passcode'}
                   </label>
                   <span className="text-[11px] font-mono font-bold text-slate-400">
                     {currentPin.length}/{PASSCODE_LENGTH}
@@ -450,7 +394,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                   onClick={onClose}
                   className="w-1/3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#22352E] text-slate-700 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] font-bold text-xs transition cursor-pointer"
                 >
-                  {language === 'mr' ? 'रद्द करा' : language === 'hi' ? 'रद्द करें' : 'Cancel'}
+                  {'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -461,21 +405,13 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span>
-                        {language === 'mr'
-                          ? 'पडताळणी सुरू आहे...'
-                          : language === 'hi'
-                          ? 'सत्यापन हो रहा है...'
-                          : 'Verifying...'}
+                        {'Verifying...'}
                       </span>
                     </>
                   ) : (
                     <>
                       <span>
-                        {language === 'mr'
-                          ? 'पडताळणी करा व पुढे जा'
-                          : language === 'hi'
-                          ? 'सत्यापित करें व आगे बढ़ें'
-                          : 'Verify & Continue'}
+                        {'Verify & Continue'}
                       </span>
                       <ArrowRight className="w-4 h-4" />
                     </>
@@ -491,11 +427,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
               <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/35 border border-emerald-200 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>
-                  {language === 'mr'
-                    ? 'सध्याचा पासवर्ड पडताळला गेला. आता नवीन ८-अंकी पासवर्ड सेट करा.'
-                    : language === 'hi'
-                    ? 'वर्तमान पासवर्ड सत्यापित हो गया। अब नया ८-अंकीय पासवर्ड सेट करें।'
-                    : 'Current passcode verified. Now enter your new 8-digit passcode.'}
+                  {'Current passcode verified. Now enter your new 8-digit passcode.'}
                 </span>
               </div>
 
@@ -506,11 +438,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                     htmlFor="new-master-pin"
                     className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
                   >
-                    {language === 'mr'
-                      ? 'नवीन ८-अंकी मास्टर पासवर्ड'
-                      : language === 'hi'
-                      ? 'नया ८-अंकीय मास्टर पासवर्ड'
-                      : 'New 8-Digit Master Passcode'}
+                    {'New 8-Digit Master Passcode'}
                   </label>
                   <span className="text-[11px] font-mono font-bold text-slate-400">
                     {newPin.length}/{PASSCODE_LENGTH}
@@ -557,11 +485,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                     htmlFor="confirm-master-pin"
                     className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
                   >
-                    {language === 'mr'
-                      ? 'नवीन पासवर्ड पुन्हा टाका (Confirm)'
-                      : language === 'hi'
-                      ? 'नया पासवर्ड पुनः दर्ज करें (Confirm)'
-                      : 'Confirm New 8-Digit Passcode'}
+                    {'Confirm New 8-Digit Passcode'}
                   </label>
                   {confirmPin.length === PASSCODE_LENGTH && (
                     <span
@@ -572,15 +496,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                       }`}
                     >
                       {confirmPin === newPin
-                        ? language === 'mr'
-                          ? 'जुळला ✓'
-                          : language === 'hi'
-                          ? 'मेल खाया ✓'
-                          : 'Matched ✓'
-                        : language === 'mr'
-                        ? 'जुळत नाही'
-                        : language === 'hi'
-                        ? 'मेल नहीं खाता'
+                        ? 'Matched ✓'
                         : 'Mismatch'}
                     </span>
                   )}
@@ -630,7 +546,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                   }}
                   className="w-1/3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#22352E] text-slate-700 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] font-bold text-xs transition cursor-pointer"
                 >
-                  {language === 'mr' ? 'मागे जा' : language === 'hi' ? 'पीछे जाएं' : 'Back'}
+                  {'Back'}
                 </button>
                 <button
                   type="submit"
@@ -646,22 +562,14 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span>
-                        {language === 'mr'
-                          ? 'सुरक्षित होत आहे...'
-                          : language === 'hi'
-                          ? 'अपडेट हो रहा है...'
-                          : 'Updating...'}
+                        {'Updating...'}
                       </span>
                     </>
                   ) : (
                     <>
                       <ShieldCheck className="w-4 h-4" />
                       <span>
-                        {language === 'mr'
-                          ? 'नवीन पासवर्ड सेव्ह करा'
-                          : language === 'hi'
-                          ? 'नया पासवर्ड सेव करें'
-                          : 'Save New Passcode'}
+                        {'Save New Passcode'}
                       </span>
                     </>
                   )}
@@ -679,18 +587,10 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
 
               <div className="space-y-1">
                 <h4 className="text-base font-extrabold text-slate-900 dark:text-white">
-                  {language === 'mr'
-                    ? 'मास्टर पासवर्ड यशस्वीरित्या बदलला!'
-                    : language === 'hi'
-                    ? 'मास्टर पासवर्ड सफलतापूर्वक बदल गया!'
-                    : 'Master Passcode Updated!'}
+                  {'Master Passcode Updated!'}
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-[#8FA69C] leading-relaxed">
-                  {language === 'mr'
-                    ? 'पुढच्या वेळी स्क्रीन अनलॉक करताना तुमचा नवीन ८-अंकी पासवर्ड वापरा.'
-                    : language === 'hi'
-                    ? 'अगली बार स्क्रीन अनलॉक करते समय अपना नया ८-अंकीय पासवर्ड उपयोग करें।'
-                    : 'Use your new 8-digit master passcode the next time you unlock the POS counter.'}
+                  {'Use your new 8-digit master passcode the next time you unlock the POS counter.'}
                 </p>
               </div>
 
@@ -698,15 +598,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                 <CloudCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>
                   {cloudSynced
-                    ? language === 'mr'
-                      ? 'SHA-256 एन्क्रिप्टेड • क्लाउड व डिव्हाइसवर सिंक झाले'
-                      : language === 'hi'
-                      ? 'SHA-256 एन्क्रिप्टेड • क्लाउड और डिवाइस पर सिंक'
-                      : 'SHA-256 encrypted • Synced to cloud & device'
-                    : language === 'mr'
-                    ? 'SHA-256 एन्क्रिप्टेड • या डिव्हाइसवर त्वरित सक्रिय'
-                    : language === 'hi'
-                    ? 'SHA-256 एन्क्रिप्टेड • इस डिवाइस पर तुरंत सक्रिय'
+                    ? 'SHA-256 encrypted • Synced to cloud & device'
                     : 'SHA-256 encrypted • Active immediately on this device'}
                 </span>
               </div>
@@ -722,11 +614,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                 >
                   <Lock className="w-3.5 h-3.5" />
                   <span>
-                    {language === 'mr'
-                      ? 'लॉक करून तपासा'
-                      : language === 'hi'
-                      ? 'लॉक करके जांचें'
-                      : 'Lock & Test'}
+                    {'Lock & Test'}
                   </span>
                 </button>
                 <button
@@ -734,7 +622,7 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                   onClick={onClose}
                   className="w-1/2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition cursor-pointer"
                 >
-                  {language === 'mr' ? 'पूर्ण झाले' : language === 'hi' ? 'पूर्ण हुआ' : 'Done'}
+                  {'Done'}
                 </button>
               </div>
             </div>

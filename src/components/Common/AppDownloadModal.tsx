@@ -119,13 +119,13 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
             <div className="min-w-0 flex-1">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-[10px] font-extrabold text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/40 mb-1">
                 <Smartphone className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                <span>{language === 'mr' ? 'अधिकृत मोबाईल ॲप' : language === 'hi' ? 'ऑफिशियल मोबाइल ऐप' : 'Official Mobile App'}</span>
+                <span>{'Official Mobile App'}</span>
               </span>
               <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                {language === 'mr' ? 'योगेश्वरी डेअरी मोबाईल ॲप' : language === 'hi' ? 'योगेश्वरी डेयरी मोबाइल ऐप' : 'Yogeshwari Dairy Mobile App'}
+                {'Yogeshwari Dairy Mobile App'}
               </h2>
               <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-0.5 font-medium line-clamp-1">
-                {language === 'mr' ? 'जलद बिलिंग, ऑफलाइन कॅश आणि फुल स्क्रीन अनुभव' : language === 'hi' ? 'तेज बिलिंग, ऑफलाइन रोकड़ और फुल स्क्रीन अनुभव' : 'Instant billing, offline cash sync & full screen mode'}
+                {'Instant billing, offline cash sync & full screen mode'}
               </p>
             </div>
           </div>
@@ -134,7 +134,7 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
           {isInstalled && (
             <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/60 flex items-center gap-2.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 animate-fadeIn">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              <span>{language === 'mr' ? 'ॲप यशस्वीरित्या इन्स्टॉल झाले! आता थेट होम स्क्रीनवरून वापरा.' : language === 'hi' ? 'ऐप सफलतापूर्वक इंस्टॉल हुआ! अब होम स्क्रीन से सीधे इस्तेमाल करें।' : 'App successfully installed! You can now launch it directly from your home screen.'}</span>
+              <span>{'App successfully installed! You can now launch it directly from your home screen.'}</span>
             </div>
           )}
 
@@ -148,10 +148,10 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
               </div>
               <div className="min-w-0">
                 <h4 className="text-xs font-black text-slate-900 dark:text-white leading-tight">
-                  {language === 'mr' ? '१ सेकंदात बिलिंग' : language === 'hi' ? '१ सेकंड में बिलिंग' : '1-Second Billing'}
+                  {'1-Second Billing'}
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 leading-snug">
-                  {language === 'mr' ? 'थेट होम स्क्रीनवरून त्वरित काऊंटर विक्री सुरू' : language === 'hi' ? 'होम स्क्रीन से तुरंत काउंटर बिक्री शुरू' : 'Launch counter billing in 1 tap from home screen'}
+                  {'Launch counter billing in 1 tap from home screen'}
                 </p>
               </div>
             </div>
@@ -163,10 +163,10 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
               </div>
               <div className="min-w-0">
                 <h4 className="text-xs font-black text-slate-900 dark:text-white leading-tight">
-                  {language === 'mr' ? 'ऑफलाइन सपोर्ट' : language === 'hi' ? 'ऑफलाइन सपोर्ट' : 'Offline Ready'}
+                  {'Offline Ready'}
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 leading-snug">
-                  {language === 'mr' ? 'इंटरनेट नसतानाही अखंड कॅश बिलिंग चालू राहते' : language === 'hi' ? 'इंटरनेट न होने पर भी रोकड़ बिलिंग चालू रहती है' : 'Keep selling smoothly even without internet connection'}
+                  {'Keep selling smoothly even without internet connection'}
                 </p>
               </div>
             </div>
@@ -178,10 +178,10 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
               </div>
               <div className="min-w-0">
                 <h4 className="text-xs font-black text-slate-900 dark:text-white leading-tight">
-                  {language === 'mr' ? 'एक्सपायरी व स्टॉक अलर्ट्स' : language === 'hi' ? 'एक्सपायरी व स्टॉक अलर्ट्स' : 'Smart Alerts'}
+                  {'Smart Alerts'}
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 leading-snug">
-                  {language === 'mr' ? 'कमी साठा आणि मुदत संपण्यापूर्वी तत्काळ सूचना' : language === 'hi' ? 'कम स्टॉक और एक्सपायरी से पहले तुरंत सूचना' : 'Real-time low stock & FEFO expiry notifications'}
+                  {'Real-time low stock & FEFO expiry notifications'}
                 </p>
               </div>
             </div>
@@ -193,10 +193,10 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
               </div>
               <div className="min-w-0">
                 <h4 className="text-xs font-black text-slate-900 dark:text-white leading-tight">
-                  {language === 'mr' ? 'फुल स्क्रीन व सुरक्षितता' : language === 'hi' ? 'फुल स्क्रीन व सुरक्षा' : 'Full Screen & Secure'}
+                  {'Full Screen & Secure'}
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5 leading-snug">
-                  {language === 'mr' ? 'ब्राउझर बारशिवाय ॲपसारखा मोठा डिस्प्ले व लॉक' : language === 'hi' ? 'ब्राउज़र बार के बिना बड़ा डिस्प्ले और सुरक्षित लॉक' : 'Native app experience without browser address bar'}
+                  {'Native app experience without browser address bar'}
                 </p>
               </div>
             </div>
@@ -208,19 +208,19 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
             <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 text-xs text-amber-950 dark:text-amber-200 space-y-2 animate-fadeIn">
               <div className="font-extrabold flex items-center gap-1.5 text-amber-800 dark:text-amber-400">
                 <Smartphone className="w-4 h-4" />
-                <span>{language === 'mr' ? 'होम स्क्रीनवर ॲप कसे जोडायचे?' : language === 'hi' ? 'होम स्क्रीन पर ऐप कैसे जोड़ें?' : 'How to add to Home Screen?'}</span>
+                <span>{'How to add to Home Screen?'}</span>
               </div>
               {isIOS ? (
                 <ol className="list-decimal pl-4 space-y-1 font-medium text-[11px]">
-                  <li>{language === 'mr' ? 'Safari ब्राउझरच्या खालील शेअर बटणावर (⎋ Share) टॅप करा.' : language === 'hi' ? 'Safari ब्राउज़र के नीचे शेयर बटन (⎋ Share) दबाएं।' : 'Tap the Share button (⎋) at the bottom of Safari.'}</li>
-                  <li>{language === 'mr' ? 'पर्यायांमध्ये "Add to Home Screen" (⊞) निवडा.' : language === 'hi' ? 'विकल्पों में "Add to Home Screen" (⊞) चुनें।' : 'Select "Add to Home Screen" (⊞).'}</li>
-                  <li>{language === 'mr' ? 'वरील "Add" दाबा. ॲप होम स्क्रीनवर तयार होईल!' : language === 'hi' ? 'ऊपर "Add" दबाएं। ऐप होम स्क्रीन पर आ जाएगा!' : 'Tap "Add" at top right to install!'}</li>
+                  <li>{'Tap the Share button (⎋) at the bottom of Safari.'}</li>
+                  <li>{'Select "Add to Home Screen" (⊞).'}</li>
+                  <li>{'Tap "Add" at top right to install!'}</li>
                 </ol>
               ) : (
                 <ol className="list-decimal pl-4 space-y-1 font-medium text-[11px]">
-                  <li>{language === 'mr' ? 'Chrome ब्राउझरच्या वर उजव्या कोपऱ्यातील तीन ठिपके (⋮) दाबा.' : language === 'hi' ? 'Chrome ब्राउज़र में ऊपर दाईं ओर तीन डॉट्स (⋮) दबाएं।' : 'Tap the three dots menu (⋮) in your Chrome browser.'}</li>
-                  <li>{language === 'mr' ? '"Install App" किंवा "Add to Home screen" वर टॅप करा.' : language === 'hi' ? '"Install App" या "Add to Home screen" चुनें।' : 'Tap "Install App" or "Add to Home screen".'}</li>
-                  <li>{language === 'mr' ? '"Install" वर पुष्टी करा. ॲप थेट मोबाईलवर स्थापित होईल!' : language === 'hi' ? '"Install" पर पुष्टि करें। ऐप सीधे मोबाइल पर आ जाएगा!' : 'Confirm "Install" to complete installation!'}</li>
+                  <li>{'Tap the three dots menu (⋮) in your Chrome browser.'}</li>
+                  <li>{'Tap "Install App" or "Add to Home screen".'}</li>
+                  <li>{'Confirm "Install" to complete installation!'}</li>
                 </ol>
               )}
             </div>
@@ -239,7 +239,7 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
           >
             <Download className="w-4 h-4 stroke-[2.5]" />
             <span>
-              {language === 'mr' ? '📲 मोबाईल ॲप इन्स्टॉल करा' : language === 'hi' ? '📲 मोबाइल ऐप इंस्टॉल करें' : '📲 Install Mobile App'}
+              {'📲 Install Mobile App'}
             </span>
           </button>
 
@@ -249,7 +249,7 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
             onClick={onClose}
             className="w-full sm:w-auto px-5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200/70 dark:hover:bg-[#1A2A25] transition text-center"
           >
-            {language === 'mr' ? 'वेबसाइटवर सुरू ठेवा' : language === 'hi' ? 'वेबसाइट पर जारी रखें' : 'Continue on Web'}
+            {'Continue on Web'}
           </button>
 
         </div>

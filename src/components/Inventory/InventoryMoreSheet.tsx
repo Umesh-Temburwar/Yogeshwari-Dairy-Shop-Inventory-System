@@ -96,12 +96,12 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-[#24352F] shrink-0">
           <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-            {tr('View, Filters & Exports', 'व्यू, फ़िल्टर और रिपोर्ट', 'व्यू, फिल्टर आणि अहवाल')}
+            {'View, Filters & Exports'}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label={tr('Close options', 'विकल्प बंद करें', 'पर्याय बंद करा')}
+            aria-label={'Close options'}
             className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2A25] cursor-pointer"
           >
             <X className="w-4 h-4" />
@@ -112,14 +112,14 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
           {/* 1. Layout View Mode */}
           <div className="space-y-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#8FA69C]">
-              {tr('Layout View', 'लेआउट व्यू', 'लेआउट प्रकार')}
+              {'Layout View'}
             </span>
             <div className="grid grid-cols-3 gap-2">
               {(
                 [
-                  { id: 'cards', label: tr('Cards', 'कार्ड्स', 'कार्ड्स'), icon: LayoutGrid },
-                  { id: 'list', label: tr('List', 'लिस्ट', 'यादी'), icon: List },
-                  { id: 'table', label: tr('Table', 'टेबल', 'तक्ता'), icon: Table2 }
+                  { id: 'cards', label: 'Cards', icon: LayoutGrid },
+                  { id: 'list', label: 'List', icon: List },
+                  { id: 'table', label: 'Table', icon: Table2 }
                 ] as const
               ).map((item) => {
                 const Icon = item.icon;
@@ -150,7 +150,7 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
           <div className="space-y-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#8FA69C] inline-flex items-center gap-1">
               <Tag className="w-3.5 h-3.5" />
-              <span>{tr('Category', 'श्रेणी', 'प्रकार')}</span>
+              <span>{'Category'}</span>
             </span>
             <div className="flex flex-wrap gap-1.5">
               {categories.map((cat) => {
@@ -177,7 +177,7 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
           <div className="space-y-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#8FA69C] inline-flex items-center gap-1">
               <Calendar className="w-3.5 h-3.5" />
-              <span>{tr('Batch Expiry Filter', 'बैच एक्सपायरी फ़िल्टर', 'बॅच मुदत फिल्टर')}</span>
+              <span>{'Batch Expiry Filter'}</span>
             </span>
             <div className="flex flex-wrap gap-1.5">
               {expiryOptions.map((opt) => {
@@ -206,7 +206,7 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
           {/* 4. Secondary Actions (PDF, Print, CSV, Photo Database) */}
           <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-[#24352F]">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#8FA69C]">
-              {tr('Reports & Tools', 'रिपोर्ट और टूल्स', 'अहवाल आणि साधने')}
+              {'Reports & Tools'}
             </span>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -218,7 +218,7 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
                 className="min-h-[44px] px-3 rounded-xl bg-slate-50 dark:bg-[#1A2A25] hover:bg-slate-100 dark:hover:bg-[#223630] border border-slate-200 dark:border-[#24352F] text-xs font-bold inline-flex items-center gap-2 cursor-pointer"
               >
                 <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>{tr('Stock PDF', 'स्टॉक PDF', 'साठा PDF')}</span>
+                <span>{'Stock PDF'}</span>
               </button>
 
               <button
@@ -230,7 +230,7 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
                 className="min-h-[44px] px-3 rounded-xl bg-slate-50 dark:bg-[#1A2A25] hover:bg-slate-100 dark:hover:bg-[#223630] border border-slate-200 dark:border-[#24352F] text-xs font-bold inline-flex items-center gap-2 cursor-pointer"
               >
                 <Printer className="w-4 h-4 text-slate-500 dark:text-[#8FA69C] shrink-0" />
-                <span>{tr('Print', 'प्रिंट', 'प्रिंट')}</span>
+                <span>{'Print'}</span>
               </button>
 
               <button
@@ -242,7 +242,7 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
                 className="min-h-[44px] px-3 rounded-xl bg-slate-50 dark:bg-[#1A2A25] hover:bg-slate-100 dark:hover:bg-[#223630] border border-slate-200 dark:border-[#24352F] text-xs font-bold inline-flex items-center gap-2 cursor-pointer"
               >
                 <Eye className="w-4 h-4 text-slate-500 dark:text-[#8FA69C] shrink-0" />
-                <span>{tr('View PDF', 'PDF देखें', 'PDF पहा')}</span>
+                <span>{'View PDF'}</span>
               </button>
 
               <button
@@ -254,7 +254,7 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
                 className="min-h-[44px] px-3 rounded-xl bg-slate-50 dark:bg-[#1A2A25] hover:bg-slate-100 dark:hover:bg-[#223630] border border-slate-200 dark:border-[#24352F] text-xs font-bold inline-flex items-center gap-2 cursor-pointer"
               >
                 <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>{tr('CSV / Excel', 'CSV / एक्सेल', 'CSV / एक्सेल')}</span>
+                <span>{'CSV / Excel'}</span>
               </button>
 
               <button
@@ -266,7 +266,7 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
                 className="col-span-2 min-h-[44px] px-3 rounded-xl bg-slate-50 dark:bg-[#1A2A25] hover:bg-slate-100 dark:hover:bg-[#223630] border border-slate-200 dark:border-[#24352F] text-xs font-bold inline-flex items-center justify-center gap-2 cursor-pointer"
               >
                 <ImageIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>{tr('Photo Database Manager', 'फोटो डेटाबेस मैनेजर', 'फोटो डेटाबेस व्यवस्थापक')}</span>
+                <span>{'Photo Database Manager'}</span>
               </button>
             </div>
           </div>

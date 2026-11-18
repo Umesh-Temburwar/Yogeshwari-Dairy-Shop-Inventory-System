@@ -72,8 +72,8 @@ export const Navbar: React.FC<NavbarProps> = ({
       : (user?.user_metadata?.full_name || 'Nikhil Sakhare');
 
   const roleLabel = role === 'Owner'
-    ? (language === 'mr' ? 'दुकान मालक (Owner)' : language === 'hi' ? 'दुकान मालिक (Owner)' : 'Shop Owner')
-    : (language === 'mr' ? 'काउंटर ॲडमिन (Admin)' : language === 'hi' ? 'काउंटर एडमिन (Admin)' : 'Counter Admin');
+    ? ('Shop Owner')
+    : ('Counter Admin');
 
   return (
     <header className="sticky top-0 z-30 h-16 w-full bg-white/95 dark:bg-[#131F1B]/95 backdrop-blur-md border-b border-slate-100 sm:border-slate-200 dark:border-[#24352F]/40 shadow-xs shrink-0 transition-colors duration-150">
@@ -131,16 +131,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={onOpenAppDownload}
               className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-emerald-300/60 dark:border-emerald-800/60 bg-emerald-50/80 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
               title={
-                language === 'mr'
-                  ? 'मोबाईल ॲप इन्स्टॉल करा'
-                  : language === 'hi'
-                  ? 'मोबाइल ऐप इंस्टॉल करें'
-                  : 'Install Mobile App'
+                'Install Mobile App'
               }
             >
               <Smartphone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span className="text-[11px]">
-                {language === 'mr' ? 'ॲप इन्स्टॉल' : language === 'hi' ? 'ऐप इंस्टॉल' : 'Install App'}
+                {'Install App'}
               </span>
             </button>
           )}
@@ -150,21 +146,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-black tracking-tight"
             title={
               realtimeStatus === 'CONNECTED'
-                ? language === 'mr'
-                  ? 'डेटाबेस सिंक झाले आहे (सर्व टर्मिनल जोडलेले)'
-                  : language === 'hi'
-                  ? 'रियलटाइम डेटाबेस सिंक है'
-                  : 'Realtime Database Synced'
+                ? 'Realtime Database Synced'
                 : realtimeStatus === 'CONNECTING' || realtimeStatus === 'RECONNECTING'
-                ? language === 'mr'
-                  ? 'पुन्हा जोडत आहे...'
-                  : language === 'hi'
-                  ? 'पुनः जुड़ रहा है...'
-                  : 'Reconnecting to Realtime...'
-                : language === 'mr'
-                ? 'ऑफलाइन मोड'
-                : language === 'hi'
-                ? 'ऑफ़लाइन मोड'
+                ? 'Reconnecting to Realtime...'
                 : 'Offline mode'
             }
           >
@@ -268,7 +252,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <Moon className="w-4 h-4 text-indigo-500 shrink-0" />
                       )}
                       <span>
-                        {language === 'mr' ? 'थीम बदला' : language === 'hi' ? 'थीम बदलें' : 'Theme Change'}
+                        {'Theme Change'}
                       </span>
                     </span>
                     <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#223630] text-slate-600 dark:text-emerald-300">
@@ -289,7 +273,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <Camera className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       <span>
-                        {language === 'mr' ? 'फोटो डेटाबेस' : language === 'hi' ? 'फोटो डेटाबेस' : 'Photo Database'}
+                        {'Photo Database'}
                       </span>
                     </button>
                   )}
@@ -307,7 +291,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <Settings className="w-4 h-4 text-slate-500 dark:text-[#8FA69C] shrink-0" />
                       <span>
-                        {language === 'mr' ? 'सेटिंग्ज (Settings)' : language === 'hi' ? 'सेटिंग्स (Settings)' : 'Settings'}
+                        {'Settings'}
                       </span>
                     </button>
                   )}
@@ -326,7 +310,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <LogOut className="w-4 h-4 shrink-0" />
                     <span>
-                      {language === 'mr' ? 'लॉग आउट (Logout)' : language === 'hi' ? 'लॉग आउट (Logout)' : 'Logout'}
+                      {'Logout'}
                     </span>
                   </button>
                 </div>

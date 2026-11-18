@@ -47,7 +47,7 @@ export function runERPUnitTests(): { total: number; passed: number; failed: numb
 
     // Test 5: formatTimeAgo just now
     const ta1 = formatTimeAgo(new Date().toISOString(), 'mr');
-    assert('formatTimeAgo Just Now', ta1 === 'आत्ताच', ta1, 'आत्ताच');
+    assert('formatTimeAgo Just Now', ta1 === 'Just now', ta1, 'Just now');
 
     // Test 6: formatSaleDateTime fallback
     const dt1 = formatSaleDateTime('2026-11-15T10:30:00Z');

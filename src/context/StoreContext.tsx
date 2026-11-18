@@ -296,7 +296,7 @@ interface StoreContextType {
     items?: SaleItem[];
   }) => Promise<void>;
 
-  // Supplier Returns (खरेदी व सप्लायर परतावा - खराब/एक्सपायर माल परत करणे)
+  // Supplier Returns (damaged/expired stock returned to supplier)
   createSupplierReturn: (returnData: Omit<SupplierReturn, 'id' | 'return_no' | 'created_at'>) => Promise<SupplierReturn>;
   updateSupplierRefundStatus: (
     id: string, 
@@ -1036,8 +1036,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     return {
                       id: newId,
                       name: lp.name,
-                      hindi_name: lp.hindi_name || null,
-                      marathi_name: lp.marathi_name || null,
                       category: lp.category,
                       unit: lp.unit,
                       purchase_price: lp.purchase_price,
@@ -1692,7 +1690,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           slot: 1 as 1 | 2,
           email: 'nilusakhare2003@gmail.com',
           name: 'Nilesh Sakhare',
-          counter: 'काऊंटर १ - मुख्य बिलिंग'
+          counter: 'Counter 1 - Main Billing'
         };
       } else {
         return {
@@ -1700,7 +1698,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           slot: null,
           email: 'yogeshwaridairy9896@gmail.com',
           name: 'Nikhil Sakhare',
-          counter: 'मुख्य मालक काऊंटर'
+          counter: 'Owner Master Counter'
         };
       }
     } catch {
@@ -1709,7 +1707,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         slot: 1 as 1 | 2, 
         email: 'nilusakhare2003@gmail.com',
         name: 'Nilesh Sakhare', 
-        counter: 'काऊंटर १ - मुख्य बिलिंग' 
+        counter: 'Counter 1 - Main Billing' 
       };
     }
   }, []);
@@ -1799,8 +1797,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const { error: pErr } = await supabase.from('products').insert([{
           id: newProduct.id,
           name: newProduct.name,
-          hindi_name: newProduct.hindi_name || null,
-          marathi_name: newProduct.marathi_name || null,
           category: newProduct.category,
           unit: newProduct.unit,
           purchase_price: newProduct.purchase_price,
@@ -1866,8 +1862,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'PRODUCT_ADDED',
-      title: `नवीन उत्पादन जोडले: ${newProduct.name}`,
-      details: `प्रवर्ग: ${newProduct.category} | दर: ₹${newProduct.selling_price} | खरेदी: ₹${newProduct.purchase_price} | प्रारंभिक साठा: ${newProduct.stock_quantity} ${newProduct.unit}`,
+      title: `New Product Added: ${newProduct.name}`,
+      details: `Category: ${newProduct.category} | Selling: ₹${newProduct.selling_price} | Purchase: ₹${newProduct.purchase_price} | Opening Stock: ${newProduct.stock_quantity} ${newProduct.unit}`,
       amount: newProduct.selling_price,
       reference_id: newProduct.id,
       reference_table: 'products'
@@ -1934,13 +1930,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const changes: string[] = [];
     if (existingProd) {
       if (updates.selling_price !== undefined && updates.selling_price !== existingProd.selling_price) {
-        changes.push(`विक्री भाव: ₹${existingProd.selling_price} ➔ ₹${updates.selling_price}`);
+        changes.push(`Selling Rate: ₹${existingProd.selling_price} ➔ ₹${updates.selling_price}`);
       }
       if (updates.purchase_price !== undefined && updates.purchase_price !== existingProd.purchase_price) {
-        changes.push(`खरेदी भाव: ₹${existingProd.purchase_price} ➔ ₹${updates.purchase_price}`);
+        changes.push(`Purchase Rate: ₹${existingProd.purchase_price} ➔ ₹${updates.purchase_price}`);
       }
       if (updates.stock_quantity !== undefined && updates.stock_quantity !== existingProd.stock_quantity) {
-        changes.push(`साठा: ${existingProd.stock_quantity} ➔ ${updates.stock_quantity} ${existingProd.unit}`);
+        changes.push(`Stock: ${existingProd.stock_quantity} ➔ ${updates.stock_quantity} ${existingProd.unit}`);
       }
       if (updates.min_stock_alert !== undefined && updates.min_stock_alert !== existingProd.min_stock_alert) {
         changes.push(`Min Stock Alert: ${existingProd.min_stock_alert} -> ${updates.min_stock_alert} ${existingProd.unit}`);
@@ -1970,7 +1966,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'PRODUCT_UPDATED',
-      title: `उत्पादन माहिती/दर बदल: ${existingProd?.name || updates.name || id}`,
+      title: `Product Updated: ${existingProd?.name || updates.name || id}`,
       details: detailsText,
       amount: updates.selling_price,
       reference_id: id,
@@ -1999,8 +1995,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'PRODUCT_UPDATED',
-      title: `उत्पादन कायमचे हटवले: ${prod?.name || id}`,
-      details: `हटवलेले उत्पादन: ${prod?.name || id} | प्रवर्ग: ${prod?.category || 'इतर'} | शेवटचा साठा: ${prod?.stock_quantity ?? 0} ${prod?.unit || 'Piece'} | विक्री दर: ₹${prod?.selling_price ?? 0}`,
+      title: `Product Permanently Deleted: ${prod?.name || id}`,
+      details: `Deleted Product: ${prod?.name || id} | Category: ${prod?.category || 'Other'} | Last Stock: ${prod?.stock_quantity ?? 0} ${prod?.unit || 'Piece'} | Selling Rate: ₹${prod?.selling_price ?? 0}`,
       reference_id: id,
       reference_table: 'products'
     });
@@ -2174,8 +2170,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: isIncrease ? 'STOCK_INWARD' : 'PRODUCT_UPDATED',
-      title: `${isIncrease ? 'साठा आवक/वाढवला (+)' : 'साठा घट/कमी केला (-)'}: ${prod.name}`,
-      details: `बदल: ${isIncrease ? '+' : ''}${qtyDelta} ${prod.unit} | पूर्वीचा साठा: ${oldQty} ${prod.unit} ➔ नवीन साठा: ${finalQty} ${prod.unit} | कारण: ${reason || (isIncrease ? 'साठा आवक/समायोजन' : 'साठा घट/दुरुस्ती')}`,
+      title: `${isIncrease ? 'Stock Inward / Added (+)' : 'Stock Deducted (-)'}: ${prod.name}`,
+      details: `Change: ${isIncrease ? '+' : ''}${qtyDelta} ${prod.unit} | Previous Stock: ${oldQty} ${prod.unit} ➔ New Stock: ${finalQty} ${prod.unit} | Reason: ${reason || (isIncrease ? 'Stock inward / adjustment' : 'Stock deduction / correction')}`,
       amount: Math.abs(qtyDelta * (prod.selling_price || 0)),
       reference_id: prod.id,
       reference_table: 'products'
@@ -2379,7 +2375,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const admin = getActiveAdminInfo();
     const batchSummary = entries.map((e, idx) => 
-      `बॅच ${e.batch_no || idx + 1}: +${e.quantity} ${prod.unit} (मुदत: ${e.expiry_date}${e.supplier_name ? `, सप्लायर: ${e.supplier_name}` : ''}${e.purchase_price ? `, दर: ₹${e.purchase_price}` : ''})`
+      `Batch ${e.batch_no || idx + 1}: +${e.quantity} ${prod.unit} (Expiry: ${e.expiry_date}${e.supplier_name ? `, Supplier: ${e.supplier_name}` : ''}${e.purchase_price ? `, Rate: ₹${e.purchase_price}` : ''})`
     ).join(' | ');
 
     logAdminActivity({
@@ -2389,8 +2385,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'STOCK_INWARD',
-      title: `इन्व्हेंटरी साठा आवक (+): ${prod.name}`,
-      details: `एकूण वाढ: +${totalQtyAdded} ${prod.unit} | नवीन शिल्लक: ${finalProductStock} ${prod.unit} | ${batchSummary}`,
+      title: `Inventory Stock Inward (+): ${prod.name}`,
+      details: `Total Added: +${totalQtyAdded} ${prod.unit} | New Balance: ${finalProductStock} ${prod.unit} | ${batchSummary}`,
       amount: entries.reduce((acc, e) => acc + (e.quantity * (e.purchase_price || prod.purchase_price || 0)), 0),
       reference_id: prod.id,
       reference_table: 'products'
@@ -2411,7 +2407,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const newBatch: ProductBatch = {
       ...batchData,
       id: generateUUID(),
-      product_name: batchData.product_name || targetProd?.name || 'उत्पादन',
+      product_name: batchData.product_name || targetProd?.name || 'Product',
       created_at: new Date().toISOString()
     };
     setBatches(prev => [newBatch, ...prev]);
@@ -2441,7 +2437,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         await supabase.from('batches').insert([{
           id: newBatch.id,
           product_id: newBatch.product_id,
-          product_name: newBatch.product_name || targetProd?.name || 'उत्पादन',
+          product_name: newBatch.product_name || targetProd?.name || 'Product',
           batch_no: newBatch.batch_no,
           mfg_date: newBatch.mfg_date,
           expiry_date: newBatch.expiry_date,
@@ -2474,8 +2470,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'STOCK_INWARD',
-      title: `नवीन बॅच जोडली (+): ${targetProd?.name || 'उत्पादन'}`,
-      details: `बॅच क्र: #${newBatch.batch_no} | साठा: +${newBatch.qty_remaining} ${targetProd?.unit || 'Piece'} | खरेदी भाव: ₹${newBatch.purchase_price} | मुदत समाप्ती: ${newBatch.expiry_date}${newBatch.supplier_name ? ` | सप्लायर: ${newBatch.supplier_name}` : ''}`,
+      title: `New Batch Added (+): ${targetProd?.name || 'Product'}`,
+      details: `Batch No: #${newBatch.batch_no} | Stock: +${newBatch.qty_remaining} ${targetProd?.unit || 'Piece'} | Purchase Rate: ₹${newBatch.purchase_price} | Expiry: ${newBatch.expiry_date}${newBatch.supplier_name ? ` | Supplier: ${newBatch.supplier_name}` : ''}`,
       amount: (newBatch.purchase_price || 0) * newBatch.qty_remaining,
       reference_id: newBatch.id,
       reference_table: 'batches'
@@ -2586,25 +2582,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const changes: string[] = [];
     if (existingBatch) {
       if (updates.qty_remaining !== undefined && updates.qty_remaining !== existingBatch.qty_remaining) {
-        changes.push(`शिल्लक साठा: ${existingBatch.qty_remaining} ➔ ${updates.qty_remaining} ${targetProd?.unit || 'Piece'}`);
+        changes.push(`Remaining Stock: ${existingBatch.qty_remaining} ➔ ${updates.qty_remaining} ${targetProd?.unit || 'Piece'}`);
       }
       if (updates.mfg_date !== undefined && updates.mfg_date !== existingBatch.mfg_date) {
-        changes.push(`आवक/Mfg: ${existingBatch.mfg_date} ➔ ${updates.mfg_date}`);
+        changes.push(`Mfg Date: ${existingBatch.mfg_date} ➔ ${updates.mfg_date}`);
       }
       if (updates.expiry_date !== undefined && updates.expiry_date !== existingBatch.expiry_date) {
-        changes.push(`मुदत समाप्ती: ${existingBatch.expiry_date} ➔ ${updates.expiry_date}`);
+        changes.push(`Expiry Date: ${existingBatch.expiry_date} ➔ ${updates.expiry_date}`);
       }
       if (updates.purchase_price !== undefined && updates.purchase_price !== existingBatch.purchase_price) {
-        changes.push(`खरेदी भाव: ₹${existingBatch.purchase_price} ➔ ₹${updates.purchase_price}`);
+        changes.push(`Purchase Rate: ₹${existingBatch.purchase_price} ➔ ₹${updates.purchase_price}`);
       }
       if (updates.selling_price !== undefined && updates.selling_price !== existingBatch.selling_price) {
-        changes.push(`बॅच विक्री दर: ₹${existingBatch.selling_price || 0} ➔ ₹${updates.selling_price}`);
+        changes.push(`Batch Selling Rate: ₹${existingBatch.selling_price || 0} ➔ ₹${updates.selling_price}`);
       }
       if (updates.batch_no !== undefined && updates.batch_no !== existingBatch.batch_no) {
-        changes.push(`बॅच क्र: #${existingBatch.batch_no} ➔ #${updates.batch_no}`);
+        changes.push(`Batch No: #${existingBatch.batch_no} ➔ #${updates.batch_no}`);
       }
       if (updates.notes !== undefined && updates.notes !== existingBatch.notes) {
-        changes.push(`टीप: ${updates.notes}`);
+        changes.push(`Note: ${updates.notes}`);
       }
     }
 
@@ -2615,8 +2611,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'PRODUCT_UPDATED',
-      title: `बॅच माहिती बदल: ${targetProd?.name || 'बॅच'} (#${updates.batch_no || existingBatch?.batch_no || id})`,
-      details: changes.length > 0 ? changes.join(' | ') : 'बॅच माहिती अद्ययावत केली',
+      title: `Batch Updated: ${targetProd?.name || 'Batch'} (#${updates.batch_no || existingBatch?.batch_no || id})`,
+      details: changes.length > 0 ? changes.join(' | ') : 'Batch details updated',
       reference_id: id,
       reference_table: 'batches'
     });
@@ -2686,8 +2682,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'PRODUCT_UPDATED',
-      title: `बॅच हटवली: ${targetProd?.name || 'उत्पादन'} (#${targetBatch?.batch_no || id})`,
-      details: `हटवलेली बॅच: #${targetBatch?.batch_no} | शिल्लक साठा: ${targetBatch?.qty_remaining ?? 0} | मुदत समाप्ती: ${targetBatch?.expiry_date || 'N/A'}${newProductStock !== null ? ` | नवीन एकूण साठा: ${newProductStock}` : ''}`,
+      title: `Batch Deleted: ${targetProd?.name || 'Product'} (#${targetBatch?.batch_no || id})`,
+      details: `Deleted Batch: #${targetBatch?.batch_no} | Remaining Stock: ${targetBatch?.qty_remaining ?? 0} | Expiry: ${targetBatch?.expiry_date || 'N/A'}${newProductStock !== null ? ` | New Total Stock: ${newProductStock}` : ''}`,
       reference_id: id,
       reference_table: 'batches'
     });
@@ -2877,7 +2873,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         type: 'Credit_Given',
         amount: saleData.udhar_amount,
         payment_mode: 'Cash',
-        notes: `पावती #${invoiceNo} (उधार विक्री)`,
+        notes: `Invoice #${invoiceNo} (Credit Sale)`,
         transaction_date: todayFormatted,
         created_at: new Date().toISOString()
       };
@@ -3044,8 +3040,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: adminSlot,
       counter_name: counterName,
       action_type: 'SALE_CREATED',
-      title: `पावती विक्री: #${invoiceNo}`,
-      details: `वस्तू: ${itemsSummary} | पद्धत: ${saleData.payment_mode} | निव्वळ रक्कम: ₹${saleData.net_amount}`,
+      title: `Receipt Sale: #${invoiceNo}`,
+      details: `Items: ${itemsSummary} | Payment: ${saleData.payment_mode} | Net Amount: ₹${saleData.net_amount}`,
       amount: saleData.net_amount,
       reference_id: invoiceNo,
       reference_table: 'sales'
@@ -3163,8 +3159,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'STOCK_INWARD',
-      title: `खरेदी आवक: ${newPur.product_name}`,
-      details: `सप्लायर: ${newPur.supplier_name || 'Standard Dairy Supplier'} | खरेदी प्रमाण: +${newPur.quantity} ${newPur.unit} | खरेदी भाव: ₹${newPur.purchase_price} | एकूण खर्च: ₹${newPur.total_amount} | पेमेंट: ${newPur.payment_mode || 'Cash'} | बॅच: #${newPur.batch_no || 'Standard'} | मुदत समाप्ती: ${newPur.expiry_date || 'N/A'}${newPur.notes ? ` | टीप: ${newPur.notes}` : ''}`,
+      title: `Purchase Inward: ${newPur.product_name}`,
+      details: `Supplier: ${newPur.supplier_name || 'Standard Dairy Supplier'} | Purchase Qty: +${newPur.quantity} ${newPur.unit} | Purchase Rate: ₹${newPur.purchase_price} | Total Cost: ₹${newPur.total_amount} | Payment: ${newPur.payment_mode || 'Cash'} | Batch: #${newPur.batch_no || 'Standard'} | Expiry: ${newPur.expiry_date || 'N/A'}${newPur.notes ? ` | Note: ${newPur.notes}` : ''}`,
       amount: newPur.total_amount,
       reference_id: newPur.id,
       reference_table: 'purchases'
@@ -3268,8 +3264,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'DAMAGE_RECORDED',
-      title: `खराब माल नोंद: ${damageData.product_name}`,
-      details: `कारण: ${damageData.reason} | प्रमाण: ${damageData.quantity} ${damageData.unit} | अंदाजे तोटा: ₹${damageData.estimated_loss_amount}`,
+      title: `Damage Recorded: ${damageData.product_name}`,
+      details: `Reason: ${damageData.reason} | Qty: ${damageData.quantity} ${damageData.unit} | Est. Loss: ₹${damageData.estimated_loss_amount}`,
       amount: damageData.estimated_loss_amount,
       reference_id: damageData.product_id,
       reference_table: 'damage_records'
@@ -3371,8 +3367,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'UDHAR_PAYMENT',
-      title: `उधारी वसुली जमा: ₹${amount}`,
-      details: `ग्राहक: ${cust?.name || customerId} | पेमेंट: ${paymentMode} | उर्वरित बाकी: ₹${Math.max(0, (cust?.current_balance || 0) - amount)}`,
+      title: `Credit Payment Received: ₹${amount}`,
+      details: `Customer: ${cust?.name || customerId} | Mode: ${paymentMode} | Remaining Balance: ₹${Math.max(0, (cust?.current_balance || 0) - amount)}`,
       amount,
       reference_id: customerId,
       reference_table: 'udhar_customers'
@@ -3414,8 +3410,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'EXPENSE_ADDED',
-      title: `खर्च नोंद: ${expenseData.title}`,
-      details: `प्रवर्ग: ${expenseData.category} | पद्धत: ${expenseData.payment_mode} | रक्कम: ₹${expenseData.amount}`,
+      title: `Expense Recorded: ${expenseData.title}`,
+      details: `Category: ${expenseData.category} | Mode: ${expenseData.payment_mode} | Amount: ₹${expenseData.amount}`,
       amount: expenseData.amount,
       reference_table: 'expenses'
     });
@@ -3475,8 +3471,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'SALE_DELETED',
-      title: `पावती हटवली: #${target.invoice_no}`,
-      details: `ग्राहक: ${target.customer_name} | रक्कम: ₹${target.net_amount}`,
+      title: `Invoice Deleted: #${target.invoice_no}`,
+      details: `Customer: ${target.customer_name} | Amount: ₹${target.net_amount}`,
       amount: target.net_amount,
       reference_id: target.invoice_no,
       reference_table: 'sales'
@@ -3587,8 +3583,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'SALE_UPDATED',
-      title: `पावती सुधारणा: #${target.invoice_no}`,
-      details: `ग्राहक: ${newCustomerName} | रक्कम: ₹${newNetAmount} | पेमेंट: ${newPaymentMode}`,
+      title: `Invoice Updated: #${target.invoice_no}`,
+      details: `Customer: ${newCustomerName} | Amount: ₹${newNetAmount} | Payment: ${newPaymentMode}`,
       amount: newNetAmount,
       reference_id: target.invoice_no,
       reference_table: 'sales'
@@ -3617,7 +3613,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }): Promise<ProductReturn[]> => {
     const validItems = payload.items.filter(i => i.quantity > 0);
     if (validItems.length === 0) {
-      throw new Error('किमान एका वस्तूचे परतावा प्रमाण निवडा (Please specify return quantity for at least one item)');
+      throw new Error('Please specify return quantity for at least one item');
     }
 
     const todayFormatted = payload.return_date || new Date().toISOString().split('T')[0];
@@ -3631,7 +3627,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     const invoiceNo = targetSale?.invoice_no || payload.invoice_no;
-    const customerName = payload.customer_name || targetSale?.customer_name || 'थेट ग्राहक';
+    const customerName = payload.customer_name || targetSale?.customer_name || 'Walk-in Customer';
     const customerPhone = payload.customer_phone || targetSale?.customer_phone || '';
     const totalRefundAmount = Number(validItems.reduce((acc, i) => acc + i.refund_amount, 0).toFixed(2));
 
@@ -3833,7 +3829,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           type: 'Payment_Received',
           amount: totalRefundAmount,
           payment_mode: 'Cash',
-          notes: `माल परतावा उधारी वजावट (${createdReturns[0]?.return_no}): ${invoiceNo ? 'पावती #' + invoiceNo : ''}`,
+          notes: `Return credit deduction (${createdReturns[0]?.return_no}): ${invoiceNo ? 'Invoice #' + invoiceNo : ''}`,
           transaction_date: todayFormatted,
           created_at: new Date().toISOString()
         };
@@ -3880,8 +3876,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           admin_slot: adminInfo.slot,
           counter_name: adminInfo.counter,
           action_type: 'CUSTOMER_FULL_RETURN',
-          title: `ग्राहक संपूर्ण पावती परतावा: #${targetSale.invoice_no}`,
-          details: `ग्राहक: ${customerName} | सर्व वस्तू परत | मूळ पावती हटवली | एकूण परतावा: ₹${totalRefundAmount} (${payload.refund_mode})`,
+          title: `Full Invoice Return: #${targetSale.invoice_no}`,
+          details: `Customer: ${customerName} | All items returned | Original invoice deleted | Total Refund: ₹${totalRefundAmount} (${payload.refund_mode})`,
           amount: totalRefundAmount,
           reference_id: targetSale.invoice_no,
           reference_table: 'product_returns'
@@ -3957,8 +3953,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           admin_slot: adminInfo.slot,
           counter_name: adminInfo.counter,
           action_type: 'CUSTOMER_PARTIAL_RETURN',
-          title: `ग्राहक आंशिक पावती परतावा: #${targetSale.invoice_no}`,
-          details: `ग्राहक: ${customerName} | परतावा: ₹${totalRefundAmount} | सुधारित पावती रक्कम: ₹${updatedNetAmount} (${remainingItems.length} वस्तू शिल्लक)`,
+          title: `Partial Invoice Return: #${targetSale.invoice_no}`,
+          details: `Customer: ${customerName} | Refund: ₹${totalRefundAmount} | Revised Invoice Amount: ₹${updatedNetAmount} (${remainingItems.length} items remaining)`,
           amount: totalRefundAmount,
           reference_id: targetSale.invoice_no,
           reference_table: 'sales'
@@ -3973,8 +3969,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         admin_slot: adminInfo.slot,
         counter_name: adminInfo.counter,
         action_type: 'CUSTOMER_RETURN',
-        title: `ग्राहक थेट परतावा (${createdReturns.length} वस्तू)`,
-        details: `एकूण परतावा रक्कम: ₹${totalRefundAmount} (${payload.refund_mode}) | कारण: ${payload.reason}`,
+        title: `Direct Customer Return (${createdReturns.length} items)`,
+        details: `Total Refund: ₹${totalRefundAmount} (${payload.refund_mode}) | Reason: ${payload.reason}`,
         amount: totalRefundAmount,
         reference_id: createdReturns[0]?.return_no,
         reference_table: 'product_returns'
@@ -4053,7 +4049,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // Supplier Returns (खरेदी व सप्लायर परतावा - खराब/एक्सपायर माल परत करणे)
+  // Supplier Returns (damaged/expired stock returned to supplier)
   const createSupplierReturn = async (returnData: Omit<SupplierReturn, 'id' | 'return_no' | 'created_at'>): Promise<SupplierReturn> => {
     const returnNo = `VRET-${new Date().getFullYear()}-${String(supplierReturns.length + 1).padStart(4, '0')}`;
     const returnId = generateUUID();
@@ -4200,8 +4196,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       admin_slot: admin.slot,
       counter_name: admin.counter,
       action_type: 'SUPPLIER_RETURN',
-      title: `सप्लायर खरेदी परतावा: ${newReturn.product_name}`,
-      details: `सप्लायर: ${newReturn.supplier_name} | प्रमाण: ${newReturn.quantity} ${newReturn.unit} | रिफंड: ₹${newReturn.total_refund_amount} | कारण: ${newReturn.reason}`,
+      title: `Supplier Purchase Return: ${newReturn.product_name}`,
+      details: `Supplier: ${newReturn.supplier_name} | Qty: ${newReturn.quantity} ${newReturn.unit} | Refund: ₹${newReturn.total_refund_amount} | Reason: ${newReturn.reason}`,
       amount: newReturn.total_refund_amount,
       reference_id: returnNo,
       reference_table: 'supplier_returns'

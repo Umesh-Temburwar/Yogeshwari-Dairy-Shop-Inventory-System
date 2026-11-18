@@ -15,14 +15,14 @@ export const KeyboardShortcutsModal: React.FC<Props> = ({ isOpen, onClose }) => 
   if (!isOpen) return null;
 
   const shortcuts = [
-    { key: 'F1', label: isMr ? 'कीबोर्ड शॉर्टकट मदत (Help)' : isHi ? 'शॉर्टकट सहायता' : 'Keyboard Shortcuts Guide', view: 'Global' },
-    { key: 'F2', label: isMr ? 'थेट बिलिंग काऊंटर (POS Billing)' : isHi ? 'बिलिंग काउंटर (POS)' : 'Open Billing Counter (POS)', view: 'POS' },
-    { key: 'F3', label: isMr ? 'नवीन उत्पादन / साठा जोडा' : isHi ? 'नया उत्पाद जोड़ें' : 'Add New Product / Stock', view: 'Inventory' },
-    { key: 'F4', label: isMr ? 'उधार खातेवही (Udhar Khata)' : isHi ? 'उधार खाता बही' : 'Udhar Khata (Credit Ledger)', view: 'Khata' },
-    { key: '📱 Shake', label: isMr ? 'कुठूनही थेट बिलिंग बारकोड स्कॅनर उघडा' : isHi ? 'किसी भी पेज से सीधे बिलिंग स्कैनर खोलें' : 'Global Shake to Open Billing Barcode Scanner', view: 'Global' },
-    { key: 'Esc', label: isMr ? 'कोणतीही विंडो / मॉडेल बंद करा' : isHi ? 'खुली विंडो बंद करें' : 'Close Active Modal / Drawer', view: 'Global' },
-    { key: 'Tab', label: isMr ? 'पुढील इनपुट / बटणावर जा' : isHi ? 'अगले इनपुट पर जाएं' : 'Next Input Field Focus', view: 'Form' },
-    { key: 'Enter', label: isMr ? 'बिल पूर्ण करा / सबमिट करा' : isHi ? 'बिल सुरक्षित / जमा करें' : 'Confirm & Submit Bill', view: 'POS' }
+    { key: 'F1', label: 'Keyboard Shortcuts Guide', view: 'Global' },
+    { key: 'F2', label: 'Open Billing Counter (POS)', view: 'POS' },
+    { key: 'F3', label: 'Add New Product / Stock', view: 'Inventory' },
+    { key: 'F4', label: 'Udhar Khata (Credit Ledger)', view: 'Khata' },
+    { key: '📱 Shake', label: 'Global Shake to Open Billing Barcode Scanner', view: 'Global' },
+    { key: 'Esc', label: 'Close Active Modal / Drawer', view: 'Global' },
+    { key: 'Tab', label: 'Next Input Field Focus', view: 'Form' },
+    { key: 'Enter', label: 'Confirm & Submit Bill', view: 'POS' }
   ];
 
   return (
@@ -34,9 +34,9 @@ export const KeyboardShortcutsModal: React.FC<Props> = ({ isOpen, onClose }) => 
               <Keyboard className="w-5 h-5" />
             </div>
             <div>
-              <h3>{isMr ? 'कीबोर्ड शॉर्टकट मार्गदर्शक' : isHi ? 'कीबोर्ड शॉर्टकट मार्गदर्शिका' : 'Keyboard Shortcuts Guide'}</h3>
+              <h3>{'Keyboard Shortcuts Guide'}</h3>
               <p className="text-xs text-slate-400 font-normal">
-                {isMr ? 'जलद बिलिंग व नेव्हिगेशनसाठी' : 'Fast billing & quick counter navigation'}
+                {'Fast billing & quick counter navigation'}
               </p>
             </div>
           </div>
@@ -71,7 +71,7 @@ export const KeyboardShortcutsModal: React.FC<Props> = ({ isOpen, onClose }) => 
             onClick={onClose}
             className="w-full py-2.5 px-4 rounded-xl bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-500 text-white font-bold text-xs transition"
           >
-            {isMr ? 'समजले (Close)' : 'Got it (Close)'}
+            {'Got it (Close)'}
           </button>
         </div>
       </div>

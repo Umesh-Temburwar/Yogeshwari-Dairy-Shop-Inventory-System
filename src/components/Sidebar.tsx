@@ -288,12 +288,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (onOpenPhotoDatabase) {
       items.push({
         id: 'photo-db',
-        label: tr('Photo Database', 'फोटो डेटाबेस', 'फोटो डेटाबेस'),
-        tooltip: tr(
-          'Photo Database (Images & Barcodes)',
-          'फोटो डेटाबेस (फोटो और बारकोड)',
-          'फोटो डेटाबेस (फोटो आणि बारकोड)'
-        ),
+        label: 'Photo Database',
+        tooltip: 'Photo Database (Images & Barcodes)',
         icon: Camera,
         group: 'inventory',
         onClick: onOpenPhotoDatabase
@@ -310,8 +306,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       },
       {
         id: 'expenses',
-        label: tr('Expenses', 'खर्च', 'खर्च'),
-        tooltip: tr('Rent, Electricity, Fuel', 'किराया, बिजली बिल व ईंधन', 'भाडे, वीज बिल व इंधन'),
+        label: 'Expenses',
+        tooltip: 'Rent, Electricity, Fuel',
         icon: Fuel,
         group: 'accounts'
       },
@@ -491,7 +487,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
                 <div className="min-w-0 flex items-center gap-1.5">
                   <span className="text-[14px] font-bold text-slate-900 dark:text-[#E7F0EC] tracking-tight truncate">
-                    {tr('Yogeshwari Dairy', 'योगेश्वरी डेयरी', 'योगेश्वरी डेअरी')}
+                    {'Yogeshwari Dairy'}
                   </span>
                   <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 shrink-0">
                     POS
@@ -504,8 +500,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   type="button"
                   onClick={onToggleCollapse}
-                  aria-label={tr('Collapse sidebar', 'साइडबार छोटा करें', 'साइडबार लहान करा')}
-                  title={tr('Collapse sidebar', 'साइडबार छोटा करें', 'साइडबार लहान करा')}
+                  aria-label={'Collapse sidebar'}
+                  title={'Collapse sidebar'}
                   className="hidden lg:flex w-8 h-8 rounded-lg items-center justify-center text-slate-500 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#162520] hover:text-slate-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 cursor-pointer shrink-0"
                 >
                   <PanelLeftClose className="w-4 h-4" />
@@ -517,7 +513,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   type="button"
                   onClick={onCloseMobile}
-                  aria-label={tr('Close navigation menu', 'मेनू बंद करें', 'मेनू बंद करा')}
+                  aria-label={'Close navigation menu'}
                   className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#162520] hover:text-slate-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 cursor-pointer shrink-0 lg:hidden"
                 >
                   <X className="w-5 h-5" />
@@ -528,8 +524,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               type="button"
               onClick={onToggleCollapse}
-              aria-label={tr('Expand sidebar', 'साइडबार बड़ा करें', 'साइडबार मोठा करा')}
-              title={tr('Expand sidebar', 'साइडबार बड़ा करें', 'साइडबार मोठा करा')}
+              aria-label={'Expand sidebar'}
+              title={'Expand sidebar'}
               className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#162520] hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 cursor-pointer"
             >
               <PanelLeft className="w-5 h-5" />
@@ -562,7 +558,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* 3. SCROLLABLE NAV GROUPS (slim hidden-style scrollbar) */}
         <nav
-          aria-label={tr('Primary navigation', 'मुख्य नेविगेशन', 'मुख्य नेव्हिगेशन')}
+          aria-label={'Primary navigation'}
           className="flex-1 min-h-0 overflow-y-auto px-3 py-1.5 space-y-3 no-scrollbar"
         >
           {renderGroup('main', t('navSectionMain'), isMobileDrawer)}
@@ -575,7 +571,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             type="button"
             aria-current={isSettingsActive ? 'page' : undefined}
-            title={tr('Settings', 'सेटिंग्स', 'सेटिंग्ज')}
+            title={'Settings'}
             onClick={() => handleNavigate('settings', isMobileDrawer)}
             className={`relative w-full h-11 rounded-xl flex items-center transition-all duration-150 motion-reduce:transition-none active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 cursor-pointer group ${
               rail ? 'justify-center px-0' : 'gap-3 px-3'
@@ -600,7 +596,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             />
             {!rail && (
               <span className="text-[14px] leading-none truncate">
-                {tr('Settings', 'सेटिंग्स', 'सेटिंग्ज')}
+                {'Settings'}
               </span>
             )}
           </button>
@@ -624,11 +620,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   handleNavigate('dashboard', isMobileDrawer);
                 }
               }}
-              aria-label={tr(
-                'Open Dashboard summary',
-                'डैशबोर्ड सारांश खोलें',
-                'डॅशबोर्ड सारांश उघडा'
-              )}
+              aria-label={'Open Dashboard summary'}
               className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#131F1B] hover:bg-slate-100/90 dark:hover:bg-[#162520] border border-slate-200/80 dark:border-[#22332D] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 cursor-pointer"
             >
               <div className="flex items-center justify-between gap-2 text-[12px] leading-tight">
@@ -644,13 +636,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     onClick={toggleHideAmounts}
                     aria-label={
                       hideAmounts
-                        ? tr('Show summary amounts', 'राशि दिखाएं', 'रक्कम दाखवा')
-                        : tr('Hide summary amounts', 'राशि छुपाएं', 'रक्कम लपवा')
+                        ? 'Show summary amounts'
+                        : 'Hide summary amounts'
                     }
                     title={
                       hideAmounts
-                        ? tr('Show amounts', 'राशि दिखाएं', 'रक्कम दाखवा')
-                        : tr('Hide amounts', 'राशि छुपाएं', 'रक्कम लपवा')
+                        ? 'Show amounts'
+                        : 'Hide amounts'
                     }
                     className="w-6 h-6 -mr-1 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#1E312B] transition-colors cursor-pointer"
                   >
@@ -679,15 +671,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }}
               aria-expanded={isProfilePopoverOpen}
               aria-haspopup="menu"
-              aria-label={tr(
-                'Open profile, role switcher, and sign out menu',
-                'प्रोफ़ाइल, भूमिका बदलें और साइन आउट मेनू खोलें',
-                'प्रोफाइल, भूमिका बदला आणि साइन आउट मेनू उघडा'
-              )}
+              aria-label={'Open profile, role switcher, and sign out menu'}
               title={`${currentUserName} • ${
                 role === 'Owner'
-                  ? tr('Shop Owner', 'दुकान मालिक', 'दुकान मालक')
-                  : tr('Counter 1 (Admin)', 'काउंटर 1 (एडमिन)', 'काउंटर १ (अॅडमिन)')
+                  ? 'Shop Owner'
+                  : 'Counter 1 (Admin)'
               }`}
               className={`w-full h-12 rounded-xl flex items-center border border-slate-200/80 dark:border-[#22332D] bg-slate-50/90 dark:bg-[#131F1B] hover:bg-slate-100 dark:hover:bg-[#162520] transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 cursor-pointer ${
                 rail ? 'justify-center px-0' : 'justify-between px-2.5 gap-2'
@@ -719,8 +707,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] truncate leading-tight mt-0.5">
                       {role === 'Owner'
-                        ? tr('Shop Owner', 'दुकान मालिक', 'दुकान मालक')
-                        : tr('Counter 1 (Admin)', 'काउंटर 1 (एडमिन)', 'काउंटर १ (अॅडमिन)')}
+                        ? 'Shop Owner'
+                        : 'Counter 1 (Admin)'}
                     </p>
                   </div>
                 )}
@@ -735,13 +723,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {isProfilePopoverOpen && (
               <div
                 role="menu"
-                aria-label={tr('Account and role menu', 'खाता और भूमिका मेनू', 'खाते आणि भूमिका मेनू')}
+                aria-label={'Account and role menu'}
                 className={`absolute z-[60] bottom-[calc(100%+8px)] ${
                   rail ? 'left-0 w-60' : 'left-0 right-0'
                 } rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] shadow-xl p-2 space-y-1.5 animate-in fade-in slide-in-from-bottom-2 duration-150 motion-reduce:animate-none`}
               >
                 <div className="px-2 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#7E968C]">
-                  {tr('Switch Role', 'भूमिका बदलें', 'भूमिका बदला')}
+                  {'Switch Role'}
                 </div>
 
                 <div className="space-y-1">
@@ -768,7 +756,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           alt="Nikhil Sakhare"
                           className="w-5 h-5 rounded-full object-cover border border-amber-400 shrink-0"
                         />
-                        <span className="truncate">Nikhil Sakhare ({tr('Owner', 'मालिक', 'मालक')})</span>
+                        <span className="truncate">Nikhil Sakhare ({'Owner'})</span>
                       </span>
                       {role === 'Owner' && (
                         <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -796,7 +784,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <span className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950/70 flex items-center justify-center text-[11px] shrink-0">
                         🛡️
                       </span>
-                      <span className="truncate">Nilesh Sakhare ({tr('Admin', 'एडमिन', 'अॅडमिन')})</span>
+                      <span className="truncate">Nilesh Sakhare ({'Admin'})</span>
                     </span>
                     {role === 'Admin' && (
                       <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -814,16 +802,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       className="w-full min-h-[40px] px-2.5 py-1.5 rounded-xl flex items-center gap-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                     >
                       <LogOut className="w-4 h-4 shrink-0" />
-                      <span>{tr('Sign Out', 'साइन आउट', 'साइन आउट')}</span>
+                      <span>{'Sign Out'}</span>
                     </button>
                   ) : (
                     <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/50 space-y-2">
                       <p className="text-[11px] font-semibold text-rose-800 dark:text-rose-200">
-                        {tr(
-                          'Sign out of this counter?',
-                          'क्या आप इस काउंटर से साइन आउट करना चाहते हैं?',
-                          'या काऊंटरवरून बाहेर पडायचे का?'
-                        )}
+                        {'Sign out of this counter?'}
                       </p>
                       <div className="grid grid-cols-2 gap-1.5">
                         <button
@@ -831,7 +815,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           onClick={() => setConfirmSignOut(false)}
                           className="h-8 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] text-[11px] font-semibold cursor-pointer"
                         >
-                          {tr('Cancel', 'रद्द करें', 'रद्द करा')}
+                          {'Cancel'}
                         </button>
                         <button
                           type="button"
@@ -843,7 +827,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           }}
                           className="h-8 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold cursor-pointer"
                         >
-                          {tr('Sign Out', 'साइन आउट', 'बाहेर पडा')}
+                          {'Sign Out'}
                         </button>
                       </div>
                     </div>
@@ -870,7 +854,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar: w-[272px] drawer on mobile, w-[260px] or w-[72px] rail on desktop */}
       <aside
-        aria-label={tr('Sidebar navigation', 'साइडबार नेविगेशन', 'साइडबार नेव्हिगेशन')}
+        aria-label={'Sidebar navigation'}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         className={`fixed inset-y-0 left-0 z-50 lg:static flex flex-col bg-white dark:bg-[#0F1A17] border-r border-slate-200/90 dark:border-[#1E2E28] shrink-0 h-full overflow-visible transition-transform lg:transition-[width] duration-[250ms] ease-out motion-reduce:transition-none ${

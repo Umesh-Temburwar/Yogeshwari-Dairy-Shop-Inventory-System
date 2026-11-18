@@ -92,7 +92,7 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
 
     const controller = startMobileVoiceRecognition({
       lang: voiceLang,
-      uiLang: language === 'mr' ? 'mr' : language === 'hi' ? 'hi' : 'en',
+      uiLang: 'en',
       onStart: () => setIsVoiceListening(true),
       onInterim: (raw, processed) => {
         setVoiceTranscript(raw);
@@ -156,13 +156,13 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
 
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setErrorMsg(tr('Please enter product name.', 'कृपया उत्पाद का नाम दर्ज करें।', 'कृपया उत्पादनाचे नाव प्रविष्ट करा.'));
+      setErrorMsg('Please enter product name.');
       return;
     }
 
     const sPrice = parseFloat(sellingPrice);
     if (isNaN(sPrice) || sPrice <= 0) {
-      setErrorMsg(tr('Please enter a valid selling price.', 'कृपया मान्य बिक्री मूल्य दर्ज करें।', 'कृपया योग्य विक्री दर प्रविष्ट करा.'));
+      setErrorMsg('Please enter a valid selling price.');
       return;
     }
 
@@ -211,7 +211,7 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
       onClose();
     } catch (err: any) {
       console.error('Failed to quick register product:', err);
-      setErrorMsg(err?.message || tr('Registration failed. Please try again.', 'पंजीकरण विफल रहा। पुनः प्रयास करें।', 'नोंदणी अयशस्वी झाली. पुन्हा प्रयत्न करा.'));
+      setErrorMsg(err?.message || 'Registration failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -231,7 +231,7 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
             </div>
             <div>
               <h2 className="text-base font-extrabold tracking-tight">
-                {tr('Quick Barcode Product Registration', 'नया बारकोड त्वरित पंजीकरण', 'नवीन बारकोड त्वरित नोंदणी')}
+                {'Quick Barcode Product Registration'}
               </h2>
               <p className="text-[11px] text-emerald-100 flex items-center gap-1.5 mt-0.5">
                 <Barcode className="w-3.5 h-3.5" />
@@ -274,11 +274,7 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
                 required
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
-                placeholder={tr(
-                  'e.g. Parle Monaco 50g / Britannia Good Day',
-                  'उदा. Parle Monaco 50g / Britannia Good Day',
-                  'उदा. Parle Monaco 50g / Britannia Good Day'
-                )}
+                placeholder={'e.g. Parle Monaco 50g / Britannia Good Day'}
                 className="w-full h-10 pl-3 pr-24 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               <button
@@ -292,12 +288,12 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
                 }`}
               >
                 <Mic className={`w-3.5 h-3.5 ${isVoiceListening ? 'animate-pulse' : ''}`} />
-                <span>{isVoiceListening ? tr('Stop', 'रोकें', 'थांबवा') : tr('Speak', 'बोलें', 'बोला')}</span>
+                <span>{isVoiceListening ? 'Stop' : 'Speak'}</span>
               </button>
             </div>
             {isVoiceListening && (
               <p className="mt-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 truncate">
-                🎙️ {voiceTranscript || tr('Listening... speak clearly', 'सुन रहा है... स्पष्ट बोलें', 'ऐकत आहे... स्पष्ट बोला')}
+                🎙️ {voiceTranscript || 'Listening... speak clearly'}
               </p>
             )}
             {voiceError && !isVoiceListening && (
@@ -309,37 +305,37 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                {tr('Category', 'श्रेणी', 'प्रवर्ग')}
+                {'Category'}
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as ProductCategory)}
                 className="w-full h-10 px-3 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                <option value="Bakery & Extras">{tr('Bakery & Extras', 'बेकरी व पैकेट', 'बेकरी आणि पॅकेट')}</option>
-                <option value="Milk">{tr('Milk', 'दूध', 'दूध')}</option>
-                <option value="Curd & Chaas">{tr('Curd & Chaas', 'दही व छाछ', 'दही आणि ताक')}</option>
-                <option value="Paneer & Butter">{tr('Paneer & Butter', 'पनीर व मक्खन', 'पनीर आणि लोणी')}</option>
-                <option value="Ghee">{tr('Ghee', 'शुद्ध घी', 'तूप')}</option>
-                <option value="Sweets/Mithai">{tr('Sweets / Mithai', 'मिठाई', 'मिठाई')}</option>
+                <option value="Bakery & Extras">{'Bakery & Extras'}</option>
+                <option value="Milk">{'Milk'}</option>
+                <option value="Curd & Chaas">{'Curd & Chaas'}</option>
+                <option value="Paneer & Butter">{'Paneer & Butter'}</option>
+                <option value="Ghee">{'Ghee'}</option>
+                <option value="Sweets/Mithai">{'Sweets / Mithai'}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                {tr('Unit', 'इकाई', 'एकक')}
+                {'Unit'}
               </label>
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value as ProductUnit)}
                 className="w-full h-10 px-3 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                <option value="Piece">{tr('Piece', 'नग / पीस', 'नग')}</option>
-                <option value="Packet (500ml)">{tr('Packet (500ml)', 'पैकेट (500ml)', 'पाकीट (500ml)')}</option>
-                <option value="Packet (1L)">{tr('Packet (1 Litre)', 'पैकेट (1 लीटर)', 'पाकीट (1 लिटर)')}</option>
-                <option value="Litre">{tr('Litre', 'लीटर', 'लिटर')}</option>
-                <option value="Kg">{tr('Kg', 'किलो', 'किलो')}</option>
-                <option value="Gram">{tr('Gram', 'ग्राम', 'ग्रॅम')}</option>
+                <option value="Piece">{'Piece'}</option>
+                <option value="Packet (500ml)">{'Packet (500ml)'}</option>
+                <option value="Packet (1L)">{'Packet (1 Litre)'}</option>
+                <option value="Litre">{'Litre'}</option>
+                <option value="Kg">{'Kg'}</option>
+                <option value="Gram">{'Gram'}</option>
               </select>
             </div>
           </div>
@@ -348,7 +344,7 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                {tr('Selling Price (₹)', 'बिक्री मूल्य (₹)', 'विक्री दर (₹)')} <span className="text-rose-500">*</span>
+                {'Selling Price (₹)'} <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-xs text-slate-500">₹</span>
@@ -366,7 +362,7 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-                {tr('Purchase Price (₹)', 'खरीद मूल्य (₹)', 'खरेदी दर (₹)')}
+                {'Purchase Price (₹)'}
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-xs text-slate-500">₹</span>
@@ -387,13 +383,13 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
             <div>
               <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
                 {mode === 'pos' 
-                  ? tr('Initial Stock to Add to Bill', 'बिल में जोड़ने हेतु प्रारंभिक स्टॉक', 'बिलात जोडण्यासाठी प्रारंभिक साठा')
-                  : tr('Catalogue Stock', 'कैटलॉग स्टॉक', 'कॅटलॉग साठा')}
+                  ? 'Initial Stock to Add to Bill'
+                  : 'Catalogue Stock'}
               </span>
               <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
                 {mode === 'pos' 
-                  ? tr('1 unit will be added to the bill immediately on save.', 'उत्पाद बनते ही 1 नग बिल में जुड़ जाएगा।', 'उत्पादन तयार होताच थेट १ नग बिलात जोडला जाईल.')
-                  : tr('New catalogue item will be registered with 0 stock.', 'नया उत्पाद 0 स्टॉक से दर्ज होगा।', 'नवीन कॅटलॉग माल ० साठ्यासह नोंदवला जाईल.')}
+                  ? '1 unit will be added to the bill immediately on save.'
+                  : 'New catalogue item will be registered with 0 stock.'}
               </span>
             </div>
 
@@ -417,7 +413,7 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
               disabled={isSubmitting}
               className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1A2A25] text-xs font-bold transition-colors"
             >
-              {tr('Cancel', 'रद्द करें', 'रद्द करा')}
+              {'Cancel'}
             </button>
 
             <button
@@ -428,15 +424,15 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>{tr('Saving...', 'सहेज रहे हैं...', 'नोंदवत आहे...')}</span>
+                  <span>{'Saving...'}</span>
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4" />
                   <span>
                     {mode === 'pos' 
-                      ? tr('⚡ Save & Add to Bill', '⚡ सहेजें और बिल में लें', '⚡ सेव्ह करा आणि बिलात घ्या')
-                      : tr('⚡ Quick Add to Catalogue', '⚡ कैटलॉग में तुरंत जोड़ें', '⚡ कॅटलॉगमध्ये त्वरित जोडा')}
+                      ? '⚡ Save & Add to Bill'
+                      : '⚡ Quick Add to Catalogue'}
                   </span>
                 </>
               )}

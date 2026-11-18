@@ -257,21 +257,21 @@ export interface ProductReturn {
   created_at: string;
 }
 
-// Supplier / Inward Goods Purchase Return (सप्लायर खरेदी परतावा - खराब/एक्सपायर माल परत पाठवणे)
+// Supplier / Inward Goods Purchase Return (damaged/expired stock sent back to supplier)
 export type SupplierReturnReason =
-  | 'Damaged / Leaked on Delivery' // डिलिव्हरीच्या वेळी फुटलेले / लिक
-  | 'Expired on Delivery'         // एक्सपायरी तारीख संपलेली
-  | 'Curdled / Spoiled Milk'      // दूध फाटले / आंबले
-  | 'Poor Quality / Bad Taste'    // खराब गुणवत्ता / वास येणे
-  | 'Short Expiry (Near Expiry)'  // कमी शिल्लक मुदत
-  | 'Wrong Product Delivered'     // चुकीचा माल पाठवला
+  | 'Damaged / Leaked on Delivery'
+  | 'Expired on Delivery'
+  | 'Curdled / Spoiled Milk'
+  | 'Poor Quality / Bad Taste'
+  | 'Short Expiry (Near Expiry)'
+  | 'Wrong Product Delivered'
   | 'Other';
 
 export type SupplierRefundStatus =
-  | 'Pending'                     // सप्लायरकडून रिफंड येणे बाकी
-  | 'Refund_Received'             // रोख / UPI रिफंड जमा झाला
-  | 'Adjusted_In_Next_Bill'       // पुढील बिलात वजावट झाली (Credit Note)
-  | 'Replacement_Received';       // बदल्यात नवीन माल मिळाला
+  | 'Pending'
+  | 'Refund_Received'
+  | 'Adjusted_In_Next_Bill'
+  | 'Replacement_Received';
 
 export interface SupplierReturn {
   id: string;

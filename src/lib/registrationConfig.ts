@@ -74,7 +74,7 @@ export async function setRegistrationSetting(
   if (!isOwner) {
     return {
       success: false,
-      error: 'सुरक्षा धोरण: फक्त दुकान मालक निखिल सखारे (Shop Owner) ही नोंदणी सेटिंग चालू/बंद करू शकतात.'
+      error: 'Security policy: Only Shop Owner Nikhil Sakhare can toggle operator registration.'
     };
   }
 
@@ -112,17 +112,17 @@ export async function setRegistrationSetting(
         await supabase
           .from('admin_audit_logs')
           .insert({
-            admin_name: userName || 'निखिल सखारे (दुकान मालक)',
+            admin_name: userName || 'Nikhil Sakhare (Shop Owner)',
             admin_email: userEmail || 'yogeshwaridairy9896@gmail.com',
             admin_role: 'Owner',
             action_type: 'PRODUCT_UPDATED',
             title: enabled 
-              ? 'नवीन ऑपरेटर नोंदणी सुरू केली (Registration Enabled)' 
-              : 'नवीन ऑपरेटर नोंदणी बंद व लपवली (Registration Disabled & Hidden)',
+              ? 'New Operator Registration Enabled' 
+              : 'New Operator Registration Disabled & Hidden',
             details: enabled
-              ? 'दुकान मालक निखिल सखारे यांनी लॉगिन पेजवर नवीन वापरकर्ता नोंदणी पर्याय चालू केला.'
-              : 'दुकान मालक निखिल सखारे यांनी लॉगिन पेजवरून नवीन वापरकर्ता नोंदणी पर्याय पूर्णपणे बंद व सुरक्षित केला.',
-            counter_name: 'मुख्य मालक काऊंटर'
+              ? 'Shop Owner Nikhil Sakhare enabled new user registration on the login page.'
+              : 'Shop Owner Nikhil Sakhare disabled and hid new user registration on the login page.',
+            counter_name: 'Owner Master Counter'
           });
       } catch (logErr) {
         console.warn('Audit log write error:', logErr);

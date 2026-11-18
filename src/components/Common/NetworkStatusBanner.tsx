@@ -23,22 +23,14 @@ export const NetworkStatusBanner: React.FC = () => {
         <>
           <Wifi className="w-3.5 h-3.5 shrink-0" />
           <span>
-            {tr(
-              'Internet connection restored (Back Online)',
-              'इंटरनेट कनेक्शन बहाल हो गया है (Back Online)',
-              'इंटरनेट कनेक्शन पूर्ववत झाले आहे (Back Online)'
-            )}
+            {'Internet connection restored (Back Online)'}
           </span>
         </>
       ) : (
         <>
           <WifiOff className="w-3.5 h-3.5 shrink-0" />
           <span>
-            {tr(
-              'Internet disconnected — Working Offline',
-              'इंटरनेट डिस्कनेक्ट हो गया है — ऑफ़लाइन मोड चालू है',
-              'इंटरनेट डिस्कनेक्ट झाले आहे — ऑफलाइन मोड सुरू आहे'
-            )}
+            {'Internet disconnected — Working Offline'}
           </span>
         </>
       )}

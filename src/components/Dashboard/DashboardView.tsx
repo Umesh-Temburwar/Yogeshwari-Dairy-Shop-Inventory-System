@@ -26,11 +26,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddProduct }
   const { language } = useLanguage();
 
   const title =
-    language === 'mr'
-      ? 'व्यवसाय डॅशबोर्ड'
-      : language === 'hi'
-      ? 'व्यापार डैशबोर्ड'
-      : 'Dairy Dashboard';
+    'Dairy Dashboard';
 
   return (
     <div className="space-y-3 sm:space-y-4 max-w-7xl mx-auto pb-28 lg:pb-8">
@@ -39,13 +35,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddProduct }
         title={title}
         icon={<LayoutDashboard className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />}
         secondaryAction={{
-          label: language === 'mr' ? 'जोडा' : language === 'hi' ? 'जोड़ें' : 'Add',
+          label: 'Add',
           icon: <Plus className="w-3.5 h-3.5 stroke-[2.5]" />,
           onClick: onOpenAddProduct,
           ariaLabel: 'Add new product'
         }}
         primaryAction={{
-          label: language === 'mr' ? 'POS बिलिंग' : language === 'hi' ? 'POS बिलिंग' : 'POS',
+          label: 'POS',
           icon: <ShoppingCart className="w-3.5 h-3.5" />,
           onClick: () => setActiveView('pos'),
           ariaLabel: 'Open POS billing counter'

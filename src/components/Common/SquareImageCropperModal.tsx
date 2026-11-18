@@ -183,11 +183,7 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
       if (img.naturalWidth <= 0 || img.naturalHeight <= 0) {
         imageRef.current = null;
         setLoadError(
-          tr(
-            'Selected image file appears corrupted. Please choose another photo.',
-            'चुनी गई इमेज फ़ाइल खराब प्रतीत होती है। कृपया दूसरा फोटो चुनें।',
-            'निवडलेली फोटो फाईल खराब दिसते. कृपया दुसरा फोटो निवडा.'
-          )
+          'Selected image file appears corrupted. Please choose another photo.'
         );
         return;
       }
@@ -199,11 +195,7 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
     img.onerror = () => {
       imageRef.current = null;
       setLoadError(
-        tr(
-          'Could not read the selected image file. Please try a valid JPEG, PNG, or WebP photo.',
-          'चुनी गई इमेज फ़ाइल नहीं पढ़ी जा सकी। कृपया मान्य JPEG, PNG या WebP फोटो चुनें।',
-          'निवडलेली इमेज फाईल वाचता आली नाही. कृपया वैध JPEG, PNG किंवा WebP फोटो निवडा.'
-        )
+        'Could not read the selected image file. Please try a valid JPEG, PNG, or WebP photo.'
       );
     };
 
@@ -488,7 +480,7 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
       className="fixed inset-0 z-[130] bg-black/75 flex items-center justify-center p-2.5 sm:p-4"
       role="dialog"
       aria-modal="true"
-      aria-label={tr('Crop, Compress & Upload Product Photo', 'फोटो क्रॉप, कंप्रेस और अपलोड करें', 'फोटो क्रॉप, कॉम्प्रेस व अपलोड करा')}
+      aria-label={'Crop, Compress & Upload Product Photo'}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -499,11 +491,11 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
           <div className="min-w-0">
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
               <Crop className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span>{tr('Crop & Optimize Photo', 'फोटो क्रॉप व ऑप्टिमाइज़', 'फोटो क्रॉप व ऑप्टिमाइझ')}</span>
+              <span>{'Crop & Optimize Photo'}</span>
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] truncate">
               {productName ? `${productName} • ` : ''}
-              {tr('Drag corners to crop • Auto ~20 KB WebP', 'कोने खींचकर क्रॉप करें • ऑटो ~20 KB WebP', 'कोपरे ओढून क्रॉप करा • ऑटो ~20 KB WebP')}
+              {'Drag corners to crop • Auto ~20 KB WebP'}
             </p>
           </div>
           <button
@@ -511,7 +503,7 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
             disabled={isUploading}
             onClick={onCancel}
             className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition shrink-0 disabled:opacity-40 cursor-pointer"
-            aria-label={tr('Close', 'बंद करें', 'बंद करा')}
+            aria-label={'Close'}
           >
             <X className="w-4 h-4" />
           </button>
@@ -532,7 +524,7 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
                     : 'text-slate-500 dark:text-[#8FA69C]'
                 }`}
               >
-                {tr('Crop Frame', 'क्रॉप फ़्रेम', 'क्रॉप फ्रेम')}
+                {'Crop Frame'}
               </button>
               <button
                 type="button"
@@ -544,7 +536,7 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
                     : 'text-slate-500 dark:text-[#8FA69C]'
                 }`}
               >
-                {tr('WebP Result', 'WebP प्रीव्यू', 'WebP प्रीव्ह्यू')}
+                {'WebP Result'}
               </button>
             </div>
 
@@ -557,7 +549,7 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
                   className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] hover:bg-slate-50 dark:hover:bg-[#223630] text-[11px] font-bold text-slate-700 dark:text-[#E7F0EC] transition cursor-pointer disabled:opacity-40"
                 >
                   <Upload className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                  <span>{tr('Replace', 'बदलें', 'बदला')}</span>
+                  <span>{'Replace'}</span>
                 </button>
                 <input
                   ref={replaceInputRef}
@@ -697,7 +689,7 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
                         : 'bg-white dark:bg-[#131F1B] text-slate-600 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F] hover:text-emerald-700'
                     }`}
                   >
-                    {preset === 'free' ? tr('Free', 'फ़्री', 'फ्री') : preset}
+                    {preset === 'free' ? 'Free' : preset}
                   </button>
                 ))}
               </div>
@@ -707,8 +699,8 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
                   type="button"
                   disabled={isUploading}
                   onClick={handleRotate}
-                  title={tr('Rotate 90°', '90° घुमाएं', '90° फिरवा')}
-                  aria-label={tr('Rotate 90 degrees', '90 डिग्री घुमाएं', '90 अंश फिरवा')}
+                  title={'Rotate 90°'}
+                  aria-label={'Rotate 90 degrees'}
                   className="w-7 h-7 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] flex items-center justify-center text-slate-700 dark:text-[#E7F0EC] hover:text-emerald-600 transition cursor-pointer disabled:opacity-40"
                 >
                   <RotateCw className="w-3.5 h-3.5" />
@@ -717,8 +709,8 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
                   type="button"
                   disabled={isUploading}
                   onClick={handleReset}
-                  title={tr('Reset crop', 'क्रॉप रीसेट', 'क्रॉप रीसेट')}
-                  aria-label={tr('Reset crop', 'क्रॉप रीसेट', 'क्रॉप रीसेट')}
+                  title={'Reset crop'}
+                  aria-label={'Reset crop'}
                   className="w-7 h-7 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] flex items-center justify-center text-slate-700 dark:text-[#E7F0EC] hover:text-emerald-600 transition cursor-pointer disabled:opacity-40"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -731,12 +723,12 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
           <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] space-y-2">
             <div className="flex items-center justify-between text-[11px] font-bold">
               <span className="text-slate-600 dark:text-[#8FA69C]">
-                {tr('Compression Summary', 'कम्प्रेशन सारांश', 'कॉम्प्रेशन सारांश')}
+                {'Compression Summary'}
               </span>
               {isCompressing ? (
                 <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  <span>{tr('Compressing...', 'कंप्रेस हो रहा है...', 'कॉम्प्रेस होत आहे...')}</span>
+                  <span>{'Compressing...'}</span>
                 </span>
               ) : compressedPreview ? (
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold tabular-nums ${sizeBadgeTone}`}>
@@ -748,7 +740,7 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="px-2 py-1.5 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-200/70 dark:border-[#24352F]">
                 <p className="text-[10px] font-medium text-slate-500 dark:text-[#8FA69C]">
-                  {tr('Original', 'मूल साइज़', 'मूळ साईझ')}
+                  {'Original'}
                 </p>
                 <p className="text-xs font-extrabold text-slate-900 dark:text-white tabular-nums mt-0.5">
                   {formatFileSize(file.size)}
@@ -756,7 +748,7 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
               </div>
               <div className="px-2 py-1.5 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-200/70 dark:border-[#24352F]">
                 <p className="text-[10px] font-medium text-slate-500 dark:text-[#8FA69C]">
-                  {tr('Compressed', 'कंप्रेस्ड', 'कॉम्प्रेस्ड')}
+                  {'Compressed'}
                 </p>
                 <p className="text-xs font-extrabold text-emerald-700 dark:text-emerald-400 tabular-nums mt-0.5">
                   {compressedPreview ? formatFileSize(compressedPreview.compressedBytes) : '—'}
@@ -764,7 +756,7 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
               </div>
               <div className="px-2 py-1.5 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-200/70 dark:border-[#24352F]">
                 <p className="text-[10px] font-medium text-slate-500 dark:text-[#8FA69C]">
-                  {tr('Saved', 'बचत', 'बचत')}
+                  {'Saved'}
                 </p>
                 <p className="text-xs font-extrabold text-emerald-700 dark:text-emerald-400 tabular-nums mt-0.5">
                   {compressedPreview ? `${compressedPreview.savedPercent}%` : '—'}
@@ -776,11 +768,7 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
               <div className="flex items-start gap-1.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1.5 rounded-lg border border-amber-200/80 dark:border-amber-800/40">
                 <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                 <span>
-                  {tr(
-                    'Clarity prioritized so product label, brand text, and barcode stay clearly legible.',
-                    'उत्पाद लेबल और टेक्स्ट साफ़ रखने के लिए क्लैरिटी को प्राथमिकता दी गई।',
-                    'उत्पादन लेबल व मजकूर स्पष्ट राहण्यासाठी क्लॅरिटीला प्राधान्य दिले आहे.'
-                  )}
+                  {'Clarity prioritized so product label, brand text, and barcode stay clearly legible.'}
                 </span>
               </div>
             )}
@@ -792,7 +780,7 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
               <div className="flex items-center justify-between text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
                 <span className="inline-flex items-center gap-1.5">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>{tr('Uploading compressed WebP...', 'कंप्रेस्ड WebP अपलोड हो रहा है...', 'कॉम्प्रेस्ड WebP अपलोड होत आहे...')}</span>
+                  <span>{'Uploading compressed WebP...'}</span>
                 </span>
                 <span className="tabular-nums">{effectiveProgress}%</span>
               </div>
@@ -822,7 +810,7 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
             onClick={onCancel}
             className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-xs font-bold text-slate-700 dark:text-[#8FA69C] transition disabled:opacity-50 cursor-pointer"
           >
-            {tr('Cancel', 'रद्द करें', 'रद्द करा')}
+            {'Cancel'}
           </button>
           <button
             type="button"
@@ -833,22 +821,22 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
             {isUploading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>{tr('Uploading...', 'अपलोड हो रहा है...', 'अपलोड होत आहे...')}</span>
+                <span>{'Uploading...'}</span>
               </>
             ) : isCompressing ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>{tr('Compressing...', 'कंप्रेस हो रहा है...', 'कॉम्प्रेस होत आहे...')}</span>
+                <span>{'Compressing...'}</span>
               </>
             ) : uploadError ? (
               <>
                 <CheckCircle2 className="w-4 h-4" />
-                <span>{tr('Retry Upload', 'पुनः अपलोड करें', 'पुन्हा अपलोड करा')}</span>
+                <span>{'Retry Upload'}</span>
               </>
             ) : (
               <>
                 <Check className="w-4 h-4" />
-                <span>{tr('Crop & Upload', 'क्रॉप व अपलोड', 'क्रॉप व अपलोड')}</span>
+                <span>{'Crop & Upload'}</span>
               </>
             )}
           </button>

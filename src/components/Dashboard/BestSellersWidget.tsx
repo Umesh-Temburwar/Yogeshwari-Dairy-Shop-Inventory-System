@@ -107,7 +107,7 @@ export const BestSellersWidget: React.FC = () => {
           })
         ) : (
           <div className="text-center py-10 text-slate-400 dark:text-[#8FA69C] text-xs">
-            {language === 'mr' ? 'या कालावधीत विक्री सापडली नाही' : language === 'hi' ? 'चुनी गई अवधि में कोई बिक्री नहीं मिली' : 'No sales recorded in this period'}
+            {'No sales recorded in this period'}
           </div>
         )}
       </div>
@@ -115,7 +115,7 @@ export const BestSellersWidget: React.FC = () => {
       {/* Fixed Footer */}
       <div className="pt-3 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between text-xs text-slate-500 dark:text-[#8FA69C]">
         <span className="truncate">
-          {language === 'mr' ? 'दूध आणि पनीर सर्वाधिक वेगाने खपणारी उत्पादने आहेत' : language === 'hi' ? 'दूध व पनीर सर्वाधिक बिकने वाले उत्पाद हैं' : 'Milk and paneer are highest velocity items'}
+          {'Milk and paneer are highest velocity items'}
         </span>
       </div>
 

@@ -92,7 +92,7 @@ export const DailySalesTracker: React.FC = () => {
       setEditingSale(null);
     } catch (err) {
       console.error('Failed to update sale:', err);
-      alert(tr('Error updating bill!', 'बिल अपडेट करने में त्रुटि!', 'बिल अपडेट करताना त्रुटी आली!'));
+      alert('Error updating bill!');
     } finally {
       setIsSavingEdit(false);
     }
@@ -106,14 +106,14 @@ export const DailySalesTracker: React.FC = () => {
       setSaleToDelete(null);
     } catch (err) {
       console.error('Failed to delete sale:', err);
-      alert(tr('Error deleting bill!', 'बिल डिलीट करने में त्रुटि!', 'बिल डिलीट करताना त्रुटी आली!'));
+      alert('Error deleting bill!');
     } finally {
       setIsDeleting(false);
     }
   };
 
   const paymentModes = [
-    { id: 'All', label: language === 'mr' ? 'सर्व पेमेंट' : language === 'hi' ? 'सभी भुगतान' : 'All Modes' },
+    { id: 'All', label: 'All Modes' },
     { id: 'Cash', label: t('cash') },
     { id: 'Online_UPI', label: t('onlineUpi') },
     { id: 'Split', label: t('splitPay') },
@@ -121,14 +121,14 @@ export const DailySalesTracker: React.FC = () => {
   ];
 
   const genderOptions = [
-    { id: 'All', label: language === 'mr' ? 'सर्व लिंग' : language === 'hi' ? 'सभी जेंडर' : 'All Genders' },
-    { id: 'Male', label: language === 'mr' ? '👨 पुरुष' : language === 'hi' ? '👨 पुरुष' : '👨 Male' },
-    { id: 'Female', label: language === 'mr' ? '👩 महिला' : language === 'hi' ? '👩 महिला' : '👩 Female' },
-    { id: 'Other', label: language === 'mr' ? '🧑 इतर' : language === 'hi' ? '🧑 अन्य' : '🧑 Other' }
+    { id: 'All', label: 'All Genders' },
+    { id: 'Male', label: '👨 Male' },
+    { id: 'Female', label: '👩 Female' },
+    { id: 'Other', label: '🧑 Other' }
   ];
 
   const ageGroupOptions = [
-    { id: 'All', label: language === 'mr' ? 'सर्व वय' : language === 'hi' ? 'सभी आयु' : 'All Ages' },
+    { id: 'All', label: 'All Ages' },
     { id: 'Kids (<18)', label: '<18' },
     { id: 'Youth (18-25)', label: '18-25' },
     { id: 'Adults (26-45)', label: '26-45' },
@@ -145,7 +145,7 @@ export const DailySalesTracker: React.FC = () => {
     const matchesAgeGroup = selectedAgeGroup === 'All' || sale.customer_age_group === selectedAgeGroup;
     const matchesAdmin = selectedAdminSlot === 'All' ||
       (selectedAdminSlot === '1' && (sale.admin_slot === 1 || sale.created_by_email === 'nilusakhare2003@gmail.com' || (!sale.admin_slot && sale.created_by_role !== 'Owner'))) ||
-      (selectedAdminSlot === 'Owner' && (sale.created_by_role === 'Owner' || sale.created_by_email === 'yogeshwaridairy9896@gmail.com' || (sale.admin_slot === null && (sale.created_by_name?.includes('मालक') || sale.created_by_name?.toLowerCase().includes('nikhil')))));
+      (selectedAdminSlot === 'Owner' && (sale.created_by_role === 'Owner' || sale.created_by_email === 'yogeshwaridairy9896@gmail.com' || (sale.admin_slot === null && sale.created_by_name?.toLowerCase().includes('nikhil'))));
 
     return matchesSearch && matchesMode && matchesGender && matchesAgeGroup && matchesAdmin;
   });
@@ -174,46 +174,42 @@ export const DailySalesTracker: React.FC = () => {
     const isHi = language === 'hi';
 
     return {
-      title: isMr ? 'दैनिक विक्री व रोकड लेजर अहवाल' : isHi ? 'दैनिक बिक्री व रोकड़ लेजर रिपोर्ट' : 'Daily Sales & Cash/Online Ledger Report',
-      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
-      periodText: isMr ? 'निवडलेला कालावधी हिशोब' : isHi ? 'चुनी गई अवधि का हिसाब' : 'Selected Period Sales & Collections',
+      title: 'Daily Sales & Cash/Online Ledger Report',
+      subtitle: 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: 'Selected Period Sales & Collections',
       language,
       kpis: [
-        { label: isMr ? 'एकूण विक्री' : isHi ? 'कुल बिक्री' : 'Total Sales', value: `₹${(filteredKpis.totalRevenue || 0).toLocaleString('en-IN')}`, color: 'emerald' },
-        { label: isMr ? 'रोख जमा' : isHi ? 'रोकड़ जमा' : 'Cash Inflow', value: `₹${(filteredKpis.cashInflow || 0).toLocaleString('en-IN')}`, color: 'blue' },
-        { label: isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI', value: `₹${(filteredKpis.onlineInflow || 0).toLocaleString('en-IN')}`, color: 'purple' },
-        { label: isMr ? 'उधारी दिली' : isHi ? 'उधारी दी' : 'Credit Given', value: `₹${(filteredKpis.udharGiven || 0).toLocaleString('en-IN')}`, color: 'amber' }
+        { label: 'Total Sales', value: `₹${(filteredKpis.totalRevenue || 0).toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: 'Cash Inflow', value: `₹${(filteredKpis.cashInflow || 0).toLocaleString('en-IN')}`, color: 'blue' },
+        { label: 'Online UPI', value: `₹${(filteredKpis.onlineInflow || 0).toLocaleString('en-IN')}`, color: 'purple' },
+        { label: 'Credit Given', value: `₹${(filteredKpis.udharGiven || 0).toLocaleString('en-IN')}`, color: 'amber' }
       ],
       table: {
-        headers: isMr 
-          ? ['बिल क्र.', 'तारीख व वेळ', 'काऊंटर व ऑपरेटर', 'ग्राहक नाव', 'पेमेंट', 'वस्तू तपशील', 'सवलत (₹)', 'एकूण (₹)']
-          : isHi
-          ? ['बिल क्र.', 'दिनांक व समय', 'काउंटर व ऑपरेटर', 'ग्राहक नाम', 'भुगतान', 'सामान विवरण', 'छूट (₹)', 'कुल (₹)']
-          : ['Invoice No.', 'Date & Time', 'Counter & Operator', 'Customer Name', 'Payment', 'Items Sold', 'Discount (₹)', 'Net (₹)'],
+        headers: ['Invoice No.', 'Date & Time', 'Counter & Operator', 'Customer Name', 'Payment', 'Items Sold', 'Discount (₹)', 'Net (₹)'],
         alignments: ['left', 'center', 'left', 'left', 'center', 'left', 'right', 'right'] as ('left' | 'center' | 'left' | 'left' | 'center' | 'left' | 'right' | 'right')[],
         rows: filtered.length > 0 ? filtered.map(s => {
           const sRets = (returns || []).filter(r => (r.sale_id && r.sale_id === s.id) || (r.invoice_no && r.invoice_no.trim().toLowerCase() === s.invoice_no.trim().toLowerCase()));
           const sRefund = sRets.reduce((acc, r) => acc + r.refund_amount, 0);
           const { dateTimeFormatted } = formatSaleDateTime(s.created_at, s.sale_date);
           return [
-            s.invoice_no + (sRefund > 0 ? ` (परतावा -₹${sRefund})` : ''),
+            s.invoice_no + (sRefund > 0 ? ` (Return -₹${sRefund})` : ''),
             dateTimeFormatted,
-            s.counter_name ? `${s.counter_name} (${s.created_by_name || 'Admin'})` : (s.created_by_role === 'Owner' ? 'मुख्य मालक काऊंटर (निखिल सखारे)' : 'काऊंटर १ (निलेश सखारे)'),
+            s.counter_name ? `${s.counter_name} (${s.created_by_name || 'Admin'})` : (s.created_by_role === 'Owner' ? 'Owner Master Counter (Nikhil Sakhare)' : 'Counter 1 (Nilesh Sakhare)'),
             s.customer_name + (s.customer_phone ? ` (${s.customer_phone})` : ''),
-            s.payment_mode === 'Cash' ? (isMr ? 'रोख' : isHi ? 'रोकड़' : 'Cash') :
-            s.payment_mode === 'Online_UPI' ? (isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन UPI' : 'Online UPI') :
-            s.payment_mode === 'Udhar' ? (isMr ? 'उधारी' : isHi ? 'उधार' : 'Credit') :
-            s.payment_mode === 'Split' ? (isMr ? 'विभागून' : isHi ? 'विभाजित' : 'Split') : s.payment_mode,
+            s.payment_mode === 'Cash' ? ('Cash') :
+            s.payment_mode === 'Online_UPI' ? ('Online UPI') :
+            s.payment_mode === 'Udhar' ? ('Credit') :
+            s.payment_mode === 'Split' ? ('Split') : s.payment_mode,
             s.items ? s.items.map(i => `${i.product_name} x ${i.quantity}`).join(', ') : '—',
             s.discount > 0 ? `₹${s.discount}` : '₹0',
             `₹${s.net_amount.toLocaleString('en-IN')}`
           ];
         }) : [
-          ['—', '—', '—', isMr ? 'या निवडलेल्या कालावधीत कोणतीही विक्री नोंद नाही' : isHi ? 'इस अवधि में कोई बिक्री दर्ज नहीं' : 'No sales records found for this period', '—', '—', '—', '₹0']
+          ['—', '—', '—', 'No sales records found for this period', '—', '—', '—', '₹0']
         ],
         summaryRow: [
-          isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
-          `${filtered.length} ${isMr ? 'बिले' : isHi ? 'बिल' : 'Bills'}`,
+          'Total',
+          `${filtered.length} ${'Bills'}`,
           '',
           '',
           '',
@@ -222,11 +218,7 @@ export const DailySalesTracker: React.FC = () => {
           `₹${filtered.reduce((acc, s) => acc + s.net_amount, 0).toLocaleString('en-IN')}`
         ]
       },
-      notes: isMr 
-        ? 'संगणकीय तयार केलेला अधिकृत विक्री अहवाल. रोकड व ऑनलाईन पावती तपासून घ्यावी.'
-        : isHi
-        ? 'कंप्यूटर द्वारा जनरेटेड अधिकृत बिक्री रिपोर्ट। रोकड़ व ऑनलाइन रसीद जांच लें।'
-        : 'Computer generated official sales audit report. Please verify cash and online receipts.'
+      notes: 'Computer generated official sales audit report. Please verify cash and online receipts.'
     };
   };
 
@@ -248,25 +240,21 @@ export const DailySalesTracker: React.FC = () => {
     const { dateFormatted, timeFormatted, dateTimeFormatted } = formatSaleDateTime(sale.created_at, sale.sale_date);
 
     return {
-      title: `${isMr ? 'विक्री पावती' : isHi ? 'बिक्री रसीद' : 'Sales Invoice'} (${sale.invoice_no})`,
-      subtitle: `${isMr ? 'योगेश्वरी डेअरी उत्पादने' : isHi ? 'योगेश्वरी डेरी उत्पाद' : 'Yogeshwari Dairy Products'} | FSSAI: 21524012000341`,
-      periodText: `${isMr ? 'बिल क्र.' : isHi ? 'बिल क्र.' : 'Invoice No.'}: ${sale.invoice_no} | ${isMr ? 'बिल दिनांक व वेळ' : isHi ? 'बिल दिनांक व समय' : 'Bill Date & Time'}: ${dateTimeFormatted}`,
+      title: `${'Sales Invoice'} (${sale.invoice_no})`,
+      subtitle: `${'Yogeshwari Dairy Products'} | FSSAI: 21524012000341`,
+      periodText: `${'Invoice No.'}: ${sale.invoice_no} | ${'Bill Date & Time'}: ${dateTimeFormatted}`,
       createdAt: sale.created_at,
       language,
       kpis: [
-        { label: isMr ? 'एकूण निव्वळ रक्कम' : isHi ? 'कुल देय राशि' : 'Net Amount', value: `₹${sale.net_amount.toLocaleString('en-IN')}`, color: 'emerald' },
-        { label: isMr ? 'बिल दिनांक' : isHi ? 'बिल दिनांक' : 'Bill Date', value: dateFormatted, color: 'teal' },
-        { label: isMr ? 'बिल तयार वेळ' : isHi ? 'बिल समय' : 'Bill Time', value: timeFormatted || '—', color: 'purple' },
-        { label: isMr ? 'पेमेंट पद्धत' : isHi ? 'भुगतान माध्यम' : 'Payment Mode', value: sale.payment_mode, color: 'blue' },
-        { label: isMr ? 'काऊंटर' : isHi ? 'काउंटर' : 'Counter', value: sale.counter_name || (sale.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १'), color: 'teal' },
-        { label: isMr ? 'ग्राहक नाव' : isHi ? 'ग्राहक नाम' : 'Customer Name', value: sale.customer_name, color: 'blue' }
+        { label: 'Net Amount', value: `₹${sale.net_amount.toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: 'Bill Date', value: dateFormatted, color: 'teal' },
+        { label: 'Bill Time', value: timeFormatted || '—', color: 'purple' },
+        { label: 'Payment Mode', value: sale.payment_mode, color: 'blue' },
+        { label: 'Counter', value: sale.counter_name || (sale.admin_slot === 2 ? 'Counter 2' : 'Counter 1'), color: 'teal' },
+        { label: 'Customer Name', value: sale.customer_name, color: 'blue' }
       ],
       table: {
-        headers: isMr 
-          ? ['अ.क्र.', 'वस्तूचे नाव / तपशील', 'नग/प्रमाण', 'दर (₹)', 'एकूण रक्कम (₹)'] 
-          : isHi 
-          ? ['क्र.', 'सामान का नाम / विवरण', 'मात्रा', 'दर (₹)', 'कुल राशि (₹)'] 
-          : ['Sr.', 'Item Description', 'Qty', 'Rate (₹)', 'Total (₹)'],
+        headers: ['Sr.', 'Item Description', 'Qty', 'Rate (₹)', 'Total (₹)'],
         alignments: ['center', 'left', 'right', 'right', 'right'] as ('center' | 'left' | 'right' | 'right' | 'right')[],
         rows: sale.items?.map((i, idx) => [
           idx + 1, 
@@ -276,18 +264,14 @@ export const DailySalesTracker: React.FC = () => {
           `₹${i.total_price.toLocaleString('en-IN')}`
         ]) || [],
         summaryRow: [
-          isMr ? 'एकूण निव्वळ रक्कम' : isHi ? 'कुल देय राशि' : 'Net Total', 
-          `${sale.items?.length || 0} वस्तू`, 
+          'Net Total', 
+          `${sale.items?.length || 0} Items`, 
           '', 
-          sale.discount > 0 ? `${isMr ? 'सवलत' : isHi ? 'छूट' : 'Discount'}: ₹${sale.discount}` : '', 
+          sale.discount > 0 ? `${'Discount'}: ₹${sale.discount}` : '', 
           `₹${sale.net_amount.toLocaleString('en-IN')}`
         ]
       },
-      notes: isMr 
-        ? 'धन्यवाद! पुन्हा भेट द्या • शुद्धता हीच आमची ओळख | UPI ID: Q226038088@ybl' 
-        : isHi 
-        ? 'धन्यवाद! फिर पधारें • शुद्धता ही हमारी पहचान है | UPI ID: Q226038088@ybl' 
-        : 'Thank you! Visit again • Purity is our identity | UPI ID: Q226038088@ybl'
+      notes: 'Thank you! Visit again • Purity is our identity | UPI ID: Q226038088@ybl'
     };
   };
 
@@ -295,37 +279,37 @@ export const DailySalesTracker: React.FC = () => {
     <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-28 lg:pb-8">
       {/* 1. Compact Header + More (⋮) Exports Sheet + Round New Bill CTA */}
       <CompactPageHeader
-        title={language === 'mr' ? 'दैनिक विक्री व लेजर' : language === 'hi' ? 'दैनिक बिक्री व लेजर' : 'Daily Sales'}
+        title={'Daily Sales'}
         icon={<ReceiptIndianRupee className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />}
         primaryAction={{
-          label: language === 'mr' ? 'नवीन बिल' : language === 'hi' ? 'नया बिल' : 'New Bill',
+          label: 'New Bill',
           icon: <Plus className="w-4 h-4 stroke-[2.5]" />,
           onClick: () => setActiveView('pos'),
           ariaLabel: 'New Bill in POS'
         }}
-        moreTitle={language === 'mr' ? 'विक्री अहवाल व निर्यात' : language === 'hi' ? 'बिक्री रिपोर्ट व निर्यात' : 'Sales Reports & Export'}
+        moreTitle={'Sales Reports & Export'}
         moreActions={[
           {
             id: 'view-pdf',
-            label: language === 'mr' ? 'अहवाल पहा (View PDF)' : language === 'hi' ? 'रिपोर्ट देखें (View PDF)' : 'View Sales PDF',
+            label: 'View Sales PDF',
             icon: <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
             onClick: handleViewSalesPDF
           },
           {
             id: 'print',
-            label: language === 'mr' ? 'प्रिंट करा' : language === 'hi' ? 'प्रिंट करें' : 'Print Report',
+            label: 'Print Report',
             icon: <Printer className="w-4 h-4 text-slate-500 dark:text-[#8FA69C]" />,
             onClick: handlePrintSalesPDF
           },
           {
             id: 'csv',
-            label: tr('Export CSV / Excel', 'CSV / एक्सेल एक्सपोर्ट', 'CSV / एक्सेल एक्सपोर्ट'),
+            label: 'Export CSV / Excel',
             icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
             onClick: () => exportSalesToCSV(filteredSales, language)
           },
           {
             id: 'download-pdf',
-            label: language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF',
+            label: 'Download PDF',
             icon: <Download className="w-4 h-4" />,
             onClick: handleDownloadSalesPDF,
             tone: 'primary'
@@ -340,7 +324,7 @@ export const DailySalesTracker: React.FC = () => {
           {
             label: t('totalSales'),
             value: `₹${filteredKpis.totalRevenue.toLocaleString('en-IN')}`,
-            sublabel: `${filteredKpis.billCount} ${language === 'mr' ? 'बिले' : language === 'hi' ? 'बिल' : 'bills'}`
+            sublabel: `${filteredKpis.billCount} ${'bills'}`
           },
           {
             label: t('cashCollected'),
@@ -370,7 +354,7 @@ export const DailySalesTracker: React.FC = () => {
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
             <input
               type="text"
-              placeholder={language === 'mr' ? 'बिल क्र., ग्राहक नाव किंवा फोन शोधा...' : language === 'hi' ? 'बिल नंबर, ग्राहक नाम या फोन से खोजें...' : 'Search invoice, customer or phone...'}
+              placeholder={'Search invoice, customer or phone...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -439,13 +423,13 @@ export const DailySalesTracker: React.FC = () => {
         {role === 'Owner' && (
           <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F] overflow-x-auto no-scrollbar">
             <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
-              👑 {language === 'mr' ? 'काऊंटर:' : language === 'hi' ? 'काउंटर:' : 'Counter:'}
+              👑 {'Counter:'}
             </span>
             <div className="flex items-center gap-1.5 shrink-0">
               {[
-                { id: 'All', label: language === 'mr' ? 'सर्व नोंदी' : language === 'hi' ? 'सभी रिकॉर्ड' : 'All' },
-                { id: '1', label: language === 'mr' ? '🛡️ काऊंटर १ (निलेश)' : language === 'hi' ? '🛡️ काउंटर १ (निलेश)' : '🛡️ Counter 1' },
-                { id: 'Owner', label: language === 'mr' ? '👑 मालक (निखिल)' : language === 'hi' ? '👑 मालिक (निखिल)' : '👑 Owner' },
+                { id: 'All', label: 'All' },
+                { id: '1', label: '🛡️ Counter 1' },
+                { id: 'Owner', label: '👑 Owner' },
               ].map((adm) => (
                 <button
                   key={adm.id}
@@ -468,10 +452,10 @@ export const DailySalesTracker: React.FC = () => {
       <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs overflow-hidden transition-colors">
         <div className="p-4 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between">
           <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-            {language === 'mr' ? 'विक्री बिल तपशील (Invoices Ledger)' : language === 'hi' ? 'बिक्री बिल विवरण (Invoices Ledger)' : 'Invoices Ledger'}
+            {'Invoices Ledger'}
           </h3>
           <span className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
-            {filtered.length} {language === 'mr' ? 'बिले' : language === 'hi' ? 'बिल प्रदर्शित' : 'invoices displayed'}
+            {filtered.length} {'invoices displayed'}
           </span>
         </div>
 
@@ -509,13 +493,13 @@ export const DailySalesTracker: React.FC = () => {
                         {hasReturn && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-900 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shadow-2xs">
                             <RotateCcw className="w-3 h-3 text-purple-600 dark:text-purple-400" />
-                            <span>{language === 'mr' ? `परतावा वजावट: -₹${totalRefundedOnSale}` : language === 'hi' ? `वापसी कटौती: -₹${totalRefundedOnSale}` : `Return Cut: -₹${totalRefundedOnSale}`}</span>
+                            <span>{`Return Cut: -₹${totalRefundedOnSale}`}</span>
                           </span>
                         )}
 
                         {/* Admin Slot & Counter Badge */}
                         {(() => {
-                          const isOwnerSale = sale.created_by_role === 'Owner' || (sale.admin_slot === null && (sale.created_by_name?.includes('मालक') || sale.created_by_name?.toLowerCase().includes('nikhil')));
+                          const isOwnerSale = sale.created_by_role === 'Owner' || (sale.admin_slot === null && Boolean(sale.created_by_name?.toLowerCase().includes('nikhil')));
                           return (
                             <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                               isOwnerSale
@@ -527,7 +511,7 @@ export const DailySalesTracker: React.FC = () => {
                               ) : (
                                 <span>👤</span>
                               )}
-                              <span>📍 {sale.counter_name || (isOwnerSale ? tr('Owner Master Counter', 'मुख्य मालिक काउंटर', 'मुख्य मालक काऊंटर') : tr('Counter 1', 'काउंटर १', 'काऊंटर १'))} • {sale.created_by_name || (isOwnerSale ? tr('Nikhil Sakhare', 'निखिल सखारे', 'निखिल सखारे') : tr('Nilesh Sakhare', 'निलेश सखारे', 'निलेश सखारे'))}</span>
+                              <span>📍 {sale.counter_name || (isOwnerSale ? 'Owner Master Counter' : 'Counter 1')} • {sale.created_by_name || (isOwnerSale ? 'Nikhil Sakhare' : 'Nilesh Sakhare')}</span>
                               {sale.created_by_email && (
                                 <span className="text-[10px] font-normal opacity-75 hidden sm:inline">({sale.created_by_email})</span>
                               )}
@@ -552,10 +536,10 @@ export const DailySalesTracker: React.FC = () => {
                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F]">
                             {sale.customer_gender === 'Male' ? '👨' : sale.customer_gender === 'Female' ? '👩' : '🧑'}
                             {sale.customer_gender === 'Male' 
-                              ? (language === 'mr' ? 'पुरुष' : language === 'hi' ? 'पुरुष' : 'Male') 
+                              ? ('Male') 
                               : sale.customer_gender === 'Female' 
-                              ? (language === 'mr' ? 'महिला' : language === 'hi' ? 'महिला' : 'Female') 
-                              : (language === 'mr' ? 'इतर' : language === 'hi' ? 'अन्य' : 'Other')}
+                              ? ('Female') 
+                              : ('Other')}
                             {sale.customer_age_group && ` • ${sale.customer_age_group}`}
                             {sale.customer_age && ` (${sale.customer_age}y)`}
                           </span>
@@ -587,12 +571,12 @@ export const DailySalesTracker: React.FC = () => {
                         </div>
                         {hasReturn && (
                           <div className="text-[10px] text-slate-400 line-through">
-                            {language === 'mr' ? 'मूळ' : language === 'hi' ? 'मूल' : 'Orig'}: ₹{originalGross.toLocaleString('en-IN')}
+                            {'Orig'}: ₹{originalGross.toLocaleString('en-IN')}
                           </div>
                         )}
                         <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">
                           {sale.payment_mode === 'Split' && (
-                            <span>{language === 'mr' ? 'रोख' : language === 'hi' ? 'कैश' : 'Cash'}: ₹{sale.cash_amount} | UPI: ₹{sale.online_amount}</span>
+                            <span>{'Cash'}: ₹{sale.cash_amount} | UPI: ₹{sale.online_amount}</span>
                           )}
                           {sale.discount > 0 && <span>{t('discount')}: ₹{sale.discount}</span>}
                         </div>
@@ -607,16 +591,16 @@ export const DailySalesTracker: React.FC = () => {
                             productId: sale.items?.[0]?.product_id
                           })}
                           className="px-2 py-1 rounded-lg text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-950/50 flex items-center gap-1 text-[11px] font-bold transition"
-                          title={tr('Record Customer Return', 'ग्राहक वापसी दर्ज करें', 'ग्राहक परतावा नोंदवा')}
+                          title={'Record Customer Return'}
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">{language === 'mr' ? 'परतावा' : language === 'hi' ? 'वापसी' : 'Return'}</span>
+                          <span className="hidden sm:inline">{'Return'}</span>
                         </button>
 
                         <button
                           onClick={() => setSelectedSaleForView(sale)}
                           className="p-1.5 rounded-lg text-slate-600 dark:text-[#8FA69C] hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-[#1A2A25]"
-                          title={language === 'mr' ? 'बिल पाहा' : language === 'hi' ? 'बिल देखें' : 'View Bill Details'}
+                          title={'View Bill Details'}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -625,7 +609,7 @@ export const DailySalesTracker: React.FC = () => {
                         <button
                           onClick={() => openEditModal(sale)}
                           className="p-1.5 rounded-lg text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                          title={language === 'mr' ? 'बिल संपादित करा (Edit)' : language === 'hi' ? 'बिल सुधारें (Edit)' : 'Edit Bill'}
+                          title={'Edit Bill'}
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
@@ -634,7 +618,7 @@ export const DailySalesTracker: React.FC = () => {
                         <button
                           onClick={() => setSaleToDelete(sale)}
                           className="p-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                          title={language === 'mr' ? 'बिल हटवा (Delete)' : language === 'hi' ? 'बिल हटाएं (Delete)' : 'Delete Bill'}
+                          title={'Delete Bill'}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -654,7 +638,7 @@ export const DailySalesTracker: React.FC = () => {
                   {isExpanded && (
                     <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-[#24352F] bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-xl space-y-2 text-xs">
                       <div className="font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between pb-1 border-b border-slate-200/60 dark:border-[#24352F]">
-                        <span>{language === 'mr' ? 'या बिलामध्ये शिल्लक असलेला माल (Active Items):' : language === 'hi' ? 'इस बिल में शेष सामान (Active Items):' : 'Items in this Bill:'}</span>
+                        <span>{'Items in this Bill:'}</span>
                         <span className="text-emerald-700 dark:text-emerald-400 font-black">₹{sale.net_amount}</span>
                       </div>
                       
@@ -673,7 +657,7 @@ export const DailySalesTracker: React.FC = () => {
                           <div className="font-bold text-[11px] text-purple-900 dark:text-purple-300 flex items-center justify-between">
                             <span className="flex items-center gap-1.5">
                               <RotateCcw className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                              <span>{language === 'mr' ? 'या पावतीतून परत केलेला माल (Returned Items):' : language === 'hi' ? 'इस बिल से वापस किया गया सामान:' : 'Returned Items:'}</span>
+                              <span>{'Returned Items:'}</span>
                             </span>
                             <span className="font-black text-rose-600 dark:text-rose-400">-₹{totalRefundedOnSale}</span>
                           </div>
@@ -694,7 +678,7 @@ export const DailySalesTracker: React.FC = () => {
           </div>
         ) : (
           <div className="p-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs">
-            {language === 'mr' ? 'या कालावधीत कोणतेही बिल आढळले नाही.' : language === 'hi' ? 'इस अवधि में कोई बिक्री बिल नहीं मिला।' : 'No sales bills found for this period.'}
+            {'No sales bills found for this period.'}
           </div>
         )}
         <LoadOlderHistoryButton entity="sales" className="pb-4" />
@@ -707,7 +691,7 @@ export const DailySalesTracker: React.FC = () => {
             
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-2">
               <span className="text-xs font-bold text-slate-500 dark:text-[#8FA69C]">
-                {language === 'mr' ? 'पावती तपशील:' : language === 'hi' ? 'रसीद विवरण:' : 'Receipt Details:'} {selectedSaleForView.invoice_no}
+                {'Receipt Details:'} {selectedSaleForView.invoice_no}
               </span>
               <button 
                 onClick={() => setSelectedSaleForView(null)}
@@ -721,16 +705,16 @@ export const DailySalesTracker: React.FC = () => {
               <div className="text-center border-b border-slate-200 dark:border-[#24352F] pb-2">
                 <div className="font-bold text-sm text-slate-900 dark:text-white">{t('shopName')}</div>
                 <div className="text-[10px] text-slate-500 dark:text-[#8FA69C]">
-                  {language === 'mr' ? 'ताजे दूध, पनीर, दही, शुद्ध साजूक तूप' : language === 'hi' ? 'ताज़ा दूध, पनीर, दही, शुद्ध देसी घी' : 'Fresh Milk, Paneer, Curd, Pure Desi Ghee'}
+                  {'Fresh Milk, Paneer, Curd, Pure Desi Ghee'}
                 </div>
               </div>
 
               <div className="flex justify-between items-center text-[11px] text-slate-700 dark:text-[#E7F0EC] pt-1">
-                <span>{language === 'mr' ? 'बिल:' : language === 'hi' ? 'बिल:' : 'Bill:'} <b className="font-mono text-slate-900 dark:text-white">{selectedSaleForView.invoice_no}</b></span>
+                <span>{'Bill:'} <b className="font-mono text-slate-900 dark:text-white">{selectedSaleForView.invoice_no}</b></span>
                 <span className="font-bold">{formatSaleDate(selectedSaleForView.created_at, selectedSaleForView.sale_date)}</span>
               </div>
               <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-[#8FA69C]">
-                <span>{tr('Counter:', 'काउंटर:', 'काऊंटर:')} {selectedSaleForView.counter_name || (selectedSaleForView.admin_slot === 2 ? tr('Counter 2', 'काउंटर २', 'काऊंटर २') : tr('Counter 1', 'काउंटर १', 'काऊंटर १'))}</span>
+                <span>{'Counter:'} {selectedSaleForView.counter_name || (selectedSaleForView.admin_slot === 2 ? 'Counter 2' : 'Counter 1')}</span>
                 <span className="inline-flex items-center gap-1 font-mono font-bold text-emerald-700 dark:text-emerald-400">
                   <Clock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                   <span>{formatSaleTime(selectedSaleForView.created_at) || '—'}</span>
@@ -756,7 +740,7 @@ export const DailySalesTracker: React.FC = () => {
                   ))
                 ) : (
                   <div className="text-center text-[11px] text-slate-500 py-1">
-                    {language === 'mr' ? 'दुग्ध उत्पादने (दूध/पनीर/तूप)' : language === 'hi' ? 'डेरी उत्पाद (दूध/पनीर/घी)' : 'Dairy Products'} &bull; ₹{selectedSaleForView.net_amount}
+                    {'Dairy Products'} &bull; ₹{selectedSaleForView.net_amount}
                   </div>
                 )}
               </div>
@@ -773,7 +757,7 @@ export const DailySalesTracker: React.FC = () => {
                 return (
                   <div className="border-b border-dashed border-purple-300 dark:border-purple-800 py-1.5 space-y-0.5 text-purple-900 dark:text-purple-300 bg-purple-50/60 dark:bg-purple-950/30 px-2 rounded-lg">
                     <div className="text-[10px] font-bold uppercase tracking-wider flex items-center justify-between">
-                      <span>{tr('Return Deduction:', 'वापसी कटौती:', 'परतावा वजावट (Return Deduction):')}</span>
+                      <span>{'Return Deduction:'}</span>
                       <span className="text-rose-600 dark:text-rose-400 font-extrabold">-₹{viewModalRefundSum}</span>
                     </div>
                     {viewModalReturns.map((mr, idx) => (
@@ -808,7 +792,7 @@ export const DailySalesTracker: React.FC = () => {
                 className="py-2.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2621] text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center justify-center gap-1 border border-slate-300 dark:border-slate-700 active:scale-95"
               >
                 <Eye className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
+                <span>{'View'}</span>
               </button>
 
               <button
@@ -821,7 +805,7 @@ export const DailySalesTracker: React.FC = () => {
                 className="py-2.5 px-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95"
               >
                 <Printer className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+                <span>{'Print'}</span>
               </button>
 
               <button
@@ -837,7 +821,7 @@ export const DailySalesTracker: React.FC = () => {
                 className="py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>{language === 'mr' ? 'डाउनलोड' : language === 'hi' ? 'डाउनलोड' : 'Download'}</span>
+                <span>{'Download'}</span>
               </button>
             </div>
 
@@ -865,7 +849,7 @@ export const DailySalesTracker: React.FC = () => {
               <div>
                 <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <Edit2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  <span>{language === 'mr' ? 'बिल संपादित करा' : language === 'hi' ? 'बिल सुधारें' : 'Edit Invoice'}</span>
+                  <span>{'Edit Invoice'}</span>
                 </h3>
                 <span className="text-xs font-mono text-slate-500 font-bold">#{editingSale.invoice_no}</span>
               </div>
@@ -883,7 +867,7 @@ export const DailySalesTracker: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    {language === 'mr' ? 'ग्राहकाचे नाव:' : language === 'hi' ? 'ग्राहक का नाम:' : 'Customer Name:'}
+                    {'Customer Name:'}
                   </label>
                   <input
                     type="text"
@@ -894,7 +878,7 @@ export const DailySalesTracker: React.FC = () => {
                 </div>
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    {language === 'mr' ? 'मोबाईल नंबर:' : language === 'hi' ? 'मोबाइल नंबर:' : 'Phone Number:'}
+                    {'Phone Number:'}
                   </label>
                   <input
                     type="tel"
@@ -909,7 +893,7 @@ export const DailySalesTracker: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    {language === 'mr' ? 'लिंग:' : language === 'hi' ? 'लिंग:' : 'Gender:'}
+                    {'Gender:'}
                   </label>
                   <div className="flex gap-1">
                     {(['Male', 'Female', 'Other'] as CustomerGender[]).map((g) => (
@@ -923,7 +907,7 @@ export const DailySalesTracker: React.FC = () => {
                             : 'border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
                         }`}
                       >
-                        {g === 'Male' ? tr('👨 Male', '👨 पुरुष', '👨 पुरुष') : g === 'Female' ? tr('👩 Female', '👩 महिला', '👩 महिला') : tr('🧑 Other', '🧑 अन्य', '🧑 इतर')}
+                        {g === 'Male' ? '👨 Male' : g === 'Female' ? '👩 Female' : '🧑 Other'}
                       </button>
                     ))}
                   </div>
@@ -931,7 +915,7 @@ export const DailySalesTracker: React.FC = () => {
 
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    {language === 'mr' ? 'वयोगट:' : language === 'hi' ? 'आयु वर्ग:' : 'Age Group:'}
+                    {'Age Group:'}
                   </label>
                   <select
                     value={editCustomerAgeGroup}
@@ -950,23 +934,23 @@ export const DailySalesTracker: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    {language === 'mr' ? 'पेमेंट पद्धत:' : language === 'hi' ? 'भुगतान तरीका:' : 'Payment Mode:'}
+                    {'Payment Mode:'}
                   </label>
                   <select
                     value={editPaymentMode}
                     onChange={(e) => setEditPaymentMode(e.target.value as PaymentMode)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="Cash">{language === 'mr' ? 'रोख (Cash)' : language === 'hi' ? 'रोकड़ (Cash)' : 'Cash'}</option>
-                    <option value="Online_UPI">{tr('Online UPI (GPay/PhonePe)', 'ऑनलाइन UPI (GPay/PhonePe)', 'ऑनलाईन UPI (GPay/PhonePe)')}</option>
-                    <option value="Udhar">{language === 'mr' ? 'उधार खाते (Udhar)' : language === 'hi' ? 'उधार खाता (Udhar)' : 'Udhar (Credit)'}</option>
-                    <option value="Split">{language === 'mr' ? 'विभागून (Split)' : language === 'hi' ? 'विभाजित (Split)' : 'Split Pay'}</option>
+                    <option value="Cash">{'Cash'}</option>
+                    <option value="Online_UPI">{'Online UPI (GPay/PhonePe)'}</option>
+                    <option value="Udhar">{'Udhar (Credit)'}</option>
+                    <option value="Split">{'Split Pay'}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    {language === 'mr' ? 'सवलत / सूट (₹):' : language === 'hi' ? 'छूट / डिस्काउंट (₹):' : 'Discount (₹):'}
+                    {'Discount (₹):'}
                   </label>
                   <input
                     type="number"
@@ -982,9 +966,9 @@ export const DailySalesTracker: React.FC = () => {
               {/* Items in Bill */}
               <div className="space-y-2 pt-2 border-t border-slate-200/80 dark:border-[#24352F]">
                 <div className="flex items-center justify-between font-bold text-slate-700 dark:text-slate-300">
-                  <span>{language === 'mr' ? 'बिलातील वस्तू (Items):' : language === 'hi' ? 'बिल का सामान (Items):' : 'Bill Items:'}</span>
+                  <span>{'Bill Items:'}</span>
                   <span className="text-emerald-700 dark:text-emerald-400">
-                    {editItems.length} {language === 'mr' ? 'वस्तू' : language === 'hi' ? 'सामान' : 'items'}
+                    {editItems.length} {'items'}
                   </span>
                 </div>
 
@@ -1057,7 +1041,7 @@ export const DailySalesTracker: React.FC = () => {
                             setEditItems(prev => prev.filter((_, i) => i !== idx));
                           }}
                           className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg ml-1"
-                          title={tr('Remove Item', 'सामान हटाएं', 'वस्तू हटवा')}
+                          title={'Remove Item'}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1074,17 +1058,17 @@ export const DailySalesTracker: React.FC = () => {
                 return (
                   <div className="p-3 rounded-2xl bg-slate-100 dark:bg-[#1A2A25] space-y-1 font-bold">
                     <div className="flex justify-between text-slate-600 dark:text-slate-400 text-xs">
-                      <span>{language === 'mr' ? 'एकूण रक्कम:' : language === 'hi' ? 'कुल राशि:' : 'Subtotal:'}</span>
+                      <span>{'Subtotal:'}</span>
                       <span>₹{sub.toFixed(2)}</span>
                     </div>
                     {editDiscount > 0 && (
                       <div className="flex justify-between text-rose-600 text-xs">
-                        <span>{language === 'mr' ? 'सवलत:' : language === 'hi' ? 'छूट:' : 'Discount:'}</span>
+                        <span>{'Discount:'}</span>
                         <span>-₹{Number(editDiscount).toFixed(2)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-emerald-700 dark:text-emerald-400 text-sm font-black pt-1 border-t border-slate-200 dark:border-[#24352F]">
-                      <span>{language === 'mr' ? 'सुधारित अंतिम देय रक्कम:' : language === 'hi' ? 'सुधारी अंतिम देय राशि:' : 'Updated Net Total:'}</span>
+                      <span>{'Updated Net Total:'}</span>
                       <span className="text-base">₹{net.toFixed(2)}</span>
                     </div>
                   </div>
@@ -1101,7 +1085,7 @@ export const DailySalesTracker: React.FC = () => {
                 disabled={isSavingEdit}
                 className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-700 dark:text-slate-200 font-bold text-xs active:scale-95 transition"
               >
-                {language === 'mr' ? 'रद्द करा' : language === 'hi' ? 'रद्द करें' : 'Cancel'}
+                {'Cancel'}
               </button>
 
               <button
@@ -1111,7 +1095,7 @@ export const DailySalesTracker: React.FC = () => {
                 className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-black text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition"
               >
                 <Save className="w-4 h-4" />
-                <span>{isSavingEdit ? tr('Saving...', 'सहेज रहे हैं...', 'जतन करत आहे...') : tr('Save Changes', 'बदलाव सहेजें (Save Changes)', 'बदल जतन करा (Save Changes)')}</span>
+                <span>{isSavingEdit ? 'Saving...' : 'Save Changes'}</span>
               </button>
             </div>
 
@@ -1130,22 +1114,18 @@ export const DailySalesTracker: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                  {language === 'mr' ? 'बिल नक्की हटवायचे आहे का?' : language === 'hi' ? 'क्या वाकई यह बिल हटाना चाहते हैं?' : 'Delete Invoice Confirmation'}
+                  {'Delete Invoice Confirmation'}
                 </h3>
                 <span className="text-xs font-mono text-rose-600 dark:text-rose-400 font-bold">#{saleToDelete.invoice_no}</span>
               </div>
             </div>
 
             <div className="p-3 rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200/60 dark:border-rose-900/40 text-xs text-rose-950 dark:text-rose-200 space-y-1">
-              <div><strong>{language === 'mr' ? 'ग्राहक:' : language === 'hi' ? 'ग्राहक:' : 'Customer:'}</strong> {saleToDelete.customer_name}</div>
-              <div><strong>{language === 'mr' ? 'रक्कम:' : language === 'hi' ? 'रकम:' : 'Amount:'}</strong> ₹{saleToDelete.net_amount} ({saleToDelete.payment_mode})</div>
-              <div><strong>{language === 'mr' ? 'दिनांक व वेळ:' : language === 'hi' ? 'दिनांक व समय:' : 'Date & Time:'}</strong> {formatSaleDateTime(saleToDelete.created_at, saleToDelete.sale_date).dateTimeFormatted}</div>
+              <div><strong>{'Customer:'}</strong> {saleToDelete.customer_name}</div>
+              <div><strong>{'Amount:'}</strong> ₹{saleToDelete.net_amount} ({saleToDelete.payment_mode})</div>
+              <div><strong>{'Date & Time:'}</strong> {formatSaleDateTime(saleToDelete.created_at, saleToDelete.sale_date).dateTimeFormatted}</div>
               <p className="text-[11px] text-rose-700 dark:text-rose-400 pt-1 border-t border-rose-200/50 dark:border-rose-900/40 font-medium">
-                {language === 'mr' 
-                  ? '⚠️ हे बिल लेजर, दैनंदिन विक्री व Supabase क्लाऊडवरून कायमचे हटवले जाईल.' 
-                  : language === 'hi' 
-                  ? '⚠️ यह बिल लेजर, दैनिक बिक्री और Supabase क्लाउड से हमेशा के लिए हट जाएगा।' 
-                  : '⚠️ This bill will be permanently deleted from sales ledger and Supabase.'}
+                {'⚠️ This bill will be permanently deleted from sales ledger and Supabase.'}
               </p>
             </div>
 
@@ -1156,7 +1136,7 @@ export const DailySalesTracker: React.FC = () => {
                 disabled={isDeleting}
                 className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-700 dark:text-slate-200 font-bold text-xs active:scale-95 transition"
               >
-                {language === 'mr' ? 'रद्द करा' : language === 'hi' ? 'रद्द करें' : 'Cancel'}
+                {'Cancel'}
               </button>
 
               <button
@@ -1166,7 +1146,7 @@ export const DailySalesTracker: React.FC = () => {
                 className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 active:scale-95 transition"
               >
                 <Trash2 className="w-4 h-4" />
-                <span>{isDeleting ? tr('Deleting...', 'हटा रहे हैं...', 'हटवत आहे...') : tr('Yes, Delete Bill', 'हाँ, बिल हटाएं', 'होय, बिल हटवा')}</span>
+                <span>{isDeleting ? 'Deleting...' : 'Yes, Delete Bill'}</span>
               </button>
             </div>
 

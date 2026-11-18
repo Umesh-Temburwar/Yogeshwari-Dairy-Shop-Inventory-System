@@ -158,7 +158,7 @@ export const ExpiryOcrModal: React.FC<ExpiryOcrModalProps> = ({
           <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
             <Sparkles className="w-5 h-5" />
             <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-              {tr('Package Expiry OCR Scanner', 'पैकेजिंग एक्सपायरी OCR स्कैनर', 'पॅकेजिंग मुदत OCR स्कॅनर')}
+              {'Package Expiry OCR Scanner'}
             </h3>
           </div>
           <button
@@ -191,7 +191,7 @@ export const ExpiryOcrModal: React.FC<ExpiryOcrModalProps> = ({
                 <img src={selectedImage} alt="Package label" className="w-full h-auto object-contain mx-auto" />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs font-bold gap-1.5">
                   <RotateCw className="w-4 h-4" />
-                  <span>{tr('Take Another Photo', 'दूसरा फोटो लें', 'दुसरा फोटो घ्या')}</span>
+                  <span>{'Take Another Photo'}</span>
                 </div>
               </div>
             ) : (
@@ -201,11 +201,7 @@ export const ExpiryOcrModal: React.FC<ExpiryOcrModalProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC]">
-                    {tr(
-                      'Take a photo of the expiry date on the milk pouch or pack',
-                      'दूध थैली या पैकेट पर छपी एक्सपायरी डेट का फोटो लें',
-                      'दूध पाऊच किंवा डब्यावरील एक्सपायरी डेटचा फोटो काढा'
-                    )}
+                    {'Take a photo of the expiry date on the milk pouch or pack'}
                   </p>
                   <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5">
                     MFG, EXP, USE BY, BATCH NO
@@ -220,11 +216,7 @@ export const ExpiryOcrModal: React.FC<ExpiryOcrModalProps> = ({
             <div className="p-4 bg-purple-50 dark:bg-purple-950/40 rounded-xl border border-purple-200 dark:border-purple-900 flex items-center justify-center gap-2 text-xs font-bold text-purple-700 dark:text-purple-300 animate-pulse">
               <RotateCw className="w-4 h-4 animate-spin" />
               <span>
-                {tr(
-                  'Reading dates and batch from photo (AI OCR)...',
-                  'फोटो से तारीख और बैच पढ़ा जा रहा है (AI OCR)...',
-                  'फोटोमधून मजकूर वाचत आहे (AI OCR)...'
-                )}
+                {'Reading dates and batch from photo (AI OCR)...'}
               </span>
             </div>
           )}
@@ -235,18 +227,14 @@ export const ExpiryOcrModal: React.FC<ExpiryOcrModalProps> = ({
               <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>
-                  {tr(
-                    'Review & confirm extracted details:',
-                    'पहचाना गया विवरण जांचें और पुष्टि करें:',
-                    'शोधलेला तपशील तपासा व खात्री करा:'
-                  )}
+                  {'Review & confirm extracted details:'}
                 </span>
               </div>
 
               {/* Batch No */}
               <div>
                 <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
-                  {tr('Batch No:', 'बैच संख्या:', 'बॅच नंबर:')}
+                  {'Batch No:'}
                 </label>
                 <input
                   type="text"
@@ -260,7 +248,7 @@ export const ExpiryOcrModal: React.FC<ExpiryOcrModalProps> = ({
                 {/* Mfg Date */}
                 <div>
                   <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
-                    {tr('Mfg Date (MFG):', 'निर्माण तारीख (MFG):', 'उत्पादन तारीख (MFG):')}
+                    {'Mfg Date (MFG):'}
                   </label>
                   <input
                     type="date"
@@ -273,7 +261,7 @@ export const ExpiryOcrModal: React.FC<ExpiryOcrModalProps> = ({
                 {/* Expiry Date */}
                 <div>
                   <label className="text-[11px] font-bold text-rose-600 dark:text-rose-400 block mb-1">
-                    {tr('Expiry Date (EXP):', 'एक्सपायरी तारीख (EXP):', 'मुदत समाप्ती (EXP):')}
+                    {'Expiry Date (EXP):'}
                   </label>
                   <input
                     type="date"
@@ -286,7 +274,7 @@ export const ExpiryOcrModal: React.FC<ExpiryOcrModalProps> = ({
 
               {extractedData.rawText && (
                 <details className="text-[10px] text-slate-400 cursor-pointer pt-1">
-                  <summary>{tr('View raw scanned text', 'रॉ स्कैन टेक्स्ट देखें', 'कच्चा स्कॅन केलेला मजकूर पहा')}</summary>
+                  <summary>{'View raw scanned text'}</summary>
                   <p className="mt-1 p-2 bg-white dark:bg-[#131F1B] rounded border border-slate-200 dark:border-[#24352F] font-mono break-all">
                     {extractedData.rawText}
                   </p>
@@ -303,14 +291,14 @@ export const ExpiryOcrModal: React.FC<ExpiryOcrModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#24352F]"
           >
-            {tr('Cancel', 'रद्द करें', 'रद्द करा')}
+            {'Cancel'}
           </button>
           <button
             disabled={!hasScanned || !extractedData.expiryDate}
             onClick={handleConfirm}
             className="px-4 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white transition disabled:opacity-50"
           >
-            {tr('Use Dates', 'तारीख लागू करें', 'तारीख वापरा')}
+            {'Use Dates'}
           </button>
         </div>
 

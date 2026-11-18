@@ -102,7 +102,7 @@ export const formatSaleTime = (
 };
 
 /**
- * Calculates human-friendly relative time (e.g. "५ मिनिटांपूर्वी" / "5 mins ago")
+ * Calculates human-friendly relative time (e.g. "5 mins ago")
  * with full Marathi, Hindi and English localization.
  */
 export const formatTimeAgo = (
@@ -117,38 +117,26 @@ export const formatTimeAgo = (
   const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
 
   if (diffSec < 45) {
-    return lang === 'mr' ? 'आत्ताच' : lang === 'hi' ? 'अभी-अभी' : 'Just now';
+    return 'Just now';
   }
 
   const diffMin = Math.floor(diffSec / 60);
   if (diffMin < 60) {
-    return lang === 'mr'
-      ? `${diffMin} मिनिटांपूर्वी`
-      : lang === 'hi'
-      ? `${diffMin} मिनट पहले`
-      : `${diffMin}m ago`;
+    return `${diffMin}m ago`;
   }
 
   const diffHours = Math.floor(diffMin / 60);
   if (diffHours < 24) {
-    return lang === 'mr'
-      ? `${diffHours} तासांपूर्वी`
-      : lang === 'hi'
-      ? `${diffHours} घंटे पहले`
-      : `${diffHours}h ago`;
+    return `${diffHours}h ago`;
   }
 
   const diffDays = Math.floor(diffHours / 24);
   if (diffDays === 1) {
-    return lang === 'mr' ? 'काल' : lang === 'hi' ? 'कल' : 'Yesterday';
+    return 'Yesterday';
   }
 
   if (diffDays < 7) {
-    return lang === 'mr'
-      ? `${diffDays} दिवसांपूर्वी`
-      : lang === 'hi'
-      ? `${diffDays} दिन पहले`
-      : `${diffDays}d ago`;
+    return `${diffDays}d ago`;
   }
 
   return formatSaleDateTime(date.toISOString()).dateFormatted;

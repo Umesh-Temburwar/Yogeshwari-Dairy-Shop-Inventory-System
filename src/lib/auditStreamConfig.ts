@@ -27,7 +27,7 @@ export function setAuditStreamEnabled(
   if (userRole && userRole !== 'Owner') {
     return {
       success: false,
-      error: 'सुरक्षा धोरण: फक्त दुकान मालक (Shop Owner) थेट तपासणी नोंदवही चालू/बंद करू शकतात.'
+      error: 'Security policy: Only the Shop Owner can toggle the live audit stream.'
     };
   }
 

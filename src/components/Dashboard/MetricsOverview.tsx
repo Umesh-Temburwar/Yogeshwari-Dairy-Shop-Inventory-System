@@ -24,7 +24,7 @@ export const MetricsOverview: React.FC = () => {
       title: `${timeLabel} ${t('totalSales')}`,
       numericValue: metrics.totalSalesRevenue,
       prefix: '₹',
-      subtitle: language === 'mr' ? 'काउंटर व होम डिलिव्हरी विक्री' : language === 'hi' ? 'काउंटर व होम डिलीवरी बिक्री' : 'Counter & delivery sales',
+      subtitle: 'Counter & delivery sales',
       icon: TrendingUp,
       iconBoxClass: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
       action: () => setActiveView('sales'),
@@ -34,7 +34,7 @@ export const MetricsOverview: React.FC = () => {
       title: `${timeLabel} ${t('cashCollected')}`,
       numericValue: metrics.cashCollected,
       prefix: '₹',
-      subtitle: `${((metrics.cashCollected / (metrics.totalSalesRevenue || 1)) * 100).toFixed(0)}% ${language === 'mr' ? 'रोख विक्री वाटा' : language === 'hi' ? 'रोकड़ शेयर' : 'Cash share'}`,
+      subtitle: `${((metrics.cashCollected / (metrics.totalSalesRevenue || 1)) * 100).toFixed(0)}% ${'Cash share'}`,
       icon: Banknote,
       iconBoxClass: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
       action: () => setActiveView('sales'),
@@ -44,7 +44,7 @@ export const MetricsOverview: React.FC = () => {
       title: `${timeLabel} ${t('onlineCollected')}`,
       numericValue: metrics.onlineCollected,
       prefix: '₹',
-      subtitle: `${((metrics.onlineCollected / (metrics.totalSalesRevenue || 1)) * 100).toFixed(0)}% ${language === 'mr' ? 'फोनपे, जीपे, स्कॅनर' : language === 'hi' ? 'फोनपे, जीपे, स्कैनर' : 'PhonePe, GPay, QR'}`,
+      subtitle: `${((metrics.onlineCollected / (metrics.totalSalesRevenue || 1)) * 100).toFixed(0)}% ${'PhonePe, GPay, QR'}`,
       icon: Smartphone,
       iconBoxClass: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
       action: () => setActiveView('sales'),
@@ -54,7 +54,7 @@ export const MetricsOverview: React.FC = () => {
       title: `${timeLabel} ${t('totalPurchases')}`,
       numericValue: metrics.totalPurchasesAmount,
       prefix: '₹',
-      subtitle: language === 'mr' ? 'दूध, खवा, तूप खरेदी खर्च' : language === 'hi' ? 'दूध, घी, खोया रॉ माल लागत' : 'Milk & raw materials cost',
+      subtitle: 'Milk & raw materials cost',
       icon: ShoppingBag,
       iconBoxClass: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400',
       action: () => setActiveView('purchases'),
@@ -64,7 +64,7 @@ export const MetricsOverview: React.FC = () => {
       title: `${timeLabel} ${t('netProfit')}`,
       numericValue: metrics.netProfit,
       prefix: '₹',
-      subtitle: `${language === 'mr' ? 'एकूण नफा' : language === 'hi' ? 'सकल लाभ' : 'Gross'} ₹${metrics.grossProfit.toLocaleString('en-IN')} ${language === 'mr' ? 'मधून खर्च वजा' : language === 'hi' ? 'में से खर्च घटाकर' : 'after expenses'}`,
+      subtitle: `${'Gross'} ₹${metrics.grossProfit.toLocaleString('en-IN')} ${'after expenses'}`,
       icon: Sparkles,
       iconBoxClass: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
       action: () => setActiveView('analytics'),
@@ -74,7 +74,7 @@ export const MetricsOverview: React.FC = () => {
       title: t('totalUdharDue'),
       numericValue: metrics.totalOutstandingUdhar,
       prefix: '₹',
-      subtitle: language === 'mr' ? 'ग्राहक व मिठाईवाल्यांकडून बाकी' : language === 'hi' ? 'ग्राहकों व हलवाइयों से बाकी' : 'Customer credit receivable',
+      subtitle: 'Customer credit receivable',
       icon: BookOpen,
       iconBoxClass: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
       action: () => setActiveView('udhar'),
@@ -84,7 +84,7 @@ export const MetricsOverview: React.FC = () => {
       title: `${timeLabel} ${t('damageLoss')}`,
       numericValue: metrics.totalDamagesLoss,
       prefix: '₹',
-      subtitle: language === 'mr' ? 'नासलेले दूध, लिकेज व एक्सपायरी' : language === 'hi' ? 'फटा दूध, पाउच लीकेज नुकसान' : 'Curdled milk & leakage loss',
+      subtitle: 'Curdled milk & leakage loss',
       icon: PackageX,
       iconBoxClass: 'bg-slate-500/15 text-slate-600 dark:text-slate-400',
       action: () => setActiveView('damages'),
@@ -93,16 +93,12 @@ export const MetricsOverview: React.FC = () => {
     {
       title: t('lowStockAlert'),
       numericValue: metrics.lowStockCount,
-      suffix: ` ${language === 'mr' ? 'उत्पादने' : language === 'hi' ? 'आइटम्स' : 'items'}`,
+      suffix: ` ${'items'}`,
       subtitle: (metrics.expiredBatchesCount > 0 || metrics.expiringTodayBatchesCount > 0)
-        ? (language === 'mr' 
-            ? `⚠️ ${metrics.expiredBatchesCount} एक्सपायर्ड • ${metrics.expiringTodayBatchesCount} आज मुदत संपणारे` 
-            : language === 'hi' 
-            ? `⚠️ ${metrics.expiredBatchesCount} एक्सपायर • ${metrics.expiringTodayBatchesCount} आज एक्सपायर` 
-            : `⚠️ ${metrics.expiredBatchesCount} expired • ${metrics.expiringTodayBatchesCount} exp. today`)
+        ? (`⚠️ ${metrics.expiredBatchesCount} expired • ${metrics.expiringTodayBatchesCount} exp. today`)
         : metrics.lowStockCount > 0 
-        ? (language === 'mr' ? 'त्वरित मागवण्याची गरज आहे' : language === 'hi' ? 'तुरंत मंगाने की ज़रूरत है' : 'Reorder needed now')
-        : (language === 'mr' ? 'सर्व माल पुरेसा उपलब्ध आहे' : language === 'hi' ? 'सभी माल पर्याप्त मात्रा में है' : 'Stock level is healthy'),
+        ? ('Reorder needed now')
+        : ('Stock level is healthy'),
       icon: AlertTriangle,
       iconBoxClass: (metrics.expiredBatchesCount > 0) 
         ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' 

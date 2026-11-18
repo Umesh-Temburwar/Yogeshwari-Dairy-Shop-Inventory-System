@@ -33,12 +33,8 @@ export const LoadOlderHistoryButton: React.FC<LoadOlderHistoryButtonProps> = ({
         )}
         <span>
           {meta.isLoading
-            ? tr('Loading older records...', 'पुराने रिकॉर्ड लोड हो रहे हैं...', 'जुने रेकॉर्ड लोड होत आहेत...')
-            : tr(
-                `Load Older Records (${meta.offset} loaded)`,
-                `पुराने रिकॉर्ड लोड करें (${meta.offset} लोड)`,
-                `जुने रेकॉर्ड लोड करा (${meta.offset} लोड)`
-              )}
+            ? 'Loading older records...'
+            : `Load Older Records (${meta.offset} loaded)`}
         </span>
       </button>
     </div>

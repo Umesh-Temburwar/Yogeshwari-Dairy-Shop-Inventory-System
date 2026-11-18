@@ -5,20 +5,18 @@ import { useAuth } from '../../context/AuthContext';
 import { Product, ProductCategory, ProductUnit } from '../../types';
 import { getShelfLifeNote } from '../../lib/shelfLifeUtils';
 import {
-  X,
-  Save,
   PackagePlus,
-  Clock,
-  Sparkles,
-  Barcode,
+  X,
   Mic,
-  CheckCircle2,
-  AlertCircle,
+  ScanBarcode,
   Search,
+  Clipboard,
   Upload,
   Trash2,
-  Clipboard,
-  Image as ImageIcon
+  Camera,
+  Info,
+  IndianRupee,
+  Save
 } from 'lucide-react';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { ProductImage, clearFailedImageUrl } from '../Common/ProductImage';
@@ -102,6 +100,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [minStockAlert, setMinStockAlert] = useState<string>('15');
   const [barcode, setBarcode] = useState<string>('');
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showPhotoHint, setShowPhotoHint] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<{
+    name: boolean;
+    purchasePrice: boolean;
+    sellingPrice: boolean;
+  }>({ name: false, purchasePrice: false, sellingPrice: false });
 
   // Standardized Product Image states
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -161,6 +166,9 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     setUploadError(null);
     setUploadProgress(0);
     setLastCompressionStats(null);
+    setIsSaving(false);
+    setShowPhotoHint(false);
+    setTouchedFields({ name: false, purchasePrice: false, sellingPrice: false });
 
     if (productToEdit) {
       setName(productToEdit.name);
@@ -280,11 +288,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
     if (!isSpeechRecognitionSupported()) {
       setVoiceError(
-        language === 'mr'
-          ? 'तुमच्या ब्राउझरमध्ये व्हॉइस इनपुट उपलब्ध नाही. कृपया Google Chrome किंवा Microsoft Edge वापरा.'
-          : language === 'hi'
-            ? 'आपके ब्राउज़र में वॉयस इनपुट उपलब्ध नहीं है। कृपया Google Chrome या Edge का उपयोग करें।'
-            : 'Voice input is not supported in this browser. Please use Chrome or Edge.'
+        'Voice input is not supported in this browser. Please use Chrome or Edge.'
       );
       return;
     }
@@ -371,22 +375,14 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           isListeningRef.current = false;
           setIsListening(false);
           setVoiceError(
-            language === 'mr'
-              ? 'मायक्रोफोन परवानगी नाकारली आहे. कृपया ॲड्रेस बारमधील कुलूप (Lock) आयकॉनवर क्लिक करून Microphone Allow करा.'
-              : language === 'hi'
-                ? 'माइक्रोफ़ोन अनुमति अस्वीकृत है। कृपया Address bar में Lock आइकॉन पर क्लिक करके Microphone Allow करें।'
-                : 'Microphone access denied. Please click the lock icon in address bar to allow microphone.'
+            'Microphone access denied. Please click the lock icon in address bar to allow microphone.'
           );
         } else if (event.error === 'network') {
           userStoppedRef.current = true;
           isListeningRef.current = false;
           setIsListening(false);
           setVoiceError(
-            tr(
-              'Google Voice Network error. Please check your internet connection.',
-              'Google Voice Network त्रुटि। कृपया इंटरनेट कनेक्शन जांचें।',
-              'Google Voice Network त्रुटी. कृपया इंटरनेट कनेक्शन तपासा.'
-            )
+            'Google Voice Network error. Please check your internet connection.'
           );
         }
       };
@@ -429,11 +425,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         isListeningRef.current = false;
         setIsListening(false);
         setVoiceFeedback(
-          language === 'mr'
-            ? 'काही आवाज ऐकू आला नाही. कृपया माईक जवळ धरून पुन्हा बोला.'
-            : language === 'hi'
-              ? 'कोई आवाज़ सुनाई नहीं दी। कृपया माइक के पास बोलें।'
-              : 'No speech detected. Please speak closer to the microphone.'
+          'No speech detected. Please speak closer to the microphone.'
         );
       };
 
@@ -443,11 +435,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       isListeningRef.current = false;
       setIsListening(false);
       setVoiceError(
-        tr(
-          'Error starting microphone. Please try again.',
-          'माइक शुरू करने में समस्या आई। कृपया पुनः प्रयास करें।',
-          'माईक सुरू करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.'
-        )
+        'Error starting microphone. Please try again.'
       );
     }
   };
@@ -539,7 +527,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       if (!navigator.clipboard || typeof navigator.clipboard.readText !== 'function') {
         setImageStatusMessage({
           type: 'error',
-          text: tr('Copy an image link first', 'पहले इमेज लिंक कॉपी करें', 'आधी फोटोची लिंक कॉपी करा')
+          text: 'Copy an image link first'
         });
         return;
       }
@@ -547,7 +535,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       if (!/^https?:\/\//i.test(clipText)) {
         setImageStatusMessage({
           type: 'error',
-          text: tr('Copy an image link first', 'पहले इमेज लिंक कॉपी करें', 'आधी फोटोची लिंक कॉपी करा')
+          text: 'Copy an image link first'
         });
         return;
       }
@@ -555,12 +543,12 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       setImageUrl(clipText);
       setImageStatusMessage({
         type: 'success',
-        text: tr('Photo pasted. Click Save to persist.', 'फोटो पेस्ट हो गया। सहेजने के लिए सेव दबाएं।', 'फोटो पेस्ट झाला. जतन करण्यासाठी सेव्ह दाबा.')
+        text: 'Photo pasted. Click Save to persist.'
       });
     } catch {
       setImageStatusMessage({
         type: 'error',
-        text: tr('Copy an image link first', 'पहले इमेज लिंक कॉपी करें', 'आधी फोटोची लिंक कॉपी करा')
+        text: 'Copy an image link first'
       });
     }
   };
@@ -575,7 +563,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     if (!validation.valid) {
       setImageStatusMessage({
         type: 'error',
-        text: validation.error || tr('Invalid image file.', 'अमान्य इमेज फ़ाइल।', 'अवैध फोटो फाईल.')
+        text: validation.error || 'Invalid image file.'
       });
       return;
     }
@@ -617,14 +605,10 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       setCropFile(null);
       setImageStatusMessage({
         type: 'success',
-        text: tr(
-          `Uploaded ${processed.extension.toUpperCase()} (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)}, saved ${processed.savedPercent}%).`,
-          `${processed.extension.toUpperCase()} अपलोड हो गया (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)}, बचत ${processed.savedPercent}%)।`,
-          `${processed.extension.toUpperCase()} अपलोड झाला (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)}, बचत ${processed.savedPercent}%).`
-        )
+        text: `Uploaded ${processed.extension.toUpperCase()} (${formatFileSize(processed.originalBytes)} → ${formatFileSize(processed.compressedBytes)}, saved ${processed.savedPercent}%).`
       });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : tr('Failed to upload image.', 'इमेज अपलोड करने में विफल।', 'फोटो अपलोड करण्यात अयशस्वी.');
+      const message = err instanceof Error ? err.message : 'Failed to upload image.';
       setUploadError(message);
     } finally {
       setIsUploadingImage(false);
@@ -634,13 +618,46 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
   if (!isOpen) return null;
 
+  const parsedPurchase = parseFloat(purchasePrice);
+  const parsedSelling = parseFloat(sellingPrice);
+  const hasPurchaseValue = purchasePrice.trim() !== '' && !Number.isNaN(parsedPurchase) && parsedPurchase >= 0;
+  const hasSellingValue = sellingPrice.trim() !== '' && !Number.isNaN(parsedSelling) && parsedSelling >= 0;
+  const nameError = touchedFields.name && !name.trim() ? 'Product name is required' : null;
+  const purchaseError = touchedFields.purchasePrice && !hasPurchaseValue ? 'Enter a valid purchase rate' : null;
+  const sellingError = touchedFields.sellingPrice && !hasSellingValue ? 'Enter a valid selling rate' : null;
+  const isFormValid = Boolean(name.trim()) && hasPurchaseValue && hasSellingValue;
+
+  const isDirty = productToEdit
+    ? name.trim() !== (productToEdit.name || '').trim() ||
+      brand.trim() !== (productToEdit.brand || '').trim() ||
+      barcode.trim() !== (productToEdit.barcode || '').trim() ||
+      category !== productToEdit.category ||
+      unit !== productToEdit.unit ||
+      purchasePrice.trim() !== productToEdit.purchase_price.toString() ||
+      sellingPrice.trim() !== productToEdit.selling_price.toString() ||
+      minStockAlert.trim() !== productToEdit.min_stock_alert.toString() ||
+      imageUrl.trim() !== (originalImageUrl || '').trim()
+    : Boolean(name.trim() || brand.trim() || barcode.trim() || purchasePrice.trim() || sellingPrice.trim() || imageUrl.trim());
+
+  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const el = e.currentTarget;
+    setTimeout(() => {
+      try {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch {
+        // Ignore unsupported scrollIntoView options
+      }
+    }, 180);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTouchedFields({ name: true, purchasePrice: true, sellingPrice: true });
     const cleanName = name.trim();
-    if (!cleanName) return;
+    if (!cleanName || !hasPurchaseValue || !hasSellingValue || isSaving) return;
 
-    const pPrice = Math.max(0, parseFloat(purchasePrice) || 0);
-    const sPrice = Math.max(0, parseFloat(sellingPrice) || 0);
+    const pPrice = Math.max(0, parsedPurchase);
+    const sPrice = Math.max(0, parsedSelling);
     const sQty = Math.max(0, parseFloat(stockQuantity) || 0);
     const minAlert = Math.max(0, parseFloat(minStockAlert) || 10);
     const nextImageUrl = imageUrl.trim() || undefined;
@@ -649,571 +666,664 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       clearFailedImageUrl(nextImageUrl);
     }
 
-    if (productToEdit) {
-      await updateProduct(productToEdit.id, {
-        name: cleanName,
-        brand: brand.trim() || undefined,
-        category,
-        unit,
-        purchase_price: pPrice,
-        selling_price: sPrice,
-        // In Edit Mode, stock_quantity is preserved and managed via Batches/Stock Inward!
-        min_stock_alert: minAlert,
-        barcode: barcode.trim() || undefined,
-        image_url: nextImageUrl
-      });
-    } else {
-      await addProduct({
-        name: cleanName,
-        brand: brand.trim() || undefined,
-        category,
-        unit,
-        purchase_price: pPrice,
-        selling_price: sPrice,
-        stock_quantity: sQty,
-        min_stock_alert: minAlert,
-        barcode: barcode.trim() || undefined,
-        image_url: nextImageUrl,
-        is_active: true
-      });
-    }
+    setIsSaving(true);
+    try {
+      if (productToEdit) {
+        await updateProduct(productToEdit.id, {
+          name: cleanName,
+          brand: brand.trim() || undefined,
+          category,
+          unit,
+          purchase_price: pPrice,
+          selling_price: sPrice,
+          // In Edit Mode, stock_quantity is preserved and managed via Batches/Stock Inward!
+          min_stock_alert: minAlert,
+          barcode: barcode.trim() || undefined,
+          image_url: nextImageUrl
+        });
+      } else {
+        await addProduct({
+          name: cleanName,
+          brand: brand.trim() || undefined,
+          category,
+          unit,
+          purchase_price: pPrice,
+          selling_price: sPrice,
+          stock_quantity: sQty,
+          min_stock_alert: minAlert,
+          barcode: barcode.trim() || undefined,
+          image_url: nextImageUrl,
+          is_active: true
+        });
+      }
 
-    onClose();
+      onClose();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const marginPerUnit = (parseFloat(sellingPrice) || 0) - (parseFloat(purchasePrice) || 0);
-  const marginPct = (parseFloat(purchasePrice) > 0)
-    ? ((marginPerUnit / parseFloat(purchasePrice)) * 100).toFixed(1)
-    : '0';
+  const hasBothPrices = hasPurchaseValue && hasSellingValue;
+  const marginPerUnit = hasBothPrices ? parsedSelling - parsedPurchase : 0;
+  const marginPct = hasBothPrices && parsedPurchase > 0
+    ? ((marginPerUnit / parsedPurchase) * 100).toFixed(1)
+    : '0.0';
+
+  const profitStripClass = !hasBothPrices || marginPerUnit === 0
+    ? 'bg-slate-50 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] border border-slate-200/80 dark:border-[#24352F]'
+    : marginPerUnit > 0
+    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50'
+    : 'bg-red-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/50';
+
+  const handleRemoveProductPhoto = async () => {
+    setImageUrl('');
+    setLastCompressionStats(null);
+    if (productToEdit) {
+      await updateProduct(productToEdit.id, { image_url: undefined });
+      setOriginalImageUrl('');
+    }
+    setImageStatusMessage({
+      type: 'info',
+      text: 'Product image removed.'
+    });
+  };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4">
-      <div className="bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border border-transparent dark:border-[#24352F] rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[92dvh] overflow-y-auto overscroll-contain">
-
-        {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#24352F] pb-3">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
+    <div
+      className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-edit-product-modal-title"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-slate-50 dark:bg-[#0F1A17] text-slate-900 dark:text-[#E7F0EC] border border-slate-200/90 dark:border-[#24352F] rounded-3xl max-w-lg w-full max-h-[92dvh] flex flex-col shadow-2xl overflow-hidden"
+      >
+        {/* 1. Sticky Modal Header */}
+        <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3.5 bg-white dark:bg-[#131F1B] border-b border-slate-200/80 dark:border-[#24352F]">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
               <PackagePlus className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="font-bold text-slate-900 dark:text-[#E7F0EC] text-base">
+            <div className="min-w-0 flex-1">
+              <h3
+                id="add-edit-product-modal-title"
+                className="font-bold text-slate-900 dark:text-[#E7F0EC] text-base leading-tight truncate"
+              >
                 {productToEdit
-                  ? (language === 'mr' ? 'मालाची माहिती बदला' : language === 'hi' ? 'माल की जानकारी अपडेट करें' : 'Edit Product Details')
-                  : (language === 'mr' ? 'दुकानात नवीन माल जोडा' : language === 'hi' ? 'दुकान में नया माल जोड़ें' : 'Add New Dairy Product')}
+                  ? 'Edit Product Details'
+                  : 'Add New Dairy Product'}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-[#8FA69C]">
-                {language === 'mr' ? 'दूध, पनीर, तूप, खवा, मिठाई किंवा इतर उत्पादने' : language === 'hi' ? 'दूध, पनीर, घी, खोया, मिठाई या अन्य डेरी उत्पाद' : 'Milk, Paneer, Ghee, Sweets or Dairy items'}
+              <p className="text-xs text-slate-500 dark:text-[#8FA69C] truncate mt-0.5">
+                {'Milk, Paneer, Ghee, Sweets or Dairy items'}
               </p>
             </div>
           </div>
-          
+
           <button
+            type="button"
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition"
+            aria-label="Close"
+            className="w-11 h-11 -mr-1 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2A25] active:scale-95 transition shrink-0 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* 2. Scrollable Body + Sticky Footer Form */}
+        <form id="product-details-form" onSubmit={handleSubmit} noValidate className="flex-1 min-h-0 flex flex-col">
+          <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-4">
 
-          {/* Product Name (English) + Voice Input */}
-          <div className="space-y-2">
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] flex items-center gap-1.5">
-                  <span>Product Name *</span>
-                </label>
-              </div>
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Fresh Buffalo Milk 1 Litre, Amul Paneer 200g, Cow Ghee..."
-                  value={name}
-                  onChange={(e) => handleNameChange(e.target.value)}
-                  className="w-full pl-3 pr-28 py-2.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-
-                <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={isListening ? stopVoiceListening : () => startVoiceListening(voiceLang)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-black transition-all shadow-xs ${isListening
-                      ? 'bg-rose-600 hover:bg-rose-700 text-white animate-pulse shadow-rose-500/40 ring-2 ring-rose-400'
-                      : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
-                      }`}
-                    title={isListening ? 'Stop Mic' : 'Voice to Text'}
+            {/* SECTION A: BASIC INFO */}
+            <section aria-label="Basic Info" className="space-y-1.5">
+              <h4 className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#8FA69C]">
+                BASIC INFO
+              </h4>
+              <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/80 dark:border-[#24352F] shadow-sm p-4 space-y-3.5">
+                {/* Product Name * with Inline 40px Mic Button */}
+                <div>
+                  <label
+                    htmlFor="product-name-input"
+                    className="block text-[13px] font-semibold text-slate-700 dark:text-[#C4D6CE] mb-1.5"
                   >
-                    <Mic className={`w-3.5 h-3.5 ${isListening ? 'animate-bounce text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
-                    <span className="text-[11px] font-black">
-                      {isListening ? 'Listening...' : 'Voice'}
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Live Interactive Voice Recognition Assistant Panel */}
-              {isListening && (
-                <div className="mt-2 p-3 bg-gradient-to-r from-emerald-50 via-teal-50/60 to-emerald-50 dark:from-emerald-950/40 dark:via-[#1A2A25] dark:to-emerald-950/40 border-2 border-emerald-500 rounded-2xl shadow-md space-y-2.5 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="relative flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
-                      </span>
-                      {/* Audio visualizer wave bars */}
-                      <div className="flex items-center gap-0.5 h-3.5 px-1 bg-rose-100 dark:bg-rose-950/60 rounded-md">
-                        <span className="w-1 bg-rose-500 rounded-full animate-bounce h-2" style={{ animationDelay: '0ms' }}></span>
-                        <span className="w-1 bg-rose-500 rounded-full animate-bounce h-3.5" style={{ animationDelay: '150ms' }}></span>
-                        <span className="w-1 bg-rose-500 rounded-full animate-bounce h-2.5" style={{ animationDelay: '300ms' }}></span>
-                        <span className="w-1 bg-rose-500 rounded-full animate-bounce h-1.5" style={{ animationDelay: '75ms' }}></span>
-                      </div>
-                      <span className="text-xs font-black text-slate-800 dark:text-white flex items-center gap-1">
-                        <span>Listening... Speak clearly (English):</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Live Speech Recognition Transcription Box */}
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-emerald-800/60 min-h-[44px] flex items-center justify-between gap-2 shadow-2xs">
-                    <div className="truncate flex-1">
-                      <p className="text-xs font-black text-emerald-950 dark:text-emerald-200 truncate">
-                        {interimTranscript
-                          ? `🎙️ "${interimTranscript}"`
-                          : tr(
-                            'Speak anything (e.g. "Amul Taaza 500ml", "Buffalo Milk 1 Litre")...',
-                            'कुछ भी बोलें (उदा. "अमुल ताज़ा 500 मिली", "भैंस का दूध 1 लीटर")...',
-                            'काहीही बोला (उदा. "अमुल ताझा ५०० मिली", "म्हशीचे दूध १ लिटर")...'
-                          )}
-                      </p>
-                      {name && (
-                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold truncate mt-0.5">
-                          ✓ Auto: <span className="font-bold">{name}</span> {category && `[${category}]`} {unit && `[${unit}]`}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={stopVoiceListening}
-                        className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black shadow-xs flex items-center gap-1 active:scale-95"
-                      >
-                        <span>✓</span>
-                        <span>{language === 'mr' ? 'पूर्ण' : language === 'hi' ? 'पूर्ण' : 'Done'}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={cancelVoiceListening}
-                        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white"
-                        title={tr('Cancel', 'रद्द करें', 'रद्द करा')}
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Trained voice suggestions with 1-tap fast buttons */}
-                  <div className="space-y-1 pt-0.5">
-                    <p className="text-[10px] text-slate-500 dark:text-[#8FA69C] font-bold">
-                      💡 {language === 'mr' ? '१-टॅप नमुने किंवा थेट बोला:' : language === 'hi' ? '1-टैप उदाहरण या सीधे बोलें:' : '1-Tap quick samples or speak:'}
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {[
-                        { label: tr('🥛 Buffalo Milk 1L', '🥛 भैंस का दूध 1L', '🥛 म्हशीचे दूध १L'), val: 'म्हशीचे दूध १ लिटर' },
-                        { label: tr('🥛 Amul Taaza 500ml', '🥛 अमूल ताज़ा 500ml', '🥛 अमुल ताझा ५००ml'), val: 'अमुल ताझा ५०० मिली' },
-                        { label: tr('🧈 Amul Butter 100g', '🧈 अमूल बटर 100g', '🧈 अमुल बटर १००g'), val: 'अमुल बटर १०० ग्रॅम' },
-                        { label: tr('🧀 Fresh Paneer 500g', '🧀 ताज़ा पनीर 500g', '🧀 ताजे पनीर ५००g'), val: 'ताजे पनीर ५०० ग्रॅम' },
-                        { label: tr('🫙 Cow Ghee 1L', '🫙 गाय का घी 1L', '🫙 गायीचे तूप १L'), val: 'गायीचे तूप १ लिटर' },
-                        { label: tr('🥤 Masala Chaas', '🥤 मसाला छाछ', '🥤 मसाला ताक'), val: 'मसाला ताक' },
-                        { label: tr('🍬 Kaju Katli', '🍬 काजू कतली', '🍬 काजू कतली'), val: 'काजू कतली' },
-                        { label: tr('🍞 Butter Khari', '🍞 बटर खारी', '🍞 बटर खारी'), val: 'बटर खारी' }
-                      ].map((item) => (
-                        <button
-                          key={item.val}
-                          type="button"
-                          onClick={() => applyVoiceSuggestion(item.val)}
-                          className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-white dark:bg-[#131F1B] border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition active:scale-95 shadow-2xs"
-                        >
-                          {item.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Voice Success Toast */}
-              {voiceFeedback && (
-                <div className="mt-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/60 flex items-center justify-between text-xs font-bold text-emerald-900 dark:text-emerald-300 animate-in fade-in">
-                  <div className="flex items-center gap-1.5 truncate">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span className="truncate">{language === 'mr' ? 'आवाजावरून भरले:' : language === 'hi' ? 'वॉयस से भरा गया:' : 'Recognized:'} <strong>{voiceFeedback}</strong></span>
-                  </div>
-                  <span className="text-[10px] bg-emerald-200/80 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200 px-1.5 py-0.5 rounded font-black shrink-0">
-                    ✓ VOICE AI
-                  </span>
-                </div>
-              )}
-
-              {/* Voice Error Banner */}
-              {voiceError && (
-                <div className="mt-1.5 px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-center gap-1.5 text-xs font-bold text-rose-700 dark:text-rose-300 animate-in fade-in">
-                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                  <span>{voiceError}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Barcode Input & Scanner */}
-          <div>
-            <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1 flex items-center gap-1.5">
-              <Barcode className="w-3.5 h-3.5 text-emerald-600" />
-              <span>{language === 'mr' ? 'बारकोड क्रमांक (Barcode / EAN-13 / SKU)' : language === 'hi' ? 'बारकोड संख्या (Barcode)' : 'Barcode / EAN-13'}</span>
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder={tr('e.g. 8901030925237', 'उदा. 8901030925237', 'उदा. 8901030925237')}
-                value={barcode}
-                onChange={(e) => setBarcode(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              <button
-                type="button"
-                onClick={() => setShowBarcodeScanner(true)}
-                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold flex items-center gap-1.5 border border-slate-200 dark:border-[#24352F] transition"
-                title={tr('Scan Barcode', 'बारकोड स्कैन करें', 'बारकोड स्कॅन करा')}
-              >
-                <Barcode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>{tr('Scan', 'स्कैन', 'स्कॅन')}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Brand (Optional — improves official image lookup) */}
-          <div>
-            <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-              {language === 'mr' ? 'ब्रँड (Brand — ऐच्छिक)' : language === 'hi' ? 'ब्रांड (Brand — वैकल्पिक)' : 'Brand (Optional)'}
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Amul, Britannia, Parle, Cadbury, Chitale..."
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
-
-          {/* Admin-Only Product Image Standardization Section (Steps 2 & 3) */}
-          {isAdmin && (
-            <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-extrabold text-slate-800 dark:text-[#E7F0EC] flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span>{tr('Product Image (1:1 Square)', 'उत्पाद फोटो (1:1 स्क्वायर)', 'उत्पादन फोटो (1:1 स्क्वेअर)')}</span>
-                </span>
-                {imageUrl && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImageUrl('');
-                      setImageStatusMessage({ type: 'info', text: tr('Image cleared. Click Save to confirm.', 'फोटो हटाया गया। सहेजने के लिए सेव दबाएं।', 'फोटो काढला. जतन करण्यासाठी सेव्ह दाबा.') });
-                    }}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    <span>{tr('Remove', 'हटाएं', 'काढा')}</span>
-                  </button>
-                )}
-              </div>
-
-              <div className="flex items-start gap-3">
-                {/* Uniform Square Preview */}
-                <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-2xl overflow-hidden bg-white border border-slate-200 dark:border-[#24352F]">
-                  <ProductImage
-                    src={imageUrl || null}
-                    alt={name.trim() || 'Product'}
-                    category={category}
-                    fill
-                  />
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex-1 min-w-0 space-y-2">
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={handleSearchOfficialPackshot}
-                      disabled={!barcode.trim() && !name.trim() && !brand.trim()}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer"
-                    >
-                      <Search className="w-3.5 h-3.5" />
-                      <span>{tr('Search Official Packshot', 'ऑफिशियल पैकशॉट खोजें', 'ऑफिशियल पॅकशॉट शोधा')}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => void handlePastePackshotUrl()}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-emerald-50 dark:hover:bg-[#223630] border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition active:scale-95 cursor-pointer"
-                    >
-                      <Clipboard className="w-3.5 h-3.5" />
-                      <span>{tr('Paste', 'पेस्ट', 'पेस्ट')}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-slate-100 dark:hover:bg-[#223630] border border-slate-300 dark:border-[#24352F] text-slate-800 dark:text-[#E7F0EC] text-xs font-bold transition active:scale-95 cursor-pointer"
-                    >
-                      <Upload className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>
-                        {imageUrl
-                          ? tr('Replace photo', 'फोटो बदलें', 'फोटो बदला')
-                          : tr('Upload photo', 'फोटो अपलोड करें', 'फोटो अपलोड करा')}
-                      </span>
-                    </button>
-
-                    {imageUrl && (
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          setImageUrl('');
-                          setLastCompressionStats(null);
-                          if (productToEdit) {
-                            await updateProduct(productToEdit.id, { image_url: undefined });
-                          }
-                          setImageStatusMessage({
-                            type: 'info',
-                            text: tr('Product image removed.', 'उत्पाद की फोटो हटाई गई।', 'उत्पादनाचा फोटो काढला गेला.')
-                          });
-                        }}
-                        className="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-950/60 border border-rose-200 dark:border-rose-800/50 text-rose-700 dark:text-rose-300 text-xs font-bold transition active:scale-95 cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>{tr('Remove', 'हटाएं', 'काढा')}</span>
-                      </button>
-                    )}
-
+                    Product Name <span className="text-rose-600">*</span>
+                  </label>
+                  <div className="relative">
                     <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept={ALLOWED_IMAGE_ACCEPT}
-                      onChange={handleSelectImageFile}
-                      className="hidden"
+                      id="product-name-input"
+                      name="productName"
+                      type="text"
+                      required
+                      placeholder="e.g. Fresh Buffalo Milk 1L, Good Day Biscuit"
+                      value={name}
+                      onFocus={handleInputFocus}
+                      onBlur={() => setTouchedFields((prev) => ({ ...prev, name: true }))}
+                      onChange={(e) => handleNameChange(e.target.value)}
+                      className={`w-full h-12 pl-3.5 pr-12 rounded-xl border bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-base font-medium focus:outline-none focus:ring-2 transition ${
+                        nameError
+                          ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/30'
+                          : 'border-slate-300 dark:border-[#24352F] focus:border-emerald-500 focus:ring-emerald-500/30'
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={isListening ? stopVoiceListening : () => startVoiceListening(voiceLang)}
+                      aria-label="Voice input"
+                      className={`absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg flex items-center justify-center transition active:scale-95 cursor-pointer ${
+                        isListening
+                          ? 'bg-rose-600 text-white animate-pulse'
+                          : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/60'
+                      }`}
+                    >
+                      <Mic className="w-5 h-5" />
+                    </button>
+                  </div>
+                  {nameError && (
+                    <p className="mt-1 text-xs font-medium text-rose-600 dark:text-rose-400">{nameError}</p>
+                  )}
+
+                  {/* Live Voice Listening Panel */}
+                  {isListening && (
+                    <div className="mt-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/60 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-semibold text-emerald-900 dark:text-emerald-200 truncate">
+                          {interimTranscript ? `"${interimTranscript}"` : 'Listening... Speak product name'}
+                        </span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={stopVoiceListening}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-700 text-white text-xs font-bold active:scale-95 cursor-pointer"
+                          >
+                            Done
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelVoiceListening}
+                            aria-label="Cancel voice input"
+                            className="w-7 h-7 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center cursor-pointer"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {voiceFeedback && !isListening && (
+                    <p className="mt-1 text-xs font-medium text-emerald-700 dark:text-emerald-400 truncate">
+                      Recognized: {voiceFeedback}
+                    </p>
+                  )}
+                  {voiceError && (
+                    <p className="mt-1 text-xs font-medium text-rose-600 dark:text-rose-400">{voiceError}</p>
+                  )}
+                </div>
+
+                {/* Barcode / EAN-13 with Matching Inline 40px Scan Button */}
+                <div>
+                  <label
+                    htmlFor="product-barcode-input"
+                    className="block text-[13px] font-semibold text-slate-700 dark:text-[#C4D6CE] mb-1.5"
+                  >
+                    Barcode / EAN-13
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="product-barcode-input"
+                      name="productBarcode"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="e.g. 8901030925237"
+                      value={barcode}
+                      onFocus={handleInputFocus}
+                      onChange={(e) => setBarcode(e.target.value)}
+                      className="w-full h-12 pl-3.5 pr-12 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-base font-mono font-medium focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowBarcodeScanner(true)}
+                      aria-label="Scan barcode"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 flex items-center justify-center transition active:scale-95 cursor-pointer"
+                    >
+                      <ScanBarcode className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Brand (Optional) & Unit * Side by Side */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      htmlFor="product-brand-input"
+                      className="block text-[13px] font-semibold text-slate-700 dark:text-[#C4D6CE] mb-1.5 truncate"
+                    >
+                      Brand (Optional)
+                    </label>
+                    <input
+                      id="product-brand-input"
+                      name="productBrand"
+                      type="text"
+                      placeholder="e.g. Amul, Parle"
+                      value={brand}
+                      onFocus={handleInputFocus}
+                      onChange={(e) => setBrand(e.target.value)}
+                      className="w-full h-12 px-3.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-base font-medium focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 transition"
                     />
                   </div>
 
-                  <p className="text-[11px] font-medium text-slate-500 dark:text-[#8FA69C]">
-                    {tr(
-                      'Auto-compressed to ~20 KB WebP (max 800×800 px) before upload. Accepts JPEG/PNG/WebP up to 15 MB.',
-                      'अपलोड से पहले ऑटो-कंप्रेस होकर ~20 KB WebP (अधिकतम 800×800 px) बनता है। 15 MB तक JPEG/PNG/WebP।',
-                      'अपलोडपूर्वी आपोआप ~20 KB WebP (कमाल 800×800 px) मध्ये कॉम्प्रेस होते. 15 MB पर्यंत JPEG/PNG/WebP.'
-                    )}
-                  </p>
+                  <div>
+                    <label
+                      htmlFor="product-unit-select"
+                      className="block text-[13px] font-semibold text-slate-700 dark:text-[#C4D6CE] mb-1.5 truncate"
+                    >
+                      {t('unitCol')} <span className="text-rose-600">*</span>
+                    </label>
+                    <select
+                      id="product-unit-select"
+                      name="productUnit"
+                      value={unit}
+                      onFocus={handleInputFocus}
+                      onChange={(e) => setUnit(e.target.value as ProductUnit)}
+                      className="w-full h-12 px-3 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-base font-medium focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 transition"
+                    >
+                      <option value="Litre">Litre</option>
+                      <option value="Kg">Kg</option>
+                      <option value="Packet (500ml)">Packet (500ml)</option>
+                      <option value="Packet (1L)">Packet (1L)</option>
+                      <option value="Piece">Piece</option>
+                      <option value="Gram">Gram</option>
+                    </select>
+                  </div>
+                </div>
 
-                  {lastCompressionStats && (
-                    <div className="inline-flex flex-wrap items-center gap-2 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/40 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 tabular-nums">
-                      <span>{tr('Original:', 'मूल:', 'मूळ:')} {formatFileSize(lastCompressionStats.originalBytes)}</span>
-                      <span>•</span>
-                      <span>{tr('Compressed:', 'कंप्रेस्ड:', 'कॉम्प्रेस्ड:')} {formatFileSize(lastCompressionStats.compressedBytes)}</span>
-                      <span>•</span>
-                      <span>{tr('Saved:', 'बचत:', 'बचत:')} {lastCompressionStats.savedPercent}%</span>
+                {/* Category * (Full Width, No Repeated Text) */}
+                <div>
+                  <label
+                    htmlFor="product-category-select"
+                    className="block text-[13px] font-semibold text-slate-700 dark:text-[#C4D6CE] mb-1.5"
+                  >
+                    {t('categoryCol')} <span className="text-rose-600">*</span>
+                  </label>
+                  <select
+                    id="product-category-select"
+                    name="productCategory"
+                    value={category}
+                    onFocus={handleInputFocus}
+                    onChange={(e) => setCategory(e.target.value as ProductCategory)}
+                    className="w-full h-12 px-3.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-base font-medium focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 transition"
+                  >
+                    <option value="Milk">{t('catMilk')}</option>
+                    <option value="Curd & Chaas">{t('catCurd')}</option>
+                    <option value="Paneer & Butter">{t('catPaneer')}</option>
+                    <option value="Ghee">{t('catGhee')}</option>
+                    <option value="Sweets/Mithai">{t('catSweets')}</option>
+                    <option value="Bakery & Extras">{t('catBakery')}</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            {/* SECTION B: PHOTO (Admin Only) */}
+            {isAdmin && (
+              <section aria-label="Photo" className="space-y-1.5">
+                <h4 className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#8FA69C]">
+                  PHOTO
+                </h4>
+                <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/80 dark:border-[#24352F] shadow-sm p-4 space-y-3">
+                  <div className="flex items-start gap-3.5">
+                    {/* 96px Square Thumbnail with Tap-to-Upload + Single Red Top-Right Remove Button */}
+                    <div className="relative w-24 h-24 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        aria-label="Select product photo from Gallery or Camera"
+                        className="relative w-24 h-24 rounded-2xl overflow-hidden bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] hover:border-emerald-500/70 transition cursor-pointer block"
+                      >
+                        {imageUrl ? (
+                          <ProductImage
+                            src={imageUrl}
+                            alt={name.trim() || 'Product'}
+                            category={category}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 dark:text-[#8FA69C] gap-1">
+                            <Camera className="w-6 h-6" />
+                            <span className="text-[10px] font-semibold">Add photo</span>
+                          </div>
+                        )}
+
+                        {/* Small Camera Badge at Bottom-Right */}
+                        <span
+                          aria-hidden="true"
+                          className="absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-emerald-700 text-white shadow-sm flex items-center justify-center ring-2 ring-white dark:ring-[#131F1B]"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                        </span>
+                      </button>
+
+                      {/* ONE Single Red Remove Icon Button at Top-Right */}
+                      {imageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => void handleRemoveProductPhoto()}
+                          aria-label="Remove photo"
+                          className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-md flex items-center justify-center ring-2 ring-white dark:ring-[#131F1B] active:scale-95 transition cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
-                  )}
+
+                    {/* Vertical Stack of 3 Equal-Width Action Buttons */}
+                    <div className="flex-1 min-w-0 flex flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={handleSearchOfficialPackshot}
+                        disabled={!barcode.trim() && !name.trim() && !brand.trim()}
+                        className="w-full h-10 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:opacity-45 text-white text-xs font-bold inline-flex items-center justify-center gap-2 shadow-2xs transition active:scale-95 cursor-pointer"
+                      >
+                        <Search className="w-4 h-4 shrink-0" />
+                        <span className="truncate">Search Packshot</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => void handlePastePackshotUrl()}
+                        className="w-full h-10 px-3 rounded-xl bg-white dark:bg-[#1A2A25] hover:bg-slate-50 dark:hover:bg-[#22352E] border border-slate-200 dark:border-[#24352F] text-slate-800 dark:text-[#E7F0EC] text-xs font-bold inline-flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
+                      >
+                        <Clipboard className="w-4 h-4 shrink-0 text-emerald-700 dark:text-emerald-400" />
+                        <span className="truncate">Paste link</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full h-10 px-3 rounded-xl bg-white dark:bg-[#1A2A25] hover:bg-slate-50 dark:hover:bg-[#22352E] border border-slate-200 dark:border-[#24352F] text-slate-800 dark:text-[#E7F0EC] text-xs font-bold inline-flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
+                      >
+                        <Upload className="w-4 h-4 shrink-0 text-emerald-700 dark:text-emerald-400" />
+                        <span className="truncate">{imageUrl ? 'Replace photo' : 'Upload photo'}</span>
+                      </button>
+
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept={ALLOWED_IMAGE_ACCEPT}
+                        onChange={handleSelectImageFile}
+                        className="hidden"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Single-Line Helper Text with Expandable Info Tooltip */}
+                  <div className="space-y-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowPhotoHint((prev) => !prev)}
+                      title="Auto-compressed to ~20 KB WebP (max 800×800 px) before upload. Accepts JPEG/PNG/WebP up to 15 MB."
+                      className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-[#8FA69C] hover:text-slate-700 dark:hover:text-slate-200 transition cursor-pointer text-left"
+                    >
+                      <Info className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                      <span>Auto-optimised to WebP, up to 15 MB</span>
+                    </button>
+
+                    {showPhotoHint && (
+                      <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] pl-5">
+                        Auto-compressed to ~20 KB WebP (max 800×800 px) before upload. Accepts JPEG, PNG, or WebP up to 15 MB.
+                      </p>
+                    )}
+
+                    {lastCompressionStats && (
+                      <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums">
+                        {formatFileSize(lastCompressionStats.originalBytes)} → {formatFileSize(lastCompressionStats.compressedBytes)} (saved {lastCompressionStats.savedPercent}%)
+                      </p>
+                    )}
+
+                    {imageStatusMessage && (
+                      <p
+                        className={`text-xs font-medium ${
+                          imageStatusMessage.type === 'error'
+                            ? 'text-rose-600 dark:text-rose-400'
+                            : imageStatusMessage.type === 'success'
+                            ? 'text-emerald-700 dark:text-emerald-400'
+                            : 'text-slate-600 dark:text-[#8FA69C]'
+                        }`}
+                      >
+                        {imageStatusMessage.text}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* SECTION C: PRICING */}
+            <section aria-label="Pricing" className="space-y-1.5">
+              <h4 className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#8FA69C]">
+                PRICING
+              </h4>
+              <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/80 dark:border-[#24352F] shadow-sm p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      htmlFor="product-purchase-rate"
+                      className="block text-[13px] font-semibold text-slate-700 dark:text-[#C4D6CE] mb-1.5 truncate"
+                    >
+                      Purchase ₹ / {unit} <span className="text-rose-600">*</span>
+                    </label>
+                    <div className="relative">
+                      <IndianRupee
+                        aria-hidden="true"
+                        className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                      />
+                      <input
+                        id="product-purchase-rate"
+                        name="purchasePrice"
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        required
+                        placeholder="0.00"
+                        value={purchasePrice}
+                        onFocus={handleInputFocus}
+                        onBlur={() => setTouchedFields((prev) => ({ ...prev, purchasePrice: true }))}
+                        onChange={(e) => setPurchasePrice(e.target.value)}
+                        className={`w-full h-12 pl-8 pr-3 rounded-xl border bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-base font-semibold tabular-nums focus:outline-none focus:ring-2 transition ${
+                          purchaseError
+                            ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/30'
+                            : 'border-slate-300 dark:border-[#24352F] focus:border-emerald-500 focus:ring-emerald-500/30'
+                        }`}
+                      />
+                    </div>
+                    {purchaseError && (
+                      <p className="mt-1 text-xs font-medium text-rose-600 dark:text-rose-400">{purchaseError}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="product-selling-rate"
+                      className="block text-[13px] font-semibold text-slate-700 dark:text-[#C4D6CE] mb-1.5 truncate"
+                    >
+                      Selling ₹ / {unit} <span className="text-rose-600">*</span>
+                    </label>
+                    <div className="relative">
+                      <IndianRupee
+                        aria-hidden="true"
+                        className="w-4 h-4 text-emerald-600 dark:text-emerald-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                      />
+                      <input
+                        id="product-selling-rate"
+                        name="sellingPrice"
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        required
+                        placeholder="0.00"
+                        value={sellingPrice}
+                        onFocus={handleInputFocus}
+                        onBlur={() => setTouchedFields((prev) => ({ ...prev, sellingPrice: true }))}
+                        onChange={(e) => setSellingPrice(e.target.value)}
+                        className={`w-full h-12 pl-8 pr-3 rounded-xl border bg-white dark:bg-[#1A2A25] text-emerald-800 dark:text-emerald-400 text-base font-semibold tabular-nums focus:outline-none focus:ring-2 transition ${
+                          sellingError
+                            ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/30'
+                            : 'border-slate-300 dark:border-[#24352F] focus:border-emerald-500 focus:ring-emerald-500/30'
+                        }`}
+                      />
+                    </div>
+                    {sellingError && (
+                      <p className="mt-1 text-xs font-medium text-rose-600 dark:text-rose-400">{sellingError}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Live Profit Strip */}
+                <div className={`rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs font-semibold ${profitStripClass}`}>
+                  <span className="truncate">Profit per {unit}</span>
+                  <span className="font-extrabold text-sm tabular-nums shrink-0">
+                    ₹{marginPerUnit.toFixed(2)} ({marginPct}%)
+                  </span>
                 </div>
               </div>
+            </section>
 
-              {/* Status Feedback */}
-              {imageStatusMessage && (
-                <div
-                  className={`px-3 py-2 rounded-xl text-[11px] font-bold flex items-center gap-1.5 ${
-                    imageStatusMessage.type === 'error'
-                      ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50'
-                      : imageStatusMessage.type === 'success'
-                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50'
-                      : 'bg-slate-100 dark:bg-[#131F1B] text-slate-700 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F]'
-                  }`}
-                >
-                  {imageStatusMessage.type === 'error' ? (
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                  ) : (
-                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  )}
-                  <span>{imageStatusMessage.text}</span>
-                </div>
-              )}
-            </div>
-          )}
+            {/* SECTION D: STOCK */}
+            <section aria-label="Stock" className="space-y-1.5">
+              <h4 className="px-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#8FA69C]">
+                STOCK
+              </h4>
+              <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/80 dark:border-[#24352F] shadow-sm p-4">
+                {productToEdit ? (
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0 rounded-xl bg-slate-50 dark:bg-[#1A2A25] px-3.5 py-2.5">
+                      <span className="block text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C]">
+                        Current stock
+                      </span>
+                      <div className="text-xl font-extrabold text-slate-900 dark:text-white tabular-nums leading-tight mt-0.5 truncate">
+                        {productToEdit.stock_quantity}{' '}
+                        <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C]">{unit}</span>
+                      </div>
+                      <span className="block text-[11px] text-slate-500 dark:text-[#8FA69C] truncate mt-0.5">
+                        Managed via Batches &amp; Inward
+                      </span>
+                    </div>
 
-          {/* Category & Unit */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {t('categoryCol')} *
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value as ProductCategory)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                <option value="Milk">{t('catMilk')} (Milk)</option>
-                <option value="Curd & Chaas">{t('catCurd')} (Curd & Chaas)</option>
-                <option value="Paneer & Butter">{t('catPaneer')} (Paneer & Butter)</option>
-                <option value="Ghee">{t('catGhee')} (Ghee)</option>
-                <option value="Sweets/Mithai">{t('catSweets')} (Sweets & Khoya)</option>
-                <option value="Bakery & Extras">{t('catBakery')} (Bakery & Extras)</option>
-              </select>
-            </div>
+                    <div className="w-32 sm:w-36 shrink-0">
+                      <label
+                        htmlFor="product-low-alert"
+                        className="block text-[13px] font-semibold text-slate-700 dark:text-[#C4D6CE] mb-1.5 truncate"
+                      >
+                        Low Alert ({unit})
+                      </label>
+                      <input
+                        id="product-low-alert"
+                        name="minStockAlert"
+                        type="number"
+                        inputMode="decimal"
+                        step="0.1"
+                        min="0"
+                        value={minStockAlert}
+                        onFocus={handleInputFocus}
+                        onChange={(e) => setMinStockAlert(e.target.value)}
+                        className="w-full h-12 px-3 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-amber-700 dark:text-amber-400 text-base font-bold tabular-nums focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 transition"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label
+                          htmlFor="product-initial-stock"
+                          className="block text-[13px] font-semibold text-slate-700 dark:text-[#C4D6CE] mb-1.5 truncate"
+                        >
+                          Initial Stock ({unit})
+                        </label>
+                        <input
+                          id="product-initial-stock"
+                          name="stockQuantity"
+                          type="number"
+                          inputMode="decimal"
+                          step="0.1"
+                          min="0"
+                          placeholder="0"
+                          value={stockQuantity}
+                          onFocus={handleInputFocus}
+                          onChange={(e) => setStockQuantity(e.target.value)}
+                          className="w-full h-12 px-3.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-base font-semibold tabular-nums focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 transition"
+                        />
+                      </div>
 
-            <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {t('unitCol')} *
-              </label>
-              <select
-                value={unit}
-                onChange={(e) => setUnit(e.target.value as ProductUnit)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                <option value="Litre">{language === 'mr' ? 'लिटर (Litre)' : language === 'hi' ? 'लीटर (Litre)' : 'Litre'}</option>
-                <option value="Kg">{language === 'mr' ? 'किलो (Kg)' : language === 'hi' ? 'किलोग्राम (Kg)' : 'Kg'}</option>
-                <option value="Packet (500ml)">{language === 'mr' ? 'पिशवी ५०० मिली' : language === 'hi' ? 'थैली ५०० मिली' : 'Packet (500ml)'}</option>
-                <option value="Packet (1L)">{language === 'mr' ? 'पिशवी १ लिटर' : language === 'hi' ? 'थैली १ लीटर' : 'Packet (1L)'}</option>
-                <option value="Piece">{language === 'mr' ? 'नग / पीस' : language === 'hi' ? 'नग / पीस' : 'Piece'}</option>
-                <option value="Gram">{language === 'mr' ? 'ग्रॅम' : language === 'hi' ? 'ग्राम' : 'Gram'}</option>
-              </select>
-            </div>
+                      <div>
+                        <label
+                          htmlFor="product-low-alert"
+                          className="block text-[13px] font-semibold text-slate-700 dark:text-[#C4D6CE] mb-1.5 truncate"
+                        >
+                          Low Alert ({unit})
+                        </label>
+                        <input
+                          id="product-low-alert"
+                          name="minStockAlert"
+                          type="number"
+                          inputMode="decimal"
+                          step="0.1"
+                          min="0"
+                          value={minStockAlert}
+                          onFocus={handleInputFocus}
+                          onChange={(e) => setMinStockAlert(e.target.value)}
+                          className="w-full h-12 px-3.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-amber-700 dark:text-amber-400 text-base font-bold tabular-nums focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 transition"
+                        />
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-500 dark:text-[#8FA69C] flex items-center gap-1.5">
+                      <Info className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <span className="truncate">
+                        {getShelfLifeNote(category, name, language)} • Initial stock batch auto-created
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
 
-          {/* Purchase Price vs Selling Price */}
-          <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-2xl border border-slate-200 dark:border-[#24352F]">
-            <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {language === 'mr' ? `खरेदी दर प्रति ${unit} (₹)` : language === 'hi' ? `खरीद भाव प्रति ${unit} (₹)` : `Purchase Rate per ${unit} (₹)`} *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                required
-                placeholder="58"
-                value={purchasePrice}
-                onChange={(e) => setPurchasePrice(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {language === 'mr' ? `विक्री दर प्रति ${unit} (₹)` : language === 'hi' ? `बिक्री भाव प्रति ${unit} (₹)` : `Selling Rate per ${unit} (₹)`} *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                required
-                placeholder="70"
-                value={sellingPrice}
-                onChange={(e) => setSellingPrice(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-emerald-800 dark:text-emerald-400 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-            </div>
-
-            {/* Live Profit Margin Calculator Indicator */}
-            <div className="col-span-2 flex items-center justify-between text-xs font-semibold pt-1 text-slate-600 dark:text-[#8FA69C] border-t border-slate-200 dark:border-[#24352F]">
-              <span>{language === 'mr' ? `प्रति ${unit} नफा:` : language === 'hi' ? `प्रति ${unit} अनुमानित लाभ:` : `Est Profit per ${unit}:`}</span>
-              <span className={`font-bold ${marginPerUnit >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600'}`}>
-                ₹{marginPerUnit.toFixed(2)} ({marginPct}% {language === 'mr' ? 'मार्जिन' : language === 'hi' ? 'मार्जिन' : 'Margin'})
-              </span>
-            </div>
-          </div>
-
-          {/* Current Stock & Low Stock Alert Level */}
-          {productToEdit ? (
-            /* In Edit Mode: Clean Informative Stock Card + Editable Low Stock Alert */
-            <div className="bg-emerald-50/60 dark:bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/40 flex items-center justify-between gap-3">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 block">
-                  {language === 'mr' ? 'सध्या दुकानातील शिल्लक साठा:' : language === 'hi' ? 'दुकान में मौजूदा स्टॉक:' : 'Current Shop Stock:'}
-                </span>
-                <span className="text-xl font-black text-slate-900 dark:text-white">
-                  {productToEdit.stock_quantity} <span className="text-xs font-bold text-slate-500">{unit}</span>
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-[#8FA69C] block mt-0.5">
-                  ✓ {language === 'mr' ? 'लॉट व मुदत बॅचनुसार सुरक्षित (बदलण्यासाठी स्टॉक आवक वापरा)' : language === 'hi' ? 'बैच व एक्सपायरी अनुसार सुरक्षित (बदलने हेतु स्टॉक आवक करें)' : 'Managed via Batches & Inward'}
-                </span>
-              </div>
-
-              <div className="w-36 shrink-0">
-                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? `कमी साठा इशारा (${unit})` : language === 'hi' ? `कम स्टॉक अलर्ट (${unit})` : `Low Alert (${unit})`}
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={minStockAlert}
-                  onChange={(e) => setMinStockAlert(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-amber-700 dark:text-amber-400 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-            </div>
-          ) : (
-            /* In Add Mode (New product): Editable Initial Stock & Alert */
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? `सुरुवातीचा साठा (${unit} मध्ये)` : language === 'hi' ? `आरंभिक स्टॉक (${unit} में)` : `Initial Stock (${unit})`}
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={stockQuantity}
-                  onChange={(e) => setStockQuantity(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  placeholder="0"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                  {language === 'mr' ? `कमी साठा मर्यादा (${unit})` : language === 'hi' ? `कम स्टॉक अलर्ट सीमा (${unit})` : `Low Stock Threshold (${unit})`}
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={minStockAlert}
-                  onChange={(e) => setMinStockAlert(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-amber-700 dark:text-amber-400 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div className="col-span-2 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/40 flex items-center gap-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold">
-                <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>{getShelfLifeNote(category, name, language)} &bull; {language === 'mr' ? 'आरंभीच्या साठ्याची बॅच आपोआप तयार होईल' : language === 'hi' ? 'आरंभिक स्टॉक का बैच स्वतः बन जाएगा' : 'Initial stock batch auto-created with variety expiry'}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Form Actions */}
-          <div className="flex gap-2 pt-3 border-t border-slate-100 dark:border-[#24352F]">
+          {/* 3. Sticky Footer */}
+          <div className="shrink-0 border-t border-slate-200/80 dark:border-[#24352F] bg-white dark:bg-[#131F1B] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex items-center gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="w-1/2 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] font-semibold text-xs text-slate-700 dark:text-[#8FA69C]"
+              className="w-1/3 h-12 px-3 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] hover:bg-slate-50 dark:hover:bg-[#22352E] font-bold text-sm text-slate-700 dark:text-[#C4D6CE] transition active:scale-95 cursor-pointer"
             >
               {t('cancel')}
             </button>
             <button
               type="submit"
-              className="w-1/2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 flex items-center justify-center gap-1.5"
+              disabled={!isDirty || !isFormValid || isSaving || isUploadingImage}
+              className="flex-1 h-12 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 disabled:bg-emerald-700/45 text-white font-bold text-sm shadow-sm inline-flex items-center justify-center gap-2 transition active:scale-95 disabled:active:scale-100 cursor-pointer"
             >
-              <Save className="w-4 h-4" />
-              <span>{productToEdit ? (language === 'mr' ? 'माहिती जतन करा' : language === 'hi' ? 'अपडेट सुरक्षित करें' : 'Update Details') : t('save')}</span>
+              {isSaving ? (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className="w-4 h-4 rounded-full border-2 border-white/35 border-t-white animate-spin"
+                  />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 shrink-0" />
+                  <span>{productToEdit ? 'Update Details' : t('save')}</span>
+                </>
+              )}
             </button>
           </div>
-
         </form>
-
       </div>
 
       {/* Barcode Scanner Modal */}

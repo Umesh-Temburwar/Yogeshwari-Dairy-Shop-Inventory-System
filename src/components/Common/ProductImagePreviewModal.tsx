@@ -168,11 +168,7 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
       } catch {
         if (active) {
           setCameraError(
-            language === 'mr'
-              ? 'कॅमेरा सुरू करता आला नाही. कृपया कॅमेरा परवानगी द्या किंवा गॅलरीमधून फोटो निवडा.'
-              : language === 'hi'
-              ? 'कैमरा शुरू नहीं हो सका। कृपया कैमरा अनुमति दें या गैलरी से फोटो चुनें।'
-              : 'Could not open camera. Please allow camera permission or choose from Gallery.'
+            'Could not open camera. Please allow camera permission or choose from Gallery.'
           );
         }
       }

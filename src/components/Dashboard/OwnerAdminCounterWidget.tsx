@@ -88,7 +88,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
     const nextState = !isRegistrationAllowed;
     setIsTogglingReg(true);
     try {
-      await setRegistrationSetting(nextState, 'Owner', 'yogeshwaridairy9896@gmail.com', 'निखिल सखारे (दुकान मालक)');
+      await setRegistrationSetting(nextState, 'Owner', 'yogeshwaridairy9896@gmail.com', 'Nikhil Sakhare (Shop Owner)');
       setIsRegistrationAllowed(nextState);
     } finally {
       setIsTogglingReg(false);
@@ -138,12 +138,12 @@ export const OwnerAdminCounterWidget: React.FC = () => {
 
       const alreadyLogged = list.some(a => a.reference_id === s.invoice_no);
       if (!alreadyLogged) {
-        const itemsText = s.items ? s.items.map(i => `${i.product_name} (${i.quantity} ${i.unit})`).join(', ') : tr('Product Sale', 'माल बिक्री', 'मालाची विक्री');
+        const itemsText = s.items ? s.items.map(i => `${i.product_name} (${i.quantity} ${i.unit})`).join(', ') : 'Product Sale';
         const isOwner = s.created_by_role === 'Owner' || s.created_by_email === 'yogeshwaridairy9896@gmail.com';
         const defaultSlot = s.admin_slot ?? (isOwner ? undefined : 1);
-        const defaultName = s.created_by_name || (isOwner ? tr('Nikhil Sakhare', 'निखिल सखारे', 'निखिल सखारे') : tr('Nilesh Sakhare', 'निलेश सखारे', 'निलेश सखारे'));
+        const defaultName = s.created_by_name || (isOwner ? 'Nikhil Sakhare' : 'Nilesh Sakhare');
         const defaultEmail = s.created_by_email || (isOwner ? 'yogeshwaridairy9896@gmail.com' : 'nilusakhare2003@gmail.com');
-        const defaultCounter = s.counter_name || (isOwner ? tr('Owner Master Counter', 'मुख्य मालिक काउंटर', 'मुख्य मालक काऊंटर') : tr('Counter 1 - Main Billing', 'काउंटर १ - मुख्य बिलिंग', 'काऊंटर १ - मुख्य बिलिंग'));
+        const defaultCounter = s.counter_name || (isOwner ? 'Owner Master Counter' : 'Counter 1 - Main Billing');
 
         list.push({
           id: 'gen-sale-' + s.id,
@@ -153,8 +153,8 @@ export const OwnerAdminCounterWidget: React.FC = () => {
           admin_slot: defaultSlot,
           counter_name: defaultCounter,
           action_type: 'SALE_CREATED',
-          title: `${tr('Receipt Sale', 'बिल बिक्री', 'पावती विक्री')}: #${s.invoice_no}`,
-          details: `${tr('Items', 'सामान', 'वस्तू')}: ${itemsText} | ${tr('Customer', 'ग्राहक', 'ग्राहक')}: ${s.customer_name} | ${tr('Mode', 'माध्यम', 'मोड')}: ${s.payment_mode} | ${tr('Total', 'कुल', 'एकूण')}: ₹${s.net_amount}`,
+          title: `${'Receipt Sale'}: #${s.invoice_no}`,
+          details: `${'Items'}: ${itemsText} | ${'Customer'}: ${s.customer_name} | ${'Mode'}: ${s.payment_mode} | ${'Total'}: ₹${s.net_amount}`,
           amount: s.net_amount,
           reference_id: s.invoice_no,
           reference_table: 'sales',
@@ -172,13 +172,13 @@ export const OwnerAdminCounterWidget: React.FC = () => {
       if (!alreadyLogged) {
         list.push({
           id: 'gen-pur-' + p.id,
-          admin_name: tr('Nikhil Sakhare', 'निखिल सखारे', 'निखिल सखारे'),
+          admin_name: 'Nikhil Sakhare',
           admin_email: 'yogeshwaridairy9896@gmail.com',
           admin_role: 'Owner',
-          counter_name: tr('Owner Master Counter', 'मुख्य मालिक काउंटर', 'मुख्य मालक काऊंटर'),
+          counter_name: 'Owner Master Counter',
           action_type: 'STOCK_INWARD',
-          title: `${tr('Stock Inward', 'खरीद स्टॉक आवक', 'खरेदी साठा आवक')}: ${p.product_name}`,
-          details: `${tr('Supplier', 'सप्लायर', 'सप्लायर')}: ${p.supplier_name || 'Standard Supplier'} | ${tr('Purchase Qty', 'खरीद मात्रा', 'खरेदी प्रमाण')}: +${p.quantity} ${p.unit} | ${tr('Rate', 'खरीद दर', 'खरेदी दर')}: ₹${p.purchase_price} | ${tr('Total Cost', 'कुल खर्च', 'एकूण खर्च')}: ₹${p.total_amount} | ${tr('Payment', 'भुगतान', 'पेमेंट')}: ${p.payment_mode || 'Cash'} | ${tr('Batch', 'बैच', 'बॅच')}: #${p.batch_no || 'Standard'} | ${tr('Expiry', 'एक्सपायरी', 'मुदत समाप्ती')}: ${p.expiry_date || 'N/A'}${p.notes ? ` | ${tr('Note', 'नोट', 'टीप')}: ${p.notes}` : ''}`,
+          title: `${'Stock Inward'}: ${p.product_name}`,
+          details: `${'Supplier'}: ${p.supplier_name || 'Standard Supplier'} | ${'Purchase Qty'}: +${p.quantity} ${p.unit} | ${'Rate'}: ₹${p.purchase_price} | ${'Total Cost'}: ₹${p.total_amount} | ${'Payment'}: ${p.payment_mode || 'Cash'} | ${'Batch'}: #${p.batch_no || 'Standard'} | ${'Expiry'}: ${p.expiry_date || 'N/A'}${p.notes ? ` | ${'Note'}: ${p.notes}` : ''}`,
           amount: p.total_amount,
           reference_id: p.id,
           reference_table: 'purchases',
@@ -196,14 +196,14 @@ export const OwnerAdminCounterWidget: React.FC = () => {
       if (!alreadyLogged) {
         list.push({
           id: 'gen-dmg-' + d.id,
-          admin_name: tr('Nilesh Sakhare', 'निलेश सखारे', 'निलेश सखारे'),
+          admin_name: 'Nilesh Sakhare',
           admin_email: 'nilusakhare2003@gmail.com',
           admin_role: 'Admin',
           admin_slot: 1,
-          counter_name: tr('Counter 1 - Main Billing', 'काउंटर १ - मुख्य बिलिंग', 'काऊंटर १ - मुख्य बिलिंग'),
+          counter_name: 'Counter 1 - Main Billing',
           action_type: 'DAMAGE_RECORDED',
-          title: `${tr('Damage Recorded', 'खराब माल प्रविष्टि', 'खराब माल नोंद')}: ${d.product_name}`,
-          details: `${tr('Reason', 'कारण', 'कारण')}: ${d.reason} | ${tr('Qty', 'मात्रा', 'प्रमाण')}: -${d.quantity} ${d.unit} | ${tr('Est. Loss', 'अनुमानित हानि', 'अंदाजे तोटा')}: ₹${d.estimated_loss_amount}`,
+          title: `${'Damage Recorded'}: ${d.product_name}`,
+          details: `${'Reason'}: ${d.reason} | ${'Qty'}: -${d.quantity} ${d.unit} | ${'Est. Loss'}: ₹${d.estimated_loss_amount}`,
           amount: d.estimated_loss_amount,
           reference_id: d.product_id,
           reference_table: 'damage_records',
@@ -221,7 +221,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
     return allActivitiesStream.filter(act => {
       // Filter by tab
       if (activeTabFilter === 'admin1') {
-        const isAdm1 = act.admin_slot === 1 || act.admin_email === 'nilusakhare2003@gmail.com' || act.admin_name?.includes('निलेश') || act.admin_name?.toLowerCase().includes('nilesh');
+        const isAdm1 = act.admin_slot === 1 || act.admin_email === 'nilusakhare2003@gmail.com' || act.admin_name?.toLowerCase().includes('nilesh');
         if (!isAdm1) return false;
       }
       if (activeTabFilter === 'inventory_changes') {
@@ -248,7 +248,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
     });
   }, [allActivitiesStream, activeTabFilter, searchQuery]);
 
-  // Granular sales list for the "काऊंटर विक्री तपशील" tab (strictly within last 1 day / 24h)
+  // Granular sales list for the Counter Sales Details tab (strictly within last 1 day / 24h)
   const itemizedSales = useMemo(() => {
     const oneDayAgoMs = Date.now() - 24 * 60 * 60 * 1000;
     return sales
@@ -273,31 +273,31 @@ export const OwnerAdminCounterWidget: React.FC = () => {
   const getActionBadge = (type: string) => {
     switch (type) {
       case 'SALE_CREATED':
-        return { label: isMr ? 'पावती विक्री' : isHi ? 'बिल बिक्री' : 'Sale', bg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40' };
+        return { label: 'Sale', bg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40' };
       case 'SALE_UPDATED':
-        return { label: isMr ? 'पावती बदल' : isHi ? 'बिल बदलाव' : 'Sale Edit', bg: 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border-amber-200 dark:border-amber-800/40' };
+        return { label: 'Sale Edit', bg: 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border-amber-200 dark:border-amber-800/40' };
       case 'SALE_DELETED':
-        return { label: isMr ? 'पावती रद्द' : isHi ? 'बिल रद्द' : 'Sale Void', bg: 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border-rose-200 dark:border-rose-800/40' };
+        return { label: 'Sale Void', bg: 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border-rose-200 dark:border-rose-800/40' };
       case 'STOCK_INWARD':
-        return { label: isMr ? 'साठा आवक' : isHi ? 'स्टॉक इनवर्ड' : 'Stock In', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-950/70 dark:text-blue-300 border-blue-200 dark:border-blue-800/40' };
+        return { label: 'Stock In', bg: 'bg-blue-100 text-blue-800 dark:bg-blue-950/70 dark:text-blue-300 border-blue-200 dark:border-blue-800/40' };
       case 'PRODUCT_ADDED':
-        return { label: isMr ? 'नवीन उत्पादन' : isHi ? 'नया उत्पाद' : 'New Product', bg: 'bg-teal-100 text-teal-800 dark:bg-teal-950/70 dark:text-teal-300 border-teal-200 dark:border-teal-800/40' };
+        return { label: 'New Product', bg: 'bg-teal-100 text-teal-800 dark:bg-teal-950/70 dark:text-teal-300 border-teal-200 dark:border-teal-800/40' };
       case 'PRODUCT_UPDATED':
-        return { label: isMr ? 'इन्व्हेंटरी बदल' : isHi ? 'इन्वेंट्री अपडेट' : 'Product Edit', bg: 'bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border-amber-200 dark:border-amber-800/40' };
+        return { label: 'Product Edit', bg: 'bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border-amber-200 dark:border-amber-800/40' };
       case 'DAMAGE_RECORDED':
-        return { label: isMr ? 'खराब माल/नुकसान' : isHi ? 'खराब माल/हानि' : 'Damage', bg: 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border-rose-200 dark:border-rose-800/40' };
+        return { label: 'Damage', bg: 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border-rose-200 dark:border-rose-800/40' };
       case 'EXPENSE_ADDED':
-        return { label: isMr ? 'दुकान खर्च' : isHi ? 'दुकान खर्च' : 'Expense', bg: 'bg-purple-100 text-purple-800 dark:bg-purple-950/70 dark:text-purple-300 border-purple-200 dark:border-purple-800/40' };
+        return { label: 'Expense', bg: 'bg-purple-100 text-purple-800 dark:bg-purple-950/70 dark:text-purple-300 border-purple-200 dark:border-purple-800/40' };
       case 'UDHAR_PAYMENT':
-        return { label: isMr ? 'उधारी जमा' : isHi ? 'उधारी जमा' : 'Credit Jama', bg: 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border-amber-200 dark:border-amber-800/40' };
+        return { label: 'Credit Jama', bg: 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border-amber-200 dark:border-amber-800/40' };
       case 'CUSTOMER_RETURN':
       case 'CUSTOMER_PARTIAL_RETURN':
       case 'CUSTOMER_FULL_RETURN':
-        return { label: isMr ? 'ग्राहक परतावा' : isHi ? 'ग्राहक वापसी' : 'Cust Return', bg: 'bg-orange-100 text-orange-800 dark:bg-orange-950/70 dark:text-orange-300 border-orange-200 dark:border-orange-800/40' };
+        return { label: 'Cust Return', bg: 'bg-orange-100 text-orange-800 dark:bg-orange-950/70 dark:text-orange-300 border-orange-200 dark:border-orange-800/40' };
       case 'SUPPLIER_RETURN':
-        return { label: isMr ? 'सप्लायर परतावा' : isHi ? 'सप्लायर वापसी' : 'Supplier Return', bg: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/70 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/40' };
+        return { label: 'Supplier Return', bg: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/70 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/40' };
       default:
-        return { label: isMr ? 'नोंद' : isHi ? 'प्रविष्टि' : 'Log', bg: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700' };
+        return { label: 'Log', bg: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700' };
     }
   };
 
@@ -305,12 +305,12 @@ export const OwnerAdminCounterWidget: React.FC = () => {
     const trimmed = part.trim();
     if (!trimmed) return null;
 
-    const isIncrease = trimmed.includes('+') || trimmed.includes('आवक') || trimmed.includes('वाढवला');
-    const isDecrease = trimmed.includes('-') || trimmed.includes('घट') || trimmed.includes('कमी') || trimmed.includes('तोटा') || trimmed.includes('हानि') || trimmed.includes('Loss') || trimmed.includes('खराब') || trimmed.includes('हटवले');
+    const isIncrease = trimmed.includes('+') || trimmed.toLowerCase().includes('inward') || trimmed.toLowerCase().includes('added');
+    const isDecrease = trimmed.includes('-') || trimmed.toLowerCase().includes('deduct') || trimmed.toLowerCase().includes('loss') || trimmed.toLowerCase().includes('damage') || trimmed.toLowerCase().includes('deleted');
     const isChangeArrow = trimmed.includes('➔') || trimmed.includes('->');
     const isMoney = trimmed.includes('₹');
-    const isBatchOrExp = trimmed.includes('बॅच') || trimmed.includes('बैच') || trimmed.includes('मुदत') || trimmed.includes('एक्सपायरी') || trimmed.includes('Batch') || trimmed.includes('Expiry');
-    const isSupplier = trimmed.includes('सप्लायर') || trimmed.includes('Supplier');
+    const isBatchOrExp = trimmed.includes('Batch') || trimmed.includes('Expiry');
+    const isSupplier = trimmed.includes('Supplier');
 
     let badgeClass = 'bg-slate-100 dark:bg-[#16221E] text-slate-700 dark:text-[#CBD5E1] border-slate-200 dark:border-[#24352F]';
     if (isChangeArrow) {
@@ -361,20 +361,20 @@ export const OwnerAdminCounterWidget: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/60">
-                👑 {isMr ? 'दुकान मालक तपासणी वही' : isHi ? 'दुकान मालिक नियंत्रण कक्ष' : 'Owner Control Center'}
+                👑 {'Owner Control Center'}
               </span>
               <span className="text-xs text-slate-400 dark:text-[#8FA69C] hidden sm:inline">&bull;</span>
               <span className="text-xs font-semibold text-slate-500 dark:text-[#8FA69C] hidden sm:inline">
-                {isMr ? 'प्रशासक थेट कामगिरी व इन्व्हेंटरी बदल' : isHi ? 'एडमिन सीधा प्रदर्शन व इन्वेंट्री बदलाव' : 'Admin Live Tracker & Inventory Audits'}
+                {'Admin Live Tracker & Inventory Audits'}
               </span>
             </div>
             <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5">
-              {isMr ? 'दुकान मालक नियंत्रण कक्ष — ॲडमिन व काऊंटर हिशोब' : 
-               isHi ? 'दुकान मालिक नियंत्रण कक्ष — एडमिन व काउंटर हिसाब' : 
+              {
+               
                'Owner Control Center: Admin & Counter Audit'}
             </h2>
             <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-0.5">
-              📧 {isMr ? 'मालक लॉगिन:' : isHi ? 'मालिक लॉगिन:' : 'Owner Login:'} <span className="font-bold text-amber-700 dark:text-amber-400">yogeshwaridairy9896@gmail.com</span>
+              📧 {'Owner Login:'} <span className="font-bold text-amber-700 dark:text-amber-400">yogeshwaridairy9896@gmail.com</span>
             </p>
           </div>
         </div>
@@ -392,15 +392,15 @@ export const OwnerAdminCounterWidget: React.FC = () => {
             }`}
             title={
               isRegistrationAllowed 
-                ? tr('Click to disable registration on login page', 'लॉगिन से पंजीकरण बंद करने के लिए दबाएं', 'लॉगिन पेजवरून नोंदणी बंद करण्यासाठी दाबा')
-                : tr('Click to enable registration on login page', 'लॉगिन पर पंजीकरण शुरू करने के लिए दबाएं', 'लॉगिन पेजवर नोंदणी सुरू करण्यासाठी दाबा')
+                ? 'Click to disable registration on login page'
+                : 'Click to enable registration on login page'
             }
           >
             <span className={`w-2 h-2 rounded-full ${isRegistrationAllowed ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
             <span>
               {isTogglingReg 
-                ? tr('Updating...', 'बदल रहा है...', 'बदलत आहे...')
-                : (isMr ? `नोंदणी: ${isRegistrationAllowed ? 'चालू (ON) 🟢' : 'बंद (OFF) 🔒'}` : isHi ? `पंजीकरण: ${isRegistrationAllowed ? 'चालू (ON) 🟢' : 'बंद (OFF) 🔒'}` : `Reg: ${isRegistrationAllowed ? 'ON 🟢' : 'OFF 🔒'}`)}
+                ? 'Updating...'
+                : (`Reg: ${isRegistrationAllowed ? 'ON 🟢' : 'OFF 🔒'}`)}
             </span>
           </button>
 
@@ -408,10 +408,10 @@ export const OwnerAdminCounterWidget: React.FC = () => {
             onClick={() => refreshData()}
             disabled={isSyncing}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] text-xs font-bold transition shadow-2xs"
-            title={tr('Refresh logs from Supabase', 'Supabase से लॉग रीफ्रेश करें', 'Supabase वरून नोंदी ताज्या करा')}
+            title={'Refresh logs from Supabase'}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-amber-500' : ''}`} />
-            <span>{isSyncing ? tr('Refreshing...', 'ताज़ा हो रहा...', 'ताजे करत आहे...') : tr('Refresh', 'रिफ्रेश', 'रिफ्रेश')}</span>
+            <span>{isSyncing ? 'Refreshing...' : 'Refresh'}</span>
           </button>
         </div>
       </div>
@@ -424,19 +424,19 @@ export const OwnerAdminCounterWidget: React.FC = () => {
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-xs">
-                {language === 'en' ? '1' : '१'}
+                1
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-black text-slate-900 dark:text-white text-sm sm:text-base">
-                    {tr('Nilesh Sakhare', 'निलेश सखारे', 'निलेश सखारे')}
+                    {'Nilesh Sakhare'}
                   </h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
-                    🛡️ {tr('Admin 1', 'एडमिन १', 'प्रशासक १')}
+                    🛡️ {'Admin 1'}
                   </span>
                 </div>
                 <p className="text-xs font-semibold text-blue-700 dark:text-blue-400">
-                  📍 {isMr ? 'काऊंटर १ — मुख्य बिलिंग (POS)' : isHi ? 'काउंटर १ — मुख्य बिलिंग (POS)' : 'Counter 1 — Main POS Billing'}
+                  📍 {'Counter 1 — Main POS Billing'}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
                   📧 <span className="font-semibold text-blue-800 dark:text-blue-300">nilusakhare2003@gmail.com</span>
@@ -445,10 +445,10 @@ export const OwnerAdminCounterWidget: React.FC = () => {
             </div>
             <div className="text-right">
               <span className="text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] block">
-                {isMr ? 'एकूण बिले' : isHi ? 'कुल बिल' : 'Total Bills'}
+                {'Total Bills'}
               </span>
               <span className="text-lg font-black text-blue-900 dark:text-blue-200">
-                {admin1Stats.count} {isMr ? 'पावत्या' : isHi ? 'बिल' : 'Bills'}
+                {admin1Stats.count} {'Bills'}
               </span>
             </div>
           </div>
@@ -456,7 +456,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
           <div className="bg-white/80 dark:bg-[#131F1B]/90 rounded-xl p-3 border border-blue-100 dark:border-[#24352F] space-y-2">
             <div className="flex items-baseline justify-between">
               <span className="text-xs font-bold text-slate-600 dark:text-[#8FA69C]">
-                {isMr ? 'एकूण विक्री रक्कम:' : isHi ? 'कुल बिक्री राशि:' : 'Total Sales:'}
+                {'Total Sales:'}
               </span>
               <span className="text-xl font-black text-emerald-700 dark:text-emerald-400">
                 ₹{admin1Stats.totalSales.toLocaleString('en-IN')}
@@ -465,15 +465,15 @@ export const OwnerAdminCounterWidget: React.FC = () => {
 
             <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F] text-[11px]">
               <div>
-                <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{isMr ? 'रोख जमा' : isHi ? 'रोकड़' : 'Cash'}</span>
+                <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{'Cash'}</span>
                 <span className="font-extrabold text-blue-900 dark:text-blue-300">₹{admin1Stats.cash.toLocaleString('en-IN')}</span>
               </div>
               <div>
-                <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन' : 'UPI'}</span>
+                <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{'UPI'}</span>
                 <span className="font-extrabold text-purple-900 dark:text-purple-300">₹{admin1Stats.online.toLocaleString('en-IN')}</span>
               </div>
               <div>
-                <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{isMr ? 'उधारी दिली' : isHi ? 'उधार' : 'Credit'}</span>
+                <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{'Credit'}</span>
                 <span className="font-extrabold text-amber-900 dark:text-amber-300">₹{admin1Stats.udhar.toLocaleString('en-IN')}</span>
               </div>
             </div>
@@ -490,14 +490,14 @@ export const OwnerAdminCounterWidget: React.FC = () => {
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-black text-slate-900 dark:text-white text-sm sm:text-base">
-                    {isMr ? 'योगेश्वरी डेअरी' : isHi ? 'योगेश्वरी डेयरी' : 'Yogeshwari Dairy'}
+                    {'Yogeshwari Dairy'}
                   </h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
-                    👑 {isMr ? 'एकूण उलाढाल' : isHi ? 'कुल टर्नओवर' : 'Total Turnover'}
+                    👑 {'Total Turnover'}
                   </span>
                 </div>
                 <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
-                  📍 {isMr ? 'दुकान विक्री व गल्ला संकलन सारांश' : isHi ? 'दुकान बिक्री & गल्ला संकलन सारांश' : 'Total Store Sales & Collection Summary'}
+                  📍 {'Total Store Sales & Collection Summary'}
                 </p>
                 <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
                   📧 <span className="font-semibold text-amber-800 dark:text-amber-300">yogeshwaridairy9896@gmail.com</span>
@@ -506,10 +506,10 @@ export const OwnerAdminCounterWidget: React.FC = () => {
             </div>
             <div className="text-right">
               <span className="text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] block">
-                {isMr ? 'एकूण बिले' : isHi ? 'कुल बिल' : 'Total Bills'}
+                {'Total Bills'}
               </span>
               <span className="text-lg font-black text-amber-900 dark:text-amber-200">
-                {storeTotalStats.count} {isMr ? 'पावत्या' : isHi ? 'बिल' : 'Bills'}
+                {storeTotalStats.count} {'Bills'}
               </span>
             </div>
           </div>
@@ -517,7 +517,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
           <div className="bg-white/80 dark:bg-[#131F1B]/90 rounded-xl p-3 border border-amber-200 dark:border-[#24352F] space-y-2">
             <div className="flex items-baseline justify-between">
               <span className="text-xs font-bold text-slate-600 dark:text-[#8FA69C]">
-                {isMr ? 'दुकान एकूण विक्री:' : isHi ? 'दुकान कुल बिक्री:' : 'Total Store Sales:'}
+                {'Total Store Sales:'}
               </span>
               <span className="text-xl font-black text-emerald-700 dark:text-emerald-400">
                 ₹{storeTotalStats.totalSales.toLocaleString('en-IN')}
@@ -526,15 +526,15 @@ export const OwnerAdminCounterWidget: React.FC = () => {
 
             <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 dark:border-[#24352F] text-[11px]">
               <div>
-                <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{isMr ? 'रोख जमा' : isHi ? 'रोकड़' : 'Cash'}</span>
+                <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{'Cash'}</span>
                 <span className="font-extrabold text-blue-900 dark:text-blue-300">₹{storeTotalStats.cash.toLocaleString('en-IN')}</span>
               </div>
               <div>
-                <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{isMr ? 'ऑनलाईन UPI' : isHi ? 'ऑनलाइन' : 'UPI'}</span>
+                <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{'UPI'}</span>
                 <span className="font-extrabold text-purple-900 dark:text-purple-300">₹{storeTotalStats.online.toLocaleString('en-IN')}</span>
               </div>
               <div>
-                <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{isMr ? 'उधारी दिली' : isHi ? 'उधार' : 'Credit'}</span>
+                <span className="text-slate-400 dark:text-[#8FA69C] block font-medium">{'Credit'}</span>
                 <span className="font-extrabold text-amber-900 dark:text-amber-300">₹{storeTotalStats.udhar.toLocaleString('en-IN')}</span>
               </div>
             </div>
@@ -550,16 +550,16 @@ export const OwnerAdminCounterWidget: React.FC = () => {
             <div className="flex flex-wrap items-center gap-2">
               <h4 className="font-black text-slate-900 dark:text-white text-sm sm:text-base flex items-center gap-2">
                 <Clock className="w-4 h-4 text-amber-500 shrink-0" />
-                <span className="hidden sm:inline">{isMr ? 'थेट तपासणी नोंदवही (कोणत्या काऊंटरवरून काय विकले व इन्व्हेंटरी बदल):' : isHi ? 'लाइव ऑडिट रजिस्टर (किसने किस काउंटर से क्या बेचा और क्या बदला):' : 'Live Audit Stream (Who sold what from which counter & updates):'}</span>
-                <span className="sm:hidden">{isMr ? 'थेट तपासणी नोंदवही (Live Audit)' : isHi ? 'लाइव ऑडिट रजिस्टर' : 'Live Audit Stream'}</span>
+                <span className="hidden sm:inline">{'Live Audit Stream (Who sold what from which counter & updates):'}</span>
+                <span className="sm:hidden">{'Live Audit Stream'}</span>
               </h4>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-300/80 dark:border-amber-700/60 flex items-center gap-1 shrink-0">
                 <span>⏱️</span>
-                <span>{isMr ? '१ दिवस डेटा' : isHi ? '१ दिन डेटा' : '1-Day Retention'}</span>
+                <span>{'1-Day Retention'}</span>
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-0.5">
-              {isMr ? 'निलेश सखारे व निखिल सखारे यांनी केलेल्या मागील १ दिवसामधील (२४ तास) सर्व विक्री, साठा बदल, इन्व्हेंटरी अपडेट व नुकसानीच्या थेट नोंदी (दुसऱ्या दिवशी आपोआप हटवले जातात).' : isHi ? 'निलेश सखारे और निखिल सखारे द्वारा पिछले १ दिन (२४ घंटे) में की गई सभी बिक्री, स्टॉक अपडेट और इन्वेंट्री बदलाव (दूसरे दिन स्वतः हट जाते हैं)।' : 'Live 1-day activity stream of sales and inventory changes by Nilesh Sakhare and Nikhil Sakhare (auto-removed on Day 2).'}
+              {'Live 1-day activity stream of sales and inventory changes by Nilesh Sakhare and Nikhil Sakhare (auto-removed on Day 2).'}
             </p>
           </div>
 
@@ -575,12 +575,12 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                     ? 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-300/80 dark:border-emerald-700/60'
                     : 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-300/80 dark:border-rose-800/60'
                 }`}
-                title={isAuditStreamEnabled ? tr('Turn OFF Audit Stream', 'रजिस्टर बंद करें (Turn OFF)', 'नोंदवही बंद करा (Turn OFF)') : tr('Turn ON Audit Stream', 'रजिस्टर चालू करें (Turn ON)', 'नोंदवही चालू करा (Turn ON)')}
+                title={isAuditStreamEnabled ? 'Turn OFF Audit Stream' : 'Turn ON Audit Stream'}
               >
                 <span className={`w-2 h-2 rounded-full ${isAuditStreamEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                <span>{isMr ? 'नोंदवही:' : isHi ? 'रजिस्टर:' : 'Audit:'}</span>
+                <span>{'Audit:'}</span>
                 <span className="font-extrabold uppercase">
-                  {isAuditStreamEnabled ? tr('ON', 'चालू (ON)', 'चालू (ON)') : tr('OFF', 'बंद (OFF)', 'बंद (OFF)')}
+                  {isAuditStreamEnabled ? 'ON' : 'OFF'}
                 </span>
                 <Power className={`w-3.5 h-3.5 ml-0.5 ${isAuditStreamEnabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`} />
               </button>
@@ -591,7 +591,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                   : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border-rose-200'
               }`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${isAuditStreamEnabled ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                <span>{isAuditStreamEnabled ? tr('Audit: ON', 'ऑडिट: चालू', 'नोंदवही: चालू') : tr('Audit: OFF', 'ऑडिट: बंद', 'नोंदवही: बंद')}</span>
+                <span>{isAuditStreamEnabled ? 'Audit: ON' : 'Audit: OFF'}</span>
               </div>
             )}
 
@@ -601,7 +601,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C]" />
                 <input
                   type="text"
-                  placeholder={isMr ? 'बिल क्र., वस्तू, नाव शोधा...' : isHi ? 'बिल क्र., सामान, नाम खोजें...' : 'Search bill, item, name...'}
+                  placeholder={'Search bill, item, name...'}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -618,18 +618,10 @@ export const OwnerAdminCounterWidget: React.FC = () => {
             </div>
             <div>
               <p className="font-extrabold text-sm text-slate-800 dark:text-white">
-                {isMr
-                  ? 'थेट तपासणी नोंदवही (Live Audit Stream) बंद आहे'
-                  : isHi
-                  ? 'लाइव ऑडिट रजिस्टर (Live Audit Stream) बंद है'
-                  : 'Live Audit Stream is Currently Turned OFF'}
+                {'Live Audit Stream is Currently Turned OFF'}
               </p>
               <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-1 max-w-md mx-auto">
-                {isMr
-                  ? 'दुकान मालक (Nikhil Sakhare) यांनी थेट तपासणी नोंदवहीचा प्रवाह बंद (OFF) केला आहे.'
-                  : isHi
-                  ? 'दुकान मालिक (Nikhil Sakhare) ने लाइव ऑडिट स्ट्रीम को बंद (OFF) किया है।'
-                  : 'Shop Owner Nikhil Sakhare has turned OFF the live audit stream and activity history display.'}
+                {'Shop Owner Nikhil Sakhare has turned OFF the live audit stream and activity history display.'}
               </p>
             </div>
             {role === 'Owner' && (
@@ -639,7 +631,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-all shadow-md active:scale-95"
               >
                 <Power className="w-4 h-4" />
-                <span>{isMr ? 'नोंदवही पुन्हा चालू करा (Switch ON)' : isHi ? 'रजिस्टर पुनः चालू करें (Switch ON)' : 'Turn ON Audit Stream'}</span>
+                <span>{'Turn ON Audit Stream'}</span>
               </button>
             )}
           </div>
@@ -648,10 +640,10 @@ export const OwnerAdminCounterWidget: React.FC = () => {
         {/* Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {[
-            { id: 'all', label: isMr ? 'सर्व नोंदी (All)' : isHi ? 'सभी प्रविष्टियां (All)' : 'All Records' },
-            { id: 'admin1', label: isMr ? '🛡️ निलेश सखारे (काऊंटर १)' : isHi ? '🛡️ निलेश सखारे (काउंटर १)' : 'Nilesh Sakhare (Counter 1)' },
-            { id: 'sales_details', label: isMr ? '🧾 काऊंटर विक्री तपशील (Who Sold What)' : isHi ? '🧾 काउंटर बिक्री विवरण' : 'Counter Sales Details' },
-            { id: 'inventory_changes', label: isMr ? '📦 इन्व्हेंटरी बदल तपशील (Inventory Changes)' : isHi ? '📦 इन्वेंट्री बदलाव' : 'Inventory Changes' },
+            { id: 'all', label: 'All Records' },
+            { id: 'admin1', label: 'Nilesh Sakhare (Counter 1)' },
+            { id: 'sales_details', label: 'Counter Sales Details' },
+            { id: 'inventory_changes', label: 'Inventory Changes' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -671,22 +663,22 @@ export const OwnerAdminCounterWidget: React.FC = () => {
         {activeTabFilter === 'sales_details' ? (
           <div className="bg-slate-50/70 dark:bg-[#1A2A25]/50 rounded-2xl border border-slate-200/80 dark:border-[#24352F] overflow-hidden max-h-[500px] overflow-y-auto divide-y divide-slate-100 dark:divide-[#24352F]">
             <div className="p-3 bg-amber-50/80 dark:bg-amber-950/40 border-b border-amber-200/80 dark:border-amber-800/40 text-xs font-bold text-amber-950 dark:text-amber-200 flex items-center justify-between">
-              <span>{isMr ? 'काऊंटर विक्री तपशील: कोणी काय माल विकला' : isHi ? 'काउंटर बिक्री विवरण: किसने क्या माल बेचा' : 'Counter Sales: Who Sold What'}</span>
-              <span>{itemizedSales.length} {isMr ? 'नोंदी' : isHi ? 'प्रविष्टियां' : 'Records'}</span>
+              <span>{'Counter Sales: Who Sold What'}</span>
+              <span>{itemizedSales.length} {'Records'}</span>
             </div>
             {itemizedSales.length === 0 ? (
               <div className="py-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs space-y-1">
                 <Receipt className="w-8 h-8 mx-auto opacity-40 mb-1" />
                 <p className="font-bold text-slate-600 dark:text-slate-300">
-                  {tr('No sales records found.', 'कोई बिक्री रिकॉर्ड नहीं मिला।', 'कोणतीही विक्री नोंद आढळली नाही.')}
+                  {'No sales records found.'}
                 </p>
               </div>
             ) : (
               itemizedSales.map((sale) => {
                 const isOwner = sale.created_by_role === 'Owner' || sale.created_by_email === 'yogeshwaridairy9896@gmail.com';
-                const adminName = sale.created_by_name || (isOwner ? tr('Nikhil Sakhare', 'निखिल सखारे', 'निखिल सखारे') : tr('Nilesh Sakhare', 'निलेश सखारे', 'निलेश सखारे'));
+                const adminName = sale.created_by_name || (isOwner ? 'Nikhil Sakhare' : 'Nilesh Sakhare');
                 const adminEmail = sale.created_by_email || (isOwner ? 'yogeshwaridairy9896@gmail.com' : 'nilusakhare2003@gmail.com');
-                const counter = sale.counter_name || (isOwner ? tr('Owner Master Counter', 'मुख्य मालिक काउंटर', 'मुख्य मालक काऊंटर') : tr('Counter 1 - Main Billing', 'काउंटर १ - मुख्य बिलिंग', 'काऊंटर १ - मुख्य बिलिंग'));
+                const counter = sale.counter_name || (isOwner ? 'Owner Master Counter' : 'Counter 1 - Main Billing');
 
                 return (
                   <div key={sale.id} className="p-3.5 hover:bg-white dark:hover:bg-[#131F1B] transition-colors space-y-2">
@@ -728,10 +720,10 @@ export const OwnerAdminCounterWidget: React.FC = () => {
 
                     <div className="flex items-center justify-between text-xs">
                       <div className="font-semibold text-slate-800 dark:text-[#E7F0EC]">
-                        {tr('Invoice No:', 'बिल क्र:', 'पावती क्र:')} <span className="font-mono text-amber-700 dark:text-amber-400 font-bold">{sale.invoice_no}</span>
+                        {'Invoice No:'} <span className="font-mono text-amber-700 dark:text-amber-400 font-bold">{sale.invoice_no}</span>
                         {sale.customer_name && (
                           <span className="ml-2 text-slate-600 dark:text-[#8FA69C]">
-                            {tr('Customer:', 'ग्राहक:', 'ग्राहक:')} <span className="font-bold">{sale.customer_name}</span> {sale.customer_phone && `(${sale.customer_phone})`}
+                            {'Customer:'} <span className="font-bold">{sale.customer_name}</span> {sale.customer_phone && `(${sale.customer_phone})`}
                           </span>
                         )}
                       </div>
@@ -741,7 +733,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                     <div className="bg-white dark:bg-[#16221E] rounded-xl p-2.5 border border-slate-200/80 dark:border-[#24352F] space-y-1">
                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                         <ShoppingBag className="w-3.5 h-3.5 text-amber-500" />
-                        <span>{tr('Sold Items:', 'बेचे गए सामान की सूची:', 'विकलेल्या वस्तूंची यादी (Sold Items):')}</span>
+                        <span>{'Sold Items:'}</span>
                       </div>
                       <div className="flex flex-wrap gap-1.5 pt-1">
                         {sale.items && sale.items.length > 0 ? (
@@ -756,7 +748,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                             </span>
                           ))
                         ) : (
-                          <span className="text-xs text-slate-400">{tr('Item details not available', 'सामान का विवरण उपलब्ध नहीं है', 'मालाचा तपशील उपलब्ध नाही')}</span>
+                          <span className="text-xs text-slate-400">{'Item details not available'}</span>
                         )}
                       </div>
                     </div>
@@ -772,10 +764,10 @@ export const OwnerAdminCounterWidget: React.FC = () => {
               <div className="py-12 text-center text-slate-400 dark:text-[#8FA69C] text-xs space-y-1">
                 <Package className="w-8 h-8 mx-auto opacity-40 mb-1" />
                 <p className="font-bold text-slate-600 dark:text-slate-300">
-                  {isMr ? 'या फिल्टरमध्ये कोणतीही ॲडमिन नोंद आढळली नाही.' : isHi ? 'इस फ़िल्टर में कोई एडमिन रिकॉर्ड नहीं मिला।' : 'No admin activity records found.'}
+                  {'No admin activity records found.'}
                 </p>
                 <p className="text-[11px]">
-                  {isMr ? 'काऊंटरवरून विक्री किंवा साठा बदल होताच येथे थेट नोंद दिसेल.' : isHi ? 'काउंटर से बिक्री या स्टॉक बदलाव होते ही यहाँ तुरंत दिखेगा।' : 'Live entries will stream here as sales or updates occur.'}
+                  {'Live entries will stream here as sales or updates occur.'}
                 </p>
               </div>
             ) : (
@@ -857,7 +849,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                     {act.amount !== undefined && act.amount > 0 && (
                       <div className="shrink-0 text-right self-end sm:self-center">
                         <span className="text-[10px] text-slate-400 dark:text-[#8FA69C] block font-medium">
-                          {isMr ? 'रक्कम' : isHi ? 'राशि' : 'Amount'}
+                          {'Amount'}
                         </span>
                         <span className="text-sm sm:text-base font-black text-emerald-700 dark:text-emerald-400">
                           ₹{act.amount.toLocaleString('en-IN')}

@@ -23,23 +23,11 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
   // Status message based on current progress
   const getStatusText = (val: number) => {
     if (val < 40) {
-      return language === 'mr'
-        ? 'प्रणाली सुरू होत आहे...'
-        : language === 'hi'
-        ? 'सिस्टम लोड हो रहा है...'
-        : 'Initializing Dairy ERP...';
+      return 'Initializing Dairy ERP...';
     } else if (val < 85) {
-      return language === 'mr'
-        ? 'डेअरी इन्व्हेन्ट्री & क्लाउड सिंक...'
-        : language === 'hi'
-        ? 'डेयरी इन्वेंटरी व क्लाउड सिंक...'
-        : 'Connecting Cloud Database...';
+      return 'Connecting Cloud Database...';
     } else {
-      return language === 'mr'
-        ? 'स्वागत आहे!'
-        : language === 'hi'
-        ? 'स्वागत है!'
-        : 'Ready!';
+      return 'Ready!';
     }
   };
 
@@ -141,19 +129,11 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            {language === 'mr'
-              ? 'योगेश्वरी डेअरी प्रॉडक्ट्स'
-              : language === 'hi'
-              ? 'योगेश्वरी डेयरी प्रोडक्ट्स'
-              : 'Yogeshwari Dairy Products'}
+            {'Yogeshwari Dairy Products'}
           </h1>
 
           <p className="text-xs sm:text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-            {language === 'mr'
-              ? 'शुद्धता आमची... विश्वास तुमचा...'
-              : language === 'hi'
-              ? 'शुद्धता हमारी... विश्वास आपका...'
-              : 'Our Purity... Your Trust...'}
+            {'Our Purity... Your Trust...'}
           </p>
         </div>
 

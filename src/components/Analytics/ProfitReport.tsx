@@ -67,8 +67,8 @@ export const ProfitReport: React.FC = () => {
     return Object.values(map).sort((a, b) => b.revenue - a.revenue);
   }, [filteredSales]);
 
-  const revKey = language === 'mr' ? 'कमाई (Revenue)' : language === 'hi' ? 'कमाई (Revenue)' : 'Revenue';
-  const profKey = language === 'mr' ? 'नफा (Profit)' : language === 'hi' ? 'मुनाफा (Profit)' : 'Profit';
+  const revKey = 'Revenue';
+  const profKey = 'Profit';
 
   const topProductsChartData = productPerformance.slice(0, 6).map(p => ({
     name: p.name.split(' (')[0],
@@ -216,46 +216,38 @@ export const ProfitReport: React.FC = () => {
     const isHi = language === 'hi';
 
     return {
-      title: isMr ? 'दुकान नफा-तोटा व व्यवसाय विश्लेषण अहवाल' : isHi ? 'दुकान लाभ-हानि व व्यापार विश्लेषण रिपोर्ट' : 'Dairy Profit & Loss Statement & Sales Intelligence Report',
-      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
-      periodText: isMr ? 'कालावधी आर्थिक ताळेबंद विवरणपत्र' : isHi ? 'अवधि वित्तीय स्थिति विवरणपत्र' : 'Period Financial Statement',
+      title: 'Dairy Profit & Loss Statement & Sales Intelligence Report',
+      subtitle: 'Yogeshwari Dairy Farm & Products ERP',
+      periodText: 'Period Financial Statement',
       language,
       kpis: [
-        { label: isMr ? 'एकूण विक्री' : isHi ? 'कुल बिक्री' : 'Revenue', value: `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`, color: 'emerald' },
-        { label: isMr ? 'स्थूल नफा' : isHi ? 'सकल लाभ' : 'Gross Profit', value: `₹${metrics.grossProfit.toLocaleString('en-IN')}`, color: 'blue' },
-        { label: isMr ? 'एकूण खर्च व नुकसान' : isHi ? 'कुल खर्च व नुकसान' : 'Expenses & Loss', value: `₹${(metrics.operatingExpenses + metrics.totalDamagesLoss).toLocaleString('en-IN')}`, color: 'rose' },
-        { label: isMr ? 'निव्वळ नफा' : isHi ? 'शुद्ध लाभ' : 'Net Profit', value: `₹${metrics.netProfit.toLocaleString('en-IN')}`, color: metrics.netProfit >= 0 ? 'emerald' : 'rose' }
+        { label: 'Revenue', value: `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`, color: 'emerald' },
+        { label: 'Gross Profit', value: `₹${metrics.grossProfit.toLocaleString('en-IN')}`, color: 'blue' },
+        { label: 'Expenses & Loss', value: `₹${(metrics.operatingExpenses + metrics.totalDamagesLoss).toLocaleString('en-IN')}`, color: 'rose' },
+        { label: 'Net Profit', value: `₹${metrics.netProfit.toLocaleString('en-IN')}`, color: metrics.netProfit >= 0 ? 'emerald' : 'rose' }
       ],
       tables: [
         {
-          heading: isMr ? '१. नफा-तोटा ताळेबंद तपशील' : isHi ? '१. लाभ-हानि खाता विवरण' : '1. Profit & Loss Summary Breakdown',
+          heading: '1. Profit & Loss Summary Breakdown',
           data: {
-            headers: isMr 
-              ? ['आर्थिक बाबी तपशील', 'रक्कम (₹)', 'टक्केवारी / हिस्सा']
-              : isHi
-              ? ['वित्तीय मद विवरण', 'राशि (₹)', 'प्रतिशत / अनुपात']
-              : ['Financial Line Item', 'Amount (₹)', 'Share / Ratio'],
+            headers: ['Financial Line Item', 'Amount (₹)', 'Share / Ratio'],
             alignments: ['left', 'right', 'right'] as ('left' | 'right')[],
             rows: [
-              [isMr ? '(+) एकूण विक्री कमाई' : isHi ? '(+) कुल बिक्री आय' : '(+) Total Sales Revenue', `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`, '100.0%'],
-              [isMr ? '(-) विकलेल्या मालाचा मूळ खरेदी खर्च' : isHi ? '(-) बेचे गए माल की मूल लागत' : '(-) Cost of Goods Sold (COGS)', `₹${metrics.totalCOGS.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.totalCOGS / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
-              [isMr ? '(=) स्थूल नफा' : isHi ? '(=) सकल लाभ' : '(=) Gross Profit', `₹${metrics.grossProfit.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.grossProfit / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
-              [isMr ? '(-) दुकान दैनंदिन चालू खर्च' : isHi ? '(-) दुकान दैनिक परिचालन व्यय' : '(-) Operating Expenses', `₹${metrics.operatingExpenses.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.operatingExpenses / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
-              [isMr ? '(-) नासलेले दूध व खराब माल नुकसान' : isHi ? '(-) खराब दूध व नुकसान माल' : '(-) Damages & Spoilage Loss', `₹${metrics.totalDamagesLoss.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.totalDamagesLoss / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
-              [isMr ? '(-) ग्राहक माल परतावा रिफंड' : isHi ? '(-) ग्राहक वापसी रिफंड' : '(-) Customer Returns Refund', `₹${(metrics.totalRefundAmount || 0).toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${(((metrics.totalRefundAmount || 0) / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
-              [isMr ? '(+) सप्लायरकडून मिळालेला परतावा' : isHi ? '(+) सप्लायर से प्राप्त रिफंड' : '(+) Supplier Refund Received', `+₹${(metrics.totalSupplierRefundReceived || 0).toLocaleString('en-IN')}`, '—'],
-              [isMr ? '(=) अंतिम निव्वळ शिल्लक नफा' : isHi ? '(=) अंतिम शुद्ध मुनाफा' : '(=) Net Profit', `₹${metrics.netProfit.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.netProfit / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%']
+              ['(+) Total Sales Revenue', `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`, '100.0%'],
+              ['(-) Cost of Goods Sold (COGS)', `₹${metrics.totalCOGS.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.totalCOGS / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
+              ['(=) Gross Profit', `₹${metrics.grossProfit.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.grossProfit / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
+              ['(-) Operating Expenses', `₹${metrics.operatingExpenses.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.operatingExpenses / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
+              ['(-) Damages & Spoilage Loss', `₹${metrics.totalDamagesLoss.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.totalDamagesLoss / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
+              ['(-) Customer Returns Refund', `₹${(metrics.totalRefundAmount || 0).toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${(((metrics.totalRefundAmount || 0) / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%'],
+              ['(+) Supplier Refund Received', `+₹${(metrics.totalSupplierRefundReceived || 0).toLocaleString('en-IN')}`, '—'],
+              ['(=) Net Profit', `₹${metrics.netProfit.toLocaleString('en-IN')}`, metrics.totalSalesRevenue > 0 ? `${((metrics.netProfit / metrics.totalSalesRevenue) * 100).toFixed(1)}%` : '0%']
             ]
           }
         },
         {
-          heading: isMr ? '२. उत्पादननिहाय नफा व विक्री कामगिरी' : isHi ? '२. उत्पाद अनुसार लाभ व बिक्री प्रदर्शन' : '2. Product Performance & Margins',
+          heading: '2. Product Performance & Margins',
           data: {
-            headers: isMr 
-              ? ['उत्पादनाचे नाव', 'विक्री प्रमाण', 'कमाई (₹)', 'खर्च (₹)', 'नफा (₹)', 'नफा मार्जिन']
-              : isHi
-              ? ['उत्पाद नाम', 'बिक्री मात्रा', 'आय (₹)', 'लागत (₹)', 'लाभ (₹)', 'लाभ मार्जिन']
-              : ['Product Name', 'Sold Qty', 'Revenue (₹)', 'Cost (₹)', 'Profit (₹)', 'Margin %'],
+            headers: ['Product Name', 'Sold Qty', 'Revenue (₹)', 'Cost (₹)', 'Profit (₹)', 'Margin %'],
             alignments: ['left', 'right', 'right', 'right', 'right', 'right'] as ('left' | 'right')[],
             rows: productPerformance.map(p => [
               p.name,
@@ -266,8 +258,8 @@ export const ProfitReport: React.FC = () => {
               p.revenue > 0 ? `${((p.profit / p.revenue) * 100).toFixed(1)}%` : '0%'
             ]),
             summaryRow: [
-              isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
-              `${productPerformance.length} ${isMr ? 'उत्पादने' : isHi ? 'उत्पाद' : 'Products'}`,
+              'Total',
+              `${productPerformance.length} ${'Products'}`,
               `₹${metrics.totalSalesRevenue.toLocaleString('en-IN')}`,
               `₹${metrics.totalCOGS.toLocaleString('en-IN')}`,
               `₹${metrics.grossProfit.toLocaleString('en-IN')}`,
@@ -276,11 +268,7 @@ export const ProfitReport: React.FC = () => {
           }
         }
       ],
-      notes: isMr 
-        ? 'योगेश्वरी डेअरी अधिकृत आर्थिक विवरणपत्र. हिशोब व कर सल्ल्यासाठी वैध.'
-        : isHi
-        ? 'योगेश्वरी डेरी अधिकृत वित्तीय विवरणपत्र। लेखा व कर उद्देश्य हेतु वैध।'
-        : 'Yogeshwari Dairy official financial audit statement. Valid for accounting and taxation.'
+      notes: 'Yogeshwari Dairy official financial audit statement. Valid for accounting and taxation.'
     };
   };
 
@@ -302,40 +290,36 @@ export const ProfitReport: React.FC = () => {
       {/* 1. Compact Header + Overflow Export Sheet */}
       <CompactPageHeader
         icon={<Sparkles className="w-4 h-4 text-amber-500" />}
-        title={language === 'mr' ? 'नफा व तोटा (P&L)' : language === 'hi' ? 'लाभ और हानि (P&L)' : 'Profit & Loss'}
+        title={'Profit & Loss'}
         subtitle={
-          language === 'mr'
-            ? 'निव्वळ नफा आणि कोणत्या मालातून सर्वाधिक नफा मिळतो याचे संपूर्ण विश्लेषण'
-            : language === 'hi'
-              ? 'शुद्ध मुनाफा एवं कौनसे माल से सर्वाधिक लाभ मिलता है उसका पूरा विश्लेषण'
-              : 'Comprehensive Net Profit analysis and product-level margin breakdown'
+          'Comprehensive Net Profit analysis and product-level margin breakdown'
         }
         primaryAction={{
-          label: language === 'mr' ? 'PDF' : language === 'hi' ? 'PDF' : 'PDF',
+          label: 'PDF',
           icon: <Download className="w-4 h-4" />,
           onClick: handleDownloadPLPDF,
           ariaLabel: 'Download Official P&L Statement PDF',
         }}
-        moreTitle={language === 'mr' ? 'नफा-तोटा अहवाल पर्याय' : language === 'hi' ? 'P&L रिपोर्ट विकल्प' : 'P&L Report Actions'}
+        moreTitle={'P&L Report Actions'}
         moreActions={[
           {
             id: 'view-pdf',
-            label: language === 'mr' ? 'अहवाल पहा (View PDF)' : language === 'hi' ? 'रिपोर्ट देखें (View PDF)' : 'View P&L PDF',
-            description: language === 'mr' ? 'ब्राउझरमध्ये प्रीव्ह्यू पहा' : language === 'hi' ? 'ब्राउज़र में प्रीव्यू देखें' : 'Preview official P&L statement',
+            label: 'View P&L PDF',
+            description: 'Preview official P&L statement',
             icon: <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
             onClick: handleViewPLPDF,
           },
           {
             id: 'print',
-            label: language === 'mr' ? 'प्रिंट करा' : language === 'hi' ? 'प्रिंट करें' : 'Print Statement',
-            description: language === 'mr' ? 'अधिकृत P&L प्रिंट करा' : language === 'hi' ? 'आधिकारिक P&L प्रिंट करें' : 'Send statement to printer',
+            label: 'Print Statement',
+            description: 'Send statement to printer',
             icon: <Printer className="w-4 h-4 text-slate-600 dark:text-slate-300" />,
             onClick: handlePrintPLPDF,
           },
           {
             id: 'download-pdf',
-            label: language === 'mr' ? 'डाउनलोड PDF' : language === 'hi' ? 'डाउनलोड PDF' : 'Download PDF',
-            description: language === 'mr' ? 'अधिकृत P&L PDF सेव्ह करा' : language === 'hi' ? 'आधिकारिक P&L PDF सेव करें' : 'Save official P&L statement PDF',
+            label: 'Download PDF',
+            description: 'Save official P&L statement PDF',
             icon: <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
             onClick: handleDownloadPLPDF,
           },
@@ -353,17 +337,13 @@ export const ProfitReport: React.FC = () => {
               {t('plStatement')}
             </h3>
             <span className="text-[11px] sm:text-xs text-slate-500 dark:text-[#8FA69C]">
-              {language === 'mr'
-                ? 'फॉर्म्युला: विक्री - खरेदी खर्च - दुकानाचे खर्च - नासाडी नुकसान'
-                : language === 'hi'
-                  ? 'सटीक फॉर्मूला: बिक्री - खरीद लागत - दुकान खर्च - डैमेज नुकसान'
-                  : 'Formula: Revenue - Cost of Goods - Operating Expenses - Spoilage'}
+              {'Formula: Revenue - Cost of Goods - Operating Expenses - Spoilage'}
             </span>
           </div>
 
           <div className="text-left sm:text-right pt-1 sm:pt-0">
             <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-[#8FA69C] block">
-              {language === 'mr' ? 'खिशात पडलेला निव्वळ नफा:' : language === 'hi' ? 'शुद्ध जेब में आया मुनाफा:' : 'Net Pocket Profit:'}
+              {'Net Pocket Profit:'}
             </span>
             <span className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
               ₹{metrics.netProfit.toLocaleString('en-IN')}
@@ -376,51 +356,51 @@ export const ProfitReport: React.FC = () => {
 
           <div className="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-[#1A2A25] font-bold text-slate-900 dark:text-white">
             <span className="text-sm">
-              1. {language === 'mr' ? 'एकूण विक्री महसूल:' : language === 'hi' ? 'कुल बिक्री आय:' : 'Total Sales Revenue:'}
+              1. {'Total Sales Revenue:'}
             </span>
             <span className="text-base text-emerald-700 dark:text-emerald-400">+₹{metrics.totalSalesRevenue.toLocaleString('en-IN')}</span>
           </div>
 
           <div className="flex justify-between items-center px-4 py-2 text-slate-600 dark:text-[#8FA69C]">
-            <span className="pl-4">&bull; {language === 'mr' ? 'रोख जमा:' : language === 'hi' ? 'रोकड़ जमा:' : 'Cash Collected:'}</span>
+            <span className="pl-4">&bull; {'Cash Collected:'}</span>
             <span className="font-semibold text-slate-900 dark:text-white">₹{metrics.cashCollected.toLocaleString('en-IN')}</span>
           </div>
 
           <div className="flex justify-between items-center px-4 py-2 text-slate-600 dark:text-[#8FA69C]">
-            <span className="pl-4">&bull; {language === 'mr' ? 'ऑनलाईन UPI जमा:' : language === 'hi' ? 'ऑनलाइन UPI जमा:' : 'Online UPI Collected:'}</span>
+            <span className="pl-4">&bull; {'Online UPI Collected:'}</span>
             <span className="font-semibold text-slate-900 dark:text-white">₹{metrics.onlineCollected.toLocaleString('en-IN')}</span>
           </div>
 
           <div className="flex justify-between items-center p-3 rounded-xl bg-rose-50/50 dark:bg-rose-950/20 text-slate-800 dark:text-[#E7F0EC] font-semibold border border-rose-100 dark:border-rose-900/40">
-            <span>2. {language === 'mr' ? 'वजा: विकलेल्या मालाचा मूळ खरेदी खर्च:' : language === 'hi' ? 'घटाएं: बेचे गए माल की मूल खरीद लागत:' : 'Less: Cost of Goods Sold (COGS):'}</span>
+            <span>2. {'Less: Cost of Goods Sold (COGS):'}</span>
             <span className="font-black text-rose-700 dark:text-rose-400">-₹{metrics.cogs.toLocaleString('en-IN')}</span>
           </div>
 
           <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-950 dark:text-emerald-300 font-extrabold border border-emerald-200 dark:border-emerald-800/40">
-            <span>= {language === 'mr' ? 'स्थूल नफा:' : language === 'hi' ? 'सकल लाभ:' : 'Gross Profit:'}</span>
+            <span>= {'Gross Profit:'}</span>
             <span className="text-base text-emerald-700 dark:text-emerald-400">₹{metrics.grossProfit.toLocaleString('en-IN')}</span>
           </div>
 
           <div className="flex justify-between items-center p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 text-slate-800 dark:text-[#E7F0EC] font-semibold border border-amber-100 dark:border-amber-900/40">
-            <span>3. {language === 'mr' ? 'वजा: दुकानाचे दैनंदिन खर्च:' : language === 'hi' ? 'घटाएं: दुकान के दैनिक संचालन खर्च:' : 'Less: Operating Expenses:'}</span>
+            <span>3. {'Less: Operating Expenses:'}</span>
             <span className="font-black text-rose-700 dark:text-rose-400">-₹{metrics.operatingExpenses.toLocaleString('en-IN')}</span>
           </div>
 
           <div className="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-[#1A2A25] text-slate-800 dark:text-[#E7F0EC] font-semibold">
-            <span>4. {language === 'mr' ? 'वजा: नासलेला व खराब माल नुकसान:' : language === 'hi' ? 'घटाएं: खराब माल व दूध का नुकसान:' : 'Less: Spoilage & Damaged Goods Loss:'}</span>
+            <span>4. {'Less: Spoilage & Damaged Goods Loss:'}</span>
             <span className="font-black text-rose-700 dark:text-rose-400">-₹{metrics.totalDamagesLoss.toLocaleString('en-IN')}</span>
           </div>
 
           {(metrics.totalRefundAmount || 0) > 0 && (
             <div className="flex justify-between items-center p-3 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 text-slate-800 dark:text-[#E7F0EC] font-semibold border border-purple-100 dark:border-purple-900/40">
-              <span>5. {language === 'mr' ? 'वजा: ग्राहक माल परतावा रिफंड:' : language === 'hi' ? 'घटाएं: ग्राहक सामान वापसी रिफंड:' : 'Less: Customer Returns & Refunds:'}</span>
+              <span>5. {'Less: Customer Returns & Refunds:'}</span>
               <span className="font-black text-rose-700 dark:text-rose-400">-₹{metrics.totalRefundAmount.toLocaleString('en-IN')}</span>
             </div>
           )}
 
           {(metrics.totalSupplierRefundReceived || 0) > 0 && (
             <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 text-slate-800 dark:text-[#E7F0EC] font-semibold border border-emerald-200 dark:border-emerald-900/40">
-              <span>6. {language === 'mr' ? 'अधिक: सप्लायरकडून मिळालेला परतावा:' : language === 'hi' ? 'जोड़ें: सप्लायर से प्राप्त रिफंड:' : 'Add: Supplier Refunds & Compensations:'}</span>
+              <span>6. {'Add: Supplier Refunds & Compensations:'}</span>
               <span className="font-black text-emerald-700 dark:text-emerald-400">+₹{metrics.totalSupplierRefundReceived.toLocaleString('en-IN')}</span>
             </div>
           )}
@@ -429,7 +409,7 @@ export const ProfitReport: React.FC = () => {
             <div>
               <span className="text-base block">{t('netPocketProfit')}</span>
               <span className="text-[11px] text-emerald-100 font-normal">
-                {language === 'mr' ? 'सर्व खर्च, खरेदी आणि नुकसान वजा करून' : language === 'hi' ? 'सभी खर्चे, नुकसान व खरीद लागत निकालने के बाद' : 'After all expenses, wholesale costs, and spoilage'}
+                {'After all expenses, wholesale costs, and spoilage'}
               </span>
             </div>
             <span className="text-2xl sm:text-3xl font-black">
@@ -449,7 +429,7 @@ export const ProfitReport: React.FC = () => {
             <div className="flex items-center gap-2 mb-1">
               <Trophy className="w-5 h-5 text-amber-500" />
               <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                {language === 'mr' ? 'सर्वाधिक महसूल देणारी उत्पादने' : language === 'hi' ? 'सर्वाधिक कमाई देने वाले उत्पाद' : 'Highest Revenue Dairy Products'}
+                {'Highest Revenue Dairy Products'}
               </h3>
             </div>
             <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
@@ -479,17 +459,17 @@ export const ProfitReport: React.FC = () => {
               </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-full text-slate-400 dark:text-[#8FA69C] text-xs">
-                {language === 'mr' ? 'माहिती उपलब्ध नाही' : language === 'hi' ? 'डेटा उपलब्ध नहीं' : 'No data available'}
+                {'No data available'}
               </div>
             )}
           </div>
 
           <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] flex items-center justify-between border-t border-slate-100 dark:border-[#24352F] pt-2">
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 bg-emerald-500 rounded" /> {language === 'mr' ? 'एकूण कमाई' : language === 'hi' ? 'कुल कमाई' : 'Total Revenue'}
+              <span className="w-3 h-3 bg-emerald-500 rounded" /> {'Total Revenue'}
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 bg-amber-500 rounded" /> {language === 'mr' ? 'त्यातील निव्वळ नफा' : language === 'hi' ? 'उसमें से शुद्ध मुनाफा' : 'Net Profit'}
+              <span className="w-3 h-3 bg-amber-500 rounded" /> {'Net Profit'}
             </span>
           </div>
         </div>
@@ -500,11 +480,11 @@ export const ProfitReport: React.FC = () => {
             <div className="flex items-center gap-2 mb-1">
               <ShoppingBag className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                {language === 'mr' ? 'माल विक्री रँकिंग (Leaderboard)' : language === 'hi' ? 'माल बिक्री रैंकिंग (Leaderboard)' : 'Dairy Sales Leaderboard'}
+                {'Dairy Sales Leaderboard'}
               </h3>
             </div>
             <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
-              {language === 'mr' ? 'रँक १ ते १० कोणता माल जास्त खपला' : language === 'hi' ? 'रैंक 1 से 10 तक कौनसा माल कितना बिका' : 'Rank 1 to 10 best-selling items'}
+              {'Rank 1 to 10 best-selling items'}
             </p>
           </div>
 
@@ -524,7 +504,7 @@ export const ProfitReport: React.FC = () => {
                   <div className="truncate">
                     <span className="font-bold text-slate-900 dark:text-white block truncate">{prod.name}</span>
                     <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium">
-                      {language === 'mr' ? 'विक्री प्रमाण:' : language === 'hi' ? 'बिक्री मात्रा:' : 'Sold:'} {prod.quantity.toFixed(1)} {prod.unit}
+                      {'Sold:'} {prod.quantity.toFixed(1)} {prod.unit}
                     </span>
                   </div>
                 </div>
@@ -534,7 +514,7 @@ export const ProfitReport: React.FC = () => {
                     ₹{prod.revenue.toLocaleString('en-IN')}
                   </span>
                   <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold block">
-                    {language === 'mr' ? 'नफा:' : language === 'hi' ? 'लाभ:' : 'Profit:'} +₹{Math.round(prod.profit).toLocaleString('en-IN')}
+                    {'Profit:'} +₹{Math.round(prod.profit).toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>
@@ -542,9 +522,9 @@ export const ProfitReport: React.FC = () => {
           </div>
 
           <div className="pt-2 border-t border-slate-100 dark:border-[#24352F] text-[11px] text-slate-500 dark:text-[#8FA69C] flex justify-between">
-            <span>{language === 'mr' ? 'एकूण विकलेली उत्पादने:' : language === 'hi' ? 'कुल बिके उत्पाद:' : 'Total Products Sold:'} <b className="text-slate-700 dark:text-white">{productPerformance.length}</b></span>
+            <span>{'Total Products Sold:'} <b className="text-slate-700 dark:text-white">{productPerformance.length}</b></span>
             <span className="text-emerald-700 dark:text-emerald-400 font-bold">
-              {language === 'mr' ? 'दूध आणि पनीर सर्वाधिक मागणीत आहेत' : language === 'hi' ? 'दूध & पनीर सबसे अधिक मांग में हैं' : 'Milk & Paneer are in highest demand'}
+              {'Milk & Paneer are in highest demand'}
             </span>
           </div>
         </div>
@@ -570,7 +550,7 @@ export const ProfitReport: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800/40">
-              {demographicStats.totalSalesCount} {language === 'mr' ? 'ग्राहक नोंदी' : language === 'hi' ? 'ग्राहक रिकॉर्ड' : 'Customer Bills'}
+              {demographicStats.totalSalesCount} {'Customer Bills'}
             </span>
           </div>
         </div>
@@ -614,17 +594,17 @@ export const ProfitReport: React.FC = () => {
               {demographicStats.topAgeGroup.name}
             </div>
             <div className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
-              {demographicStats.topAgeGroup.percentage}% {language === 'mr' ? 'एकूण विक्री' : language === 'hi' ? 'कुल बिक्री' : 'of sales'} (₹{demographicStats.topAgeGroup.revenue.toLocaleString('en-IN')})
+              {demographicStats.topAgeGroup.percentage}% {'of sales'} (₹{demographicStats.topAgeGroup.revenue.toLocaleString('en-IN')})
             </div>
             <div className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-              {language === 'mr' ? 'दुधाचे मुख्य घरगुती खरेदीदार' : language === 'hi' ? 'दूध के मुख्य घरेलू खरीदार' : 'Core household buyers'}
+              {'Core household buyers'}
             </div>
           </div>
 
           {/* Youth Favorite Card */}
           <div className="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-900/40 space-y-2">
             <div className="flex justify-between items-center text-xs font-semibold text-amber-800 dark:text-amber-300">
-              <span>{language === 'mr' ? 'तरुणांची पसंती (Youth 18-25)' : language === 'hi' ? 'युवाओं की पसंद (Youth 18-25)' : 'Youth Favorites (18-25)'}</span>
+              <span>{'Youth Favorites (18-25)'}</span>
               <Sparkles className="w-4 h-4 text-amber-600" />
             </div>
             <div className="text-sm font-black text-amber-950 dark:text-amber-100 truncate">
@@ -634,14 +614,14 @@ export const ProfitReport: React.FC = () => {
               {demographicStats.youthTopProduct ? `${demographicStats.youthTopProduct.byAge['Youth (18-25)']?.qty || 0} ${demographicStats.youthTopProduct.unit} (₹${demographicStats.youthTopProduct.byAge['Youth (18-25)']?.revenue || 0})` : 'High Refreshment Demand'}
             </div>
             <div className="text-[11px] text-amber-800/80 dark:text-amber-300/80">
-              {language === 'mr' ? 'लस्सी, ताक व मिठाईची जास्त मागणी' : language === 'hi' ? 'लस्सी, छाछ व मिठाई की ज्यादा मांग' : 'Lassi, Chaas & Quick Treats'}
+              {'Lassi, Chaas & Quick Treats'}
             </div>
           </div>
 
           {/* Seniors Favorite Card */}
           <div className="p-4 rounded-2xl bg-teal-50/50 dark:bg-teal-950/20 border border-teal-200/70 dark:border-teal-900/40 space-y-2">
             <div className="flex justify-between items-center text-xs font-semibold text-teal-800 dark:text-teal-300">
-              <span>{language === 'mr' ? 'ज्येष्ठांची पसंती (Seniors 45+)' : language === 'hi' ? 'वरिष्ठ नागरिकों की पसंद (45+)' : 'Seniors Favorites (45+)'}</span>
+              <span>{'Seniors Favorites (45+)'}</span>
               <Heart className="w-4 h-4 text-teal-600" />
             </div>
             <div className="text-sm font-black text-teal-950 dark:text-teal-100 truncate">
@@ -651,7 +631,7 @@ export const ProfitReport: React.FC = () => {
               {demographicStats.seniorsTopProduct ? `${demographicStats.seniorsTopProduct.byAge['Senior (45+)']?.qty || 0} ${demographicStats.seniorsTopProduct.unit} (₹${demographicStats.seniorsTopProduct.byAge['Senior (45+)']?.revenue || 0})` : 'Pure Health Focus'}
             </div>
             <div className="text-[11px] text-teal-800/80 dark:text-teal-300/80">
-              {language === 'mr' ? 'गाईचे दूध व शुद्ध साजूक तूप प्राधान्य' : language === 'hi' ? 'गाय का दूध व शुद्ध देसी घी प्राथमिकता' : 'Cow Milk & Pure Ghee focus'}
+              {'Cow Milk & Pure Ghee focus'}
             </div>
           </div>
 
@@ -674,11 +654,11 @@ export const ProfitReport: React.FC = () => {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-100/80 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] uppercase text-[10px] tracking-wider font-bold">
-                  <th className="py-3 px-4">{language === 'mr' ? 'उत्पादन (Product)' : language === 'hi' ? 'उत्पाद (Product)' : 'Product'}</th>
-                  <th className="py-3 px-3 text-right">{language === 'mr' ? 'एकूण विक्री' : language === 'hi' ? 'कुल बिक्री' : 'Total Sales'}</th>
-                  <th className="py-3 px-4">{language === 'mr' ? 'लिंगानुसार वाटा (Gender Ratio)' : language === 'hi' ? 'जेंडर अनुसार (Gender Ratio)' : 'Gender Ratio'}</th>
-                  <th className="py-3 px-4">{language === 'mr' ? 'वय गटानुसार वाटा (Age Demographics)' : language === 'hi' ? 'आयु वर्ग अनुसार (Age Demographics)' : 'Age Breakdown'}</th>
-                  <th className="py-3 px-4">{language === 'mr' ? 'मुख्य ग्राहक गट' : language === 'hi' ? 'मुख्य ग्राहक वर्ग' : 'Primary Buyer Profile'}</th>
+                  <th className="py-3 px-4">{'Product'}</th>
+                  <th className="py-3 px-3 text-right">{'Total Sales'}</th>
+                  <th className="py-3 px-4">{'Gender Ratio'}</th>
+                  <th className="py-3 px-4">{'Age Breakdown'}</th>
+                  <th className="py-3 px-4">{'Primary Buyer Profile'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-[#24352F] bg-white dark:bg-[#131F1B]">
@@ -691,7 +671,7 @@ export const ProfitReport: React.FC = () => {
                   const fPercent = Math.round((fQty / totalGQty) * 100);
 
                   // Find primary demographic
-                  let topGender = mPercent >= fPercent ? (language === 'mr' ? '👨 पुरुष' : language === 'hi' ? '👨 पुरुष' : '👨 Male') : (language === 'mr' ? '👩 महिला' : language === 'hi' ? '👩 महिला' : '👩 Female');
+                  let topGender = mPercent >= fPercent ? ('👨 Male') : ('👩 Female');
                   let maxAgeGroup = 'Adults (26-45)';
                   let maxAgeVal = -1;
                   Object.entries(item.byAge).forEach(([grp, data]) => {

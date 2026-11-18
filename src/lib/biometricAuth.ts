@@ -36,7 +36,7 @@ export async function authenticateNileshFingerprint(): Promise<{
   if (typeof window === 'undefined' || !navigator.credentials) {
     return {
       success: false,
-      error: 'या मोबाइलवर फिंगरप्रिंट हार्डवेअर उपलब्ध नाही.'
+      error: 'Fingerprint hardware is not available on this device.'
     };
   }
 
@@ -74,7 +74,7 @@ export async function authenticateNileshFingerprint(): Promise<{
       if (err.name === 'NotAllowedError') {
         return {
           success: false,
-          error: 'फिंगरप्रिंट पडताळणी रद्द करण्यात आली किंवा सेन्सरशी जुळली नाही.'
+          error: 'Fingerprint verification was cancelled or did not match.'
         };
       }
     }
@@ -87,12 +87,12 @@ export async function authenticateNileshFingerprint(): Promise<{
       publicKey: {
         challenge,
         rp: {
-          name: 'योगेश्वरी डेअरी ERP'
+          name: 'Yogeshwari Dairy ERP'
         },
         user: {
           id: userId,
           name: 'nilusakhare2003@gmail.com',
-          displayName: 'निलेश सखारे (Admin)'
+          displayName: 'Nilesh Sakhare (Admin)'
         },
         pubKeyCredParams: [
           { alg: -7, type: 'public-key' },  // ES256 (standard Android/iOS biometric)
@@ -116,19 +116,19 @@ export async function authenticateNileshFingerprint(): Promise<{
 
     return {
       success: false,
-      error: 'फिंगरप्रिंट ओळखता आले नाही. कृपया पुन्हा प्रयत्न करा.'
+      error: 'Could not recognize fingerprint. Please try again.'
     };
   } catch (err: any) {
     console.error('WebAuthn biometric error:', err);
     if (err.name === 'NotAllowedError') {
       return {
         success: false,
-        error: 'फिंगरप्रिंट स्कॅन रद्द केले गेले.'
+        error: 'Fingerprint scan was cancelled.'
       };
     }
     return {
       success: false,
-      error: err.message || 'फिंगरप्रिंट स्कॅनिंग दरम्यान त्रुटी आली. कृपया पासवर्ड वापरा.'
+      error: err.message || 'Error during fingerprint scan. Please use passcode.'
     };
   }
 }

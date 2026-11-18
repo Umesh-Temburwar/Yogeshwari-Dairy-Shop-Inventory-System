@@ -82,7 +82,7 @@ export const SalesProfitChart: React.FC = () => {
             {t('trendTitle')}
           </h3>
           <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium mt-0.5">
-            {language === 'mr' ? 'दैनिक विक्री वि. खरेदी वि. अंदाजित नफा' : language === 'hi' ? 'दैनिक बिक्री बनाम खरीद व शुद्ध लाभ' : 'Daily Sales vs Purchases vs Estimated Profit'}
+            {'Daily Sales vs Purchases vs Estimated Profit'}
           </p>
         </div>
       </div>
@@ -139,7 +139,7 @@ export const SalesProfitChart: React.FC = () => {
           </ResponsiveContainer>
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-[#8FA69C] text-xs">
-            <p>{language === 'mr' ? 'या कालावधीत कोणताही व्यवहार नोंदवला नाही' : language === 'hi' ? 'इस अवधि में कोई लेनदेन नहीं मिला' : 'No transactions recorded for this period'}</p>
+            <p>{'No transactions recorded for this period'}</p>
           </div>
         )}
       </div>

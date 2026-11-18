@@ -158,32 +158,32 @@ export const getExpiryBadgeInfo = (
   switch (status) {
     case 'EXPIRED':
       return {
-        label: lang === 'mr' ? `कालबाह्य (Expired, ${Math.abs(daysToExpiry)}d ago)` : lang === 'hi' ? `एक्सपायर (${Math.abs(daysToExpiry)} दिन पहले)` : `Expired (${Math.abs(daysToExpiry)}d ago)`,
-        shortLabel: lang === 'mr' ? 'कालबाह्य' : lang === 'hi' ? 'एक्सपायर्ड' : 'Expired',
+        label: `Expired (${Math.abs(daysToExpiry)}d ago)`,
+        shortLabel: 'Expired',
         badgeClass: 'bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 font-black',
         iconEmoji: '🔴',
         isSellable: false
       };
     case 'EXPIRING_TODAY':
       return {
-        label: lang === 'mr' ? 'आजच संपणार (Expiring Today!)' : lang === 'hi' ? 'आज ही एक्सपायर होगा (Expiring Today)' : 'Expiring Today',
-        shortLabel: lang === 'mr' ? 'आज संपणार' : lang === 'hi' ? 'आज एक्सपायर' : 'Today',
+        label: 'Expiring Today',
+        shortLabel: 'Today',
         badgeClass: 'bg-amber-100 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-800 font-extrabold animate-pulse',
         iconEmoji: '🟠',
         isSellable: true
       };
     case 'EXPIRING_TOMORROW':
       return {
-        label: lang === 'mr' ? 'उद्या संपणार (Expiring Tomorrow)' : lang === 'hi' ? 'कल एक्सपायर होगा (Expiring Tomorrow)' : 'Expiring Tomorrow',
-        shortLabel: lang === 'mr' ? 'उद्या संपणार' : lang === 'hi' ? 'कल एक्सपायर' : 'Tomorrow',
+        label: 'Expiring Tomorrow',
+        shortLabel: 'Tomorrow',
         badgeClass: 'bg-yellow-100 dark:bg-yellow-950/70 text-yellow-900 dark:text-yellow-300 border-yellow-300 dark:border-yellow-800 font-bold',
         iconEmoji: '🟡',
         isSellable: true
       };
     case 'EXPIRING_IN_3_DAYS':
       return {
-        label: lang === 'mr' ? `${daysToExpiry} दिवसांत संपणार` : lang === 'hi' ? `${daysToExpiry} दिनों में एक्सपायर` : `Expiring in ${daysToExpiry} days`,
-        shortLabel: lang === 'mr' ? `${daysToExpiry} दिवस शिल्लक` : lang === 'hi' ? `${daysToExpiry} दिन बचे` : `${daysToExpiry}d left`,
+        label: `Expiring in ${daysToExpiry} days`,
+        shortLabel: `${daysToExpiry}d left`,
         badgeClass: 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 font-semibold',
         iconEmoji: '🟢',
         isSellable: true
@@ -191,8 +191,8 @@ export const getExpiryBadgeInfo = (
     case 'FRESH':
     default:
       return {
-        label: lang === 'mr' ? `ताजा साठा (${daysToExpiry} दिवस मुदत)` : lang === 'hi' ? `ताज़ा स्टॉक (${daysToExpiry} दिन शेष)` : `Fresh (${daysToExpiry}d validity)`,
-        shortLabel: lang === 'mr' ? 'ताजा माल' : lang === 'hi' ? 'ताज़ा माल' : 'Fresh',
+        label: `Fresh (${daysToExpiry}d validity)`,
+        shortLabel: 'Fresh',
         badgeClass: 'bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-900/40 font-medium',
         iconEmoji: '🔵',
         isSellable: true
@@ -210,30 +210,14 @@ export const getShelfLifeNote = (
 ): string => {
   const days = getShelfLifeDays(category, productName);
   if (days === 1) {
-    return lang === 'mr' 
-      ? 'ताजे कच्चे दूध (कमाल २४ तास टिकते - सुचवलेली मुदत: उद्या)' 
-      : lang === 'hi' 
-      ? 'ताज़ा कच्चा दूध (अधिकतम 24 घंटे शेल्फ लाइफ - सुझाई एक्सपायरी: कल)' 
-      : 'Fresh Raw Milk (24h shelf life - suggested expiry: tomorrow)';
+    return 'Fresh Raw Milk (24h shelf life - suggested expiry: tomorrow)';
   }
   if (days <= 3) {
-    return lang === 'mr'
-      ? `ताजे डेअरी उत्पादन (शेल्फ लाईफ: ${days} दिवस)`
-      : lang === 'hi'
-      ? `ताज़ा डेयरी उत्पाद (शेल्फ लाइफ: ${days} दिन)`
-      : `Fresh Dairy Product (${days} days shelf life)`;
+    return `Fresh Dairy Product (${days} days shelf life)`;
   }
   if (days >= 180) {
-    return lang === 'mr'
-      ? `शुद्ध साजूक तूप (दीर्घ शेल्फ लाईफ: ६ महिने)`
-      : lang === 'hi'
-      ? `शुद्ध देसी घी (दीर्घ शेल्फ लाइफ: 6 महीने)`
-      : `Pure Desi Ghee (Long shelf life: 6 months)`;
+    return `Pure Desi Ghee (Long shelf life: 6 months)`;
   }
-  return lang === 'mr'
-    ? `या उत्पादनाची सरासरी मुदत: ${days} दिवस`
-    : lang === 'hi'
-    ? `इस उत्पाद की सामान्य शेल्फ लाइफ: ${days} दिन`
-    : `Standard shelf life: ${days} days`;
+  return `Standard shelf life: ${days} days`;
 };
 

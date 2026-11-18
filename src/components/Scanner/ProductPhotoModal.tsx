@@ -96,9 +96,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
       const lowerName = fileName.toLowerCase();
       let matchedCategory: ProductCategory = 'Milk';
       let matchedUnit: ProductUnit = 'Litre';
-      let prodName = 'Fresh Buffalo Milk (Bhains Ka Doodh)';
-      let hindiName = 'ताज़ा भैंस का दूध (फुल क्रीम)';
-      let marathiName = 'ताजे म्हशीचे दूध (फुल क्रीम)';
+      let prodName = 'Fresh Buffalo Milk (Full Cream)';
       let buyPrice = 58;
       let sellPrice = 70;
       let shelfLife = 2;
@@ -109,8 +107,6 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
         matchedCategory = 'Paneer & Butter';
         matchedUnit = 'Kg';
         prodName = 'Fresh Malai Paneer';
-        hindiName = 'ताज़ा मलाई पनीर';
-        marathiName = 'ताजे मलाईदार पनीर';
         buyPrice = 310;
         sellPrice = 380;
         shelfLife = 4;
@@ -119,9 +115,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
       } else if (lowerName.includes('dahi') || lowerName.includes('curd') || lowerName.includes('yogurt')) {
         matchedCategory = 'Curd & Chaas';
         matchedUnit = 'Kg';
-        prodName = 'Fresh Desi Dahi (Khula Curd)';
-        hindiName = 'ताज़ा मीठा दही';
-        marathiName = 'ताजे गोड दही';
+        prodName = 'Fresh Desi Curd (Dahi)';
         buyPrice = 55;
         sellPrice = 75;
         shelfLife = 3;
@@ -131,8 +125,6 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
         matchedCategory = 'Ghee';
         matchedUnit = 'Kg';
         prodName = 'Desi Cow Ghee (Pure Jar)';
-        hindiName = 'शुद्ध देसी गाय का घी';
-        marathiName = 'शुद्ध देशी गायीचे साजूक तूप';
         buyPrice = 580;
         sellPrice = 740;
         shelfLife = 180;
@@ -141,9 +133,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
       } else if (lowerName.includes('khoya') || lowerName.includes('mawa') || lowerName.includes('sweet') || lowerName.includes('katli')) {
         matchedCategory = 'Sweets/Mithai';
         matchedUnit = 'Kg';
-        prodName = 'Shuddh Khoya / Mawa (Pindi)';
-        hindiName = 'शुद्ध खोया / मावा (पिंडी)';
-        marathiName = 'शुद्ध खवा / मावा (पिंडी)';
+        prodName = 'Pure Khoya / Mawa';
         buyPrice = 290;
         sellPrice = 370;
         shelfLife = 5;
@@ -153,8 +143,8 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
 
       setIdentifiedData({
         name: prodName,
-        hindi_name: hindiName,
-        marathi_name: marathiName,
+        hindi_name: '',
+        marathi_name: '',
         category: matchedCategory,
         unit: matchedUnit,
         purchase_price: buyPrice,
@@ -188,7 +178,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
           <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
             <Sparkles className="w-5 h-5" />
             <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-              {tr('AI Product Photo Recognition', 'AI उत्पाद पहचान स्कैनर', 'AI उत्पादन ओळख स्कॅनर')}
+              {'AI Product Photo Recognition'}
             </h3>
           </div>
           <button
@@ -221,7 +211,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
                 <img src={selectedImage} alt="Captured product" className="w-full h-auto object-contain mx-auto" />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs font-bold gap-1.5">
                   <RefreshCw className="w-4 h-4" />
-                  <span>{tr('Take Another Photo', 'दूसरा फोटो लें', 'दुसरा फोटो घ्या')}</span>
+                  <span>{'Take Another Photo'}</span>
                 </div>
               </div>
             ) : (
@@ -231,14 +221,10 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC]">
-                    {tr('Take a clear photo of the product', 'उत्पाद का स्पष्ट फोटो खींचें', 'उत्पादनाचा स्पष्ट फोटो काढा')}
+                    {'Take a clear photo of the product'}
                   </p>
                   <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5">
-                    {tr(
-                      'AI will automatically identify name, price & category',
-                      'AI नाम, भाव व वर्ग पहचान लेगा',
-                      'AI आपोआप नाव, ब्रँड, भाव व वर्ग ओळखेल'
-                    )}
+                    {'AI will automatically identify name, price & category'}
                   </p>
                 </div>
               </div>
@@ -250,11 +236,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
             <div className="p-4 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-900 flex items-center justify-center gap-2 text-xs font-bold text-indigo-700 dark:text-indigo-300 animate-pulse">
               <Sparkles className="w-4 h-4 animate-spin" />
               <span>
-                {tr(
-                  'AI is analyzing photo to identify product...',
-                  'AI फोटो की जांच कर उत्पाद पहचान रहा है...',
-                  'AI फोटो तपासून उत्पादन ओळखत आहे...'
-                )}
+                {'AI is analyzing photo to identify product...'}
               </span>
             </div>
           )}
@@ -268,22 +250,18 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
                 <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-700 dark:text-emerald-400">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>
-                    {tr(
-                      `AI Confidence: ${identifiedData.confidence}%`,
-                      `AI शुद्धता: ${identifiedData.confidence}%`,
-                      `AI विश्वासार्हता: ${identifiedData.confidence}%`
-                    )}
+                    {`AI Confidence: ${identifiedData.confidence}%`}
                   </span>
                 </span>
                 <span className="text-[10px] text-slate-500 font-semibold">
-                  {tr('Please verify details before applying', 'कृपया जांच कर पुष्टि करें', 'कृपया माहिती तपासून अंतिम करा')}
+                  {'Please verify details before applying'}
                 </span>
               </div>
 
               {/* Product Name (English) */}
               <div>
                 <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
-                  {tr('Product Name (English):', 'उत्पाद का नाम (अंग्रेजी):', 'उत्पादनाचे नाव (इंग्रजी):')}
+                  {'Product Name (English):'}
                 </label>
                 <input
                   type="text"
@@ -306,7 +284,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
-                    {tr('Purchase Rate:', 'खरीद भाव:', 'खरेदी भाव:')}
+                    {'Purchase Rate:'}
                   </label>
                   <input
                     type="number"
@@ -317,7 +295,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
                 </div>
                 <div>
                   <label className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 block mb-1">
-                    {tr('Selling Rate:', 'बिक्री भाव:', 'विक्री भाव:')}
+                    {'Selling Rate:'}
                   </label>
                   <input
                     type="number"
@@ -328,7 +306,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
                 </div>
                 <div>
                   <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
-                    {tr('Shelf Life (Days):', 'शेल्फ लाइफ (दिन):', 'टिकाऊ दिवस:')}
+                    {'Shelf Life (Days):'}
                   </label>
                   <input
                     type="number"
@@ -350,14 +328,14 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#24352F]"
           >
-            {tr('Cancel', 'रद्द करें', 'रद्द करा')}
+            {'Cancel'}
           </button>
           <button
             disabled={!identifiedData}
             onClick={handleApply}
             className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition disabled:opacity-50 flex items-center gap-1.5"
           >
-            <span>{tr('Apply Details', 'जानकारी लागू करें', 'माहिती वापरा')}</span>
+            <span>{'Apply Details'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

@@ -108,7 +108,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
 }) => {
   // Trilingual UI helper synced with app language
   const tr = (en: string, hi: string, mr: string) =>
-    language === 'mr' ? mr : language === 'hi' ? hi : en;
+    en;
 
   // Current conversation step
   const [currentStep, setCurrentStep] = useState<VoiceStep>('name');
@@ -152,66 +152,46 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
   const progressPercent = Math.round(((currentStepIndex + 1) / STEPS_ORDER.length) * 100);
 
   // Helper to get step-specific spoken prompts & display text
-  const getStepPrompt = (step: VoiceStep): { en: string; mr: string; hi: string } => {
+  const getStepPrompt = (step: VoiceStep): { en: string } => {
     switch (step) {
       case 'name':
         return {
-          mr: 'स्वागत आहे! चला बोलून नवीन डेअरी प्रॉडक्ट जोडूया. कृपया प्रॉडक्टचे नाव सांगा.',
-          hi: 'स्वागत है! आइए बोलकर नया डेरी उत्पाद जोड़ते हैं। कृपया उत्पाद का नाम बताएं।',
           en: "Welcome! Let's add a new dairy product using voice. Please tell me the product name."
         };
       case 'translations':
         return {
-          mr: `मराठी नाव "${marathiName || name}" आणि हिंदी नाव "${hindiName || name}" तयार झाले आहे. बदल करायचा आहे का, की 'पुढे' जायचे?`,
-          hi: `मराठी नाम "${marathiName || name}" और हिंदी नाम "${hindiName || name}" तैयार है। बदलना है या 'आगे' बढ़ें?`,
-          en: `Marathi and Hindi names generated. Say 'Next' to continue or speak to change.`
+          en: "Product name confirmed. Say 'Next' to continue or speak to change."
         };
       case 'barcode':
         return {
-          mr: 'कृपया प्रॉडक्टचा बारकोड स्कॅन करा, किंवा अंक सांगा, किंवा "Skip" म्हणा.',
-          hi: 'कृपया उत्पाद का बारकोड स्कैन करें, या अंक बोलें, या "Skip" कहें।',
           en: 'Please scan or enter the product barcode, or say Skip.'
         };
       case 'category':
         return {
-          mr: 'हे प्रॉडक्ट कोणत्या कॅटेगरीमध्ये येते? उदा. दूध, दही, पनीर, तूप, मिठाई, किंवा बेकरी.',
-          hi: 'यह उत्पाद किस श्रेणी में आता है? उदा. दूध, दही, पनीर, घी, मिठाई, या बेकरी।',
           en: 'Which category does this product belong to? E.g. Milk, Curd, Paneer, Ghee, Sweets, or Bakery.'
         };
       case 'unit':
         return {
-          mr: 'यासाठी कोणते युनिट वापरायचे? उदा. लिटर, किलो, पिशवी ५०० मिली, पिशवी १ लिटर, नग, किंवा ग्रॅम.',
-          hi: 'इसके लिए कौन सी इकाई रखें? उदा. लीटर, किलो, थैली ५०० मिली, थैली १ लीटर, नग, या ग्राम।',
           en: 'Which unit should I use? E.g. Litre, Kg, Packet 500ml, Packet 1L, Piece, or Gram.'
         };
       case 'purchase_price':
         return {
-          mr: 'खरेदी दर (Purchase Rate) किती आहे? रुपये सांगा.',
-          hi: 'खरीद दर (Purchase Rate) कितना है? रुपये बताएं।',
           en: 'What is the purchase rate per unit?'
         };
       case 'selling_price':
         return {
-          mr: 'विक्री दर (Selling Rate) किती आहे? रुपये सांगा.',
-          hi: 'बिक्री दर (Selling Rate) कितना है? रुपये बताएं।',
           en: 'What is the selling rate per unit?'
         };
       case 'stock_quantity':
         return {
-          mr: 'सध्या दुकानात किती साठा (Stock) उपलब्ध आहे? किंवा "Skip" म्हणा.',
-          hi: 'वर्तमान में दुकान में कितना स्टॉक उपलब्ध है? या "Skip" कहें।',
           en: 'How much initial stock do you have? Or say Skip.'
         };
       case 'min_stock_alert':
         return {
-          mr: 'कमीत कमी साठा अलर्ट किती ठेवायचा आहे? उदा. १०.',
-          hi: 'न्यूनतम स्टॉक अलर्ट कितना रखना है? उदा. १०।',
           en: 'What should be the low stock alert quantity? (e.g. 10)'
         };
       case 'preview_confirm':
         return {
-          mr: 'सर्व माहिती तयार आहे. हे प्रॉडक्ट सेव्ह करू का? "Yes" म्हणा किंवा Confirm & Save दाबा.',
-          hi: 'सभी जानकारी तैयार है। क्या यह उत्पाद सेव करें? "Yes" बोलें या Confirm & Save दबाएं।',
           en: 'All product details are ready. Do you want to save this product? Say Yes to confirm.'
         };
     }
@@ -253,11 +233,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
   const startListening = () => {
     if (!isSpeechRecognitionSupported()) {
       setErrorMessage(
-        tr(
-          'Voice recognition is not supported in this browser. Please use Chrome or Edge.',
-          'इस ब्राउज़र में वॉयस इनपुट उपलब्ध नहीं है। कृपया Chrome या Edge का उपयोग करें।',
-          'तुमच्या ब्राउझरमध्ये व्हॉइस इनपुट उपलब्ध नाही. कृपया Chrome किंवा Edge वापरा.'
-        )
+        'Voice recognition is not supported in this browser. Please use Chrome or Edge.'
       );
       return;
     }
@@ -329,11 +305,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
           isListeningRef.current = false;
           setIsListening(false);
           setErrorMessage(
-            tr(
-              'Microphone permission denied. Please allow microphone access.',
-              'माइक्रोफ़ोन अनुमति अस्वीकृत है। कृपया माइक की अनुमति दें।',
-              'मायक्रोफोन परवानगी नाकारली आहे. कृपया माईक ऑन करा.'
-            )
+            'Microphone permission denied. Please allow microphone access.'
           );
         }
       };
@@ -506,7 +478,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
             playSuccessChime();
             goToNextStep();
           } else {
-            setErrorMessage(tr('Product name not clear. Please repeat.', 'उत्पाद का नाम स्पष्ट नहीं है। कृपया फिर से बोलें।', 'प्रॉडक्टचे नाव समजले नाही. कृपया पुन्हा सांगा.'));
+            setErrorMessage('Product name not clear. Please repeat.');
           }
           break;
         }
@@ -536,11 +508,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
             const isDuplicate = existingProducts.some(p => p.barcode && p.barcode.trim() === parsedCode);
             if (isDuplicate) {
               const dupProduct = existingProducts.find(p => p.barcode && p.barcode.trim() === parsedCode);
-              setErrorMessage(tr(
-                `⚠️ Barcode [${parsedCode}] is already registered for "${dupProduct?.name}". Please speak another barcode or say Skip.`,
-                `⚠️ बारकोड [${parsedCode}] पहले से "${dupProduct?.name}" के लिए दर्ज है। कृपया दूसरा बारकोड बोलें या Skip कहें।`,
-                `⚠️ बारकोड [${parsedCode}] आधीच "${dupProduct?.name}" साठी नोंदणीकृत आहे. कृपया दुसरे बारकोड सांगा किंवा Skip म्हणा.`
-              ));
+              setErrorMessage(`⚠️ Barcode [${parsedCode}] is already registered for "${dupProduct?.name}". Please speak another barcode or say Skip.`);
             } else {
               setBarcode(parsedCode);
               playSuccessChime();
@@ -548,11 +516,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
             }
           } else {
             // If user said something ambiguous
-            setErrorMessage(tr(
-              'Could not recognize barcode. Please speak digits clearly or say "Skip".',
-              'बारकोड पहचाना नहीं जा सका। कृपया अंक स्पष्ट बोलें या "Skip" कहें।',
-              'बारकोड ओळखता आला नाही. कृपया अंक स्पष्ट बोला किंवा "Skip" म्हणा.'
-            ));
+            setErrorMessage('Could not recognize barcode. Please speak digits clearly or say "Skip".');
           }
           break;
         }
@@ -564,11 +528,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
             playSuccessChime();
             goToNextStep();
           } else {
-            setErrorMessage(tr(
-              'Category not recognized. Please say Milk, Curd, Paneer, Ghee, Sweets, or Bakery.',
-              'श्रेणी समझ नहीं आई। कृपया दूध, दही, पनीर, घी, मिठाई या बेकरी में से एक बोलें।',
-              'कॅटेगरी समजली नाही. कृपया दूध, दही, पनीर, तूप, मिठाई, किंवा बेकरी यांपैकी एक सांगा.'
-            ));
+            setErrorMessage('Category not recognized. Please say Milk, Curd, Paneer, Ghee, Sweets, or Bakery.');
           }
           break;
         }
@@ -580,11 +540,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
             playSuccessChime();
             goToNextStep();
           } else {
-            setErrorMessage(tr(
-              'Unit not recognized. Please say Litre, Kg, Packet 500ml, Packet 1L, Piece, or Gram.',
-              'इकाई समझ नहीं आई। कृपया लीटर, किलो, थैली ५०० मिली, थैली १ लीटर, नग या ग्राम बोलें।',
-              'युनिट समजले नाही. कृपया लिटर, किलो, पिशवी ५०० मिली, पिशवी १ लिटर, नग, किंवा ग्रॅम सांगा.'
-            ));
+            setErrorMessage('Unit not recognized. Please say Litre, Kg, Packet 500ml, Packet 1L, Piece, or Gram.');
           }
           break;
         }
@@ -596,11 +552,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
             playSuccessChime();
             goToNextStep();
           } else {
-            setErrorMessage(tr(
-              'Could not recognize purchase rate. Please speak a number (e.g. 58 rupees).',
-              'खरीद दर पहचाना नहीं जा सका। कृपया संख्या बोलें (उदा. ५८ रुपये)।',
-              'खरेदी दर ओळखता आला नाही. कृपया संख्या सांगा (उदा. ५८ रुपये).'
-            ));
+            setErrorMessage('Could not recognize purchase rate. Please speak a number (e.g. 58 rupees).');
           }
           break;
         }
@@ -612,11 +564,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
             playSuccessChime();
             goToNextStep();
           } else {
-            setErrorMessage(tr(
-              'Could not recognize selling rate. Please speak a number (e.g. 70 rupees).',
-              'बिक्री दर पहचाना नहीं जा सका। कृपया संख्या बोलें (उदा. ७० रुपये)।',
-              'विक्री दर ओळखता आला नाही. कृपया संख्या सांगा (उदा. ७० रुपये).'
-            ));
+            setErrorMessage('Could not recognize selling rate. Please speak a number (e.g. 70 rupees).');
           }
           break;
         }
@@ -632,11 +580,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
             playSuccessChime();
             goToNextStep();
           } else {
-            setErrorMessage(tr(
-              'Could not recognize stock quantity. Please speak a number or say "Skip".',
-              'स्टॉक मात्रा समझ नहीं आई। कृपया संख्या बोलें या "Skip" कहें।',
-              'साठा संख्या समजली नाही. कृपया संख्या सांगा किंवा "Skip" म्हणा.'
-            ));
+            setErrorMessage('Could not recognize stock quantity. Please speak a number or say "Skip".');
           }
           break;
         }
@@ -670,7 +614,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
       }
     } catch (err: any) {
       console.warn('Voice interpretation error:', err);
-      setErrorMessage(err.message || tr('An error occurred. Please speak again.', 'त्रुटि आई। कृपया फिर से बोलें।', 'त्रुटी आली. कृपया पुन्हा बोला.'));
+      setErrorMessage(err.message || 'An error occurred. Please speak again.');
     } finally {
       setIsProcessing(false);
     }
@@ -703,11 +647,11 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
                 🎙️ AI VOICE ASSISTANT
               </span>
               <span className="text-xs font-bold text-emerald-200">
-                {tr('Step', 'चरण', 'पायरी')} {currentStepIndex + 1} / {STEPS_ORDER.length}
+                {'Step'} {currentStepIndex + 1} / {STEPS_ORDER.length}
               </span>
             </div>
             <h3 className="text-sm sm:text-base font-black text-white mt-0.5 flex items-center gap-1.5">
-              <span>{language === 'mr' ? 'बोलून प्रॉडक्ट नोंदणी' : language === 'hi' ? 'बोलकर उत्पाद प्रविष्टि' : 'Voice-Controlled Product Entry'}</span>
+              <span>{'Voice-Controlled Product Entry'}</span>
             </h3>
           </div>
         </div>
@@ -723,7 +667,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
                 ? 'bg-slate-800 text-slate-400 border-slate-700' 
                 : 'bg-emerald-950/80 text-emerald-300 border-emerald-700/80 hover:bg-emerald-900'
             }`}
-            title={isMuted ? tr('Unmute Voice', 'आवाज़ चालू करें (Unmute)', 'आवाज चालू करा (Unmute)') : tr('Mute Voice', 'आवाज़ बंद करें (Mute)', 'आवाज बंद करा (Mute)')}
+            title={isMuted ? 'Unmute Voice' : 'Mute Voice'}
           >
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
           </button>
@@ -733,7 +677,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
             type="button"
             onClick={onCloseVoiceMode}
             className="p-2 rounded-xl bg-black/30 hover:bg-black/50 text-slate-400 hover:text-white border border-white/10 transition"
-            title={tr('Close Voice Assistant', 'वॉयस असिस्टेंट बंद करें (Close)', 'व्हॉइस असिस्टंट बंद करा (Close)')}
+            title={'Close Voice Assistant'}
           >
             <X className="w-4 h-4" />
           </button>
@@ -758,16 +702,16 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
 
           <div className="flex-1 space-y-1">
             <p className="text-xs font-bold text-emerald-300 uppercase tracking-wider">
-              {currentStep === 'name' && tr('1. Product Name', '१. उत्पाद का नाम', '१. उत्पादनाचे नाव')}
-              {currentStep === 'translations' && tr('2. Translations', '२. मराठी व हिंदी नाम', '२. मराठी व हिंदी नावे')}
-              {currentStep === 'barcode' && tr('3. Barcode / EAN-13', '३. बारकोड / EAN-13', '३. बारकोड / EAN-13')}
-              {currentStep === 'category' && tr('4. Category', '४. उत्पाद श्रेणी', '४. प्रॉडक्ट कॅटेगरी')}
-              {currentStep === 'unit' && tr('5. Unit', '५. मापन इकाई', '५. मोजण्याचे युनिट')}
-              {currentStep === 'purchase_price' && tr('6. Purchase Rate', '६. खरीद दर (Purchase Rate)', '६. खरेदी दर (Purchase Rate)')}
-              {currentStep === 'selling_price' && tr('7. Selling Rate', '७. बिक्री दर (Selling Rate)', '७. विक्री दर (Selling Rate)')}
-              {currentStep === 'stock_quantity' && tr('8. Initial Stock', '८. प्रारंभिक स्टॉक (Initial Stock)', '८. सुरुवातीचा साठा (Initial Stock)')}
-              {currentStep === 'min_stock_alert' && tr('9. Low Stock Alert', '९. न्यूनतम स्टॉक अलर्ट', '९. कमीत कमी साठा अलर्ट')}
-              {currentStep === 'preview_confirm' && tr('10. Final Preview & Save', '१०. अंतिम जांच व सहेजें', '१०. अंतिम खात्री व जतन')}
+              {currentStep === 'name' && '1. Product Name'}
+              {currentStep === 'translations' && '2. Translations'}
+              {currentStep === 'barcode' && '3. Barcode / EAN-13'}
+              {currentStep === 'category' && '4. Category'}
+              {currentStep === 'unit' && '5. Unit'}
+              {currentStep === 'purchase_price' && '6. Purchase Rate'}
+              {currentStep === 'selling_price' && '7. Selling Rate'}
+              {currentStep === 'stock_quantity' && '8. Initial Stock'}
+              {currentStep === 'min_stock_alert' && '9. Low Stock Alert'}
+              {currentStep === 'preview_confirm' && '10. Final Preview & Save'}
             </p>
 
             <h4 className="text-base sm:text-lg font-black text-white leading-snug">
@@ -790,8 +734,8 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
 
             <p className="text-xs font-bold text-emerald-200 italic truncate max-w-xs sm:max-w-md">
               {isListening 
-                ? (interimTranscript ? `"${interimTranscript}"` : tr('🔴 Listening... Speak now', '🔴 सुन रहा है... अब बोलें', '🔴 ऐकत आहे... आता बोला'))
-                : tr('Microphone idle', 'माइक रुका हुआ है', 'माईक थांबवला आहे')}
+                ? (interimTranscript ? `"${interimTranscript}"` : '🔴 Listening... Speak now')
+                : 'Microphone idle'}
             </p>
           </div>
 
@@ -804,7 +748,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-900 text-xs font-black hover:bg-emerald-400 transition shadow-xs"
               >
                 <BarcodeIcon className="w-3.5 h-3.5" />
-                <span>{tr('Open Scanner', 'स्कैनर खोलें', 'स्कॅनर उघडा')}</span>
+                <span>{'Open Scanner'}</span>
               </button>
             )}
 
@@ -818,7 +762,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
               }`}
             >
               <Mic className="w-3.5 h-3.5" />
-              <span>{isListening ? tr('Stop', 'रोकें', 'थांबवा') : tr('Start Mic', 'माइक चालू करें', 'माईक चालू करा')}</span>
+              <span>{isListening ? 'Stop' : 'Start Mic'}</span>
             </button>
           </div>
         </div>
@@ -839,59 +783,59 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-emerald-400" />
               <h4 className="text-sm font-black text-white">
-                {tr('Final Product Preview', 'उत्पाद जानकारी पूर्वावलोकन', 'प्रॉडक्ट माहिती तपासणी (Final Preview)')}
+                {'Final Product Preview'}
               </h4>
             </div>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-              {tr('10/10 Complete', '१०/१० पूर्ण', '१०/१० पूर्ण')}
+              {'10/10 Complete'}
             </span>
           </div>
 
           {/* Product Details Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
             <div className="col-span-2 sm:col-span-3 bg-white/5 p-3 rounded-xl border border-white/10">
-              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{tr('Product Name (English / Marathi / Hindi):', 'उत्पाद का नाम (English / मराठी / हिंदी):', 'उत्पादनाचे नाव (English / मराठी / हिंदी):')}</span>
+              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{'Product Name (English / Marathi / Hindi):'}</span>
               <p className="text-base font-black text-white mt-0.5">{name || '—'}</p>
               <p className="text-xs text-slate-300 font-bold mt-0.5">{marathiName || '—'} &bull; {hindiName || '—'}</p>
             </div>
 
             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
-              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{tr('Category:', 'श्रेणी (Category):', 'कॅटेगरी (Category):')}</span>
+              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{'Category:'}</span>
               <p className="font-black text-white mt-0.5">{category}</p>
             </div>
 
             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
-              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{tr('Unit:', 'इकाई (Unit):', 'युनिट (Unit):')}</span>
+              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{'Unit:'}</span>
               <p className="font-black text-white mt-0.5">{unit}</p>
             </div>
 
             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
-              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{tr('Barcode:', 'बारकोड (Barcode):', 'बारकोड (Barcode):')}</span>
+              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{'Barcode:'}</span>
               <p className="font-mono font-bold text-white mt-0.5">{barcode || '—'}</p>
             </div>
 
             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
-              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{tr('Purchase Rate:', 'खरीद दर (Buy Rate):', 'खरेदी दर (Buy Rate):')}</span>
+              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{'Purchase Rate:'}</span>
               <p className="font-black text-white mt-0.5">₹{purchasePrice || '0'}</p>
             </div>
 
             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
-              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{tr('Selling Rate:', 'बिक्री दर (Sell Rate):', 'विक्री दर (Sell Rate):')}</span>
+              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{'Selling Rate:'}</span>
               <p className="font-black text-emerald-400 mt-0.5">₹{sellingPrice || '0'}</p>
             </div>
 
             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
-              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{tr('Profit / Margin:', 'लाभ / मार्जिन (Profit):', 'नफा / मार्जिन (Profit):')}</span>
+              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{'Profit / Margin:'}</span>
               <p className="font-black text-amber-300 mt-0.5">₹{marginPerUnit.toFixed(1)} ({marginPct}%)</p>
             </div>
 
             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
-              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{tr('Initial Stock:', 'प्रारंभिक स्टॉक (Stock):', 'सुरुवातीचा साठा (Stock):')}</span>
+              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{'Initial Stock:'}</span>
               <p className="font-black text-white mt-0.5">{stockQuantity || '0'} {unit}</p>
             </div>
 
             <div className="bg-white/5 p-2.5 rounded-xl border border-white/10">
-              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{tr('Low Stock Alert:', 'कम स्टॉक अलर्ट (Alert):', 'कमी साठा अलर्ट (Alert):')}</span>
+              <span className="text-emerald-300 text-[10px] uppercase font-bold block">{'Low Stock Alert:'}</span>
               <p className="font-black text-white mt-0.5">{minStockAlert || '10'} {unit}</p>
             </div>
           </div>
@@ -907,7 +851,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
               className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-sm font-black flex items-center justify-center gap-2 transition shadow-lg shadow-emerald-500/20 active:scale-95"
             >
               <Save className="w-4 h-4" />
-              <span>{tr('✓ Yes, Confirm & Save Product', '✓ हाँ, उत्पाद सेव करें', '✓ होय, प्रॉडक्ट सेव्ह करा (Confirm & Save)')}</span>
+              <span>{'✓ Yes, Confirm & Save Product'}</span>
             </button>
 
             <button
@@ -916,7 +860,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
               className="w-full sm:w-auto py-3 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition"
             >
               <Edit3 className="w-3.5 h-3.5" />
-              <span>{tr('Edit', 'सुधारें', 'बदल करा (Edit)')}</span>
+              <span>{'Edit'}</span>
             </button>
           </div>
         </div>
@@ -931,7 +875,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none text-white font-bold transition"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>{tr('Back', 'पीछे', 'मागे')}</span>
+          <span>{'Back'}</span>
         </button>
 
         <div className="flex items-center gap-1.5">
@@ -939,10 +883,10 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
             type="button"
             onClick={handleRepeatPrompt}
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-emerald-200 text-xs font-bold transition"
-            title={tr('Repeat question', 'प्रश्न दोहराएं', 'प्रश्न पुन्हा विचारा')}
+            title={'Repeat question'}
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{tr('Repeat', 'दोहराएं', 'पुन्हा सांगा')}</span>
+            <span className="hidden sm:inline">{'Repeat'}</span>
           </button>
 
           {(currentStep === 'barcode' || currentStep === 'stock_quantity' || currentStep === 'translations') && (
@@ -950,10 +894,10 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
               type="button"
               onClick={handleSkipStep}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold border border-amber-500/40 transition"
-              title={tr('Skip this step', 'इस चरण को छोड़ें', 'हा पर्याय पुढे ढकला')}
+              title={'Skip this step'}
             >
               <SkipForward className="w-3.5 h-3.5" />
-              <span>{tr('Skip', 'छोड़ें', 'सोडा (Skip)')}</span>
+              <span>{'Skip'}</span>
             </button>
           )}
         </div>
@@ -964,7 +908,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
           disabled={currentStepIndex === STEPS_ORDER.length - 1}
           className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-30 disabled:pointer-events-none text-slate-900 font-black transition shadow-xs"
         >
-          <span>{tr('Next', 'आगे', 'पुढे')}</span>
+          <span>{'Next'}</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>

@@ -62,29 +62,29 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
   }> = [
     {
       id: 'dashboard',
-      label: language === 'mr' ? 'होम' : language === 'hi' ? 'होम' : 'Home',
+      label: 'Home',
       icon: House,
     },
     {
       id: 'inventory',
-      label: language === 'mr' ? 'स्टॉक' : language === 'hi' ? 'स्टॉक' : 'Stock',
+      label: 'Stock',
       icon: Package,
       badgeCount: metrics.lowStockCount > 0 ? metrics.lowStockCount : undefined,
       badgeColor: 'bg-rose-500 text-white',
     },
     {
       id: 'pos',
-      label: language === 'mr' ? 'POS बिलिंग' : language === 'hi' ? 'POS बिलिंग' : 'POS',
+      label: 'POS',
       icon: ShoppingCart,
     },
     {
       id: 'udhar',
-      label: language === 'mr' ? 'खातेवही' : language === 'hi' ? 'खाताबही' : 'Khata',
+      label: 'Khata',
       icon: BookOpen,
     },
     {
       id: 'menu',
-      label: language === 'mr' ? 'मेनू' : language === 'hi' ? 'मेनू' : 'Menu',
+      label: 'Menu',
       icon: Grid2X2,
       badgeCount: metrics.expiredBatchesCount > 0 ? metrics.expiredBatchesCount : undefined,
       badgeColor: 'bg-amber-500 text-white',

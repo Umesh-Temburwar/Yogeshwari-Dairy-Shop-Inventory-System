@@ -112,9 +112,7 @@ export const ProductImage: React.FC<ProductImageProps> = ({
     const cat = (category || '').toLowerCase();
     if (
       cat.includes('milk') ||
-      cat.includes('दूध') ||
       cat.includes('dairy') ||
-      cat.includes('डेअरी') ||
       cat.includes('paneer') ||
       cat.includes('ghee') ||
       cat.includes('dahi')

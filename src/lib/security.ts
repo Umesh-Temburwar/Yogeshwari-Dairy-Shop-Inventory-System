@@ -314,9 +314,9 @@ export async function changeMasterPasscode(
           admin_email: actor?.email || 'yogeshwaridairy9896@gmail.com',
           admin_role: actor?.role || 'Owner',
           action_type: 'PRODUCT_UPDATED',
-          title: 'मास्टर सुरक्षा पासवर्ड बदलला (Master Passcode Changed)',
-          details: 'डॅशबोर्ड सेटिंग्जमधून वर्तमान पासवर्ड पडताळणीनंतर ८-अंकी मास्टर सुरक्षा पासवर्ड यशस्वीरित्या अद्यतनित केला.',
-          counter_name: actor?.role === 'Admin' ? 'बिलिंग काउंटर' : 'मुख्य मालक काउंटर'
+          title: 'Master Passcode Changed',
+          details: 'Updated 8-digit master security passcode from dashboard settings after verifying current passcode.',
+          counter_name: actor?.role === 'Admin' ? 'Billing Counter' : 'Owner Master Counter'
         });
     } catch {
       // Non-blocking audit log

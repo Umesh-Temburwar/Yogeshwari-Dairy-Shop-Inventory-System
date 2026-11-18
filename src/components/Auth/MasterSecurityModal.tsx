@@ -90,20 +90,12 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
           const secs = Math.ceil((res.lockedUntil - Date.now()) / 1000);
           setLockoutRemainingSec(Math.max(1, secs));
           setErrorMsg(
-            language === 'mr'
-              ? 'अनेक अयशस्वी प्रयत्न! सुरक्षा खातर ५ मिनिटांसाठी लॉक केले गेले आहे.'
-              : language === 'hi'
-                ? 'कई असफल प्रयास! सुरक्षा कारणों से ५ मिनट के लिए लॉक किया गया है।'
-                : 'Too many failed attempts. Locked for 5 minutes.'
+            'Too many failed attempts. Locked for 5 minutes.'
           );
         } else {
           setAttemptsLeft(res.attemptsLeft);
           setErrorMsg(
-            language === 'mr'
-              ? `चुकीचा पासवर्ड. पुन्हा प्रयत्न करा. (${res.attemptsLeft} प्रयत्न शिल्लक)`
-              : language === 'hi'
-                ? `गलत पासवर्ड। पुनः प्रयास करें। (${res.attemptsLeft} प्रयास शेष)`
-                : 'Wrong passcode. Try again.'
+            'Wrong passcode. Try again.'
           );
         }
         setPasscode('');
@@ -115,11 +107,7 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
       setTimeout(() => setIsShake(false), 420);
       setTimeout(() => setIsErrorFlash(false), 650);
       setErrorMsg(
-        language === 'mr'
-          ? 'पडताळणीमध्ये त्रुटी आली. कृपया पुन्हा प्रयत्न करा.'
-          : language === 'hi'
-            ? 'सत्यापन में त्रुटि आई। कृपया पुनः प्रयास करें।'
-            : 'Verification error. Please try again.'
+        'Verification error. Please try again.'
       );
       setPasscode('');
     } finally {
@@ -220,11 +208,7 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
         } else {
           triggerHaptic([40, 50, 40]);
           setErrorMsg(
-            language === 'mr'
-              ? 'सुरक्षा टोकन जारी करता आले नाही. कृपया पासवर्ड वापरा.'
-              : language === 'hi'
-                ? 'सुरक्षा टोकन जारी नहीं हो सका। कृपया पासवर्ड का उपयोग करें।'
-                : 'Security token issuance failed. Please use passcode.'
+            'Security token issuance failed. Please use passcode.'
           );
         }
       } else if (res.error && !isAuto) {
@@ -237,11 +221,7 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
       if (!isAuto) {
         triggerHaptic([40, 50, 40]);
         setErrorMsg(
-          language === 'mr'
-            ? 'फिंगरप्रिंट स्कॅनमध्ये त्रुटी आली. कृपया पासवर्ड वापरा.'
-            : language === 'hi'
-              ? 'फिंगरप्रिंट स्कैन में त्रुटि। कृपया पासवर्ड का उपयोग करें।'
-              : 'Fingerprint scan error. Please use passcode.'
+          'Fingerprint scan error. Please use passcode.'
         );
       }
     } finally {
@@ -300,8 +280,8 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
 
   const userName = isNilesh ? 'Nilesh Sakhare' : 'Nikhil Sakhare';
   const roleTitle = role === 'Owner'
-    ? (language === 'mr' ? 'मालक' : language === 'hi' ? 'मालिक' : 'Owner')
-    : (language === 'mr' ? 'ॲडमिन' : language === 'hi' ? 'एडमिन' : 'Admin');
+    ? ('Owner')
+    : ('Admin');
 
   const isInputBlocked = lockoutRemainingSec > 0 || isVerifying || isSuccess;
   const isClearDisabled = isInputBlocked || passcode.length === 0;
@@ -383,11 +363,7 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
             Yogeshwari Dairy
           </h1>
           <p className="mt-0.5 text-sm text-slate-400 leading-tight">
-            {language === 'mr'
-              ? 'मास्टर सुरक्षा लॉक'
-              : language === 'hi'
-                ? 'मास्टर सुरक्षा लॉक'
-                : 'POS Security Gate'}
+            {'POS Security Gate'}
           </p>
 
           {/* Compact Verified Profile Pill */}
@@ -411,11 +387,7 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
             <div className="inline-flex items-center gap-2 text-sm text-slate-300 min-w-0">
               <Lock className="w-4 h-4 text-emerald-400 shrink-0" aria-hidden="true" />
               <span className="truncate">
-                {language === 'mr'
-                  ? '८-अंकी मास्टर पासवर्ड टाका'
-                  : language === 'hi'
-                    ? '८-अंकीय मास्टर पासवर्ड दर्ज करें'
-                    : 'Enter your 8-digit master passcode'}
+                {'Enter your 8-digit master passcode'}
               </span>
             </div>
 
@@ -461,27 +433,15 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
           >
             {isVerifying ? (
               <span className="text-xs font-medium text-emerald-400">
-                {language === 'mr'
-                  ? 'पासवर्ड पडताळणी सुरू आहे...'
-                  : language === 'hi'
-                    ? 'सत्यापन हो रहा है...'
-                    : 'Verifying passcode...'}
+                {'Verifying passcode...'}
               </span>
             ) : isSuccess ? (
               <span className="text-xs font-semibold text-emerald-400">
-                {language === 'mr'
-                  ? 'प्रवेश मंजूर • दुकान अनलॉक झाले'
-                  : language === 'hi'
-                    ? 'प्रवेश स्वीकृत • दुकान अनलॉक हुआ'
-                    : 'Access Granted • Unlocked'}
+                {'Access Granted • Unlocked'}
               </span>
             ) : lockoutRemainingSec > 0 ? (
               <span className="text-xs font-semibold text-rose-400">
-                {language === 'mr'
-                  ? 'सुरक्षा लॉक सक्रिय:'
-                  : language === 'hi'
-                    ? 'सुरक्षा लॉक सक्रिय:'
-                    : 'Locked for security:'}{' '}
+                {'Locked for security:'}{' '}
                 {formatLockoutTime(lockoutRemainingSec)}
               </span>
             ) : errorMsg ? (
@@ -502,16 +462,8 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
                 className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 disabled:opacity-40 py-0.5 transition cursor-pointer"
               >
                 {isBiometricScanning
-                  ? language === 'mr'
-                    ? 'फिंगरप्रिंट स्कॅनिंग...'
-                    : language === 'hi'
-                      ? 'फिंगरप्रिंट स्कैनिंग...'
-                      : 'Scanning fingerprint...'
-                  : language === 'mr'
-                    ? 'फिंगरप्रिंट वापरा'
-                    : language === 'hi'
-                      ? 'फिंगरप्रिंट उपयोग करें'
-                      : 'Use Fingerprint'}
+                  ? 'Scanning fingerprint...'
+                  : 'Use Fingerprint'}
               </button>
             ) : null}
           </div>
@@ -541,7 +493,7 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
               aria-label="Clear passcode"
               className="h-[clamp(50px,8.2dvh,64px)] rounded-2xl bg-white/5 border border-white/10 text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center justify-center transition-all duration-100 select-none touch-manipulation active:scale-95 active:bg-emerald-500/20 active:border-emerald-400/50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
             >
-              {language === 'mr' ? 'साफ' : language === 'hi' ? 'साफ' : 'Clear'}
+              {'Clear'}
             </button>
 
             {/* Digit 0 */}
@@ -580,7 +532,7 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
             >
               <LogOut className="w-4 h-4 shrink-0" aria-hidden="true" />
               <span>
-                {language === 'mr' ? 'बाहेर पडा' : language === 'hi' ? 'साइन आउट' : 'Sign Out'}
+                {'Sign Out'}
               </span>
             </button>
 

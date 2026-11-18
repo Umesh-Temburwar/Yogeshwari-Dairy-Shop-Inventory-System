@@ -222,7 +222,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
           <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
             <FileText className="w-5 h-5" />
             <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-              {tr('Purchase Invoice / Bill Scanner (OCR)', 'खरीद बिल / इनवॉइस स्कैनर (OCR)', 'खरेदी बिल / पावती स्कॅनर (OCR)')}
+              {'Purchase Invoice / Bill Scanner (OCR)'}
             </h3>
           </div>
           <button
@@ -255,7 +255,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
                 <img src={selectedImage} alt="Supplier bill" className="w-full h-auto object-contain mx-auto" />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs font-bold gap-1.5">
                   <RotateCw className="w-4 h-4" />
-                  <span>{tr('Select Another Bill', 'दूसरा बिल चुनें', 'दुसरे बिल निवडा')}</span>
+                  <span>{'Select Another Bill'}</span>
                 </div>
               </div>
             ) : (
@@ -265,18 +265,10 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC]">
-                    {tr(
-                      'Upload photo / PDF of farmer or supplier bill',
-                      'सप्लायर के बिल का फोटो या PDF अपलोड करें',
-                      'शेतकरी किंवा पुरवठादाराच्या बिलाचा फोटो / PDF अपलोड करा'
-                    )}
+                    {'Upload photo / PDF of farmer or supplier bill'}
                   </p>
                   <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5">
-                    {tr(
-                      'AI will automatically extract items, quantity, rate & total',
-                      'AI माल, मात्रा व भाव स्वचालित पढ़ लेगा',
-                      'AI माल, आवक मात्रा, खरेदी दर व रक्कम आपोआप वाचेल'
-                    )}
+                    {'AI will automatically extract items, quantity, rate & total'}
                   </p>
                 </div>
               </div>
@@ -288,11 +280,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
             <div className="p-4 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-900 flex items-center justify-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-300 animate-pulse">
               <RotateCw className="w-4 h-4 animate-spin" />
               <span>
-                {tr(
-                  'Reading bill items and amounts (AI Invoice OCR)...',
-                  'बिल के आयटम्स पढ़े जा रहे हैं (AI Invoice OCR)...',
-                  'बिलातील रकमा व आयटम्स वाचत आहे (AI Invoice OCR)...'
-                )}
+                {'Reading bill items and amounts (AI Invoice OCR)...'}
               </span>
             </div>
           )}
@@ -305,7 +293,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-xl border border-slate-200 dark:border-[#24352F]">
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C] block mb-0.5">
-                    {tr('Supplier / Farmer:', 'सप्लायर / किसान:', 'पुरवठादार / शेतकरी:')}
+                    {'Supplier / Farmer:'}
                   </label>
                   <input
                     type="text"
@@ -316,7 +304,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C] block mb-0.5">
-                    {tr('Invoice No:', 'बिल नंबर:', 'बिल क्रमांक:')}
+                    {'Invoice No:'}
                   </label>
                   <input
                     type="text"
@@ -327,7 +315,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 dark:text-[#8FA69C] block mb-0.5">
-                    {tr('Purchase Date:', 'खरीद तारीख:', 'खरेदी तारीख:')}
+                    {'Purchase Date:'}
                   </label>
                   <input
                     type="date"
@@ -343,12 +331,12 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] font-bold">
                     <tr>
-                      <th className="px-3 py-2">{tr('Product Name', 'सामान का नाम', 'मालाचे नाव')}</th>
-                      <th className="px-2 py-2 text-center">{tr('Qty', 'मात्रा', 'प्रमाण')}</th>
-                      <th className="px-2 py-2 text-right">{tr('Rate (₹)', 'दर (₹)', 'दर (₹)')}</th>
-                      <th className="px-2 py-2 text-right">{tr('Total (₹)', 'कुल (₹)', 'एकूण (₹)')}</th>
-                      <th className="px-2 py-2">{tr('Batch & Expiry', 'बैच व अंतिम तिथि', 'बॅच व मुदत')}</th>
-                      <th className="px-2 py-2 text-center">{tr('Action', 'कार्रवाई', 'कृती')}</th>
+                      <th className="px-3 py-2">{'Product Name'}</th>
+                      <th className="px-2 py-2 text-center">{'Qty'}</th>
+                      <th className="px-2 py-2 text-right">{'Rate (₹)'}</th>
+                      <th className="px-2 py-2 text-right">{'Total (₹)'}</th>
+                      <th className="px-2 py-2">{'Batch & Expiry'}</th>
+                      <th className="px-2 py-2 text-center">{'Action'}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
@@ -385,7 +373,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
                           <div className="space-y-1">
                             <input
                               type="text"
-                              placeholder={tr('Batch No', 'बैच नंबर', 'बॅच नंबर')}
+                              placeholder={'Batch No'}
                               value={item.batch_no}
                               onChange={(e) => updateItem(item.id, 'batch_no', e.target.value)}
                               className="w-full px-1.5 py-0.5 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded text-[11px] font-mono font-bold"
@@ -415,7 +403,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
               {/* Total & Summary */}
               <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-900/60">
                 <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300">
-                  {tr('Total Bill Amount:', 'कुल खरीद राशि:', 'एकूण खरेदी रक्कम:')}
+                  {'Total Bill Amount:'}
                 </span>
                 <span className="text-lg font-black text-emerald-700 dark:text-emerald-400 tabular-nums">
                   ₹{totalBillAmount.toLocaleString('en-IN')}
@@ -433,7 +421,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#24352F]"
           >
-            {tr('Cancel', 'रद्द करें', 'रद्द करा')}
+            {'Cancel'}
           </button>
           <button
             disabled={!hasScanned || invoiceItems.length === 0}
@@ -441,7 +429,7 @@ export const InvoiceScannerModal: React.FC<InvoiceScannerModalProps> = ({
             className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition disabled:opacity-50 flex items-center gap-1.5"
           >
             <Save className="w-3.5 h-3.5" />
-            <span>{tr('Add to Stock & Save Purchase', 'स्टॉक में जोड़ें व खरीद दर्ज करें', 'साठ्यात जमा करा व खरेदी नोंदवा')}</span>
+            <span>{'Add to Stock & Save Purchase'}</span>
           </button>
         </div>
 

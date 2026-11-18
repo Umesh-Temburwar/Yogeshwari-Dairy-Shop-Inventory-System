@@ -19,6 +19,7 @@ const SALT = 'YDO_MASTER_PASSCODE_SALT_v1_2026';
 const DEFAULT_MASTER_HASH = '4b73c8ea67ccf828b42b2eed3ab6ac8fab85e62667607c1a572c044fa196cef1';
 
 const STORAGE_MASTER_HASH = 'ydo_sec_master_hash_v1';
+const STORAGE_MASTER_LENGTH = 'ydo_sec_master_length_v1';
 const STORAGE_SESSION_TOKEN = 'ydo_sec_session_token_v1';
 const STORAGE_FAILED_ATTEMPTS = 'ydo_sec_failed_attempts';
 const STORAGE_LOCKOUT_UNTIL = 'ydo_sec_lockout_until';
@@ -143,6 +144,47 @@ export async function syncMasterPasscodeHashFromCloud(forceRefresh = false): Pro
   }
 
   return getActiveMasterHash();
+}
+
+/**
+ * Returns the expected length of the master passcode (e.g. 8 for default, or custom length if set).
+ */
+export function getMasterPasscodeLength(): number | null {
+  try {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(STORAGE_MASTER_LENGTH);
+      if (stored) {
+        const parsed = parseInt(stored, 10);
+        if (Number.isFinite(parsed) && parsed >= MIN_PASSCODE_LENGTH && parsed <= MAX_PASSCODE_LENGTH) {
+          return parsed;
+        }
+      }
+    }
+  } catch {}
+  if (getActiveMasterHash() === DEFAULT_MASTER_HASH) {
+    return 8;
+  }
+  return null;
+}
+
+export function setMasterPasscodeLength(len: number): void {
+  try {
+    if (typeof window !== 'undefined' && Number.isFinite(len) && len >= MIN_PASSCODE_LENGTH && len <= MAX_PASSCODE_LENGTH) {
+      localStorage.setItem(STORAGE_MASTER_LENGTH, len.toString());
+    }
+  } catch {}
+}
+
+/**
+ * Silently tests entered passcode against active master hash without penalizing failed attempts.
+ * Enables instant auto-unlock as soon as the correct passcode is typed without pressing enter/unlock.
+ */
+export async function testMasterPasscodeSilently(enteredPin: string): Promise<boolean> {
+  const trimmed = enteredPin.trim();
+  if (!trimmed) return false;
+  const activeHash = getActiveMasterHash();
+  const computed = await computeSha256Hex(SALT + trimmed);
+  return computed.length === 64 && computed.toLowerCase() === activeHash.toLowerCase();
 }
 
 /**
@@ -345,10 +387,11 @@ export async function changeMasterPasscode(
     return { success: false, error: 'CRYPTO_UNAVAILABLE' };
   }
 
-  // 1. Persist salted SHA-256 hash locally
+  // 1. Persist salted SHA-256 hash locally + passcode length
   try {
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_MASTER_HASH, newHash);
+      setMasterPasscodeLength(cleanNew.length);
     }
   } catch {}
 

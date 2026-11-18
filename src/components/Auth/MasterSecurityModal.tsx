@@ -13,7 +13,11 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { authenticateUserFingerprint } from '../../lib/biometricAuth';
-import { MAX_PASSCODE_LENGTH } from '../../lib/security';
+import {
+  MAX_PASSCODE_LENGTH,
+  testMasterPasscodeSilently,
+  getMasterPasscodeLength
+} from '../../lib/security';
 
 interface MasterSecurityModalProps {
   isOpen: boolean;
@@ -70,6 +74,7 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
   const [isErrorFlash, setIsErrorFlash] = useState(false);
 
   const isVerifyingRef = useRef(false);
+  const passcodeRef = useRef('');
   const hasAutoTriggeredBioRef = useRef(false);
   const biometricUnlockRef = useRef<(isAuto?: boolean) => Promise<void>>(async () => {});
 
@@ -93,6 +98,7 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
             onVerified();
           }
           setTimeout(() => {
+            passcodeRef.current = '';
             setPasscode('');
           }, 320);
         } else {
@@ -110,6 +116,7 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
             setAttemptsLeft(res.attemptsLeft);
             setErrorMsg('Wrong passcode. Try again.');
           }
+          passcodeRef.current = '';
           setPasscode('');
         }
       } catch {
@@ -119,6 +126,7 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
         setTimeout(() => setIsShake(false), 420);
         setTimeout(() => setIsErrorFlash(false), 650);
         setErrorMsg('Verification error. Please try again.');
+        passcodeRef.current = '';
         setPasscode('');
       } finally {
         setIsVerifying(false);
@@ -128,44 +136,74 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
     [unlockSecurity, onVerified, lockoutRemainingSec, isVerifying, isSuccess]
   );
 
+  // Automatic verification on typing: opens immediately without pressing Enter or Unlock button
+  const checkAutoUnlock = useCallback(
+    async (candidate: string) => {
+      if (lockoutRemainingSec > 0 || isVerifyingRef.current || isSuccess) return;
+      if (!candidate || candidate.length === 0) return;
+
+      // 1. Silent check: If candidate matches the master passcode, unlock immediately!
+      const isMatch = await testMasterPasscodeSilently(candidate);
+      if (isMatch) {
+        void executeVerification(candidate);
+        return;
+      }
+
+      // 2. If expected length is known and candidate has reached that length without matching,
+      // trigger verification so incorrect passcode is reported and cleared immediately
+      const expectedLen = getMasterPasscodeLength();
+      if (expectedLen && candidate.length === expectedLen) {
+        void executeVerification(candidate);
+      }
+    },
+    [lockoutRemainingSec, isSuccess, executeVerification]
+  );
+
   // Keypad Handlers (any length 1 to 16 digits)
   const handleDigitPress = useCallback(
     (digit: string) => {
-      if (lockoutRemainingSec > 0 || isVerifying || isSuccess) return;
-      if (passcode.length < MAX_PASSCODE_LENGTH) {
+      if (lockoutRemainingSec > 0 || isVerifyingRef.current || isSuccess) return;
+      const current = passcodeRef.current;
+      if (current.length < MAX_PASSCODE_LENGTH) {
         triggerHaptic(14);
-        const next = passcode + digit;
+        const next = current + digit;
+        passcodeRef.current = next;
         setPasscode(next);
         setErrorMsg(null);
         setAttemptsLeft(null);
         setIsErrorFlash(false);
+
+        void checkAutoUnlock(next);
       }
     },
-    [passcode, isVerifying, isSuccess, lockoutRemainingSec]
+    [lockoutRemainingSec, isSuccess, checkAutoUnlock]
   );
 
   const handleBackspace = useCallback(() => {
-    if (lockoutRemainingSec > 0 || isVerifying || isSuccess || passcode.length === 0) return;
+    if (lockoutRemainingSec > 0 || isVerifyingRef.current || isSuccess || passcodeRef.current.length === 0) return;
     triggerHaptic(14);
-    setPasscode((prev) => prev.slice(0, -1));
+    const next = passcodeRef.current.slice(0, -1);
+    passcodeRef.current = next;
+    setPasscode(next);
     setErrorMsg(null);
     setIsErrorFlash(false);
-  }, [lockoutRemainingSec, isVerifying, isSuccess, passcode.length]);
+  }, [lockoutRemainingSec, isSuccess]);
 
   const handleClear = useCallback(() => {
-    if (lockoutRemainingSec > 0 || isVerifying || isSuccess || passcode.length === 0) return;
+    if (lockoutRemainingSec > 0 || isVerifyingRef.current || isSuccess || passcodeRef.current.length === 0) return;
     triggerHaptic(18);
+    passcodeRef.current = '';
     setPasscode('');
     setErrorMsg(null);
     setIsErrorFlash(false);
-  }, [lockoutRemainingSec, isVerifying, isSuccess, passcode.length]);
+  }, [lockoutRemainingSec, isSuccess]);
 
-  // Physical keyboard support (0-9, Backspace, Enter, Escape, Delete)
+  // Physical keyboard & paste support (0-9, Backspace, Enter, Escape, Delete, Paste)
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (lockoutRemainingSec > 0 || isVerifying || isSuccess) return;
+      if (lockoutRemainingSec > 0 || isVerifyingRef.current || isSuccess) return;
 
       if (e.key >= '0' && e.key <= '9') {
         e.preventDefault();
@@ -174,9 +212,9 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
         e.preventDefault();
         handleBackspace();
       } else if (e.key === 'Enter') {
-        if (passcode.length > 0) {
+        if (passcodeRef.current.length > 0) {
           e.preventDefault();
-          void executeVerification(passcode);
+          void executeVerification(passcodeRef.current);
         }
       } else if (e.key === 'Escape' || e.key === 'Delete') {
         e.preventDefault();
@@ -184,18 +222,36 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
       }
     };
 
+    const handlePaste = (e: ClipboardEvent) => {
+      if (lockoutRemainingSec > 0 || isVerifyingRef.current || isSuccess) return;
+      const text = e.clipboardData?.getData('text') || '';
+      const digits = text.replace(/\D/g, '').slice(0, MAX_PASSCODE_LENGTH);
+      if (digits) {
+        e.preventDefault();
+        passcodeRef.current = digits;
+        setPasscode(digits);
+        setErrorMsg(null);
+        setAttemptsLeft(null);
+        setIsErrorFlash(false);
+        void checkAutoUnlock(digits);
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('paste', handlePaste);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('paste', handlePaste);
+    };
   }, [
     isOpen,
     lockoutRemainingSec,
-    isVerifying,
     isSuccess,
-    passcode,
     handleDigitPress,
     handleBackspace,
     handleClear,
-    executeVerification
+    executeVerification,
+    checkAutoUnlock
   ]);
 
   // Mobile Biometric Unlock for Owner & Admin
@@ -259,6 +315,7 @@ export const MasterSecurityModal: React.FC<MasterSecurityModalProps> = ({ isOpen
   // Lifecycle & Biometric Auto-Trigger (auto-prompts in Fingerprint mode or legacy Admin with Both mode)
   useEffect(() => {
     if (isOpen) {
+      passcodeRef.current = '';
       setPasscode('');
       setErrorMsg(null);
       setAttemptsLeft(null);

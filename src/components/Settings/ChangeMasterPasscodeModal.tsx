@@ -17,7 +17,8 @@ import {
   verifyCurrentMasterPasscodeForChange,
   changeMasterPasscode,
   getLockoutTimestamp,
-  MAX_PASSCODE_LENGTH
+  MAX_PASSCODE_LENGTH,
+  testMasterPasscodeSilently
 } from '../../lib/security';
 
 interface ChangeMasterPasscodeModalProps {
@@ -344,11 +345,21 @@ export const ChangeMasterPasscodeModal: React.FC<ChangeMasterPasscodeModalProps>
                     autoFocus
                     disabled={lockoutRemainingSec > 0 || isSubmitting}
                     value={currentPin}
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const next = sanitizeDigits(e.target.value);
                       if (next.length > currentPin.length) triggerHaptic(14);
                       setCurrentPin(next);
                       setErrorMsg(null);
+
+                      if (next.length > 0) {
+                        const isMatch = await testMasterPasscodeSilently(next);
+                        if (isMatch) {
+                          triggerHaptic([20, 35, 45]);
+                          setVerifiedCurrentPin(next);
+                          setCurrentPin('');
+                          setStep('new');
+                        }
+                      }
                     }}
                     placeholder="Enter digits"
                     className="w-full h-12 pl-4 pr-11 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white font-mono text-lg tracking-[0.25em] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none disabled:opacity-50"

@@ -22,9 +22,83 @@ const STORAGE_MASTER_HASH = 'ydo_sec_master_hash_v1';
 const STORAGE_SESSION_TOKEN = 'ydo_sec_session_token_v1';
 const STORAGE_FAILED_ATTEMPTS = 'ydo_sec_failed_attempts';
 const STORAGE_LOCKOUT_UNTIL = 'ydo_sec_lockout_until';
+const STORAGE_MASTER_LOCK_ENABLED = 'ydo_sec_master_lock_enabled_v1';
+const STORAGE_UNLOCK_METHOD = 'ydo_sec_unlock_method_v1';
+const SECURITY_SETTINGS_EVENT = 'ydo_security_settings_changed';
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 5 * 60 * 1000; // 5 minutes
-const PASSCODE_REGEX = /^\d{8}$/;
+export const MIN_PASSCODE_LENGTH = 1;
+export const MAX_PASSCODE_LENGTH = 64;
+
+export type MasterUnlockMethod = 'both' | 'password' | 'fingerprint';
+
+/**
+ * Validates flexible master passcode: any digits, text, symbols, or emojis (1 to 64 chars).
+ */
+export function isValidMasterPasscodeFormat(value: string): boolean {
+  const trimmed = value.trim();
+  const charCount = Array.from(trimmed).length;
+  return charCount >= MIN_PASSCODE_LENGTH && charCount <= MAX_PASSCODE_LENGTH;
+}
+
+/** Whether Master Password lock screen is enabled (defaults to ON / true) */
+export function isMasterLockEnabled(): boolean {
+  try {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(STORAGE_MASTER_LOCK_ENABLED);
+      if (stored === 'false') return false;
+      if (stored === 'true') return true;
+    }
+  } catch {}
+  return true;
+}
+
+export function setMasterLockEnabled(enabled: boolean): void {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_MASTER_LOCK_ENABLED, enabled ? 'true' : 'false');
+      window.dispatchEvent(new CustomEvent(SECURITY_SETTINGS_EVENT));
+    }
+  } catch {}
+}
+
+/** Active unlock method for Master Security Gate ('both' | 'password' | 'fingerprint') */
+export function getMasterUnlockMethod(): MasterUnlockMethod {
+  try {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(STORAGE_UNLOCK_METHOD);
+      if (stored === 'password' || stored === 'fingerprint' || stored === 'both') {
+        return stored;
+      }
+    }
+  } catch {}
+  return 'both';
+}
+
+export function setMasterUnlockMethod(method: MasterUnlockMethod): void {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_UNLOCK_METHOD, method);
+      window.dispatchEvent(new CustomEvent(SECURITY_SETTINGS_EVENT));
+    }
+  } catch {}
+}
+
+export function subscribeToSecuritySettings(listener: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
+  const handleCustom = () => listener();
+  const handleStorage = (e: StorageEvent) => {
+    if (e.key === STORAGE_MASTER_LOCK_ENABLED || e.key === STORAGE_UNLOCK_METHOD) {
+      listener();
+    }
+  };
+  window.addEventListener(SECURITY_SETTINGS_EVENT, handleCustom);
+  window.addEventListener('storage', handleStorage);
+  return () => {
+    window.removeEventListener(SECURITY_SETTINGS_EVENT, handleCustom);
+    window.removeEventListener('storage', handleStorage);
+  };
+}
 
 function isValidSha256Hex(value: unknown): value is string {
   return typeof value === 'string' && /^[0-9a-f]{64}$/i.test(value.trim());
@@ -175,7 +249,7 @@ export async function verifyCurrentMasterPasscodeForChange(currentPin: string): 
   }
 
   const trimmed = currentPin.trim();
-  if (!PASSCODE_REGEX.test(trimmed)) {
+  if (!isValidMasterPasscodeFormat(trimmed)) {
     return {
       success: false,
       attemptsLeft: Math.max(0, MAX_ATTEMPTS - getFailedAttempts()),
@@ -244,7 +318,7 @@ export async function changeMasterPasscode(
   const cleanNew = newPin.trim();
   const cleanConfirm = confirmPin.trim();
 
-  if (!PASSCODE_REGEX.test(cleanNew)) {
+  if (!isValidMasterPasscodeFormat(cleanNew)) {
     return { success: false, error: 'INVALID_NEW_FORMAT' };
   }
 
@@ -315,7 +389,7 @@ export async function changeMasterPasscode(
           admin_role: actor?.role || 'Owner',
           action_type: 'PRODUCT_UPDATED',
           title: 'Master Passcode Changed',
-          details: 'Updated 8-digit master security passcode from dashboard settings after verifying current passcode.',
+          details: 'Updated master security passcode from dashboard settings after verifying current passcode.',
           counter_name: actor?.role === 'Admin' ? 'Billing Counter' : 'Owner Master Counter'
         });
     } catch {
@@ -330,6 +404,7 @@ export async function changeMasterPasscode(
  * Checks if the current session has already successfully passed the Master Security verification.
  */
 export async function isSessionSecurityValid(): Promise<boolean> {
+  if (!isMasterLockEnabled()) return true;
   try {
     const token = sessionStorage.getItem(STORAGE_SESSION_TOKEN);
     if (!token) return false;

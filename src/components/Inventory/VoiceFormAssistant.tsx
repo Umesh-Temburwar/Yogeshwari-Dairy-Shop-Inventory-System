@@ -29,6 +29,10 @@ import {
 } from '../../lib/voiceFieldParser';
 import { 
   isSpeechRecognitionSupported, 
+  isMobileVoiceDevice,
+  queryMicrophonePermission,
+  ensureMobileMicrophonePermission,
+  getVoiceErrorMessage,
   processVoiceTranscript, 
   VoiceLanguage 
 } from '../../lib/voiceProductRecognizer';
@@ -215,8 +219,22 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
       isSpeakingRef.current = false;
     }
 
+    // On mobile browsers, never auto-trigger recognition before microphone permission is granted
+    // (mobile OS requires a direct tap gesture to display the Allow Microphone popup cleanly).
+    if (isMobileVoiceDevice()) {
+      const perm = await queryMicrophonePermission();
+      if (perm !== 'granted') {
+        setErrorMessage(
+          perm === 'denied'
+            ? getVoiceErrorMessage('not-allowed')
+            : 'Tap the Mic button below to allow microphone access and speak.'
+        );
+        return;
+      }
+    }
+
     // After prompt finishes, open mic to listen for user response
-    startListening();
+    void startListening();
   };
 
   // Trigger prompt when step changes
@@ -230,7 +248,7 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
   }, [currentStep, voiceLang]);
 
   // Speech Recognition Control
-  const startListening = () => {
+  const startListening = async () => {
     if (!isSpeechRecognitionSupported()) {
       setErrorMessage(
         'Voice recognition is not supported in this browser. Please use Chrome or Edge.'
@@ -238,10 +256,23 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
       return;
     }
 
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    setErrorMessage(null);
     transcriptRef.current = '';
     userStoppedRef.current = false;
     restartCountRef.current = 0;
     setInterimTranscript('');
+
+    if (isMobileVoiceDevice()) {
+      const perm = await ensureMobileMicrophonePermission();
+      if (!perm.granted) {
+        setErrorMessage(getVoiceErrorMessage(perm.errorCode));
+        return;
+      }
+    }
 
     initAssistantRecognition();
   };
@@ -256,11 +287,14 @@ export const VoiceFormAssistant: React.FC<VoiceFormAssistantProps> = ({
       const recognition = new SpeechClass();
       recognitionRef.current = recognition;
 
-      recognition.continuous = true;
+      const isMobile = isMobileVoiceDevice();
+      recognition.continuous = !isMobile;
       recognition.interimResults = true;
       recognition.lang = voiceLang;
 
-      playBeepSound();
+      if (!isMobile) {
+        playBeepSound();
+      }
       isListeningRef.current = true;
       setIsListening(true);
 

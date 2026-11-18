@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import nikhilAvatar from '../../assets/nikhil_avatar.png';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
@@ -39,7 +38,7 @@ import { CustomerGender, CustomerAgeGroup, PaymentMode, SaleItem } from '../../t
 export const DailySalesTracker: React.FC = () => {
   const { filteredSales, metrics, setActiveView, returns, deleteSale, updateSale } = useStore();
   const { t, language, tr } = useLanguage();
-  const { role } = useAuth();
+  const { role, ownerAvatarUrl } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPaymentMode, setSelectedPaymentMode] = useState<string>('All');
@@ -507,7 +506,7 @@ export const DailySalesTracker: React.FC = () => {
                                 : 'bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800/40'
                             }`}>
                               {isOwnerSale ? (
-                                <img src={nikhilAvatar} alt="" className="w-3.5 h-3.5 rounded-full object-cover border border-amber-400 shrink-0" />
+                                <img src={ownerAvatarUrl} alt="" className="w-3.5 h-3.5 rounded-full object-cover border border-amber-400 shrink-0" />
                               ) : (
                                 <span>👤</span>
                               )}

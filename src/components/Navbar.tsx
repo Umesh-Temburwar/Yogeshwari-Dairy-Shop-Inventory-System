@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ydoLogo from '../assets/YDO_logo.jpg';
-import nikhilAvatar from '../assets/nikhil_avatar.png';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -35,7 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAppDownload,
 }) => {
   const { t, language } = useLanguage();
-  const { user, role, signOut } = useAuth();
+  const { user, role, signOut, avatarUrl, hasCustomAvatar } = useAuth();
   const { resolvedTheme, toggleTheme } = useTheme();
   const realtimeStatus = useRealtimeStatus();
 
@@ -183,9 +182,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               title={`${currentUserName} (${role === 'Owner' ? 'Shop Owner' : 'Admin'})`}
             >
               <div className="w-9 h-9 rounded-full p-0.5 border-2 border-amber-400/90 dark:border-amber-400 overflow-hidden bg-white dark:bg-[#131F1B] flex items-center justify-center shrink-0">
-                {role === 'Owner' ? (
+                {role === 'Owner' || hasCustomAvatar ? (
                   <img 
-                    src={nikhilAvatar} 
+                    src={avatarUrl} 
                     alt={currentUserName} 
                     className="w-full h-full rounded-full object-cover" 
                   />
@@ -211,8 +210,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {/* User Identity Header */}
                 <div className="px-3.5 py-2.5 border-b border-slate-100 dark:border-[#24352F] flex items-center gap-2.5">
                   <div className="w-10 h-10 rounded-full p-0.5 border-2 border-amber-400 overflow-hidden bg-white dark:bg-[#1A2A25] shrink-0">
-                    {role === 'Owner' ? (
-                      <img src={nikhilAvatar} alt={currentUserName} className="w-full h-full rounded-full object-cover" />
+                    {role === 'Owner' || hasCustomAvatar ? (
+                      <img src={avatarUrl} alt={currentUserName} className="w-full h-full rounded-full object-cover" />
                     ) : (
                       <div className="w-full h-full rounded-full flex items-center justify-center text-sm bg-emerald-100 dark:bg-emerald-950/60">
                         🛡️

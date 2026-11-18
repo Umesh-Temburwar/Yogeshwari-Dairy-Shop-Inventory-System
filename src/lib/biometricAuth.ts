@@ -1,23 +1,17 @@
 /**
  * YOGESHWARI DAIRY ERP - BIOMETRIC FINGERPRINT AUTHENTICATION SERVICE
- * Exclusively provides hardware-level mobile fingerprint authentication
- * for Nilesh Sakhare (Admin) via Web Authentication API (WebAuthn).
+ * Provides hardware-level mobile fingerprint / Touch ID authentication
+ * for both Shop Owner and Admin profiles via Web Authentication API (WebAuthn).
  */
 
-/**
- * Checks if the current mobile device or browser supports hardware-level
- * user-verifying platform authenticators (such as Android Fingerprint / Touch ID).
- */
 export async function isBiometricSupported(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
-  
-  // Check if WebAuthn PublicKeyCredential is supported
   if (!window.PublicKeyCredential) return false;
 
   try {
     if (typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
       const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      return !!available;
+      return Boolean(available);
     }
     return true;
   } catch {
@@ -25,11 +19,18 @@ export async function isBiometricSupported(): Promise<boolean> {
   }
 }
 
+export interface BiometricProfileIdentity {
+  email?: string | null;
+  displayName?: string | null;
+}
+
 /**
- * Performs authentic mobile fingerprint scan using the device's native fingerprint sensor.
- * Prompts the native Android / mobile fingerprint sensor dialog.
+ * Performs native mobile fingerprint / biometric scan via WebAuthn platform authenticator.
+ * Supports any logged-in user (Owner or Admin) with per-user credential storage.
  */
-export async function authenticateNileshFingerprint(): Promise<{
+export async function authenticateUserFingerprint(
+  profile?: BiometricProfileIdentity
+): Promise<{
   success: boolean;
   error?: string;
 }> {
@@ -40,23 +41,40 @@ export async function authenticateNileshFingerprint(): Promise<{
     };
   }
 
+  const isLocalhost =
+    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (window.isSecureContext === false && !isLocalhost) {
+    return {
+      success: false,
+      error: 'Mobile fingerprint requires a secure HTTPS connection.'
+    };
+  }
+
+  const cleanEmail = (profile?.email || 'nilusakhare2003@gmail.com').trim().toLowerCase();
+  const displayName = (profile?.displayName || 'Yogeshwari Dairy User').trim();
+  const safeEmailKey = cleanEmail.replace(/[^a-z0-9]/g, '_').slice(0, 48) || 'user';
+  const isLegacyNilesh = cleanEmail.includes('nilu') || cleanEmail.includes('nilesh');
+
+  const STORAGE_KEY = isLegacyNilesh
+    ? 'ydo_nilesh_webauthn_cred_id'
+    : `ydo_webauthn_cred_${safeEmailKey}`;
+
   // 32-byte cryptographic random challenge
   const challenge = new Uint8Array(32);
   window.crypto.getRandomValues(challenge);
 
-  const STORAGE_KEY = 'ydo_nilesh_webauthn_cred_id';
   const storedCredId = localStorage.getItem(STORAGE_KEY);
 
-  // 1. If Nilesh has an existing enrolled credential on this device, attempt .get()
+  // 1. If this user already enrolled a fingerprint credential on this device, verify with .get()
   if (storedCredId) {
     try {
-      const credIdBytes = base64ToUint8Array(storedCredId);
+      const credIdBuffer = base64ToArrayBuffer(storedCredId);
       const assertion = await navigator.credentials.get({
         publicKey: {
           challenge,
           allowCredentials: [
             {
-              id: credIdBytes,
+              id: credIdBuffer,
               type: 'public-key',
               transports: ['internal']
             }
@@ -69,9 +87,10 @@ export async function authenticateNileshFingerprint(): Promise<{
       if (assertion) {
         return { success: true };
       }
-    } catch (err: any) {
-      console.warn('WebAuthn get error, falling back to enrollment/create...', err);
-      if (err.name === 'NotAllowedError') {
+    } catch (err: unknown) {
+      console.warn('WebAuthn get error, checking cancellation/fallback...', err);
+      const errName = err instanceof Error ? err.name : '';
+      if (errName === 'NotAllowedError') {
         return {
           success: false,
           error: 'Fingerprint verification was cancelled or did not match.'
@@ -80,9 +99,9 @@ export async function authenticateNileshFingerprint(): Promise<{
     }
   }
 
-  // 2. First-time enrollment or re-registration using .create() with platform fingerprint sensor
+  // 2. First-time enrollment on this device using .create() with platform fingerprint sensor
   try {
-    const userId = new TextEncoder().encode('nilesh-sakhare-admin-2026');
+    const userId = new TextEncoder().encode(`ydo-biometric-${safeEmailKey}`);
     const credential = (await navigator.credentials.create({
       publicKey: {
         challenge,
@@ -91,16 +110,16 @@ export async function authenticateNileshFingerprint(): Promise<{
         },
         user: {
           id: userId,
-          name: 'nilusakhare2003@gmail.com',
-          displayName: 'Nilesh Sakhare (Admin)'
+          name: cleanEmail,
+          displayName
         },
         pubKeyCredParams: [
-          { alg: -7, type: 'public-key' },  // ES256 (standard Android/iOS biometric)
-          { alg: -257, type: 'public-key' } // RS256
+          { alg: -7, type: 'public-key' },   // ES256 (Android/iOS biometric)
+          { alg: -257, type: 'public-key' }  // RS256
         ],
         authenticatorSelection: {
-          authenticatorAttachment: 'platform', // strictly mobile hardware sensor (fingerprint)
-          userVerification: 'required',        // strictly requires biometric touch
+          authenticatorAttachment: 'platform',
+          userVerification: 'required',
           residentKey: 'preferred'
         },
         timeout: 60000,
@@ -118,9 +137,11 @@ export async function authenticateNileshFingerprint(): Promise<{
       success: false,
       error: 'Could not recognize fingerprint. Please try again.'
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('WebAuthn biometric error:', err);
-    if (err.name === 'NotAllowedError') {
+    const errName = err instanceof Error ? err.name : '';
+    const errMsg = err instanceof Error ? err.message : '';
+    if (errName === 'NotAllowedError') {
       return {
         success: false,
         error: 'Fingerprint scan was cancelled.'
@@ -128,14 +149,22 @@ export async function authenticateNileshFingerprint(): Promise<{
     }
     return {
       success: false,
-      error: err.message || 'Error during fingerprint scan. Please use passcode.'
+      error: errMsg || 'Error during fingerprint scan. Please use master password.'
     };
   }
 }
 
-/**
- * Utility: Converts Uint8Array to Base64 string safely
- */
+/** Backwards-compatible alias */
+export async function authenticateNileshFingerprint(): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  return authenticateUserFingerprint({
+    email: 'nilusakhare2003@gmail.com',
+    displayName: 'Nilesh Sakhare (Admin)'
+  });
+}
+
 function uint8ArrayToBase64(bytes: Uint8Array): string {
   let binary = '';
   for (let i = 0; i < bytes.byteLength; i++) {
@@ -144,14 +173,12 @@ function uint8ArrayToBase64(bytes: Uint8Array): string {
   return window.btoa(binary);
 }
 
-/**
- * Utility: Converts Base64 string to Uint8Array safely
- */
-function base64ToUint8Array(base64: string): Uint8Array {
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
   const binary = window.atob(base64);
-  const bytes = new Uint8Array(binary.length);
+  const buffer = new ArrayBuffer(binary.length);
+  const bytes = new Uint8Array(buffer);
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);
   }
-  return bytes;
+  return buffer;
 }

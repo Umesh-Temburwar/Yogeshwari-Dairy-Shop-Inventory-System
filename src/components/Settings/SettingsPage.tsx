@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   ShieldCheck,
   KeyRound,
@@ -12,14 +12,23 @@ import {
   HeartPulse,
   Lock,
   LogOut,
-  RefreshCw
+  RefreshCw,
+  Camera,
+  RotateCcw,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Fingerprint
 } from 'lucide-react';
-import nikhilAvatar from '../../assets/nikhil_avatar.png';
 import { useStore } from '../../context/StoreContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { isMobileDevice, requestMotionPermission } from '../../hooks/useShakeDetector';
+import { uploadUserProfilePhoto } from '../../lib/profilePhotoService';
+import { formatFileSize } from '../../lib/productImageService';
+import { isBiometricSupported } from '../../lib/biometricAuth';
+import type { MasterUnlockMethod } from '../../lib/security';
 import {
   isRegistrationAllowedSync,
   setRegistrationSetting,
@@ -57,7 +66,28 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     triggerGlobalBillingScanner
   } = useStore();
   const { resolvedTheme, toggleTheme } = useTheme();
-  const { user, role, lockSecurity, signOut } = useAuth();
+  const {
+    user,
+    role,
+    lockSecurity,
+    signOut,
+    avatarUrl,
+    hasCustomAvatar,
+    updateProfileAvatar,
+    masterLockEnabled,
+    setMasterLockEnabled,
+    unlockMethod,
+    setUnlockMethod
+  } = useAuth();
+  const [biometricSupported, setBiometricSupported] = useState(false);
+
+  // Profile Photo Upload State (any raw size -> strictly <= 20 KB compressed)
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarStatus, setAvatarStatus] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   // Security Controls (Registration & Audit Stream)
   const [isRegistrationAllowed, setIsRegistrationAllowed] = useState<boolean>(() => isRegistrationAllowedSync());
@@ -72,6 +102,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     syncRegistrationSettingFromCloud().then(setIsRegistrationAllowed).catch(() => {});
     const unsubReg = subscribeToRegistrationSetting(setIsRegistrationAllowed);
     const unsubAudit = subscribeToAuditStreamSetting(setIsAuditStreamEnabledState);
+    isBiometricSupported().then(setBiometricSupported).catch(() => setBiometricSupported(false));
     return () => {
       unsubReg();
       unsubAudit();
@@ -142,6 +173,57 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     }
   };
 
+  const handleAvatarFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Reset input so selecting the same file again still triggers onChange
+    e.target.value = '';
+    if (!file || isUploadingAvatar) return;
+
+    setIsUploadingAvatar(true);
+    setAvatarStatus(null);
+    try {
+      const result = await uploadUserProfilePhoto({
+        file,
+        userEmail: user?.email || null,
+        userRole: role,
+        userId: user?.id || null
+      });
+      await updateProfileAvatar(result.avatarUrl);
+      const origLabel = formatFileSize(result.compressed.originalBytes);
+      const finalLabel = formatFileSize(result.compressed.compressedBytes);
+      const fmtLabel = result.compressed.extension.toUpperCase();
+      setAvatarStatus({
+        type: 'success',
+        message: `Profile photo updated (${origLabel} → ${finalLabel} ${fmtLabel})`
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Could not update profile photo. Please try another image.';
+      setAvatarStatus({ type: 'error', message: msg });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleResetAvatar = async () => {
+    if (isUploadingAvatar) return;
+    setIsUploadingAvatar(true);
+    setAvatarStatus(null);
+    try {
+      await updateProfileAvatar(null);
+      setAvatarStatus({
+        type: 'success',
+        message: 'Profile photo reset to default'
+      });
+    } catch {
+      setAvatarStatus({
+        type: 'error',
+        message: 'Could not reset profile photo'
+      });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   const handleTestShakeScanner = () => {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       try {
@@ -198,19 +280,48 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
       {/* Main Content */}
       <div className="max-w-2xl mx-auto px-4 pt-4 space-y-5 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-10">
-        {/* Compact Profile Summary Card + Quick Counter Actions */}
+        {/* Compact Profile Summary Card + Profile Photo Updater + Quick Counter Actions */}
         <section
           aria-label="Profile Summary"
           className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/80 dark:border-[#24352F] shadow-sm p-4 space-y-3.5"
         >
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/40 shrink-0">
-              <img
-                src={nikhilAvatar}
-                alt={currentUserName}
-                className="w-full h-full object-cover"
-              />
-            </div>
+          <input
+            ref={avatarInputRef}
+            id="profile-avatar-upload"
+            name="profile_avatar_upload"
+            type="file"
+            accept="image/*"
+            onChange={(e) => void handleAvatarFileSelected(e)}
+            className="hidden"
+          />
+
+          <div className="flex items-center gap-3.5 min-w-0">
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              aria-label="Update profile photo"
+              title="Tap to update profile photo (auto-compressed to ≤20 KB)"
+              className="relative w-14 h-14 rounded-full shrink-0 group focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer disabled:opacity-70"
+            >
+              <div className="w-full h-full rounded-full overflow-hidden border-2 border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40">
+                <img
+                  src={avatarUrl}
+                  alt={currentUserName}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {isUploadingAvatar ? (
+                <span className="absolute inset-0 rounded-full bg-black/55 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 text-white animate-spin" />
+                </span>
+              ) : (
+                <span className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full bg-emerald-600 group-hover:bg-emerald-700 text-white border-2 border-white dark:border-[#131F1B] flex items-center justify-center shadow-xs transition">
+                  <Camera className="w-3 h-3" />
+                </span>
+              )}
+            </button>
 
             <div className="min-w-0 flex-1">
               <div className="text-[15px] font-bold text-slate-900 dark:text-[#E7F0EC] truncate">
@@ -226,18 +337,77 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                   </span>
                 )}
               </div>
+              <p className="text-[11px] text-slate-400 dark:text-[#7E968C] mt-1 truncate">
+                Any photo size auto-compressed to ≤20 KB
+              </p>
             </div>
           </div>
+
+          {/* Profile Photo Actions */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={isUploadingAvatar}
+              onClick={() => avatarInputRef.current?.click()}
+              className="flex-1 min-h-[40px] px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100/90 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold inline-flex items-center justify-center gap-1.5 transition active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+            >
+              {isUploadingAvatar ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                  <span>Compressing to ≤20 KB...</span>
+                </>
+              ) : (
+                <>
+                  <Camera className="w-3.5 h-3.5 shrink-0" />
+                  <span>{hasCustomAvatar ? 'Change Profile Photo' : 'Update Profile Photo'}</span>
+                </>
+              )}
+            </button>
+
+            {hasCustomAvatar && (
+              <button
+                type="button"
+                disabled={isUploadingAvatar}
+                onClick={() => void handleResetAvatar()}
+                aria-label="Reset profile photo to default"
+                title="Reset to default photo"
+                className="min-h-[40px] px-3 py-2 rounded-xl border border-slate-200 dark:border-[#24352F] bg-slate-50 hover:bg-slate-100 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-600 dark:text-[#9DB2A9] text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition active:scale-[0.98] disabled:opacity-60 shrink-0 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                <span>Reset</span>
+              </button>
+            )}
+          </div>
+
+          {/* Live Compression / Upload Feedback */}
+          {avatarStatus && (
+            <div
+              role="status"
+              className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                avatarStatus.type === 'success'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50'
+                  : 'bg-red-50 dark:bg-rose-950/40 text-red-700 dark:text-rose-300 border border-red-200/80 dark:border-rose-800/50'
+              }`}
+            >
+              {avatarStatus.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              ) : (
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-600 dark:text-rose-400" />
+              )}
+              <span className="min-w-0 truncate">{avatarStatus.message}</span>
+            </div>
+          )}
 
           {/* Lock Counter & Logout Quick Actions */}
           <div className="grid grid-cols-2 gap-2.5">
             <button
               type="button"
+              disabled={!masterLockEnabled}
               onClick={() => lockSecurity()}
-              className="min-h-[44px] px-3 py-2 rounded-xl border border-amber-300 dark:border-amber-700/70 bg-amber-50/60 hover:bg-amber-100/80 dark:bg-amber-950/25 dark:hover:bg-amber-950/50 text-amber-800 dark:text-amber-300 text-xs font-bold inline-flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
+              className="min-h-[44px] px-3 py-2 rounded-xl border border-amber-300 dark:border-amber-700/70 bg-amber-50/60 hover:bg-amber-100/80 dark:bg-amber-950/25 dark:hover:bg-amber-950/50 text-amber-800 dark:text-amber-300 text-xs font-bold inline-flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <Lock className="w-4 h-4 shrink-0" />
-              <span className="truncate">Lock Counter</span>
+              <span className="truncate">{masterLockEnabled ? 'Lock Counter' : 'Lock is OFF'}</span>
             </button>
 
             <button
@@ -254,10 +424,89 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         {/* SECTION 1: SECURITY */}
         <SettingSection title="SECURITY">
           <SettingRow
+            icon={<Lock className="w-5 h-5" />}
+            tone={masterLockEnabled ? 'emerald' : 'amber'}
+            title="Master Password Lock"
+            subtitle={
+              masterLockEnabled
+                ? 'ON — Require unlock after login or idle'
+                : 'OFF — Open app directly without lock screen'
+            }
+            onClick={() => setMasterLockEnabled(!masterLockEnabled)}
+            rightContent={
+              <ToggleSwitch
+                checked={masterLockEnabled}
+                onChange={() => setMasterLockEnabled(!masterLockEnabled)}
+                ariaLabel="Master Password Lock"
+              />
+            }
+          />
+
+          {masterLockEnabled && (
+            <div className="px-4 py-3.5 space-y-2.5 bg-white dark:bg-[#131F1B]">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
+                  <Fingerprint className="w-5 h-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[14px] font-semibold text-slate-900 dark:text-[#E7F0EC] leading-snug">
+                    Unlock Method
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-[#8FA69C] leading-snug">
+                    {unlockMethod === 'fingerprint'
+                      ? 'Unlock with mobile fingerprint (password fallback available)'
+                      : unlockMethod === 'password'
+                      ? 'Unlock using master password only'
+                      : 'Unlock with mobile fingerprint or master password'}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                role="radiogroup"
+                aria-label="Master password unlock method"
+                className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-[#0F1916] border border-slate-200/80 dark:border-[#24352F]"
+              >
+                {(
+                  [
+                    { id: 'password', label: 'Password' },
+                    { id: 'fingerprint', label: 'Fingerprint' },
+                    { id: 'both', label: 'Both' }
+                  ] as Array<{ id: MasterUnlockMethod; label: string }>
+                ).map((opt) => {
+                  const active = unlockMethod === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => setUnlockMethod(opt.id)}
+                      className={`min-h-[38px] px-2 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        active
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'text-slate-600 dark:text-[#9DB2A9] hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="text-[11px] text-slate-400 dark:text-[#7E968C]">
+                {biometricSupported
+                  ? '✓ Fingerprint / biometric sensor ready on this device.'
+                  : 'Fingerprint unlocks automatically on mobile phones with a biometric sensor.'}
+              </p>
+            </div>
+          )}
+
+          <SettingRow
             icon={<KeyRound className="w-5 h-5" />}
             tone="emerald"
-            title="Change Master Passcode"
-            subtitle="8-digit passcode"
+            title="Change Master Password"
+            subtitle="Digits, text, symbols or emojis (any length)"
             onClick={onOpenChangePasscode}
             showChevron
           />

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ydoLogo from '../assets/YDO_logo.jpg';
-import nikhilAvatar from '../assets/nikhil_avatar.png';
 import { useStore, AppView } from '../context/StoreContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -74,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { activeView, setActiveView, metrics } = useStore();
   const { t, tr } = useLanguage();
-  const { user, role, setRole, signOut } = useAuth();
+  const { user, role, setRole, signOut, avatarUrl, hasCustomAvatar, ownerAvatarUrl } = useAuth();
 
   // Collapsible group state persisted in localStorage
   // Default: all open on desktop (>=1024px); only active route's group open on mobile
@@ -683,9 +682,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <div className={`flex items-center ${rail ? 'justify-center' : 'gap-2.5 min-w-0'}`}>
                 <div className="relative shrink-0">
-                  {role === 'Owner' ? (
+                  {role === 'Owner' || hasCustomAvatar ? (
                     <img
-                      src={nikhilAvatar}
+                      src={avatarUrl}
                       alt={currentUserName}
                       className="w-8 h-8 rounded-full object-cover border border-amber-400/90"
                     />
@@ -752,7 +751,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     >
                       <span className="flex items-center gap-2 min-w-0">
                         <img
-                          src={nikhilAvatar}
+                          src={ownerAvatarUrl}
                           alt="Nikhil Sakhare"
                           className="w-5 h-5 rounded-full object-cover border border-amber-400 shrink-0"
                         />

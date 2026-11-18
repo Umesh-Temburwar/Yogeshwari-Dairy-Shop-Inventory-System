@@ -11,12 +11,26 @@ import {
   isSessionSecurityValid, 
   revokeSessionSecurity,
   grantBiometricSecurityUnlock,
-  syncMasterPasscodeHashFromCloud
+  syncMasterPasscodeHashFromCloud,
+  isMasterLockEnabled,
+  setMasterLockEnabled as persistMasterLockEnabled,
+  getMasterUnlockMethod,
+  setMasterUnlockMethod as persistMasterUnlockMethod,
+  subscribeToSecuritySettings,
+  MasterUnlockMethod
 } from '../lib/security';
 import { 
   isRegistrationAllowedSync, 
   syncRegistrationSettingFromCloud 
 } from '../lib/registrationConfig';
+import {
+  getCachedProfileAvatar,
+  getCachedOwnerAvatar,
+  setCachedProfileAvatar,
+  persistProfileAvatarUrl,
+  syncProfileAvatarsFromCloud
+} from '../lib/profilePhotoService';
+import defaultOwnerAvatar from '../assets/nikhil_avatar.png';
 
 interface AuthContextType {
   user: User | null;
@@ -56,6 +70,14 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error: any }>;
   sessionExpiredNotice: string | null;
   clearSessionExpiredNotice: () => void;
+  avatarUrl: string;
+  hasCustomAvatar: boolean;
+  ownerAvatarUrl: string;
+  updateProfileAvatar: (nextUrl: string | null) => Promise<void>;
+  masterLockEnabled: boolean;
+  setMasterLockEnabled: (enabled: boolean) => void;
+  unlockMethod: MasterUnlockMethod;
+  setUnlockMethod: (method: MasterUnlockMethod) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -90,8 +112,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
 
   // Second-factor Master Security Passcode verification state
-  const [isSecurityUnlocked, setIsSecurityUnlocked] = useState<boolean>(false);
+  const [masterLockEnabled, setMasterLockEnabledState] = useState<boolean>(() => isMasterLockEnabled());
+  const [unlockMethod, setUnlockMethodState] = useState<MasterUnlockMethod>(() => getMasterUnlockMethod());
+  const [isSecurityUnlocked, setIsSecurityUnlocked] = useState<boolean>(() => !isMasterLockEnabled());
   const [sessionExpiredNotice, setSessionExpiredNotice] = useState<string | null>(null);
+  const [customAvatarUrl, setCustomAvatarUrl] = useState<string | null>(() =>
+    getCachedProfileAvatar(null, role)
+  );
+  const [customOwnerAvatarUrl, setCustomOwnerAvatarUrl] = useState<string | null>(() =>
+    getCachedOwnerAvatar()
+  );
   const pendingUnlockVerifiedRef = useRef<boolean>(false);
   // Tracks whether a genuine Supabase cloud session was active in this tab
   const hadCloudSessionRef = useRef<boolean>(false);
@@ -150,9 +180,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     role === 'Owner' ? 'dashboard' : 'pos';
 
   const lockSecurity = useCallback(() => {
+    if (!isMasterLockEnabled()) {
+      pendingUnlockVerifiedRef.current = false;
+      setIsSecurityUnlocked(true);
+      return;
+    }
     revokeSessionSecurity();
     pendingUnlockVerifiedRef.current = false;
     setIsSecurityUnlocked(false);
+  }, []);
+
+  const setMasterLockEnabled = useCallback((enabled: boolean) => {
+    persistMasterLockEnabled(enabled);
+    setMasterLockEnabledState(enabled);
+    if (!enabled) {
+      pendingUnlockVerifiedRef.current = false;
+      setIsSecurityUnlocked(true);
+    }
+  }, []);
+
+  const setUnlockMethod = useCallback((method: MasterUnlockMethod) => {
+    persistMasterUnlockMethod(method);
+    setUnlockMethodState(method);
+  }, []);
+
+  useEffect(() => {
+    return subscribeToSecuritySettings(() => {
+      const enabled = isMasterLockEnabled();
+      setMasterLockEnabledState(enabled);
+      setUnlockMethodState(getMasterUnlockMethod());
+      if (!enabled) {
+        pendingUnlockVerifiedRef.current = false;
+        setIsSecurityUnlocked(true);
+      }
+    });
   }, []);
 
   const unlockSecurity = async (passcode: string, deferReveal = false) => {
@@ -380,11 +441,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, [applyRoleForUser, lockSecurity]);
 
-  // Inactivity Auto-Lock: Automatically lock counter after 15 minutes of idle time
+  // Inactivity Auto-Lock: Automatically lock counter after 15 minutes of idle time (only when Master Lock is ON)
   useEffect(() => {
-    if (!user || !isSecurityUnlocked) return;
+    if (!user || !isSecurityUnlocked || !masterLockEnabled) return;
 
-    let timeoutId: any;
+    let timeoutId: ReturnType<typeof setTimeout>;
     const INACTIVITY_LIMIT_MS = 15 * 60 * 1000; // 15 minutes
 
     const handleActivity = () => {
@@ -402,7 +463,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       clearTimeout(timeoutId);
       trackedEvents.forEach((ev) => window.removeEventListener(ev, handleActivity));
     };
-  }, [user, isSecurityUnlocked]);
+  }, [user, isSecurityUnlocked, masterLockEnabled, lockSecurity]);
 
   // Sign In with Email with Role-Based Redirection
   const signInWithEmail = async (email: string, password: string) => {
@@ -734,6 +795,72 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Hydrate user & owner avatars from cache, user_metadata, and Supabase profiles
+  useEffect(() => {
+    const email = user?.email || null;
+    const metaAvatar =
+      typeof user?.user_metadata?.avatar_url === 'string' && user.user_metadata.avatar_url.trim()
+        ? user.user_metadata.avatar_url.trim()
+        : null;
+    const cached = getCachedProfileAvatar(email, role);
+    const resolved = cached || metaAvatar || null;
+    setCustomAvatarUrl(resolved);
+    if (metaAvatar && !cached) {
+      setCachedProfileAvatar(metaAvatar, email, role);
+    }
+
+    const cachedOwner = getCachedOwnerAvatar();
+    if (cachedOwner) {
+      setCustomOwnerAvatarUrl(cachedOwner);
+    } else if (role === 'Owner' && metaAvatar) {
+      setCustomOwnerAvatarUrl(metaAvatar);
+    }
+
+    let active = true;
+    syncProfileAvatarsFromCloud()
+      .then(({ byEmail, ownerAvatar }) => {
+        if (!active) return;
+        const cleanEmail = (email || '').trim().toLowerCase();
+        const cloudForUser = (cleanEmail && byEmail[cleanEmail]) || (role === 'Owner' ? ownerAvatar : null);
+        if (cloudForUser) {
+          setCustomAvatarUrl(cloudForUser);
+        }
+        if (ownerAvatar) {
+          setCustomOwnerAvatarUrl(ownerAvatar);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      active = false;
+    };
+  }, [user?.email, user?.user_metadata?.avatar_url, role]);
+
+  const updateProfileAvatar = useCallback(
+    async (nextUrl: string | null) => {
+      const cleanUrl = nextUrl && nextUrl.trim() ? nextUrl.trim() : null;
+      const email = user?.email || null;
+      setCustomAvatarUrl(cleanUrl);
+      if (role === 'Owner') {
+        setCustomOwnerAvatarUrl(cleanUrl);
+      }
+      setCachedProfileAvatar(cleanUrl, email, role);
+      if (cleanUrl === null) {
+        await persistProfileAvatarUrl({
+          avatarUrl: null,
+          userEmail: email,
+          userRole: role,
+          userId: user?.id || null
+        });
+      }
+    },
+    [user?.email, user?.id, role]
+  );
+
+  const avatarUrl = customAvatarUrl || defaultOwnerAvatar;
+  const hasCustomAvatar = Boolean(customAvatarUrl);
+  const ownerAvatarUrl = customOwnerAvatarUrl || defaultOwnerAvatar;
+
   return (
     <AuthContext.Provider
       value={{
@@ -757,6 +884,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         resetPassword,
         sessionExpiredNotice,
         clearSessionExpiredNotice,
+        avatarUrl,
+        hasCustomAvatar,
+        ownerAvatarUrl,
+        updateProfileAvatar,
+        masterLockEnabled,
+        setMasterLockEnabled,
+        unlockMethod,
+        setUnlockMethod,
       }}
     >
       {children}

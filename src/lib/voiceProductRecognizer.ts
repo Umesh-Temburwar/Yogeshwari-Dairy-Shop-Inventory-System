@@ -351,7 +351,9 @@ export function getVoiceErrorMessage(errorCode: string, _uiLang?: string): strin
   switch (errorCode) {
     case 'not-allowed':
     case 'service-not-allowed':
-      return 'Microphone permission denied. Please allow microphone access in browser settings.';
+      return isMobileVoiceDevice()
+        ? 'Microphone permission blocked. Tap the site settings / lock icon in your browser address bar → Permissions → Microphone → Allow, then tap Mic again.'
+        : 'Microphone permission denied. Please allow microphone access in your browser address bar and try again.';
     case 'no-speech':
       return 'No speech detected. Please speak clearly closer to the mic.';
     case 'audio-capture':
@@ -364,6 +366,95 @@ export function getVoiceErrorMessage(errorCode: string, _uiLang?: string): strin
       return 'Voice input is not supported in this browser. Use Chrome or your keyboard mic.';
     default:
       return 'Voice recognition failed. Please tap mic and try again.';
+  }
+}
+
+export type MicPermissionState = 'granted' | 'denied' | 'prompt' | 'unsupported';
+
+let cachedMicPermissionGranted = false;
+
+/** Check current microphone permission without triggering a browser prompt */
+export async function queryMicrophonePermission(): Promise<MicPermissionState> {
+  if (typeof navigator === 'undefined') return 'unsupported';
+  try {
+    if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+      const status = await navigator.permissions.query({
+        name: 'microphone' as PermissionName
+      });
+      if (status.state === 'granted') {
+        cachedMicPermissionGranted = true;
+        return 'granted';
+      }
+      if (status.state === 'denied') {
+        cachedMicPermissionGranted = false;
+        return 'denied';
+      }
+      return 'prompt';
+    }
+  } catch {
+    // Safari / older WebViews throw on 'microphone' permission query — fall through to prompt
+  }
+  return cachedMicPermissionGranted ? 'granted' : 'prompt';
+}
+
+// Passively warm the permission flag so already-granted mobile devices start SpeechRecognition synchronously
+if (typeof window !== 'undefined') {
+  void queryMicrophonePermission();
+}
+
+/**
+ * Explicitly request microphone permission via getUserMedia({ audio: true }) inside a user tap.
+ * On Android Chrome & iOS Safari, this reliably triggers the native OS/browser Microphone popup
+ * BEFORE SpeechRecognition starts, then immediately releases the audio track so the mic is free.
+ */
+export async function ensureMobileMicrophonePermission(): Promise<
+  { granted: true } | { granted: false; errorCode: 'not-allowed' | 'audio-capture' | 'insecure-context' }
+> {
+  if (typeof window === 'undefined') {
+    return { granted: false, errorCode: 'audio-capture' };
+  }
+
+  const isLocalhost =
+    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (window.isSecureContext === false && !isLocalhost) {
+    return { granted: false, errorCode: 'insecure-context' };
+  }
+
+  const current = await queryMicrophonePermission();
+  if (current === 'granted') {
+    cachedMicPermissionGranted = true;
+    return { granted: true };
+  }
+  if (current === 'denied') {
+    cachedMicPermissionGranted = false;
+    return { granted: false, errorCode: 'not-allowed' };
+  }
+
+  if (!navigator?.mediaDevices?.getUserMedia) {
+    // Browser lacks getUserMedia — let SpeechRecognition handle its own prompt
+    return { granted: true };
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    // Release mic immediately so SpeechRecognition has exclusive audio capture on Android/iOS
+    stream.getTracks().forEach((track) => track.stop());
+    cachedMicPermissionGranted = true;
+    // Brief yield on mobile Android so OS audio hardware finishes releasing the stream
+    if (isMobileVoiceDevice()) {
+      await new Promise<void>((resolve) => setTimeout(resolve, 120));
+    }
+    return { granted: true };
+  } catch (err: unknown) {
+    cachedMicPermissionGranted = false;
+    const name = err instanceof Error ? err.name : '';
+    if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError') {
+      return { granted: false, errorCode: 'not-allowed' };
+    }
+    if (name === 'NotFoundError' || name === 'NotReadableError' || name === 'AbortError') {
+      return { granted: false, errorCode: 'audio-capture' };
+    }
+    return { granted: false, errorCode: 'not-allowed' };
   }
 }
 
@@ -506,6 +597,9 @@ export function startMobileVoiceRecognition(options: {
     clearTimers();
     const code = event?.error || 'unknown';
     if (code === 'aborted') return;
+    if (code === 'not-allowed' || code === 'service-not-allowed') {
+      cachedMicPermissionGranted = false;
+    }
     if (code === 'no-speech' && !lastBestRaw && noSpeechRetries < 1) {
       noSpeechRetries += 1;
       pendingRetry = true;
@@ -537,17 +631,56 @@ export function startMobileVoiceRecognition(options: {
     options.onEnd?.();
   };
 
-  try {
-    recognition.start();
-  } catch {
-    clearTimers();
-    options.onError?.('audio-capture', getVoiceErrorMessage('audio-capture'));
-    return null;
+  let recognitionStarted = false;
+  let abortedBeforeStart = false;
+
+  const beginRecognition = () => {
+    if (abortedBeforeStart || finished) return;
+    try {
+      recognitionStarted = true;
+      recognition.start();
+    } catch {
+      clearTimers();
+      finished = true;
+      options.onError?.('audio-capture', getVoiceErrorMessage('audio-capture'));
+      options.onEnd?.();
+    }
+  };
+
+  if (isMobile && !cachedMicPermissionGranted) {
+    // Request explicit microphone permission inside the user tap so Android Chrome / iOS Safari
+    // reliably displays the native OS/browser Allow Microphone dialog before SpeechRecognition starts.
+    void ensureMobileMicrophonePermission().then((perm) => {
+      if (abortedBeforeStart || finished) return;
+      if (!perm.granted) {
+        hadError = true;
+        finished = true;
+        options.onError?.(perm.errorCode, getVoiceErrorMessage(perm.errorCode));
+        options.onEnd?.();
+        return;
+      }
+      beginRecognition();
+    });
+  } else {
+    try {
+      recognitionStarted = true;
+      recognition.start();
+    } catch {
+      clearTimers();
+      options.onError?.('audio-capture', getVoiceErrorMessage('audio-capture'));
+      return null;
+    }
   }
 
   return {
     stop: () => {
       clearTimers();
+      if (!recognitionStarted) {
+        abortedBeforeStart = true;
+        finished = true;
+        options.onEnd?.();
+        return;
+      }
       try {
         recognition.stop();
       } catch {
@@ -556,7 +689,9 @@ export function startMobileVoiceRecognition(options: {
     },
     abort: () => {
       clearTimers();
+      abortedBeforeStart = true;
       finished = true;
+      if (!recognitionStarted) return;
       try {
         recognition.abort();
       } catch {

@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import nikhilAvatar from '../../assets/nikhil_avatar.png';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -47,7 +46,7 @@ import {
 export const OwnerAdminCounterWidget: React.FC = () => {
   const { sales, adminActivities, purchases, damages, refreshData, isSyncing } = useStore();
   const { language, tr } = useLanguage();
-  const { role } = useAuth();
+  const { role, ownerAvatarUrl } = useAuth();
 
   const isMr = language === 'mr';
   const isHi = language === 'hi';
@@ -350,7 +349,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="relative shrink-0">
             <img 
-              src={nikhilAvatar} 
+              src={ownerAvatarUrl} 
               alt="Nikhil Sakhare" 
               className="w-14 h-14 rounded-2xl object-cover border-2 border-amber-400 shadow-md shadow-amber-500/20" 
             />
@@ -690,7 +689,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                             : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300'
                         }`}>
                           {isOwner ? (
-                            <img src={nikhilAvatar} alt="" className="w-3.5 h-3.5 rounded-full object-cover border border-amber-400 shrink-0" />
+                            <img src={ownerAvatarUrl} alt="" className="w-3.5 h-3.5 rounded-full object-cover border border-amber-400 shrink-0" />
                           ) : (
                             <span>👤</span>
                           )}
@@ -799,7 +798,7 @@ export const OwnerAdminCounterWidget: React.FC = () => {
                                 : 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300/80 dark:border-amber-800/60'
                             }`}>
                               {isOwnerAct ? (
-                                <img src={nikhilAvatar} alt="" className="w-3.5 h-3.5 rounded-full object-cover border border-amber-400 shrink-0" />
+                                <img src={ownerAvatarUrl} alt="" className="w-3.5 h-3.5 rounded-full object-cover border border-amber-400 shrink-0" />
                               ) : (
                                 <span>👤</span>
                               )}

@@ -32,10 +32,9 @@ import { translateProductName, translateProductNameSync } from '../../lib/produc
 import { playBeepSound, playSuccessChime } from '../../utils/audioUtils';
 import {
   isSpeechRecognitionSupported,
-  isMobileVoiceDevice,
-  dedupeVoiceTranscript,
+  startMobileVoiceRecognition,
+  MobileVoiceController,
   processVoiceTranscript,
-  processVoiceTranscriptSync,
   VoiceLanguage
 } from '../../lib/voiceProductRecognizer';
 
@@ -142,7 +141,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const isListeningRef = useRef(false);
   const userStoppedRef = useRef(false);
   const restartCountRef = useRef(0);
-  const recognitionRef = useRef<SpeechRecognitionInstanceLike | null>(null);
+  const recognitionRef = useRef<MobileVoiceController | null>(null);
   const transcriptRef = useRef<string>('');
   const silenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -277,7 +276,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     }
   };
 
-  // Start Speech Recognition
+  // Start Speech Recognition (uses unified mobile-hardened permission + recognition launcher)
   const startVoiceListening = (selectedLang: VoiceLanguage = voiceLang) => {
     setVoiceError(null);
     setInterimTranscript('');
@@ -288,155 +287,66 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
 
     if (!isSpeechRecognitionSupported()) {
       setVoiceError(
-        'Voice input is not supported in this browser. Please use Chrome or Edge.'
+        'Voice input is not supported in this browser. Please use Chrome or your mobile keyboard mic.'
       );
       return;
     }
 
-    initRecognition(selectedLang);
-  };
-
-  const initRecognition = (selectedLang: VoiceLanguage) => {
-    if (recognitionRef.current) {
-      try { recognitionRef.current.abort(); } catch { }
+    // Release active input focus on mobile so soft keyboard does not fight the microphone permission popup
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
     }
 
-    try {
-      const win = window as WindowWithSpeechRecognition;
-      const SpeechRecognitionClass = win.SpeechRecognition || win.webkitSpeechRecognition;
-      if (!SpeechRecognitionClass) {
-        throw new Error('SpeechRecognition not supported');
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch {
+        // ignore
       }
-      const recognition = new SpeechRecognitionClass();
-      recognitionRef.current = recognition;
+      recognitionRef.current = null;
+    }
 
-      const isMobile = isMobileVoiceDevice();
-      recognition.continuous = !isMobile;
-      recognition.interimResults = true;
-      recognition.lang = selectedLang;
-
-      if (!isMobile) {
-        playBeepSound();
-      }
-      isListeningRef.current = true;
-      setIsListening(true);
-
-      const scheduleFinalizeOnSilence = () => {
-        if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
-        silenceTimeoutRef.current = setTimeout(() => {
-          if (transcriptRef.current.trim()) {
-            stopVoiceListening();
-          }
-        }, 2500); // 2.5s of silence after speech detected
-      };
-
-      recognition.onstart = () => {
+    const controller = startMobileVoiceRecognition({
+      lang: selectedLang,
+      uiLang: 'en',
+      onStart: () => {
         isListeningRef.current = true;
         setIsListening(true);
-      };
-
-      recognition.onresult = (event: SpeechRecognitionEventLike) => {
-        let interim = '';
-        let finalized = '';
-
-        for (let i = 0; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalized += event.results[i][0].transcript + ' ';
-          } else {
-            interim += event.results[i][0].transcript;
-          }
+      },
+      onInterim: (raw, instant) => {
+        transcriptRef.current = raw;
+        setInterimTranscript(raw);
+        if (instant.englishName) {
+          setName(instant.englishName);
+          if (instant.detectedBrand) setBrand(instant.detectedBrand);
+          if (instant.detectedCategory) setCategory(instant.detectedCategory);
+          if (instant.detectedUnit) setUnit(instant.detectedUnit);
         }
-
-        const currentText = dedupeVoiceTranscript((finalized + interim).trim());
-        if (currentText) {
-          transcriptRef.current = currentText;
-          setInterimTranscript(currentText);
-          scheduleFinalizeOnSilence();
-
-          // Instant preview across all 3 language fields, brand, category & unit
-          const instant = processVoiceTranscriptSync(currentText, selectedLang);
-          if (instant.englishName) {
-            setName(instant.englishName);
-            setMarathiName(instant.marathiName);
-            setHindiName(instant.hindiName);
-            if (instant.detectedBrand) setBrand(instant.detectedBrand);
-            if (instant.detectedCategory) setCategory(instant.detectedCategory);
-            if (instant.detectedUnit) setUnit(instant.detectedUnit);
-          }
-        }
-      };
-
-      recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
-        if (event.error !== 'no-speech' && event.error !== 'aborted') {
-          console.warn('Speech recognition notice:', event.error);
-        }
-        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-          userStoppedRef.current = true;
-          isListeningRef.current = false;
-          setIsListening(false);
-          setVoiceError(
-            'Microphone access denied. Please click the lock icon in address bar to allow microphone.'
-          );
-        } else if (event.error === 'network') {
-          userStoppedRef.current = true;
-          isListeningRef.current = false;
-          setIsListening(false);
-          setVoiceError(
-            'Google Voice Network error. Please check your internet connection.'
-          );
-        }
-      };
-
-      recognition.onend = async () => {
-        if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
-
-        // Case 1: User explicitly cancelled or stopped
-        if (userStoppedRef.current) {
-          isListeningRef.current = false;
-          setIsListening(false);
-          return;
-        }
-
-        // Case 2: We have captured speech transcript
-        const capturedText = transcriptRef.current.trim();
-        if (capturedText) {
-          isListeningRef.current = false;
-          setIsListening(false);
-          await handleVoiceResult(capturedText, selectedLang);
-          return;
-        }
-
-        // Case 3: No speech captured yet, but user is still in listening mode!
-        // Allow up to 4 auto-restarts (~15s listening window) so slight hesitations do not abort
-        if (isListeningRef.current && restartCountRef.current < 4) {
-          restartCountRef.current += 1;
-          try {
-            recognition.start();
-            return;
-          } catch {
-            setTimeout(() => {
-              if (isListeningRef.current) initRecognition(selectedLang);
-            }, 100);
-            return;
-          }
-        }
-
-        // Case 4: Timed out after prolonged silence (15+ seconds)
+      },
+      onFinal: (raw) => {
+        transcriptRef.current = raw;
         isListeningRef.current = false;
         setIsListening(false);
-        setVoiceFeedback(
-          'No speech detected. Please speak closer to the microphone.'
-        );
-      };
+        void handleVoiceResult(raw, selectedLang);
+      },
+      onError: (_code, message) => {
+        userStoppedRef.current = true;
+        isListeningRef.current = false;
+        setIsListening(false);
+        recognitionRef.current = null;
+        setVoiceError(message);
+      },
+      onEnd: () => {
+        isListeningRef.current = false;
+        setIsListening(false);
+        recognitionRef.current = null;
+      }
+    });
 
-      recognition.start();
-    } catch (err: unknown) {
-      console.error('Failed to start speech recognition:', err);
-      isListeningRef.current = false;
-      setIsListening(false);
-      setVoiceError(
-        'Error starting microphone. Please try again.'
-      );
+    if (controller) {
+      recognitionRef.current = controller;
+      isListeningRef.current = true;
+      setIsListening(true);
     }
   };
 

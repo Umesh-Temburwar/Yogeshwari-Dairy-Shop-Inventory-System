@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useCallback, useDeferredValue, useEffect } from 'react';
-import nikhilAvatar from '../../assets/nikhil_avatar.png';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -242,7 +241,7 @@ export const BillingCounter: React.FC = () => {
     setIsBarcodeScannerOpen
   } = useStore();
   const { t, language, tr } = useLanguage();
-  const { role, adminSlot, user } = useAuth();
+  const { role, adminSlot, user, ownerAvatarUrl } = useAuth();
   const [previewImageProduct, setPreviewImageProduct] = useState<Product | null>(null);
 
   const activeOperator = useMemo(() => {
@@ -776,7 +775,7 @@ export const BillingCounter: React.FC = () => {
               : 'bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40'
           }`}>
             {activeOperator.role === 'Owner' || activeOperator.email === 'yogeshwaridairy9896@gmail.com' ? (
-              <img src={nikhilAvatar} alt="" className="w-4 h-4 rounded-full object-cover border border-amber-400 shrink-0" />
+              <img src={ownerAvatarUrl} alt="" className="w-4 h-4 rounded-full object-cover border border-amber-400 shrink-0" />
             ) : (
               <span>👤</span>
             )}

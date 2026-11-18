@@ -77,6 +77,49 @@ const createInitialPaginationState = (): Record<HistoryEntity, HistoryPagination
   udharTransactions: { hasMore: false, isLoading: false, offset: 0 }
 });
 
+interface ServerPeriodMetrics {
+  sales_count: number;
+  total_sales_revenue: number;
+  cash_collected: number;
+  online_collected: number;
+  udhar_given: number;
+  cogs: number;
+  gross_profit: number;
+  operating_expenses: number;
+  capital_investments: number;
+  total_damages_loss: number;
+  net_profit: number;
+  total_purchases_amount: number;
+  total_returns_count: number;
+  total_refund_amount: number;
+  total_outstanding_udhar: number;
+}
+
+const formatLocalYmd = (d: Date): string => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getPeriodDateBounds = (filter: TimeRangeFilter): { startDate: string | null; endDate: string | null } => {
+  if (filter === 'all') {
+    return { startDate: null, endDate: null };
+  }
+  const now = new Date();
+  const endDate = formatLocalYmd(now);
+  if (filter === 'today') {
+    return { startDate: endDate, endDate };
+  }
+  if (filter === 'week') {
+    return { startDate: formatLocalYmd(startOfWeek(now, { weekStartsOn: 1 })), endDate };
+  }
+  if (filter === 'month') {
+    return { startDate: formatLocalYmd(startOfMonth(now)), endDate };
+  }
+  return { startDate: formatLocalYmd(startOfYear(now)), endDate };
+};
+
 const mergeUniqueById = <T extends { id: string }>(existing: T[], incoming: T[]): T[] => {
   const seen = new Set(existing.map((item) => item.id));
   const additions = incoming.filter((item) => item && item.id && !seen.has(item.id));
@@ -1410,6 +1453,84 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return supplierReturns.filter(r => filterByDate(r.return_date));
   }, [supplierReturns, timeFilter]);
 
+  // Server-side aggregated period metrics via Phase 72 RPC (`fn_get_period_metrics`).
+  // Activated automatically when any financial table is paginated (`hasMore === true`),
+  // guaranteeing exact multi-month/year/all-time KPIs in <1 KB without fetching thousands of rows.
+  const hasPaginatedFinancialHistory =
+    historyPagination.sales.hasMore ||
+    historyPagination.purchases.hasMore ||
+    historyPagination.expenses.hasMore ||
+    historyPagination.damages.hasMore ||
+    historyPagination.returns.hasMore;
+
+  const [serverPeriodMetrics, setServerPeriodMetrics] = useState<{
+    filter: TimeRangeFilter;
+    data: ServerPeriodMetrics;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!supabase || isAuthLoading || !authUser || !hasPaginatedFinancialHistory) {
+      setServerPeriodMetrics(null);
+      return;
+    }
+
+    let cancelled = false;
+    const client = supabase;
+    const activeFilter = timeFilter;
+
+    const timer = setTimeout(async () => {
+      try {
+        const { startDate, endDate } = getPeriodDateBounds(activeFilter);
+        const { data, error } = await client.rpc('fn_get_period_metrics', {
+          p_start_date: startDate,
+          p_end_date: endDate
+        });
+
+        if (!cancelled && !error && data && typeof data === 'object') {
+          const row = data as Record<string, unknown>;
+          setServerPeriodMetrics({
+            filter: activeFilter,
+            data: {
+              sales_count: Number(row.sales_count || 0),
+              total_sales_revenue: Number(row.total_sales_revenue || 0),
+              cash_collected: Number(row.cash_collected || 0),
+              online_collected: Number(row.online_collected || 0),
+              udhar_given: Number(row.udhar_given || 0),
+              cogs: Number(row.cogs || 0),
+              gross_profit: Number(row.gross_profit || 0),
+              operating_expenses: Number(row.operating_expenses || 0),
+              capital_investments: Number(row.capital_investments || 0),
+              total_damages_loss: Number(row.total_damages_loss || 0),
+              net_profit: Number(row.net_profit || 0),
+              total_purchases_amount: Number(row.total_purchases_amount || 0),
+              total_returns_count: Number(row.total_returns_count || 0),
+              total_refund_amount: Number(row.total_refund_amount || 0),
+              total_outstanding_udhar: Number(row.total_outstanding_udhar || 0)
+            }
+          });
+        }
+      } catch {
+        // Silent graceful fallback to client-computed metrics when offline or RPC absent
+      }
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [
+    isAuthLoading,
+    authUser?.id,
+    hasPaginatedFinancialHistory,
+    timeFilter,
+    sales,
+    purchases,
+    expenses,
+    damages,
+    returns,
+    customers
+  ]);
+
   // Aggregated Financial Metrics
   const metrics = useMemo(() => {
     let totalSalesRevenue = 0;
@@ -1474,19 +1595,42 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       else freshBatchesCount += 1;
     });
 
+    const useServerSummary =
+      hasPaginatedFinancialHistory &&
+      serverPeriodMetrics !== null &&
+      serverPeriodMetrics.filter === timeFilter;
+    const srv = useServerSummary ? serverPeriodMetrics.data : null;
+
+    const finalSalesRevenue = srv ? srv.total_sales_revenue : totalSalesRevenue;
+    const finalCashCollected = srv ? srv.cash_collected : cashCollected;
+    const finalOnlineCollected = srv ? srv.online_collected : onlineCollected;
+    const finalUdharGiven = srv ? srv.udhar_given : udharGiven;
+    const finalPurchasesAmount = srv ? srv.total_purchases_amount : totalPurchasesAmount;
+    const finalCogs = srv ? srv.cogs : cogs;
+    const finalGrossProfit = srv ? srv.gross_profit : grossProfit;
+    const finalOperatingExpenses = srv ? srv.operating_expenses : operatingExpenses;
+    const finalCapitalInvestments = srv ? srv.capital_investments : capitalInvestments;
+    const finalDamagesLoss = srv ? srv.total_damages_loss : totalDamagesLoss;
+    const finalNetProfit = srv ? srv.net_profit : netProfit;
+    const finalOutstandingUdhar = srv ? srv.total_outstanding_udhar : totalOutstandingUdhar;
+    const finalReturnsCount = srv ? srv.total_returns_count : filteredReturns.length;
+    const finalRefundAmount = srv
+      ? srv.total_refund_amount
+      : filteredReturns.reduce((acc, r) => acc + (r.refund_amount || 0), 0);
+
     return {
-      totalSalesRevenue,
-      cashCollected,
-      onlineCollected,
-      udharGiven,
-      totalPurchasesAmount,
-      cogs,
-      grossProfit,
-      operatingExpenses,
-      capitalInvestments,
-      netProfit,
-      totalDamagesLoss,
-      totalOutstandingUdhar,
+      totalSalesRevenue: finalSalesRevenue,
+      cashCollected: finalCashCollected,
+      onlineCollected: finalOnlineCollected,
+      udharGiven: finalUdharGiven,
+      totalPurchasesAmount: finalPurchasesAmount,
+      cogs: finalCogs,
+      grossProfit: finalGrossProfit,
+      operatingExpenses: finalOperatingExpenses,
+      capitalInvestments: finalCapitalInvestments,
+      netProfit: finalNetProfit,
+      totalDamagesLoss: finalDamagesLoss,
+      totalOutstandingUdhar: finalOutstandingUdhar,
       lowStockCount,
       outOfStockCount,
       expiredBatchesCount,
@@ -1496,8 +1640,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       freshBatchesCount,
       totalActiveBatches: batches.filter(b => b.qty_remaining > 0).length,
       // Returns Metrics
-      totalReturnsCount: filteredReturns.length,
-      totalRefundAmount: filteredReturns.reduce((acc, r) => acc + (r.refund_amount || 0), 0),
+      totalReturnsCount: finalReturnsCount,
+      totalRefundAmount: finalRefundAmount,
       todayRefundAmount: returns.filter(r => r.return_date === new Date().toISOString().split('T')[0]).reduce((acc, r) => acc + (r.refund_amount || 0), 0),
       // Supplier Returns Metrics
       totalSupplierReturnsCount: filteredSupplierReturns.length,
@@ -1506,10 +1650,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       pendingSupplierRefundAmount: filteredSupplierReturns.filter(r => r.refund_status === 'Pending').reduce((acc, r) => acc + (r.total_refund_amount || 0), 0),
       supplierReplacementCount: filteredSupplierReturns.filter(r => r.refund_status === 'Replacement_Received').length,
       // Compatibility Aliases
-      totalCOGS: cogs,
-      creditGiven: udharGiven
+      totalCOGS: finalCogs,
+      creditGiven: finalUdharGiven
     };
-  }, [filteredSales, filteredPurchases, filteredExpenses, filteredDamages, filteredReturns, returns, customers, products, batches]);
+  }, [
+    filteredSales,
+    filteredPurchases,
+    filteredExpenses,
+    filteredDamages,
+    filteredReturns,
+    filteredSupplierReturns,
+    returns,
+    customers,
+    products,
+    batches,
+    hasPaginatedFinancialHistory,
+    serverPeriodMetrics,
+    timeFilter
+  ]);
 
   // Helper to resolve currently active admin/owner profile details
   const getActiveAdminInfo = useCallback(() => {

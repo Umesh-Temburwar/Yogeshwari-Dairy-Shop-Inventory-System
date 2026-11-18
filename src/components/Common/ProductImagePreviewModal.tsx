@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   Copy,
   Check,
+  ClipboardPaste,
   ExternalLink,
   Image as ImageIcon,
   Save,
@@ -39,16 +40,19 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
 
   const [urlInput, setUrlInput] = useState('');
   const [copied, setCopied] = useState(false);
+  const [pasted, setPasted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [previewError, setPreviewError] = useState(false);
   const [previewLoaded, setPreviewLoaded] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (product) {
       const currentUrl = (product.image_url || '').trim();
       setUrlInput(currentUrl);
       setCopied(false);
+      setPasted(false);
       setPreviewError(false);
       setPreviewLoaded(false);
       setFeedback(null);
@@ -90,6 +94,44 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback copy
+    }
+  };
+
+  const handlePasteUrl = async () => {
+    try {
+      if (!navigator.clipboard || typeof navigator.clipboard.readText !== 'function') {
+        throw new Error('Clipboard read unsupported');
+      }
+      const clipText = (await navigator.clipboard.readText()).trim();
+      if (!clipText) {
+        setFeedback({
+          type: 'error',
+          text:
+            language === 'mr'
+              ? 'क्लिपबोर्डवर कोणतीही लिंक कॉपी केलेली नाही.'
+              : language === 'hi'
+              ? 'क्लिपबोर्ड पर कोई लिंक कॉपी नहीं है।'
+              : 'Clipboard is empty. Copy an image URL first.'
+        });
+        return;
+      }
+      setUrlInput(clipText);
+      setPreviewError(false);
+      setPreviewLoaded(false);
+      setFeedback(null);
+      setPasted(true);
+      setTimeout(() => setPasted(false), 2000);
+    } catch {
+      textareaRef.current?.focus();
+      setFeedback({
+        type: 'error',
+        text:
+          language === 'mr'
+            ? 'ब्राउझरने क्लिपबोर्ड परवानगी नाकारली — कृपया बॉक्समध्ये लाँग-प्रेस करून Paste करा.'
+            : language === 'hi'
+            ? 'ब्राउज़र ने क्लिपबोर्ड अनुमति रोकी — कृपया बॉक्स में लॉन्ग-प्रेस करके Paste करें।'
+            : 'Clipboard permission blocked — long-press or Ctrl+V inside the URL box to paste.'
+      });
     }
   };
 
@@ -322,7 +364,7 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
                   : 'Product Official Image URL'}
               </span>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 flex-wrap justify-end">
                 {activePreviewUrl && (
                   <>
                     <button
@@ -355,12 +397,34 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
                     </a>
                   </>
                 )}
+
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={handlePasteUrl}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200/80 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold transition cursor-pointer"
+                    title="Paste copied image URL from clipboard"
+                  >
+                    {pasted ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                        <span>{language === 'mr' ? 'पेस्ट झाले' : language === 'hi' ? 'पेस्ट हुआ' : 'Pasted'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <ClipboardPaste className="w-3 h-3" />
+                        <span>{language === 'mr' ? 'पेस्ट' : language === 'hi' ? 'पेस्ट' : 'Paste'}</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Editable Image URL Form */}
             <form onSubmit={handleSaveUrl} className="space-y-3">
               <textarea
+                ref={textareaRef}
                 rows={2}
                 value={urlInput}
                 onChange={(e) => {

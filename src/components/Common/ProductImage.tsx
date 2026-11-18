@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Package, Milk, Coffee, Cookie } from 'lucide-react';
 
-// Global cache for broken/unreachable image URLs across component mounts and scroll virtualizations
+// Global in-memory caches across component mounts, tab switches & scroll virtualizations:
+// - loadedUrls: once loaded once, renders instantaneously with zero shimmer flash
+// - failedUrls: prevents repeated broken-URL retries on scroll
+const loadedUrls = new Set<string>();
 const failedUrls = new Set<string>();
 
 /** Clear a URL from the broken-image cache after an admin updates or replaces it */
@@ -30,13 +33,14 @@ const getProductInitial = (alt: string): string => {
 };
 
 /**
- * Standardized Square Product Image Component
+ * Standardized Square Product Image Component with Zero-Reload In-Memory + SW Cache
  *
  * Features:
  * - Fixed 1:1 aspect-square white showcase box with object-contain + padding (never cropped/stretched)
- * - Native lazy loading + async decoding + skeleton shimmer while loading
+ * - In-memory `loadedUrls` + `img.complete` check eliminates shimmer flashes on tab switch / re-mount
+ * - Paired with persistent Cache-First Service Worker (`public/sw.js`) for instant disk-cached loads
+ * - Native lazy loading + async decoding + skeleton shimmer on first load only
  * - onError / missing fallback: neutral icon + product initial on emerald-tinted background
- * - Module-level failedUrls cache to prevent repeated broken-URL retries on scroll
  */
 export const ProductImage: React.FC<ProductImageProps> = ({
   src,
@@ -48,19 +52,43 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   fill = false
 }) => {
   const normalizedSrc = src?.trim() || '';
-  const isPreFailed = Boolean(normalizedSrc && failedUrls.has(normalizedSrc));
-  const [hasError, setHasError] = useState<boolean>(isPreFailed);
-  const [isLoading, setIsLoading] = useState<boolean>(Boolean(normalizedSrc) && !isPreFailed);
+  const imgRef = useRef<HTMLImageElement | null>(null);
 
-  // Sync state when src changes dynamically
+  const isPreFailed = Boolean(normalizedSrc && failedUrls.has(normalizedSrc));
+  const isPreLoaded = Boolean(normalizedSrc && loadedUrls.has(normalizedSrc));
+
+  const [hasError, setHasError] = useState<boolean>(isPreFailed);
+  const [isLoading, setIsLoading] = useState<boolean>(
+    Boolean(normalizedSrc) && !isPreFailed && !isPreLoaded
+  );
+
+  // Sync state when src changes dynamically — never re-flash shimmer if already cached in memory or browser
   useEffect(() => {
-    if (normalizedSrc && failedUrls.has(normalizedSrc)) {
+    if (!normalizedSrc) {
+      setHasError(false);
+      setIsLoading(false);
+      return;
+    }
+    if (failedUrls.has(normalizedSrc)) {
       setHasError(true);
       setIsLoading(false);
-    } else {
-      setHasError(false);
-      setIsLoading(Boolean(normalizedSrc));
+      return;
     }
+    if (loadedUrls.has(normalizedSrc)) {
+      setHasError(false);
+      setIsLoading(false);
+      return;
+    }
+    // Check if the browser / Service Worker disk cache already resolved the image synchronously
+    const imgEl = imgRef.current;
+    if (imgEl && imgEl.complete && imgEl.naturalWidth > 0) {
+      loadedUrls.add(normalizedSrc);
+      setHasError(false);
+      setIsLoading(false);
+      return;
+    }
+    setHasError(false);
+    setIsLoading(true);
   }, [normalizedSrc]);
 
   const sizeClasses = fill
@@ -140,7 +168,7 @@ export const ProductImage: React.FC<ProductImageProps> = ({
     );
   }
 
-  const paddingClass = fill ? 'p-2.5 sm:p-3' : size === 'xs' ? 'p-1' : 'p-2';
+  const paddingClass = fill ? 'p-2 sm:p-2.5' : size === 'xs' ? 'p-1' : 'p-2';
 
   return (
     <div
@@ -159,20 +187,27 @@ export const ProductImage: React.FC<ProductImageProps> = ({
         </div>
       )}
       <img
+        ref={imgRef}
         src={normalizedSrc}
         alt={alt}
         loading={loading}
         decoding="async"
         referrerPolicy="no-referrer"
-        onLoad={() => setIsLoading(false)}
+        draggable={false}
+        onLoad={() => {
+          loadedUrls.add(normalizedSrc);
+          failedUrls.delete(normalizedSrc);
+          setIsLoading(false);
+        }}
         onError={() => {
           failedUrls.add(normalizedSrc);
+          loadedUrls.delete(normalizedSrc);
           setIsLoading(false);
           setHasError(true);
         }}
-        className={`w-full h-full object-contain ${paddingClass} transition-opacity duration-200 ${
-          isLoading ? 'opacity-0' : 'opacity-100'
-        }`}
+        className={`w-full h-full object-contain ${paddingClass} ${
+          isPreLoaded ? '' : 'transition-opacity duration-200'
+        } ${isLoading ? 'opacity-0' : 'opacity-100'}`}
       />
     </div>
   );

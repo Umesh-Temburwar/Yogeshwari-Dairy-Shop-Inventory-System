@@ -46,6 +46,7 @@ import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF, expor
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { BarcodeStockInModal } from '../Scanner/BarcodeStockInModal';
 import { ProductImage } from '../Common/ProductImage';
+import { HoldableImageBox } from '../Common/HoldableImageBox';
 import { ProductImagePreviewModal } from '../Common/ProductImagePreviewModal';
 import { ProductImageManagerModal } from '../Admin/ProductImageManagerModal';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
@@ -1228,13 +1229,12 @@ export const ProductList: React.FC<ProductListProps> = ({
                     </span>
                   </div>
 
-                  {/* Standardized 1:1 Square Product Image Showcase & Title — Tap Photo to View Full Image & Edit URL */}
-                  <div className="my-2.5 space-y-2.5">
-                    <button
-                      type="button"
-                      onClick={() => setPreviewImageProduct(prod)}
-                      className="group/img relative w-full aspect-square rounded-2xl bg-white border border-slate-200/80 dark:border-[#24352F] shadow-2xs overflow-hidden flex items-center justify-center cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                      title={language === 'mr' ? 'फोटो पहा व इमेज URL बदला' : language === 'hi' ? 'फोटो देखें व इमेज URL बदलें' : 'View full image & edit URL'}
+                  {/* Compact 1:1 Square Product Image Showcase — Hold Photo to View Full Image & Edit URL */}
+                  <div className="my-2 space-y-2">
+                    <HoldableImageBox
+                      onHold={() => setPreviewImageProduct(prod)}
+                      className="group/img relative w-36 h-36 sm:w-40 sm:h-40 mx-auto aspect-square rounded-2xl bg-white border border-slate-200/80 dark:border-[#24352F] shadow-2xs overflow-hidden flex items-center justify-center cursor-pointer"
+                      title={language === 'mr' ? 'इमेज URL बदलण्यासाठी फोटोवर होल्ड करा' : language === 'hi' ? 'इमेज URL बदलने के लिए फोटो पर होल्ड करें' : 'Hold image to view & edit URL'}
                     >
                       <ProductImage 
                         src={prod.image_url} 
@@ -1243,11 +1243,19 @@ export const ProductList: React.FC<ProductListProps> = ({
                         fill
                         className="group-hover/img:scale-[1.03] transition-transform duration-200"
                       />
-                      <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900/75 text-white text-[10px] font-bold opacity-85 sm:opacity-0 sm:group-hover/img:opacity-100 transition-opacity backdrop-blur-xs">
-                        <Eye className="w-3 h-3" />
-                        <span>{language === 'mr' ? 'फोटो / URL' : language === 'hi' ? 'फोटो / URL' : 'Photo / URL'}</span>
-                      </span>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewImageProduct(prod);
+                        }}
+                        className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/75 hover:bg-emerald-700 text-white text-[9px] font-bold opacity-85 sm:opacity-0 sm:group-hover/img:opacity-100 transition-opacity backdrop-blur-xs cursor-pointer"
+                        title={language === 'mr' ? 'फोटो / URL बदला' : language === 'hi' ? 'फोटो / URL बदलें' : 'Photo / URL'}
+                      >
+                        <Eye className="w-2.5 h-2.5" />
+                        <span>URL</span>
+                      </button>
+                    </HoldableImageBox>
                     <div className="min-w-0">
                       <h3 className="text-base font-black text-slate-900 dark:text-white leading-snug line-clamp-2">
                         {displayName}

@@ -39,6 +39,7 @@ import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { QuickProductRegisterModal } from '../Scanner/QuickProductRegisterModal';
 import { ProductImage } from '../Common/ProductImage';
+import { HoldableImageBox } from '../Common/HoldableImageBox';
 import { ProductImagePreviewModal } from '../Common/ProductImagePreviewModal';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { requestMotionPermission, isMobileDevice } from '../../hooks/useShakeDetector';
@@ -125,22 +126,10 @@ const ProductCard = React.memo<ProductCardProps>(({
           </span>
         </div>
 
-        {/* Standardized 1:1 Square Product Image Showcase — Click photo to view full image & update URL */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={(e) => {
-            e.stopPropagation();
-            onPreviewImage(prod);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              e.stopPropagation();
-              onPreviewImage(prod);
-            }
-          }}
-          title={language === 'mr' ? 'फोटो पहा व इमेज URL बदला' : language === 'hi' ? 'फोटो देखें व इमेज URL बदलें' : 'View full image & update URL'}
+        {/* Standardized 1:1 Square Product Image Showcase — Hold image to change URL, tap card to add */}
+        <HoldableImageBox
+          onHold={() => onPreviewImage(prod)}
+          title={language === 'mr' ? 'इमेज URL बदलण्यासाठी फोटोवर होल्ड करा' : language === 'hi' ? 'इमेज URL बदलने के लिए फोटो पर होल्ड करें' : 'Hold image to view & update URL'}
           className="group/posimg relative w-full aspect-square flex justify-center items-center mb-2.5 bg-white rounded-2xl border border-slate-200/80 dark:border-[#24352F] overflow-hidden shadow-2xs cursor-pointer"
         >
           <ProductImage 
@@ -150,11 +139,19 @@ const ProductCard = React.memo<ProductCardProps>(({
             fill
             className="group-hover/posimg:scale-[1.03] transition-transform duration-200"
           />
-          <span className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/75 text-white text-[9px] font-bold opacity-85 sm:opacity-0 sm:group-hover/posimg:opacity-100 transition-opacity">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreviewImage(prod);
+            }}
+            title={language === 'mr' ? 'इमेज URL बदला' : language === 'hi' ? 'इमेज URL बदलें' : 'Edit image URL'}
+            className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/75 hover:bg-emerald-700 text-white text-[9px] font-bold opacity-85 sm:opacity-0 sm:group-hover/posimg:opacity-100 transition-opacity cursor-pointer"
+          >
             <Eye className="w-2.5 h-2.5" />
             <span>URL</span>
-          </span>
-        </div>
+          </button>
+        </HoldableImageBox>
 
         {/* Product Title */}
         <div className="mb-1">

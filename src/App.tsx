@@ -17,7 +17,7 @@ import { AppDownloadModal } from './components/Common/AppDownloadModal';
 import { NetworkStatusBanner } from './components/Common/NetworkStatusBanner';
 import { KeyboardShortcutsModal } from './components/Common/KeyboardShortcutsModal';
 import { GlobalShakeDetector } from './components/Common/GlobalShakeDetector';
-import { RotateCw } from 'lucide-react';
+import { MAIN_SCROLL_CONTAINER_ID } from './utils/scrollUtils';
 import { Product } from './types';
 
 // Lazy-load secondary heavy view modules for initial bundle optimization
@@ -40,7 +40,7 @@ const ProductImageManagerModal = React.lazy(() => import('./components/Admin/Pro
 const ImageHealthView = React.lazy(() => import('./components/Admin/ImageHealthView').then(m => ({ default: m.ImageHealthView })));
 
 const MainContent: React.FC = () => {
-  const { activeView, setActiveView, refreshData, isSyncing } = useStore();
+  const { activeView, setActiveView } = useStore();
 
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
@@ -52,33 +52,9 @@ const MainContent: React.FC = () => {
   const [isAppDownloadOpen, setIsAppDownloadOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
-  // Automatically trigger Mobile Application Download popup after website login
-  useEffect(() => {
-    // Check if running in standalone mode (already installed PWA)
-    const isStandalone =
-      typeof window !== 'undefined' &&
-      (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true);
-
-    const alreadyShown = sessionStorage.getItem('ydo_app_download_prompt_shown');
-
-    if (!isStandalone && !alreadyShown) {
-      const timer = setTimeout(() => {
-        setIsAppDownloadOpen(true);
-        sessionStorage.setItem('ydo_app_download_prompt_shown', 'true');
-      }, 1200);
-
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
   // Sidebar states: Collapsible on desktop (264px <-> 72px) and Drawer on mobile
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-
-  // Pull-to-refresh mobile state
-  const [pullY, setPullY] = useState(0);
-  const [isPulling, setIsPulling] = useState(false);
-  const [touchStartY, setTouchStartY] = useState<number | null>(null);
 
   // Global Keyboard Shortcuts (F1, F2, F3, F4)
   useEffect(() => {
@@ -123,34 +99,6 @@ const MainContent: React.FC = () => {
     }
   }, [isAddProductOpen, isSettingsOpen, isChangePasscodeOpen, isReturnModalOpen, isMobileSidebarOpen, isAppDownloadOpen]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const mainEl = e.currentTarget;
-    if (mainEl.scrollTop <= 0) {
-      setTouchStartY(e.touches[0].clientY);
-    } else {
-      setTouchStartY(null);
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStartY === null) return;
-    const currentY = e.touches[0].clientY;
-    const diff = currentY - touchStartY;
-    if (diff > 0 && e.currentTarget.scrollTop <= 0) {
-      setPullY(Math.min(diff * 0.45, 80));
-      setIsPulling(true);
-    }
-  };
-
-  const handleTouchEnd = async () => {
-    if (pullY > 50) {
-      await refreshData();
-    }
-    setPullY(0);
-    setIsPulling(false);
-    setTouchStartY(null);
-  };
-
   const handleEditProduct = (prod: Product) => {
     setProductToEdit(prod);
     setIsAddProductOpen(true);
@@ -165,7 +113,6 @@ const MainContent: React.FC = () => {
       <Navbar
         onOpenSettings={() => setActiveView('settings')}
         onOpenPhotoDatabase={() => setIsPhotoDatabaseOpen(true)}
-        onOpenImageHealth={() => setActiveView('image-health')}
         onOpenAppDownload={() => setIsAppDownloadOpen(true)}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebarCollapse={() => setIsSidebarCollapsed(prev => !prev)}
@@ -188,21 +135,9 @@ const MainContent: React.FC = () => {
 
         {/* Main Content Area - pb-28 on mobile prevents bottom nav & floating POS button overlap */}
         <main
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          className="flex-1 h-full p-2.5 sm:p-6 min-w-0 overflow-y-auto pb-28 lg:pb-6 overscroll-y-auto relative"
+          id={MAIN_SCROLL_CONTAINER_ID}
+          className="flex-1 h-full p-2.5 sm:p-6 min-w-0 overflow-y-auto scroll-smooth pb-28 lg:pb-6 overscroll-y-auto relative"
         >
-          {/* Mobile Pull-to-Refresh Indicator */}
-          {(isPulling || (isSyncing && pullY > 0)) && (
-            <div
-              style={{ height: `${pullY}px` }}
-              className="sm:hidden flex items-center justify-center overflow-hidden transition-all duration-150 text-emerald-700 dark:text-emerald-400 font-bold text-xs gap-2 bg-emerald-50/80 dark:bg-emerald-950/30 rounded-xl mb-2"
-            >
-              <RotateCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>{isSyncing ? 'रिफ्रेश होत आहे...' : pullY > 50 ? 'सोडून द्या (रिफ्रेश करा)' : 'खाली ओढा (रिफ्रेश)'}</span>
-            </div>
-          )}
           <Suspense fallback={<ViewFallbackSkeleton />}>
             <div key={activeView} className="w-full">
               {activeView === 'dashboard' && (

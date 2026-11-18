@@ -1,6 +1,7 @@
 import React from 'react';
 import { useStore, AppView } from '../context/StoreContext';
 import { useLanguage } from '../context/LanguageContext';
+import { smoothScrollToTop, getMainScrollTop } from '../utils/scrollUtils';
 import { 
   House, 
   Package, 
@@ -97,9 +98,31 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
               type="button"
               onClick={() => {
                 if (tab.id === 'menu') {
+                  const isMenuPageActive = [
+                    'purchases',
+                    'damages',
+                    'expenses',
+                    'analytics',
+                    'returns',
+                    'settings',
+                    'image-health'
+                  ].includes(activeView);
+
+                  if (isMenuPageActive && !isMobileSidebarOpen && getMainScrollTop() > 40) {
+                    smoothScrollToTop();
+                    return;
+                  }
                   onOpenMobileSidebar();
+                  return;
+                }
+
+                const targetView = tab.id as AppView;
+                if (activeView === targetView) {
+                  // Already on this page — smoothly scroll to top with zero lag
+                  smoothScrollToTop();
                 } else {
-                  setActiveView(tab.id as AppView);
+                  setActiveView(targetView);
+                  requestAnimationFrame(() => smoothScrollToTop());
                 }
               }}
               className="group relative flex flex-col items-center justify-center h-full py-1 px-0.5 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl transition-all duration-200 active:scale-95 motion-reduce:transition-none cursor-pointer"

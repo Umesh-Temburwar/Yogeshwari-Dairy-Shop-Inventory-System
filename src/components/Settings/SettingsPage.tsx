@@ -10,14 +10,7 @@ import {
   Camera,
   Smartphone,
   Download,
-  Database,
   RefreshCw,
-  RotateCcw,
-  CheckCircle2,
-  AlertCircle,
-  Copy,
-  Check,
-  FileCode,
   UserPlus,
   Activity,
   Power,
@@ -28,7 +21,6 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage, Language } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { getSupabaseConfig, saveSupabaseConfig, testSupabaseConnection } from '../../lib/supabase';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { isMobileDevice, requestMotionPermission } from '../../hooks/useShakeDetector';
 import {
@@ -57,11 +49,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   onOpenAppDownload
 }) => {
   const {
-    isSupabaseConnected,
-    syncWithSupabase,
     refreshData,
     isSyncing,
-    resetToSampleData,
     triggerGlobalBillingScanner
   } = useStore();
   const { language, setLanguage } = useLanguage();
@@ -76,15 +65,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
   // Shake-to-Scan setting
   const [shakeToScanEnabled, setShakeToScanEnabled] = useLocalStorage<boolean>('ydo_shake_to_scan_enabled', true);
-
-  // Cloud Database (Supabase) Configuration
-  const currentConfig = getSupabaseConfig();
-  const [url, setUrl] = useState(currentConfig.url);
-  const [key, setKey] = useState(currentConfig.key);
-  const [testingStatus, setTestingStatus] = useState<{ testing: boolean; message?: string; success?: boolean }>({
-    testing: false
-  });
-  const [copiedSql, setCopiedSql] = useState(false);
 
   useEffect(() => {
     syncRegistrationSettingFromCloud().then(setIsRegistrationAllowed).catch(() => {});
@@ -142,48 +122,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     const nextVal = !isAuditStreamEnabled;
     setAuditStreamEnabled(nextVal);
     setIsAuditStreamEnabledState(nextVal);
-  };
-
-  const handleTestAndSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setTestingStatus({ testing: true });
-    const result = await testSupabaseConnection(url.trim(), key.trim());
-    if (result.success) {
-      saveSupabaseConfig(url.trim(), key.trim());
-      setTestingStatus({
-        testing: false,
-        success: true,
-        message:
-          language === 'mr'
-            ? 'Supabase क्लाउड डेटाबेसशी यशस्वीरित्या जोडले गेले!'
-            : language === 'hi'
-            ? 'Supabase से सफलतापूर्वक जुड़ गया!'
-            : 'Connected to Supabase successfully!'
-      });
-      await syncWithSupabase();
-    } else {
-      setTestingStatus({ testing: false, success: false, message: result.message });
-    }
-  };
-
-  const handleDisconnect = () => {
-    saveSupabaseConfig('', '');
-    setUrl('');
-    setKey('');
-    setTestingStatus({
-      testing: false,
-      success: false,
-      message: 'Disconnected. Running in Local Storage mode.'
-    });
-    setTimeout(() => window.location.reload(), 500);
-  };
-
-  const handleCopySqlSchema = () => {
-    const sqlText = `-- YOGESHWARI DAIRY SHOP MASTER PASSCODE SYNC
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS master_passcode_hash TEXT;`;
-    navigator.clipboard.writeText(sqlText);
-    setCopiedSql(true);
-    setTimeout(() => setCopiedSql(false), 2500);
   };
 
   return (
@@ -499,15 +437,39 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS master_passcode_hash TEXT;`
                     {language === 'mr' ? 'शेक-टू-बिलिंग स्कॅनर' : language === 'hi' ? 'शेक-टू-बिलिंग स्कैनर' : 'Shake to Open Scanner'}
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                    {isMobileDevice() ? 'Mobile motion sensor active' : 'Auto-enabled on mobile devices'}
+                    {shakeToScanEnabled
+                      ? isMobileDevice()
+                        ? language === 'mr'
+                          ? 'चालू आहे — फोन हलवताच स्कॅनर उघडेल'
+                          : language === 'hi'
+                          ? 'चालू है — फोन हिलाने पर स्कैनर खुलेगा'
+                          : 'Active — shake phone to open scanner'
+                        : language === 'mr'
+                        ? 'मोबाईलवर चालू आहे'
+                        : language === 'hi'
+                        ? 'मोबाइल पर चालू है'
+                        : 'Enabled on mobile devices'
+                      : language === 'mr'
+                      ? 'बंद आहे — फोन शेक निष्क्रिय'
+                      : language === 'hi'
+                      ? 'बंद है — फोन शेक निष्क्रिय'
+                      : 'Turned OFF — phone shake disabled'}
                   </div>
                 </div>
               </div>
               <button
                 type="button"
+                aria-pressed={shakeToScanEnabled}
                 onClick={async () => {
-                  await requestMotionPermission();
-                  setShakeToScanEnabled(!shakeToScanEnabled);
+                  const nextEnabled = !shakeToScanEnabled;
+                  setShakeToScanEnabled(nextEnabled);
+                  if (nextEnabled) {
+                    try {
+                      await requestMotionPermission();
+                    } catch {
+                      // Non-blocking on Android Chrome
+                    }
+                  }
                 }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer shrink-0 ${
                   shakeToScanEnabled
@@ -542,125 +504,6 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS master_passcode_hash TEXT;`
               </button>
             </div>
           </div>
-        </section>
-
-        {/* SECTION 3: CLOUD DATABASE (SUPABASE) — Full Width Bottom Card */}
-        <section className="lg:col-span-2 bg-white dark:bg-[#131F1B] p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-[#24352F]">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
-                <Database className="w-4 h-4" />
-              </div>
-              <div>
-                <h2 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                  {language === 'mr' ? 'क्लाउड डेटाबेस (Supabase)' : language === 'hi' ? 'क्लाउड डेटाबेस (Supabase)' : 'Cloud Database (Supabase)'}
-                </h2>
-                <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                  {isSupabaseConnected
-                    ? language === 'mr'
-                      ? 'सध्या Supabase PostgreSQL क्लाउड डेटाबेस जोडलेला आहे'
-                      : language === 'hi'
-                      ? 'वर्तमान में Supabase PostgreSQL क्लाउड डेटाबेस जुड़ा है'
-                      : 'Connected to Supabase PostgreSQL cloud sync'
-                    : 'Offline Local Storage mode active'}
-                </p>
-              </div>
-            </div>
-
-            <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold self-start sm:self-auto ${
-                isSupabaseConnected
-                  ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50'
-                  : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F]'
-              }`}
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>{isSupabaseConnected ? 'Connected' : 'Offline Mode'}</span>
-            </span>
-          </div>
-
-          <form onSubmit={handleTestAndSave} className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                Supabase Project URL
-              </label>
-              <input
-                type="url"
-                placeholder="https://xyzcompany.supabase.co"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                Supabase Anon / Public API Key
-              </label>
-              <input
-                type="password"
-                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                value={key}
-                onChange={(e) => setKey(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              />
-            </div>
-
-            {testingStatus.message && (
-              <div
-                className={`md:col-span-2 p-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
-                  testingStatus.success ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                }`}
-              >
-                {testingStatus.success ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-                <span>{testingStatus.message}</span>
-              </div>
-            )}
-
-            <div className="md:col-span-2 flex flex-wrap items-center gap-2">
-              <button
-                type="submit"
-                disabled={testingStatus.testing}
-                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-              >
-                {testingStatus.testing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
-                <span>{language === 'mr' ? 'कनेक्शन तपासा व सेव्ह करा' : language === 'hi' ? 'कनेक्शन जांचें व सेव करें' : 'Test & Save Connection'}</span>
-              </button>
-
-              {isSupabaseConnected && (
-                <button
-                  type="button"
-                  onClick={handleDisconnect}
-                  className="px-3.5 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-900/40 cursor-pointer"
-                >
-                  {language === 'mr' ? 'डिस्कनेक्ट' : language === 'hi' ? 'डिस्कनेक्ट' : 'Disconnect'}
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={handleCopySqlSchema}
-                className="px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs border border-slate-200 dark:border-[#24352F] inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                <FileCode className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>{copiedSql ? 'Copied!' : 'Copy Passcode Sync SQL'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (window.confirm('Reset local demo sample dairy data?')) {
-                    resetToSampleData();
-                  }
-                }}
-                className="ml-auto px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-600 dark:text-[#8FA69C] font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>{language === 'mr' ? 'सॅम्पल डेटा रिसेट' : language === 'hi' ? 'सैंपल डेटा रिसेट' : 'Reset Sample Data'}</span>
-              </button>
-            </div>
-          </form>
         </section>
       </div>
     </div>

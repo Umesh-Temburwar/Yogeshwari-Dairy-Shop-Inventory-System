@@ -18,6 +18,7 @@ import { useStore } from '../../context/StoreContext';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { ProductImage, clearFailedImageUrl } from '../Common/ProductImage';
+import { ProductImagePreviewModal } from '../Common/ProductImagePreviewModal';
 import { SquareImageCropperModal } from '../Common/SquareImageCropperModal';
 import {
   lookupOfficialImages,
@@ -49,7 +50,7 @@ const LOAD_MORE_STEP = 40;
 const OUT_OF_STOCK_PAGE_SIZE = 60;
 
 export const ImageHealthView: React.FC = () => {
-  const { products, updateProduct, outOfStockCount } = useStore();
+  const { products, updateProduct, outOfStockCount, refreshData } = useStore();
   const { user, role } = useAuth();
   const isAdmin = Boolean(user) && (role === 'Owner' || role === 'Admin');
 
@@ -57,6 +58,7 @@ export const ImageHealthView: React.FC = () => {
   const [filter, setFilter] = useState<HealthFilter>('issues');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleLimit, setVisibleLimit] = useState(INITIAL_VISIBLE_ROWS);
+  const [rescanNonce, setRescanNonce] = useState(0);
 
   // Paginated out-of-stock products loaded directly from Supabase when scope === 'out_of_stock'
   const [outOfStockProducts, setOutOfStockProducts] = useState<Product[]>([]);
@@ -82,6 +84,7 @@ export const ImageHealthView: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const uploadTargetRef = useRef<Product | null>(null);
   const [cropTarget, setCropTarget] = useState<{ product: Product; file: File } | null>(null);
+  const [previewProduct, setPreviewProduct] = useState<Product | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -185,7 +188,7 @@ export const ImageHealthView: React.FC = () => {
     }
   }, []);
 
-  // Automatically scan scoped products on mount / scope change (read-only inspection, never modifies DB)
+  // Automatically scan scoped products on mount / scope change / manual re-scan (read-only inspection)
   useEffect(() => {
     if (!isAdmin) return;
     setVisibleLimit(INITIAL_VISIBLE_ROWS);
@@ -193,7 +196,30 @@ export const ImageHealthView: React.FC = () => {
     return () => {
       scanRunIdRef.current += 1;
     };
-  }, [isAdmin, scopedProducts, runHealthScan]);
+  }, [isAdmin, scopedProducts, runHealthScan, rescanNonce]);
+
+  const handleRescan = async () => {
+    if (!isAdmin || isScanning || isLoadingOutOfStock) return;
+    // Cancel any in-flight scan and visibly clear stale statuses & broken-URL cache
+    scanRunIdRef.current += 1;
+    setIsScanning(true);
+    setHealthMap({});
+    setRowLookupMap({});
+    setRowMessage(null);
+    for (const p of scopedProducts) {
+      clearFailedImageUrl(p.image_url);
+    }
+
+    try {
+      if (scope === 'out_of_stock') {
+        await fetchOutOfStockPage(0, false, searchQuery);
+      } else {
+        await refreshData();
+      }
+    } finally {
+      setRescanNonce((n) => n + 1);
+    }
+  };
 
   const counts = useMemo(() => {
     let missing = 0;
@@ -494,12 +520,12 @@ export const ImageHealthView: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => runHealthScan(scopedProducts)}
-              disabled={isScanning}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition disabled:opacity-50"
+              onClick={handleRescan}
+              disabled={isScanning || isLoadingOutOfStock}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition disabled:opacity-50 cursor-pointer"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
-              <span>{isScanning ? 'Scanning' : 'Re-scan'}</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${isScanning || isLoadingOutOfStock ? 'animate-spin' : ''}`} />
+              <span>{isScanning || isLoadingOutOfStock ? 'Scanning...' : 'Re-scan'}</span>
             </button>
           </div>
         </div>
@@ -651,16 +677,22 @@ export const ImageHealthView: React.FC = () => {
                 className="bg-white dark:bg-[#131F1B] p-3 sm:p-4 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-2xs space-y-3"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                  {/* Top/Left: Square Thumbnail + Meta */}
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-white border border-slate-200 dark:border-[#24352F]">
+                  {/* Top/Left: Bigger Clickable Square Thumbnail + Meta */}
+                  <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewProduct(prod)}
+                      title="Click to open full photo & update URL"
+                      className="group/ihimg relative w-24 h-24 sm:w-28 sm:h-28 shrink-0 aspect-square rounded-2xl overflow-hidden bg-white border border-slate-200 dark:border-[#24352F] shadow-2xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                    >
                       <ProductImage
                         src={prod.image_url}
                         alt={prod.name}
                         category={prod.category}
                         fill
+                        className="group-hover/ihimg:scale-[1.03] transition-transform duration-200"
                       />
-                    </div>
+                    </button>
 
                     <div className="min-w-0 flex-1 space-y-1">
                       <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate">
@@ -902,6 +934,25 @@ export const ImageHealthView: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Full Photo Preview & URL Editor Modal */}
+      <ProductImagePreviewModal
+        product={previewProduct}
+        onClose={() => setPreviewProduct(null)}
+        onImageUpdated={async (productId, newUrl) => {
+          const normalized = newUrl || undefined;
+          if (scope === 'out_of_stock') {
+            setOutOfStockProducts((prev) =>
+              prev.map((item) => (item.id === productId ? { ...item, image_url: normalized } : item))
+            );
+          }
+          setPreviewProduct((prev) =>
+            prev && prev.id === productId ? { ...prev, image_url: normalized } : prev
+          );
+          const recheck = await probeImageHealth(normalized);
+          setHealthMap((prev) => ({ ...prev, [productId]: recheck }));
+        }}
+      />
 
       {/* Square 1:1 Cropper Modal */}
       <SquareImageCropperModal

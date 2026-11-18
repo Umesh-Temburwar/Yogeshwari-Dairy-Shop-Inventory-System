@@ -12,7 +12,6 @@ import {
   Moon,
   Smartphone,
   Camera,
-  ShieldCheck,
   Settings,
   LogOut,
   ChevronDown
@@ -21,7 +20,6 @@ import {
 interface NavbarProps {
   onOpenSettings?: () => void;
   onOpenPhotoDatabase?: () => void;
-  onOpenImageHealth?: () => void;
   onOpenAppDownload?: () => void;
   isSidebarCollapsed: boolean;
   onToggleSidebarCollapse: () => void;
@@ -34,7 +32,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   isSidebarCollapsed,
   onOpenSettings,
   onOpenPhotoDatabase,
-  onOpenImageHealth,
   onOpenAppDownload,
 }) => {
   const { t, language } = useLanguage();
@@ -271,24 +268,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <Camera className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       <span>
                         {language === 'mr' ? 'फोटो डेटाबेस' : language === 'hi' ? 'फोटो डेटाबेस' : 'Photo Database'}
-                      </span>
-                    </button>
-                  )}
-
-                  {/* 2b. Image Health (Admin) */}
-                  {onOpenImageHealth && (role === 'Owner' || role === 'Admin') && (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setIsProfileMenuOpen(false);
-                        onOpenImageHealth();
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left text-xs font-bold text-slate-700 dark:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition cursor-pointer"
-                    >
-                      <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <span>
-                        {language === 'mr' ? 'इमेज हेल्थ (Image Health)' : language === 'hi' ? 'इमेज हेल्थ (Image Health)' : 'Image Health'}
                       </span>
                     </button>
                   )}

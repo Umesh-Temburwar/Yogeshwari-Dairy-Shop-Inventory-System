@@ -35,6 +35,8 @@ import { translateProductName, translateProductNameSync } from '../../lib/produc
 import { playBeepSound, playSuccessChime } from '../../utils/audioUtils';
 import {
   isSpeechRecognitionSupported,
+  isMobileVoiceDevice,
+  dedupeVoiceTranscript,
   processVoiceTranscript,
   processVoiceTranscriptSync,
   VoiceLanguage
@@ -303,11 +305,14 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       const recognition = new SpeechRecognitionClass();
       recognitionRef.current = recognition;
 
-      recognition.continuous = true;
+      const isMobile = isMobileVoiceDevice();
+      recognition.continuous = !isMobile;
       recognition.interimResults = true;
       recognition.lang = selectedLang;
 
-      playBeepSound();
+      if (!isMobile) {
+        playBeepSound();
+      }
       isListeningRef.current = true;
       setIsListening(true);
 
@@ -337,18 +342,19 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           }
         }
 
-        const currentText = (finalized + interim).trim();
+        const currentText = dedupeVoiceTranscript((finalized + interim).trim());
         if (currentText) {
           transcriptRef.current = currentText;
           setInterimTranscript(currentText);
           scheduleFinalizeOnSilence();
 
-          // Instant preview across all 3 language fields, category & unit
+          // Instant preview across all 3 language fields, brand, category & unit
           const instant = processVoiceTranscriptSync(currentText, selectedLang);
           if (instant.englishName) {
             setName(instant.englishName);
             setMarathiName(instant.marathiName);
             setHindiName(instant.hindiName);
+            if (instant.detectedBrand) setBrand(instant.detectedBrand);
             if (instant.detectedCategory) setCategory(instant.detectedCategory);
             if (instant.detectedUnit) setUnit(instant.detectedUnit);
           }
@@ -356,7 +362,9 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       };
 
       recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
-        console.warn('Speech recognition notice:', event.error);
+        if (event.error !== 'no-speech' && event.error !== 'aborted') {
+          console.warn('Speech recognition notice:', event.error);
+        }
         if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
           userStoppedRef.current = true;
           isListeningRef.current = false;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product, ProductCategory, ProductUnit } from '../../types';
@@ -6,7 +6,12 @@ import { translateProductNameSync } from '../../lib/productTranslator';
 import { validateBarcode } from '../../utils/barcodeChecksum';
 import { playSuccessChime } from '../../utils/audioUtils';
 import { supabase } from '../../lib/supabase';
-import { X, Barcode, Sparkles, Save, CheckCircle2, AlertCircle, ShoppingCart } from 'lucide-react';
+import {
+  startMobileVoiceRecognition,
+  MobileVoiceController,
+  VoiceLanguage
+} from '../../lib/voiceProductRecognizer';
+import { X, Barcode, Sparkles, Save, CheckCircle2, AlertCircle, ShoppingCart, Mic } from 'lucide-react';
 
 interface QuickProductRegisterModalProps {
   isOpen: boolean;
@@ -35,6 +40,17 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
   const [stockQuantity, setStockQuantity] = useState(mode === 'pos' ? '1' : '0');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isVoiceListening, setIsVoiceListening] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [voiceLang, setVoiceLang] = useState<VoiceLanguage>(() => {
+    try {
+      const saved = localStorage.getItem('ydo_voice_lang');
+      if (saved === 'en-IN' || saved === 'mr-IN' || saved === 'hi-IN') return saved;
+    } catch {}
+    return 'en-IN';
+  });
+  const voiceControllerRef = useRef<MobileVoiceController | null>(null);
 
   const cleanBarcode = barcode.trim();
   const validation = validateBarcode(cleanBarcode);
@@ -49,8 +65,75 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
       setPurchasePrice('');
       setStockQuantity(mode === 'pos' ? '1' : '0');
       setErrorMsg(null);
+      setVoiceTranscript('');
+      setVoiceError(null);
+      setIsVoiceListening(false);
+    } else if (voiceControllerRef.current) {
+      voiceControllerRef.current.abort();
+      voiceControllerRef.current = null;
+      setIsVoiceListening(false);
     }
+    return () => {
+      if (voiceControllerRef.current) {
+        voiceControllerRef.current.abort();
+        voiceControllerRef.current = null;
+      }
+    };
   }, [isOpen, barcode, mode]);
+
+  const handleVoiceToggle = () => {
+    if (isVoiceListening) {
+      voiceControllerRef.current?.stop();
+      voiceControllerRef.current = null;
+      setIsVoiceListening(false);
+      return;
+    }
+
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    setVoiceError(null);
+    setVoiceTranscript('');
+
+    const controller = startMobileVoiceRecognition({
+      lang: voiceLang,
+      uiLang: language === 'mr' ? 'mr' : language === 'hi' ? 'hi' : 'en',
+      onStart: () => setIsVoiceListening(true),
+      onInterim: (raw, processed) => {
+        setVoiceTranscript(raw);
+        if (processed.englishName) {
+          setName(processed.englishName);
+          if (processed.marathiName) setMarathiName(processed.marathiName);
+          if (processed.detectedCategory) setCategory(processed.detectedCategory);
+          if (processed.detectedUnit) setUnit(processed.detectedUnit);
+        }
+      },
+      onFinal: (raw, processed) => {
+        setVoiceTranscript(raw);
+        if (processed.englishName) {
+          setName(processed.englishName);
+          if (processed.marathiName) setMarathiName(processed.marathiName);
+          if (processed.detectedCategory) setCategory(processed.detectedCategory);
+          if (processed.detectedUnit) setUnit(processed.detectedUnit);
+        }
+        playSuccessChime();
+      },
+      onError: (_code, msg) => {
+        setIsVoiceListening(false);
+        setVoiceError(msg);
+      },
+      onEnd: () => {
+        voiceControllerRef.current = null;
+        setIsVoiceListening(false);
+      }
+    });
+
+    if (controller) {
+      voiceControllerRef.current = controller;
+      setIsVoiceListening(true);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -184,20 +267,69 @@ export const QuickProductRegisterModal: React.FC<QuickProductRegisterModalProps>
             </div>
           )}
 
-          {/* Product Name (English) */}
+          {/* Product Name (English) + Mobile Voice Input */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
-              {language === 'mr' ? 'उत्पादनाचे नाव (इंग्रजी)' : 'उत्पाद का नाम (अंग्रेजी)'} <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              autoFocus
-              required
-              value={name}
-              onChange={(e) => handleNameChange(e.target.value)}
-              placeholder="उदा. Parle Monaco 50g / Britannia Good Day"
-              className="w-full h-10 px-3 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
+            <div className="flex items-center justify-between gap-1.5 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">
+                {language === 'mr' ? 'उत्पादनाचे नाव (इंग्रजी)' : 'उत्पाद का नाम (अंग्रेजी)'} <span className="text-rose-500">*</span>
+              </label>
+              <div className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-[#1A2A25] p-0.5 border border-slate-200 dark:border-[#24352F]">
+                {(
+                  [
+                    { code: 'en-IN', label: 'EN' },
+                    { code: 'mr-IN', label: 'मराठी' },
+                    { code: 'hi-IN', label: 'हिंदी' }
+                  ] as Array<{ code: VoiceLanguage; label: string }>
+                ).map((opt) => (
+                  <button
+                    key={opt.code}
+                    type="button"
+                    onClick={() => {
+                      setVoiceLang(opt.code);
+                      try { localStorage.setItem('ydo_voice_lang', opt.code); } catch {}
+                    }}
+                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                      voiceLang === opt.code
+                        ? 'bg-emerald-600 text-white'
+                        : 'text-slate-600 dark:text-[#8FA69C]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => handleNameChange(e.target.value)}
+                placeholder="उदा. Parle Monaco 50g / Britannia Good Day"
+                className="w-full h-10 pl-3 pr-24 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <button
+                type="button"
+                onClick={handleVoiceToggle}
+                aria-label={isVoiceListening ? 'Stop voice input' : 'Start voice input'}
+                className={`absolute right-1 top-1/2 -translate-y-1/2 h-8 px-2.5 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition active:scale-[0.97] cursor-pointer ${
+                  isVoiceListening
+                    ? 'bg-rose-600 text-white'
+                    : 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                }`}
+              >
+                <Mic className={`w-3.5 h-3.5 ${isVoiceListening ? 'animate-pulse' : ''}`} />
+                <span>{isVoiceListening ? (language === 'mr' ? 'थांबवा' : 'Stop') : (language === 'mr' ? 'बोला' : 'Speak')}</span>
+              </button>
+            </div>
+            {isVoiceListening && (
+              <p className="mt-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 truncate">
+                🎙️ {voiceTranscript || (language === 'mr' ? 'ऐकत आहे... स्पष्ट बोला' : 'Listening... speak clearly')}
+              </p>
+            )}
+            {voiceError && !isVoiceListening && (
+              <p className="mt-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400">{voiceError}</p>
+            )}
           </div>
 
           {/* Marathi Name (Auto-Transliterated) */}

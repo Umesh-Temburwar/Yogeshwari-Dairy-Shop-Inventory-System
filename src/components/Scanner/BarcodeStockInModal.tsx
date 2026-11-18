@@ -17,9 +17,12 @@ import { supabase } from '../../lib/supabase';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { translateProductName, translateProductNameSync } from '../../lib/productTranslator';
 import { playSuccessChime } from '../../utils/audioUtils';
-import { 
-  isSpeechRecognitionSupported, 
-  processVoiceTranscript 
+import {
+  isSpeechRecognitionSupported,
+  processVoiceTranscript,
+  startMobileVoiceRecognition,
+  MobileVoiceController,
+  VoiceLanguage
 } from '../../lib/voiceProductRecognizer';
 import {
   Camera,
@@ -140,75 +143,125 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     }
   };
 
-  // Voice-to-Text Recognition for Barcode Product Registration
+  // Mobile-Hardened Voice-to-Text Recognition for Barcode Product Registration
   const [isVoiceListening, setIsVoiceListening] = useState(false);
-  const barcodeRecognitionRef = useRef<any>(null);
+  const [voiceLiveTranscript, setVoiceLiveTranscript] = useState('');
+  const [voiceErrorMsg, setVoiceErrorMsg] = useState<string | null>(null);
+  const [voiceLang, setVoiceLang] = useState<VoiceLanguage>(() => {
+    try {
+      const saved = localStorage.getItem('ydo_voice_lang');
+      if (saved === 'en-IN' || saved === 'mr-IN' || saved === 'hi-IN') return saved;
+    } catch {}
+    // Default en-IN recognizes English FMCG brands + Hinglish/Marathi dairy terms cleanly on mobile
+    return 'en-IN';
+  });
+  const voiceControllerRef = useRef<MobileVoiceController | null>(null);
+  const voiceSessionSeqRef = useRef<number>(0);
+
+  const handleSelectVoiceLang = (nextLang: VoiceLanguage) => {
+    setVoiceLang(nextLang);
+    try {
+      localStorage.setItem('ydo_voice_lang', nextLang);
+    } catch {}
+  };
+
+  // Stop voice recognition cleanly when modal closes or step changes
+  useEffect(() => {
+    if (!isOpen || step !== 'register') {
+      if (voiceControllerRef.current) {
+        voiceControllerRef.current.abort();
+        voiceControllerRef.current = null;
+      }
+      setIsVoiceListening(false);
+      setVoiceLiveTranscript('');
+      setVoiceErrorMsg(null);
+    }
+    return () => {
+      if (voiceControllerRef.current) {
+        voiceControllerRef.current.abort();
+        voiceControllerRef.current = null;
+      }
+    };
+  }, [isOpen, step]);
 
   const handleBarcodeVoiceClick = () => {
     if (isVoiceListening) {
-      if (barcodeRecognitionRef.current) {
-        try { barcodeRecognitionRef.current.stop(); } catch {}
+      if (voiceControllerRef.current) {
+        voiceControllerRef.current.stop();
+        voiceControllerRef.current = null;
       }
       setIsVoiceListening(false);
       return;
     }
 
-    if (!isSpeechRecognitionSupported()) return;
+    // Release active input focus on mobile so soft keyboard doesn't fight OS voice capture
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
 
-    try {
-      const SpeechClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      const recognition = new SpeechClass();
-      barcodeRecognitionRef.current = recognition;
-      recognition.lang = language === 'hi' ? 'hi-IN' : language === 'en' ? 'en-IN' : 'mr-IN';
-      recognition.interimResults = true;
-      recognition.continuous = true;
+    // Ensure camera stream is fully stopped so mobile audio/media resources are completely free
+    stopCamera();
 
-      playBeepSound();
-      setIsVoiceListening(true);
+    setVoiceErrorMsg(null);
+    setVoiceLiveTranscript('');
+    const seqId = ++voiceSessionSeqRef.current;
 
-      let accumulated = '';
-      let stopTimer: any = null;
-
-      const resetStopTimer = () => {
-        if (stopTimer) clearTimeout(stopTimer);
-        stopTimer = setTimeout(() => {
-          try { recognition.stop(); } catch {}
-        }, 2500);
-      };
-
-      recognition.onresult = async (e: any) => {
-        resetStopTimer();
-        let interim = '';
-        for (let i = 0; i < e.results.length; ++i) {
-          if (e.results[i].isFinal) {
-            accumulated += e.results[i][0].transcript + ' ';
-          } else {
-            interim += e.results[i][0].transcript;
-          }
+    const controller = startMobileVoiceRecognition({
+      lang: voiceLang,
+      uiLang: language === 'mr' ? 'mr' : language === 'hi' ? 'hi' : 'en',
+      onStart: () => {
+        setIsVoiceListening(true);
+      },
+      onInterim: (raw, processed) => {
+        if (voiceSessionSeqRef.current !== seqId) return;
+        setVoiceLiveTranscript(raw);
+        if (processed.englishName) {
+          setNewProdName(processed.englishName);
+          if (processed.marathiName) setNewProdMarathiName(processed.marathiName);
+          if (processed.detectedBrand) setNewProdBrand(processed.detectedBrand);
+          if (processed.detectedCategory) setNewProdCategory(processed.detectedCategory);
+          if (processed.detectedUnit) setNewProdUnit(processed.detectedUnit);
+          if (processed.packSize) setNewProdPackSize(processed.packSize);
         }
-        const text = (accumulated + interim).trim();
-        if (text) {
-          const processed = await processVoiceTranscript(text, recognition.lang);
-          if (processed.englishName) {
-            setNewProdName(processed.englishName);
-            setNewProdMarathiName(processed.marathiName);
-            if (processed.detectedCategory) setNewProdCategory(processed.detectedCategory);
-            if (processed.detectedUnit) setNewProdUnit(processed.detectedUnit);
-            if (processed.packSize) setNewProdPackSize(processed.packSize);
-          }
+      },
+      onFinal: async (raw, processed) => {
+        if (voiceSessionSeqRef.current !== seqId) return;
+        setVoiceLiveTranscript(raw);
+        if (processed.englishName) {
+          setNewProdName(processed.englishName);
+          if (processed.marathiName) setNewProdMarathiName(processed.marathiName);
+          if (processed.detectedBrand) setNewProdBrand(processed.detectedBrand);
+          if (processed.detectedCategory) setNewProdCategory(processed.detectedCategory);
+          if (processed.detectedUnit) setNewProdUnit(processed.detectedUnit);
+          if (processed.packSize) setNewProdPackSize(processed.packSize);
         }
-      };
-
-      recognition.onerror = () => setIsVoiceListening(false);
-      recognition.onend = () => {
-        if (stopTimer) clearTimeout(stopTimer);
-        setIsVoiceListening(false);
         playSuccessChime();
-      };
+        // Optional async enrichment guarded by sequence ID (prevents race overwrites)
+        try {
+          const enriched = await processVoiceTranscript(raw, voiceLang);
+          if (voiceSessionSeqRef.current === seqId && enriched.englishName) {
+            setNewProdName(enriched.englishName);
+            if (enriched.marathiName) setNewProdMarathiName(enriched.marathiName);
+          }
+        } catch {
+          // Synchronous result already applied
+        }
+      },
+      onError: (_code, message) => {
+        if (voiceSessionSeqRef.current !== seqId) return;
+        setIsVoiceListening(false);
+        setVoiceErrorMsg(message);
+      },
+      onEnd: () => {
+        if (voiceSessionSeqRef.current !== seqId) return;
+        voiceControllerRef.current = null;
+        setIsVoiceListening(false);
+      }
+    });
 
-      recognition.start();
-    } catch {
-      setIsVoiceListening(false);
+    if (controller) {
+      voiceControllerRef.current = controller;
+      setIsVoiceListening(true);
     }
   };
 
@@ -1184,38 +1237,96 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
               {/* Product Name Input - The ONLY Required Field */}
               <div className="space-y-3">
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1.5">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
                       {language === 'mr' ? 'उत्पादनाचे नाव (Product Name) *' : 'उत्पाद का नाम (Product Name) *'}
                     </label>
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                      🎤 {language === 'mr' ? 'व्हॉइस उपलब्ध' : 'वॉयस उपलब्ध'}
-                    </span>
+                    {/* Compact Voice Language Switcher (EN / मराठी / हिंदी) */}
+                    <div className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-[#1A2A25] p-0.5 border border-slate-200 dark:border-[#24352F]">
+                      {(
+                        [
+                          { code: 'en-IN', label: 'EN' },
+                          { code: 'mr-IN', label: 'मराठी' },
+                          { code: 'hi-IN', label: 'हिंदी' }
+                        ] as Array<{ code: VoiceLanguage; label: string }>
+                      ).map((opt) => (
+                        <button
+                          key={opt.code}
+                          type="button"
+                          onClick={() => handleSelectVoiceLang(opt.code)}
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                            voiceLang === opt.code
+                              ? 'bg-emerald-600 text-white shadow-2xs'
+                              : 'text-slate-600 dark:text-[#8FA69C] hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div className="relative">
                     <input
                       type="text"
-                      autoFocus
                       required
                       value={newProdName}
                       onChange={(e) => handleNewProdNameChange(e.target.value)}
                       placeholder="उदा. Parle Monaco 50g / Britannia Toast"
-                      className="w-full pr-24 px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full pr-28 px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                     <button
                       type="button"
                       onClick={handleBarcodeVoiceClick}
-                      className={`absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                      aria-label={isVoiceListening ? 'Stop voice input' : 'Start voice input'}
+                      className={`absolute right-1.5 top-1/2 -translate-y-1/2 min-h-[36px] flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition active:scale-[0.97] cursor-pointer ${
                         isVoiceListening
-                          ? 'bg-rose-500 text-white animate-pulse'
+                          ? 'bg-rose-600 text-white shadow-sm'
                           : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                       }`}
                       title="बोलून नाव भरा (Voice Input)"
                     >
-                      <Mic className={`w-3.5 h-3.5 ${isVoiceListening ? 'animate-bounce' : ''}`} />
-                      <span>{isVoiceListening ? 'ऐकत आहे...' : 'बोला'}</span>
+                      <Mic className={`w-3.5 h-3.5 ${isVoiceListening ? 'animate-pulse' : ''}`} />
+                      <span>
+                        {isVoiceListening
+                          ? language === 'mr' ? 'थांबवा' : language === 'hi' ? 'रोकें' : 'Stop'
+                          : language === 'mr' ? 'बोला' : language === 'hi' ? 'बोलें' : 'Speak'}
+                      </span>
                     </button>
                   </div>
+
+                  {/* Live Mobile Voice Listening Feedback */}
+                  {isVoiceListening && (
+                    <div className="mt-1.5 px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 flex items-center justify-between gap-2 text-[11px] font-semibold text-rose-700 dark:text-rose-300">
+                      <span className="inline-flex items-center gap-1.5 truncate">
+                        <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping shrink-0" />
+                        <span className="truncate">
+                          {voiceLiveTranscript
+                            ? `${language === 'mr' ? 'ऐकले' : 'Heard'}: "${voiceLiveTranscript}"`
+                            : language === 'mr'
+                            ? 'ऐकत आहे... उत्पादनाचे नाव स्पष्ट बोला'
+                            : language === 'hi'
+                            ? 'सुन रहा है... उत्पाद का नाम स्पष्ट बोलें'
+                            : 'Listening... speak product name clearly'}
+                        </span>
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Actionable Voice Error Feedback (Permission / No Speech / HTTP) */}
+                  {voiceErrorMsg && !isVoiceListening && (
+                    <div className="mt-1.5 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start gap-1.5 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                      <span>{voiceErrorMsg}</span>
+                    </div>
+                  )}
+
+                  {!isSpeechRecognitionSupported() && !voiceErrorMsg && (
+                    <p className="mt-1 text-[10px] text-slate-500 dark:text-[#8FA69C]">
+                      {language === 'mr'
+                        ? 'टीप: मोबाईल कीबोर्डवरील 🎤 माइक देखील वापरता येतो.'
+                        : 'Tip: You can also tap the 🎤 mic on your mobile keyboard.'}
+                    </p>
+                  )}
                 </div>
 
                 {/* Marathi Name (Auto-Translated) */}

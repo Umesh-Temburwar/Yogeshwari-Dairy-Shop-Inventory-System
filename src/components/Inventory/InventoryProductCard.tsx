@@ -3,7 +3,6 @@ import { Plus, Minus } from 'lucide-react';
 import { Product } from '../../types';
 import { useLanguage } from '../../context/LanguageContext';
 import { ProductImage } from '../Common/ProductImage';
-import { HoldableImageBox } from '../Common/HoldableImageBox';
 
 export interface InventoryCardItemProps {
   product: Product;
@@ -81,12 +80,17 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
             : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500/70'
         }`}
       >
-        {/* Top Section: Square White Image Box + Status Corner Dot */}
+        {/* Top Section: One-Click Square White Image Box + Status Corner Dot */}
         <div>
-          <HoldableImageBox
-            onHold={() => onPreviewImage(product)}
-            title="Hold image to view or change URL"
-            className="relative w-full h-[88px] sm:h-28 rounded-xl bg-white border border-slate-100 dark:border-[#24352F] overflow-hidden flex items-center justify-center mb-1.5"
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreviewImage(product);
+            }}
+            aria-label={`View or upload photo for ${displayName}`}
+            title={tr('Click photo to view, crop, or upload', 'फोटो देखने, क्रॉप या अपलोड करने के लिए क्लिक करें', 'फोटो पाहण्यासाठी, क्रॉप किंवा अपलोड करण्यासाठी क्लिक करा')}
+            className="relative w-full h-[88px] sm:h-28 rounded-xl bg-white border border-slate-100 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden flex items-center justify-center mb-1.5 cursor-pointer transition-colors"
           >
             <div className="h-full aspect-square flex items-center justify-center">
               <ProductImage
@@ -112,7 +116,7 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
                 aria-label="Expiring soon"
               />
             )}
-          </HoldableImageBox>
+          </button>
 
           {/* Name (14px semibold, max 2 lines) + Muted Category (11px) */}
           <h3 className="text-[13px] sm:text-[14px] font-semibold text-slate-900 dark:text-[#E7F0EC] leading-snug line-clamp-2 min-h-[2.1rem]">
@@ -222,10 +226,15 @@ export const InventoryListRow: React.FC<InventoryCardItemProps> = React.memo(
             : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500/60'
         }`}
       >
-        {/* Square Thumbnail */}
-        <HoldableImageBox
-          onHold={() => onPreviewImage(product)}
-          className="relative w-14 h-14 shrink-0 aspect-square rounded-xl bg-white border border-slate-100 dark:border-[#24352F] overflow-hidden"
+        {/* One-Click Square Thumbnail */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPreviewImage(product);
+          }}
+          aria-label={`View or upload photo for ${displayName}`}
+          className="relative w-14 h-14 shrink-0 aspect-square rounded-xl bg-white border border-slate-100 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden cursor-pointer transition-colors"
         >
           <ProductImage
             src={product.image_url}
@@ -238,7 +247,7 @@ export const InventoryListRow: React.FC<InventoryCardItemProps> = React.memo(
               isOut ? 'bg-rose-500' : isLow ? 'bg-amber-500' : 'bg-emerald-500'
             }`}
           />
-        </HoldableImageBox>
+        </button>
 
         {/* Details */}
         <div className="min-w-0 flex-1">

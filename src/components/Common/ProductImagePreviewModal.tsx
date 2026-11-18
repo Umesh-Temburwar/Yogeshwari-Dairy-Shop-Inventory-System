@@ -149,15 +149,17 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
     };
   }, [isLiveCameraOpen, language]);
 
-  // Close on Escape key
+  // Close on Escape key (only when child cropper/camera modals are closed)
   useEffect(() => {
     if (!product) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && !cropFile && !isLiveCameraOpen) {
+        onClose();
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [product, onClose]);
+  }, [product, cropFile, isLiveCameraOpen, onClose]);
 
   if (!product) return null;
 
@@ -487,13 +489,14 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
   )}`;
 
   return (
-    <div
-      className="fixed inset-0 z-[110] bg-black/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="product-image-modal-title"
-    >
+    <>
+      <div
+        className="fixed inset-0 z-[110] bg-black/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4"
+        onClick={onClose}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-image-modal-title"
+      >
       <div
         className="bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border border-slate-200/90 dark:border-[#24352F] rounded-2xl sm:rounded-3xl max-w-lg w-full max-h-[92dvh] flex flex-col shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
@@ -607,7 +610,7 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
               </span>
             )}
 
-            {/* Subtle Tap-to-Change / Crop Bottom Bar */}
+            {/* Subtle Tap-to-Change / Crop Bottom Bar (always visible on mobile & desktop) */}
             {isAdmin && !showSourceChooser && (
               <div className="absolute inset-x-2.5 bottom-2.5 flex items-center justify-between gap-2 pointer-events-none">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/75 text-white text-[10px] font-bold">
@@ -621,7 +624,7 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
                   </span>
                 </span>
 
-                {activePreviewUrl && previewLoaded && !previewError && (
+                {activePreviewUrl && !previewError && (
                   <button
                     type="button"
                     disabled={isLoadingCropCurrent}
@@ -646,7 +649,7 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
             {isAdmin && showSourceChooser && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute inset-0 bg-slate-950/75 flex flex-col items-center justify-center p-4 gap-3"
+                className="absolute inset-0 bg-slate-950/80 flex flex-col items-center justify-center p-3 gap-2 overflow-y-auto"
               >
                 <div className="flex items-center justify-between w-full max-w-[260px]">
                   <span className="text-xs font-extrabold text-white">
@@ -666,14 +669,14 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5 w-full max-w-[260px]">
+                <div className="grid grid-cols-2 gap-2 w-full max-w-[260px]">
                   <button
                     type="button"
                     onClick={handleChooseGallery}
-                    className="flex flex-col items-center justify-center gap-1.5 py-3.5 px-3 rounded-2xl bg-white hover:bg-emerald-50 text-slate-900 font-extrabold text-xs shadow-lg active:scale-[0.98] transition cursor-pointer"
+                    className="flex flex-col items-center justify-center gap-1 py-2.5 px-2.5 rounded-xl bg-white hover:bg-emerald-50 text-slate-900 font-extrabold text-xs shadow-lg active:scale-[0.98] transition cursor-pointer"
                   >
-                    <span className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                      <ImageIcon className="w-5 h-5" />
+                    <span className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                      <ImageIcon className="w-4 h-4" />
                     </span>
                     <span>{language === 'mr' ? 'गॅलरी' : language === 'hi' ? 'गैलरी' : 'Gallery'}</span>
                   </button>
@@ -681,16 +684,16 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
                   <button
                     type="button"
                     onClick={handleChooseCamera}
-                    className="flex flex-col items-center justify-center gap-1.5 py-3.5 px-3 rounded-2xl bg-white hover:bg-emerald-50 text-slate-900 font-extrabold text-xs shadow-lg active:scale-[0.98] transition cursor-pointer"
+                    className="flex flex-col items-center justify-center gap-1 py-2.5 px-2.5 rounded-xl bg-white hover:bg-emerald-50 text-slate-900 font-extrabold text-xs shadow-lg active:scale-[0.98] transition cursor-pointer"
                   >
-                    <span className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
-                      <Camera className="w-5 h-5" />
+                    <span className="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
+                      <Camera className="w-4 h-4" />
                     </span>
                     <span>{language === 'mr' ? 'कॅमेरा' : language === 'hi' ? 'कैमरा' : 'Camera'}</span>
                   </button>
                 </div>
 
-                {activePreviewUrl && previewLoaded && !previewError && (
+                {activePreviewUrl && !previewError && (
                   <button
                     type="button"
                     disabled={isLoadingCropCurrent}
@@ -818,7 +821,23 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
                 </a>
 
                 {isAdmin && (
-                  <>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {activePreviewUrl && !previewError && (
+                      <button
+                        type="button"
+                        disabled={isSaving || isUploadingFile || isLoadingCropCurrent}
+                        onClick={() => void handleCropCurrentPhoto()}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1A2A25] hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-slate-700 dark:text-[#E7F0EC] hover:text-emerald-700 dark:hover:text-emerald-300 border border-slate-200 dark:border-[#24352F] font-bold transition cursor-pointer disabled:opacity-40"
+                      >
+                        {isLoadingCropCurrent ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Crop className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        )}
+                        <span>{language === 'mr' ? 'क्रॉप करा' : language === 'hi' ? 'क्रॉप करें' : 'Crop Photo'}</span>
+                      </button>
+                    )}
+
                     <button
                       type="button"
                       disabled={isSaving || isUploadingFile}
@@ -855,7 +874,7 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
                       onChange={handleSelectDeviceFile}
                       className="hidden"
                     />
-                  </>
+                  </div>
                 )}
               </div>
 
@@ -918,8 +937,9 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
           </div>
         </div>
       </div>
+      </div>
 
-      {/* Built-in Desktop Live Camera Viewfinder (Mobile uses native rear camera capture) */}
+      {/* Built-in Desktop Live Camera Viewfinder (Sibling modal so clicks never bubble to preview backdrop) */}
       {isLiveCameraOpen && (
         <div
           className="fixed inset-0 z-[125] bg-black/80 flex items-center justify-center p-3"
@@ -1017,6 +1037,6 @@ export const ProductImagePreviewModal: React.FC<ProductImagePreviewModalProps> =
         }}
         onConfirm={handleConfirmDeviceUpload}
       />
-    </div>
+    </>
   );
 };

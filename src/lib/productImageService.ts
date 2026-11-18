@@ -681,9 +681,61 @@ export const cropImageRegionToWebp = async (
   });
 };
 
+const loadImageViaCorsCanvas = (imageUrl: string, safeName: string): Promise<File> => {
+  return new Promise<File>((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    const timer = window.setTimeout(() => {
+      reject(new Error('Image load timed out'));
+    }, 10000);
+
+    img.onload = () => {
+      window.clearTimeout(timer);
+      try {
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+        if (w <= 0 || h <= 0) {
+          reject(new Error('Invalid image dimensions'));
+          return;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Canvas unavailable'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob || blob.size <= 0) {
+              reject(new Error('Failed to read image pixels'));
+              return;
+            }
+            resolve(new File([blob], `${safeName}.png`, { type: 'image/png' }));
+          },
+          'image/png'
+        );
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    img.onerror = () => {
+      window.clearTimeout(timer);
+      reject(new Error('CORS image load failed'));
+    };
+
+    const sep = imageUrl.includes('?') ? '&' : '?';
+    img.src = `${imageUrl}${sep}_crop=${Date.now()}`;
+  });
+};
+
 /**
  * Fetch an existing remote image URL (Supabase Storage or CORS-enabled CDN) into a local File
  * so admins can crop & re-optimize any existing product photo directly in the cropper.
+ * Uses cache-busting + no-store so cached opaque Service Worker/<img> responses never block CORS reads.
  */
 export const fetchImageUrlAsFile = async (
   imageUrl: string,
@@ -694,30 +746,40 @@ export const fetchImageUrlAsFile = async (
     throw new Error('Invalid image URL.');
   }
 
+  const safeName = fileBaseName.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 32) || 'product';
+  const sep = cleanUrl.includes('?') ? '&' : '?';
+  const corsBustUrl = `${cleanUrl}${sep}_crop=${Date.now()}`;
+
+  // 1. Primary path: Direct CORS fetch with cache-busting (bypasses opaque SW/img cache)
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), 10000);
   try {
-    const response = await fetch(cleanUrl, {
+    const response = await fetch(corsBustUrl, {
       mode: 'cors',
+      cache: 'no-store',
       signal: controller.signal
     });
-    if (!response.ok) {
-      throw new Error(`Could not load image (${response.status}).`);
+    if (response.ok) {
+      const blob = await response.blob();
+      if (blob && blob.size > 0) {
+        const mime = blob.type && blob.type.startsWith('image/') ? blob.type : 'image/jpeg';
+        const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg';
+        return new File([blob], `${safeName}.${ext}`, { type: mime });
+      }
     }
-    const blob = await response.blob();
-    if (!blob || blob.size <= 0) {
-      throw new Error('Downloaded image is empty.');
-    }
-    const mime = blob.type && blob.type.startsWith('image/') ? blob.type : 'image/jpeg';
-    const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg';
-    const safeName = fileBaseName.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 32) || 'product';
-    return new File([blob], `${safeName}.${ext}`, { type: mime });
+  } catch {
+    // Fall through to CORS canvas fallback below
+  } finally {
+    window.clearTimeout(timer);
+  }
+
+  // 2. Secondary path: Anonymous CORS Image -> Canvas -> File
+  try {
+    return await loadImageViaCorsCanvas(cleanUrl, safeName);
   } catch {
     throw new Error(
       'This external website blocks direct cropping (CORS). Please pick the photo from Gallery or Camera to crop and upload.'
     );
-  } finally {
-    window.clearTimeout(timer);
   }
 };
 

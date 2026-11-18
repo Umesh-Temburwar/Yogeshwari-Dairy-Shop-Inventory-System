@@ -483,12 +483,17 @@ export const SquareImageCropperModal: React.FC<SquareImageCropperModalProps> = (
 
   return (
     <div
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
       className="fixed inset-0 z-[130] bg-black/75 flex items-center justify-center p-2.5 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label={tr('Crop, Compress & Upload Product Photo', 'फोटो क्रॉप, कंप्रेस और अपलोड करें', 'फोटो क्रॉप, कॉम्प्रेस व अपलोड करा')}
     >
-      <div className="bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] rounded-2xl sm:rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden max-h-[94dvh] flex flex-col">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] rounded-2xl sm:rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden max-h-[94dvh] flex flex-col"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-[#24352F] shrink-0">
           <div className="min-w-0">

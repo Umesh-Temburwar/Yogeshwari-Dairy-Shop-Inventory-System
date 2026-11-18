@@ -1,7 +1,9 @@
 /**
- * YOGESHWARI DAIRY SHOP - COMPREHENSIVE PDF & CSV EXPORT UTILITY
- * Supports 100% Devanagari (Marathi/Hindi) font fidelity, High-Resolution A4 Layout,
- * Professional Dairy ERP Header, KPI Summary Cards, Authentic .pdf Binary Generation, and Print Slips.
+ * YOGESHWARI DAIRY SHOP - OFFICIAL A4 PDF, PRINT & CSV EXPORT UTILITY
+ * Supports 100% Devanagari (Marathi/Hindi) + English font fidelity,
+ * real A4 scaled mobile preview (ResizeObserver + pinch-zoom),
+ * row-aware multi-page PDF pagination (zero split rows, repeating headers, Page X of Y),
+ * and clean single-toolbar print/download workflows across all ERP reports.
  */
 
 import { jsPDF } from 'jspdf';
@@ -14,17 +16,35 @@ export interface KPIItem {
   color?: string; // e.g. 'emerald', 'blue', 'purple', 'rose', 'amber'
 }
 
+export interface PDFSortOption {
+  id: string;
+  label: string;
+  sortRows: (
+    rows: (string | number)[][],
+    rowClasses?: string[]
+  ) => { rows: (string | number)[][]; rowClasses?: string[] };
+}
+
 export interface PDFTableData {
   headers: string[];
   rows: (string | number)[][];
   alignments?: ('left' | 'center' | 'right')[];
+  columnWidths?: string[];
+  nowrapColumns?: number[];
+  boldColumns?: number[];
+  statusColumnIndex?: number;
+  rowClasses?: string[];
   summaryRow?: (string | number)[];
+  sortOptions?: PDFSortOption[];
 }
 
 export interface PDFReportOptions {
   title: string;
+  toolbarTitle?: string;
   subtitle?: string;
   periodText?: string;
+  reportNumber?: string;
+  summaryNote?: string;
   kpis?: KPIItem[];
   tables?: {
     heading?: string;
@@ -36,577 +56,1216 @@ export interface PDFReportOptions {
   orientation?: 'portrait' | 'landscape';
   mode?: 'print' | 'download' | 'view';
   language?: 'mr' | 'hi' | 'en';
-  createdAt?: string; // Bill / Report creation timestamp
+  createdAt?: string;
+}
+
+interface ReportLocalizedStrings {
+  locale: string;
+  defaultSubtitle: string;
+  defaultAuthor: string;
+  brandTitle: string;
+  brandSubtitle: string;
+  printBtn: string;
+  downloadBtn: string;
+  closeBtn: string;
+  downloading: string;
+  downloaded: string;
+  sortLabel: string;
+  reportNoLabel: string;
+  dateLabel: string;
+  timeLabel: string;
+  authorLabel: string;
+  periodLabel: string;
+  notesLabel: string;
+  confidentialFooter: string;
+  generatedOnLabel: string;
+  pageWord: string;
+  ofWord: string;
+  preparedBy: string;
+  authorisedSignatory: string;
 }
 
 /**
- * Returns complete styled HTML document markup for report preview, print, and PDF rasterization
+ * Strips pictographic emojis from report text so PDF fonts never render broken glyphs.
+ * Preserves ₹, Marathi/Hindi Devanagari Unicode, numbers, and punctuation cleanly.
  */
-export const getReportHTMLMarkup = (options: PDFReportOptions): string => {
-  const {
-    title,
-    subtitle,
-    periodText,
-    kpis = [],
-    tables = options.table ? [{ data: options.table }] : [],
-    notes,
-    author,
-    orientation = 'portrait'
-  } = options;
+export const stripEmojisForPDF = (value: string | number | null | undefined): string => {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D]/gu, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+};
 
-  const lang: 'mr' | 'hi' | 'en' = options.language || (typeof window !== 'undefined' ? (localStorage.getItem('dairy_language') as 'mr' | 'hi' | 'en') : 'mr') || 'mr';
+/**
+ * Consistent compact unit abbreviations for stock & inventory tables.
+ */
+export const abbreviateUnitForPDF = (unit: string): string => {
+  const normalized = (unit || '').trim().toLowerCase();
+  if (normalized === 'piece' || normalized === 'pieces' || normalized === 'pcs' || normalized === 'pc') return 'Pc';
+  if (normalized === 'gram' || normalized === 'grams' || normalized === 'gm' || normalized === 'g') return 'g';
+  if (normalized === 'kg' || normalized === 'kilogram' || normalized === 'kilograms') return 'Kg';
+  if (normalized === 'litre' || normalized === 'liter' || normalized === 'litres' || normalized === 'liters' || normalized === 'l') return 'L';
+  if (normalized === 'packet' || normalized === 'packets' || normalized === 'pkt' || normalized === 'pack') return 'Pkt';
+  if (normalized === 'ml' || normalized === 'millilitre' || normalized === 'milliliter') return 'ml';
+  if (normalized === 'bottle' || normalized === 'bottles') return 'Btl';
+  if (normalized === 'box' || normalized === 'boxes') return 'Box';
+  if (normalized === 'dozen') return 'Dz';
+  return unit.trim();
+};
 
-  const strings = {
+const escapeHtml = (input: string): string => {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
+const safeReportText = (value: string | number | null | undefined): string => {
+  return escapeHtml(stripEmojisForPDF(value));
+};
+
+const resolveLanguage = (explicitLang?: 'mr' | 'hi' | 'en'): 'mr' | 'hi' | 'en' => {
+  if (explicitLang === 'mr' || explicitLang === 'hi' || explicitLang === 'en') {
+    return explicitLang;
+  }
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('dairy_language');
+    if (stored === 'mr' || stored === 'hi' || stored === 'en') return stored;
+  }
+  return 'en';
+};
+
+const getReportStrings = (lang: 'mr' | 'hi' | 'en'): ReportLocalizedStrings => {
+  const map: Record<'mr' | 'hi' | 'en', ReportLocalizedStrings> = {
     mr: {
       locale: 'mr-IN',
-      defaultSubtitle: 'डेअरी ERP आणि इन्व्हेंटरी खातेवही प्रणाली',
+      defaultSubtitle: 'डेअरी फार्म व उत्पादने ERP',
       defaultAuthor: 'योगेश्वरी डेअरी व्यवस्थापक',
-      brandTitle: 'योगेश्वरी डेअरी & उत्पादने',
-      brandSubtitle: 'Yogeshwari Dairy Farm & Products • Enterprise ERP',
-      topBarTitle: 'योगेश्वरी डेअरी अधिकृत अहवाल',
-      topBarSub: 'प्रिंट करा किंवा PDF स्वरूपात सेव्ह करा',
-      previewBadge: 'योगेश्वरी डेअरी अधिकृत PDF पूर्वदृश्य',
-      printBtn: '🖨️ प्रिंट',
-      downloadBtn: '📥 डाउनलोड PDF',
-      closeBtn: '✕ बंद करा',
+      brandTitle: 'Yogeshwari Dairy Products',
+      brandSubtitle: 'डेअरी फार्म व उत्पादने ERP',
+      printBtn: 'प्रिंट',
+      downloadBtn: 'डाउनलोड PDF',
+      closeBtn: 'बंद करा',
+      downloading: 'PDF तयार होत आहे...',
+      downloaded: 'PDF डाउनलोड झाले',
+      sortLabel: 'क्रम:',
+      reportNoLabel: 'अहवाल क्र.:',
       dateLabel: 'तारीख:',
       timeLabel: 'वेळ:',
-      authorLabel: 'अहवाल तयार केला:',
-      auditBadge: '✓ अधिकृत डेअरी ऑडिट अहवाल',
+      authorLabel: 'तयार केला:',
       periodLabel: 'कालावधी:',
       notesLabel: 'टीप:',
-      footerNotice: 'योगेश्वरी डेअरी ERP सिस्टीम • संगणकीय अधिकृत दस्तऐवज',
-      slogan: 'शुद्धता हीच आमची ओळख • ताजे म्हशीचे दूध, पनीर, दही आणि शुद्ध साजूक तूप',
-      signatory: 'व्यवस्थापक / अधिकृत स्वाक्षरी'
+      confidentialFooter: 'Yogeshwari Dairy Products - गोपनीय दस्तऐवज',
+      generatedOnLabel: 'तयार वेळ:',
+      pageWord: 'पान',
+      ofWord: '/',
+      preparedBy: 'तयार करणारे (Prepared By)',
+      authorisedSignatory: 'अधिकृत स्वाक्षरी (Authorised Signatory)'
     },
     hi: {
       locale: 'hi-IN',
-      defaultSubtitle: 'डेरी ERP व इन्वेंट्री खाता प्रणाली',
+      defaultSubtitle: 'डेरी फार्म व उत्पाद ERP',
       defaultAuthor: 'योगेश्वरी डेरी प्रबंधक',
-      brandTitle: 'योगेश्वरी डेरी & उत्पाद',
-      brandSubtitle: 'Yogeshwari Dairy Farm & Products • Enterprise ERP',
-      topBarTitle: 'योगेश्वरी डेरी अधिकृत रिपोर्ट',
-      topBarSub: 'प्रिंट करें या PDF के रूप में सहेजें',
-      previewBadge: 'योगेश्वरी डेरी अधिकृत PDF पूर्वावलोकन',
-      printBtn: '🖨️ प्रिंट',
-      downloadBtn: '📥 डाउनलोड PDF',
-      closeBtn: '✕ बंद करें',
+      brandTitle: 'Yogeshwari Dairy Products',
+      brandSubtitle: 'डेरी फार्म व उत्पाद ERP',
+      printBtn: 'प्रिंट',
+      downloadBtn: 'डाउनलोड PDF',
+      closeBtn: 'बंद करें',
+      downloading: 'PDF तैयार हो रहा है...',
+      downloaded: 'PDF डाउनलोड हुआ',
+      sortLabel: 'क्रम:',
+      reportNoLabel: 'रिपोर्ट क्र.:',
       dateLabel: 'दिनांक:',
       timeLabel: 'समय:',
-      authorLabel: 'रिपोर्ट कर्ता:',
-      auditBadge: '✓ अधिकृत डेरी ऑडिट रिपोर्ट',
+      authorLabel: 'तैयार किया:',
       periodLabel: 'अवधि:',
       notesLabel: 'नोट:',
-      footerNotice: 'योगेश्वरी डेरी ERP सिस्टम • कंप्यूटर द्वारा तैयार अधिकृत दस्तावेज',
-      slogan: 'शुद्धता ही हमारी पहचान • ताजा भैंस का दूध, पनीर, दही और शुद्ध देसी घी',
-      signatory: 'प्रबंधक / अधिकृत हस्ताक्षर'
+      confidentialFooter: 'Yogeshwari Dairy Products - गोपनीय दस्तावेज',
+      generatedOnLabel: 'तैयार समय:',
+      pageWord: 'पृष्ठ',
+      ofWord: '/',
+      preparedBy: 'तैयार कर्ता (Prepared By)',
+      authorisedSignatory: 'अधिकृत हस्ताक्षर (Authorised Signatory)'
     },
     en: {
       locale: 'en-IN',
-      defaultSubtitle: 'Dairy ERP & Inventory Khata System',
+      defaultSubtitle: 'Dairy Farm & Products ERP',
       defaultAuthor: 'Yogeshwari Dairy Manager',
       brandTitle: 'Yogeshwari Dairy Products',
-      brandSubtitle: 'Enterprise Dairy ERP & Inventory Khata System',
-      topBarTitle: 'Yogeshwari Dairy Official Report',
-      topBarSub: 'Print or Save as PDF file',
-      previewBadge: 'Official Dairy PDF Report Preview',
-      printBtn: '🖨️ Print',
-      downloadBtn: '📥 Download PDF',
-      closeBtn: '✕ Close',
+      brandSubtitle: 'Dairy Farm & Products ERP',
+      printBtn: 'Print',
+      downloadBtn: 'Download PDF',
+      closeBtn: 'Close',
+      downloading: 'Generating PDF...',
+      downloaded: 'PDF Downloaded',
+      sortLabel: 'Sort:',
+      reportNoLabel: 'Report No.:',
       dateLabel: 'Date:',
       timeLabel: 'Time:',
-      authorLabel: 'Report Generated by:',
-      auditBadge: '✓ Official Dairy Audit Report',
+      authorLabel: 'Generated by:',
       periodLabel: 'Period:',
       notesLabel: 'Notes:',
-      footerNotice: 'Yogeshwari Dairy ERP System • Computer Generated Document',
-      slogan: 'Purity is Our Identity • Fresh Buffalo Milk, Paneer, Curd & Pure Desi Ghee',
-      signatory: 'Manager / Authorized Signatory'
+      confidentialFooter: 'Yogeshwari Dairy Products - Confidential',
+      generatedOnLabel: 'Generated on',
+      pageWord: 'Page',
+      ofWord: 'of',
+      preparedBy: 'Prepared By',
+      authorisedSignatory: 'Authorised Signatory'
     }
-  }[lang];
+  };
+  return map[lang];
+};
 
-  // Use bill creation date & time if provided (e.g. for authentic invoices/receipts)
-  const targetDate = options.createdAt ? new Date(options.createdAt) : new Date();
-  const validDate = isNaN(targetDate.getTime()) ? new Date() : targetDate;
+const buildReportNumber = (options: PDFReportOptions, targetDate: Date): string => {
+  if (options.reportNumber) return options.reportNumber;
+  const y = targetDate.getFullYear();
+  const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+  const d = String(targetDate.getDate()).padStart(2, '0');
+  const lowerTitle = (options.title || '').toLowerCase();
+  const prefix = lowerTitle.includes('valuation') || lowerTitle.includes('stock') || lowerTitle.includes('साठा') || lowerTitle.includes('स्टॉक')
+    ? 'SVR'
+    : lowerTitle.includes('sale') || lowerTitle.includes('invoice') || lowerTitle.includes('बिल')
+    ? 'INV'
+    : lowerTitle.includes('khata') || lowerTitle.includes('udhar') || lowerTitle.includes('खाते')
+    ? 'KHT'
+    : 'YDR';
+  return `${prefix}-${y}${m}${d}-001`;
+};
 
-  const dateFormatted = validDate.toLocaleDateString(strings.locale, {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-  const timeFormatted = validDate.toLocaleTimeString(strings.locale, {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
+const formatDateShort = (date: Date): string => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${day} ${months[date.getMonth()]} ${date.getFullYear()}`;
+};
 
-  // KPI HTML Cards
-  const kpiHtml = kpis.length > 0 ? `
-    <div class="kpi-grid">
-      ${kpis.map(kpi => `
-        <div class="kpi-card ${kpi.color || 'emerald'}">
-          <div class="kpi-label">${kpi.label}</div>
-          <div class="kpi-value">${kpi.value}</div>
-        </div>
-      `).join('')}
-    </div>
-  ` : '';
+const formatTimeShort = (date: Date): string => {
+  let hours = date.getHours();
+  const mins = String(date.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'pm' : 'am';
+  hours = hours % 12 || 12;
+  return `${String(hours).padStart(2, '0')}:${mins} ${ampm}`;
+};
 
-  // Tables HTML
-  const tablesHtml = tables.map((tbl) => {
-    const { headers, rows, alignments = [], summaryRow } = tbl.data;
-    return `
-      ${tbl.heading ? `<h3 class="table-heading">${tbl.heading}</h3>` : ''}
-      <table class="report-table">
-        <thead>
-          <tr>
-            ${headers.map((h, i) => {
-              const align = alignments[i] || 'left';
-              return `<th class="text-${align}">${h}</th>`;
-            }).join('')}
-          </tr>
-        </thead>
-        <tbody>
-          ${rows.map((row, rIdx) => `
-            <tr class="${rIdx % 2 === 1 ? 'even-row' : ''}">
-              ${row.map((cell, cIdx) => {
-                const align = alignments[cIdx] || 'left';
-                return `<td class="text-${align}">${cell !== null && cell !== undefined ? cell : '—'}</td>`;
-              }).join('')}
-            </tr>
-          `).join('')}
-        </tbody>
-        ${summaryRow ? `
-          <tfoot>
-            <tr class="summary-row">
-              ${summaryRow.map((cell, cIdx) => {
-                const align = alignments[cIdx] || 'left';
-                return `<td class="text-${align}"><strong>${cell !== null && cell !== undefined ? cell : ''}</strong></td>`;
-              }).join('')}
-            </tr>
-          </tfoot>
-        ` : ''}
-      </table>
-    `;
-  }).join('<div style="height: 16px;"></div>');
+const normalizeTables = (options: PDFReportOptions): { heading?: string; data: PDFTableData }[] => {
+  if (options.tables && options.tables.length > 0) return options.tables;
+  if (options.table) return [{ data: options.table }];
+  return [];
+};
 
-  // Complete HTML Print & PDF Document
+const renderCellHtml = (
+  cell: string | number | null | undefined,
+  colIdx: number,
+  tableData: PDFTableData
+): string => {
+  const cleaned = stripEmojisForPDF(cell);
+  if (tableData.statusColumnIndex === colIdx) {
+    const upper = cleaned.toUpperCase();
+    if (upper === 'LOW' || upper === 'OUT' || upper === 'CRITICAL' || upper === 'EXPIRED') {
+      return `<span class="status-badge status-low">${escapeHtml(upper)}</span>`;
+    }
+    if (upper === 'OK' || upper === 'GOOD' || upper === 'IN STOCK') {
+      return `<span class="status-badge status-ok"><span class="status-dot"></span>${escapeHtml(upper)}</span>`;
+    }
+  }
+  return cleaned ? escapeHtml(cleaned) : '—';
+};
+
+const buildColgroupHtml = (headers: string[], columnWidths?: string[]): string => {
+  if (!columnWidths || columnWidths.length !== headers.length) return '';
+  return `<colgroup>${columnWidths.map((w) => `<col style="width: ${escapeHtml(w)};" />`).join('')}</colgroup>`;
+};
+
+const buildTableHeaderRowHtml = (tableData: PDFTableData): string => {
+  const { headers, alignments = [] } = tableData;
   return `
-    <!DOCTYPE html>
-    <html lang="${lang}">
-    <head>
-      <meta charset="UTF-8">
-      <title>${title} - ${strings.brandTitle}</title>
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-      <style>
-        @page {
-          size: A4 ${orientation};
-          margin: 10mm 12mm 12mm 12mm;
-        }
-        * {
-          box-sizing: border-box;
-          margin: 0;
-          padding: 0;
-        }
-        body {
-          font-family: 'Noto Sans Devanagari', 'Inter', -apple-system, sans-serif;
-          color: #0f172a;
-          background: #ffffff;
-          font-size: 11px;
-          line-height: 1.45;
-          padding: 12px;
-          position: relative;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
+    <tr>
+      ${headers
+        .map((h, i) => {
+          const align = alignments[i] || 'left';
+          return `<th class="text-${align}">${safeReportText(h)}</th>`;
+        })
+        .join('')}
+    </tr>
+  `;
+};
 
-        /* Centered Watermark Logo - Fixed across all pages in Print & PDF */
-        .watermark-container {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 360px;
-          height: 360px;
-          max-width: 65vw;
-          max-height: 65vh;
-          opacity: 0.08;
-          pointer-events: none;
-          z-index: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          user-select: none;
-          -webkit-user-select: none;
-        }
-        .watermark-container img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          filter: grayscale(10%);
-        }
+const buildTableBodyRowHtml = (
+  row: (string | number)[],
+  rowIdx: number,
+  tableData: PDFTableData
+): string => {
+  const { alignments = [], nowrapColumns = [], boldColumns = [], rowClasses = [] } = tableData;
+  const extraRowClass = rowClasses[rowIdx] || '';
+  const zebraClass = rowIdx % 2 === 1 ? 'even-row' : '';
+  return `
+    <tr class="${zebraClass} ${extraRowClass}">
+      ${row
+        .map((cell, cIdx) => {
+          const align = alignments[cIdx] || 'left';
+          const nowrapClass = nowrapColumns.includes(cIdx) ? 'cell-nowrap' : '';
+          const boldClass = boldColumns.includes(cIdx) ? 'cell-bold' : '';
+          return `<td class="text-${align} ${nowrapClass} ${boldClass}">${renderCellHtml(cell, cIdx, tableData)}</td>`;
+        })
+        .join('')}
+    </tr>
+  `;
+};
 
-        /* Report Main Content - Sits cleanly above the watermark */
-        .report-content-body {
-          position: relative;
-          z-index: 1;
-        }
+const buildTableFooterRowHtml = (tableData: PDFTableData): string => {
+  if (!tableData.summaryRow) return '';
+  const { alignments = [], nowrapColumns = [] } = tableData;
+  return `
+    <tr class="summary-row">
+      ${tableData.summaryRow
+        .map((cell, cIdx) => {
+          const align = alignments[cIdx] || 'left';
+          const nowrapClass = nowrapColumns.includes(cIdx) ? 'cell-nowrap' : '';
+          const cleaned = stripEmojisForPDF(cell);
+          return `<td class="text-${align} ${nowrapClass}"><strong>${cleaned ? escapeHtml(cleaned) : ''}</strong></td>`;
+        })
+        .join('')}
+    </tr>
+  `;
+};
 
-        /* Header */
-        .report-header {
-          border-bottom: 2px solid #059669;
-          padding-bottom: 12px;
-          margin-bottom: 14px;
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          position: relative;
-          z-index: 1;
-        }
-        .brand-title {
-          font-size: 20px;
-          font-weight: 800;
-          color: #047857;
-          letter-spacing: -0.3px;
-        }
-        .brand-subtitle {
-          font-size: 11px;
-          color: #475569;
-          font-weight: 600;
-          margin-top: 2px;
-        }
-        .report-title-badge {
-          display: inline-block;
-          background: #ecfdf5;
-          color: #065f46;
-          border: 1px solid #a7f3d0;
-          padding: 4px 10px;
-          border-radius: 6px;
-          font-size: 13px;
-          font-weight: 800;
-          margin-top: 6px;
-        }
-        .meta-box {
-          text-align: right;
-          font-size: 10px;
-          color: #475569;
-        }
-        .meta-box strong {
-          color: #0f172a;
-        }
+const buildHeaderBlockHtml = (
+  options: PDFReportOptions,
+  strings: ReportLocalizedStrings,
+  dateShort: string,
+  timeShort: string,
+  reportNo: string
+): string => {
+  const cleanTitle = safeReportText(options.title);
+  const cleanSubtitle = safeReportText(options.subtitle || strings.brandSubtitle);
+  const cleanAuthor = safeReportText(options.author || strings.defaultAuthor);
+  const cleanPeriod = options.periodText ? safeReportText(options.periodText) : '';
 
-        /* KPI Cards */
-        .kpi-grid {
-          display: grid;
-          grid-template-columns: repeat(${Math.min(kpis.length, 4)}, 1fr);
-          gap: 8px;
-          margin-bottom: 14px;
-        }
-        .kpi-card {
-          padding: 8px 12px;
-          border-radius: 8px;
-          border: 1px solid #e2e8f0;
-          background: rgba(248, 250, 252, 0.85);
-        }
-        .kpi-card.emerald {
-          background: rgba(240, 253, 244, 0.85);
-          border-color: #bbf7d0;
-        }
-        .kpi-card.blue {
-          background: rgba(239, 246, 255, 0.85);
-          border-color: #bfdbfe;
-        }
-        .kpi-card.purple {
-          background: rgba(250, 245, 255, 0.85);
-          border-color: #e9d5ff;
-        }
-        .kpi-card.rose {
-          background: rgba(255, 241, 242, 0.85);
-          border-color: #fecdd3;
-        }
-        .kpi-card.amber {
-          background: rgba(255, 251, 235, 0.85);
-          border-color: #fde68a;
-        }
-        .kpi-label {
-          font-size: 9px;
-          font-weight: 700;
-          text-transform: uppercase;
-          color: #64748b;
-          letter-spacing: 0.3px;
-        }
-        .kpi-value {
-          font-size: 16px;
-          font-weight: 800;
-          color: #0f172a;
-          margin-top: 2px;
-        }
-
-        /* Tables */
-        .table-heading {
-          font-size: 12px;
-          font-weight: 700;
-          color: #1e293b;
-          margin-bottom: 6px;
-        }
-        .report-table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 10px;
-          margin-bottom: 8px;
-        }
-        .report-table th {
-          background: rgba(241, 245, 249, 0.92);
-          color: #1e293b;
-          font-weight: 700;
-          padding: 6px 8px;
-          border: 1px solid #cbd5e1;
-          text-transform: uppercase;
-          font-size: 9px;
-          letter-spacing: 0.2px;
-        }
-        .report-table td {
-          padding: 5px 8px;
-          border: 1px solid #e2e8f0;
-          color: #334155;
-        }
-        .report-table tr.even-row {
-          background: rgba(248, 250, 252, 0.65);
-        }
-        .report-table tr.summary-row {
-          background: rgba(226, 232, 240, 0.88);
-          font-weight: 800;
-          border-top: 2px solid #94a3b8;
-          color: #0f172a;
-        }
-        .text-left { text-align: left; }
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-
-        /* Notes & Footer */
-        .report-notes {
-          background: rgba(248, 250, 252, 0.85);
-          border: 1px dashed #cbd5e1;
-          padding: 8px 12px;
-          border-radius: 6px;
-          font-size: 10px;
-          color: #475569;
-          margin-top: 12px;
-          position: relative;
-          z-index: 1;
-        }
-        .report-footer {
-          margin-top: 24px;
-          padding-top: 12px;
-          border-top: 1px solid #e2e8f0;
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-end;
-          font-size: 9px;
-          color: #64748b;
-          position: relative;
-          z-index: 1;
-        }
-        .signature-box {
-          text-align: center;
-          min-width: 150px;
-          border-top: 1px solid #94a3b8;
-          padding-top: 4px;
-          font-weight: 600;
-        }
-
-        @media print {
-          body {
-            padding: 0;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          .no-print {
-            display: none !important;
-          }
-          .watermark-container {
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            opacity: 0.08 !important;
-            z-index: 0 !important;
-            display: flex !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          .watermark-container img {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          .report-content-body {
-            position: relative !important;
-            z-index: 1 !important;
-          }
-        }
-      </style>
-    </head>
-    <body>
-      <!-- Top Action Bar (Hidden during Print / PDF generation) -->
-      <div class="no-print" style="position: sticky; top: 0; z-index: 9999; background: #064e3b; color: #ffffff; padding: 10px 18px; margin: -12px -12px 14px -12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-family: sans-serif; flex-wrap: wrap; gap: 8px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 18px;">📄</span>
-          <div>
-            <div style="font-weight: 800; font-size: 13px; color: #ecfdf5;">${strings.topBarTitle}</div>
-            <div style="font-size: 10px; color: #a7f3d0;">${strings.topBarSub}</div>
-          </div>
-        </div>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button onclick="window.print()" style="background: #10b981; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            <span>${strings.printBtn}</span>
-          </button>
-          <button onclick="downloadReportAsPDF()" style="background: #2563eb; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            <span>${strings.downloadBtn}</span>
-          </button>
-          <button onclick="window.parent && window.parent !== window ? window.parent.postMessage({ type: 'YD_CLOSE_MODAL' }, '*') : window.close()" style="background: #334155; color: #ffffff; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer;">
-            ${strings.closeBtn}
-          </button>
+  return `
+    <header class="report-header">
+      <div class="header-left">
+        <img src="${YDO_LOGO_BASE64}" alt="Yogeshwari Dairy Products Logo" class="header-logo" />
+        <div class="brand-info">
+          <div class="brand-title">${escapeHtml(strings.brandTitle)}</div>
+          <div class="brand-subtitle">${cleanSubtitle}</div>
         </div>
       </div>
-
-      <!-- Centered Watermark Logo (Appears on every page of PDF & Print) -->
-      <div class="watermark-container" aria-hidden="true">
-        <img src="${YDO_LOGO_BASE64}" alt="Watermark" />
-      </div>
-
-      <!-- Report Content Wrapper (Sits safely above watermark) -->
-      <div class="report-content-body">
-        <!-- Header -->
-        <div class="report-header">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <img src="${YDO_LOGO_BASE64}" alt="Logo" style="width: 52px; height: 52px; border-radius: 12px; object-fit: contain; border: 1.5px solid #059669; background: #ffffff; padding: 2px;" />
-            <div>
-              <div class="brand-title">${strings.brandTitle}</div>
-              <div class="brand-subtitle">${subtitle || strings.defaultSubtitle}</div>
-              <div class="report-title-badge">${title}</div>
-              ${periodText ? `<div style="font-size: 10px; color: #047857; font-weight: 700; margin-top: 4px;">${strings.periodLabel} ${periodText}</div>` : ''}
-            </div>
-          </div>
-          <div class="meta-box">
-            <div>${strings.dateLabel} <strong>${dateFormatted}</strong></div>
-            <div>${strings.timeLabel} <strong>${timeFormatted}</strong></div>
-            <div>${strings.authorLabel} <strong>${author || strings.defaultAuthor}</strong></div>
-            <div style="margin-top: 4px; font-size: 9px; color: #059669; font-weight: 700;">${strings.auditBadge}</div>
-          </div>
-        </div>
-
-        <!-- KPIs -->
-        ${kpiHtml}
-
-        <!-- Tables Content -->
-        ${tablesHtml}
-
-        <!-- Optional Notes -->
-        ${notes ? `<div class="report-notes"><strong>${strings.notesLabel}</strong> ${notes}</div>` : ''}
-
-        <!-- Footer & Signatures -->
-        <div class="report-footer">
-          <div>
-            <div>${strings.footerNotice}</div>
-            <div>${strings.slogan}</div>
-          </div>
-          <div class="signature-box">
-            ${strings.signatory}
-          </div>
+      <div class="header-right">
+        <div class="report-title">${cleanTitle}</div>
+        <div class="meta-lines">
+          <div><span class="meta-label">${escapeHtml(strings.reportNoLabel)}</span> <strong>${escapeHtml(reportNo)}</strong></div>
+          <div><span class="meta-label">${escapeHtml(strings.dateLabel)}</span> <strong>${escapeHtml(dateShort)}</strong> &nbsp;|&nbsp; <span class="meta-label">${escapeHtml(strings.timeLabel)}</span> <strong>${escapeHtml(timeShort)}</strong></div>
+          <div><span class="meta-label">${escapeHtml(strings.authorLabel)}</span> <strong>${cleanAuthor}</strong></div>
+          ${cleanPeriod ? `<div><span class="meta-label">${escapeHtml(strings.periodLabel)}</span> <strong>${cleanPeriod}</strong></div>` : ''}
         </div>
       </div>
+    </header>
+  `;
+};
 
-      <script>
-        function triggerPrint() {
-          try {
-            window.focus();
-            window.print();
-          } catch(e) {
-            console.error('Print trigger error', e);
-          }
-        }
-        function downloadReportAsPDF() {
-          try {
-            if (window.parent && window.parent !== window) {
-              window.parent.postMessage({ type: 'YD_DOWNLOAD_PDF' }, '*');
-            } else {
-              window.print();
-            }
-          } catch(e) {
-            window.print();
-          }
-        }
-        ${options.mode === 'print' ? 'setTimeout(triggerPrint, 350);' : ''}
-      </script>
-    </body>
-    </html>
+const buildKpiSectionHtml = (options: PDFReportOptions): string => {
+  const kpis = options.kpis || [];
+  if (kpis.length === 0 && !options.summaryNote) return '';
+
+  const colCount = Math.max(1, Math.min(kpis.length, 4));
+  return `
+    <section class="summary-section">
+      ${
+        kpis.length > 0
+          ? `<div class="kpi-grid" style="grid-template-columns: repeat(${colCount}, minmax(0, 1fr));">
+              ${kpis
+                .map((kpi) => {
+                  const accentClass = kpi.color ? `kpi-accent-${escapeHtml(kpi.color)}` : 'kpi-accent-emerald';
+                  return `
+                    <div class="kpi-card ${accentClass}">
+                      <div class="kpi-label">${safeReportText(kpi.label)}</div>
+                      <div class="kpi-value">${safeReportText(kpi.value)}</div>
+                    </div>
+                  `;
+                })
+                .join('')}
+            </div>`
+          : ''
+      }
+      ${
+        options.summaryNote
+          ? `<div class="summary-note-bar">${safeReportText(options.summaryNote)}</div>`
+          : ''
+      }
+    </section>
+  `;
+};
+
+const buildNotesAndSignatureHtml = (
+  options: PDFReportOptions,
+  strings: ReportLocalizedStrings
+): string => {
+  return `
+    <div class="report-end-block">
+      ${
+        options.notes
+          ? `<div class="report-notes"><strong>${escapeHtml(strings.notesLabel)}</strong> ${safeReportText(options.notes)}</div>`
+          : ''
+      }
+      <div class="signature-grid">
+        <div class="signature-col">
+          <div class="signature-space"></div>
+          <div class="signature-line">${escapeHtml(strings.preparedBy)}</div>
+        </div>
+        <div class="signature-col">
+          <div class="signature-space"></div>
+          <div class="signature-line">${escapeHtml(strings.authorisedSignatory)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+const buildReportStylesheet = (
+  orientation: 'portrait' | 'landscape',
+  strings: ReportLocalizedStrings,
+  generatedStamp: string
+): string => {
+  const pageWidthMm = orientation === 'landscape' ? '297mm' : '210mm';
+  const pageMinHeightMm = orientation === 'landscape' ? '210mm' : '297mm';
+  const safeConf = escapeHtml(strings.confidentialFooter).replace(/"/g, '\\"');
+  const safeGen = escapeHtml(`${strings.generatedOnLabel} ${generatedStamp}`).replace(/"/g, '\\"');
+  const safePageWord = escapeHtml(strings.pageWord).replace(/"/g, '\\"');
+  const safeOfWord = escapeHtml(strings.ofWord).replace(/"/g, '\\"');
+
+  return `
+    @page {
+      size: A4 ${orientation};
+      margin: 12mm 10mm 16mm 10mm;
+      @bottom-left {
+        content: "${safeConf}";
+        font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, sans-serif;
+        font-size: 8px;
+        color: #64748b;
+      }
+      @bottom-center {
+        content: "${safePageWord} " counter(page) " ${safeOfWord} " counter(pages);
+        font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, sans-serif;
+        font-size: 8px;
+        font-weight: 600;
+        color: #475569;
+      }
+      @bottom-right {
+        content: "${safeGen}";
+        font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, sans-serif;
+        font-size: 8px;
+        color: #64748b;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      background: #ffffff;
+      color: #0f172a;
+      font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 10px;
+      line-height: 1.3;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    .no-print {
+      display: none !important;
+    }
+
+    #report-document {
+      position: relative;
+      width: ${pageWidthMm};
+      min-height: ${pageMinHeightMm};
+      background: #ffffff;
+      color: #0f172a;
+      padding: 12mm 10mm 16mm 10mm;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .watermark-container {
+      position: absolute;
+      top: 520px;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 340px;
+      height: 340px;
+      opacity: 0.07;
+      pointer-events: none;
+      z-index: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .watermark-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .report-content-body {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Official Header (Page 1 only) */
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      border-bottom: 2px solid #065f46;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .header-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 10px;
+      object-fit: contain;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      padding: 2px;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #065f46;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .header-right {
+      text-align: right;
+      flex-shrink: 0;
+      max-width: 48%;
+    }
+
+    .report-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.25;
+      margin-bottom: 4px;
+    }
+
+    .meta-lines {
+      font-size: 9px;
+      color: #475569;
+      line-height: 1.45;
+    }
+
+    .meta-label {
+      color: #64748b;
+    }
+
+    .meta-lines strong {
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    /* Summary Cards */
+    .summary-section {
+      margin-bottom: 12px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .kpi-card {
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid #e2e8f0;
+      border-left: 3px solid #065f46;
+      border-radius: 6px;
+      padding: 7px 10px;
+    }
+
+    .kpi-accent-emerald { border-left-color: #065f46; }
+    .kpi-accent-blue { border-left-color: #047857; }
+    .kpi-accent-purple { border-left-color: #0f766e; }
+    .kpi-accent-rose { border-left-color: #dc2626; }
+    .kpi-accent-amber { border-left-color: #d97706; }
+
+    .kpi-label {
+      font-size: 8.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #64748b;
+    }
+
+    .kpi-value {
+      font-size: 14px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kpi-accent-rose .kpi-value {
+      color: #dc2626;
+    }
+
+    .summary-note-bar {
+      margin-top: 6px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      font-size: 9.5px;
+      font-weight: 600;
+      color: #334155;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Table */
+    .table-block {
+      margin-bottom: 12px;
+    }
+
+    .table-heading {
+      font-size: 11px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 5px;
+    }
+
+    .report-table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      font-size: 10px;
+      line-height: 1.3;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .report-table thead {
+      display: table-header-group;
+    }
+
+    .report-table tfoot {
+      display: table-footer-group;
+    }
+
+    .report-table tr {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .report-table th {
+      background: #065f46;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 6px 6px;
+      border-bottom: 1px solid #064e3b;
+      vertical-align: middle;
+      word-wrap: break-word;
+    }
+
+    .report-table td {
+      padding: 5px 6px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #0f172a;
+      vertical-align: middle;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .report-table tbody tr {
+      background: transparent;
+    }
+
+    .report-table tbody tr.even-row {
+      background: rgba(248, 250, 252, 0.55);
+    }
+
+    .report-table tbody tr.row-low {
+      background: rgba(254, 242, 242, 0.72);
+    }
+
+    .report-table tr.summary-row td {
+      background: #f1f5f9;
+      border-top: 2px solid #065f46;
+      border-bottom: 2px solid #065f46;
+      color: #0f172a;
+      font-weight: 800;
+      padding: 6px 6px;
+    }
+
+    .text-left { text-align: left; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+
+    .cell-nowrap {
+      white-space: nowrap;
+    }
+
+    .cell-bold {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* Status Badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 1.5px 5px;
+      border-radius: 999px;
+      font-size: 8.5px;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .status-ok {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+
+    .status-low {
+      background: #fee2e2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+
+    /* Notes & Signature Block */
+    .report-end-block {
+      margin-top: 14px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .report-notes {
+      padding: 7px 10px;
+      border-radius: 6px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      font-size: 9.5px;
+      color: #475569;
+      margin-bottom: 16px;
+    }
+
+    .signature-grid {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 40px;
+      margin-top: 10px;
+      padding-top: 4px;
+    }
+
+    .signature-col {
+      width: 190px;
+      text-align: center;
+    }
+
+    .signature-space {
+      height: 36px;
+    }
+
+    .signature-line {
+      border-top: 1px solid #94a3b8;
+      padding-top: 5px;
+      font-size: 9.5px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    /* Fixed Footer Bar (for preview & paginated PDF pages) */
+    .page-footer-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 6px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 8.5px;
+      color: #64748b;
+    }
+
+    .page-footer-center {
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .preview-footer-spacer {
+      margin-top: 20px;
+    }
+
+    @media print {
+      html, body {
+        width: auto;
+        height: auto;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+      }
+
+      #report-document {
+        width: 100% !important;
+        min-height: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+      }
+
+      .preview-footer-spacer {
+        display: none !important;
+      }
+
+      .watermark-container {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 340px !important;
+        height: 340px !important;
+        opacity: 0.07 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
   `;
 };
 
 /**
- * Generates an authentic .pdf binary document from options with 100% Devanagari font fidelity
- * and automatically triggers download strictly ending with .pdf extension
+ * Returns clean, toolbar-free official A4 HTML markup for #report-document (used for Print & Preview).
+ */
+export const getReportHTMLMarkup = (options: PDFReportOptions): string => {
+  const orientation = options.orientation || 'portrait';
+  const lang = resolveLanguage(options.language);
+  const strings = getReportStrings(lang);
+
+  const targetDate = options.createdAt ? new Date(options.createdAt) : new Date();
+  const validDate = Number.isNaN(targetDate.getTime()) ? new Date() : targetDate;
+  const dateShort = formatDateShort(validDate);
+  const timeShort = formatTimeShort(validDate);
+  const generatedStamp = `${dateShort}, ${timeShort}`;
+  const reportNo = buildReportNumber(options, validDate);
+
+  const tables = normalizeTables(options);
+  const tablesHtml = tables
+    .map((tbl) => {
+      const { headers, rows, columnWidths } = tbl.data;
+      return `
+        <div class="table-block">
+          ${tbl.heading ? `<h3 class="table-heading">${safeReportText(tbl.heading)}</h3>` : ''}
+          <table class="report-table">
+            ${buildColgroupHtml(headers, columnWidths)}
+            <thead>
+              ${buildTableHeaderRowHtml(tbl.data)}
+            </thead>
+            <tbody>
+              ${rows.map((row, idx) => buildTableBodyRowHtml(row, idx, tbl.data)).join('')}
+            </tbody>
+            ${tbl.data.summaryRow ? `<tfoot>${buildTableFooterRowHtml(tbl.data)}</tfoot>` : ''}
+          </table>
+        </div>
+      `;
+    })
+    .join('');
+
+  return `<!DOCTYPE html>
+<html lang="${lang}">
+<head>
+  <meta charset="UTF-8" />
+  <title>${safeReportText(options.title)} - ${escapeHtml(strings.brandTitle)}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>${buildReportStylesheet(orientation, strings, generatedStamp)}</style>
+</head>
+<body>
+  <div id="report-document">
+    <div class="watermark-container" aria-hidden="true">
+      <img src="${YDO_LOGO_BASE64}" alt="" />
+    </div>
+    <div class="report-content-body">
+      ${buildHeaderBlockHtml(options, strings, dateShort, timeShort, reportNo)}
+      ${buildKpiSectionHtml(options)}
+      ${tablesHtml}
+      ${buildNotesAndSignatureHtml(options, strings)}
+      <div class="page-footer-bar preview-footer-spacer">
+        <span>${escapeHtml(strings.confidentialFooter)}</span>
+        <span class="page-footer-center">${escapeHtml(strings.pageWord)} 1</span>
+        <span>${escapeHtml(`${strings.generatedOnLabel} ${generatedStamp}`)}</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+};
+
+/**
+ * Row-aware A4 Paginator + Authentic .pdf Binary Generator.
+ * Never cuts a table row between pages, repeats table header on every page,
+ * stamps 4% watermark and "Page X of Y" footer on every page, and never includes any UI toolbar.
  */
 export const generateAndDownloadPDF = async (
-  options: PDFReportOptions, 
-  customElement?: HTMLElement | null
+  options: PDFReportOptions,
+  _customElement?: HTMLElement | null
 ): Promise<void> => {
-  const { title, orientation = 'portrait' } = options;
+  const orientation = options.orientation || 'portrait';
+  const lang = resolveLanguage(options.language);
+  const strings = getReportStrings(lang);
 
-  // Build clean, safe filename ending strictly with .pdf
-  const safeTitle = (title || 'Dairy_Report')
-    .trim()
-    .replace(/[\/\\?%*:|"<>]/g, '_')
+  const safeTitle = stripEmojisForPDF(options.title || 'Dairy_Report')
+    .replace(/[/\\?%*:|"<>]/g, '_')
     .replace(/\s+/g, '_');
-  const dateStr = new Date().toISOString().split('T')[0];
-  const cleanPdfFilename = safeTitle.toLowerCase().endsWith('.pdf') 
-    ? `${safeTitle.slice(0, -4)}_${dateStr}.pdf` 
-    : `${safeTitle}_${dateStr}.pdf`;
+  const dateFileStr = new Date().toISOString().split('T')[0];
+  const cleanPdfFilename = safeTitle.toLowerCase().endsWith('.pdf')
+    ? `${safeTitle.slice(0, -4)}_${dateFileStr}.pdf`
+    : `${safeTitle}_${dateFileStr}.pdf`;
 
-  let elementToCapture: HTMLElement | null = customElement || null;
-  let temporaryContainer: HTMLElement | null = null;
+  const targetDate = options.createdAt ? new Date(options.createdAt) : new Date();
+  const validDate = Number.isNaN(targetDate.getTime()) ? new Date() : targetDate;
+  const dateShort = formatDateShort(validDate);
+  const timeShort = formatTimeShort(validDate);
+  const generatedStamp = `${dateShort}, ${timeShort}`;
+  const reportNo = buildReportNumber(options, validDate);
+
+  // Exact A4 dimensions at 96 DPI (210mm x 297mm = 794px x 1123px)
+  const pageWidthPx = orientation === 'landscape' ? 1123 : 794;
+  const pageHeightPx = orientation === 'landscape' ? 794 : 1123;
+  const padTopPx = 42; // ~11mm
+  const padSidePx = 38; // ~10mm
+  const padBottomPx = 26; // bottom edge space
+  const footerHeightPx = 30;
+  const maxBodyHeightPx = pageHeightPx - padTopPx - padBottomPx - footerHeightPx - 8;
+
+  const tables = normalizeTables(options);
+
+  let sandbox: HTMLDivElement | null = null;
+  let styleTag: HTMLStyleElement | null = null;
 
   try {
-    if (!elementToCapture) {
-      // Build offscreen container to render full styled HTML
-      temporaryContainer = document.createElement('div');
-      temporaryContainer.id = 'yd-pdf-capture-container';
-      temporaryContainer.style.position = 'fixed';
-      temporaryContainer.style.left = '-15000px';
-      temporaryContainer.style.top = '0';
-      temporaryContainer.style.width = orientation === 'landscape' ? '1120px' : '794px';
-      temporaryContainer.style.background = '#ffffff';
-      temporaryContainer.style.color = '#0f172a';
-      temporaryContainer.style.zIndex = '-9999';
-      temporaryContainer.style.padding = '12px';
-
-      const fullHtml = getReportHTMLMarkup(options);
-      temporaryContainer.innerHTML = fullHtml;
-
-      // Remove top action bar and preview buttons
-      temporaryContainer.querySelectorAll('.no-print').forEach(el => el.remove());
-
-      document.body.appendChild(temporaryContainer);
-      elementToCapture = temporaryContainer;
-
-      // Wait a tick for fonts and layout
-      if (document.fonts && document.fonts.ready) {
-        await document.fonts.ready;
-      }
-      await new Promise(resolve => setTimeout(resolve, 200));
+    // Wait for fonts to load for crisp Devanagari/Inter measurement
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
     }
 
-    // High resolution retina canvas rasterization (Scale 2 = 300 DPI print clarity)
-    const canvas = await html2canvas(elementToCapture, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
-      backgroundColor: '#ffffff'
-    });
+    // Scoped offscreen sandbox for exact row-height measurement and per-page rendering
+    styleTag = document.createElement('style');
+    styleTag.textContent = `
+      .yd-pdf-sandbox {
+        position: fixed;
+        left: -20000px;
+        top: 0;
+        width: ${pageWidthPx}px;
+        background: #ffffff;
+        color: #0f172a;
+        font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 10px;
+        line-height: 1.3;
+        z-index: -9999;
+      }
+      .yd-pdf-sandbox * { box-sizing: border-box; }
+      .yd-pdf-page {
+        position: relative;
+        width: ${pageWidthPx}px;
+        height: ${pageHeightPx}px;
+        background: #ffffff;
+        padding: ${padTopPx}px ${padSidePx}px ${padBottomPx}px ${padSidePx}px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+      }
+      .yd-pdf-page-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 340px;
+        height: 340px;
+        opacity: 0.07;
+        pointer-events: none;
+        z-index: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .yd-pdf-page-watermark img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      .yd-pdf-page-body {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        overflow: hidden;
+      }
+      .yd-pdf-page-footer {
+        position: relative;
+        z-index: 1;
+        height: ${footerHeightPx}px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding-top: 6px;
+        border-top: 1px solid #e2e8f0;
+        font-size: 8.5px;
+        color: #64748b;
+      }
+      .yd-pdf-sandbox .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        padding-bottom: 10px;
+        margin-bottom: 12px;
+        border-bottom: 2px solid #065f46;
+      }
+      .yd-pdf-sandbox .header-left { display: flex; align-items: center; gap: 12px; }
+      .yd-pdf-sandbox .header-logo {
+        width: 56px; height: 56px; border-radius: 10px; object-fit: contain;
+        border: 1px solid #cbd5e1; background: #ffffff; padding: 2px; flex-shrink: 0;
+      }
+      .yd-pdf-sandbox .brand-title { font-size: 20px; font-weight: 800; color: #065f46; letter-spacing: -0.02em; line-height: 1.15; }
+      .yd-pdf-sandbox .brand-subtitle { font-size: 11px; color: #64748b; font-weight: 500; margin-top: 2px; }
+      .yd-pdf-sandbox .header-right { text-align: right; max-width: 48%; }
+      .yd-pdf-sandbox .report-title { font-size: 13px; font-weight: 800; color: #0f172a; line-height: 1.25; margin-bottom: 4px; }
+      .yd-pdf-sandbox .meta-lines { font-size: 9px; color: #475569; line-height: 1.45; }
+      .yd-pdf-sandbox .meta-label { color: #64748b; }
+      .yd-pdf-sandbox .meta-lines strong { color: #0f172a; font-weight: 600; }
+      .yd-pdf-sandbox .summary-section { margin-bottom: 12px; }
+      .yd-pdf-sandbox .kpi-grid { display: grid; gap: 8px; }
+      .yd-pdf-sandbox .kpi-card {
+        background: rgba(255, 255, 255, 0.82); border: 1px solid #e2e8f0; border-left: 3px solid #065f46;
+        border-radius: 6px; padding: 7px 10px;
+      }
+      .yd-pdf-sandbox .kpi-accent-emerald { border-left-color: #065f46; }
+      .yd-pdf-sandbox .kpi-accent-blue { border-left-color: #047857; }
+      .yd-pdf-sandbox .kpi-accent-purple { border-left-color: #0f766e; }
+      .yd-pdf-sandbox .kpi-accent-rose { border-left-color: #dc2626; }
+      .yd-pdf-sandbox .kpi-accent-amber { border-left-color: #d97706; }
+      .yd-pdf-sandbox .kpi-label { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; }
+      .yd-pdf-sandbox .kpi-value { font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 2px; font-variant-numeric: tabular-nums; }
+      .yd-pdf-sandbox .kpi-accent-rose .kpi-value { color: #dc2626; }
+      .yd-pdf-sandbox .summary-note-bar {
+        margin-top: 6px; padding: 5px 10px; border-radius: 6px; background: #f8fafc;
+        border: 1px solid #e2e8f0; font-size: 9.5px; font-weight: 600; color: #334155; font-variant-numeric: tabular-nums;
+      }
+      .yd-pdf-sandbox .table-heading { font-size: 11px; font-weight: 700; color: #0f172a; margin: 6px 0 5px 0; }
+      .yd-pdf-sandbox .report-table {
+        width: 100%; table-layout: fixed; border-collapse: collapse;
+        font-size: 10px; line-height: 1.3; font-variant-numeric: tabular-nums; margin-bottom: 8px;
+      }
+      .yd-pdf-sandbox .report-table th {
+        background: #065f46; color: #ffffff; font-weight: 700; font-size: 9px;
+        text-transform: uppercase; letter-spacing: 0.03em; padding: 6px 6px;
+        border-bottom: 1px solid #064e3b; vertical-align: middle; word-wrap: break-word;
+      }
+      .yd-pdf-sandbox .report-table td {
+        padding: 5px 6px; border-bottom: 1px solid #e2e8f0; color: #0f172a;
+        vertical-align: middle; word-wrap: break-word; overflow-wrap: break-word;
+      }
+      .yd-pdf-sandbox .report-table tbody tr { background: transparent; }
+      .yd-pdf-sandbox .report-table tbody tr.even-row { background: rgba(248, 250, 252, 0.55); }
+      .yd-pdf-sandbox .report-table tbody tr.row-low { background: rgba(254, 242, 242, 0.72); }
+      .yd-pdf-sandbox .report-table tr.summary-row td {
+        background: #f1f5f9; border-top: 2px solid #065f46; border-bottom: 2px solid #065f46;
+        color: #0f172a; font-weight: 800; padding: 6px 6px;
+      }
+      .yd-pdf-sandbox .text-left { text-align: left; }
+      .yd-pdf-sandbox .text-center { text-align: center; }
+      .yd-pdf-sandbox .text-right { text-align: right; }
+      .yd-pdf-sandbox .cell-nowrap { white-space: nowrap; }
+      .yd-pdf-sandbox .cell-bold { font-weight: 700; color: #0f172a; }
+      .yd-pdf-sandbox .status-badge {
+        display: inline-flex; align-items: center; justify-content: center; gap: 3px;
+        padding: 1.5px 5px; border-radius: 999px; font-size: 8.5px; font-weight: 700;
+        line-height: 1.2; white-space: nowrap;
+      }
+      .yd-pdf-sandbox .status-ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+      .yd-pdf-sandbox .status-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #10b981; }
+      .yd-pdf-sandbox .status-low { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+      .yd-pdf-sandbox .report-end-block { margin-top: 12px; }
+      .yd-pdf-sandbox .report-notes {
+        padding: 7px 10px; border-radius: 6px; background: #f8fafc;
+        border: 1px solid #e2e8f0; font-size: 9.5px; color: #475569; margin-bottom: 14px;
+      }
+      .yd-pdf-sandbox .signature-grid { display: flex; justify-content: space-between; align-items: flex-end; gap: 40px; margin-top: 8px; }
+      .yd-pdf-sandbox .signature-col { width: 190px; text-align: center; }
+      .yd-pdf-sandbox .signature-space { height: 34px; }
+      .yd-pdf-sandbox .signature-line { border-top: 1px solid #94a3b8; padding-top: 5px; font-size: 9.5px; font-weight: 600; color: #334155; }
+    `;
+    document.head.appendChild(styleTag);
+
+    sandbox = document.createElement('div');
+    sandbox.className = 'yd-pdf-sandbox';
+    document.body.appendChild(sandbox);
+
+    // Measure helper inside exact content width
+    const contentWidthPx = pageWidthPx - padSidePx * 2;
+    const measureRoot = document.createElement('div');
+    measureRoot.style.width = `${contentWidthPx}px`;
+    sandbox.appendChild(measureRoot);
+
+    const headerHtml = buildHeaderBlockHtml(options, strings, dateShort, timeShort, reportNo);
+    const kpiHtml = buildKpiSectionHtml(options);
+    const endBlockHtml = buildNotesAndSignatureHtml(options, strings);
+
+    const measureHtmlHeight = (html: string): number => {
+      if (!html.trim()) return 0;
+      measureRoot.innerHTML = html;
+      return Math.ceil(measureRoot.getBoundingClientRect().height);
+    };
+
+    const pageHtmlChunks: string[] = [];
+    let currentChunks: string[] = [];
+    let usedHeight = 0;
+
+    const pushCurrentPage = () => {
+      if (currentChunks.length > 0) {
+        pageHtmlChunks.push(currentChunks.join(''));
+        currentChunks = [];
+        usedHeight = 0;
+      }
+    };
+
+    // Page 1 header + KPIs
+    const topBlockHtml = `${headerHtml}${kpiHtml}`;
+    const topBlockH = measureHtmlHeight(topBlockHtml);
+    currentChunks.push(topBlockHtml);
+    usedHeight += topBlockH;
+
+    // Paginate each table row-by-row with repeating emerald thead
+    for (const tbl of tables) {
+      const { headers, rows, columnWidths } = tbl.data;
+      const colgroup = buildColgroupHtml(headers, columnWidths);
+      const theadRow = buildTableHeaderRowHtml(tbl.data);
+      const headingHtml = tbl.heading ? `<h3 class="table-heading">${safeReportText(tbl.heading)}</h3>` : '';
+      const headingH = headingHtml ? measureHtmlHeight(headingHtml) : 0;
+
+      // Measure thead, every row, and optional summary row in one real table layout pass
+      measureRoot.innerHTML = `
+        <table class="report-table">
+          ${colgroup}
+          <thead>${theadRow}</thead>
+          <tbody>${rows.map((r, i) => buildTableBodyRowHtml(r, i, tbl.data)).join('')}</tbody>
+          ${tbl.data.summaryRow ? `<tfoot>${buildTableFooterRowHtml(tbl.data)}</tfoot>` : ''}
+        </table>
+      `;
+      const theadEl = measureRoot.querySelector('thead');
+      const rowEls = Array.from(measureRoot.querySelectorAll('tbody tr'));
+      const tfootEl = measureRoot.querySelector('tfoot');
+
+      const theadH = theadEl ? Math.ceil(theadEl.getBoundingClientRect().height) : 28;
+      const rowHeights = rowEls.map((el) => Math.ceil(el.getBoundingClientRect().height) || 24);
+      const tfootH = tfootEl ? Math.ceil(tfootEl.getBoundingClientRect().height) : 0;
+
+      // If not enough room for heading + thead + first row, start fresh page
+      const minStartNeed = headingH + theadH + (rowHeights[0] || 24) + 10;
+      if (usedHeight > 0 && usedHeight + minStartNeed > maxBodyHeightPx) {
+        pushCurrentPage();
+      }
+
+      let isFirstChunkOfTable = true;
+      let chunkRowsHtml: string[] = [];
+      let chunkExtraTop = headingH + theadH + 8;
+
+      const flushTableChunk = (includeSummary: boolean) => {
+        if (chunkRowsHtml.length === 0 && !includeSummary) return;
+        const tfootMarkup = includeSummary && tbl.data.summaryRow
+          ? `<tfoot>${buildTableFooterRowHtml(tbl.data)}</tfoot>`
+          : '';
+        currentChunks.push(`
+          ${isFirstChunkOfTable ? headingHtml : ''}
+          <table class="report-table">
+            ${colgroup}
+            <thead>${theadRow}</thead>
+            <tbody>${chunkRowsHtml.join('')}</tbody>
+            ${tfootMarkup}
+          </table>
+        `);
+        isFirstChunkOfTable = false;
+        chunkRowsHtml = [];
+      };
+
+      usedHeight += chunkExtraTop;
+
+      for (let i = 0; i < rows.length; i++) {
+        const rh = rowHeights[i] || 24;
+        if (chunkRowsHtml.length > 0 && usedHeight + rh > maxBodyHeightPx) {
+          flushTableChunk(false);
+          pushCurrentPage();
+          usedHeight += theadH + 8;
+        }
+        chunkRowsHtml.push(buildTableBodyRowHtml(rows[i], i, tbl.data));
+        usedHeight += rh;
+      }
+
+      // Attach summary row (tfoot) on the table's final page
+      if (tbl.data.summaryRow) {
+        if (usedHeight + tfootH > maxBodyHeightPx && chunkRowsHtml.length > 0) {
+          flushTableChunk(false);
+          pushCurrentPage();
+          usedHeight += theadH + 8 + tfootH;
+          flushTableChunk(true);
+        } else {
+          usedHeight += tfootH;
+          flushTableChunk(true);
+        }
+      } else {
+        flushTableChunk(false);
+      }
+    }
+
+    // Attach Notes + Signature block at end of last page (or new page if tight)
+    const endBlockH = measureHtmlHeight(endBlockHtml);
+    if (usedHeight > 0 && usedHeight + endBlockH > maxBodyHeightPx) {
+      pushCurrentPage();
+    }
+    currentChunks.push(endBlockHtml);
+    pushCurrentPage();
+
+    const totalPages = Math.max(1, pageHtmlChunks.length);
+    measureRoot.remove();
 
     const pdf = new jsPDF({
       orientation,
@@ -614,45 +1273,50 @@ export const generateAndDownloadPDF = async (
       format: 'a4',
       compress: true
     });
+    const pdfWidthMm = pdf.internal.pageSize.getWidth();
+    const pdfHeightMm = pdf.internal.pageSize.getHeight();
 
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = pageWidth;
-    const pxPageHeight = Math.floor((canvas.width * pageHeight) / pageWidth);
-
-    let renderedHeight = 0;
-    let pageIndex = 0;
-
-    // Slice canvas cleanly across A4 pages without awkward clipping
-    while (renderedHeight < canvas.height) {
-      if (pageIndex > 0) {
+    for (let pIdx = 0; pIdx < totalPages; pIdx++) {
+      if (pIdx > 0) {
         pdf.addPage();
       }
-      const sliceHeight = Math.min(pxPageHeight, canvas.height - renderedHeight);
-      const sliceCanvas = document.createElement('canvas');
-      sliceCanvas.width = canvas.width;
-      sliceCanvas.height = sliceHeight;
-      const ctx = sliceCanvas.getContext('2d');
-      if (ctx) {
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
-        ctx.drawImage(
-          canvas,
-          0, renderedHeight, canvas.width, sliceHeight,
-          0, 0, canvas.width, sliceHeight
-        );
-        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
-        const sliceMmHeight = (sliceHeight * imgWidth) / canvas.width;
-        pdf.addImage(sliceData, 'JPEG', 0, 0, imgWidth, sliceMmHeight, undefined, 'FAST');
-      }
-      renderedHeight += sliceHeight;
-      pageIndex++;
+
+      const pageEl = document.createElement('div');
+      pageEl.className = 'yd-pdf-page';
+      pageEl.innerHTML = `
+        <div class="yd-pdf-page-watermark" aria-hidden="true">
+          <img src="${YDO_LOGO_BASE64}" alt="" />
+        </div>
+        <div class="yd-pdf-page-body">
+          ${pageHtmlChunks[pIdx]}
+        </div>
+        <div class="yd-pdf-page-footer">
+          <span>${escapeHtml(strings.confidentialFooter)}</span>
+          <span style="font-weight: 600; color: #475569;">${escapeHtml(`${strings.pageWord} ${pIdx + 1} ${strings.ofWord} ${totalPages}`)}</span>
+          <span>${escapeHtml(`${strings.generatedOnLabel} ${generatedStamp}`)}</span>
+        </div>
+      `;
+      sandbox.innerHTML = '';
+      sandbox.appendChild(pageEl);
+
+      const canvas = await html2canvas(pageEl, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        width: pageWidthPx,
+        height: pageHeightPx
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.94);
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidthMm, pdfHeightMm, undefined, 'FAST');
     }
 
-    // 1. Direct save as authentic .pdf binary via jsPDF
+    // 1. Primary save via jsPDF
     pdf.save(cleanPdfFilename);
 
-    // 2. Blob download fallback for Capacitor WebView & mobile browsers
+    // 2. Fallback anchor download for mobile WebViews / Capacitor
     try {
       const pdfBlob = pdf.output('blob');
       const blobUrl = URL.createObjectURL(pdfBlob);
@@ -666,133 +1330,411 @@ export const generateAndDownloadPDF = async (
         URL.revokeObjectURL(blobUrl);
       }, 1000);
     } catch {
-      // Ignored if handled
+      // Handled by pdf.save above
     }
   } catch (err) {
     console.error('PDF generation error, falling back to print dialog:', err);
-    window.print();
+    printCleanReportDocument(options);
   } finally {
-    if (temporaryContainer && temporaryContainer.parentNode) {
-      temporaryContainer.parentNode.removeChild(temporaryContainer);
+    if (sandbox && sandbox.parentNode) {
+      sandbox.parentNode.removeChild(sandbox);
+    }
+    if (styleTag && styleTag.parentNode) {
+      styleTag.parentNode.removeChild(styleTag);
     }
   }
 };
 
 /**
- * Universal PDF Generator & Handler for all Dairy Inventory modules
+ * Prints strictly the clean #report-document HTML using a hidden iframe so NO app chrome
+ * or preview toolbar ever leaks into printed pages.
  */
-export const exportReportToPDF = (options: PDFReportOptions) => {
-  // If download mode requested, generate and download authentic .pdf immediately
-  if (options.mode === 'download') {
-    generateAndDownloadPDF(options);
+const printCleanReportDocument = (options: PDFReportOptions): void => {
+  const htmlContent = getReportHTMLMarkup({ ...options, mode: 'print' });
+
+  const existingFrame = document.getElementById('yd-print-frame');
+  if (existingFrame) existingFrame.remove();
+
+  const printFrame = document.createElement('iframe');
+  printFrame.id = 'yd-print-frame';
+  printFrame.style.position = 'fixed';
+  printFrame.style.right = '0';
+  printFrame.style.bottom = '0';
+  printFrame.style.width = '0';
+  printFrame.style.height = '0';
+  printFrame.style.border = '0';
+  printFrame.style.visibility = 'hidden';
+  document.body.appendChild(printFrame);
+
+  const frameDoc = printFrame.contentDocument || printFrame.contentWindow?.document;
+  if (!frameDoc) {
+    printFrame.remove();
+    window.print();
     return;
   }
 
-  const htmlContent = getReportHTMLMarkup(options);
-  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-  const blobUrl = URL.createObjectURL(blob);
+  frameDoc.open();
+  frameDoc.write(htmlContent);
+  frameDoc.close();
 
-  // If print mode requested, try opening dedicated print window
-  if (options.mode === 'print') {
-    let printWindow: Window | null = null;
+  const triggerFramePrint = () => {
     try {
-      printWindow = window.open(blobUrl, '_blank');
+      printFrame.contentWindow?.focus();
+      printFrame.contentWindow?.print();
     } catch {
-      printWindow = null;
+      window.print();
     }
+    setTimeout(() => {
+      if (printFrame.parentNode) printFrame.remove();
+    }, 60_000);
+  };
 
-    if (printWindow && !printWindow.closed) {
-      printWindow.focus();
-      return;
+  setTimeout(triggerFramePrint, 350);
+};
+
+/**
+ * Applies selected sort option to the primary table cleanly without mutating the caller's payload.
+ */
+const applySortToOptions = (
+  baseOptions: PDFReportOptions,
+  sortId: string
+): PDFReportOptions => {
+  if (!sortId || sortId === 'default') return baseOptions;
+
+  if (baseOptions.table && baseOptions.table.sortOptions) {
+    const sorter = baseOptions.table.sortOptions.find((s) => s.id === sortId);
+    if (sorter) {
+      const sorted = sorter.sortRows(baseOptions.table.rows, baseOptions.table.rowClasses);
+      return {
+        ...baseOptions,
+        table: {
+          ...baseOptions.table,
+          rows: sorted.rows,
+          rowClasses: sorted.rowClasses
+        }
+      };
     }
   }
 
-  // If mode === 'view' or print popup was blocked, render full in-app preview modal
+  if (baseOptions.tables && baseOptions.tables.length > 0 && baseOptions.tables[0].data.sortOptions) {
+    const first = baseOptions.tables[0];
+    const sorter = first.data.sortOptions?.find((s) => s.id === sortId);
+    if (sorter) {
+      const sorted = sorter.sortRows(first.data.rows, first.data.rowClasses);
+      return {
+        ...baseOptions,
+        tables: [
+          {
+            ...first,
+            data: {
+              ...first.data,
+              rows: sorted.rows,
+              rowClasses: sorted.rowClasses
+            }
+          },
+          ...baseOptions.tables.slice(1)
+        ]
+      };
+    }
+  }
+
+  return baseOptions;
+};
+
+/**
+ * Universal PDF Report Preview, Print & Download Entry Point for all Yogeshwari Dairy modules.
+ * Renders a single-toolbar full-screen modal with a real A4 sheet scaled via ResizeObserver.
+ */
+export const exportReportToPDF = (options: PDFReportOptions): void => {
+  if (options.mode === 'download') {
+    void generateAndDownloadPDF(options);
+    return;
+  }
+
+  if (options.mode === 'print') {
+    printCleanReportDocument(options);
+    return;
+  }
+
+  // Clean up any existing modal before opening
   const existingModal = document.getElementById('yd-report-modal');
   if (existingModal) existingModal.remove();
 
-  const lang: 'mr' | 'hi' | 'en' = options.language || (typeof window !== 'undefined' ? (localStorage.getItem('dairy_language') as 'mr' | 'hi' | 'en') : 'mr') || 'mr';
-  const strings = {
-    mr: { printBtn: '🖨️ प्रिंट', downloadBtn: '📥 डाउनलोड PDF', closeBtn: '✕ बंद करा', previewBadge: 'योगेश्वरी डेअरी अधिकृत PDF पूर्वदृश्य', downloading: '⏳ PDF तयार होत आहे...', downloaded: '✓ PDF डाऊनलोड झाले!' },
-    hi: { printBtn: '🖨️ प्रिंट', downloadBtn: '📥 डाउनलोड PDF', closeBtn: '✕ बंद करें', previewBadge: 'योगेश्वरी डेरी अधिकृत PDF पूर्वावलोकन', downloading: '⏳ PDF तैयार हो रहा है...', downloaded: '✓ PDF डाउनलोड हुआ!' },
-    en: { printBtn: '🖨️ Print', downloadBtn: '📥 Download PDF', closeBtn: '✕ Close', previewBadge: 'Official Dairy PDF Report Preview', downloading: '⏳ Generating PDF...', downloaded: '✓ PDF Downloaded!' }
-  }[lang];
+  const lang = resolveLanguage(options.language);
+  const strings = getReportStrings(lang);
+  const orientation = options.orientation || 'portrait';
+  const docWidthPx = orientation === 'landscape' ? 1123 : 794;
+
+  let activeOptions: PDFReportOptions = options;
+  const sortOptions =
+    options.table?.sortOptions ||
+    (options.tables && options.tables[0]?.data.sortOptions) ||
+    [];
+
+  // Save & lock body scroll (restored cleanly on close)
+  const previousBodyOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
 
   const modalContainer = document.createElement('div');
   modalContainer.id = 'yd-report-modal';
-  modalContainer.style.position = 'fixed';
-  modalContainer.style.inset = '0';
-  modalContainer.style.zIndex = '99999';
-  modalContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.75)';
-  modalContainer.style.backdropFilter = 'blur(4px)';
-  modalContainer.style.display = 'flex';
-  modalContainer.style.flexDirection = 'column';
-  modalContainer.style.alignItems = 'center';
-  modalContainer.style.justifyContent = 'center';
-  modalContainer.style.padding = '8px';
-
-  const modalBox = document.createElement('div');
-  modalBox.style.backgroundColor = '#ffffff';
-  modalBox.style.borderRadius = '18px';
-  modalBox.style.width = '100%';
-  modalBox.style.maxWidth = '920px';
-  modalBox.style.height = '94vh';
-  modalBox.style.display = 'flex';
-  modalBox.style.flexDirection = 'column';
-  modalBox.style.overflow = 'hidden';
-  modalBox.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.45)';
-  modalBox.style.border = '1px solid #059669';
-
-  const topBar = document.createElement('div');
-  topBar.style.backgroundColor = '#064e3b';
-  topBar.style.color = '#ffffff';
-  topBar.style.padding = '10px 14px';
-  topBar.style.display = 'flex';
-  topBar.style.justifyContent = 'space-between';
-  topBar.style.alignItems = 'center';
-  topBar.style.flexWrap = 'wrap';
-  topBar.style.gap = '8px';
-  topBar.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <span style="font-size: 18px;">📄</span>
-      <div>
-        <div style="font-weight: 800; font-size: 13px; color: #ecfdf5;">${options.title}</div>
-        <div style="font-size: 10px; color: #a7f3d0;">${strings.previewBadge}</div>
-      </div>
-    </div>
-    <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
-      <button id="yd-modal-print-btn" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-        <span>${strings.printBtn}</span>
-      </button>
-      <button id="yd-modal-download-btn" style="background: #2563eb; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-        <span>${strings.downloadBtn}</span>
-      </button>
-      <button id="yd-modal-close-btn" style="background: #e11d48; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">
-        ${strings.closeBtn}
-      </button>
-    </div>
+  modalContainer.className = 'no-print';
+  modalContainer.setAttribute('role', 'dialog');
+  modalContainer.setAttribute('aria-modal', 'true');
+  modalContainer.setAttribute('aria-label', stripEmojisForPDF(options.toolbarTitle || options.title));
+  modalContainer.style.cssText = `
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #f1f5f9;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, sans-serif;
   `;
 
-  const iframe = document.createElement('iframe');
-  iframe.style.flex = '1';
-  iframe.style.width = '100%';
-  iframe.style.border = 'none';
-  iframe.style.backgroundColor = '#ffffff';
-  iframe.src = blobUrl;
+  // ONE clean sticky toolbar outside #report-document (360px-safe, never included in Print/PDF)
+  const toolbar = document.createElement('div');
+  toolbar.id = 'yd-report-toolbar';
+  toolbar.className = 'no-print';
+  toolbar.style.cssText = `
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  `;
 
-  modalBox.appendChild(topBar);
-  modalBox.appendChild(iframe);
-  modalContainer.appendChild(modalBox);
+  const displayToolbarTitle = safeReportText(options.toolbarTitle || options.title);
+
+  const sortRowHtml =
+    sortOptions.length > 0
+      ? `
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 6px; border-top: 1px solid #f1f5f9;">
+          <label for="yd-modal-sort-select" style="font-size: 11px; font-weight: 700; color: #64748b; white-space: nowrap;">
+            ${escapeHtml(strings.sortLabel)}
+          </label>
+          <select
+            id="yd-modal-sort-select"
+            aria-label="Sort report rows"
+            style="
+              flex: 1;
+              max-width: 240px;
+              height: 32px;
+              padding: 0 8px;
+              border-radius: 8px;
+              border: 1px solid #cbd5e1;
+              background: #f8fafc;
+              color: #0f172a;
+              font-size: 12px;
+              font-weight: 600;
+              cursor: pointer;
+            "
+          >
+            ${sortOptions
+              .map((opt) => `<option value="${escapeHtml(opt.id)}">${safeReportText(opt.label)}</option>`)
+              .join('')}
+          </select>
+        </div>
+      `
+      : '';
+
+  toolbar.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0;">
+      <div style="min-width: 0; flex: 1; font-size: 14px; font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+        ${displayToolbarTitle}
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+        <button
+          id="yd-modal-print-btn"
+          type="button"
+          aria-label="${escapeHtml(strings.printBtn)}"
+          style="
+            height: 36px;
+            padding: 0 10px;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #0f172a;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            white-space: nowrap;
+          "
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          <span>${escapeHtml(strings.printBtn)}</span>
+        </button>
+        <button
+          id="yd-modal-download-btn"
+          type="button"
+          aria-label="${escapeHtml(strings.downloadBtn)}"
+          style="
+            height: 36px;
+            padding: 0 11px;
+            border-radius: 10px;
+            border: 1px solid #047857;
+            background: #047857;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(4, 120, 87, 0.25);
+          "
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span id="yd-modal-download-label">${escapeHtml(strings.downloadBtn)}</span>
+        </button>
+        <button
+          id="yd-modal-close-btn"
+          type="button"
+          aria-label="Close"
+          style="
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+          "
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+    ${sortRowHtml}
+  `;
+
+  // Scrollable A4 Preview Viewport (allows pinch-zoom, scales A4 sheet cleanly to screen width)
+  const previewViewport = document.createElement('div');
+  previewViewport.style.cssText = `
+    flex: 1;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y pinch-zoom;
+    padding: 14px 8px calc(env(safe-area-inset-bottom, 0px) + 28px) 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  `;
+
+  const scaleHolder = document.createElement('div');
+  scaleHolder.style.cssText = `
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  `;
+
+  const a4Frame = document.createElement('iframe');
+  a4Frame.title = stripEmojisForPDF(options.title);
+  a4Frame.style.cssText = `
+    width: ${docWidthPx}px;
+    min-height: ${orientation === 'landscape' ? 794 : 1123}px;
+    border: none;
+    background: #ffffff;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.16), 0 4px 10px -2px rgba(15, 23, 42, 0.08);
+    border-radius: 4px;
+    transform-origin: top center;
+    display: block;
+  `;
+
+  scaleHolder.appendChild(a4Frame);
+  previewViewport.appendChild(scaleHolder);
+  modalContainer.appendChild(toolbar);
+  modalContainer.appendChild(previewViewport);
   document.body.appendChild(modalContainer);
 
-  const printBtn = modalContainer.querySelector('#yd-modal-print-btn');
-  const downloadBtn = modalContainer.querySelector('#yd-modal-download-btn') as HTMLButtonElement | null;
-  const closeBtn = modalContainer.querySelector('#yd-modal-close-btn');
+  let currentBlobUrl: string | null = null;
+  let naturalDocHeight = orientation === 'landscape' ? 794 : 1123;
+
+  const updateScale = () => {
+    const availableWidth = Math.max(280, previewViewport.clientWidth - 16);
+    const scale = Math.min(1, availableWidth / docWidthPx);
+    a4Frame.style.transform = `scale(${scale})`;
+    scaleHolder.style.width = `${Math.round(docWidthPx * scale)}px`;
+    scaleHolder.style.height = `${Math.ceil(naturalDocHeight * scale)}px`;
+  };
+
+  const renderPreviewFrame = (opts: PDFReportOptions) => {
+    if (currentBlobUrl) {
+      URL.revokeObjectURL(currentBlobUrl);
+    }
+    const htmlContent = getReportHTMLMarkup({ ...opts, mode: 'view' });
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    currentBlobUrl = URL.createObjectURL(blob);
+    a4Frame.src = currentBlobUrl;
+  };
+
+  a4Frame.addEventListener('load', () => {
+    const syncFrameHeight = () => {
+      try {
+        const docEl = a4Frame.contentDocument?.getElementById('report-document');
+        const bodyHeight = docEl
+          ? docEl.scrollHeight
+          : a4Frame.contentDocument?.body?.scrollHeight || naturalDocHeight;
+        naturalDocHeight = Math.max(orientation === 'landscape' ? 794 : 1123, bodyHeight);
+        a4Frame.style.height = `${naturalDocHeight}px`;
+        updateScale();
+      } catch {
+        updateScale();
+      }
+    };
+    syncFrameHeight();
+    a4Frame.contentDocument?.fonts?.ready.then(syncFrameHeight).catch(() => {});
+  });
+
+  const resizeObserver = new ResizeObserver(() => {
+    updateScale();
+  });
+  resizeObserver.observe(previewViewport);
+
+  renderPreviewFrame(activeOptions);
+  updateScale();
+
+  const printBtn = toolbar.querySelector('#yd-modal-print-btn') as HTMLButtonElement | null;
+  const downloadBtn = toolbar.querySelector('#yd-modal-download-btn') as HTMLButtonElement | null;
+  const downloadLabel = toolbar.querySelector('#yd-modal-download-label') as HTMLSpanElement | null;
+  const closeBtn = toolbar.querySelector('#yd-modal-close-btn') as HTMLButtonElement | null;
+  const sortSelect = toolbar.querySelector('#yd-modal-sort-select') as HTMLSelectElement | null;
 
   const removeModal = () => {
+    resizeObserver.disconnect();
+    if (currentBlobUrl) {
+      URL.revokeObjectURL(currentBlobUrl);
+      currentBlobUrl = null;
+    }
     modalContainer.remove();
+    document.body.style.overflow = previousBodyOverflow;
     document.removeEventListener('keydown', handleKeyEsc);
-    window.removeEventListener('message', handleWindowMessage);
   };
 
   const handleKeyEsc = (e: KeyboardEvent) => {
@@ -800,49 +1742,44 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
   };
   document.addEventListener('keydown', handleKeyEsc);
 
-  // Close when tapping backdrop
-  modalContainer.addEventListener('click', (e) => {
-    if (e.target === modalContainer) removeModal();
+  sortSelect?.addEventListener('change', () => {
+    activeOptions = applySortToOptions(options, sortSelect.value);
+    renderPreviewFrame(activeOptions);
   });
-
-  // Handle postMessages from inside iframe
-  const handleWindowMessage = (e: MessageEvent) => {
-    if (e.data?.type === 'YD_DOWNLOAD_PDF') {
-      downloadBtn?.click();
-    } else if (e.data?.type === 'YD_CLOSE_MODAL') {
-      removeModal();
-    }
-  };
-  window.addEventListener('message', handleWindowMessage);
 
   printBtn?.addEventListener('click', () => {
     try {
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
+      if (a4Frame.contentWindow) {
+        a4Frame.contentWindow.focus();
+        a4Frame.contentWindow.print();
+        return;
+      }
     } catch {
-      window.print();
+      // Fallback below
     }
+    printCleanReportDocument(activeOptions);
   });
 
   downloadBtn?.addEventListener('click', async () => {
+    if (!downloadBtn || downloadBtn.disabled) return;
+    downloadBtn.disabled = true;
+    downloadBtn.style.opacity = '0.7';
+    if (downloadLabel) downloadLabel.textContent = strings.downloading;
+
     try {
-      const originalText = downloadBtn.innerHTML;
-      downloadBtn.innerHTML = `<span>${strings.downloading}</span>`;
-      downloadBtn.disabled = true;
-
-      // Capture iframe body or fall back to offscreen container
-      const targetElement = iframe.contentDocument?.body || null;
-      await generateAndDownloadPDF(options, targetElement);
-
-      downloadBtn.innerHTML = `<span>${strings.downloaded}</span>`;
+      await generateAndDownloadPDF(activeOptions);
+      if (downloadLabel) downloadLabel.textContent = strings.downloaded;
       setTimeout(() => {
-        downloadBtn.innerHTML = originalText;
+        if (downloadLabel) downloadLabel.textContent = strings.downloadBtn;
         downloadBtn.disabled = false;
-      }, 2000);
+        downloadBtn.style.opacity = '1';
+      }, 1800);
     } catch (err) {
       console.error('Download PDF error:', err);
-      iframe.contentWindow?.print();
-      if (downloadBtn) downloadBtn.disabled = false;
+      printCleanReportDocument(activeOptions);
+      if (downloadLabel) downloadLabel.textContent = strings.downloadBtn;
+      downloadBtn.disabled = false;
+      downloadBtn.style.opacity = '1';
     }
   });
 
@@ -854,36 +1791,43 @@ export const exportReportToPDF = (options: PDFReportOptions) => {
 /**
  * Convenience alias for Viewing / Previewing Report in In-App Modal
  */
-export const viewReportPDF = (options: PDFReportOptions) => {
-  return exportReportToPDF({ ...options, mode: 'view' });
+export const viewReportPDF = (options: PDFReportOptions): void => {
+  exportReportToPDF({ ...options, mode: 'view' });
 };
 
 /**
  * Convenience alias for Printing Report / Slip
  */
-export const printReport = (options: PDFReportOptions) => {
-  return exportReportToPDF({ ...options, mode: 'print' });
+export const printReport = (options: PDFReportOptions): void => {
+  exportReportToPDF({ ...options, mode: 'print' });
 };
 
 /**
  * Universal Download Function: Automatically creates and downloads an authentic .pdf file
  */
-export const downloadReportPDF = (options: PDFReportOptions) => {
+export const downloadReportPDF = (options: PDFReportOptions): Promise<void> => {
   return generateAndDownloadPDF(options);
 };
 
 /**
  * Universal CSV Export with UTF-8 BOM
  */
-export const exportToCSV = (filename: string, headers: string[], rows: (string | number)[][]) => {
+export const exportToCSV = (
+  filename: string,
+  headers: string[],
+  rows: (string | number)[][]
+): void => {
   let csvContent = '\uFEFF'; // UTF-8 BOM
-  csvContent += headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(',') + '\r\n';
+  csvContent += headers.map((h) => `"${String(h).replace(/"/g, '""')}"`).join(',') + '\r\n';
 
-  rows.forEach(row => {
-    csvContent += row.map(val => {
-      const strVal = val === null || val === undefined ? '' : String(val);
-      return `"${strVal.replace(/"/g, '""')}"`;
-    }).join(',') + '\r\n';
+  rows.forEach((row) => {
+    csvContent +=
+      row
+        .map((val) => {
+          const strVal = val === null || val === undefined ? '' : String(val);
+          return `"${strVal.replace(/"/g, '""')}"`;
+        })
+        .join(',') + '\r\n';
   });
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -897,18 +1841,35 @@ export const exportToCSV = (filename: string, headers: string[], rows: (string |
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
+
+interface CSVProductLike {
+  name: string;
+  marathi_name?: string;
+  hindi_name?: string;
+  category: string;
+  unit: string;
+  purchase_price: number;
+  selling_price: number;
+  stock_quantity: number;
+  min_stock_alert: number;
+  barcode?: string;
+}
 
 /**
  * High-level helper: Export Product Catalog to CSV / Excel
  */
-export const exportProductsToCSV = (products: any[], lang: 'mr' | 'hi' | 'en' = 'mr') => {
+export const exportProductsToCSV = (
+  products: CSVProductLike[],
+  lang: 'mr' | 'hi' | 'en' = 'mr'
+): void => {
   const isMr = lang === 'mr';
   const headers = isMr
     ? ['उत्पादनाचे नाव', 'मराठी नाव', 'प्रवर्ग', 'एकक', 'खरेदी दर', 'विक्री दर', 'उपलब्ध साठा', 'किमान साठा अलर्ट', 'बारकोड']
     : ['Product Name', 'Regional Name', 'Category', 'Unit', 'Purchase Price', 'Selling Price', 'Current Stock', 'Min Stock Alert', 'Barcode'];
 
-  const rows = products.map(p => [
+  const rows = products.map((p) => [
     p.name,
     p.marathi_name || p.hindi_name || '',
     p.category,
@@ -923,26 +1884,41 @@ export const exportProductsToCSV = (products: any[], lang: 'mr' | 'hi' | 'en' = 
   exportToCSV('Yogeshwari_Dairy_Products', headers, rows);
 };
 
+interface CSVSaleLike {
+  invoice_no?: string;
+  created_at?: string;
+  sale_date?: string;
+  customer_name?: string;
+  customer_phone?: string;
+  net_amount?: number;
+  total_amount?: number;
+  payment_mode?: string;
+  created_by_name?: string;
+  counter_name?: string;
+}
+
 /**
  * High-level helper: Export Daily Sales Ledger to CSV / Excel
  */
-export const exportSalesToCSV = (sales: any[], lang: 'mr' | 'hi' | 'en' = 'mr') => {
+export const exportSalesToCSV = (
+  sales: CSVSaleLike[],
+  lang: 'mr' | 'hi' | 'en' = 'mr'
+): void => {
   const isMr = lang === 'mr';
   const headers = isMr
     ? ['बिल क्र.', 'तारीख व वेळ', 'ग्राहक नाव', 'मोबाईल', 'एकूण रक्कम', 'पेमेंट प्रकार', 'विक्रेता', 'काऊंटर']
     : ['Invoice No', 'Date & Time', 'Customer Name', 'Mobile', 'Net Amount', 'Payment Mode', 'Operator', 'Counter'];
 
-  const rows = sales.map(s => [
-    s.invoice_no,
-    s.created_at || s.sale_date,
+  const rows = sales.map((s) => [
+    s.invoice_no || '',
+    s.created_at || s.sale_date || '',
     s.customer_name || 'Counter Customer',
     s.customer_phone || '',
-    s.net_amount || s.total_amount,
-    s.payment_mode,
+    s.net_amount ?? s.total_amount ?? 0,
+    s.payment_mode || '',
     s.created_by_name || 'Admin',
     s.counter_name || 'Counter 1'
   ]);
 
   exportToCSV('Yogeshwari_Dairy_Sales_Ledger', headers, rows);
 };
-

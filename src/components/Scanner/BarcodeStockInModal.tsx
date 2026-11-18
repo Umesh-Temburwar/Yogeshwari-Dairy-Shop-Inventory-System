@@ -1011,283 +1011,264 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4">
-      <div className="relative w-full max-w-xl max-h-[92dvh] flex flex-col bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-        {/* Top Header */}
-        <div className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2 sm:p-2.5 bg-white/20 rounded-xl backdrop-blur-md shrink-0">
-              <PackagePlus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fadeIn">
+      <div
+        className={`relative w-full ${
+          step === 'scan' ? 'max-w-lg' : 'max-w-xl'
+        } max-h-[92vh] flex flex-col bg-white dark:bg-[#131F1B] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#24352F] overflow-hidden`}
+      >
+        {/* Top Header — Matches Live Barcode Camera Scanner */}
+        <div className="shrink-0 p-4 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between gap-2 bg-slate-50/50 dark:bg-[#1A2A25]/50">
+          <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 min-w-0">
+            <Barcode className="w-5 h-5 shrink-0" />
             <div className="min-w-0">
-              <h2 className="text-base sm:text-lg font-bold truncate">
+              <h2 className="font-extrabold text-base text-slate-900 dark:text-white leading-tight truncate">
                 {tr('Barcode Stock-In', 'बारकोड द्वारा स्टॉक आवक', 'बारकोड द्वारे साठा आवक')}
               </h2>
-              <p className="text-xs text-emerald-100 truncate">
-                {step === 'scan' && tr('Step 1: Scan or search barcode', 'चरण 1: बारकोड स्कैन या खोजें', 'पायरी १: बारकोड स्कॅन किंवा सर्च करा')}
-                {step === 'register' && tr('Step 2: Register new product (Catalogue)', 'चरण 2: नया उत्पाद पंजीकरण (कैटलॉग)', 'पायरी २: नवीन उत्पादन नोंदणी (कॅटलॉग)')}
-                {step === 'details' && tr('Step 3: Stock, batch & price details', 'चरण 3: स्टॉक, बैच एवं मूल्य विवरण', 'पायरी ३: साठा, बॅच व किमतीची नोंद')}
-                {step === 'confirm' && tr('Step 4: Confirm stock inward', 'चरण 4: स्टॉक आवक पुष्टि', 'पायरी ४: साठा आवक खात्री करा')}
-                {step === 'success' && tr('Stock saved successfully!', 'स्टॉक सफलतापूर्वक दर्ज!', 'साठा यशस्वीरीत्या जमा झाला!')}
-              </p>
+              {step !== 'scan' && (
+                <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] truncate mt-0.5">
+                  {step === 'register' && tr('Step 2: Register new product (Catalogue)', 'चरण 2: नया उत्पाद पंजीकरण (कैटलॉग)', 'पायरी २: नवीन उत्पादन नोंदणी (कॅटलॉग)')}
+                  {step === 'details' && tr('Step 3: Stock, batch & price details', 'चरण 3: स्टॉक, बैच एवं मूल्य विवरण', 'पायरी ३: साठा, बॅच व किमतीची नोंद')}
+                  {step === 'confirm' && tr('Step 4: Confirm stock inward', 'चरण 4: स्टॉक आवक पुष्टि', 'पायरी ४: साठा आवक खात्री करा')}
+                  {step === 'success' && tr('Stock saved successfully!', 'स्टॉक सफलतापूर्वक दर्ज!', 'साठा यशस्वीरीत्या जमा झाला!')}
+                </p>
+              )}
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-white/80 hover:text-white hover:bg-white/20 transition-all shrink-0"
+            aria-label="Close"
+            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1A2A25] transition shrink-0 cursor-pointer"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Error Alert Box */}
         {errorMessage && (
-          <div className="shrink-0 mx-4 sm:mx-6 mt-3 p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-xl flex items-center gap-2 text-sm">
-            <AlertCircle className="w-5 h-5 shrink-0" />
+          <div className="shrink-0 mx-4 mt-3 p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-xl flex items-center gap-2 text-xs font-semibold">
+            <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
-        {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
-          {/* STEP 1: SCAN OR MANUAL SEARCH */}
-          {step === 'scan' && (
-            <div className="space-y-5">
-              {/* Camera Viewfinder */}
-              <div className="relative aspect-video w-full bg-slate-950 rounded-2xl overflow-hidden border-2 border-dashed border-emerald-500/50 flex items-center justify-center">
-                <video
-                  ref={videoRef}
-                  className="w-full h-full object-cover"
-                  autoPlay
-                  playsInline
-                  muted
-                />
+        {/* STEP 1: FULL-BLEED CAMERA SCANNER LAYOUT (IDENTICAL TO BARCODE SCANNER MODAL) */}
+        {step === 'scan' ? (
+          <>
+            {/* Video Viewfinder & Overlay */}
+            <div className="relative bg-slate-950 flex-1 min-h-[280px] max-h-[360px] flex items-center justify-center overflow-hidden">
+              <video
+                ref={videoRef}
+                className="w-full h-full object-cover"
+                autoPlay
+                playsInline
+                muted
+              />
 
-                {/* OCR Processing Overlay */}
-                {isOcrRunning && (
-                  <div className="absolute inset-0 bg-slate-950/85 z-30 flex flex-col items-center justify-center text-white space-y-2.5 animate-fadeIn">
-                    <RefreshCw className="w-7 h-7 text-amber-400 animate-spin" />
-                    <p className="text-xs font-bold text-amber-200">
-                      {tr(
-                        'Reading barcode digits via AI OCR...',
-                        'AI OCR द्वारा बारकोड संख्या पढ़ी जा रही है...',
-                        'AI OCR द्वारे बारकोड नंबर वाचत आहे...'
-                      )}
-                    </p>
-                  </div>
-                )}
-
-                {/* Aiming Reticle: Clean Minimalist Frame with 60fps GPU-Composited Laser */}
-                {isScanningCamera && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-64 h-36 border border-emerald-400/70 rounded-2xl relative shadow-[0_0_0_100vmax_rgba(0,0,0,0.48)] overflow-hidden">
-                      {/* Crisp Corner Brackets */}
-                      <span className="absolute top-0 left-0 w-5 h-5 border-t-[3px] border-l-[3px] border-emerald-400 rounded-tl-xl" />
-                      <span className="absolute top-0 right-0 w-5 h-5 border-t-[3px] border-r-[3px] border-emerald-400 rounded-tr-xl" />
-                      <span className="absolute bottom-0 left-0 w-5 h-5 border-b-[3px] border-l-[3px] border-emerald-400 rounded-bl-xl" />
-                      <span className="absolute bottom-0 right-0 w-5 h-5 border-b-[3px] border-r-[3px] border-emerald-400 rounded-br-xl" />
-
-                      {/* 60fps GPU-Composited Laser Beam */}
-                      <div className="absolute inset-0 animate-scanner-sweep pointer-events-none">
-                        <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-emerald-300 to-transparent shadow-[0_0_12px_#10b981,0_0_24px_#34d399]" />
-                        <div className="mx-3 h-5 bg-gradient-to-b from-emerald-400/25 to-transparent" />
-                      </div>
-
-                      <div className="absolute top-2 left-0 right-0 text-center text-[10px] font-bold text-white tracking-wider uppercase bg-emerald-900/85 rounded-md py-0.5 px-2.5 max-w-fit mx-auto shadow-sm">
-                        {tr('Hold barcode inside frame', 'बारकोड फ्रेम में रखें', 'बारकोड चौकटीत धरा')}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Floating Viewfinder Controls: Torch & Camera Switch Only */}
-                <div className="absolute top-3 right-3 flex items-center gap-2 z-20">
-
-                  {hasTorch && isScanningCamera && (
-                    <button
-                      type="button"
-                      onClick={toggleTorch}
-                      className={`p-2 rounded-xl backdrop-blur-md border text-xs font-bold transition flex items-center gap-1 shadow-lg ${torchEnabled
-                        ? 'bg-amber-400 text-slate-900 border-amber-300'
-                        : 'bg-black/60 text-white border-white/20 hover:bg-black/80'
-                        }`}
-                      title={tr('Flashlight / Torch', 'टॉर्च / फ्लैशलाइट', 'टॉर्च / फ्लॅशलाइट')}
-                    >
-                      <Flashlight className="w-4 h-4" />
-                    </button>
-                  )}
-
-                  {isScanningCamera && (
-                    <button
-                      type="button"
-                      onClick={toggleFacingMode}
-                      className="p-2 rounded-xl bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 text-xs font-bold transition flex items-center gap-1 shadow-lg"
-                      title={
-                        facingMode === 'environment'
-                          ? tr('Switch to Front Camera', 'फ्रंट कैमरा पर स्विच करें', 'समोरचा कॅमेरा (Front)')
-                          : tr('Switch to Back Camera', 'बैक कैमरा पर स्विच करें', 'मागील कॅमेरा (Back)')
-                      }
-                    >
-                      <SwitchCamera className="w-4 h-4" />
-                      <span className="text-[10px] hidden sm:inline">
-                        {facingMode === 'environment' ? tr('Back', 'बैक', 'मागील') : tr('Front', 'फ्रंट', 'समोरचा')}
-                      </span>
-                    </button>
-                  )}
+              {/* OCR Processing Overlay */}
+              {isOcrRunning && (
+                <div className="absolute inset-0 bg-slate-950/85 z-30 flex flex-col items-center justify-center text-white space-y-2.5 animate-fadeIn">
+                  <RefreshCw className="w-7 h-7 text-amber-400 animate-spin" />
+                  <p className="text-xs font-bold text-amber-200">
+                    {tr(
+                      'Reading barcode digits via AI OCR...',
+                      'AI OCR द्वारा बारकोड संख्या पढ़ी जा रही है...',
+                      'AI OCR द्वारे बारकोड नंबर वाचत आहे...'
+                    )}
+                  </p>
                 </div>
+              )}
 
-                {!isScanningCamera && (
-                  <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10 animate-fadeIn">
-                    <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-1">
-                      <Camera className="w-7 h-7" />
-                    </div>
-                    <p className="text-xs text-slate-300 max-w-xs">
-                      {cameraError || tr('Press the button below to start camera.', 'कैमरा शुरू करने के लिए नीचे दिए बटन को दबाएं।', 'कॅमेरा सुरू करण्यासाठी खालील बटण दाबा.')}
-                    </p>
-                    {/* Action Buttons: Enable Live Camera OR Direct Mobile Camera Photo */}
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-1 w-full max-w-sm">
-                      <label className="w-full sm:w-auto cursor-pointer px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2 active:scale-95 transition">
-                        <Camera className="w-4 h-4 text-white" />
-                        <span>{tr('📷 Take Photo with Mobile Camera', '📷 मोबाइल कैमरे से फोटो लें', '📷 मोबाईल कॅमेऱ्याने फोटो काढा')}</span>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          className="hidden"
-                          onChange={handleImageUpload}
-                        />
-                      </label>
+              {/* Active Scanning Box: Clean Minimalist Frame with 60fps GPU-Composited Laser */}
+              {isScanningCamera && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-64 h-36 border border-emerald-400/70 rounded-2xl relative shadow-[0_0_0_100vmax_rgba(0,0,0,0.48)] overflow-hidden">
+                    {/* Crisp Corner Brackets */}
+                    <span className="absolute top-0 left-0 w-5 h-5 border-t-[3px] border-l-[3px] border-emerald-400 rounded-tl-xl" />
+                    <span className="absolute top-0 right-0 w-5 h-5 border-t-[3px] border-r-[3px] border-emerald-400 rounded-tr-xl" />
+                    <span className="absolute bottom-0 left-0 w-5 h-5 border-b-[3px] border-l-[3px] border-emerald-400 rounded-bl-xl" />
+                    <span className="absolute bottom-0 right-0 w-5 h-5 border-b-[3px] border-r-[3px] border-emerald-400 rounded-br-xl" />
 
-                      <button
-                        type="button"
-                        onClick={startCamera}
-                        className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 shadow-md flex items-center justify-center gap-2 active:scale-95 transition"
-                      >
-                        <Video className="w-4 h-4 text-emerald-400" />
-                        <span>{tr('🎥 Try Again', '🎥 पुनः प्रयास करें', '🎥 पुन्हा प्रयत्न करा')}</span>
-                      </button>
+                    {/* 60fps GPU-Composited Laser Beam */}
+                    <div className="absolute inset-0 animate-scanner-sweep pointer-events-none">
+                      <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-emerald-300 to-transparent shadow-[0_0_12px_#10b981,0_0_24px_#34d399]" />
+                      <div className="mx-3 h-5 bg-gradient-to-b from-emerald-400/25 to-transparent" />
                     </div>
 
-                    {/* Mobile HTTP Security Help Box */}
-                    {cameraError && (
-                      <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[11px] text-amber-200 max-w-sm text-left space-y-1.5 leading-relaxed">
-                        <p className="font-bold text-amber-300">
-                          {tr(
-                            '💡 Why is camera permission not showing on mobile?',
-                            '💡 मोबाइल पर कैमरा अनुमति क्यों नहीं आ रही है?',
-                            '💡 मोबाईलवर कॅमेरा परवानगी का येत नाही?'
-                          )}
-                        </p>
-                        <p>
-                          {tr(
-                            'Mobile browsers (Chrome/Safari) block live video over insecure HTTP (10.63.238.67) for security.',
-                            'मोबाइल ब्राउज़र (Chrome/Safari) सुरक्षा के लिए HTTP (10.63.238.67) पर लाइव वीडियो बंद रखते हैं।',
-                            'मोबाईल ब्राउझर (Chrome/Safari) सुरक्षेसाठी HTTP (10.63.238.67) वर थेट व्हिडिओ बंद ठेवतो.'
-                          )}
-                        </p>
-                        <p className="font-semibold text-emerald-300">
-                          {tr(
-                            '✓ Option 1: Use the "Take Photo with Mobile Camera" button above (works instantly without any settings).',
-                            '✓ उपाय 1: ऊपर दिए "मोबाइल कैमरे से फोटो लें" बटन का उपयोग करें (यह बिना किसी सेटिंग के तुरंत काम करता है)।',
-                            '✓ उपाय १: वरील "मोबाईल कॅमेऱ्याने फोटो काढा" बटण वापरा (हे कोणत्याही सेटिंगशिवाय लगेच काम करते).'
-                          )}
-                        </p>
-                        <p className="font-semibold text-sky-300">
-                          {tr(
-                            '✓ Option 2: Open chrome://flags in mobile Chrome, add http://10.63.238.67:5173 in unsafely-treat-insecure-origin-as-secure and enable it.',
-                            '✓ उपाय 2: मोबाइल Chrome में chrome://flags खोलें, unsafely-treat-insecure-origin-as-secure में http://10.63.238.67:5173 जोड़ें और Enable करें।',
-                            '✓ उपाय २: मोबाईल Chrome मध्ये chrome://flags उघडून unsafely-treat-insecure-origin-as-secure मध्ये http://10.63.238.67:5173 टाका आणि Enable करा.'
-                          )}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Diagnostics Toggle */}
-                    {diagnosticsLogs.length > 0 && (
-                      <div className="w-full max-w-sm pt-1">
-                        <button
-                          type="button"
-                          onClick={() => setShowDiagnostics(!showDiagnostics)}
-                          className="text-[10px] text-slate-400 hover:text-slate-200 underline"
-                        >
-                          {showDiagnostics
-                            ? tr('Hide technical details', 'तकनीकी जानकारी छुपाएं', 'तांत्रिक माहिती लपवा')
-                            : tr('🛠️ Technical Details (Diagnostics)', '🛠️ तकनीकी जानकारी (Diagnostics)', '🛠️ तांत्रिक माहिती (Diagnostics)')}
-                        </button>
-                        {showDiagnostics && (
-                          <div className="w-full mt-1 p-2 bg-black/80 border border-slate-800 rounded-lg text-[9px] text-left font-mono text-emerald-400 max-h-24 overflow-y-auto whitespace-pre-wrap select-all">
-                            {diagnosticsLogs.join('\n')}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <div className="absolute top-2 left-0 right-0 text-center text-[10px] font-bold text-white tracking-wider uppercase bg-emerald-900/85 rounded-md py-0.5 px-2.5 max-w-fit mx-auto shadow-sm">
+                      {tr('Hold barcode inside frame', 'बारकोड फ्रेम में रखें', 'बारकोड चौकटीत धरा')}
+                    </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* Manual Barcode Input / Scanner Gun (Optional secondary input, no autoFocus) */}
-              <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800">
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                  <Barcode className="w-4 h-4 text-emerald-600" />
-                  {tr(
-                    'Or type barcode number / use scanner gun:',
-                    'या बारकोड नंबर टाइप करें / स्कैनर गन उपयोग करें:',
-                    'किंवा बारकोड नंबर टाईप करा / स्कॅनर गन वापरा:'
-                  )}
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={barcodeInput}
-                    onChange={(e) => setBarcodeInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        lookupBarcode(barcodeInput);
-                      }
-                    }}
-                    placeholder={tr('e.g. 8901030384721', 'उदा. 8901030384721', 'उदा. 8901030384721')}
-                    className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                  />
-                  <label
-                    title={tr('Take photo with mobile camera to scan', 'मोबाइल कैमरे से फोटो खींचकर स्कैन करें', 'मोबाईल कॅमेऱ्याने फोटो काढून स्कॅन करा')}
-                    className="px-3.5 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white rounded-xl flex items-center justify-center cursor-pointer shadow-md active:scale-95 transition shrink-0"
-                  >
-                    <Camera className="w-5 h-5" />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      className="hidden"
-                      onChange={handleImageUpload}
-                    />
-                  </label>
+              {/* Floating Viewfinder Controls: Torch & Camera Switch Only */}
+              <div className="absolute top-3 right-3 flex items-center gap-2 z-20">
+                {hasTorch && isScanningCamera && (
                   <button
                     type="button"
-                    onClick={() => lookupBarcode(barcodeInput)}
-                    disabled={!barcodeInput.trim()}
-                    className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl flex items-center gap-2 disabled:opacity-50 transition-all shadow-md shrink-0"
+                    onClick={toggleTorch}
+                    className={`p-2 rounded-xl backdrop-blur-md border text-xs font-bold transition flex items-center gap-1 shadow-lg ${torchEnabled
+                      ? 'bg-amber-400 text-slate-900 border-amber-300'
+                      : 'bg-black/60 text-white border-white/20 hover:bg-black/80'
+                      }`}
+                    title={tr('Flashlight / Torch', 'टॉर्च / फ्लैशलाइट', 'टॉर्च / फ्लॅशलाइट')}
                   >
-                    <Search className="w-4 h-4" />
-                    {tr('Search', 'खोजें', 'शोधा')}
+                    <Flashlight className="w-4 h-4" />
                   </button>
-                </div>
+                )}
+
+                {isScanningCamera && (
+                  <button
+                    type="button"
+                    onClick={toggleFacingMode}
+                    className="p-2 rounded-xl bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 text-xs font-bold transition flex items-center gap-1 shadow-lg"
+                    title={
+                      facingMode === 'environment'
+                        ? tr('Switch to Front Camera', 'फ्रंट कैमरा पर स्विच करें', 'समोरचा कॅमेरा (Front)')
+                        : tr('Switch to Back Camera', 'बैक कैमरा पर स्विच करें', 'मागील कॅमेरा (Back)')
+                    }
+                  >
+                    <SwitchCamera className="w-4 h-4" />
+                    <span className="text-[10px] hidden sm:inline">
+                      {facingMode === 'environment' ? tr('Back', 'बैक', 'मागील') : tr('Front', 'फ्रंट', 'समोरचा')}
+                    </span>
+                  </button>
+                )}
               </div>
 
-              {/* Quick helper tip */}
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 shrink-0 text-emerald-600" />
-                <span>
-                  {tr(
-                    'Scan barcodes of Amul, Gowardhan, Mother Dairy, or local products.',
-                    'अमूल, गोवर्धन, मदर डेयरी अथवा स्थानीय उत्पादों का बारकोड स्कैन करें।',
-                    'अमूल, गोवर्धन, मदर डेअरी किंवा स्थानिक उत्पादनांचा बारकोड स्कॅन करा.'
+              {!isScanningCamera && (
+                <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10 animate-fadeIn">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-1">
+                    <Camera className="w-7 h-7" />
+                  </div>
+                  <p className="text-xs text-slate-300 max-w-xs">
+                    {cameraError || tr('Press the button below to start camera.', 'कैमरा शुरू करने के लिए नीचे दिए बटन को दबाएं।', 'कॅमेरा सुरू करण्यासाठी खालील बटण दाबा.')}
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-1 w-full max-w-sm">
+                    <label className="w-full sm:w-auto cursor-pointer px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2 active:scale-95 transition">
+                      <Camera className="w-4 h-4 text-white" />
+                      <span>{tr('📷 Take Photo with Mobile Camera', '📷 मोबाइल कैमरे से फोटो लें', '📷 मोबाईल कॅमेऱ्याने फोटो काढा')}</span>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={startCamera}
+                      className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 shadow-md flex items-center justify-center gap-2 active:scale-95 transition"
+                    >
+                      <Video className="w-4 h-4 text-emerald-400" />
+                      <span>{tr('🎥 Try Again', '🎥 पुनः प्रयास करें', '🎥 पुन्हा प्रयत्न करा')}</span>
+                    </button>
+                  </div>
+
+                  {cameraError && (
+                    <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[11px] text-amber-200 max-w-sm text-left space-y-1.5 leading-relaxed">
+                      <p className="font-bold text-amber-300">
+                        {tr(
+                          '💡 Why is camera permission not showing on mobile?',
+                          '💡 मोबाइल पर कैमरा अनुमति क्यों नहीं आ रही है?',
+                          '💡 मोबाईलवर कॅमेरा परवानगी का येत नाही?'
+                        )}
+                      </p>
+                      <p>
+                        {tr(
+                          'Mobile browsers (Chrome/Safari) block live video over insecure HTTP (10.63.238.67) for security.',
+                          'मोबाइल ब्राउज़र (Chrome/Safari) सुरक्षा के लिए HTTP (10.63.238.67) पर लाइव वीडियो बंद रखते हैं।',
+                          'मोबाईल ब्राउझर (Chrome/Safari) सुरक्षेसाठी HTTP (10.63.238.67) वर थेट व्हिडिओ बंद ठेवतो.'
+                        )}
+                      </p>
+                      <p className="font-semibold text-emerald-300">
+                        {tr(
+                          '✓ Option 1: Use the "Take Photo with Mobile Camera" button above (works instantly without any settings).',
+                          '✓ उपाय 1: ऊपर दिए "मोबाइल कैमरे से फोटो लें" बटन का उपयोग करें (यह बिना किसी सेटिंग के तुरंत काम करता है)।',
+                          '✓ उपाय १: वरील "मोबाईल कॅमेऱ्याने फोटो काढा" बटण वापरा (हे कोणत्याही सेटिंगशिवाय लगेच काम करते).'
+                        )}
+                      </p>
+                      <p className="font-semibold text-sky-300">
+                        {tr(
+                          '✓ Option 2: Open chrome://flags in mobile Chrome, add http://10.63.238.67:5173 in unsafely-treat-insecure-origin-as-secure and enable it.',
+                          '✓ उपाय 2: मोबाइल Chrome में chrome://flags खोलें, unsafely-treat-insecure-origin-as-secure में http://10.63.238.67:5173 जोड़ें और Enable करें।',
+                          '✓ उपाय २: मोबाईल Chrome मध्ये chrome://flags उघडून unsafely-treat-insecure-origin-as-secure मध्ये http://10.63.238.67:5173 टाका आणि Enable करा.'
+                        )}
+                      </p>
+                    </div>
                   )}
-                </span>
-              </div>
+
+                  {diagnosticsLogs.length > 0 && (
+                    <div className="w-full max-w-sm pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowDiagnostics(!showDiagnostics)}
+                        className="text-[10px] text-slate-400 hover:text-slate-200 underline"
+                      >
+                        {showDiagnostics
+                          ? tr('Hide technical details', 'तकनीकी जानकारी छुपाएं', 'तांत्रिक माहिती लपवा')
+                          : tr('🛠️ Technical Details (Diagnostics)', '🛠️ तकनीकी जानकारी (Diagnostics)', '🛠️ तांत्रिक माहिती (Diagnostics)')}
+                      </button>
+                      {showDiagnostics && (
+                        <div className="w-full mt-1 p-2 bg-black/80 border border-slate-800 rounded-lg text-[9px] text-left font-mono text-emerald-400 max-h-24 overflow-y-auto whitespace-pre-wrap select-all">
+                          {diagnosticsLogs.join('\n')}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Compact Manual Barcode Input Bar — Matches BarcodeScannerModal */}
+            <div className="p-3.5 bg-slate-50 dark:bg-[#1A2A25] border-t border-slate-200/80 dark:border-[#24352F]">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (barcodeInput.trim()) lookupBarcode(barcodeInput);
+                }}
+                className="flex gap-2"
+              >
+                <input
+                  type="text"
+                  value={barcodeInput}
+                  onChange={(e) => setBarcodeInput(e.target.value)}
+                  placeholder={tr('Or type barcode number...', 'या बारकोड संख्या टाइप करें...', 'किंवा बारकोड नंबर टाईप करा...')}
+                  className="flex-1 min-w-0 px-3 py-2 bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] rounded-xl text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <label
+                  title={tr('Take photo with mobile camera to scan', 'मोबाइल कैमरे से फोटो खींचकर स्कैन करें', 'मोबाईल कॅमेऱ्याने फोटो काढून स्कॅन करा')}
+                  className="px-3 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition active:scale-95 shadow-xs cursor-pointer shrink-0"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>{tr('Photo', 'फोटो', 'फोटो')}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={!barcodeInput.trim()}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition active:scale-95 shrink-0 cursor-pointer"
+                >
+                  <Search className="w-4 h-4" />
+                  <span className="hidden sm:inline">{tr('Search', 'खोजें', 'शोधा')}</span>
+                </button>
+              </form>
+            </div>
+          </>
+        ) : (
+        /* Modal Body for Steps 2-5 */
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
 
           {/* STEP 2: REGISTER NEW PRODUCT IN CATALOGUE (MINIMAL 1-STEP: NAME + BARCODE ONLY) */}
           {step === 'register' && (
@@ -1561,6 +1542,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

@@ -33,7 +33,11 @@ import {
   printReport,
   downloadReportPDF,
   viewReportPDF,
-  exportProductsToCSV
+  exportProductsToCSV,
+  abbreviateUnitForPDF,
+  stripEmojisForPDF,
+  PDFReportOptions,
+  PDFSortOption
 } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { BarcodeStockInModal } from '../Scanner/BarcodeStockInModal';
@@ -624,85 +628,248 @@ export const ProductList: React.FC<ProductListProps> = ({
     [deleteProduct]
   );
 
-  // PDF / Print / CSV Report Payload (identical business logic)
-  const getStockReportPayload = () => {
+  // Dynamic Official A4 PDF / Print / CSV Report Payload (adapts to active tab, category & search filters without changing valuation math)
+  const getStockReportPayload = (): PDFReportOptions => {
     const isMr = language === 'mr';
     const isHi = language === 'hi';
-    return {
-      title: isMr
+
+    const formatIN = (value: number): string => {
+      const rounded = Math.round(value * 100) / 100;
+      return rounded.toLocaleString('en-IN', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+    };
+
+    const reportItems = filteredProducts;
+    const isFilteredView =
+      activeTab !== 'IN_STOCK' || selectedCategory !== 'All' || debouncedQuery.length > 0;
+
+    // Exact same stock valuation formulas (cost = stock * purchase_price, retail = stock * selling_price)
+    const reportCostValuation = isFilteredView
+      ? reportItems.reduce((sum, p) => sum + p.stock_quantity * p.purchase_price, 0)
+      : totalStockCostValuation;
+    const reportRetailValuation = isFilteredView
+      ? reportItems.reduce((sum, p) => sum + p.stock_quantity * p.selling_price, 0)
+      : totalStockRetailValuation;
+    const reportPotentialProfit = reportRetailValuation - reportCostValuation;
+    const reportLowStockCount = isFilteredView
+      ? reportItems.filter((p) => p.stock_quantity <= p.min_stock_alert).length
+      : lowStockCount;
+    const reportSkuCount = isFilteredView ? reportItems.length : products.length;
+
+    // Dynamic report title & period reflecting active inventory filter/need
+    const tabTitle =
+      activeTab === 'LOW_STOCK'
+        ? isMr
+          ? 'कमी साठा व पुनर्खरेदी मूल्यांकन अहवाल'
+          : isHi
+          ? 'कम स्टॉक व रीऑर्डर मूल्यांकन रिपोर्ट'
+          : 'Low Stock & Reorder Valuation Report'
+        : activeTab === 'OUT_OF_STOCK'
+        ? isMr
+          ? 'साठा संपलेल्या उत्पादनांचा अहवाल'
+          : isHi
+          ? 'आउट ऑफ स्टॉक उत्पाद रिपोर्ट'
+          : 'Out of Stock Catalog Report'
+        : activeTab === 'EXPIRING'
+        ? isMr
+          ? 'एक्सपायरी जवळील साठा अहवाल'
+          : isHi
+          ? 'एक्सपायरी नजदीक स्टॉक रिपोर्ट'
+          : 'Expiring Soon Inventory Report'
+        : isMr
         ? 'दुकान शिल्लक माल व साठा मूल्यांकन अहवाल'
         : isHi
         ? 'दुकान स्टॉक व मूल्यांकन रिपोर्ट'
-        : 'Dairy Inventory Stock Valuation & Catalog Report',
+        : 'Stock Valuation & Catalog Report';
+
+    const periodParts: string[] = [];
+    if (activeTab === 'LOW_STOCK') {
+      periodParts.push(isMr ? 'कमी साठा अलर्ट' : isHi ? 'कम स्टॉक अलर्ट' : 'Low Stock Items');
+    } else if (activeTab === 'OUT_OF_STOCK') {
+      periodParts.push(isMr ? 'साठा शून्य' : isHi ? 'स्टॉक शून्य' : 'Out of Stock');
+    } else if (activeTab === 'EXPIRING') {
+      periodParts.push(isMr ? 'एक्सपायरी जवळील' : isHi ? 'जल्द एक्सपायर' : 'Expiring Soon');
+    } else if (activeTab === 'ALL') {
+      periodParts.push(isMr ? 'संपूर्ण कॅटलॉग' : isHi ? 'संपूर्ण कैटलॉग' : 'All Loaded Catalog');
+    } else {
+      periodParts.push(
+        isMr
+          ? 'सद्यस्थिती साठा मूल्य'
+          : isHi
+          ? 'वर्तमान स्टॉक मूल्यांकन'
+          : 'Current Stock & Inventory Valuation'
+      );
+    }
+    if (selectedCategory !== 'All') {
+      periodParts.push(`${isMr ? 'प्रवर्ग' : isHi ? 'वर्ग' : 'Category'}: ${selectedCategory}`);
+    }
+    if (debouncedQuery.length > 0) {
+      periodParts.push(`${isMr ? 'शोध' : isHi ? 'खोज' : 'Search'}: "${debouncedQuery}"`);
+    }
+
+    const buildRowsFromList = (list: Product[]): { rows: (string | number)[][]; rowClasses: string[] } => {
+      const rows: (string | number)[][] = [];
+      const rowClasses: string[] = [];
+
+      list.forEach((p, idx) => {
+        const stockVal = p.stock_quantity * p.purchase_price;
+        const isLow = p.stock_quantity <= p.min_stock_alert;
+        const shortUnit = abbreviateUnitForPDF(p.unit);
+        const cleanName = stripEmojisForPDF(getProductDisplayName(p)) || stripEmojisForPDF(p.name);
+
+        rows.push([
+          idx + 1,
+          cleanName,
+          p.category,
+          `${formatIN(p.stock_quantity)} ${shortUnit}`,
+          formatIN(p.purchase_price),
+          formatIN(p.selling_price),
+          `${formatIN(p.min_stock_alert)} ${shortUnit}`,
+          formatIN(stockVal),
+          isLow ? 'LOW' : 'OK'
+        ]);
+        rowClasses.push(isLow ? 'row-low' : '');
+      });
+
+      return { rows, rowClasses };
+    };
+
+    const initialTable = buildRowsFromList(reportItems);
+
+    const sortOptions: PDFSortOption[] = [
+      {
+        id: 'default',
+        label: isMr ? 'क्रम: डीफॉल्ट' : isHi ? 'क्रम: डिफ़ॉल्ट' : 'Sort: Default',
+        sortRows: () => buildRowsFromList(reportItems)
+      },
+      {
+        id: 'stock_desc',
+        label: isMr ? 'साठा: जास्त → कमी' : isHi ? 'स्टॉक: ज्यादा → कम' : 'Stock: High → Low',
+        sortRows: () =>
+          buildRowsFromList([...reportItems].sort((a, b) => b.stock_quantity - a.stock_quantity))
+      },
+      {
+        id: 'name_asc',
+        label: isMr ? 'नाव: A → Z' : isHi ? 'नाम: A → Z' : 'Name: A → Z',
+        sortRows: () =>
+          buildRowsFromList(
+            [...reportItems].sort((a, b) =>
+              stripEmojisForPDF(getProductDisplayName(a)).localeCompare(
+                stripEmojisForPDF(getProductDisplayName(b))
+              )
+            )
+          )
+      },
+      {
+        id: 'category_asc',
+        label: isMr ? 'प्रवर्ग: A → Z' : isHi ? 'वर्ग: A → Z' : 'Category: A → Z',
+        sortRows: () =>
+          buildRowsFromList(
+            [...reportItems].sort(
+              (a, b) =>
+                a.category.localeCompare(b.category) ||
+                stripEmojisForPDF(a.name).localeCompare(stripEmojisForPDF(b.name))
+            )
+          )
+      },
+      {
+        id: 'low_first',
+        label: isMr ? 'कमी साठा प्रथम' : isHi ? 'कम स्टॉक पहले' : 'Low Stock First',
+        sortRows: () =>
+          buildRowsFromList(
+            [...reportItems].sort((a, b) => {
+              const aLow = a.stock_quantity <= a.min_stock_alert ? 0 : 1;
+              const bLow = b.stock_quantity <= b.min_stock_alert ? 0 : 1;
+              if (aLow !== bLow) return aLow - bLow;
+              return a.stock_quantity - b.stock_quantity;
+            })
+          )
+      }
+    ];
+
+    const grandTotalCostVal = reportItems.reduce(
+      (sum, p) => sum + p.stock_quantity * p.purchase_price,
+      0
+    );
+    const grandTotalRetailVal = reportItems.reduce(
+      (sum, p) => sum + p.stock_quantity * p.selling_price,
+      0
+    );
+
+    return {
+      title: tabTitle,
+      toolbarTitle: isMr
+        ? 'साठा मूल्यांकन अहवाल'
+        : isHi
+        ? 'स्टॉक मूल्यांकन रिपोर्ट'
+        : 'Stock Valuation Report',
       subtitle: isMr
-        ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP'
+        ? 'डेअरी फार्म व उत्पादने ERP'
         : isHi
-        ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP'
-        : 'Yogeshwari Dairy Farm & Products ERP',
-      periodText: isMr
-        ? 'सद्यस्थिती साठा मूल्य'
-        : isHi
-        ? 'वर्तमान स्टॉक इन्वेंटरी'
-        : 'Current Stock & Inventory Valuation',
+        ? 'डेरी फार्म व उत्पाद ERP'
+        : 'Dairy Farm & Products ERP',
+      periodText: periodParts.join(' • '),
       language,
       kpis: [
         {
-          label: isMr ? 'एकूण उत्पादने' : isHi ? 'कुल उत्पाद संख्या' : 'Total SKUs',
-          value: `${products.length}`,
+          label: isMr ? 'एकूण उत्पादने' : isHi ? 'कुल उत्पाद' : 'Total SKUs',
+          value: `${reportSkuCount}`,
           color: 'emerald'
         },
         {
-          label: isMr ? 'खरेदीनुसार साठा मूल्य' : isHi ? 'खरीद भाव अनुसार स्टॉक मूल्य' : 'Cost Valuation',
-          value: `₹${totalStockCostValuation.toLocaleString('en-IN')}`,
+          label: isMr ? 'खरेदीनुसार मूल्य' : isHi ? 'खरीद मूल्य' : 'Cost Valuation',
+          value: `₹${formatIN(reportCostValuation)}`,
           color: 'blue'
         },
         {
-          label: isMr ? 'विक्रीनुसार साठा मूल्य' : isHi ? 'बिक्री भाव अनुसार स्टॉक मूल्य' : 'Retail Valuation',
-          value: `₹${totalStockRetailValuation.toLocaleString('en-IN')}`,
+          label: isMr ? 'विक्रीनुसार मूल्य' : isHi ? 'बिक्री मूल्य' : 'Retail Valuation',
+          value: `₹${formatIN(reportRetailValuation)}`,
           color: 'purple'
         },
         {
-          label: isMr ? 'कमी साठा उत्पादने' : isHi ? 'कम स्टॉक उत्पाद' : 'Low Stock Items',
-          value: `${lowStockCount}`,
+          label: isMr ? 'कमी साठा' : isHi ? 'कम स्टॉक' : 'Low Stock Items',
+          value: `${reportLowStockCount}`,
           color: 'rose'
         }
       ],
+      summaryNote: isMr
+        ? `अंदाजित नफा (Potential Profit = विक्री - खरेदी): ₹${formatIN(reportPotentialProfit)}`
+        : isHi
+        ? `संभावित लाभ (Potential Profit = बिक्री - खरीद): ₹${formatIN(reportPotentialProfit)}`
+        : `Potential Profit = Retail - Cost: ₹${formatIN(reportPotentialProfit)}`,
       table: {
         headers: isMr
-          ? ['उत्पादनाचे नाव', 'प्रवर्ग', 'शिल्लक साठा', 'खरेदी दर (₹)', 'विक्री दर (₹)', 'किमान मर्यादा', 'साठा मूल्य (₹)']
+          ? ['अ.क्र.', 'उत्पादनाचे नाव', 'प्रवर्ग', 'साठा', 'खरेदी दर ₹', 'विक्री दर ₹', 'किमान अलर्ट', 'साठा मूल्य ₹', 'स्थिती']
           : isHi
-          ? ['सामान का नाम', 'वर्ग', 'वर्तमान स्टॉक', 'खरीद दर (₹)', 'बिक्री दर (₹)', 'न्यूनतम सीमा', 'स्टॉक मूल्य (₹)']
-          : ['Product Name', 'Category', 'Current Stock', 'Purchase Rate (₹)', 'Selling Rate (₹)', 'Min Alert', 'Valuation (₹)'],
-        alignments: ['left', 'center', 'right', 'right', 'right', 'center', 'right'] as Array<
-          'left' | 'center' | 'right'
-        >,
-        rows: filteredProducts.map((p) => {
-          const val = p.stock_quantity * p.purchase_price;
-          return [
-            getProductDisplayName(p),
-            p.category,
-            `${p.stock_quantity} ${p.unit}`,
-            `₹${p.purchase_price}`,
-            `₹${p.selling_price}`,
-            `${p.min_stock_alert} ${p.unit}`,
-            `₹${val.toLocaleString('en-IN')}`
-          ];
-        }),
+          ? ['क्र.', 'उत्पाद का नाम', 'वर्ग', 'स्टॉक', 'खरीद दर ₹', 'बिक्री दर ₹', 'न्यूनतम अलर्ट', 'स्टॉक मूल्य ₹', 'स्थिति']
+          : ['Sr. No.', 'Product Name', 'Category', 'Stock', 'Purchase Rate ₹', 'Selling Rate ₹', 'Min Alert', 'Stock Value ₹', 'Status'],
+        columnWidths: ['6%', '24%', '13%', '10%', '10%', '10%', '9%', '11%', '7%'],
+        alignments: ['center', 'left', 'left', 'right', 'right', 'right', 'right', 'right', 'center'],
+        nowrapColumns: [0, 3, 6, 8],
+        boldColumns: [7],
+        statusColumnIndex: 8,
+        rows: initialTable.rows,
+        rowClasses: initialTable.rowClasses,
+        sortOptions,
         summaryRow: [
-          isMr ? 'एकूण' : isHi ? 'कुल योग' : 'Total',
-          `${filteredProducts.length} ${isMr ? 'उत्पादने' : isHi ? 'उत्पाद' : 'Products'}`,
           '',
+          isMr ? 'एकूण योग (Grand Total)' : isHi ? 'महायोग (Grand Total)' : 'Grand Total',
+          `${reportItems.length} SKUs`,
           '',
+          `₹${formatIN(grandTotalCostVal)}`,
+          `₹${formatIN(grandTotalRetailVal)}`,
           '',
-          '',
-          `₹${filteredProducts.reduce((sum, p) => sum + p.stock_quantity * p.purchase_price, 0).toLocaleString('en-IN')}`
+          `₹${formatIN(grandTotalCostVal)}`,
+          ''
         ]
       },
       notes: isMr
-        ? 'दुकान साठा तपशील. कमी साठा असलेली उत्पादने वेळेत खरेदी करावीत.'
+        ? 'दुकान साठा तपशील. कमी साठा (LOW) असलेली उत्पादने वेळेत खरेदी करावीत.'
         : isHi
-        ? 'दुकान स्टॉक विवरण। कम स्टॉक वाले उत्पाद समय रहते खरीद लें।'
-        : 'Dairy inventory valuation statement. Ensure timely replenishment for items reaching reorder thresholds.'
+        ? 'दुकान स्टॉक विवरण। कम स्टॉक (LOW) वाले उत्पाद समय रहते खरीद लें।'
+        : 'Official inventory valuation statement. Items marked LOW are at or below minimum alert threshold.'
     };
   };
 

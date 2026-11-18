@@ -1,9 +1,11 @@
 import React from 'react';
 import { WifiOff, Wifi } from 'lucide-react';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const NetworkStatusBanner: React.FC = () => {
   const { isOnline, wasOffline } = useNetworkStatus();
+  const { tr } = useLanguage();
 
   if (isOnline && !wasOffline) return null;
 
@@ -20,12 +22,24 @@ export const NetworkStatusBanner: React.FC = () => {
       {isOnline ? (
         <>
           <Wifi className="w-3.5 h-3.5 shrink-0" />
-          <span>इंटरनेट कनेक्शन पूर्ववत झाले आहे (Back Online)</span>
+          <span>
+            {tr(
+              'Internet connection restored (Back Online)',
+              'इंटरनेट कनेक्शन बहाल हो गया है (Back Online)',
+              'इंटरनेट कनेक्शन पूर्ववत झाले आहे (Back Online)'
+            )}
+          </span>
         </>
       ) : (
         <>
           <WifiOff className="w-3.5 h-3.5 shrink-0" />
-          <span>इंटरनेट डिस्कनेक्ट झाले आहे - ऑफलाइन मोड सुरू आहे (Working Offline)</span>
+          <span>
+            {tr(
+              'Internet disconnected — Working Offline',
+              'इंटरनेट डिस्कनेक्ट हो गया है — ऑफ़लाइन मोड चालू है',
+              'इंटरनेट डिस्कनेक्ट झाले आहे — ऑफलाइन मोड सुरू आहे'
+            )}
+          </span>
         </>
       )}
     </div>

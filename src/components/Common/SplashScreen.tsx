@@ -141,11 +141,19 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-            योगेश्वरी डेअरी प्रॉडक्ट्स
+            {language === 'mr'
+              ? 'योगेश्वरी डेअरी प्रॉडक्ट्स'
+              : language === 'hi'
+              ? 'योगेश्वरी डेयरी प्रोडक्ट्स'
+              : 'Yogeshwari Dairy Products'}
           </h1>
 
           <p className="text-xs sm:text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-            शुद्धता आमची... विश्वास तुमचा...
+            {language === 'mr'
+              ? 'शुद्धता आमची... विश्वास तुमचा...'
+              : language === 'hi'
+              ? 'शुद्धता हमारी... विश्वास आपका...'
+              : 'Our Purity... Your Trust...'}
           </p>
         </div>
 

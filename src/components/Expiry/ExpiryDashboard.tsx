@@ -29,7 +29,7 @@ import {
 
 export const ExpiryDashboard: React.FC = () => {
   const { batches, products, recordDamage, adjustStock } = useStore();
-  const { t, language } = useLanguage();
+  const { t, language, tr } = useLanguage();
 
   const [activeTab, setActiveTab] = useState<ExpiryStatus | 'ALL'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -318,8 +318,8 @@ export const ExpiryDashboard: React.FC = () => {
         }
         primaryAction={{
           label: copiedAlert
-            ? language === 'mr' ? 'कॉपी!' : 'कॉपी!'
-            : language === 'mr' ? 'रिस्क कॉपी' : language === 'hi' ? 'रिस्क कॉपी' : 'WhatsApp',
+            ? tr('Copied!', 'कॉपी हुआ!', 'कॉपी!')
+            : tr('WhatsApp', 'रिस्क कॉपी', 'रिस्क कॉपी'),
           icon: copiedAlert ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />,
           onClick: handleCopyWhatsAppAlert,
           ariaLabel: 'Copy WhatsApp Expiry Risk Alert',
@@ -355,25 +355,25 @@ export const ExpiryDashboard: React.FC = () => {
         columns={4}
         items={[
           {
-            label: language === 'mr' ? 'मुदत संपली' : 'एक्सपायर्ड',
+            label: tr('Expired', 'एक्सपायर्ड', 'मुदत संपली'),
             value: `₹${kpis.expiredCostLoss.toLocaleString('en-IN')}`,
-            sublabel: `${kpis.expiredCount} ${language === 'mr' ? 'बॅचेस' : 'बैचेस'}`,
+            sublabel: `${kpis.expiredCount} ${tr('batches', 'बैचेस', 'बॅचेस')}`,
             tone: 'rose',
           },
           {
-            label: language === 'mr' ? 'धोक्यातील' : 'जोखिम में',
+            label: tr('At Risk', 'जोखिम में', 'धोक्यातील'),
             value: `₹${kpis.nearExpiryRiskTotal.toLocaleString('en-IN')}`,
-            sublabel: `${kpis.todayCount + kpis.tomorrowCount + kpis.threeDaysCount} ${language === 'mr' ? 'आधी विका' : 'पहले बेचें'}`,
+            sublabel: `${kpis.todayCount + kpis.tomorrowCount + kpis.threeDaysCount} ${tr('sell first', 'पहले बेचें', 'आधी विका')}`,
             tone: 'amber',
           },
           {
-            label: language === 'mr' ? 'ताजा माल' : 'ताज़ा स्टॉक',
+            label: tr('Fresh Stock', 'ताज़ा स्टॉक', 'ताजा माल'),
             value: kpis.freshCount,
-            sublabel: language === 'mr' ? '७+ दिवस सुरक्षित' : '7+ दिन सुरक्षित',
+            sublabel: tr('7+ days safe', '7+ दिन सुरक्षित', '७+ दिवस सुरक्षित'),
             tone: 'emerald',
           },
           {
-            label: language === 'mr' ? 'सक्रिय बॅचेस' : 'सक्रिय बैचेस',
+            label: tr('Active Batches', 'सक्रिय बैचेस', 'सक्रिय बॅचेस'),
             value: kpis.totalActiveBatches,
             sublabel: `₹${kpis.totalStockCost.toLocaleString('en-IN')}`,
             tone: 'neutral',
@@ -420,13 +420,13 @@ export const ExpiryDashboard: React.FC = () => {
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5">
             {(
               [
-                { id: 'ALL', label: language === 'mr' ? 'सर्व' : 'सभी', count: enrichedBatches.length, color: 'bg-emerald-600 text-white border-emerald-600' },
-                { id: 'EXPIRED', label: language === 'mr' ? '🔴 संपली' : '🔴 एक्सपायर्ड', count: kpis.expiredCount, color: 'bg-rose-600 text-white border-rose-600' },
-                { id: 'EXPIRING_TODAY', label: language === 'mr' ? '🟠 आज' : '🟠 आज', count: kpis.todayCount, color: 'bg-orange-600 text-white border-orange-600' },
-                { id: 'EXPIRING_TOMORROW', label: language === 'mr' ? '🟡 उद्या' : '🟡 कल', count: kpis.tomorrowCount, color: 'bg-amber-600 text-white border-amber-600' },
-                { id: 'EXPIRING_IN_3_DAYS', label: language === 'mr' ? '🔵 ३ दिवस' : '🔵 3 दिन', count: kpis.threeDaysCount, color: 'bg-blue-600 text-white border-blue-600' },
-                { id: 'EXPIRING_IN_7_DAYS', label: language === 'mr' ? '🟣 ७ दिवस' : '🟣 7 दिन', count: kpis.sevenDaysCount, color: 'bg-purple-600 text-white border-purple-600' },
-                { id: 'FRESH', label: language === 'mr' ? '🟢 ताजा' : '🟢 ताजा', count: kpis.freshCount, color: 'bg-emerald-600 text-white border-emerald-600' }
+                { id: 'ALL', label: tr('All', 'सभी', 'सर्व'), count: enrichedBatches.length, color: 'bg-emerald-600 text-white border-emerald-600' },
+                { id: 'EXPIRED', label: tr('🔴 Expired', '🔴 एक्सपायर्ड', '🔴 संपली'), count: kpis.expiredCount, color: 'bg-rose-600 text-white border-rose-600' },
+                { id: 'EXPIRING_TODAY', label: tr('🟠 Today', '🟠 आज', '🟠 आज'), count: kpis.todayCount, color: 'bg-orange-600 text-white border-orange-600' },
+                { id: 'EXPIRING_TOMORROW', label: tr('🟡 Tomorrow', '🟡 कल', '🟡 उद्या'), count: kpis.tomorrowCount, color: 'bg-amber-600 text-white border-amber-600' },
+                { id: 'EXPIRING_IN_3_DAYS', label: tr('🔵 3 Days', '🔵 3 दिन', '🔵 ३ दिवस'), count: kpis.threeDaysCount, color: 'bg-blue-600 text-white border-blue-600' },
+                { id: 'EXPIRING_IN_7_DAYS', label: tr('🟣 7 Days', '🟣 7 दिन', '🟣 ७ दिवस'), count: kpis.sevenDaysCount, color: 'bg-purple-600 text-white border-purple-600' },
+                { id: 'FRESH', label: tr('🟢 Fresh', '🟢 ताजा', '🟢 ताजा'), count: kpis.freshCount, color: 'bg-emerald-600 text-white border-emerald-600' }
               ] as Array<{ id: ExpiryStatus | 'ALL'; label: string; count: number; color: string }>
             ).map((tab) => {
               const isActive = activeTab === tab.id;
@@ -469,13 +469,13 @@ export const ExpiryDashboard: React.FC = () => {
             <thead className="bg-slate-50 dark:bg-[#1A2A25] border-b border-slate-200 dark:border-[#24352F] text-slate-600 dark:text-[#8FA69C] font-bold uppercase">
               <tr>
                 <th className="px-4 py-3">{t('productNameCol')}</th>
-                <th className="px-3 py-3">{language === 'mr' ? 'बॅच क्र.' : 'बैच सं.'}</th>
-                <th className="px-3 py-3">{language === 'mr' ? 'पुरवठादार' : 'सप्लायर'}</th>
-                <th className="px-3 py-3 text-center">{language === 'mr' ? 'शिल्लक साठा' : 'उपलब्ध स्टॉक'}</th>
-                <th className="px-3 py-3 text-right">{language === 'mr' ? 'खरेदी भाव' : 'खरीद भाव'}</th>
-                <th className="px-3 py-3 text-right">{language === 'mr' ? 'एकूण मूल्य' : 'कुल लागत'}</th>
-                <th className="px-3 py-3">{language === 'mr' ? 'मुदत समाप्ती तारीख' : 'एक्सपायरी तारीख'}</th>
-                <th className="px-3 py-3 text-center">{language === 'mr' ? 'स्थिती' : 'स्थिति'}</th>
+                <th className="px-3 py-3">{tr('Batch No.', 'बैच सं.', 'बॅच क्र.')}</th>
+                <th className="px-3 py-3">{tr('Supplier', 'सप्लायर', 'पुरवठादार')}</th>
+                <th className="px-3 py-3 text-center">{tr('Stock Left', 'उपलब्ध स्टॉक', 'शिल्लक साठा')}</th>
+                <th className="px-3 py-3 text-right">{tr('Purchase Rate', 'खरीद भाव', 'खरेदी भाव')}</th>
+                <th className="px-3 py-3 text-right">{tr('Total Cost', 'कुल लागत', 'एकूण मूल्य')}</th>
+                <th className="px-3 py-3">{tr('Expiry Date', 'एक्सपायरी तारीख', 'मुदत समाप्ती तारीख')}</th>
+                <th className="px-3 py-3 text-center">{tr('Status', 'स्थिति', 'स्थिती')}</th>
                 <th className="px-4 py-3 text-right">{t('actionsCol')}</th>
               </tr>
             </thead>
@@ -545,12 +545,12 @@ export const ExpiryDashboard: React.FC = () => {
                         <span className={`text-[10px] font-bold block mt-0.5 ${isExpired ? 'text-rose-600 dark:text-rose-400' : isToday ? 'text-orange-600 dark:text-orange-400' : 'text-slate-500'
                           }`}>
                           {isExpired
-                            ? `${Math.abs(batch.daysToExpiry)} ${language === 'mr' ? 'दिवसांपूर्वी संपली' : 'दिन पहले समाप्त'}`
+                            ? `${Math.abs(batch.daysToExpiry)} ${tr('days ago', 'दिन पहले समाप्त', 'दिवसांपूर्वी संपली')}`
                             : isToday
-                              ? (language === 'mr' ? 'आजच संपत आहे!' : 'आज ही समाप्त!')
+                              ? tr('Expires today!', 'आज ही समाप्त!', 'आजच संपत आहे!')
                               : isTomorrow
-                                ? (language === 'mr' ? 'उद्या संपणार' : 'कल समाप्त')
-                                : `${batch.daysToExpiry} ${language === 'mr' ? 'दिवस शिल्लक' : 'दिन बचे'}`}
+                                ? tr('Expires tomorrow', 'कल समाप्त', 'उद्या संपणार')
+                                : `${batch.daysToExpiry} ${tr('days left', 'दिन बचे', 'दिवस शिल्लक')}`}
                         </span>
                       </td>
 
@@ -567,14 +567,14 @@ export const ExpiryDashboard: React.FC = () => {
                                 : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900'
                           }`}>
                           {isExpired
-                            ? (language === 'mr' ? 'मुदत संपली (Blocked)' : language === 'hi' ? 'मुदत समाप्त' : 'Expired')
+                            ? tr('Expired (Blocked)', 'अवधि समाप्त (ब्लॉक)', 'मुदत संपली (ब्लॉक)')
                             : isToday
-                            ? (language === 'mr' ? 'आज संपत आहे' : language === 'hi' ? 'आज समाप्त' : 'Expiring Today')
+                            ? tr('Expiring Today', 'आज समाप्त', 'आज संपत आहे')
                             : isTomorrow
-                            ? (language === 'mr' ? 'उद्या संपणार' : language === 'hi' ? 'कल समाप्त' : 'Expiring Tomorrow')
+                            ? tr('Expiring Tomorrow', 'कल समाप्त', 'उद्या संपणार')
                             : batch.expiryStatus === 'EXPIRING_IN_3_DAYS'
-                            ? (language === 'mr' ? '३ दिवसांत संपणार' : language === 'hi' ? '३ दिनों में समाप्त' : 'In 3 Days')
-                            : (language === 'mr' ? 'सुरक्षित साठा' : language === 'hi' ? 'सुरक्षित स्टॉक' : 'Safe Stock')}
+                            ? tr('In 3 Days', '३ दिनों में समाप्त', '३ दिवसांत संपणार')
+                            : tr('Safe Stock', 'सुरक्षित स्टॉक', 'सुरक्षित साठा')}
                         </span>
                       </td>
 
@@ -583,10 +583,10 @@ export const ExpiryDashboard: React.FC = () => {
                         <button
                           onClick={() => openWriteOff(batch)}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 transition-colors"
-                          title="Record Expired Removal & Loss"
+                          title={tr('Record Expired Removal & Loss', 'एक्सपायर माल हटाना व नुकसान दर्ज करें', 'मुदत संपलेला माल काढणे व नुकसान नोंदवा')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          <span>{language === 'mr' ? 'नुकसान नोंदवा' : 'नुकसान दर्ज करें'}</span>
+                          <span>{tr('Log Loss', 'नुकसान दर्ज करें', 'नुकसान नोंदवा')}</span>
                         </button>
                       </td>
                     </tr>
@@ -597,10 +597,10 @@ export const ExpiryDashboard: React.FC = () => {
                   <td colSpan={9} className="px-4 py-12 text-center text-slate-500 dark:text-[#8FA69C]">
                     <CheckCircle2 className="w-10 h-10 mx-auto text-emerald-500 mb-2 opacity-60" />
                     <p className="font-bold text-sm">
-                      {language === 'mr' ? 'निवडलेल्या श्रेणीत कोणतीही मुदत संपलेली बॅच नाही.' : 'चुनी गई श्रेणी में कोई एक्सपायर्ड बैच नहीं है।'}
+                      {tr('No batches found in the selected category.', 'चुनी गई श्रेणी में कोई एक्सपायर्ड बैच नहीं है।', 'निवडलेल्या श्रेणीत कोणतीही मुदत संपलेली बॅच नाही.')}
                     </p>
                     <p className="text-xs text-slate-400 mt-1">
-                      {language === 'mr' ? 'सर्व साठा सुरक्षित व ताजा आहे.' : 'सभी स्टॉक सुरक्षित और ताज़ा है।'}
+                      {tr('All stock is safe and fresh.', 'सभी स्टॉक सुरक्षित और ताज़ा है।', 'सर्व साठा सुरक्षित व ताजा आहे.')}
                     </p>
                   </td>
                 </tr>
@@ -618,7 +618,7 @@ export const ExpiryDashboard: React.FC = () => {
               <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
                 <AlertOctagon className="w-5 h-5" />
                 <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                  {language === 'mr' ? 'खराब / मुदत संपलेला माल नोंदणी' : 'एक्सपायर्ड माल हटाना व नुकसान दर्ज करें'}
+                  {tr('Write Off Expired / Spoiled Stock', 'एक्सपायर्ड माल हटाना व नुकसान दर्ज करें', 'खराब / मुदत संपलेला माल नोंदणी')}
                 </h3>
               </div>
               <button
@@ -630,20 +630,20 @@ export const ExpiryDashboard: React.FC = () => {
             </div>
 
             <div className="bg-slate-50 dark:bg-[#1A2A25] p-3 rounded-xl border border-slate-200/80 dark:border-[#24352F] space-y-1">
-              <div className="text-xs text-slate-500 dark:text-[#8FA69C]">{language === 'mr' ? 'उत्पादन:' : 'उत्पाद:'}</div>
+              <div className="text-xs text-slate-500 dark:text-[#8FA69C]">{tr('Product:', 'उत्पाद:', 'उत्पादन:')}</div>
               <div className="font-bold text-slate-900 dark:text-white text-sm">
                 {getProductDisplayName(writeOffBatch)}
               </div>
               <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#8FA69C] pt-1">
-                <span>बॅच क्र: <span className="font-mono font-bold text-slate-800 dark:text-white">{writeOffBatch.batch_no}</span></span>
-                <span>उपलब्ध: <span className="font-bold text-rose-600">{writeOffBatch.qty_remaining} {writeOffBatch.product?.unit}</span></span>
+                <span>{tr('Batch No:', 'बैच सं:', 'बॅच क्र:')} <span className="font-mono font-bold text-slate-800 dark:text-white">{writeOffBatch.batch_no}</span></span>
+                <span>{tr('Available:', 'उपलब्ध:', 'उपलब्ध:')} <span className="font-bold text-rose-600">{writeOffBatch.qty_remaining} {writeOffBatch.product?.unit}</span></span>
               </div>
             </div>
 
             {/* Removal Quantity */}
             <div>
               <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {language === 'mr' ? 'काढून टाकायची मात्रा (Quantity to Remove):' : 'हटाने की मात्रा (Quantity):'}
+                {tr('Quantity to Remove:', 'हटाने की मात्रा:', 'काढून टाकायची मात्रा:')}
               </label>
               <input
                 type="number"
@@ -659,25 +659,25 @@ export const ExpiryDashboard: React.FC = () => {
             {/* Reason */}
             <div>
               <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {language === 'mr' ? 'खराबीचे कारण (Reason):' : 'कारण (Reason):'}
+                {tr('Reason:', 'कारण:', 'खराबीचे कारण:')}
               </label>
               <select
                 value={writeOffReason}
                 onChange={(e) => setWriteOffReason(e.target.value as DamageReason)}
                 className="w-full px-3 py-2 bg-slate-50 dark:bg-[#1A2A25] border border-slate-300 dark:border-[#24352F] rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
               >
-                <option value="Expiry Date Over">Expiry Date Over (मुदत संपली)</option>
-                <option value="Doodh Fat Gya (Curdled)">Doodh Fat Gya (दूध फाटले / Curdled)</option>
-                <option value="Theli Phat Gayi (Leaked)">Theli Phat Gayi (पाऊच लीकेज / Leaked)</option>
-                <option value="Handling Spoilage">Handling Spoilage (हाताळणीत खराब)</option>
-                <option value="Other">Other (इतर कारण)</option>
+                <option value="Expiry Date Over">{tr('Expiry Date Over', 'एक्सपायरी डेट समाप्त', 'मुदत संपली')}</option>
+                <option value="Doodh Fat Gya (Curdled)">{tr('Curdled Milk', 'दूध फट गया', 'दूध फाटले / नासले')}</option>
+                <option value="Theli Phat Gayi (Leaked)">{tr('Leaked / Torn Pouch', 'पाउच लीकेज / फटा', 'पाऊच लीकेज / फुटले')}</option>
+                <option value="Handling Spoilage">{tr('Handling Spoilage', 'हैंडलिंग में खराब', 'हाताळणीत खराब')}</option>
+                <option value="Other">{tr('Other Reason', 'अन्य कारण', 'इतर कारण')}</option>
               </select>
             </div>
 
             {/* Estimated Loss Display */}
             <div className="p-3 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-900/60 flex items-center justify-between">
               <span className="text-xs font-bold text-rose-800 dark:text-rose-300">
-                {language === 'mr' ? 'थेट आर्थिक नुकसान (Loss Amount):' : 'कुल नुकसान राशि:'}
+                {tr('Direct Financial Loss:', 'कुल नुकसान राशि:', 'थेट आर्थिक नुकसान:')}
               </span>
               <span className="text-base font-black text-rose-700 dark:text-rose-400 tabular-nums">
                 ₹{(writeOffQty * writeOffBatch.purchase_price).toFixed(2)}
@@ -687,7 +687,7 @@ export const ExpiryDashboard: React.FC = () => {
             {/* Notes */}
             <div>
               <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C] block mb-1">
-                {language === 'mr' ? 'तपशील / टीप (Notes):' : 'नोट्स (Notes):'}
+                {tr('Notes / Details:', 'नोट्स / विवरण:', 'तपशील / टीप:')}
               </label>
               <textarea
                 rows={2}
@@ -704,7 +704,7 @@ export const ExpiryDashboard: React.FC = () => {
                 onClick={() => setWriteOffBatch(null)}
                 className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-[#8FA69C] hover:bg-slate-100 dark:hover:bg-[#1A2A25]"
               >
-                {language === 'mr' ? 'रद्द करा' : 'रद्द करें'}
+                {tr('Cancel', 'रद्द करें', 'रद्द करा')}
               </button>
               <button
                 type="button"
@@ -712,7 +712,9 @@ export const ExpiryDashboard: React.FC = () => {
                 onClick={handleConfirmWriteOff}
                 className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white transition-colors disabled:opacity-50"
               >
-                {isSubmittingWriteOff ? 'नोंद होत आहे...' : (language === 'mr' ? 'नुकसान नोंदवा आणि साठा कमी करा' : 'नुकसान दर्ज करें')}
+                {isSubmittingWriteOff
+                  ? tr('Recording...', 'दर्ज हो रहा है...', 'नोंद होत आहे...')
+                  : tr('Record Loss & Deduct Stock', 'नुकसान दर्ज करें और स्टॉक घटाएं', 'नुकसान नोंदवा आणि साठा कमी करा')}
               </button>
             </div>
           </div>

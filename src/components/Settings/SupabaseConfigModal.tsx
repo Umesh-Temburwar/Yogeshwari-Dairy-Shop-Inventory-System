@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { getSupabaseConfig, saveSupabaseConfig, testSupabaseConnection } from '../../lib/supabase';
 import { 
   Database, 
@@ -27,6 +28,7 @@ interface SupabaseConfigModalProps {
 
 export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({ isOpen, onClose, onOpenChangePasscode }) => {
   const { isSupabaseConnected, syncWithSupabase, resetToSampleData, triggerGlobalBillingScanner } = useStore();
+  const { tr } = useLanguage();
 
   const currentConfig = getSupabaseConfig();
   const [url, setUrl] = useState(currentConfig.url);
@@ -46,7 +48,11 @@ export const SupabaseConfigModal: React.FC<SupabaseConfigModalProps> = ({ isOpen
     const result = await testSupabaseConnection(url.trim(), key.trim());
     if (result.success) {
       saveSupabaseConfig(url.trim(), key.trim());
-      setTestingStatus({ testing: false, success: true, message: 'Supabase से सफलतापूर्वक जुड़ गया!' });
+      setTestingStatus({
+        testing: false,
+        success: true,
+        message: tr('Successfully connected to Supabase!', 'Supabase से सफलतापूर्वक जुड़ गया!', 'Supabase शी यशस्वीरित्या जोडले गेले!')
+      });
       await syncWithSupabase();
     } else {
       setTestingStatus({ testing: false, success: false, message: result.message });
@@ -175,10 +181,10 @@ CREATE TABLE IF NOT EXISTS expenses (
             </div>
             <div>
               <h3 className="font-extrabold text-slate-900 dark:text-[#E7F0EC] text-base">
-                Supabase डेटाबेस सेटिंग्स (Cloud Database)
+                {tr('Supabase Cloud Database Settings', 'Supabase डेटाबेस सेटिंग्स (Cloud Database)', 'Supabase डेटाबेस सेटिंग्ज (Cloud Database)')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-medium">
-                क्लाउड सिंक अथवा ऑफलाइन लोकल स्टोरेज मोड
+                {tr('Cloud sync or offline local storage mode', 'क्लाउड सिंक अथवा ऑफलाइन लोकल स्टोरेज मोड', 'क्लाउड सिंक किंवा ऑफलाइन लोकल स्टोरेज मोड')}
               </p>
             </div>
           </div>
@@ -204,12 +210,14 @@ CREATE TABLE IF NOT EXISTS expenses (
             )}
             <div>
               <div className="font-bold">
-                {isSupabaseConnected ? 'क्लाउड डेटाबेस सक्रिय (Supabase Connected)' : 'ऑफलाइन लोकल स्टोरेज सक्रिय (Offline Mode)'}
+                {isSupabaseConnected
+                  ? tr('Cloud Database Connected (Supabase)', 'क्लाउड डेटाबेस सक्रिय (Supabase Connected)', 'क्लाउड डेटाबेस सक्रिय (Supabase Connected)')
+                  : tr('Offline Local Storage Active', 'ऑफलाइन लोकल स्टोरेज सक्रिय (Offline Mode)', 'ऑफलाइन लोकल स्टोरेज सक्रिय (Offline Mode)')}
               </div>
               <div className="text-[11px] font-normal text-slate-500 dark:text-[#8FA69C]">
-                {isSupabaseConnected 
-                  ? 'आपका सारा डेटा सीधे Supabase PostgreSQL में सुरक्षित हो रहा है'
-                  : 'डेटा आपके ब्राउज़र में सुरक्षित है। Supabase जोड़ते ही ऑटो-सिंक हो जाएगा।'}
+                {isSupabaseConnected
+                  ? tr('All your shop data is securely synced to Supabase PostgreSQL.', 'आपका सारा डेटा सीधे Supabase PostgreSQL में सुरक्षित हो रहा है', 'तुमचा सर्व डेटा थेट Supabase PostgreSQL मध्ये सुरक्षित होत आहे')
+                  : tr('Data is saved in your browser. Connect Supabase to auto-sync.', 'डेटा आपके ब्राउज़र में सुरक्षित है। Supabase जोड़ते ही ऑटो-सिंक हो जाएगा।', 'डेटा ब्राउझरमध्ये सुरक्षित आहे. Supabase जोडताच ऑटो-सिंक होईल.')}
               </div>
             </div>
           </div>
@@ -259,7 +267,7 @@ CREATE TABLE IF NOT EXISTS expenses (
               className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20"
             >
               {testingStatus.testing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
-              <span>कनेक्शन जांचें व सुरक्षित करें</span>
+              <span>{tr('Test & Save Connection', 'कनेक्शन जांचें व सुरक्षित करें', 'कनेक्शन तपासा व सेव्ह करा')}</span>
             </button>
 
             {isSupabaseConnected && (
@@ -268,7 +276,7 @@ CREATE TABLE IF NOT EXISTS expenses (
                 onClick={handleDisconnect}
                 className="px-3 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-900/40"
               >
-                डिस्कनेक्ट
+                {tr('Disconnect', 'डिस्कनेक्ट', 'डिस्कनेक्ट')}
               </button>
             )}
           </div>
@@ -279,18 +287,26 @@ CREATE TABLE IF NOT EXISTS expenses (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-[#E7F0EC]">
               <FileCode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Supabase SQL सेटअप स्क्रिप्ट</span>
+              <span>{tr('Supabase SQL Setup Script', 'Supabase SQL सेटअप स्क्रिप्ट', 'Supabase SQL सेटअप स्क्रिप्ट')}</span>
             </div>
             <button
               onClick={handleCopySqlSchema}
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] text-xs font-bold text-slate-700 dark:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#24352F]"
             >
               {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copiedSql ? 'कॉपी हो गया!' : '1-क्लिक SQL कॉपी करें'}</span>
+              <span>
+                {copiedSql
+                  ? tr('Copied!', 'कॉपी हो गया!', 'कॉपी झाले!')
+                  : tr('1-Click Copy SQL', '1-क्लिक SQL कॉपी करें', '1-क्लिक SQL कॉपी करा')}
+              </span>
             </button>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-            इसे Supabase Dashboard में <b className="text-slate-700 dark:text-[#E7F0EC]">SQL Editor</b> में पेस्ट करके "Run" दबाएं।
+            {tr(
+              'Paste this in Supabase Dashboard -> SQL Editor and click "Run".',
+              'इसे Supabase Dashboard में SQL Editor में पेस्ट करके "Run" दबाएं।',
+              'हे Supabase Dashboard मधील SQL Editor मध्ये पेस्ट करून "Run" दाबा.'
+            )}
           </p>
         </div>
 
@@ -303,10 +319,10 @@ CREATE TABLE IF NOT EXISTS expenses (
               </div>
               <div className="min-w-0">
                 <h4 className="text-xs font-extrabold text-slate-900 dark:text-[#E7F0EC] truncate">
-                  मास्टर सुरक्षा पासवर्ड बदला (Master Passcode)
+                  {tr('Change Master Passcode', 'मास्टर सुरक्षा पासवर्ड बदलें', 'मास्टर सुरक्षा पासवर्ड बदला')}
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                  वर्तमान ८-अंकी पासवर्ड सत्यापित करून नवीन पासवर्ड सेट करा
+                  {tr('Verify current 8-digit passcode and set a new one', 'वर्तमान 8-अंकीय पासवर्ड सत्यापित करके नया पासवर्ड सेट करें', 'वर्तमान ८-अंकी पासवर्ड सत्यापित करून नवीन पासवर्ड सेट करा')}
                 </p>
               </div>
             </div>
@@ -318,7 +334,7 @@ CREATE TABLE IF NOT EXISTS expenses (
               }}
               className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shrink-0 shadow-xs transition active:scale-95 cursor-pointer"
             >
-              पासवर्ड बदला
+              {tr('Change', 'पासवर्ड बदलें', 'पासवर्ड बदला')}
             </button>
           </div>
         )}
@@ -332,10 +348,14 @@ CREATE TABLE IF NOT EXISTS expenses (
               </div>
               <div>
                 <h4 className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC]">
-                  Shake to Open Billing Scanner (शेक-टू-बिलिंग स्कॅनर)
+                  {tr('Shake to Open Billing Scanner', 'शेक-टू-बिलिंग स्कैनर', 'शेक-टू-बिलिंग स्कॅनर')}
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                  कोणत्याही पेजवरून मोबाईल १ वेळा हलवताच थेट बिलिंग पेजवर जाऊन बारकोड स्कॅनर उघडेल
+                  {tr(
+                    'Shake phone once from any screen to jump straight to Billing Barcode Scanner',
+                    'किसी भी पेज से मोबाइल 1 बार हिलाते ही बिलिंग बारकोड स्कैनर खुल जाएगा',
+                    'कोणत्याही पेजवरून मोबाईल १ वेळा हलवताच थेट बिलिंग बारकोड स्कॅनर उघडेल'
+                  )}
                 </p>
               </div>
             </div>
@@ -352,7 +372,7 @@ CREATE TABLE IF NOT EXISTS expenses (
                   : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
               }`}
             >
-              {shakeToScanEnabled ? 'चालू (ON)' : 'बंद (OFF)'}
+              {shakeToScanEnabled ? tr('ON', 'चालू (ON)', 'चालू (ON)') : tr('OFF', 'बंद (OFF)', 'बंद (OFF)')}
             </button>
           </div>
 
@@ -360,12 +380,12 @@ CREATE TABLE IF NOT EXISTS expenses (
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-2 border-t border-slate-200/60 dark:border-[#24352F]">
             <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] bg-white dark:bg-[#131F1B] px-2.5 py-1.5 rounded-xl border border-slate-200/60 dark:border-[#24352F] flex items-center justify-between gap-2">
               <span>
-                {isMobileDevice() 
-                  ? '✓ Android Chrome मोशन सेन्सर सक्रिय आहे' 
-                  : 'ℹ️ डेस्कटॉपवर बंद; मोबाईलवर स्वयंचलित सक्रिय'}
+                {isMobileDevice()
+                  ? tr('✓ Mobile motion sensor active', '✓ मोबाइल मोशन सेंसर सक्रिय है', '✓ मोबाईल मोशन सेन्सर सक्रिय आहे')
+                  : tr('ℹ️ Inactive on desktop; auto-active on mobile', 'ℹ️ डेस्कटॉप पर बंद; मोबाइल पर स्वतः सक्रिय', 'ℹ️ डेस्कटॉपवर बंद; मोबाईलवर स्वयंचलित सक्रिय')}
               </span>
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 shrink-0">
-                Active
+                {tr('Active', 'सक्रिय', 'सक्रिय')}
               </span>
             </div>
 
@@ -381,27 +401,42 @@ CREATE TABLE IF NOT EXISTS expenses (
               className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Smartphone className="w-3.5 h-3.5" />
-              <span>📱 Test Shake (शेक टेस्ट करा)</span>
+              <span>{tr('Test Shake', 'शेक टेस्ट करें', 'शेक टेस्ट करा')}</span>
             </button>
           </div>
 
           <p className="text-[10px] text-slate-400 dark:text-[#8FA69C] leading-normal">
-            💡 <strong>वापरण्याची पद्धत:</strong> बिलिंग, इन्व्हेंटरी, रिपोर्ट्स किंवा डॅशबोर्डवर असताना फोन १ वेळा मनगटातून सहज हलवा. थेट बिलिंग काउंटर उघडून कॅमेरा स्कॅनर सुरू होईल.
+            💡{' '}
+            {tr(
+              'How to use: Gently flick your phone once from any screen to open the Billing Counter barcode scanner immediately.',
+              'उपयोग विधि: किसी भी स्क्रीन से फोन को 1 बार हल्के से हिलाएं, सीधे बिलिंग काउंटर बारकोड स्कैनर खुल जाएगा।',
+              'वापरण्याची पद्धत: कोणत्याही पेजवरून फोन १ वेळा हलवा, थेट बिलिंग काउंटर बारकोड स्कॅनर सुरू होईल.'
+            )}
           </p>
         </div>
 
         {/* Demo Data Reset */}
         <div className="border-t border-slate-100 dark:border-[#24352F] pt-3 flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC] block">डेरी सैंपल डेटा रिसेट</span>
+            <span className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC] block">
+              {tr('Reset Sample Dairy Data', 'डेरी सैंपल डेटा रिसेट', 'डेअरी सॅम्पल डेटा रीसेट')}
+            </span>
             <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] block">
-              ताज़ा दूध, पनीर, खर्च और बिक्री डेटा दोबारा लोड करें
+              {tr('Reload sample milk, paneer, expense, and sales data', 'ताज़ा दूध, पनीर, खर्च और बिक्री डेटा दोबारा लोड करें', 'ताजे दूध, पनीर, खर्च आणि विक्री डेटा पुन्हा लोड करा')}
             </span>
           </div>
 
           <button
             onClick={() => {
-              if (window.confirm('क्या आप सैंपल डेरी डेटा दोबारा लोड करना चाहते हैं?')) {
+              if (
+                window.confirm(
+                  tr(
+                    'Do you want to reload sample dairy data?',
+                    'क्या आप सैंपल डेरी डेटा दोबारा लोड करना चाहते हैं?',
+                    'तुम्हाला सॅम्पल डेअरी डेटा पुन्हा लोड करायचा आहे का?'
+                  )
+                )
+              ) {
                 resetToSampleData();
                 onClose();
               }
@@ -409,7 +444,7 @@ CREATE TABLE IF NOT EXISTS expenses (
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-[#8FA69C] text-xs font-bold"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>डेटा रिसेट करें</span>
+            <span>{tr('Reset Data', 'डेटा रिसेट करें', 'डेटा रीसेट करा')}</span>
           </button>
         </div>
 

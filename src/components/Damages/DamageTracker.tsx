@@ -21,7 +21,7 @@ import { SupplierReturnReason } from '../../types';
 
 export const DamageTracker: React.FC = () => {
   const { products, filteredDamages, recordDamage, metrics } = useStore();
-  const { t, language } = useLanguage();
+  const { t, language, tr } = useLanguage();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(products[0]?.id || '');
@@ -223,7 +223,7 @@ export const DamageTracker: React.FC = () => {
                   <th className="px-3 py-3">{language === 'mr' ? 'नासाडीचे कारण' : language === 'hi' ? 'खराबी का कारण' : 'Reason'}</th>
                   <th className="px-3 py-3 text-right">{language === 'mr' ? 'अंदाजे नुकसान' : language === 'hi' ? 'अनुमानित नुकसान' : 'Est. Loss'}</th>
                   <th className="px-4 py-3">{language === 'mr' ? 'तपशील / शेरा' : language === 'hi' ? 'विवरण / नोट्स' : 'Notes / Remarks'}</th>
-                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'सप्लायर रिफंड' : 'सप्लायर रिफंड'}</th>
+                  <th className="px-3 py-3 text-right">{tr('Supplier Refund', 'सप्लायर रिफंड', 'सप्लायर रिफंड')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
@@ -278,10 +278,10 @@ export const DamageTracker: React.FC = () => {
                           setIsSupplierReturnOpen(true);
                         }}
                         className="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] border border-emerald-200 dark:border-emerald-800/40 transition flex items-center gap-1 active:scale-95 ml-auto whitespace-nowrap shadow-2xs"
-                        title="सप्लायरला परत पाठवून रिफंड मागा"
+                        title={tr('Return to supplier & claim refund', 'सप्लायर को वापस भेजकर रिफंड मांगें', 'सप्लायरला परत पाठवून रिफंड मागा')}
                       >
                         <Truck className="w-3 h-3 text-emerald-600" />
-                        <span>{language === 'mr' ? 'रिफंड क्लेम' : 'रिफंड क्लेम'}</span>
+                        <span>{tr('Claim Refund', 'रिफंड क्लेम', 'रिफंड क्लेम')}</span>
                       </button>
                     </td>
                   </tr>
@@ -336,7 +336,7 @@ export const DamageTracker: React.FC = () => {
                 >
                   {products.map(p => (
                     <option key={p.id} value={p.id}>
-                      {getProductDisplayName(p)} ({p.name}) - Stock: {p.stock_quantity} {p.unit}
+                      {getProductDisplayName(p)} ({p.name}) - {tr('Stock', 'स्टॉक', 'साठा')}: {p.stock_quantity} {p.unit}
                     </option>
                   ))}
                 </select>

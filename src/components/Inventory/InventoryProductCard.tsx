@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Minus } from 'lucide-react';
 import { Product } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 import { ProductImage } from '../Common/ProductImage';
 import { HoldableImageBox } from '../Common/HoldableImageBox';
 
@@ -44,6 +45,7 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
     onOpenDetail,
     onPreviewImage
   }) => {
+    const { tr } = useLanguage();
     const status = getStockStatus(product);
     const isOut = status === 'out';
     const isLow = status === 'low';
@@ -54,7 +56,11 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
       ? 'bg-amber-500 text-slate-950'
       : 'bg-emerald-600 text-white';
 
-    const statusDotLabel = isOut ? 'Out' : isLow ? 'Low' : 'In';
+    const statusDotLabel = isOut
+      ? tr('Out', 'खत्म', 'संपला')
+      : isLow
+      ? tr('Low', 'कम', 'कमी')
+      : tr('In', 'स्टॉक', 'उपलब्ध');
 
     return (
       <div

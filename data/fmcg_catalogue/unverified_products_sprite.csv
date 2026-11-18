@@ -1,6 +1,0 @@
-barcode,brand,reason,source
-'06746500,Sprite,"GS1 Checksum Failure: Check digit mismatch (expected 6, got 0)",Pre-validation
-'06750600,Sprite,"GS1 Checksum Failure: Check digit mismatch (expected 2, got 0)",Pre-validation
-'06793207,Sprite,"GS1 Checksum Failure: Check digit mismatch (expected 3, got 7)",Pre-validation
-'41908242,Sprite,No product name found in OFF or DB,Data extraction
-'90399794,Sprite,No product name found in OFF or DB,Data extraction

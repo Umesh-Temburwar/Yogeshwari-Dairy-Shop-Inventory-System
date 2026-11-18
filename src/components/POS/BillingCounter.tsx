@@ -191,7 +191,7 @@ const ProductCard = React.memo<ProductCardProps>(({
           </span>
           {Boolean(earliestBatch && earliestBatch.selling_price && earliestBatch.selling_price > 0 && earliestBatch.selling_price !== prod.selling_price) && (
             <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold block leading-none">
-              ({language === 'mr' ? 'बॅच दर' : 'बैच दर'})
+              ({language === 'mr' ? 'बॅच दर' : language === 'hi' ? 'बैच दर' : 'Batch Rate'})
             </span>
           )}
         </div>
@@ -219,7 +219,7 @@ const ProductCard = React.memo<ProductCardProps>(({
               onAddToCart(prod, 1);
             }}
             className="h-8 px-2.5 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs disabled:bg-slate-300 dark:disabled:bg-slate-800 transition active:scale-95 flex items-center gap-1 shadow-xs cursor-pointer"
-            title={hasExpiredOnly ? 'Expired Batch Blocked' : 'Add 1 Unit'}
+            title={hasExpiredOnly ? (language === 'mr' ? 'मुदत संपलेली बॅच ब्लॉक' : language === 'hi' ? 'एक्सपायर्ड बैच ब्लॉक' : 'Expired Batch Blocked') : (language === 'mr' ? '१ नग जोडा' : language === 'hi' ? '१ नग जोड़ें' : 'Add 1 Unit')}
           >
             <Plus className="w-3.5 h-3.5" />
             <span className="hidden xs:inline">{language === 'mr' ? 'जोडा' : language === 'hi' ? 'जोड़ें' : 'Add'}</span>
@@ -241,7 +241,7 @@ export const BillingCounter: React.FC = () => {
     consumeBillingScannerRequest,
     setIsBarcodeScannerOpen
   } = useStore();
-  const { t, language } = useLanguage();
+  const { t, language, tr } = useLanguage();
   const { role, adminSlot, user } = useAuth();
   const [previewImageProduct, setPreviewImageProduct] = useState<Product | null>(null);
 
@@ -830,10 +830,10 @@ export const BillingCounter: React.FC = () => {
               onClick={() => setShowBarcodeScanner(true)}
               aria-label="Camera Barcode Scanner"
               className="w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs active:scale-[0.97] transition-all shrink-0 cursor-pointer"
-              title="Camera Barcode Scanner"
+              title={tr('Camera Barcode Scanner', 'कैमरा बारकोड स्कैनर', 'कॅमेरा बारकोड स्कॅनर')}
             >
               <Barcode className="w-4 h-4 text-white" />
-              <span className="hidden sm:inline">{language === 'mr' ? 'स्कॅन' : 'स्कैन'}</span>
+              <span className="hidden sm:inline">{tr('Scan', 'स्कैन', 'स्कॅन')}</span>
             </button>
 
             {isMobileDevice() && (
@@ -849,11 +849,11 @@ export const BillingCounter: React.FC = () => {
                     ? 'bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-400'
                     : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-500 dark:text-slate-400'
                 }`}
-                title={language === 'mr' ? 'फोन हलवून स्कॅन (Global Shake to Scan)' : 'फोन हिलाकर स्कैन (Global Shake to Scan)'}
+                title={tr('Global Shake to Scan', 'फोन हिलाकर स्कैन (Global Shake to Scan)', 'फोन हलवून स्कॅन (Global Shake to Scan)')}
               >
                 <Smartphone className={`w-4 h-4 ${shakeToScanEnabled ? 'text-amber-500' : ''}`} />
                 <span className="hidden sm:inline">
-                  {language === 'mr' ? 'शेक' : 'शेक'}: {shakeToScanEnabled ? 'चालू' : 'बंद'}
+                  {tr('Shake', 'शेक', 'शेक')}: {shakeToScanEnabled ? tr('ON', 'चालू', 'चालू') : tr('OFF', 'बंद', 'बंद')}
                 </span>
               </button>
             )}
@@ -863,7 +863,7 @@ export const BillingCounter: React.FC = () => {
               onClick={() => setActiveView('returns')}
               aria-label="Customer Returns"
               className="w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800/40 text-purple-700 dark:text-purple-300 flex items-center justify-center gap-1.5 text-xs font-bold shrink-0 transition active:scale-[0.97]"
-              title="माल परतावा (Customer Returns)"
+              title={tr('Customer Returns', 'माल वापसी (Customer Returns)', 'माल परतावा (Customer Returns)')}
             >
               <RotateCcw className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               <span className="hidden sm:inline">{language === 'mr' ? 'माल परत' : language === 'hi' ? 'माल वापसी' : 'Return'}</span>
@@ -904,15 +904,17 @@ export const BillingCounter: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm sm:text-base text-slate-800 dark:text-white">
-                    {language === 'mr' ? 'नवीन बारकोड सापडला!' : 'नया बारकोड मिला!'}
+                    {tr('New Barcode Found!', 'नया बारकोड मिला!', 'नवीन बारकोड सापडला!')}
                   </h3>
                   <p className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">
                     {searchQuery.trim()}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-1 max-w-sm">
-                    {language === 'mr' 
-                      ? 'हा बारकोड सिस्टिममध्ये नाही. त्वरित नाव आणि दर भरून १ सेकंदात बिलात जोडा.' 
-                      : 'यह बारकोड सिस्टम में नहीं है। तुरंत नाम और मूल्य दर्ज कर 1 सेकंड में बिल में लें।'}
+                    {tr(
+                      'This barcode is not in the system. Enter name and price to add it to the bill in 1 second.',
+                      'यह बारकोड सिस्टम में नहीं है। तुरंत नाम और मूल्य दर्ज कर 1 सेकंड में बिल में लें।',
+                      'हा बारकोड सिस्टिममध्ये नाही. त्वरित नाव आणि दर भरून १ सेकंदात बिलात जोडा.'
+                    )}
                   </p>
                 </div>
                 <button
@@ -924,7 +926,7 @@ export const BillingCounter: React.FC = () => {
                   className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-emerald-600/30 active:scale-95 transition-all cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4 text-amber-200" />
-                  <span>{language === 'mr' ? '⚡ त्वरित कॅटलॉगमध्ये जोडा आणि बिलात घ्या' : '⚡ तुरंत कैटलॉग में जोड़ें और बिल में लें'}</span>
+                  <span>{tr('⚡ Quick Add to Catalog & Bill', '⚡ तुरंत कैटलॉग में जोड़ें और बिल में लें', '⚡ त्वरित कॅटलॉगमध्ये जोडा आणि बिलात घ्या')}</span>
                 </button>
               </div>
             ) : (
@@ -967,10 +969,10 @@ export const BillingCounter: React.FC = () => {
                 type="button"
                 onClick={() => setMobileTab('products')}
                 className="lg:hidden p-1.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-[#8FA69C] hover:text-slate-900 flex items-center gap-1 text-xs font-bold"
-                title="Back to products"
+                title={tr('Back to products', 'सामान सूची पर लौटें', 'मालाच्या यादीवर जा')}
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">{language === 'mr' ? 'माल' : 'सामान'}</span>
+                <span className="hidden sm:inline">{tr('Products', 'सामान', 'माल')}</span>
               </button>
 
               <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400">
@@ -1039,7 +1041,7 @@ export const BillingCounter: React.FC = () => {
                           type="button"
                           onClick={() => updateQuantity(item.product_id, Number((item.quantity - step).toFixed(2)))}
                           className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] active:scale-90 transition cursor-pointer"
-                          title="कमी करा (Decrease)"
+                          title={tr('Decrease', 'कम करें', 'कमी करा')}
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
@@ -1054,7 +1056,7 @@ export const BillingCounter: React.FC = () => {
                           type="button"
                           onClick={() => updateQuantity(item.product_id, Number((item.quantity + step).toFixed(2)))}
                           className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] active:scale-90 transition cursor-pointer"
-                          title="वाढवा (Increase)"
+                          title={tr('Increase', 'बढ़ाएं', 'वाढवा')}
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>
@@ -1068,7 +1070,7 @@ export const BillingCounter: React.FC = () => {
                         type="button"
                         onClick={() => removeFromCart(item.product_id)}
                         className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                        title="काढून टाका (Remove)"
+                        title={tr('Remove', 'हटाएं', 'काढून टाका')}
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -1350,7 +1352,7 @@ export const BillingCounter: React.FC = () => {
                 </span>
               </div>
               <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold shrink-0">
-                <span>{showCustomerDetails ? (language === 'mr' ? 'लपवा' : 'छुपाएं') : (language === 'mr' ? 'बदला' : 'बदलें')}</span>
+                <span>{showCustomerDetails ? tr('Hide', 'छुपाएं', 'लपवा') : tr('Edit', 'बदलें', 'बदला')}</span>
                 <span className="text-xs transition-transform duration-200" style={{ transform: showCustomerDetails ? 'rotate(180deg)' : 'none' }}>▼</span>
               </div>
             </button>
@@ -1453,7 +1455,7 @@ export const BillingCounter: React.FC = () => {
             ) : (
               <>
                 <Printer className="w-5 h-5" />
-                <span>{t('completeAndPrint')} (Pay ₹{netTotal.toFixed(2)})</span>
+                <span>{t('completeAndPrint')} ({tr('Pay', 'भुगतान', 'देय')} ₹{netTotal.toFixed(2)})</span>
               </>
             )}
           </button>
@@ -1707,7 +1709,7 @@ export const BillingCounter: React.FC = () => {
               <span className="font-bold">{formatSaleDate(lastCompletedSale?.created_at, lastCompletedSale?.sale_date)}</span>
             </div>
             <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-[#8FA69C]">
-              <span>{language === 'mr' ? 'काऊंटर:' : language === 'hi' ? 'काउंटर:' : 'Counter:'} {lastCompletedSale?.counter_name || (lastCompletedSale?.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १')}</span>
+              <span>{tr('Counter:', 'काउंटर:', 'काऊंटर:')} {lastCompletedSale?.counter_name || (lastCompletedSale?.admin_slot === 2 ? tr('Counter 2', 'काउंटर २', 'काऊंटर २') : tr('Counter 1', 'काउंटर १', 'काऊंटर १'))}</span>
               <span className="inline-flex items-center gap-1 font-mono font-bold text-emerald-700 dark:text-emerald-400">
                 <Clock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                 <span>{formatSaleTime(lastCompletedSale?.created_at) || '—'}</span>
@@ -1746,7 +1748,7 @@ export const BillingCounter: React.FC = () => {
             </div>
 
             <div className="text-center text-[10px] text-slate-500 dark:text-[#8FA69C] pt-2 border-t border-slate-200 dark:border-[#24352F]">
-              {language === 'mr' ? 'धन्यवाद! पुन्हा भेट द्या &bull; शुद्धता हीच आमची ओळख' : language === 'hi' ? 'धन्यवाद! फिर पधारें &bull; शुद्धता ही हमारी पहचान है' : 'Thank you! Visit again &bull; Purity is our identity'}
+              {tr('Thank you! Visit again • Purity is our identity', 'धन्यवाद! फिर पधारें • शुद्धता ही हमारी पहचान है', 'धन्यवाद! पुन्हा भेट द्या • शुद्धता हीच आमची ओळख')}
             </div>
           </div>
 
@@ -1802,9 +1804,11 @@ export const BillingCounter: React.FC = () => {
             setShowBarcodeScanner(false);
           } else {
             const confirmBill = confirm(
-              language === 'mr'
-                ? `हा माल सापडला: "${prod.name}", पण सिस्टिममध्ये शिल्लक साठा ० आहे. तरीही बिलात १ नग जोडू का?`
-                : `यह उत्पाद मिला: "${prod.name}", लेकिन सिस्टम में स्टॉक 0 है। क्या बिल में 1 नग जोड़ना है?`
+              tr(
+                `Product found: "${prod.name}", but stock is 0 in system. Add 1 unit to the bill anyway?`,
+                `यह उत्पाद मिला: "${prod.name}", लेकिन सिस्टम में स्टॉक 0 है। क्या बिल में 1 नग जोड़ना है?`,
+                `हा माल सापडला: "${prod.name}", पण सिस्टिममध्ये शिल्लक साठा ० आहे. तरीही बिलात १ नग जोडू का?`
+              )
             );
             if (confirmBill) {
               addToCart({ ...prod, stock_quantity: 999 }, 1);
@@ -1827,9 +1831,11 @@ export const BillingCounter: React.FC = () => {
               return;
             } else {
               const confirmBill = confirm(
-                language === 'mr'
-                  ? `हा माल सापडला: "${localMatch.name}", पण सिस्टिममध्ये शिल्लक साठा ० आहे. तरीही बिलात १ नग जोडू का?`
-                  : `यह उत्पाद मिला: "${localMatch.name}", लेकिन सिस्टम में स्टॉक 0 है। क्या बिल में 1 नग जोड़ना है?`
+                tr(
+                  `Product found: "${localMatch.name}", but stock is 0 in system. Add 1 unit to the bill anyway?`,
+                  `यह उत्पाद मिला: "${localMatch.name}", लेकिन सिस्टम में स्टॉक 0 है। क्या बिल में 1 नग जोड़ना है?`,
+                  `हा माल सापडला: "${localMatch.name}", पण सिस्टिममध्ये शिल्लक साठा ० आहे. तरीही बिलात १ नग जोडू का?`
+                )
               );
               if (confirmBill) {
                 addToCart({ ...localMatch, stock_quantity: 999 }, 1);
@@ -1848,9 +1854,11 @@ export const BillingCounter: React.FC = () => {
                 setShowBarcodeScanner(false);
               } else {
                 const confirmBill = confirm(
-                  language === 'mr'
-                    ? `हा माल सापडला: "${res.product.name}", पण सिस्टिममध्ये शिल्लक साठा ० आहे. तरीही बिलात १ नग जोडू का?`
-                    : `यह उत्पाद मिला: "${res.product.name}", लेकिन सिस्टम में स्टॉक 0 है। क्या बिल में 1 नग जोड़ना है?`
+                  tr(
+                    `Product found: "${res.product.name}", but stock is 0 in system. Add 1 unit to the bill anyway?`,
+                    `यह उत्पाद मिला: "${res.product.name}", लेकिन सिस्टम में स्टॉक 0 है। क्या बिल में 1 नग जोड़ना है?`,
+                    `हा माल सापडला: "${res.product.name}", पण सिस्टिममध्ये शिल्लक साठा ० आहे. तरीही बिलात १ नग जोडू का?`
+                  )
                 );
                 if (confirmBill) {
                   addToCart({ ...res.product, stock_quantity: 999 }, 1);

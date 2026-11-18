@@ -79,6 +79,9 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [product, onClose]);
 
+  const tr = (en: string, hi: string, mr: string) =>
+    language === 'mr' ? mr : language === 'hi' ? hi : en;
+
   if (!product) return null;
 
   const isOut = product.stock_quantity <= 0;
@@ -166,7 +169,11 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
                     : 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300'
                 }`}
               >
-                {isOut ? 'Out of Stock' : isLow ? 'Low Stock' : 'In Stock'}
+                {isOut
+                  ? tr('Out of Stock', 'स्टॉक खत्म', 'साठा संपला')
+                  : isLow
+                  ? tr('Low Stock', 'कम स्टॉक', 'कमी साठा')
+                  : tr('In Stock', 'स्टॉक में', 'उपलब्ध')}
               </span>
               <span className="text-[11px] font-medium text-slate-500 dark:text-[#8FA69C]">
                 {product.category}
@@ -186,7 +193,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close product details"
+            aria-label={tr('Close product details', 'उत्पाद विवरण बंद करें', 'उत्पादन तपशील बंद करा')}
             className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1A2A25] shrink-0 cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -198,7 +205,9 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
           {/* Key Numbers: Stock, Selling Rate, Cost Price */}
           <div className="grid grid-cols-3 gap-2">
             <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/70 dark:border-[#24352F]">
-              <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] block">Stock</span>
+              <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] block">
+                {tr('Stock', 'स्टॉक', 'साठा')}
+              </span>
               <span className="text-lg font-bold text-slate-900 dark:text-white tabular-nums">
                 {product.stock_quantity}
               </span>
@@ -207,13 +216,17 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
               </span>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/70 dark:border-[#24352F]">
-              <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] block">Selling Rate</span>
+              <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] block">
+                {tr('Selling Rate', 'बिक्री दर', 'विक्री दर')}
+              </span>
               <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
                 ₹{product.selling_price}
               </span>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/70 dark:border-[#24352F]">
-              <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] block">Cost Price</span>
+              <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] block">
+                {tr('Cost Price', 'खरीद दर', 'खरेदी दर')}
+              </span>
               <span className="text-lg font-bold text-slate-700 dark:text-[#E7F0EC] tabular-nums">
                 ₹{product.purchase_price}
               </span>
@@ -226,10 +239,17 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
               <Layers className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <div className="min-w-0">
                 <div className="text-xs font-bold text-slate-900 dark:text-white">
-                  {activeBatches.length} Active {activeBatches.length === 1 ? 'Batch' : 'Batches'}
+                  {activeBatches.length}{' '}
+                  {tr(
+                    activeBatches.length === 1 ? 'Active Batch' : 'Active Batches',
+                    'सक्रिय बैच',
+                    'सक्रिय बॅचेस'
+                  )}
                 </div>
                 <div className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                  {expiringCount > 0 ? `${expiringCount} expiring soon` : 'Expiry tracked automatically'}
+                  {expiringCount > 0
+                    ? `${expiringCount} ${tr('expiring soon', 'जल्द एक्सपायर', 'लवकरच कालबाह्य')}`
+                    : tr('Expiry tracked automatically', 'एक्सपायरी ऑटो-ट्रैक', 'मुदत आपोआप ट्रॅक होते')}
                 </div>
               </div>
             </div>
@@ -241,7 +261,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
               }}
               className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-[#223630] shrink-0 cursor-pointer"
             >
-              View Batches
+              {tr('View Batches', 'बैच देखें', 'बॅच पहा')}
             </button>
           </div>
 
@@ -325,7 +345,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <div>
                   <label className="text-[11px] font-medium text-slate-500 dark:text-[#8FA69C] block mb-1">
-                    Batch No
+                    {tr('Batch No', 'बैच नंबर', 'बॅच क्र.')}
                   </label>
                   <input
                     type="text"
@@ -337,7 +357,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
                 <div>
                   <label className="text-[11px] font-medium text-slate-500 dark:text-[#8FA69C] flex items-center gap-1 mb-1">
                     <Clock className="w-3 h-3 text-emerald-500" />
-                    <span>Expiry Date</span>
+                    <span>{tr('Expiry Date', 'एक्सपायरी तिथि', 'मुदत तारीख')}</span>
                   </label>
                   <input
                     type="date"
@@ -351,7 +371,9 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
 
             {/* Confirm CTA */}
             <div className="flex items-center justify-between text-xs pt-1">
-              <span className="text-slate-500 dark:text-[#8FA69C]">New Stock:</span>
+              <span className="text-slate-500 dark:text-[#8FA69C]">
+                {tr('New Stock:', 'नया स्टॉक:', 'नवीन साठा:')}
+              </span>
               <span className="font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
                 {resultingStock} {product.unit}
               </span>
@@ -370,7 +392,9 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
               >
                 <Check className="w-4 h-4" />
                 <span>
-                  {mode === 'in' ? `Add +${safeQty} ${product.unit}` : `Remove −${safeQty} ${product.unit}`}
+                  {mode === 'in'
+                    ? `${tr('Add', 'जोड़ें', 'जोडा')} +${safeQty} ${product.unit}`
+                    : `${tr('Remove', 'कम करें', 'काढा')} −${safeQty} ${product.unit}`}
                 </span>
               </button>
 
@@ -381,12 +405,12 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
                     onClose();
                     onOpenFullStockIn(product);
                   }}
-                  title="Open full Stock Inward with supplier & purchase pricing"
+                  title={tr('Open full Stock Inward with supplier & purchase pricing', 'सप्लायर और खरीद दर के साथ स्टॉक इनवर्ड खोलें', 'पुरवठादार व खरेदी दरासह पूर्ण साठा आवक उघडा')}
                   aria-label="Open full stock inward modal"
                   className="min-h-[44px] px-3 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] text-emerald-700 dark:text-emerald-400 text-xs font-bold inline-flex items-center gap-1 active:scale-[0.97] cursor-pointer"
                 >
                   <PackagePlus className="w-4 h-4" />
-                  <span>Full Inward</span>
+                  <span>{tr('Full Inward', 'पूर्ण आवक', 'पूर्ण आवक')}</span>
                 </button>
               )}
             </div>
@@ -403,7 +427,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
               className="min-h-[44px] rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] text-xs font-bold inline-flex items-center justify-center gap-1.5 active:scale-[0.97] cursor-pointer"
             >
               <Edit3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Edit</span>
+              <span>{tr('Edit', 'संपादित', 'बदला')}</span>
             </button>
 
             <button
@@ -412,7 +436,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
               className="min-h-[44px] rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] text-xs font-bold inline-flex items-center justify-center gap-1.5 active:scale-[0.97] cursor-pointer"
             >
               <ImageIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Photo/URL</span>
+              <span>{tr('Photo/URL', 'फोटो/URL', 'फोटो/URL')}</span>
             </button>
 
             <button
@@ -432,7 +456,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
               className="min-h-[44px] rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200/70 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 text-xs font-bold inline-flex items-center justify-center gap-1.5 active:scale-[0.97] cursor-pointer"
             >
               <Trash2 className="w-4 h-4" />
-              <span>Delete</span>
+              <span>{tr('Delete', 'हटाएं', 'हटवा')}</span>
             </button>
           </div>
         </div>

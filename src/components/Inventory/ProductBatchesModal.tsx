@@ -36,7 +36,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
   onOpenDamageForBatch
 }) => {
   const { batches, addBatch, updateBatch, deleteBatch, recordDamage, products } = useStore();
-  const { language } = useLanguage();
+  const { language, tr } = useLanguage();
 
   // Keep product stock and details live in sync with central store state
   const liveProduct = products.find(p => p.id === product.id) || product;
@@ -120,7 +120,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
 
     const remainingQty = parseFloat(editQtyRemaining);
     if (isNaN(remainingQty) || remainingQty < 0) {
-      alert(language === 'mr' ? 'कृपया योग्य साठा मात्रा टाका' : 'कृपया मान्य स्टॉक मात्रा दर्ज करें');
+      alert(tr('Please enter a valid stock quantity', 'कृपया मान्य स्टॉक मात्रा दर्ज करें', 'कृपया योग्य साठा मात्रा टाका'));
       return;
     }
 
@@ -170,7 +170,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
       qty_remaining: qty,
       purchase_price: parseFloat(purchasePrice) || liveProduct.purchase_price,
       selling_price: parseFloat(sellingPrice) || liveProduct.selling_price,
-      supplier_name: supplierName.trim() || (language === 'mr' ? 'स्थानिक पुरवठादार' : 'Local Supplier'),
+      supplier_name: supplierName.trim() || tr('Local Supplier', 'स्थानीय सप्लायर', 'स्थानिक पुरवठादार'),
       notes: batchNotes.trim() || undefined
     }, liveProduct);
 
@@ -178,13 +178,17 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
     setQuantity('');
     setBatchNotes('');
     setFeedbackMessage(
-      language === 'mr' ? '✓ नवीन बॅच यशस्वीरीत्या जोडली!' : '✓ नया बैच सफलतापूर्वक जोड़ा गया!'
+      tr('✓ New batch added successfully!', '✓ नया बैच सफलतापूर्वक जोड़ा गया!', '✓ नवीन बॅच यशस्वीरीत्या जोडली!')
     );
     setTimeout(() => setFeedbackMessage(null), 3000);
   };
 
   const handleQuickWriteOff = async (b: ProductBatch) => {
-    if (window.confirm(language === 'mr' ? `या बॅचचा (${b.batch_no}) ${b.qty_remaining} ${liveProduct.unit} माल खराब / नासलेला म्हणून नोंद करायचा का?` : `Write off remaining ${b.qty_remaining} ${liveProduct.unit} of batch ${b.batch_no} as Spoilage/Damage?`)) {
+    if (window.confirm(tr(
+      `Write off remaining ${b.qty_remaining} ${liveProduct.unit} of batch ${b.batch_no} as Spoilage/Damage?`,
+      `क्या इस बैच (${b.batch_no}) का शेष ${b.qty_remaining} ${liveProduct.unit} माल खराब / डैमेज के रूप में दर्ज करना है?`,
+      `या बॅचचा (${b.batch_no}) ${b.qty_remaining} ${liveProduct.unit} माल खराब / नासलेला म्हणून नोंद करायचा का?`
+    ))) {
       if (onOpenDamageForBatch) {
         onOpenDamageForBatch(b);
       } else {
@@ -225,7 +229,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
                 {language === 'mr' ? 'एकूण शिल्लक साठा:' : language === 'hi' ? 'कुल उपलब्ध स्टॉक:' : 'Total Active Stock:'}{' '}
                 <b className="text-emerald-700 dark:text-emerald-400 font-extrabold text-sm">{liveProduct.stock_quantity} {liveProduct.unit}</b>
                 {' '}&bull; {productBatches.length} {language === 'mr' ? 'बॅचेस' : language === 'hi' ? 'बैच' : 'batches'}
-                {' '}&bull; <span className="text-slate-400">मूळ भाव: ₹{liveProduct.selling_price}</span>
+                {' '}&bull; <span className="text-slate-400">{tr('Base Rate:', 'मूल भाव:', 'मूळ भाव:')} ₹{liveProduct.selling_price}</span>
               </p>
             </div>
           </div>
@@ -309,7 +313,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
                           <span>{language === 'mr' ? `या बॅचचा शिल्लक साठा (${liveProduct.unit})` : language === 'hi' ? `इस बैच का उपलब्ध स्टॉक (${liveProduct.unit})` : `Batch Remaining Stock (${liveProduct.unit})`} *</span>
                         </label>
                         <span className="text-[11px] font-mono font-bold text-slate-500">
-                          {language === 'mr' ? 'सध्याचा:' : 'Current:'} <b className="text-slate-800 dark:text-white">{b.qty_remaining}</b>
+                          {tr('Current:', 'वर्तमान:', 'सध्याचा:')} <b className="text-slate-800 dark:text-white">{b.qty_remaining}</b>
                         </span>
                       </div>
 
@@ -348,7 +352,11 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
                           {language === 'mr' ? 'एकूण दुकानाच्या साठ्यावर परिणाम:' : language === 'hi' ? 'कुल दुकान स्टॉक पर असर:' : 'Impact on Total Shop Stock:'}
                         </span>
                         <span className={`font-black ${stockDelta > 0 ? 'text-emerald-600 dark:text-emerald-400' : stockDelta < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'}`}>
-                          {stockDelta > 0 ? `+${stockDelta} ${liveProduct.unit} (साठा वाढेल)` : stockDelta < 0 ? `${stockDelta} ${liveProduct.unit} (साठा कमी होईल)` : 'साठा स्थिर (बदल नाही)'}
+                          {stockDelta > 0
+                            ? `+${stockDelta} ${liveProduct.unit} (${tr('Stock increases', 'स्टॉक बढ़ेगा', 'साठा वाढेल')})`
+                            : stockDelta < 0
+                            ? `${stockDelta} ${liveProduct.unit} (${tr('Stock decreases', 'स्टॉक घटेगा', 'साठा कमी होईल')})`
+                            : tr('No stock change', 'स्टॉक स्थिर (कोई बदलाव नहीं)', 'साठा स्थिर (बदल नाही)')}
                         </span>
                       </div>
                     </div>
@@ -437,7 +445,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
                         </label>
                         <input
                           type="text"
-                          placeholder="Supplier Name"
+                          placeholder={tr('Supplier Name', 'सप्लायर का नाम', 'पुरवठादाराचे नाव')}
                           value={editSupplierName}
                           onChange={(e) => setEditSupplierName(e.target.value)}
                           className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
@@ -450,7 +458,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
                         </label>
                         <input
                           type="text"
-                          placeholder="उदा. साठा मोजणी दुरुस्ती / सवलत"
+                          placeholder={tr('e.g. Stock count correction / discount', 'उदा. स्टॉक गिनती सुधार / छूट', 'उदा. साठा मोजणी दुरुस्ती / सवलत')}
                           value={editNotes}
                           onChange={(e) => setEditNotes(e.target.value)}
                           className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
@@ -475,7 +483,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
                         {isSavingBatch ? (
                           <>
                             <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            <span>{language === 'mr' ? 'बदल जतन होत आहेत...' : 'अपडेट हो रहा है...'}</span>
+                            <span>{tr('Saving changes...', 'अपडेट हो रहा है...', 'बदल जतन होत आहेत...')}</span>
                           </>
                         ) : (
                           <>
@@ -516,7 +524,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
                         {Boolean(b.selling_price && b.selling_price > 0 && b.selling_price !== liveProduct.selling_price) && (
                           <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 flex items-center gap-0.5">
                             <Tag className="w-3 h-3" />
-                            <span>खास दर: ₹{b.selling_price}</span>
+                            <span>{tr('Special Rate:', 'विशेष दर:', 'खास दर:')} ₹{b.selling_price}</span>
                           </span>
                         )}
                       </div>
@@ -541,10 +549,10 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
                           {b.qty_remaining} <span className="text-xs font-normal text-slate-500">{liveProduct.unit}</span>
                         </div>
                         <div className="text-[10px] text-slate-400">
-                          {language === 'mr' ? 'एकूण प्राप्त:' : 'Received:'} {b.qty_received} {liveProduct.unit}
+                          {tr('Received:', 'कुल प्राप्त:', 'एकूण प्राप्त:')} {b.qty_received} {liveProduct.unit}
                         </div>
                         <div className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">
-                          {language === 'mr' ? 'विक्री:' : 'Sell:'} <b>₹{b.selling_price ?? liveProduct.selling_price}</b> | <span className="text-slate-500">खरेदी: ₹{b.purchase_price}</span>
+                          {tr('Sell:', 'बिक्री:', 'विक्री:')} <b>₹{b.selling_price ?? liveProduct.selling_price}</b> | <span className="text-slate-500">{tr('Buy:', 'खरीद:', 'खरेदी:')} ₹{b.purchase_price}</span>
                         </div>
                       </div>
 
@@ -553,7 +561,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
                         type="button"
                         onClick={() => handleStartEdit(b)}
                         className="p-2 rounded-xl bg-slate-100 hover:bg-emerald-100 dark:bg-[#131F1B] dark:hover:bg-[#20332D] text-slate-700 dark:text-[#E7F0EC] hover:text-emerald-700 dark:hover:text-emerald-300 border border-slate-200 dark:border-[#24352F] transition-all"
-                        title={language === 'mr' ? 'बॅच साठा, मुदत व दर बदला' : 'बैच स्टॉक, एक्सपायरी व भाव बदलें'}
+                        title={tr('Edit batch stock, expiry & rates', 'बैच स्टॉक, एक्सपायरी व भाव बदलें', 'बॅच साठा, मुदत व दर बदला')}
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
@@ -564,10 +572,10 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
                           type="button"
                           onClick={() => handleQuickWriteOff(b)}
                           className="px-2 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold shadow-xs transition-colors flex items-center gap-1"
-                          title="Record as damage"
+                          title={tr('Record as damage', 'खराब माल में दर्ज करें', 'खराब म्हणून नोंदवा')}
                         >
                           <ShieldAlert className="w-3.5 h-3.5" />
-                          <span>{language === 'mr' ? 'खराब' : 'डैमेज'}</span>
+                          <span>{tr('Damage', 'डैमेज', 'खराब')}</span>
                         </button>
                       )}
 
@@ -575,12 +583,16 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          if (confirm(language === 'mr' ? `बॅच #${b.batch_no} कायमची हटवायची का? या बॅचचा शिल्लक साठा (${b.qty_remaining} ${liveProduct.unit}) एकूण दुकानाच्या साठ्यातून कमी होईल.` : `Delete batch #${b.batch_no}? Remaining stock (${b.qty_remaining} ${liveProduct.unit}) will be deducted from shop stock.`)) {
+                          if (confirm(tr(
+                            `Delete batch #${b.batch_no}? Remaining stock (${b.qty_remaining} ${liveProduct.unit}) will be deducted from shop stock.`,
+                            `क्या बैच #${b.batch_no} स्थायी रूप से हटाना है? इस बैच का शेष स्टॉक (${b.qty_remaining} ${liveProduct.unit}) कुल दुकान स्टॉक से घट जाएगा।`,
+                            `बॅच #${b.batch_no} कायमची हटवायची का? या बॅचचा शिल्लक साठा (${b.qty_remaining} ${liveProduct.unit}) एकूण दुकानाच्या साठ्यातून कमी होईल.`
+                          ))) {
                             deleteBatch(b.id);
                           }
                         }}
                         className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                        title="Delete batch entry"
+                        title={tr('Delete batch entry', 'बैच हटाएं', 'बॅच नोंद हटवा')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -712,7 +724,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
                 <div>
                   <label className="text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C] block mb-1">
-                    {language === 'mr' ? `आवक साठा (${liveProduct.unit})` : `मात्रा (${liveProduct.unit})`}
+                    {tr(`Inward Qty (${liveProduct.unit})`, `मात्रा (${liveProduct.unit})`, `आवक साठा (${liveProduct.unit})`)}
                   </label>
                   <input
                     type="number"
@@ -727,7 +739,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
 
                 <div>
                   <label className="text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C] block mb-1">
-                    {language === 'mr' ? 'खरेदी दर (₹)' : 'खरीद भाव (₹)'}
+                    {tr('Purchase Rate (₹)', 'खरीद भाव (₹)', 'खरेदी दर (₹)')}
                   </label>
                   <input
                     type="number"
@@ -740,7 +752,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
 
                 <div>
                   <label className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 block mb-1">
-                    {language === 'mr' ? 'विक्री दर (₹)' : 'बिक्री भाव (₹)'}
+                    {tr('Selling Rate (₹)', 'बिक्री भाव (₹)', 'विक्री दर (₹)')}
                   </label>
                   <input
                     type="number"
@@ -753,11 +765,11 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
 
                 <div>
                   <label className="text-[11px] font-semibold text-slate-500 dark:text-[#8FA69C] block mb-1">
-                    {language === 'mr' ? 'पुरवठादार' : 'सप्लायर'}
+                    {tr('Supplier', 'सप्लायर', 'पुरवठादार')}
                   </label>
                   <input
                     type="text"
-                    placeholder="Local Dairy"
+                    placeholder={tr('Local Dairy', 'स्थानीय डेरी', 'स्थानिक डेअरी')}
                     value={supplierName}
                     onChange={(e) => setSupplierName(e.target.value)}
                     className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"

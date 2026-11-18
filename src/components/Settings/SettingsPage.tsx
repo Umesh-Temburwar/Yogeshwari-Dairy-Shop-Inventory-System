@@ -54,7 +54,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     isSyncing,
     triggerGlobalBillingScanner
   } = useStore();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, tr } = useLanguage();
   const { resolvedTheme, toggleTheme } = useTheme();
   const { user, role, lockSecurity, signOut } = useAuth();
 
@@ -111,7 +111,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             : '✓ Operator registration disabled'
         );
       } else {
-        setRegFeedback(res.error || 'Error updating setting');
+        setRegFeedback(res.error || tr('Error updating setting', 'सेटिंग अपडेट करने में त्रुटि', 'सेटिंग अपडेट करताना त्रुटी आली'));
       }
     } finally {
       setIsUpdatingReg(false);
@@ -140,8 +140,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         }
         primaryAction={{
           label: isSyncing
-            ? language === 'mr' ? 'सिंक...' : 'सिंक...'
-            : language === 'mr' ? 'सिंक' : language === 'hi' ? 'सिंक' : 'Sync',
+            ? tr('Syncing...', 'सिंक हो रहा है...', 'सिंक...')
+            : tr('Sync', 'सिंक', 'सिंक'),
           icon: <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />,
           onClick: () => {
             if (!isSyncing) refreshData();
@@ -273,7 +273,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                   {language === 'mr' ? 'थेट तपासणी नोंदवही' : language === 'hi' ? 'लाइव ऑडिट रजिस्टर' : 'Live Audit Stream'}
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                  {isAuditStreamEnabled ? 'Active (ON)' : 'Paused (OFF)'}
+                  {isAuditStreamEnabled ? tr('Active (ON)', 'सक्रिय (ON)', 'सक्रिय (ON)') : tr('Paused (OFF)', 'बंद (OFF)', 'बंद (OFF)')}
                 </span>
               </div>
             </div>

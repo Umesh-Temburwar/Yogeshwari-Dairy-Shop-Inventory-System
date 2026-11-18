@@ -43,7 +43,7 @@ interface MultiLotRow {
 
 export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onClose }) => {
   const { batches, addStockEntries, adjustStock } = useStore();
-  const { t, language } = useLanguage();
+  const { t, language, tr } = useLanguage();
 
   if (!product) return null;
 
@@ -277,9 +277,7 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
           {/* SELECT LOT TYPE: "PAHALE KA THA YA ABHI KA THA?" */}
           <div>
             <label className="text-xs font-black text-slate-700 dark:text-[#E7F0EC] block mb-1.5">
-              {language === 'mr' ? 'माल कोणता आहे? (Pahale ka tha ya abhi ka tha?):' : 
-               language === 'hi' ? 'माल कौन सा है? (पहले का माल था या अभी का?):' : 
-               'Lot Arrival Type (Pahale ka tha ya abhi ka tha?):'}
+              {tr('Lot Arrival Type:', 'माल कौन सा है? (पहले का माल था या अभी का?):', 'माल कोणता आहे? (आधीचा की आत्ताचा?):')}
             </label>
 
             <div className="grid grid-cols-3 gap-2">
@@ -408,7 +406,7 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
                       >
                         {existingProductBatches.map(b => (
                           <option key={b.id} value={b.id}>
-                            {b.batch_no} &bull; {b.qty_remaining} {product.unit} शिल्लक &bull; Expiry: {b.expiry_date}
+                            {b.batch_no} &bull; {b.qty_remaining} {product.unit} {tr('left', 'शेष', 'शिल्लक')} &bull; {tr('Expiry', 'एक्सपायरी', 'मुदत')}: {b.expiry_date}
                           </option>
                         ))}
                       </select>
@@ -461,7 +459,7 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
                     </label>
                     {(!product.selling_price || product.selling_price === 0) && (
                       <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
-                        {language === 'mr' ? 'नवीन दर' : 'नया रेट'}
+                        {tr('New Rate', 'नया रेट', 'नवीन दर')}
                       </span>
                     )}
                   </div>
@@ -505,7 +503,7 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
                   {/* OCR Trigger Button */}
                   <div className="sm:col-span-2 flex items-center justify-between pb-1">
                     <span className="text-[11px] font-bold text-slate-500 dark:text-[#8FA69C]">
-                      {language === 'mr' ? 'तारीख व बॅच माहिती:' : 'तारीख व बैच विवरण:'}
+                      {tr('Date & Batch Details:', 'तारीख व बैच विवरण:', 'तारीख व बॅच माहिती:')}
                     </span>
                     <button
                       type="button"
@@ -513,7 +511,7 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/50 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-xs font-bold transition shadow-2xs"
                     >
                       <Camera className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                      <span>{language === 'mr' ? '📷 पॅकेटवरील मुदत स्कॅन करा (OCR)' : '📷 फोटो से एक्सपायरी स्कैन करें (OCR)'}</span>
+                      <span>{tr('📷 Scan Expiry from Pack (OCR)', '📷 फोटो से एक्सपायरी स्कैन करें (OCR)', '📷 पॅकेटवरील मुदत स्कॅन करा (OCR)')}</span>
                     </button>
                   </div>
 
@@ -611,7 +609,7 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
                           ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
                           : 'bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-300'
                       }`}>
-                        #{index + 1} {row.lot_type === 'fresh_today' ? (language === 'mr' ? 'आजचा' : 'आज') : (language === 'mr' ? 'आधीचा' : 'पहले')}
+                        #{index + 1} {row.lot_type === 'fresh_today' ? tr('Today', 'आज', 'आजचा') : tr('Previous', 'पहले', 'आधीचा')}
                       </span>
                     </div>
 
@@ -665,7 +663,7 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
                         type="button"
                         onClick={() => handleRemoveMultiRow(row.id)}
                         className="text-slate-400 hover:text-rose-600 p-1 rounded-lg"
-                        title="Remove row"
+                        title={tr('Remove row', 'पंक्ति हटाएं', 'ओळ हटवा')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

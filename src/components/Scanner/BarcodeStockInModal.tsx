@@ -67,7 +67,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   forceRegisterNew = false,
 }) => {
   const { products, addProduct, addBatch } = useStore();
-  const { language } = useLanguage();
+  const { language, tr, getProductDisplayName } = useLanguage();
 
   // Step 1: Scan | Step 2: Register New (if not found) | Step 3: Enter Stock Details | Step 4: Confirm Summary | Step 5: Success
   const [step, setStep] = useState<'scan' | 'register' | 'details' | 'confirm' | 'success'>('scan');
@@ -352,9 +352,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
 
     if (!videoElement) {
       setCameraError(
-        language === 'mr'
-          ? 'कॅमेरा सुरू करण्यासाठी खालील बटण दाबा.'
-          : 'कैमरा शुरू करने के लिए नीचे दिए बटन को दबाएं।'
+        tr(
+          'Press the button below to start camera.',
+          'कैमरा शुरू करने के लिए नीचे दिए बटन को दबाएं।',
+          'कॅमेरा सुरू करण्यासाठी खालील बटण दाबा.'
+        )
       );
       setIsScanningCamera(false);
       return;
@@ -392,9 +394,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       if (!isSecure && (!navigator?.mediaDevices || !navigator?.mediaDevices?.getUserMedia)) {
         logD('Insecure context without getUserMedia. Falling back to native camera.');
         setCameraError(
-          language === 'mr'
-            ? 'मोबाईल ब्राऊझर सुरक्षित नसलेल्या (HTTP) वायफाय पत्त्यावर थेट व्हिडिओ कॅमेरा ब्लॉक करतो. आम्ही तुमच्यासाठी थेट मोबाईल कॅमेरा फोटो स्कॅनर उघडत आहोत...'
-            : 'मोबाइल ब्राउज़र HTTP पते पर लाइव कैमरा ब्लॉक करता है। आपके लिए सीधे मोबाइल कैमरा फोटो स्कैनर खोला जा रहा है...'
+          tr(
+            'Mobile browser blocks live video camera on insecure (HTTP) Wi-Fi addresses. Opening native mobile camera photo scanner for you...',
+            'मोबाइल ब्राउज़र HTTP पते पर लाइव कैमरा ब्लॉक करता है। आपके लिए सीधे मोबाइल कैमरा फोटो स्कैनर खोला जा रहा है...',
+            'मोबाईल ब्राऊझर सुरक्षित नसलेल्या (HTTP) वायफाय पत्त्यावर थेट व्हिडिओ कॅमेरा ब्लॉक करतो. आम्ही तुमच्यासाठी थेट मोबाईल कॅमेरा फोटो स्कॅनर उघडत आहोत...'
+          )
         );
         setIsScanningCamera(false);
         // Automatically launch native phone camera intent so user is never stuck
@@ -600,12 +604,16 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       const isPermissionDenied = err?.name === 'NotAllowedError' || err?.message?.includes('Permission');
       setCameraError(
         isPermissionDenied
-          ? (language === 'mr'
-            ? 'कॅमेरा परवानगी नाकारली गेली. कृपया ब्राऊझर पत्त्याजवळ (Address bar) कुलूपावर क्लिक करून कॅमेरा सुरू करा.'
-            : 'कैमरा अनुमति अस्वीकृत। कृपया ब्राउज़र में कैमरा एक्सेस दें।')
-          : (language === 'mr'
-            ? `कॅमेरा सुरू करता आला नाही (${err?.name || 'Error'}). कृपया "कॅमेरा सुरू करा" बटण दाबा किंवा बारकोड टाईप करा.`
-            : `कैमरा शुरू नहीं हो सका (${err?.name || 'Error'})। कृपया "कैमरा शुरू करें" बटन दबाएं।`)
+          ? tr(
+              'Camera permission denied. Please click the lock icon in the browser address bar to allow camera access.',
+              'कैमरा अनुमति अस्वीकृत। कृपया ब्राउज़र में कैमरा एक्सेस दें।',
+              'कॅमेरा परवानगी नाकारली गेली. कृपया ब्राऊझर पत्त्याजवळ (Address bar) कुलूपावर क्लिक करून कॅमेरा सुरू करा.'
+            )
+          : tr(
+              `Could not start camera (${err?.name || 'Error'}). Please press "Try Again" or type the barcode.`,
+              `कैमरा शुरू नहीं हो सका (${err?.name || 'Error'})। कृपया "कैमरा शुरू करें" बटन दबाएं।`,
+              `कॅमेरा सुरू करता आला नाही (${err?.name || 'Error'}). कृपया "कॅमेरा सुरू करा" बटण दाबा किंवा बारकोड टाईप करा.`
+            )
       );
       setIsScanningCamera(false);
     }
@@ -647,9 +655,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
         handleBarcodeDetected(ocrRes.barcode);
       } else {
         alert(
-          language === 'mr'
-            ? 'संख्या वाचता आली नाही. कृपया खाली बारकोड नंबर टाईप करा.'
-            : 'संख्या पहचानी नहीं जा सकी। कृपया नीचे बारकोड नंबर टाइप करें।'
+          tr(
+            'Could not read digits. Please type the barcode number below.',
+            'संख्या पहचानी नहीं जा सकी। कृपया नीचे बारकोड नंबर टाइप करें।',
+            'संख्या वाचता आली नाही. कृपया खाली बारकोड नंबर टाईप करा.'
+          )
         );
       }
     } catch (err) {
@@ -786,11 +796,23 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       if (detected) {
         handleBarcodeDetected(detected);
       } else {
-        alert(language === 'mr' ? 'फोटोमध्ये बारकोड सापडला नाही. कृपया जवळून स्पष्ट फोटो काढा.' : 'फोटो में बारकोड नहीं मिला। कृपया स्पष्ट फोटो लें।');
+        alert(
+          tr(
+            'No barcode found in photo. Please take a closer, clearer photo.',
+            'फोटो में बारकोड नहीं मिला। कृपया स्पष्ट फोटो लें।',
+            'फोटोमध्ये बारकोड सापडला नाही. कृपया जवळून स्पष्ट फोटो काढा.'
+          )
+        );
       }
       URL.revokeObjectURL(objectUrl);
     } catch (err) {
-      alert(language === 'mr' ? 'फोटोमध्ये बारकोड वाचता आला नाही. कृपया बारकोड नंबर हाताने टाका.' : 'फोटो में बारकोड नहीं पढ़ा जा सका। कृपया बारकोड संख्या टाइप करें।');
+      alert(
+        tr(
+          'Could not read barcode from photo. Please type the barcode number manually.',
+          'फोटो में बारकोड नहीं पढ़ा जा सका। कृपया बारकोड संख्या टाइप करें।',
+          'फोटोमध्ये बारकोड वाचता आला नाही. कृपया बारकोड नंबर हाताने टाका.'
+        )
+      );
     }
   };
 
@@ -806,7 +828,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
     e.preventDefault();
     const cleanName = newProdName.trim();
     if (!cleanName) {
-      setErrorMessage(language === 'mr' ? 'उत्पादनाचे नाव आवश्यक आहे' : 'उत्पाद का नाम आवश्यक है');
+      setErrorMessage(tr('Product name is required', 'उत्पाद का नाम आवश्यक है', 'उत्पादनाचे नाव आवश्यक आहे'));
       return;
     }
 
@@ -889,7 +911,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       setStep('success');
     } catch (err: any) {
       console.error('Register product error:', err);
-      setErrorMessage(err?.message || 'उत्पादन नोंदणी करताना त्रुटी आली.');
+      setErrorMessage(err?.message || tr('Error registering product.', 'उत्पाद पंजीकरण में त्रुटि हुई।', 'उत्पादन नोंदणी करताना त्रुटी आली.'));
     } finally {
       setIsRegistering(false);
     }
@@ -899,11 +921,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
   const handleProceedToConfirm = (e: React.FormEvent) => {
     e.preventDefault();
     if (!quantity || Number(quantity) <= 0) {
-      setErrorMessage(language === 'mr' ? 'कृपया वैध नग संख्या टाका (> 0)' : 'कृपया वैध मात्रा दर्ज करें (> 0)');
+      setErrorMessage(tr('Please enter a valid quantity (> 0)', 'कृपया वैध मात्रा दर्ज करें (> 0)', 'कृपया वैध नग संख्या टाका (> 0)'));
       return;
     }
     if (!expiryDate) {
-      setErrorMessage(language === 'mr' ? 'कृपया एक्सपायरी तारीख निवडा' : 'कृपया समाप्ति तिथि चुनें');
+      setErrorMessage(tr('Please select an expiry date', 'कृपया समाप्ति तिथि चुनें', 'कृपया एक्सपायरी तारीख निवडा'));
       return;
     }
     setErrorMessage(null);
@@ -976,7 +998,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
       setStep('success');
     } catch (err: any) {
       console.error('Stock inward error:', err);
-      setErrorMessage(err?.message || 'साठा जमा करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.');
+      setErrorMessage(err?.message || tr('Error saving stock. Please try again.', 'स्टॉक सहेजने में त्रुटि हुई। कृपया पुनः प्रयास करें।', 'साठा जमा करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -995,14 +1017,14 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
             </div>
             <div className="min-w-0">
               <h2 className="text-base sm:text-lg font-bold truncate">
-                {language === 'mr' ? 'बारकोड द्वारे साठा आवक (Stock-In)' : 'बारकोड द्वारा स्टॉक आवक'}
+                {tr('Barcode Stock-In', 'बारकोड द्वारा स्टॉक आवक', 'बारकोड द्वारे साठा आवक')}
               </h2>
               <p className="text-xs text-emerald-100 truncate">
-                {step === 'scan' && (language === 'mr' ? 'पायरी १: बारकोड स्कॅन किंवा सर्च करा' : 'चरण १: बारकोड स्कैन या खोजें')}
-                {step === 'register' && (language === 'mr' ? 'पायरी २: नवीन उत्पादन नोंदणी (कॅटलॉग)' : 'चरण २: नया उत्पाद पंजीकरण')}
-                {step === 'details' && (language === 'mr' ? 'पायरी ३: साठा, बॅच व किमतीची नोंद' : 'चरण ३: स्टॉक, बैच एवं मूल्य विवरण')}
-                {step === 'confirm' && (language === 'mr' ? 'पायरी ४: साठा आवक खात्री करा' : 'चरण ४: स्टॉक आवक पुष्टि')}
-                {step === 'success' && (language === 'mr' ? 'साठा यशस्वीरीत्या जमा झाला!' : 'स्टॉक सफलतापूर्वक दर्ज!')}
+                {step === 'scan' && tr('Step 1: Scan or search barcode', 'चरण 1: बारकोड स्कैन या खोजें', 'पायरी १: बारकोड स्कॅन किंवा सर्च करा')}
+                {step === 'register' && tr('Step 2: Register new product (Catalogue)', 'चरण 2: नया उत्पाद पंजीकरण (कैटलॉग)', 'पायरी २: नवीन उत्पादन नोंदणी (कॅटलॉग)')}
+                {step === 'details' && tr('Step 3: Stock, batch & price details', 'चरण 3: स्टॉक, बैच एवं मूल्य विवरण', 'पायरी ३: साठा, बॅच व किमतीची नोंद')}
+                {step === 'confirm' && tr('Step 4: Confirm stock inward', 'चरण 4: स्टॉक आवक पुष्टि', 'पायरी ४: साठा आवक खात्री करा')}
+                {step === 'success' && tr('Stock saved successfully!', 'स्टॉक सफलतापूर्वक दर्ज!', 'साठा यशस्वीरीत्या जमा झाला!')}
               </p>
             </div>
           </div>
@@ -1042,7 +1064,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                   <div className="absolute inset-0 bg-slate-950/85 z-30 flex flex-col items-center justify-center text-white space-y-2.5 animate-fadeIn">
                     <RefreshCw className="w-7 h-7 text-amber-400 animate-spin" />
                     <p className="text-xs font-bold text-amber-200">
-                      {language === 'mr' ? 'AI OCR द्वारे बारकोड नंबर वाचत आहे...' : 'AI OCR द्वारा बारकोड संख्या पढ़ी जा रही है...'}
+                      {tr(
+                        'Reading barcode digits via AI OCR...',
+                        'AI OCR द्वारा बारकोड संख्या पढ़ी जा रही है...',
+                        'AI OCR द्वारे बारकोड नंबर वाचत आहे...'
+                      )}
                     </p>
                   </div>
                 )}
@@ -1056,7 +1082,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                         <div className="absolute -top-2 left-4 right-4 h-5 bg-gradient-to-b from-emerald-400/25 to-transparent blur-[2px] pointer-events-none" />
                       </div>
                       <div className="absolute top-2 left-0 right-0 text-center text-[10px] font-bold text-white tracking-wider uppercase bg-emerald-800/90 rounded-md py-0.5 px-2.5 max-w-fit mx-auto shadow-sm">
-                        {language === 'mr' ? 'बारकोड चौकटीत धरा' : 'बारकोड फ्रेम में रखें'}
+                        {tr('Hold barcode inside frame', 'बारकोड फ्रेम में रखें', 'बारकोड चौकटीत धरा')}
                       </div>
                     </div>
                   </div>
@@ -1073,7 +1099,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                         ? 'bg-amber-400 text-slate-900 border-amber-300'
                         : 'bg-black/60 text-white border-white/20 hover:bg-black/80'
                         }`}
-                      title="टॉर्च / Flashlight"
+                      title={tr('Flashlight / Torch', 'टॉर्च / फ्लैशलाइट', 'टॉर्च / फ्लॅशलाइट')}
                     >
                       <Flashlight className="w-4 h-4" />
                     </button>
@@ -1084,11 +1110,15 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                       type="button"
                       onClick={toggleFacingMode}
                       className="p-2 rounded-xl bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 text-xs font-bold transition flex items-center gap-1 shadow-lg"
-                      title={facingMode === 'environment' ? 'समोरचा कॅमेरा (Front)' : 'मागील कॅमेरा (Back)'}
+                      title={
+                        facingMode === 'environment'
+                          ? tr('Switch to Front Camera', 'फ्रंट कैमरा पर स्विच करें', 'समोरचा कॅमेरा (Front)')
+                          : tr('Switch to Back Camera', 'बैक कैमरा पर स्विच करें', 'मागील कॅमेरा (Back)')
+                      }
                     >
                       <SwitchCamera className="w-4 h-4" />
                       <span className="text-[10px] hidden sm:inline">
-                        {facingMode === 'environment' ? 'Back' : 'Front'}
+                        {facingMode === 'environment' ? tr('Back', 'बैक', 'मागील') : tr('Front', 'फ्रंट', 'समोरचा')}
                       </span>
                     </button>
                   )}
@@ -1100,13 +1130,13 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                       <Camera className="w-7 h-7" />
                     </div>
                     <p className="text-xs text-slate-300 max-w-xs">
-                      {cameraError || (language === 'mr' ? 'कॅमेरा सुरू करण्यासाठी खालील बटण दाबा.' : 'कैमरा शुरू करने के लिए नीचे दिए बटन को दबाएं।')}
+                      {cameraError || tr('Press the button below to start camera.', 'कैमरा शुरू करने के लिए नीचे दिए बटन को दबाएं।', 'कॅमेरा सुरू करण्यासाठी खालील बटण दाबा.')}
                     </p>
                     {/* Action Buttons: Enable Live Camera OR Direct Mobile Camera Photo */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-1 w-full max-w-sm">
                       <label className="w-full sm:w-auto cursor-pointer px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-900/40 flex items-center justify-center gap-2 active:scale-95 transition">
                         <Camera className="w-4 h-4 text-white" />
-                        <span>{language === 'mr' ? '📷 मोबाईल कॅमेऱ्याने फोटो काढा' : '📷 मोबाइल कैमरे से फोटो लें'}</span>
+                        <span>{tr('📷 Take Photo with Mobile Camera', '📷 मोबाइल कैमरे से फोटो लें', '📷 मोबाईल कॅमेऱ्याने फोटो काढा')}</span>
                         <input
                           ref={fileInputRef}
                           type="file"
@@ -1123,17 +1153,41 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                         className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 shadow-md flex items-center justify-center gap-2 active:scale-95 transition"
                       >
                         <Video className="w-4 h-4 text-emerald-400" />
-                        <span>{language === 'mr' ? '🎥 पुन्हा प्रयत्न करा' : '🎥 पुनः प्रयास करें'}</span>
+                        <span>{tr('🎥 Try Again', '🎥 पुनः प्रयास करें', '🎥 पुन्हा प्रयत्न करा')}</span>
                       </button>
                     </div>
 
                     {/* Mobile HTTP Security Help Box */}
                     {cameraError && (
                       <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[11px] text-amber-200 max-w-sm text-left space-y-1.5 leading-relaxed">
-                        <p className="font-bold text-amber-300">💡 मोबाईलवर कॅमेरा परवानगी का येत नाही?</p>
-                        <p>मोबाईल ब्राउझर (Chrome/Safari) सुरक्षेसाठी <strong>HTTP (10.63.238.67)</strong> वर थेट व्हिडिओ बंद ठेवतो.</p>
-                        <p className="font-semibold text-emerald-300">✓ उपाय १: वरील "मोबाईल कॅमेऱ्याने फोटो काढा" बटण वापरा (हे कोणत्याही सेटिंगशिवाय लगेच काम करते).</p>
-                        <p className="font-semibold text-sky-300">✓ उपाय २: मोबाईल Chrome मध्ये <code>chrome://flags</code> उघडून <code>unsafely-treat-insecure-origin-as-secure</code> मध्ये <code>http://10.63.238.67:5173</code> टाका आणि Enable करा.</p>
+                        <p className="font-bold text-amber-300">
+                          {tr(
+                            '💡 Why is camera permission not showing on mobile?',
+                            '💡 मोबाइल पर कैमरा अनुमति क्यों नहीं आ रही है?',
+                            '💡 मोबाईलवर कॅमेरा परवानगी का येत नाही?'
+                          )}
+                        </p>
+                        <p>
+                          {tr(
+                            'Mobile browsers (Chrome/Safari) block live video over insecure HTTP (10.63.238.67) for security.',
+                            'मोबाइल ब्राउज़र (Chrome/Safari) सुरक्षा के लिए HTTP (10.63.238.67) पर लाइव वीडियो बंद रखते हैं।',
+                            'मोबाईल ब्राउझर (Chrome/Safari) सुरक्षेसाठी HTTP (10.63.238.67) वर थेट व्हिडिओ बंद ठेवतो.'
+                          )}
+                        </p>
+                        <p className="font-semibold text-emerald-300">
+                          {tr(
+                            '✓ Option 1: Use the "Take Photo with Mobile Camera" button above (works instantly without any settings).',
+                            '✓ उपाय 1: ऊपर दिए "मोबाइल कैमरे से फोटो लें" बटन का उपयोग करें (यह बिना किसी सेटिंग के तुरंत काम करता है)।',
+                            '✓ उपाय १: वरील "मोबाईल कॅमेऱ्याने फोटो काढा" बटण वापरा (हे कोणत्याही सेटिंगशिवाय लगेच काम करते).'
+                          )}
+                        </p>
+                        <p className="font-semibold text-sky-300">
+                          {tr(
+                            '✓ Option 2: Open chrome://flags in mobile Chrome, add http://10.63.238.67:5173 in unsafely-treat-insecure-origin-as-secure and enable it.',
+                            '✓ उपाय 2: मोबाइल Chrome में chrome://flags खोलें, unsafely-treat-insecure-origin-as-secure में http://10.63.238.67:5173 जोड़ें और Enable करें।',
+                            '✓ उपाय २: मोबाईल Chrome मध्ये chrome://flags उघडून unsafely-treat-insecure-origin-as-secure मध्ये http://10.63.238.67:5173 टाका आणि Enable करा.'
+                          )}
+                        </p>
                       </div>
                     )}
 
@@ -1145,7 +1199,9 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                           onClick={() => setShowDiagnostics(!showDiagnostics)}
                           className="text-[10px] text-slate-400 hover:text-slate-200 underline"
                         >
-                          {showDiagnostics ? 'तांत्रिक माहिती लपवा' : '🛠️ तांत्रिक माहिती (Diagnostics)'}
+                          {showDiagnostics
+                            ? tr('Hide technical details', 'तकनीकी जानकारी छुपाएं', 'तांत्रिक माहिती लपवा')
+                            : tr('🛠️ Technical Details (Diagnostics)', '🛠️ तकनीकी जानकारी (Diagnostics)', '🛠️ तांत्रिक माहिती (Diagnostics)')}
                         </button>
                         {showDiagnostics && (
                           <div className="w-full mt-1 p-2 bg-black/80 border border-slate-800 rounded-lg text-[9px] text-left font-mono text-emerald-400 max-h-24 overflow-y-auto whitespace-pre-wrap select-all">
@@ -1162,7 +1218,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
               <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800">
                 <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                   <Barcode className="w-4 h-4 text-emerald-600" />
-                  {language === 'mr' ? 'किंवा बारकोड नंबर टाईप करा / स्कॅनर गन वापरा:' : 'या बारकोड नंबर टाइप करें / स्कैनर गन उपयोग करें:'}
+                  {tr(
+                    'Or type barcode number / use scanner gun:',
+                    'या बारकोड नंबर टाइप करें / स्कैनर गन उपयोग करें:',
+                    'किंवा बारकोड नंबर टाईप करा / स्कॅनर गन वापरा:'
+                  )}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -1175,11 +1235,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                         lookupBarcode(barcodeInput);
                       }
                     }}
-                    placeholder={language === 'mr' ? 'उदा. 8901030384721' : 'उदा. 8901030384721'}
+                    placeholder={tr('e.g. 8901030384721', 'उदा. 8901030384721', 'उदा. 8901030384721')}
                     className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                   />
                   <label
-                    title={language === 'mr' ? 'मोबाईल कॅमेऱ्याने फोटो काढून स्कॅन करा' : 'मोबाइल कैमरे से फोटो खींचकर स्कैन करें'}
+                    title={tr('Take photo with mobile camera to scan', 'मोबाइल कैमरे से फोटो खींचकर स्कैन करें', 'मोबाईल कॅमेऱ्याने फोटो काढून स्कॅन करा')}
                     className="px-3.5 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white rounded-xl flex items-center justify-center cursor-pointer shadow-md active:scale-95 transition shrink-0"
                   >
                     <Camera className="w-5 h-5" />
@@ -1198,7 +1258,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                     className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl flex items-center gap-2 disabled:opacity-50 transition-all shadow-md shrink-0"
                   >
                     <Search className="w-4 h-4" />
-                    {language === 'mr' ? 'शोधा' : 'खोजें'}
+                    {tr('Search', 'खोजें', 'शोधा')}
                   </button>
                 </div>
               </div>
@@ -1207,9 +1267,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
               <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 shrink-0 text-emerald-600" />
                 <span>
-                  {language === 'mr'
-                    ? 'अमूल, गोवर्धन, मदर डेअरी किंवा स्थानिक उत्पादनांचा बारकोड स्कॅन करा.'
-                    : 'अमूल, गोवर्धन, मदर डेयरी अथवा स्थानीय उत्पादों का बारकोड स्कैन करें।'}
+                  {tr(
+                    'Scan barcodes of Amul, Gowardhan, Mother Dairy, or local products.',
+                    'अमूल, गोवर्धन, मदर डेयरी अथवा स्थानीय उत्पादों का बारकोड स्कैन करें।',
+                    'अमूल, गोवर्धन, मदर डेअरी किंवा स्थानिक उत्पादनांचा बारकोड स्कॅन करा.'
+                  )}
                 </span>
               </div>
             </div>
@@ -1225,7 +1287,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                   </div>
                   <div>
                     <h4 className="text-sm font-extrabold text-amber-900 dark:text-amber-200">
-                      {language === 'mr' ? 'नवीन बारकोड - फक्त उत्पादनाचे नाव नोंदवा' : 'नया बारकोड - केवल उत्पाद का नाम दर्ज करें'}
+                      {tr(
+                        'New Barcode - Enter Product Name Only',
+                        'नया बारकोड - केवल उत्पाद का नाम दर्ज करें',
+                        'नवीन बारकोड - फक्त उत्पादनाचे नाव नोंदवा'
+                      )}
                     </h4>
                     <p className="font-mono text-xs font-bold text-amber-700 dark:text-amber-400 mt-0.5">
                       {barcodeInput}
@@ -1239,7 +1305,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                 <div>
                   <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1.5">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                      {language === 'mr' ? 'उत्पादनाचे नाव (Product Name) *' : 'उत्पाद का नाम (Product Name) *'}
+                      {tr('Product Name *', 'उत्पाद का नाम *', 'उत्पादनाचे नाव *')}
                     </label>
                     {/* Compact Voice Language Switcher (EN / मराठी / हिंदी) */}
                     <div className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-[#1A2A25] p-0.5 border border-slate-200 dark:border-[#24352F]">
@@ -1271,7 +1337,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                       required
                       value={newProdName}
                       onChange={(e) => handleNewProdNameChange(e.target.value)}
-                      placeholder="उदा. Parle Monaco 50g / Britannia Toast"
+                      placeholder={tr(
+                        'e.g. Parle Monaco 50g / Britannia Toast',
+                        'उदा. Parle Monaco 50g / Britannia Toast',
+                        'उदा. Parle Monaco 50g / Britannia Toast'
+                      )}
                       className="w-full pr-28 px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                     <button
@@ -1283,13 +1353,13 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                           ? 'bg-rose-600 text-white shadow-sm'
                           : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                       }`}
-                      title="बोलून नाव भरा (Voice Input)"
+                      title={tr('Speak to fill product name (Voice Input)', 'बोलकर नाम भरें (वॉइस इनपुट)', 'बोलून नाव भरा (Voice Input)')}
                     >
                       <Mic className={`w-3.5 h-3.5 ${isVoiceListening ? 'animate-pulse' : ''}`} />
                       <span>
                         {isVoiceListening
-                          ? language === 'mr' ? 'थांबवा' : language === 'hi' ? 'रोकें' : 'Stop'
-                          : language === 'mr' ? 'बोला' : language === 'hi' ? 'बोलें' : 'Speak'}
+                          ? tr('Stop', 'रोकें', 'थांबवा')
+                          : tr('Speak', 'बोलें', 'बोला')}
                       </span>
                     </button>
                   </div>
@@ -1301,12 +1371,12 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                         <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping shrink-0" />
                         <span className="truncate">
                           {voiceLiveTranscript
-                            ? `${language === 'mr' ? 'ऐकले' : 'Heard'}: "${voiceLiveTranscript}"`
-                            : language === 'mr'
-                            ? 'ऐकत आहे... उत्पादनाचे नाव स्पष्ट बोला'
-                            : language === 'hi'
-                            ? 'सुन रहा है... उत्पाद का नाम स्पष्ट बोलें'
-                            : 'Listening... speak product name clearly'}
+                            ? `${tr('Heard', 'सुना गया', 'ऐकले')}: "${voiceLiveTranscript}"`
+                            : tr(
+                                'Listening... speak product name clearly',
+                                'सुन रहा है... उत्पाद का नाम स्पष्ट बोलें',
+                                'ऐकत आहे... उत्पादनाचे नाव स्पष्ट बोला'
+                              )}
                         </span>
                       </span>
                     </div>
@@ -1322,9 +1392,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
 
                   {!isSpeechRecognitionSupported() && !voiceErrorMsg && (
                     <p className="mt-1 text-[10px] text-slate-500 dark:text-[#8FA69C]">
-                      {language === 'mr'
-                        ? 'टीप: मोबाईल कीबोर्डवरील 🎤 माइक देखील वापरता येतो.'
-                        : 'Tip: You can also tap the 🎤 mic on your mobile keyboard.'}
+                      {tr(
+                        'Tip: You can also tap the 🎤 mic on your mobile keyboard.',
+                        'टिप: आप अपने मोबाइल कीबोर्ड पर 🎤 माइक भी दबा सकते हैं।',
+                        'टीप: मोबाईल कीबोर्डवरील 🎤 माइक देखील वापरता येतो.'
+                      )}
                     </p>
                   )}
                 </div>
@@ -1333,11 +1405,11 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                      {language === 'mr' ? 'मराठी नाव (आपोआप भाषांतर)' : 'मराठी/हिंदी नाम'}
+                      {tr('Marathi / Regional Name', 'मराठी / हिंदी नाम', 'मराठी नाव (आपोआप भाषांतर)')}
                     </label>
                     {newProdMarathiName && (
                       <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/40">
-                        ✓ ऑटो-मराठी
+                        {tr('✓ Auto-Marathi', '✓ ऑटो-मराठी', '✓ ऑटो-मराठी')}
                       </span>
                     )}
                   </div>
@@ -1345,7 +1417,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                     type="text"
                     value={newProdMarathiName}
                     onChange={(e) => setNewProdMarathiName(e.target.value)}
-                    placeholder="उदा. पार्ले मोनाको ५० ग्रॅम"
+                    placeholder={tr('e.g. Parle Monaco 50g (Regional)', 'उदा. पार्ले मोनाको 50 ग्राम', 'उदा. पार्ले मोनाको ५० ग्रॅम')}
                     className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
@@ -1361,7 +1433,7 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                   }}
                   className="px-4 py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-xs font-bold"
                 >
-                  {language === 'mr' ? 'मागे जा' : 'वापस'}
+                  {tr('Back', 'वापस', 'मागे जा')}
                 </button>
                 <button
                   type="submit"
@@ -1371,12 +1443,12 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                   {isRegistering ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>{language === 'mr' ? 'डेटाबेसमध्ये सेव्ह करत आहे...' : 'डेटाबेस में सहेज रहे हैं...'}</span>
+                      <span>{tr('Saving to database...', 'डेटाबेस में सहेज रहे हैं...', 'डेटाबेसमध्ये सेव्ह करत आहे...')}</span>
                     </>
                   ) : (
                     <>
                       <PlusCircle className="w-4 h-4" />
-                      <span>{language === 'mr' ? '⚡ थेट डेटाबेसमध्ये सेव्ह करा' : '⚡ सीधे डेटाबेस में सहेजें'}</span>
+                      <span>{tr('⚡ Save Directly to Database', '⚡ सीधे डेटाबेस में सहेजें', '⚡ थेट डेटाबेसमध्ये सेव्ह करा')}</span>
                     </>
                   )}
                 </button>
@@ -1393,13 +1465,17 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                 </div>
                 <div>
                   <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
-                    {language === 'mr' ? '✓ उत्पादन डेटाबेसमध्ये आधीच उपलब्ध आहे' : '✓ उत्पाद डेटाबेस में पहले से उपलब्ध है'}
+                    {tr(
+                      '✓ Product already exists in database',
+                      '✓ उत्पाद डेटाबेस में पहले से उपलब्ध है',
+                      '✓ उत्पादन डेटाबेसमध्ये आधीच उपलब्ध आहे'
+                    )}
                   </span>
                   <h3 className="text-base font-extrabold text-slate-900 dark:text-white mt-1">
-                    {selectedProduct.marathi_name || selectedProduct.name}
+                    {getProductDisplayName(selectedProduct)}
                   </h3>
                   <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    बारकोड: <strong className="text-slate-800 dark:text-slate-200">{selectedProduct.barcode || barcodeInput}</strong> | साठा: <strong className="text-emerald-600 dark:text-emerald-400">{selectedProduct.stock_quantity || 0} {selectedProduct.unit}</strong>
+                    {tr('Barcode:', 'बारकोड:', 'बारकोड:')} <strong className="text-slate-800 dark:text-slate-200">{selectedProduct.barcode || barcodeInput}</strong> | {tr('Stock:', 'स्टॉक:', 'साठा:')} <strong className="text-emerald-600 dark:text-emerald-400">{selectedProduct.stock_quantity || 0} {selectedProduct.unit}</strong>
                   </p>
                 </div>
               </div>
@@ -1411,14 +1487,14 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                   className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-md shadow-emerald-600/30 active:scale-95 transition"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  <span>{language === 'mr' ? 'पुढील बारकोड स्कॅन करा' : 'अगला बारकोड स्कैन करें'}</span>
+                  <span>{tr('Scan Next Barcode', 'अगला बारकोड स्कैन करें', 'पुढील बारकोड स्कॅन करा')}</span>
                 </button>
                 <button
                   type="button"
                   onClick={onClose}
                   className="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition"
                 >
-                  {language === 'mr' ? 'पूर्ण झाले / बंद करा' : 'पूर्ण / बंद करें'}
+                  {tr('Done / Close', 'पूर्ण / बंद करें', 'पूर्ण झाले / बंद करा')}
                 </button>
               </div>
             </div>
@@ -1433,16 +1509,24 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
 
               <div>
                 <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                  {language === 'mr' ? 'उत्पादन आणि बारकोड यशस्वीरीत्या सेव्ह झाले!' : 'उत्पाद और बारकोड सफलतापूर्वक दर्ज हुआ!'}
+                  {tr(
+                    'Product & barcode saved successfully!',
+                    'उत्पाद और बारकोड सफलतापूर्वक दर्ज हुआ!',
+                    'उत्पादन आणि बारकोड यशस्वीरीत्या सेव्ह झाले!'
+                  )}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  डेटाबेसमध्ये नवीन नोंद पूर्ण झाली आहे.
+                  {tr(
+                    'New record has been saved to the database.',
+                    'डेटाबेस में नई प्रविष्टि पूरी हो गई है।',
+                    'डेटाबेसमध्ये नवीन नोंद पूर्ण झाली आहे.'
+                  )}
                 </p>
               </div>
 
               <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl inline-block text-left text-xs space-y-1 font-mono">
-                <div>उत्पादन: <strong className="text-slate-900 dark:text-white text-sm">{lastStockInResult.productName}</strong></div>
-                <div>बारकोड: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{lastStockInResult.barcode}</strong></div>
+                <div>{tr('Product:', 'उत्पाद:', 'उत्पादन:')} <strong className="text-slate-900 dark:text-white text-sm">{lastStockInResult.productName}</strong></div>
+                <div>{tr('Barcode:', 'बारकोड:', 'बारकोड:')} <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{lastStockInResult.barcode}</strong></div>
               </div>
 
               <div className="flex justify-center gap-3 pt-3">
@@ -1452,14 +1536,14 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
                   className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold flex items-center gap-2 shadow-md"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  {language === 'mr' ? 'पुढील उत्पादन स्कॅन करा' : 'अगला उत्पाद स्कैन करें'}
+                  {tr('Scan Next Product', 'अगला उत्पाद स्कैन करें', 'पुढील उत्पादन स्कॅन करा')}
                 </button>
                 <button
                   type="button"
                   onClick={onClose}
                   className="px-5 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-300"
                 >
-                  {language === 'mr' ? 'बंद करा' : 'बंद करें'}
+                  {tr('Close', 'बंद करें', 'बंद करा')}
                 </button>
               </div>
             </div>

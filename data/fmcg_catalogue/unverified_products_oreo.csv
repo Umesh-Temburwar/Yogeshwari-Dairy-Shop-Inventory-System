@@ -1,8 +1,0 @@
-barcode,brand,reason,source
-'09659203,Oreo,"GS1 Checksum Failure: Check digit mismatch (expected 9, got 3)",Pre-validation
-'4007993019831,Oreo,No product name found in OFF or DB,Data extraction
-'5000396020687,Oreo,No product name found in OFF or DB,Data extraction
-'6901668005915,Oreo,No product name found in OFF or DB,Data extraction
-'7622201757250,Oreo,No product name found in OFF or DB,Data extraction
-'7622210810915,Oreo,No product name found in OFF or DB,Data extraction
-'84100733,Oreo,No product name found in OFF or DB,Data extraction

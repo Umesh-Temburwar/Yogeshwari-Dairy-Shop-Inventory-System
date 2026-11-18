@@ -87,7 +87,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   productToEdit
 }) => {
   const { addProduct, updateProduct } = useStore();
-  const { t, language } = useLanguage();
+  const { t, language, tr } = useLanguage();
   const { user, role } = useAuth();
   const isAdmin = Boolean(user) && (role === 'Owner' || role === 'Admin');
 
@@ -381,9 +381,11 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           isListeningRef.current = false;
           setIsListening(false);
           setVoiceError(
-            language === 'mr'
-              ? 'Google Voice Network त्रुटी. कृपया इंटरनेट कनेक्शन तपासा.'
-              : 'Google Voice Network error. Please check your internet connection.'
+            tr(
+              'Google Voice Network error. Please check your internet connection.',
+              'Google Voice Network त्रुटि। कृपया इंटरनेट कनेक्शन जांचें।',
+              'Google Voice Network त्रुटी. कृपया इंटरनेट कनेक्शन तपासा.'
+            )
           );
         }
       };
@@ -440,7 +442,11 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       isListeningRef.current = false;
       setIsListening(false);
       setVoiceError(
-        language === 'mr' ? 'माईक सुरू करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.' : 'माइक शुरू करने में समस्या आई।'
+        tr(
+          'Error starting microphone. Please try again.',
+          'माइक शुरू करने में समस्या आई। कृपया पुनः प्रयास करें।',
+          'माईक सुरू करताना त्रुटी आली. कृपया पुन्हा प्रयत्न करा.'
+        )
       );
     }
   };
@@ -553,7 +559,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     setLookupNotFound(false);
     setImageStatusMessage({
       type: 'success',
-      text: 'Official image selected. Click Save to persist.'
+      text: tr('Official image selected. Click Save to persist.', 'आधिकारिक इमेज चुनी गई। सहेजने के लिए सेव दबाएं।', 'अधिकृत फोटो निवडला. जतन करण्यासाठी सेव्ह दाबा.')
     });
   };
 
@@ -577,7 +583,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     if (!validation.valid) {
       setImageStatusMessage({
         type: 'error',
-        text: validation.error || 'Invalid image file.'
+        text: validation.error || tr('Invalid image file.', 'अमान्य इमेज फ़ाइल।', 'अवैध फोटो फाईल.')
       });
       return;
     }
@@ -607,10 +613,10 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       setPendingOverwriteCandidate(null);
       setImageStatusMessage({
         type: 'success',
-        text: 'Square 512×512 WebP image uploaded to Storage. Click Save to apply.'
+        text: tr('Square 512×512 WebP image uploaded to Storage. Click Save to apply.', 'स्क्वायर 512×512 WebP इमेज अपलोड हो गई। लागू करने के लिए सेव दबाएं।', 'स्क्वेअर 512×512 WebP फोटो अपलोड झाला. लागू करण्यासाठी सेव्ह दाबा.')
       });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to upload image.';
+      const message = err instanceof Error ? err.message : tr('Failed to upload image.', 'इमेज अपलोड करने में विफल।', 'फोटो अपलोड करण्यात अयशस्वी.');
       setUploadError(message);
     } finally {
       setIsUploadingImage(false);
@@ -728,15 +734,15 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   onClick={handleManualTranslateTrigger}
                   disabled={(isTranslating && Boolean(name.trim())) || !name.trim()}
                   className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 flex items-center gap-1 transition active:scale-95 disabled:opacity-50"
-                  title="मराठी आणि हिंदी नाव आपोआप भरा (Re-translate)"
+                  title={tr('Auto-fill Marathi & Hindi names (Re-translate)', 'मराठी और हिंदी नाम अपने आप भरें (पुनः अनुवाद)', 'मराठी आणि हिंदी नाव आपोआप भरा (Re-translate)')}
                 >
                   <Sparkles className={`w-3.5 h-3.5 ${isTranslating && Boolean(name.trim()) ? 'animate-spin text-amber-500' : 'text-emerald-500'}`} />
                   <span>
                     {isTranslating && Boolean(name.trim())
-                      ? (language === 'mr' ? 'अनुवाद करत आहे...' : 'अनुवाद कर रहे हैं...')
-                      : (language === 'mr'
-                        ? (name.trim() ? '✨ पुन्हा भाषांतर करा' : '✨ ऑटो भाषांतर')
-                        : (name.trim() ? '✨ पुनः अनुवाद करें' : '✨ ऑटो ट्रांसलेट'))}
+                      ? tr('Translating...', 'अनुवाद कर रहे हैं...', 'अनुवाद करत आहे...')
+                      : name.trim()
+                        ? tr('✨ Re-translate', '✨ पुनः अनुवाद करें', '✨ पुन्हा भाषांतर करा')
+                        : tr('✨ Auto-translate', '✨ ऑटो ट्रांसलेट', '✨ ऑटो भाषांतर')}
                   </span>
                 </button>
               </div>
@@ -758,13 +764,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                       ? 'bg-rose-600 hover:bg-rose-700 text-white animate-pulse shadow-rose-500/40 ring-2 ring-rose-400'
                       : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
                       }`}
-                    title={isListening ? 'माईक थांबवा (Stop)' : 'बोलून नाव टाका (Voice to Text)'}
+                    title={isListening ? tr('Stop Mic', 'माइक रोकें', 'माईक थांबवा') : tr('Voice to Text', 'बोलकर नाम डालें', 'बोलून नाव टाका')}
                   >
                     <Mic className={`w-3.5 h-3.5 ${isListening ? 'animate-bounce text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
                     <span className="text-[11px] font-black">
                       {isListening
-                        ? (language === 'mr' ? 'ऐकत आहे...' : 'सुन रहा है...')
-                        : (language === 'mr' ? '🎤 बोला' : language === 'hi' ? '🎤 बोलें' : '🎤 Voice')}
+                        ? tr('Listening...', 'सुन रहा है...', 'ऐकत आहे...')
+                        : tr('🎤 Voice', '🎤 बोलें', '🎤 बोला')}
                     </span>
                   </button>
                 </div>
@@ -823,7 +829,11 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                       <p className="text-xs font-black text-emerald-950 dark:text-emerald-200 truncate">
                         {interimTranscript
                           ? `🎙️ "${interimTranscript}"`
-                          : (language === 'mr' ? 'काहीही बोला (उदा. "अमुल ताझा ५०० मिली", "म्हशीचे दूध १ लिटर")...' : 'कुछ भी बोलें (उदा. "अमुल ताज़ा 500 मिली", "भैंस का दूध 1 लीटर")...')}
+                          : tr(
+                            'Speak anything (e.g. "Amul Taaza 500ml", "Buffalo Milk 1 Litre")...',
+                            'कुछ भी बोलें (उदा. "अमुल ताज़ा 500 मिली", "भैंस का दूध 1 लीटर")...',
+                            'काहीही बोला (उदा. "अमुल ताझा ५०० मिली", "म्हशीचे दूध १ लिटर")...'
+                          )}
                       </p>
                       {name && (
                         <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold truncate mt-0.5">
@@ -844,7 +854,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                         type="button"
                         onClick={cancelVoiceListening}
                         className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white"
-                        title="रद्द करा (Cancel)"
+                        title={tr('Cancel', 'रद्द करें', 'रद्द करा')}
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -858,14 +868,14 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                     </p>
                     <div className="flex flex-wrap gap-1">
                       {[
-                        { label: '🥛 म्हशीचे दूध १L', val: 'म्हशीचे दूध १ लिटर' },
-                        { label: '🥛 अमुल ताझा ५००ml', val: 'अमुल ताझा ५०० मिली' },
-                        { label: '🧈 अमुल बटर १००g', val: 'अमुल बटर १०० ग्रॅम' },
-                        { label: '🧀 ताजे पनीर ५००g', val: 'ताजे पनीर ५०० ग्रॅम' },
-                        { label: '🫙 गायीचे तूप १L', val: 'गायीचे तूप १ लिटर' },
-                        { label: '🥤 मसाला ताक', val: 'मसाला ताक' },
-                        { label: '🍬 काजू कतली', val: 'काजू कतली' },
-                        { label: '🍞 बटर खारी', val: 'बटर खारी' }
+                        { label: tr('🥛 Buffalo Milk 1L', '🥛 भैंस का दूध 1L', '🥛 म्हशीचे दूध १L'), val: 'म्हशीचे दूध १ लिटर' },
+                        { label: tr('🥛 Amul Taaza 500ml', '🥛 अमूल ताज़ा 500ml', '🥛 अमुल ताझा ५००ml'), val: 'अमुल ताझा ५०० मिली' },
+                        { label: tr('🧈 Amul Butter 100g', '🧈 अमूल बटर 100g', '🧈 अमुल बटर १००g'), val: 'अमुल बटर १०० ग्रॅम' },
+                        { label: tr('🧀 Fresh Paneer 500g', '🧀 ताज़ा पनीर 500g', '🧀 ताजे पनीर ५००g'), val: 'ताजे पनीर ५०० ग्रॅम' },
+                        { label: tr('🫙 Cow Ghee 1L', '🫙 गाय का घी 1L', '🫙 गायीचे तूप १L'), val: 'गायीचे तूप १ लिटर' },
+                        { label: tr('🥤 Masala Chaas', '🥤 मसाला छाछ', '🥤 मसाला ताक'), val: 'मसाला ताक' },
+                        { label: tr('🍬 Kaju Katli', '🍬 काजू कतली', '🍬 काजू कतली'), val: 'काजू कतली' },
+                        { label: tr('🍞 Butter Khari', '🍞 बटर खारी', '🍞 बटर खारी'), val: 'बटर खारी' }
                       ].map((item) => (
                         <button
                           key={item.val}
@@ -911,13 +921,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   </label>
                   {marathiName && (
                     <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/40">
-                      ✓ ऑटो-मराठी
+                      ✓ {tr('Auto-Marathi', 'ऑटो-मराठी', 'ऑटो-मराठी')}
                     </span>
                   )}
                 </div>
                 <input
                   type="text"
-                  placeholder="उदा. ताजे म्हशीचे दूध १ लिटर"
+                  placeholder={tr('e.g. ताजे म्हशीचे दूध १ लिटर', 'उदा. ताजे म्हशीचे दूध १ लिटर', 'उदा. ताजे म्हशीचे दूध १ लिटर')}
                   value={marathiName}
                   onChange={(e) => setMarathiName(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -930,13 +940,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   </label>
                   {hindiName && (
                     <span className="text-[10px] font-extrabold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-200 dark:border-teal-800/40">
-                      ✓ ऑटो-हिंदी
+                      ✓ {tr('Auto-Hindi', 'ऑटो-हिंदी', 'ऑटो-हिंदी')}
                     </span>
                   )}
                 </div>
                 <input
                   type="text"
-                  placeholder="उदा. ताज़ा भैंस का दूध 1 लीटर"
+                  placeholder={tr('e.g. ताज़ा भैंस का दूध 1 लीटर', 'उदा. ताज़ा भैंस का दूध 1 लीटर', 'उदा. ताज़ा भैंस का दूध 1 लीटर')}
                   value={hindiName}
                   onChange={(e) => setHindiName(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -954,7 +964,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="उदा. 8901030925237"
+                placeholder={tr('e.g. 8901030925237', 'उदा. 8901030925237', 'उदा. 8901030925237')}
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
                 className="flex-1 px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-[#E7F0EC] text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -963,10 +973,10 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 type="button"
                 onClick={() => setShowBarcodeScanner(true)}
                 className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#20332D] text-slate-700 dark:text-white text-xs font-bold flex items-center gap-1.5 border border-slate-200 dark:border-[#24352F] transition"
-                title="Scan Barcode"
+                title={tr('Scan Barcode', 'बारकोड स्कैन करें', 'बारकोड स्कॅन करा')}
               >
                 <Barcode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>{language === 'mr' ? 'स्कॅन' : 'स्कैन'}</span>
+                <span>{tr('Scan', 'स्कैन', 'स्कॅन')}</span>
               </button>
             </div>
           </div>
@@ -991,7 +1001,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-extrabold text-slate-800 dark:text-[#E7F0EC] flex items-center gap-1.5">
                   <ImageIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span>Product Image (1:1 Square)</span>
+                  <span>{tr('Product Image (1:1 Square)', 'उत्पाद फोटो (1:1 स्क्वायर)', 'उत्पादन फोटो (1:1 स्क्वेअर)')}</span>
                 </span>
                 {imageUrl && (
                   <button
@@ -999,12 +1009,12 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                     onClick={() => {
                       setImageUrl('');
                       setPendingOverwriteCandidate(null);
-                      setImageStatusMessage({ type: 'info', text: 'Image cleared. Click Save to confirm.' });
+                      setImageStatusMessage({ type: 'info', text: tr('Image cleared. Click Save to confirm.', 'फोटो हटाया गया। सहेजने के लिए सेव दबाएं।', 'फोटो काढला. जतन करण्यासाठी सेव्ह दाबा.') });
                     }}
                     className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
                   >
                     <Trash2 className="w-3 h-3" />
-                    <span>Remove</span>
+                    <span>{tr('Remove', 'हटाएं', 'काढा')}</span>
                   </button>
                 )}
               </div>
@@ -1034,7 +1044,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                       ) : (
                         <Search className="w-3.5 h-3.5" />
                       )}
-                      <span>{isLookingUpImage ? 'Searching...' : 'Find official image'}</span>
+                      <span>{isLookingUpImage ? tr('Searching...', 'खोज रहे हैं...', 'शोधत आहे...') : tr('Find official image', 'आधिकारिक फोटो खोजें', 'अधिकृत फोटो शोधा')}</span>
                     </button>
 
                     <button
@@ -1043,7 +1053,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                       className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-slate-100 dark:hover:bg-[#223630] border border-slate-300 dark:border-[#24352F] text-slate-800 dark:text-[#E7F0EC] text-xs font-bold transition active:scale-95"
                     >
                       <Upload className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>Upload photo</span>
+                      <span>{tr('Upload photo', 'फोटो अपलोड करें', 'फोटो अपलोड करा')}</span>
                     </button>
 
                     <input
@@ -1056,7 +1066,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   </div>
 
                   <p className="text-[11px] font-medium text-slate-500 dark:text-[#8FA69C]">
-                    Plain background, product centered, good light. (JPEG/PNG/WebP, max 5 MB)
+                    {tr('Plain background, product centered, good light. (JPEG/PNG/WebP, max 5 MB)', 'साफ़ बैकग्राउंड, उत्पाद बीच में, अच्छी रोशनी। (JPEG/PNG/WebP, अधिकतम 5 MB)', 'स्वच्छ पार्श्वभूमी, उत्पादन मध्यभागी, चांगला प्रकाश. (JPEG/PNG/WebP, कमाल 5 MB)')}
                   </p>
                 </div>
               </div>
@@ -1085,7 +1095,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               {pendingOverwriteCandidate && (
                 <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 space-y-2">
                   <p className="text-[11px] font-bold text-amber-900 dark:text-amber-300">
-                    This product already has an image. Replace existing image with the selected official image?
+                    {tr('This product already has an image. Replace existing image with the selected official image?', 'इस उत्पाद की पहले से एक फोटो है। क्या इसे चुनी गई आधिकारिक फोटो से बदलें?', 'या उत्पादनाला आधीच फोटो आहे. निवडलेल्या अधिकृत फोटोने जुना फोटो बदलायचा का?')}
                   </p>
                   <div className="flex items-center gap-2">
                     <button
@@ -1093,14 +1103,14 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                       onClick={() => applyCandidateUrl(pendingOverwriteCandidate)}
                       className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold"
                     >
-                      Confirm Replace
+                      {tr('Confirm Replace', 'बदल की पुष्टि करें', 'बदल निश्चित करा')}
                     </button>
                     <button
                       type="button"
                       onClick={() => setPendingOverwriteCandidate(null)}
                       className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#131F1B] border border-slate-300 dark:border-[#24352F] text-slate-700 dark:text-[#8FA69C] text-[11px] font-bold"
                     >
-                      Keep Current
+                      {tr('Keep Current', 'मौजूदा रखें', 'सध्याचा ठेवा')}
                     </button>
                   </div>
                 </div>
@@ -1111,7 +1121,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 <div className="space-y-2 pt-1">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400">
-                      Select an official image ({officialCandidates.length} found)
+                      {tr(`Select an official image (${officialCandidates.length} found)`, `आधिकारिक फोटो चुनें (${officialCandidates.length} मिले)`, `अधिकृत फोटो निवडा (${officialCandidates.length} सापडले)`)}
                     </span>
                     <button
                       type="button"
@@ -1121,7 +1131,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                       }}
                       className="text-[11px] font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white"
                     >
-                      Ignore
+                      {tr('Ignore', 'छोड़ें', 'दुर्लक्ष करा')}
                     </button>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -1160,7 +1170,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               {lookupNotFound && officialCandidates.length === 0 && (
                 <div className="p-2.5 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC]">
-                    No official image found, upload your own
+                    {tr('No official image found, upload your own', 'कोई आधिकारिक फोटो नहीं मिली, अपनी फोटो अपलोड करें', 'अधिकृत फोटो सापडला नाही, स्वतःचा फोटो अपलोड करा')}
                   </span>
                   <button
                     type="button"
@@ -1168,7 +1178,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                     className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold"
                   >
                     <Upload className="w-3 h-3" />
-                    <span>Upload now</span>
+                    <span>{tr('Upload now', 'अभी अपलोड करें', 'आता अपलोड करा')}</span>
                   </button>
                 </div>
               )}

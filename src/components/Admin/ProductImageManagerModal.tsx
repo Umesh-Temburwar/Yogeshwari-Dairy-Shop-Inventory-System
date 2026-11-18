@@ -35,7 +35,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
   onClose
 }) => {
   const { products, setProducts, totalCatalogCount = 46571, totalBarcodesCount = 44202 } = useStore() as any;
-  const { language } = useLanguage();
+  const { language, tr } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -192,14 +192,14 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
 
   // Stat chips definition in prompt-specified order
   const statChips = useMemo(() => [
-    { id: 'ALL' as ImageStatusFilter, label: language === 'mr' ? 'एकूण' : 'Total', count: stats.totalProducts, border: 'border-slate-300 dark:border-slate-700', activeBg: 'bg-emerald-600' },
-    { id: 'OFFICIAL' as ImageStatusFilter, label: 'Official', count: stats.officialCount, border: 'border-emerald-300 dark:border-emerald-700', activeBg: 'bg-emerald-600' },
-    { id: 'TRUSTED' as ImageStatusFilter, label: 'Trusted', count: stats.trustedCount, border: 'border-sky-300 dark:border-sky-700', activeBg: 'bg-sky-600' },
-    { id: 'RETAILER' as ImageStatusFilter, label: 'Retailer', count: stats.retailerCount, border: 'border-indigo-300 dark:border-indigo-700', activeBg: 'bg-indigo-600' },
-    { id: 'NEEDS_REVIEW' as ImageStatusFilter, label: 'Review', count: stats.needsReviewCount, border: 'border-amber-300 dark:border-amber-700', activeBg: 'bg-amber-600' },
-    { id: 'INCORRECT' as ImageStatusFilter, label: 'Incorrect', count: stats.incorrectCount, border: 'border-rose-300 dark:border-rose-700', activeBg: 'bg-rose-600' },
-    { id: 'BROKEN' as ImageStatusFilter, label: 'Broken', count: stats.brokenCount, border: 'border-red-300 dark:border-red-700', activeBg: 'bg-red-600' },
-    { id: 'MISSING' as ImageStatusFilter, label: 'Missing', count: stats.missingCount, border: 'border-slate-300 dark:border-slate-600', activeBg: 'bg-slate-700' },
+    { id: 'ALL' as ImageStatusFilter, label: tr('Total', 'कुल', 'एकूण'), count: stats.totalProducts, border: 'border-slate-300 dark:border-slate-700', activeBg: 'bg-emerald-600' },
+    { id: 'OFFICIAL' as ImageStatusFilter, label: tr('Official', 'आधिकारिक', 'अधिकृत'), count: stats.officialCount, border: 'border-emerald-300 dark:border-emerald-700', activeBg: 'bg-emerald-600' },
+    { id: 'TRUSTED' as ImageStatusFilter, label: tr('Trusted', 'विश्वसनीय', 'विश्वासार्ह'), count: stats.trustedCount, border: 'border-sky-300 dark:border-sky-700', activeBg: 'bg-sky-600' },
+    { id: 'RETAILER' as ImageStatusFilter, label: tr('Retailer', 'रिटेलर', 'रिटेलर'), count: stats.retailerCount, border: 'border-indigo-300 dark:border-indigo-700', activeBg: 'bg-indigo-600' },
+    { id: 'NEEDS_REVIEW' as ImageStatusFilter, label: tr('Review', 'समीक्षा', 'तपासणी'), count: stats.needsReviewCount, border: 'border-amber-300 dark:border-amber-700', activeBg: 'bg-amber-600' },
+    { id: 'INCORRECT' as ImageStatusFilter, label: tr('Incorrect', 'गलत', 'चुकीचा'), count: stats.incorrectCount, border: 'border-rose-300 dark:border-rose-700', activeBg: 'bg-rose-600' },
+    { id: 'BROKEN' as ImageStatusFilter, label: tr('Broken', 'टूटा लिंक', 'तुटलेला'), count: stats.brokenCount, border: 'border-red-300 dark:border-red-700', activeBg: 'bg-red-600' },
+    { id: 'MISSING' as ImageStatusFilter, label: tr('Missing', 'अनुपलब्ध', 'नाही'), count: stats.missingCount, border: 'border-slate-300 dark:border-slate-600', activeBg: 'bg-slate-700' },
   ], [stats, language]);
 
   // Database-backed Catalogue Products State for Photo Dashboard
@@ -605,9 +605,13 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
     if (cleanUrl && !cleanUrl.startsWith('data:image/')) {
       const isValid = await validateImageUrl(cleanUrl);
       if (!isValid) {
-        alert(language === 'mr' 
-          ? 'हा फोटो URL उघडता येत नाही किंवा वैध फोटो फॉरमॅट नाही.' 
-          : 'यह इमेज URL लोड नहीं हो सका या वैध फॉर्मेट नहीं है।');
+        alert(
+          tr(
+            'This image URL cannot be opened or is not a valid image format.',
+            'यह इमेज URL लोड नहीं हो सका या वैध फॉर्मेट नहीं है।',
+            'हा फोटो URL उघडता येत नाही किंवा वैध फोटो फॉरमॅट नाही.'
+          )
+        );
         setIsValidatingUrl(false);
         return;
       }
@@ -653,9 +657,11 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
 
       playSuccessChime();
       setSaveSuccessToast(
-        language === 'mr'
-          ? `✓ "${editingProduct.name}" चा फोटो यशस्वीरित्या सेव्ह झाला!`
-          : `✓ "${editingProduct.name}" की फोटो सफलतापूर्वक सेव हुई!`
+        tr(
+          `✓ Photo for "${editingProduct.name}" saved successfully!`,
+          `✓ "${editingProduct.name}" की फोटो सफलतापूर्वक सेव हुई!`,
+          `✓ "${editingProduct.name}" चा फोटो यशस्वीरित्या सेव्ह झाला!`
+        )
       );
       setTimeout(() => setSaveSuccessToast(null), 4000);
 
@@ -726,10 +732,10 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
             </div>
             <div className="min-w-0">
               <h3 className="text-base font-bold text-slate-900 dark:text-white truncate leading-tight">
-                Product Image Dashboard
+                {tr('Product Image Dashboard', 'उत्पाद फोटो डैशबोर्ड', 'उत्पादन फोटो डॅशबोर्ड')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-[#8FA69C] truncate">
-                {stats.totalProducts.toLocaleString()} records • {stats.eligibleBarcodes.toLocaleString()} barcodes
+                {stats.totalProducts.toLocaleString()} {tr('records', 'रिकॉर्ड्स', 'नोंदी')} • {stats.eligibleBarcodes.toLocaleString()} {tr('barcodes', 'बारकोड', 'बारकोड')}
               </p>
             </div>
           </div>
@@ -740,7 +746,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
               onClose();
             }}
             className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#24352F] transition cursor-pointer active:scale-95"
-            title="बंद करा (Close)"
+            title={tr('Close', 'बंद करें', 'बंद करा')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -763,10 +769,12 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
               <Sparkles className="w-4 h-4 text-emerald-600 animate-spin shrink-0" />
               <div className="min-w-0">
                 <span className="text-xs font-black text-slate-800 dark:text-white block truncate">
-                  {progress.isPaused ? '⏸️ प्रक्रिया थांबवली (Paused)' : '🔄 फोटो पडताळणी सुरू...'}
+                  {progress.isPaused
+                    ? tr('⏸️ Process Paused', '⏸️ प्रक्रिया रुकी हुई है', '⏸️ प्रक्रिया थांबवली')
+                    : tr('🔄 Verifying photos...', '🔄 फोटो सत्यापन जारी...', '🔄 फोटो पडताळणी सुरू...')}
                 </span>
                 <span className="text-[10px] text-slate-500 dark:text-[#8FA69C] truncate block">
-                  {progress.currentBarcode || 'Searching'} • सापडले: {progress.verified}
+                  {progress.currentBarcode || tr('Searching', 'खोज रहे हैं', 'शोधत आहे')} • {tr('Found:', 'मिले:', 'सापडले:')} {progress.verified}
                 </span>
               </div>
             </div>
@@ -778,7 +786,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                   className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center gap-1 hover:bg-emerald-700 cursor-pointer"
                 >
                   <Play className="w-3 h-3 fill-current" />
-                  <span>Resume</span>
+                  <span>{tr('Resume', 'जारी रखें', 'पुन्हा सुरू')}</span>
                 </button>
               ) : (
                 <button
@@ -786,14 +794,14 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                   className="px-2.5 py-1 rounded-lg bg-amber-500 text-white font-bold text-xs flex items-center gap-1 hover:bg-amber-600 cursor-pointer"
                 >
                   <Pause className="w-3 h-3" />
-                  <span>Pause</span>
+                  <span>{tr('Pause', 'रोकें', 'थांबवा')}</span>
                 </button>
               )}
               <button
                 onClick={handleStop}
                 className="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-300 cursor-pointer"
               >
-                Stop
+                {tr('Stop', 'बंद करें', 'बंद करा')}
               </button>
             </div>
           </div>
@@ -805,11 +813,15 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
             type="button"
             onClick={() => setIsBarcodeScannerOpen(true)}
             className="flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition flex items-center justify-center gap-1.5 cursor-pointer"
-            title="कॅमेराने बारकोड स्कॅन करून फोटो शोधा / अपडेट करा"
+            title={tr(
+              'Scan barcode with camera to find / update photo',
+              'कैमरे से बारकोड स्कैन करके फोटो खोजें / अपडेट करें',
+              'कॅमेराने बारकोड स्कॅन करून फोटो शोधा / अपडेट करा'
+            )}
           >
             <Barcode className="w-4 h-4 shrink-0" />
             <Camera className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{language === 'mr' ? 'बारकोड स्कॅन' : language === 'hi' ? 'बारकोड स्कैन' : 'Scan Barcode'}</span>
+            <span className="truncate">{tr('Scan Barcode', 'बारकोड स्कैन', 'बारकोड स्कॅन')}</span>
           </button>
 
           {!progress.isRunning ? (
@@ -817,10 +829,14 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
               type="button"
               onClick={handleStartFetching}
               className="flex-1 h-11 rounded-xl border border-emerald-500/50 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 transition active:scale-95 cursor-pointer"
-              title="ऑनलाइन फूड डेटाबेसमधून फोटो ऑटो-फेच करा"
+              title={tr(
+                'Auto-fetch photos from online food database',
+                'ऑनलाइन फूड डेटाबेस से फोटो ऑटो-फेच करें',
+                'ऑनलाइन फूड डेटाबेसमधून फोटो ऑटो-फेच करा'
+              )}
             >
               <Play className="w-3.5 h-3.5 fill-current shrink-0" />
-              <span className="truncate">Auto-Fetch</span>
+              <span className="truncate">{tr('Auto-Fetch', 'ऑटो-फेच', 'ऑटो-फेच')}</span>
             </button>
           ) : (
             <div className="flex-1 h-11 flex items-center gap-1.5">
@@ -831,7 +847,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                   className="flex-1 h-11 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition cursor-pointer"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Resume</span>
+                  <span>{tr('Resume', 'जारी रखें', 'पुन्हा सुरू')}</span>
                 </button>
               ) : (
                 <button
@@ -840,7 +856,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                   className="flex-1 h-11 rounded-xl bg-amber-500 text-white font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition cursor-pointer"
                 >
                   <Pause className="w-3.5 h-3.5" />
-                  <span>Pause</span>
+                  <span>{tr('Pause', 'रोकें', 'थांबवा')}</span>
                 </button>
               )}
               <button
@@ -848,7 +864,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                 onClick={handleStop}
                 className="h-11 px-3 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center active:scale-95 transition cursor-pointer"
               >
-                Stop
+                {tr('Stop', 'बंद करें', 'बंद करा')}
               </button>
             </div>
           )}
@@ -857,7 +873,11 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
             type="button"
             onClick={handleExportMissing}
             className="w-11 h-11 shrink-0 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-700 dark:text-[#8FA69C] border border-slate-200 dark:border-[#24352F] flex items-center justify-center transition active:scale-95 cursor-pointer"
-            title={language === 'mr' ? 'मिसिंग फोटोंची CSV फाईल डाऊनलोड करा (Export CSV)' : 'मिसिंग फोटो CSV निर्यात करें'}
+            title={tr(
+              'Download CSV of missing photos (Export CSV)',
+              'मिसिंग फोटो की CSV फ़ाइल डाउनलोड करें',
+              'मिसिंग फोटोंची CSV फाईल डाऊनलोड करा'
+            )}
           >
             <Download className="w-4 h-4" />
           </button>
@@ -895,7 +915,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search name / barcode"
+              placeholder={tr('Search name / barcode', 'नाम / बारकोड खोजें', 'नाव / बारकोड शोधा')}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full h-11 pl-9 pr-8 rounded-xl text-xs bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
@@ -915,7 +935,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
             type="button"
             onClick={() => setIsBarcodeScannerOpen(true)}
             className="w-11 h-11 shrink-0 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-xs active:scale-95 transition cursor-pointer"
-            title="Scan Barcode"
+            title={tr('Scan Barcode', 'बारकोड स्कैन करें', 'बारकोड स्कॅन करा')}
           >
             <Barcode className="w-5 h-5" />
           </button>
@@ -936,19 +956,19 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
           {isLoadingModalProducts && displayedProducts.length === 0 ? (
             <div className="text-center py-16 text-slate-400 space-y-3">
               <Loader2 className="w-8 h-8 animate-spin mx-auto text-emerald-600" />
-              <p className="text-xs font-medium">{language === 'mr' ? 'उत्पादने लोड होत आहेत...' : 'उत्पाद लोड हो रहे हैं...'}</p>
+              <p className="text-xs font-medium">{tr('Loading products...', 'उत्पाद लोड हो रहे हैं...', 'उत्पादने लोड होत आहेत...')}</p>
             </div>
           ) : displayedProducts.length === 0 ? (
             <div className="text-center py-12 text-slate-400 space-y-3">
               <ImageIcon className="w-10 h-10 mx-auto opacity-30" />
-              <p className="text-xs">कोणतेही उत्पादन सापडले नाही (No products match criteria).</p>
+              <p className="text-xs">{tr('No products match your search criteria.', 'कोई भी उत्पाद नहीं मिला।', 'कोणतेही उत्पादन सापडले नाही.')}</p>
               <button
                 type="button"
                 onClick={() => setIsBarcodeScannerOpen(true)}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-xs cursor-pointer active:scale-95"
               >
                 <Barcode className="w-4 h-4" />
-                <span>बारकोड स्कॅन करून फोटो जोडा</span>
+                <span>{tr('Scan Barcode to Add Photo', 'बारकोड स्कैन कर फोटो जोड़ें', 'बारकोड स्कॅन करून फोटो जोडा')}</span>
               </button>
             </div>
           ) : (
@@ -986,27 +1006,27 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                         <div className="flex items-center gap-1.5 flex-wrap mt-1">
                           {isOfficial && (
                             <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold border border-emerald-300 dark:border-emerald-800 shrink-0">
-                              🛡️ Official
+                              🛡️ {tr('Official', 'आधिकारिक', 'अधिकृत')}
                             </span>
                           )}
                           {!isOfficial && isRetailer && (
                             <span className="px-1.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 text-[10px] font-bold border border-indigo-300 dark:border-indigo-800 shrink-0">
-                              🏪 Retailer
+                              🏪 {tr('Retailer', 'रिटेलर', 'रिटेलर')}
                             </span>
                           )}
                           {!isOfficial && !isRetailer && prod.image_url && !isNeedsReview && (
                             <span className="px-1.5 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 text-[10px] font-bold border border-sky-300 dark:border-sky-800 shrink-0">
-                              🗄️ Trusted
+                              🗄️ {tr('Trusted', 'विश्वसनीय', 'विश्वासार्ह')}
                             </span>
                           )}
                           {isNeedsReview && (
                             <span className="px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 text-[10px] font-bold border border-amber-300 dark:border-amber-800 shrink-0">
-                              ⚠️ Review
+                              ⚠️ {tr('Review', 'समीक्षा', 'तपासणी')}
                             </span>
                           )}
                           {!prod.image_url && (
                             <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold shrink-0">
-                              🔍 Missing
+                              🔍 {tr('Missing', 'अनुपलब्ध', 'नाही')}
                             </span>
                           )}
 
@@ -1015,7 +1035,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                               {prod.barcode}
                             </span>
                           ) : (
-                            <span className="text-slate-400 text-[10px] italic">बारकोड नाही</span>
+                            <span className="text-slate-400 text-[10px] italic">{tr('No barcode', 'बारकोड नहीं', 'बारकोड नाही')}</span>
                           )}
                         </div>
 
@@ -1031,14 +1051,14 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                             <button
                               onClick={() => handleApproveImage(prod)}
                               className="w-10 h-10 rounded-xl text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 flex items-center justify-center transition active:scale-95 cursor-pointer"
-                              title="Approve Image"
+                              title={tr('Approve Image', 'फोटो स्वीकृत करें', 'फोटो मंजूर करा')}
                             >
                               <Check className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleRejectImage(prod)}
                               className="w-10 h-10 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center transition active:scale-95 cursor-pointer"
-                              title="Reject Image"
+                              title={tr('Reject Image', 'फोटो अस्वीकार करें', 'फोटो नाकारा')}
                             >
                               <Ban className="w-4 h-4" />
                             </button>
@@ -1049,7 +1069,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                           <button
                             onClick={() => setPreviewImage({ url: prod.image_url!, name: prod.name })}
                             className="w-10 h-10 rounded-xl text-slate-400 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-[#24352F] flex items-center justify-center transition active:scale-95 cursor-pointer"
-                            title="फोटो मोठा करून पहा"
+                            title={tr('View larger photo', 'फोटो बड़ा करके देखें', 'फोटो मोठा करून पहा')}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -1058,10 +1078,12 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                         <button
                           onClick={() => openImageEditorForProduct(prod)}
                           className="h-10 px-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-[#131F1B] hover:bg-slate-200 dark:hover:bg-[#20332D] text-slate-700 dark:text-[#8FA69C] transition flex items-center gap-1 cursor-pointer border border-slate-200 dark:border-[#24352F] active:scale-95"
-                          title="फोटो URL अपडेट करा"
+                          title={tr('Update photo URL', 'फोटो URL अपडेट करें', 'फोटो URL अपडेट करा')}
                         >
                           <Edit2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                          <span className="hidden xs:inline">{prod.image_url ? 'बदला' : 'जोडा'}</span>
+                          <span className="hidden xs:inline">
+                            {prod.image_url ? tr('Change', 'बदलें', 'बदला') : tr('Add', 'जोड़ें', 'जोडा')}
+                          </span>
                         </button>
                       </div>
                     </div>
@@ -1079,9 +1101,11 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                   >
                     {isLoadingModalProducts && <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />}
                     <span>
-                      {language === 'mr'
-                        ? `आणखी उत्पादने दाखवा (${displayedProducts.length}+)`
-                        : `और उत्पाद लोड करें (${displayedProducts.length}+)`}
+                      {tr(
+                        `Load More Products (${displayedProducts.length}+)`,
+                        `और उत्पाद लोड करें (${displayedProducts.length}+)`,
+                        `आणखी उत्पादने दाखवा (${displayedProducts.length}+)`
+                      )}
                     </span>
                   </button>
                 </div>
@@ -1109,23 +1133,31 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <h4 className="text-sm font-black text-slate-900 dark:text-white">
-                {language === 'mr' ? 'उत्पादन सापडले नाही' : 'उत्पाद नहीं मिला'}
+                {tr('Product Not Found', 'उत्पाद नहीं मिला', 'उत्पादन सापडले नाही')}
               </h4>
               <p className="text-xs text-slate-500">
-                {language === 'mr' ? 'स्कॅन केलेल्या बारकोडशी जोडलेले उत्पादन कॅटलॉगमध्ये सापडले नाही:' : 'स्कैन किए गए बारकोड से जुड़ा कोई उत्पाद कैटलॉग में नहीं मिला:'}
+                {tr(
+                  'No product linked to the scanned barcode was found in the catalogue:',
+                  'स्कैन किए गए बारकोड से जुड़ा कोई उत्पाद कैटलॉग में नहीं मिला:',
+                  'स्कॅन केलेल्या बारकोडशी जोडलेले उत्पादन कॅटलॉगमध्ये सापडले नाही:'
+                )}
               </p>
               <div className="p-2 rounded-xl bg-slate-100 dark:bg-[#131F1B] font-mono text-xs font-bold text-slate-800 dark:text-white">
                 {scannedBarcodeNotFound}
               </div>
               <p className="text-[11px] text-slate-400">
-                {language === 'mr' ? 'आपण सर्च बॉक्समध्ये नाव टाकून ते उत्पादन शोधू शकता.' : 'आप सर्च बॉक्स में नाम डालकर उत्पाद खोज सकते हैं।'}
+                {tr(
+                  'You can search for the product by typing its name in the search box.',
+                  'आप सर्च बॉक्स में नाम डालकर उत्पाद खोज सकते हैं।',
+                  'आपण सर्च बॉक्समध्ये नाव टाकून ते उत्पादन शोधू शकता.'
+                )}
               </p>
               <button
                 type="button"
                 onClick={() => setScannedBarcodeNotFound(null)}
                 className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs cursor-pointer active:scale-95 transition"
               >
-                {language === 'mr' ? 'समजले (OK)' : 'ठीक है (OK)'}
+                {tr('OK', 'ठीक है', 'समजले')}
               </button>
             </div>
           </div>
@@ -1144,10 +1176,14 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                   </div>
                   <div>
                     <h4 className="text-sm font-black text-slate-900 dark:text-white">
-                      {language === 'mr' ? 'उत्पादन फोटो जोडा / अपडेट करा' : 'उत्पाद फोटो जोड़ें / अपडेट करें'}
+                      {tr('Add / Update Product Photo', 'उत्पाद फोटो जोड़ें / अपडेट करें', 'उत्पादन फोटो जोडा / अपडेट करा')}
                     </h4>
                     <p className="text-[11px] text-slate-500">
-                      {language === 'mr' ? 'बारकोडवरून किंवा थेट फोटो URL जोडून सेव्ह करा' : 'बारकोड या डायरेक्ट फोटो URL जोड़कर सेव करें'}
+                      {tr(
+                        'Save from barcode lookup or by entering a direct photo URL',
+                        'बारकोड या डायरेक्ट फोटो URL जोड़कर सेव करें',
+                        'बारकोडवरून किंवा थेट फोटो URL जोडून सेव्ह करा'
+                      )}
                     </p>
                   </div>
                 </div>
@@ -1187,7 +1223,13 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
               {isSearchingOnlineImage && (
                 <div className="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 flex items-center gap-2 text-xs font-bold text-sky-800 dark:text-sky-300">
                   <Sparkles className="w-4 h-4 animate-spin text-sky-600" />
-                  <span>{language === 'mr' ? 'ऑनलाइन अधिकृत डेटाबेस शोधत आहे...' : 'ऑनलाइन डेटाबेस से फोटो खोजी जा रही है...'}</span>
+                  <span>
+                    {tr(
+                      'Searching online official database...',
+                      'ऑनलाइन डेटाबेस से फोटो खोजी जा रही है...',
+                      'ऑनलाइन अधिकृत डेटाबेस शोधत आहे...'
+                    )}
+                  </span>
                 </div>
               )}
 
@@ -1196,7 +1238,13 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
                       <Sparkles className="w-4 h-4 text-emerald-600" />
-                      <span>{language === 'mr' ? `✨ अधिकृत फोटो सापडला (${onlineSuggestedImage.source})` : `✨ आधिकारिक फोटो मिली (${onlineSuggestedImage.source})`}</span>
+                      <span>
+                        {tr(
+                          `✨ Official photo found (${onlineSuggestedImage.source})`,
+                          `✨ आधिकारिक फोटो मिली (${onlineSuggestedImage.source})`,
+                          `✨ अधिकृत फोटो सापडला (${onlineSuggestedImage.source})`
+                        )}
+                      </span>
                     </span>
                     <button
                       type="button"
@@ -1204,7 +1252,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                       className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black shadow-xs flex items-center gap-1 active:scale-95 transition cursor-pointer"
                     >
                       <Check className="w-3.5 h-3.5" />
-                      <span>{language === 'mr' ? 'हा फोटो वापरा' : 'यह फोटो चुनें'}</span>
+                      <span>{tr('Use This Photo', 'यह फोटो चुनें', 'हा फोटो वापरा')}</span>
                     </button>
                   </div>
                   <div className="flex items-center gap-3">
@@ -1226,7 +1274,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
-                      {language === 'mr' ? 'फोटो URL (Image URL)' : 'फोटो URL (Image URL)'}
+                      {tr('Photo URL', 'फोटो URL', 'फोटो URL')}
                     </label>
                     <button
                       type="button"
@@ -1234,7 +1282,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                       className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       <Camera className="w-3.5 h-3.5" />
-                      <span>{language === 'mr' ? '📷 कॅमेरा / फोटो निवडा' : '📷 कैमरा / फोटो चुनें'}</span>
+                      <span>{tr('📷 Camera / Choose Photo', '📷 कैमरा / फोटो चुनें', '📷 कॅमेरा / फोटो निवडा')}</span>
                     </button>
                     <input
                       type="file"
@@ -1247,7 +1295,11 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                   </div>
                   <input
                     type="url"
-                    placeholder="https://.../product.jpg किंवा कॅमेराने फोटो काढा"
+                    placeholder={tr(
+                      'https://.../product.jpg or capture with camera',
+                      'https://.../product.jpg या कैमरे से फोटो लें',
+                      'https://.../product.jpg किंवा कॅमेराने फोटो काढा'
+                    )}
                     value={editUrlInput}
                     onChange={e => setEditUrlInput(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-[#131F1B] border border-slate-200 dark:border-[#24352F] text-slate-800 dark:text-white outline-none focus:border-emerald-500 font-mono"
@@ -1269,10 +1321,12 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                     </div>
                     <div className="min-w-0 flex-1">
                       <span className="text-xs font-bold text-slate-800 dark:text-white block">
-                        {language === 'mr' ? 'लाईव्ह फोटो प्रीव्ह्यू' : 'लाइव फोटो प्रीव्यू'}
+                        {tr('Live Photo Preview', 'लाइव फोटो प्रीव्यू', 'लाईव्ह फोटो प्रीव्ह्यू')}
                       </span>
                       <p className="text-[10px] text-slate-500 truncate mt-0.5">
-                        {editUrlInput.startsWith('data:') ? 'स्थानिक कॅमेरा फोटो (Direct Uploaded Image)' : editUrlInput}
+                        {editUrlInput.startsWith('data:')
+                          ? tr('Local Camera Photo (Direct Upload)', 'लोकल कैमरा फोटो (सीधा अपलोड)', 'स्थानिक कॅमेरा फोटो (थेट अपलोड)')
+                          : editUrlInput}
                       </p>
                     </div>
                   </div>
@@ -1287,7 +1341,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                     onClick={() => setEditUrlInput('')}
                     className="px-3 py-1.5 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition mr-auto cursor-pointer"
                   >
-                    {language === 'mr' ? 'हटवा (Clear)' : 'हटाएं (Clear)'}
+                    {tr('Clear', 'हटाएं', 'हटवा')}
                   </button>
                 )}
                 <button
@@ -1298,7 +1352,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                   }}
                   className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 cursor-pointer"
                 >
-                  {language === 'mr' ? 'रद्द करा' : 'रद्द करें'}
+                  {tr('Cancel', 'रद्द करें', 'रद्द करा')}
                 </button>
                 <button
                   type="button"
@@ -1307,7 +1361,11 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                   className="px-4 py-2 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 active:scale-95 transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
                   <Check className="w-3.5 h-3.5" />
-                  <span>{isValidatingUrl ? (language === 'mr' ? 'तपासत आहे...' : 'जांच रहे हैं...') : (language === 'mr' ? 'फोटो सेव्ह करा (Save)' : 'फोटो सेव करें (Save)')}</span>
+                  <span>
+                    {isValidatingUrl
+                      ? tr('Checking...', 'जांच रहे हैं...', 'तपासत आहे...')
+                      : tr('Save Photo', 'फोटो सेव करें', 'फोटो सेव्ह करा')}
+                  </span>
                 </button>
               </div>
 
@@ -1334,7 +1392,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
                 rel="noreferrer"
                 className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-1 hover:underline"
               >
-                <span>मूळ लिंक उघडा</span>
+                <span>{tr('Open Original Link', 'मूल लिंक खोलें', 'मूळ लिंक उघडा')}</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>

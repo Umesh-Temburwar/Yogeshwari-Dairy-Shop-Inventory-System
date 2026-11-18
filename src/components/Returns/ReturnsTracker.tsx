@@ -46,7 +46,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
     setTimeFilter 
   } = useStore();
   
-  const { language } = useLanguage();
+  const { language, tr } = useLanguage();
 
   const [activeTab, setActiveTab] = useState<'customer' | 'supplier'>('customer');
   const [searchTerm, setSearchTerm] = useState('');
@@ -330,8 +330,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
         >
           <RotateCcw className="w-4 h-4 shrink-0" />
           <span>
-            {language === 'mr' ? '१. ग्राहक परतावा' : language === 'hi' ? '१. ग्राहक वापसी' : '1. Customer Returns'}
-            <span className="hidden sm:inline"> (Customer Returns)</span>
+            {tr('1. Customer Returns', '१. ग्राहक वापसी', '१. ग्राहक परतावा')}
           </span>
           <span className="px-2 py-0.5 rounded-full text-[10px] bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold shrink-0">
             {metrics.totalReturnsCount}
@@ -349,12 +348,11 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
         >
           <Truck className="w-4 h-4 shrink-0" />
           <span>
-            {language === 'mr' ? '२. सप्लायर परतावा' : language === 'hi' ? '२. सप्लायर वापसी' : '2. Supplier Returns'}
-            <span className="hidden sm:inline"> (Supplier Returns)</span>
+            {tr('2. Supplier Returns', '२. सप्लायर वापसी', '२. सप्लायर परतावा')}
           </span>
           {metrics.pendingSupplierRefundAmount > 0 && (
             <span className="px-2 py-0.5 rounded-full text-[10px] bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-extrabold animate-pulse shrink-0">
-              ₹{metrics.pendingSupplierRefundAmount.toFixed(0)} येणे बाकी
+              ₹{metrics.pendingSupplierRefundAmount.toFixed(0)} {tr('Due', 'बाकी', 'येणे बाकी')}
             </span>
           )}
         </button>
@@ -369,7 +367,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
             <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
               <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
                 <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'एकूण ग्राहक परतावे' : 'कुल ग्राहक वापसी'}
+                  {tr('Total Customer Returns', 'कुल ग्राहक वापसी', 'एकूण ग्राहक परतावे')}
                 </span>
                 <RotateCcw className="w-4 h-4 text-purple-600" />
               </div>
@@ -386,7 +384,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
             <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
               <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
                 <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'आजचा ग्राहक रिफंड' : 'आज का रिफंड'}
+                  {tr("Today's Refund", 'आज का रिफंड', 'आजचा ग्राहक रिफंड')}
                 </span>
                 <DollarSign className="w-4 h-4 text-rose-500" />
               </div>
@@ -395,7 +393,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                   ₹{metrics.todayRefundAmount.toFixed(0)}
                 </span>
                 <span className="text-[10px] font-semibold text-slate-400">
-                  {language === 'mr' ? 'आज अदा केला' : 'आज दिया'}
+                  {tr('Paid today', 'आज दिया', 'आज अदा केला')}
                 </span>
               </div>
             </div>
@@ -403,7 +401,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
             <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
               <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
                 <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'पुन्हा स्टॉकमध्ये' : 'पुनः स्टॉक में'}
+                  {tr('Restocked', 'पुनः स्टॉक में', 'पुन्हा स्टॉकमध्ये')}
                 </span>
                 <CheckCircle className="w-4 h-4 text-emerald-500" />
               </div>
@@ -420,7 +418,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
             <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
               <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
                 <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'खराब / नुकसान' : 'खराब / नुकसान'}
+                  {tr('Damaged / Waste', 'खराब / नुकसान', 'खराब / नुकसान')}
                 </span>
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
               </div>
@@ -443,7 +441,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                 type="text"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                placeholder={language === 'mr' ? 'उत्पादन, पावती क्र., ग्राहक किंवा बिल शोधा...' : 'उत्पाद, रसीद सं., ग्राहक खोजें...'}
+                placeholder={tr('Search product, return no., customer or bill...', 'उत्पाद, रसीद सं., ग्राहक या बिल खोजें...', 'उत्पादन, पावती क्र., ग्राहक किंवा बिल शोधा...')}
                 className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-semibold text-slate-800 dark:text-[#E7F0EC]"
               />
             </div>
@@ -454,9 +452,9 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                 onChange={e => setConditionFilter(e.target.value as any)}
                 className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
               >
-                <option value="all">{language === 'mr' ? 'सर्व स्थिती' : 'सभी स्थितियां'}</option>
-                <option value="Resellable">{language === 'mr' ? 'चांगला माल (स्टॉक)' : 'अच्छा माल (स्टॉक)'}</option>
-                <option value="Damaged_Waste">{language === 'mr' ? 'खराब / नासलेला (नुकसान)' : 'खराब (नुकसान)'}</option>
+                <option value="all">{tr('All Conditions', 'सभी स्थितियां', 'सर्व स्थिती')}</option>
+                <option value="Resellable">{tr('Good Condition (Restocked)', 'अच्छा माल (स्टॉक)', 'चांगला माल (स्टॉक)')}</option>
+                <option value="Damaged_Waste">{tr('Damaged / Spoiled (Waste)', 'खराब (नुकसान)', 'खराब / नासलेला (नुकसान)')}</option>
               </select>
 
               <select
@@ -464,10 +462,10 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                 onChange={e => setTimeFilter(e.target.value as any)}
                 className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
               >
-                <option value="today">{language === 'mr' ? 'आज' : 'आज'}</option>
-                <option value="week">{language === 'mr' ? 'या आठवड्यात' : 'इस सप्ताह'}</option>
-                <option value="month">{language === 'mr' ? 'या महिन्यात' : 'इस माह'}</option>
-                <option value="all">{language === 'mr' ? 'सर्व' : 'सभी'}</option>
+                <option value="today">{tr('Today', 'आज', 'आज')}</option>
+                <option value="week">{tr('This Week', 'इस सप्ताह', 'या आठवड्यात')}</option>
+                <option value="month">{tr('This Month', 'इस माह', 'या महिन्यात')}</option>
+                <option value="all">{tr('All Time', 'सभी', 'सर्व')}</option>
               </select>
             </div>
           </div>
@@ -479,16 +477,16 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                 <RotateCcw className="w-7 h-7" />
               </div>
               <h3 className="text-base font-bold text-slate-800 dark:text-white">
-                {language === 'mr' ? 'कोणतीही ग्राहक परतावा नोंद आढळली नाही' : 'कोई ग्राहक वापसी प्रविष्टि नहीं मिली'}
+                {tr('No customer return records found', 'कोई ग्राहक वापसी प्रविष्टि नहीं मिली', 'कोणतीही ग्राहक परतावा नोंद आढळली नाही')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-[#8FA69C] max-w-sm mx-auto">
-                {language === 'mr' ? 'ग्राहकाने परत केलेल्या मालाची नोंद करण्यासाठी वरील बटणावर क्लिक करा.' : 'ग्राहक द्वारा वापस किए गए सामान को दर्ज करने के लिए ऊपर दिए गए बटन पर क्लिक करें।'}
+                {tr('Click the button above to record a customer product return.', 'ग्राहक द्वारा वापस किए गए सामान को दर्ज करने के लिए ऊपर दिए गए बटन पर क्लिक करें।', 'ग्राहकाने परत केलेल्या मालाची नोंद करण्यासाठी वरील बटणावर क्लिक करा.')}
               </p>
               <button
                 onClick={onOpenReturnModal}
                 className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-xs transition"
               >
-                + {language === 'mr' ? 'ग्राहक परतावा नोंदवा' : 'ग्राहक वापसी दर्ज करें'}
+                + {tr('Record Customer Return', 'ग्राहक वापसी दर्ज करें', 'ग्राहक परतावा नोंदवा')}
               </button>
             </div>
           ) : (
@@ -497,15 +495,15 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 dark:bg-[#1A2A25] text-slate-500 dark:text-[#8FA69C] font-bold border-b border-slate-200 dark:border-[#24352F]">
                     <tr>
-                      <th className="p-3.5">{language === 'mr' ? 'परतावा क्र.' : 'रसीद सं.'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'तारीख' : 'दिनांक'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'उत्पादन' : 'उत्पाद'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'प्रमाण' : 'मात्रा'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'रिफंड रक्कम' : 'रिफंड'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'पद्धत' : 'माध्यम'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'स्थिती' : 'स्थिति'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'कारण' : 'कारण'}</th>
-                      <th className="p-3.5 text-right">{language === 'mr' ? 'कृती' : 'कार्रवाई'}</th>
+                      <th className="p-3.5">{tr('Return No.', 'रसीद सं.', 'परतावा क्र.')}</th>
+                      <th className="p-3.5">{tr('Date', 'दिनांक', 'तारीख')}</th>
+                      <th className="p-3.5">{tr('Product', 'उत्पाद', 'उत्पादन')}</th>
+                      <th className="p-3.5">{tr('Qty', 'मात्रा', 'प्रमाण')}</th>
+                      <th className="p-3.5">{tr('Refund Amount', 'रिफंड', 'रिफंड रक्कम')}</th>
+                      <th className="p-3.5">{tr('Mode', 'माध्यम', 'पद्धत')}</th>
+                      <th className="p-3.5">{tr('Condition', 'स्थिति', 'स्थिती')}</th>
+                      <th className="p-3.5">{tr('Reason', 'कारण', 'कारण')}</th>
+                      <th className="p-3.5 text-right">{tr('Action', 'कार्रवाई', 'कृती')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-[#1E2D27]">
@@ -520,17 +518,17 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                           )}
                           {(r.return_type === 'Full' || r.notes?.includes('[Full Return]')) && (
                             <span className="block text-[9px] font-black text-amber-700 dark:text-amber-400 bg-amber-100/70 dark:bg-amber-950/40 px-1.5 py-0.5 rounded mt-0.5 w-fit">
-                              ⚡ {language === 'mr' ? 'संपूर्ण बिल वापसी' : 'पूर्ण बिल वापसी'}
+                              ⚡ {tr('Full Bill Return', 'पूर्ण बिल वापसी', 'संपूर्ण बिल वापसी')}
                             </span>
                           )}
                           {(r.return_type === 'Partial' || r.notes?.includes('[Partial Return]')) && (
                             <span className="block text-[9px] font-black text-blue-700 dark:text-blue-400 bg-blue-100/70 dark:bg-blue-950/40 px-1.5 py-0.5 rounded mt-0.5 w-fit">
-                              ✂️ {language === 'mr' ? 'आंशिक बिल वापसी' : 'आंशिक बिल वापसी'}
+                              ✂️ {tr('Partial Bill Return', 'आंशिक बिल वापसी', 'आंशिक बिल वापसी')}
                             </span>
                           )}
                           {(r.return_type === 'Direct' || r.notes?.includes('[Direct Return]')) && (
                             <span className="block text-[9px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-100/70 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded mt-0.5 w-fit">
-                              📦 {language === 'mr' ? 'थेट परतावा' : 'सीधी वापसी'}
+                              📦 {tr('Direct Return', 'सीधी वापसी', 'थेट परतावा')}
                             </span>
                           )}
                         </td>
@@ -542,7 +540,19 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                         <td className="p-3.5 text-slate-700 dark:text-slate-200 font-semibold">{r.quantity} {r.unit}</td>
                         <td className="p-3.5 font-black text-slate-900 dark:text-white">₹{r.refund_amount.toFixed(2)}</td>
                         <td className="p-3.5 text-slate-600 dark:text-slate-300">
-                          <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1A2A25] font-semibold text-[11px]">{r.refund_mode}</span>
+                          <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1A2A25] font-semibold text-[11px]">
+                            {r.refund_mode === 'Cash'
+                              ? tr('Cash', 'रोकड़', 'रोख')
+                              : (r.refund_mode as string) === 'Online_UPI' || (r.refund_mode as string) === 'UPI'
+                              ? tr('Online UPI', 'ऑनलाइन UPI', 'ऑनलाईन UPI')
+                              : (r.refund_mode as string) === 'Udhar_Credit'
+                              ? tr('Udhar Credit', 'उधार जमा', 'उधार जमा')
+                              : (r.refund_mode as string) === 'Credit_Note'
+                              ? tr('Credit Note', 'क्रेडिट नोट', 'क्रेडिट नोट')
+                              : r.refund_mode === 'Replacement'
+                              ? tr('Replacement', 'बदलाव', 'माल बदलून')
+                              : r.refund_mode}
+                          </span>
                         </td>
                         <td className="p-3.5">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
@@ -551,8 +561,8 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                               : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400'
                           }`}>
                             {r.condition === 'Resellable' 
-                              ? (language === 'mr' ? '✅ चांगला (स्टॉक)' : '✅ अच्छा (स्टॉक)')
-                              : (language === 'mr' ? '⚠️ खराब (नुकसान)' : '⚠️ खराब (नुकसान)')}
+                              ? tr('✅ Good (Restocked)', '✅ अच्छा (स्टॉक)', '✅ चांगला (स्टॉक)')
+                              : tr('⚠️ Damaged (Waste)', '⚠️ खराब (नुकसान)', '⚠️ खराब (नुकसान)')}
                           </span>
                         </td>
                         <td className="p-3.5 text-slate-600 dark:text-[#8FA69C] text-[11px] max-w-[150px] truncate" title={r.reason}>{r.reason}</td>
@@ -560,7 +570,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                           <button
                             onClick={() => handleDeleteCustomerReturn(r.id, r.return_no)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
-                            title="Delete Return Record"
+                            title={tr('Delete Return Record', 'वापसी रिकॉर्ड हटाएं', 'परतावा नोंद हटवा')}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -585,7 +595,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
             <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
               <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
                 <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'सप्लायर परतावे' : 'सप्लायर वापसी'}
+                  {tr('Supplier Returns', 'सप्लायर वापसी', 'सप्लायर परतावे')}
                 </span>
                 <Truck className="w-4 h-4 text-amber-600" />
               </div>
@@ -602,7 +612,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
             <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
               <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
                 <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'रिफंड वसूल / जमा' : 'रिफंड प्राप्त'}
+                  {tr('Refund Received', 'रिफंड प्राप्त', 'रिफंड वसूल / जमा')}
                 </span>
                 <DollarSign className="w-4 h-4 text-emerald-500" />
               </div>
@@ -611,7 +621,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                   ₹{(metrics.totalSupplierRefundReceived || 0).toLocaleString('en-IN')}
                 </span>
                 <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
-                  {language === 'mr' ? 'रोख / बिलात जमा' : 'रोकड़ / बिल में'}
+                  {tr('Cash / Adjusted in bill', 'रोकड़ / बिल में', 'रोख / बिलात जमा')}
                 </span>
               </div>
             </div>
@@ -619,7 +629,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
             <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
               <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
                 <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'सप्लायरकडे येणे बाकी' : 'सप्लायर से बाकी'}
+                  {tr('Pending From Supplier', 'सप्लायर से बाकी', 'सप्लायरकडे येणे बाकी')}
                 </span>
                 <Clock className="w-4 h-4 text-rose-500" />
               </div>
@@ -628,7 +638,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                   ₹{(metrics.pendingSupplierRefundAmount || 0).toLocaleString('en-IN')}
                 </span>
                 <span className="text-[10px] font-semibold text-rose-500">
-                  {language === 'mr' ? 'पुढील बिलात वजा करा' : 'अगले बिल से काटें'}
+                  {tr('Deduct in next bill', 'अगले बिल से काटें', 'पुढील बिलात वजा करा')}
                 </span>
               </div>
             </div>
@@ -636,7 +646,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
             <div className="bg-white dark:bg-[#131F1B] p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs">
               <div className="flex items-center justify-between text-slate-500 dark:text-[#8FA69C]">
                 <span className="text-[11px] font-bold uppercase tracking-wider">
-                  {language === 'mr' ? 'बदल्यात नवीन माल' : 'बदले में नया माल'}
+                  {tr('Replacements Received', 'बदले में नया माल', 'बदल्यात नवीन माल')}
                 </span>
                 <RefreshCw className="w-4 h-4 text-purple-500" />
               </div>
@@ -645,7 +655,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                   {metrics.supplierReplacementCount || 0}
                 </span>
                 <span className="text-[10px] font-semibold text-purple-500">
-                  {language === 'mr' ? 'पाकिटे बदलून मिळाली' : 'पैकेट बदले गए'}
+                  {tr('Packets replaced', 'पैकेट बदले गए', 'पाकिटे बदलून मिळाली')}
                 </span>
               </div>
             </div>
@@ -659,7 +669,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                 type="text"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                placeholder={language === 'mr' ? 'सप्लायर, उत्पादन, बॅच किंवा डेबिट नोट शोधा...' : 'सप्लायर, उत्पाद, बैच खोजें...'}
+                placeholder={tr('Search supplier, product, batch or debit note...', 'सप्लायर, उत्पाद, बैच या डेबिट नोट खोजें...', 'सप्लायर, उत्पादन, बॅच किंवा डेबिट नोट शोधा...')}
                 className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-semibold text-slate-800 dark:text-[#E7F0EC]"
               />
             </div>
@@ -670,11 +680,11 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                 onChange={e => setSupplierStatusFilter(e.target.value as any)}
                 className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
               >
-                <option value="all">{language === 'mr' ? 'सर्व रिफंड स्थिती' : 'सभी स्थितियां'}</option>
-                <option value="Pending">{language === 'mr' ? '⏳ येणे बाकी (Pending)' : '⏳ बाकी (Pending)'}</option>
-                <option value="Refund_Received">{language === 'mr' ? '✅ रिफंड मिळाला' : '✅ रिफंड प्राप्त'}</option>
-                <option value="Adjusted_In_Next_Bill">{language === 'mr' ? '🧾 बिलात वजावट' : '🧾 बिल में कटौती'}</option>
-                <option value="Replacement_Received">{language === 'mr' ? '🔄 बदलून नवीन माल' : '🔄 बदले में नया माल'}</option>
+                <option value="all">{tr('All Refund Statuses', 'सभी स्थितियां', 'सर्व रिफंड स्थिती')}</option>
+                <option value="Pending">{tr('⏳ Pending', '⏳ बाकी', '⏳ येणे बाकी')}</option>
+                <option value="Refund_Received">{tr('✅ Refund Received', '✅ रिफंड प्राप्त', '✅ रिफंड मिळाला')}</option>
+                <option value="Adjusted_In_Next_Bill">{tr('🧾 Adjusted in Bill', '🧾 बिल में कटौती', '🧾 बिलात वजावट')}</option>
+                <option value="Replacement_Received">{tr('🔄 Replacement Received', '🔄 बदले में नया माल', '🔄 बदलून नवीन माल')}</option>
               </select>
 
               <select
@@ -682,10 +692,10 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                 onChange={e => setTimeFilter(e.target.value as any)}
                 className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-slate-700 dark:text-[#E7F0EC]"
               >
-                <option value="today">{language === 'mr' ? 'आज' : 'आज'}</option>
-                <option value="week">{language === 'mr' ? 'या आठवड्यात' : 'इस सप्ताह'}</option>
-                <option value="month">{language === 'mr' ? 'या महिन्यात' : 'इस माह'}</option>
-                <option value="all">{language === 'mr' ? 'सर्व' : 'सभी'}</option>
+                <option value="today">{tr('Today', 'आज', 'आज')}</option>
+                <option value="week">{tr('This Week', 'इस सप्ताह', 'या आठवड्यात')}</option>
+                <option value="month">{tr('This Month', 'इस माह', 'या महिन्यात')}</option>
+                <option value="all">{tr('All Time', 'सभी', 'सर्व')}</option>
               </select>
             </div>
           </div>
@@ -697,18 +707,20 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                 <Truck className="w-7 h-7" />
               </div>
               <h3 className="text-base font-bold text-slate-800 dark:text-white">
-                {language === 'mr' ? 'कोणतीही सप्लायर परतावा नोंद नाही' : 'कोई सप्लायर वापसी प्रविष्टि नहीं मिली'}
+                {tr('No supplier return records found', 'कोई सप्लायर वापसी प्रविष्टि नहीं मिली', 'कोणतीही सप्लायर परतावा नोंद नाही')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-[#8FA69C] max-w-sm mx-auto">
-                {language === 'mr' 
-                  ? 'दुकानात आलेला खराब, लिक किंवा एक्सपायर्ड माल सप्लायरला परत पाठवण्यासाठी वरील बटणावर क्लिक करा.' 
-                  : 'दुकान में आया खराब, लीक या एक्सपायर माल सप्लायर को लौटाने के लिए ऊपर दिए गए बटन पर क्लिक करें।'}
+                {tr(
+                  'Click the button above to return damaged, leaked, or expired goods to the supplier.',
+                  'दुकान में आया खराब, लीक या एक्सपायर माल सप्लायर को लौटाने के लिए ऊपर दिए गए बटन पर क्लिक करें।',
+                  'दुकानात आलेला खराब, लिक किंवा एक्सपायर्ड माल सप्लायरला परत पाठवण्यासाठी वरील बटणावर क्लिक करा.'
+                )}
               </p>
               <button
                 onClick={() => setIsSupplierModalOpen(true)}
                 className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition"
               >
-                + {language === 'mr' ? 'सप्लायरला माल परत करा' : 'सप्लायर को माल वापस करें'}
+                + {tr('Return Stock to Supplier', 'सप्लायर को माल वापस करें', 'सप्लायरला माल परत करा')}
               </button>
             </div>
           ) : (
@@ -717,15 +729,15 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 dark:bg-[#1A2A25] text-slate-500 dark:text-[#8FA69C] font-bold border-b border-slate-200 dark:border-[#24352F]">
                     <tr>
-                      <th className="p-3.5">{language === 'mr' ? 'डेबिट नोट क्र.' : 'डेबिट नोट सं.'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'तारीख' : 'दिनांक'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'सप्लायर नाव' : 'सप्लायर'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'उत्पादन' : 'उत्पाद'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'प्रमाण' : 'मात्रा'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'रिफंड दावा' : 'रिफंड दावा'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'कारण' : 'कारण'}</th>
-                      <th className="p-3.5">{language === 'mr' ? 'रिफंड तोडगा स्थिती' : 'रिफंड स्थिति'}</th>
-                      <th className="p-3.5 text-right">{language === 'mr' ? 'कृती' : 'कार्रवाई'}</th>
+                      <th className="p-3.5">{tr('Debit Note No.', 'डेबिट नोट सं.', 'डेबिट नोट क्र.')}</th>
+                      <th className="p-3.5">{tr('Date', 'दिनांक', 'तारीख')}</th>
+                      <th className="p-3.5">{tr('Supplier', 'सप्लायर', 'सप्लायर नाव')}</th>
+                      <th className="p-3.5">{tr('Product', 'उत्पाद', 'उत्पादन')}</th>
+                      <th className="p-3.5">{tr('Qty', 'मात्रा', 'प्रमाण')}</th>
+                      <th className="p-3.5">{tr('Refund Claim', 'रिफंड दावा', 'रिफंड दावा')}</th>
+                      <th className="p-3.5">{tr('Reason', 'कारण', 'कारण')}</th>
+                      <th className="p-3.5">{tr('Settlement Status', 'रिफंड स्थिति', 'रिफंड तोडगा स्थिती')}</th>
+                      <th className="p-3.5 text-right">{tr('Action', 'कार्रवाई', 'कृती')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-[#1E2D27]">
@@ -733,7 +745,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                       <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-[#182621] transition">
                         <td className="p-3.5 font-mono font-bold text-amber-600 dark:text-amber-400">
                           {r.return_no}
-                          {r.batch_no && <span className="block text-[10px] text-slate-400 font-sans">बॅच: {r.batch_no}</span>}
+                          {r.batch_no && <span className="block text-[10px] text-slate-400 font-sans">{tr('Batch', 'बैच', 'बॅच')}: {r.batch_no}</span>}
                         </td>
                         <td className="p-3.5 text-slate-600 dark:text-slate-300 whitespace-nowrap">{r.return_date}</td>
                         <td className="p-3.5 font-bold text-slate-800 dark:text-white">
@@ -761,9 +773,13 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                                 ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300'
                                 : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 animate-pulse'
                             }`}>
-                              {r.refund_status === 'Refund_Received' ? '✅ रिफंड जमा' :
-                               r.refund_status === 'Adjusted_In_Next_Bill' ? '🧾 बिलात वजावट' :
-                               r.refund_status === 'Replacement_Received' ? '🔄 बदलून नवीन माल' : '⏳ येणे बाकी (Due)'}
+                              {r.refund_status === 'Refund_Received'
+                                ? tr('✅ Refund Received', '✅ रिफंड प्राप्त', '✅ रिफंड जमा')
+                                : r.refund_status === 'Adjusted_In_Next_Bill'
+                                ? tr('🧾 Adjusted in Bill', '🧾 बिल में कटौती', '🧾 बिलात वजावट')
+                                : r.refund_status === 'Replacement_Received'
+                                ? tr('🔄 Replacement Received', '🔄 बदले में नया माल', '🔄 बदलून नवीन माल')
+                                : tr('⏳ Pending (Due)', '⏳ बाकी', '⏳ येणे बाकी')}
                             </span>
 
                             {/* Quick Action buttons for pending refunds */}
@@ -773,25 +789,25 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                                   type="button"
                                   onClick={() => updateSupplierRefundStatus(r.id, 'Refund_Received', 'Cash')}
                                   className="px-1.5 py-0.5 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[9px] font-bold border border-emerald-200"
-                                  title="Mark cash/UPI refund received"
+                                  title={tr('Mark cash/UPI refund received', 'नकद/UPI रिफंड प्राप्त चिह्नित करें', 'रोख/UPI रिफंड मिळाल्याची नोंद करा')}
                                 >
-                                  + रिफंड
+                                  + {tr('Refund', 'रिफंड', 'रिफंड')}
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => updateSupplierRefundStatus(r.id, 'Adjusted_In_Next_Bill', 'Credit_Deduction')}
                                   className="px-1.5 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-[9px] font-bold border border-blue-200"
-                                  title="Mark adjusted in bill"
+                                  title={tr('Mark adjusted in bill', 'बिल में समायोजित चिह्नित करें', 'बिलात वजावट झाल्याची नोंद करा')}
                                 >
-                                  + बिलात वजा
+                                  + {tr('Bill Adjust', 'बिल में कटौती', 'बिलात वजा')}
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => updateSupplierRefundStatus(r.id, 'Replacement_Received', 'Replacement')}
                                   className="px-1.5 py-0.5 rounded bg-purple-50 hover:bg-purple-100 text-purple-700 text-[9px] font-bold border border-purple-200"
-                                  title="Mark replacement received"
+                                  title={tr('Mark replacement received', 'नया माल प्राप्त चिह्नित करें', 'बदलून नवीन माल मिळाल्याची नोंद करा')}
                                 >
-                                  + नवीन माल
+                                  + {tr('Replaced', 'नया माल', 'नवीन माल')}
                                 </button>
                               </div>
                             )}
@@ -801,7 +817,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
                           <button
                             onClick={() => handleDeleteSupplierReturn(r.id, r.return_no)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
-                            title="Delete Supplier Return Record"
+                            title={tr('Delete Supplier Return Record', 'सप्लायर वापसी रिकॉर्ड हटाएं', 'सप्लायर परतावा नोंद हटवा')}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

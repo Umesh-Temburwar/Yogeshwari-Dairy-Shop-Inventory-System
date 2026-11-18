@@ -42,9 +42,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
   prefillCustomerPhone = ''
 }) => {
   const { products, sales, customers, processSaleReturn } = useStore();
-  const { language } = useLanguage();
-  const isMr = language === 'mr';
-  const isHi = language === 'hi';
+  const { language, tr } = useLanguage();
 
   // Return Mode: 'invoice' (Return from Customer Bill) vs 'direct' (Return without Bill)
   const [returnMode, setReturnMode] = useState<'invoice' | 'direct'>(prefillInvoiceNo || sales.length > 0 ? 'invoice' : 'direct');
@@ -266,11 +264,11 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
 
     if (returnMode === 'invoice') {
       if (!selectedSale) {
-        setErrorMessage(isMr ? 'कृपया ग्राहकाचे विक्री बिल / पावती निवडा.' : 'कृपया ग्राहक बिक्री बिल / रसीद चुनें।');
+        setErrorMessage(tr('Please select a customer sales bill / invoice.', 'कृपया ग्राहक बिक्री बिल / रसीद चुनें।', 'कृपया ग्राहकाचे विक्री बिल / पावती निवडा.'));
         return;
       }
       if (!anyItemReturning || totalRefund <= 0) {
-        setErrorMessage(isMr ? 'कृपया परत करावयाच्या किमान एका वस्तूचे प्रमाण निवडा.' : 'कृपया वापस करने हेतु कम से कम एक सामान की मात्रा चुनें।');
+        setErrorMessage(tr('Please select a return quantity for at least one item.', 'कृपया वापस करने हेतु कम से कम एक सामान की मात्रा चुनें।', 'कृपया परत करावयाच्या किमान एका वस्तूचे प्रमाण निवडा.'));
         return;
       }
 
@@ -305,22 +303,23 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
         });
       } catch (err: any) {
         console.error('Failed to process invoice return:', err);
-        setErrorMessage(err.message || 'परतावा प्रक्रिया करताना त्रुटी आली. पुन्हा प्रयत्न करा.');
+        setErrorMessage(err.message || tr('Error processing return. Please try again.', 'वापसी प्रक्रिया के दौरान त्रुटि हुई। कृपया पुनः प्रयास करें।', 'परतावा प्रक्रिया करताना त्रुटी आली. पुन्हा प्रयत्न करा.'));
       } finally {
         setIsSubmitting(false);
       }
     } else {
       // Direct return without invoice
       if (!directProduct || directNumQty <= 0) {
-        setErrorMessage(isMr ? 'कृपया उत्पादन आणि योग्य प्रमाण प्रविष्ट करा.' : 'कृपया उत्पाद और सही मात्रा दर्ज करें।');
+        setErrorMessage(tr('Please select a product and enter a valid quantity.', 'कृपया उत्पाद और सही मात्रा दर्ज करें।', 'कृपया उत्पादन आणि योग्य प्रमाण प्रविष्ट करा.'));
         return;
       }
 
       setIsSubmitting(true);
       try {
         const todayFormatted = new Date().toISOString().split('T')[0];
+        const defaultWalkInCustomer = tr('Walk-in Customer', 'सीधा ग्राहक', 'थेट ग्राहक');
         const res = await processSaleReturn({
-          customer_name: customerName.trim() || 'थेट ग्राहक',
+          customer_name: customerName.trim() || defaultWalkInCustomer,
           customer_phone: customerPhone.trim() || undefined,
           refund_mode: refundMode,
           reason,
@@ -340,7 +339,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
         setCompletedSummary({
           returnNo: res[0]?.return_no || `RET-${new Date().getTime()}`,
           returnType: 'Direct',
-          customerName: customerName.trim() || 'थेट ग्राहक',
+          customerName: customerName.trim() || defaultWalkInCustomer,
           customerPhone: customerPhone.trim() || undefined,
           items: [{
             product_name: directProduct.name,
@@ -356,7 +355,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
         });
       } catch (err: any) {
         console.error('Failed to process direct return:', err);
-        setErrorMessage(err.message || 'थेट परतावा नोंदवताना त्रुटी आली.');
+        setErrorMessage(err.message || tr('Error recording direct return.', 'सीधी वापसी दर्ज करते समय त्रुटि हुई।', 'थेट परतावा नोंदवताना त्रुटी आली.'));
       } finally {
         setIsSubmitting(false);
       }
@@ -369,39 +368,39 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
 
     const returnTypeLabel = 
       completedSummary.returnType === 'Full' 
-        ? (isMr ? 'संपूर्ण बिल परतावा (100% Full Return)' : isHi ? 'पूर्ण बिल वापसी (100% Full Return)' : 'Full Bill Return')
+        ? tr('100% Full Bill Return', 'पूर्ण बिल वापसी (100%)', 'संपूर्ण बिल परतावा (१००%)')
         : completedSummary.returnType === 'Partial'
-        ? (isMr ? 'आंशिक / निवडक माल परतावा (Partial Return)' : isHi ? 'आंशिक सामान वापसी (Partial Return)' : 'Partial Return')
-        : (isMr ? 'थेट परतावा (Direct Return)' : isHi ? 'सीधी वापसी (Direct Return)' : 'Direct Return');
+        ? tr('Partial / Selective Return', 'आंशिक सामान वापसी', 'आंशिक / निवडक माल परतावा')
+        : tr('Direct Return', 'सीधी वापसी', 'थेट परतावा');
 
     return {
-      title: isMr 
-        ? `ग्राहक माल परतावा पावती (${completedSummary.returnNo})` 
-        : isHi 
-        ? `ग्राहक सामान वापसी रसीद (${completedSummary.returnNo})` 
-        : `Customer Return Voucher (${completedSummary.returnNo})`,
-      subtitle: isMr ? 'योगेश्वरी डेअरी फार्म & उत्पादने ERP' : isHi ? 'योगेश्वरी डेरी फार्म & उत्पाद ERP' : 'Yogeshwari Dairy Farm & Products ERP',
-      periodText: `${isMr ? 'व्हाउचर क्र.' : 'वाउचर सं.'}: ${completedSummary.returnNo} | ${isMr ? 'तारीख' : 'दिनांक'}: ${completedSummary.returnDate} | ${returnTypeLabel}`,
+      title: tr(
+        `Customer Return Voucher (${completedSummary.returnNo})`,
+        `ग्राहक सामान वापसी रसीद (${completedSummary.returnNo})`,
+        `ग्राहक माल परतावा पावती (${completedSummary.returnNo})`
+      ),
+      subtitle: tr('Yogeshwari Dairy Farm & Products ERP', 'योगेश्वरी डेरी फार्म & उत्पाद ERP', 'योगेश्वरी डेअरी फार्म & उत्पादने ERP'),
+      periodText: `${tr('Voucher No.', 'वाउचर सं.', 'व्हाउचर क्र.')}: ${completedSummary.returnNo} | ${tr('Date', 'दिनांक', 'तारीख')}: ${completedSummary.returnDate} | ${returnTypeLabel}`,
       language,
       kpis: [
-        { label: isMr ? 'एकूण परतावा रक्कम' : 'कुल रिफंड राशि', value: `₹${completedSummary.totalRefund.toFixed(2)}`, color: 'emerald' },
+        { label: tr('Total Refund Amount', 'कुल रिफंड राशि', 'एकूण परतावा रक्कम'), value: `₹${completedSummary.totalRefund.toFixed(2)}`, color: 'emerald' },
         { 
-          label: isMr ? 'परतावा पद्धत' : 'रिफंड माध्यम', 
-          value: completedSummary.refundMode === 'Cash' ? (isMr ? 'रोख' : 'रोकड़') :
-                 completedSummary.refundMode === 'Online_UPI' ? 'ऑनलाइन UPI' :
-                 completedSummary.refundMode === 'Udhar_Credit' ? (isMr ? 'उधारी खात्यात जमा' : 'उधार खाते में जमा') : completedSummary.refundMode, 
+          label: tr('Refund Mode', 'रिफंड माध्यम', 'परतावा पद्धत'), 
+          value: completedSummary.refundMode === 'Cash' ? tr('Cash', 'रोकड़', 'रोख') :
+                 completedSummary.refundMode === 'Online_UPI' ? tr('Online UPI', 'ऑनलाइन UPI', 'ऑनलाईन UPI') :
+                 completedSummary.refundMode === 'Udhar_Credit' ? tr('Credited to Udhar Khata', 'उधार खाते में जमा', 'उधारी खात्यात जमा') : completedSummary.refundMode, 
           color: 'blue' 
         },
         {
-          label: isMr ? 'मालाची स्थिती' : 'सामान स्थिति',
-          value: completedSummary.condition === 'Resellable' ? (isMr ? 'स्टॉकमध्ये जमा (Restocked)' : 'स्टॉक में जमा') : (isMr ? 'नुकसान नोंद (Damaged)' : 'नुकसान दर्ज'),
+          label: tr('Item Condition', 'सामान स्थिति', 'मालाची स्थिती'),
+          value: completedSummary.condition === 'Resellable' ? tr('Restocked', 'स्टॉक में जमा', 'स्टॉकमध्ये जमा') : tr('Damaged / Waste', 'नुकसान दर्ज', 'नुकसान नोंद'),
           color: completedSummary.condition === 'Resellable' ? 'emerald' : 'amber'
         }
       ],
       table: {
-        headers: isMr 
+        headers: language === 'mr' 
           ? ['उत्पादनाचे नाव', 'परत प्रमाण', 'दर (₹)', 'रिफंड रक्कम (₹)']
-          : isHi
+          : language === 'hi'
           ? ['उत्पाद नाम', 'वापसी मात्रा', 'दर (₹)', 'रिफंड राशि (₹)']
           : ['Product Name', 'Returned Qty', 'Unit Price (₹)', 'Refund Amount (₹)'],
         alignments: ['left', 'center', 'right', 'right'] as ('left' | 'center' | 'right' | 'right')[],
@@ -412,13 +411,13 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
           `₹${item.refund_amount.toFixed(2)}`
         ]),
         summaryRow: [
-          isMr ? 'एकूण परतावा' : 'कुल रिफंड', 
+          tr('Total Refund', 'कुल रिफंड', 'एकूण परतावा'), 
           '', 
           '', 
           `₹${completedSummary.totalRefund.toFixed(2)}`
         ]
       },
-      notes: `${isMr ? 'ग्राहक नाव' : 'ग्राहक नाम'}: ${completedSummary.customerName} | ${isMr ? 'फोन' : 'फोन'}: ${completedSummary.customerPhone || '—'} | ${completedSummary.invoiceNo ? `${isMr ? 'मूळ पावती' : 'मूल बिल'}: #${completedSummary.invoiceNo}` : ''} | ${completedSummary.returnType === 'Full' ? (isMr ? 'पावती विक्री यादीतून कायमची रद्द झाली' : 'बिल बिक्री सूची से रद्द किया गया') : completedSummary.returnType === 'Partial' ? `${isMr ? 'सुधारित पावती शिल्लक' : 'संशोधित बिल शेष'}: ₹${completedSummary.remainingSaleAmount?.toFixed(2)}` : ''}`
+      notes: `${tr('Customer Name', 'ग्राहक नाम', 'ग्राहक नाव')}: ${completedSummary.customerName} | ${tr('Phone', 'फोन', 'फोन')}: ${completedSummary.customerPhone || '—'} | ${completedSummary.invoiceNo ? `${tr('Original Bill', 'मूल बिल', 'मूळ पावती')}: #${completedSummary.invoiceNo}` : ''} | ${completedSummary.returnType === 'Full' ? tr('Bill permanently cancelled from sales list', 'बिल बिक्री सूची से रद्द किया गया', 'पावती विक्री यादीतून कायमची रद्द झाली') : completedSummary.returnType === 'Partial' ? `${tr('Revised Bill Balance', 'संशोधित बिल शेष', 'सुधारित पावती शिल्लक')}: ₹${completedSummary.remainingSaleAmount?.toFixed(2)}` : ''}`
     };
   };
 
@@ -453,10 +452,10 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
 
             <div className="text-center space-y-1">
               <h3 className="text-lg font-black text-slate-900 dark:text-[#E7F0EC]">
-                {isMr ? 'ग्राहक माल परतावा यशस्वीरित्या नोंदवला!' : isHi ? 'ग्राहक सामान वापसी सफलतापूर्वक दर्ज!' : 'Return Processed Successfully!'}
+                {tr('Return Processed Successfully!', 'ग्राहक सामान वापसी सफलतापूर्वक दर्ज!', 'ग्राहक माल परतावा यशस्वीरित्या नोंदवला!')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-[#8FA69C] font-mono">
-                {isMr ? 'व्हाउचर क्र:' : 'वाउचर सं:'} <span className="font-bold text-purple-600 dark:text-purple-400">{completedSummary.returnNo}</span>
+                {tr('Voucher No:', 'वाउचर सं:', 'व्हाउचर क्र:')} <span className="font-bold text-purple-600 dark:text-purple-400">{completedSummary.returnNo}</span>
               </p>
             </div>
 
@@ -470,9 +469,9 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
             }`}>
               <div className="font-extrabold flex items-center justify-between text-sm">
                 <span>
-                  {completedSummary.returnType === 'Full' && '⚡ संपूर्ण बिल वापसी (100% Full Return)'}
-                  {completedSummary.returnType === 'Partial' && '✂️ आंशिक / निवडक माल परतावा (Partial Return)'}
-                  {completedSummary.returnType === 'Direct' && '📦 थेट परतावा (Direct Item Return)'}
+                  {completedSummary.returnType === 'Full' && tr('⚡ 100% Full Bill Return', '⚡ पूर्ण बिल वापसी (100%)', '⚡ संपूर्ण बिल वापसी (१००%)')}
+                  {completedSummary.returnType === 'Partial' && tr('✂️ Partial / Selective Return', '✂️ आंशिक / चुनिंदा सामान वापसी', '✂️ आंशिक / निवडक माल परतावा')}
+                  {completedSummary.returnType === 'Direct' && tr('📦 Direct Item Return', '📦 सीधी वापसी (बिना बिल)', '📦 थेट परतावा')}
                 </span>
                 <span className="text-base font-black text-emerald-600 dark:text-emerald-400">
                   ₹{completedSummary.totalRefund.toFixed(2)}
@@ -480,17 +479,25 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
               </div>
               <p className="text-[11px] leading-relaxed opacity-90">
                 {completedSummary.returnType === 'Full' && (
-                  isMr 
-                    ? `पावती #${completedSummary.invoiceNo} मधील सर्वच्या सर्व वस्तू परत झाल्यामुळे ही पावती विक्री यादीतून कायमची रद्द झाली आहे आणि सर्व परतावा Return & Refund मध्ये सुरक्षित नोंदवला गेला आहे.`
-                    : `बिल #${completedSummary.invoiceNo} का संपूर्ण सामान वापस हो गया है। यह बिल बिक्री सूची से रद्द कर दिया गया है और संपूर्ण वापसी Return & Refund में दर्ज की गई है।`
+                  tr(
+                    `All items from Bill #${completedSummary.invoiceNo} have been returned. This bill has been permanently cancelled from the sales list and the full return is recorded in Returns & Refunds.`,
+                    `बिल #${completedSummary.invoiceNo} का संपूर्ण सामान वापस हो गया है। यह बिल बिक्री सूची से रद्द कर दिया गया है और संपूर्ण वापसी Return & Refund में दर्ज की गई है।`,
+                    `पावती #${completedSummary.invoiceNo} मधील सर्वच्या सर्व वस्तू परत झाल्यामुळे ही पावती विक्री यादीतून कायमची रद्द झाली आहे आणि सर्व परतावा Return & Refund मध्ये सुरक्षित नोंदवला गेला आहे.`
+                  )
                 )}
                 {completedSummary.returnType === 'Partial' && (
-                  isMr 
-                    ? `पावती #${completedSummary.invoiceNo} मधील फक्त निवडक वस्तू परत घेतल्या आहेत. शिल्लक मालाची सुधारित पावती रक्कम ₹${completedSummary.remainingSaleAmount?.toFixed(2)} विक्री यादीमध्ये चालू राहील आणि परत केलेल्या वस्तूंचा हिशोब Return & Refund मध्ये सेव्ह झाला आहे.`
-                    : `बिल #${completedSummary.invoiceNo} में से कुछ सामान वापस लिया गया है। शेष सामान का संशोधित बिल ₹${completedSummary.remainingSaleAmount?.toFixed(2)} बिक्री सूची में सुरक्षित है और वापसी Return & Refund में दर्ज हुई है।`
+                  tr(
+                    `Selected items from Bill #${completedSummary.invoiceNo} have been returned. The revised bill balance of ₹${completedSummary.remainingSaleAmount?.toFixed(2)} remains active in sales, and returned items are saved in Returns & Refunds.`,
+                    `बिल #${completedSummary.invoiceNo} में से कुछ सामान वापस लिया गया है। शेष सामान का संशोधित बिल ₹${completedSummary.remainingSaleAmount?.toFixed(2)} बिक्री सूची में सुरक्षित है और वापसी Return & Refund में दर्ज हुई है।`,
+                    `पावती #${completedSummary.invoiceNo} मधील फक्त निवडक वस्तू परत घेतल्या आहेत. शिल्लक मालाची सुधारित पावती रक्कम ₹${completedSummary.remainingSaleAmount?.toFixed(2)} विक्री यादीमध्ये चालू राहील आणि परत केलेल्या वस्तूंचा हिशोब Return & Refund मध्ये सेव्ह झाला आहे.`
+                  )
                 )}
                 {completedSummary.returnType === 'Direct' && (
-                  isMr ? 'थेट परतावा नोंदवला गेला असून रक्कम ग्राहकाला अदा करण्यात आली आहे.' : 'सीधी वापसी दर्ज कर राशि ग्राहक को वापस की गई।'
+                  tr(
+                    'Direct return has been recorded and the refund amount has been issued to the customer.',
+                    'सीधी वापसी दर्ज कर राशि ग्राहक को वापस की गई।',
+                    'थेट परतावा नोंदवला गेला असून रक्कम ग्राहकाला अदा करण्यात आली आहे.'
+                  )
                 )}
               </p>
             </div>
@@ -498,7 +505,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
             {/* Returned Items Table */}
             <div className="bg-slate-50 dark:bg-[#1A2A25] p-3.5 rounded-2xl border border-slate-200 dark:border-[#24352F] space-y-2 text-xs">
               <div className="flex justify-between items-center font-bold text-slate-700 dark:text-slate-300 pb-1.5 border-b border-slate-200 dark:border-[#24352F]">
-                <span>{isMr ? 'परत केलेल्या वस्तू' : 'वापस किया गया सामान'} ({completedSummary.items.length})</span>
+                <span>{tr('Returned Items', 'वापस किया गया सामान', 'परत केलेल्या वस्तू')} ({completedSummary.items.length})</span>
                 <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">₹{completedSummary.totalRefund.toFixed(2)}</span>
               </div>
               
@@ -516,21 +523,29 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
 
               <div className="pt-2 border-t border-slate-200 dark:border-[#24352F] grid grid-cols-2 gap-2 text-[11px] text-slate-500 dark:text-[#8FA69C]">
                 <div>
-                  <span>{isMr ? 'ग्राहक:' : 'ग्राहक:'} </span>
+                  <span>{tr('Customer:', 'ग्राहक:', 'ग्राहक:')} </span>
                   <span className="font-bold text-slate-700 dark:text-slate-200">{completedSummary.customerName}</span>
                 </div>
                 <div>
-                  <span>{isMr ? 'पद्धत:' : 'माध्यम:'} </span>
-                  <span className="font-bold text-slate-700 dark:text-slate-200">{completedSummary.refundMode}</span>
-                </div>
-                <div>
-                  <span>{isMr ? 'मालाची स्थिती:' : 'सामान स्थिति:'} </span>
-                  <span className={`font-bold ${completedSummary.condition === 'Resellable' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {completedSummary.condition === 'Resellable' ? (isMr ? 'स्टॉकमध्ये जमा' : 'स्टॉक में जमा') : (isMr ? 'नुकसान नोंद' : 'नुकसान दर्ज')}
+                  <span>{tr('Mode:', 'माध्यम:', 'पद्धत:')} </span>
+                  <span className="font-bold text-slate-700 dark:text-slate-200">
+                    {completedSummary.refundMode === 'Cash'
+                      ? tr('Cash', 'रोकड़', 'रोख')
+                      : completedSummary.refundMode === 'Online_UPI'
+                      ? tr('Online UPI', 'ऑनलाइन UPI', 'ऑनलाईन UPI')
+                      : completedSummary.refundMode === 'Udhar_Credit'
+                      ? tr('Udhar Credit', 'उधार जमा', 'उधारी खात्यात जमा')
+                      : completedSummary.refundMode}
                   </span>
                 </div>
                 <div>
-                  <span>{isMr ? 'तारीख:' : 'दिनांक:'} </span>
+                  <span>{tr('Item Condition:', 'सामान स्थिति:', 'मालाची स्थिती:')} </span>
+                  <span className={`font-bold ${completedSummary.condition === 'Resellable' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {completedSummary.condition === 'Resellable' ? tr('Restocked', 'स्टॉक में जमा', 'स्टॉकमध्ये जमा') : tr('Damaged / Waste', 'नुकसान दर्ज', 'नुकसान नोंद')}
+                  </span>
+                </div>
+                <div>
+                  <span>{tr('Date:', 'दिनांक:', 'तारीख:')} </span>
                   <span className="font-bold text-slate-700 dark:text-slate-200">{completedSummary.returnDate}</span>
                 </div>
               </div>
@@ -544,7 +559,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 className="py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs"
               >
                 <Printer className="w-4 h-4" />
-                <span>{isMr ? 'प्रिंट पावती' : 'प्रिंट रसीद'}</span>
+                <span>{tr('Print Slip', 'प्रिंट रसीद', 'प्रिंट पावती')}</span>
               </button>
               <button
                 type="button"
@@ -552,7 +567,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95"
               >
                 <Eye className="w-4 h-4 text-purple-600" />
-                <span>{isMr ? 'पहा' : 'देखें'}</span>
+                <span>{tr('View', 'देखें', 'पहा')}</span>
               </button>
               <button
                 type="button"
@@ -569,7 +584,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
               onClick={onClose}
               className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-black text-xs transition active:scale-95 shadow-md mt-2"
             >
-              {isMr ? 'पूर्ण झाले (बंद करा)' : isHi ? 'पूर्ण हुआ (बंद करें)' : 'Done (Close)'}
+              {tr('Done (Close)', 'पूर्ण हुआ (बंद करें)', 'पूर्ण झाले (बंद करा)')}
             </button>
           </div>
         ) : (
@@ -585,10 +600,10 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 </div>
                 <div>
                   <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-[#E7F0EC]">
-                    {isMr ? 'ग्राहक माल परतावा (Customer Returns & Refund)' : isHi ? 'ग्राहक सामान वापसी (Customer Returns & Refund)' : 'Customer Sales Return & Refund'}
+                    {tr('Customer Sales Return & Refund', 'ग्राहक सामान वापसी व रिफंड', 'ग्राहक माल परतावा व रिफंड')}
                   </h2>
                   <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                    {isMr ? '१००% संपूर्ण बिल परतावा किंवा काही निवडक वस्तू परत घेणे' : '100% पूरा बिल वापसी अथवा कुछ चुनिंदा सामान की वापसी'}
+                    {tr('100% full bill return or selective item return', '100% पूरा बिल वापसी अथवा कुछ चुनिंदा सामान की वापसी', '१००% संपूर्ण बिल परतावा किंवा काही निवडक वस्तू परत घेणे')}
                   </p>
                 </div>
               </div>
@@ -621,7 +636,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 }`}
               >
                 <Receipt className="w-3.5 h-3.5" />
-                <span>{isMr ? 'पावती / बिलावरून परतावा' : isHi ? 'बिल / रसीद से वापसी' : 'From Bill / Invoice'}</span>
+                <span>{tr('From Bill / Invoice', 'बिल / रसीद से वापसी', 'पावती / बिलावरून परतावा')}</span>
               </button>
               <button
                 type="button"
@@ -633,7 +648,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span>{isMr ? 'थेट परतावा (पावती विना)' : isHi ? 'सीधी वापसी (बिना बिल)' : 'Direct Item Return'}</span>
+                <span>{tr('Direct Item Return', 'सीधी वापसी (बिना बिल)', 'थेट परतावा (पावती विना)')}</span>
               </button>
             </div>
 
@@ -649,7 +664,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                   {/* Step 1: Search or Pick Bill */}
                   <div className="space-y-1.5">
                     <label className="block text-xs font-bold text-slate-700 dark:text-[#E7F0EC]">
-                      {isMr ? '१. ग्राहकाचे विक्री बिल / पावती निवडा:' : '१. ग्राहक का बिक्री बिल / रसीद चुनें:'}
+                      {tr('1. Select Customer Sales Bill / Invoice:', '१. ग्राहक का बिक्री बिल / रसीद चुनें:', '१. ग्राहकाचे विक्री बिल / पावती निवडा:')}
                     </label>
                     <div className="relative">
                       <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
@@ -662,7 +677,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                             setSelectedSaleId('');
                           }
                         }}
-                        placeholder={isMr ? 'पावती क्र. (YD-...), ग्राहक नाव किंवा मोबाईल नंबर टाका...' : 'बिल सं. (YD-...), ग्राहक नाम या मोबाइल नंबर लिखें...'}
+                        placeholder={tr('Enter invoice no. (YD-...), customer name or mobile...', 'बिल सं. (YD-...), ग्राहक नाम या मोबाइल नंबर लिखें...', 'पावती क्र. (YD-...), ग्राहक नाव किंवा मोबाईल नंबर टाका...')}
                         className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC] focus:ring-2 focus:ring-purple-500 focus:outline-hidden"
                       />
                     </div>
@@ -671,7 +686,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                     {(!selectedSale || invoiceSearch !== selectedSale.invoice_no) && matchingSales.length > 0 && (
                       <div className="border border-slate-200 dark:border-[#24352F] rounded-2xl bg-white dark:bg-[#1A2A25] p-1.5 max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-[#24352F] shadow-lg">
                         <div className="p-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          {isMr ? 'नुकतीच झालेली बिले (क्लिक करून निवडा):' : 'हाल के बिल (क्लिक करके चुनें):'}
+                          {tr('Recent Bills (Click to select):', 'हाल के बिल (क्लिक करके चुनें):', 'नुकतीच झालेली बिले (क्लिक करून निवडा):')}
                         </div>
                         {matchingSales.map(sale => (
                           <button
@@ -689,14 +704,14 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                                 <span>📅 {formatSaleDate(sale.created_at, sale.sale_date)}</span>
                                 {sale.created_at && <span>⏰ {formatSaleTime(sale.created_at)}</span>}
                                 <span>&bull;</span>
-                                <span>{sale.items?.length || 0} {isMr ? 'वस्तू' : 'सामान'}</span>
+                                <span>{sale.items?.length || 0} {tr('items', 'सामान', 'वस्तू')}</span>
                                 <span>&bull;</span>
                                 <span>💳 {sale.payment_mode}</span>
                               </div>
                             </div>
                             <div className="text-right shrink-0">
                               <span className="font-black text-emerald-600 dark:text-emerald-400 block">₹{sale.net_amount}</span>
-                              <span className="text-[9px] text-purple-600 font-bold group-hover:underline">निवडा &rarr;</span>
+                              <span className="text-[9px] text-purple-600 font-bold group-hover:underline">{tr('Select', 'चुनें', 'निवडा')} &rarr;</span>
                             </div>
                           </button>
                         ))}
@@ -720,7 +735,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                             </span>
                           </div>
                           <div className="text-right">
-                            <span className="text-[10px] text-slate-400 block">{isMr ? 'मूळ बिल रक्कम' : 'मूल बिल राशि'}</span>
+                            <span className="text-[10px] text-slate-400 block">{tr('Original Bill Amount', 'मूल बिल राशि', 'मूळ बिल रक्कम')}</span>
                             <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
                               ₹{selectedSale.net_amount}
                             </span>
@@ -734,8 +749,8 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                               ⏰ {formatSaleTime(selectedSale.created_at)}
                             </span>
                           )}
-                          <span>📦 {selectedSale.items?.length || 0} {isMr ? 'उत्पादने' : 'उत्पाद'}</span>
-                          <span>📍 {selectedSale.counter_name || 'काऊंटर १'}</span>
+                          <span>📦 {selectedSale.items?.length || 0} {tr('products', 'उत्पाद', 'उत्पादने')}</span>
+                          <span>📍 {selectedSale.counter_name || tr('Counter 1', 'काउंटर १', 'काऊंटर १')}</span>
                         </div>
                       </div>
 
@@ -744,7 +759,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                       {/* ======================================================= */}
                       <div className="space-y-2">
                         <label className="block text-xs font-black text-slate-800 dark:text-[#E7F0EC] uppercase tracking-wide">
-                          {isMr ? '२. परतावा प्रकार निवडा (Return Mode):' : '२. वापसी प्रकार चुनें (Return Mode):'}
+                          {tr('2. Select Return Mode:', '२. वापसी प्रकार चुनें:', '२. परतावा प्रकार निवडा:')}
                         </label>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -762,7 +777,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                               <div className="flex items-center justify-between">
                                 <span className="inline-flex items-center gap-1.5 font-black text-xs text-amber-600 dark:text-amber-400">
                                   <span>⚡</span>
-                                  <span>{isMr ? 'संपूर्ण बिल वापसी' : 'संपूर्ण बिल वापसी'}</span>
+                                  <span>{tr('Full Bill Return', 'संपूर्ण बिल वापसी', 'संपूर्ण बिल वापसी')}</span>
                                 </span>
                                 <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
                                   invoiceReturnChoice === 'full' 
@@ -773,18 +788,20 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                                 </span>
                               </div>
                               <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                                100% Full Return
+                                {tr('100% Full Return', '१००% पूर्ण वापसी', '१००% संपूर्ण परतावा')}
                               </h4>
                               <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] leading-snug">
-                                {isMr 
-                                  ? 'ग्राहकाने घेतलेले सर्व सामान परत आणले आहे. हे बिल विक्रीतून रद्द होऊन संपूर्ण रिफंड मिळेल.' 
-                                  : 'ग्राहक ने खरीदा हुआ सारा सामान वापस कर दिया। यह बिल बिक्री से रद्द होकर पूरा रिफंड मिलेगा।'}
+                                {tr(
+                                  'Customer returned all purchased items. This bill will be cancelled from sales with a full refund.',
+                                  'ग्राहक ने खरीदा हुआ सारा सामान वापस कर दिया। यह बिल बिक्री से रद्द होकर पूरा रिफंड मिलेगा।',
+                                  'ग्राहकाने घेतलेले सर्व सामान परत आणले आहे. हे बिल विक्रीतून रद्द होऊन संपूर्ण रिफंड मिळेल.'
+                                )}
                               </p>
                             </div>
 
                             <div className="mt-2.5 pt-2 border-t border-amber-200 dark:border-amber-900/50 flex items-center justify-between text-xs">
                               <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">
-                                {isMr ? '१००% रिफंड रक्कम:' : '100% रिफंड राशि:'}
+                                {tr('100% Refund Amount:', '100% रिफंड राशि:', '१००% रिफंड रक्कम:')}
                               </span>
                               <span className="font-black text-emerald-600 dark:text-emerald-400">
                                 ₹{selectedSale.net_amount.toFixed(2)}
@@ -806,7 +823,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                               <div className="flex items-center justify-between">
                                 <span className="inline-flex items-center gap-1.5 font-black text-xs text-blue-600 dark:text-blue-400">
                                   <Scissors className="w-3.5 h-3.5" />
-                                  <span>{isMr ? 'निवडक / आंशिक वापसी' : 'चुनिंदा / आंशिक वापसी'}</span>
+                                  <span>{tr('Selective / Partial Return', 'चुनिंदा / आंशिक वापसी', 'निवडक / आंशिक वापसी')}</span>
                                 </span>
                                 <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
                                   invoiceReturnChoice === 'partial' 
@@ -817,18 +834,20 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                                 </span>
                               </div>
                               <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                                Selective / Partial Return
+                                {tr('Partial Item Return', 'आंशिक सामान वापसी', 'आंशिक माल परतावा')}
                               </h4>
                               <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] leading-snug">
-                                {isMr 
-                                  ? 'ग्राहकाने अनेक वस्तूंमधून फक्त काही वस्तू किंवा कमी प्रमाण परत आणले आहे. शिल्लक बिल चालू राहील.' 
-                                  : 'ग्राहक ने कई सामानों में से कुछ सामान या कम मात्रा वापस की है। बाकी का बिल जारी रहेगा।'}
+                                {tr(
+                                  'Customer returned only selected items or partial quantity. The remaining bill stays active.',
+                                  'ग्राहक ने कई सामानों में से कुछ सामान या कम मात्रा वापस की है। बाकी का बिल जारी रहेगा।',
+                                  'ग्राहकाने अनेक वस्तूंमधून फक्त काही वस्तू किंवा कमी प्रमाण परत आणले आहे. शिल्लक बिल चालू राहील.'
+                                )}
                               </p>
                             </div>
 
                             <div className="mt-2.5 pt-2 border-t border-blue-200 dark:border-blue-900/50 flex items-center justify-between text-xs">
                               <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400">
-                                {isMr ? 'निवडलेल्या वस्तूंचा रिफंड:' : 'चुने गए सामान का रिफंड:'}
+                                {tr('Selected Items Refund:', 'चुने गए सामान का रिफंड:', 'निवडलेल्या वस्तूंचा रिफंड:')}
                               </span>
                               <span className="font-black text-emerald-600 dark:text-emerald-400">
                                 ₹{totalRefund.toFixed(2)}
@@ -845,8 +864,8 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                             <PackageCheck className="w-4 h-4 text-purple-600" />
                             <span>
                               {invoiceReturnChoice === 'full' 
-                                ? (isMr ? '३. बिलातील सर्व वस्तू (सर्व परत होत आहेत):' : '३. बिल के सभी सामान (सभी वापस हो रहे हैं):')
-                                : (isMr ? '३. ज्या वस्तू परत करायच्या आहेत त्या निवडा व प्रमाण ठरवा:' : '३. जो सामान वापस करना है उसे चुनें व मात्रा तय करें:')}
+                                ? tr('3. All Bill Items (Returning all):', '३. बिल के सभी सामान (सभी वापस हो रहे हैं):', '३. बिलातील सर्व वस्तू (सर्व परत होत आहेत):')
+                                : tr('3. Select items to return & adjust quantity:', '३. जो सामान वापस करना है उसे चुनें व मात्रा तय करें:', '३. ज्या वस्तू परत करायच्या आहेत त्या निवडा व प्रमाण ठरवा:')}
                             </span>
                           </span>
 
@@ -856,7 +875,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                               onClick={setFullReturnMode}
                               className="px-2.5 py-1 rounded-lg text-[10px] font-black bg-purple-100 hover:bg-purple-200 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 transition"
                             >
-                              ⚡ {isMr ? 'सर्व निवडा' : 'सभी चुनें'}
+                              ⚡ {tr('Select All', 'सभी चुनें', 'सर्व निवडा')}
                             </button>
                           )}
                         </div>
@@ -896,28 +915,28 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                                         <span>{item.product_name}</span>
                                         {isFullyReturned && (
                                           <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                                            १००% परतावा
+                                            {tr('100% Return', '१००% वापसी', '१००% परतावा')}
                                           </span>
                                         )}
                                         {isPartial && (
                                           <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
-                                            आंशिक ({currentRetQty}/{item.quantity})
+                                            {tr('Partial', 'आंशिक', 'आंशिक')} ({currentRetQty}/{item.quantity})
                                           </span>
                                         )}
                                         {isNotReturned && (
                                           <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                                            परत नाही
+                                            {tr('Not Returned', 'वापस नहीं', 'परत नाही')}
                                           </span>
                                         )}
                                       </h4>
                                       <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                                        {isMr ? 'खरेदी मात्रा:' : 'खरीद मात्रा:'} <b>{item.quantity} {item.unit}</b> &bull; {isMr ? 'दर:' : 'दर:'} <b>₹{item.unit_price}</b>
+                                        {tr('Purchased Qty:', 'खरीद मात्रा:', 'खरेदी मात्रा:')} <b>{item.quantity} {item.unit}</b> &bull; {tr('Rate:', 'दर:', 'दर:')} <b>₹{item.unit_price}</b>
                                       </p>
                                     </div>
                                   </div>
 
                                   <div className="text-right shrink-0">
-                                    <span className="text-[10px] text-slate-400 block">{isMr ? 'परतावा रक्कम:' : 'वापसी राशि:'}</span>
+                                    <span className="text-[10px] text-slate-400 block">{tr('Refund Amount:', 'वापसी राशि:', 'परतावा रक्कम:')}</span>
                                     <span className={`text-xs font-black ${currentRetQty > 0 ? 'text-purple-600 dark:text-purple-400' : 'text-slate-400'}`}>
                                       ₹{itemRefund.toFixed(2)}
                                     </span>
@@ -927,10 +946,10 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                                 {/* Quantity Control Buttons (Enabled in Partial mode, or visible in full) */}
                                 <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-[#24352F]">
                                   <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
-                                    {isMr ? 'परत प्रमाण:' : 'वापसी मात्रा:'} <span className="text-purple-600 dark:text-purple-400 font-extrabold">{currentRetQty} {item.unit}</span>
+                                    {tr('Return Qty:', 'वापसी मात्रा:', 'परत प्रमाण:')} <span className="text-purple-600 dark:text-purple-400 font-extrabold">{currentRetQty} {item.unit}</span>
                                     {remainingQty > 0 && (
                                       <span className="text-slate-400 font-normal ml-1">
-                                        ({isMr ? 'शिल्लक' : 'शेष'}: {remainingQty} {item.unit})
+                                        ({tr('Remaining', 'शेष', 'शिल्लक')}: {remainingQty} {item.unit})
                                       </span>
                                     )}
                                   </span>
@@ -970,7 +989,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                                       onClick={() => setItemQty(item.product_id, item.quantity, item.quantity)}
                                       className="px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-200 hover:bg-purple-100 dark:bg-[#24352F] dark:hover:bg-purple-950 text-slate-700 dark:text-slate-200 transition"
                                     >
-                                      Full
+                                      {tr('Full', 'पूरा', 'पूर्ण')}
                                     </button>
                                   </div>
                                 </div>
@@ -989,40 +1008,46 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                         }`}>
                           <div className="flex items-center justify-between font-black text-sm">
                             <span className="flex items-center gap-1.5">
-                              {isFullReturn ? '⚡ 100% संपूर्ण बिल वापसी (Full Return)' : '✂️ आंशिक बिल वापसी (Partial Return)'}
+                              {isFullReturn
+                                ? tr('⚡ 100% Full Bill Return', '⚡ १००% संपूर्ण बिल वापसी', '⚡ १००% संपूर्ण बिल वापसी')
+                                : tr('✂️ Partial Bill Return', '✂️ आंशिक बिल वापसी', '✂️ आंशिक बिल वापसी')}
                             </span>
                             <span className="text-base font-black text-emerald-600 dark:text-emerald-400">
-                              रिफंड: ₹{totalRefund.toFixed(2)}
+                              {tr('Refund', 'रिफंड', 'रिफंड')}: ₹{totalRefund.toFixed(2)}
                             </span>
                           </div>
 
                           {/* Dynamic comparison table */}
                           <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-white/70 dark:bg-[#131F1B]/70 border border-slate-200/50 dark:border-slate-800 text-center">
                             <div>
-                              <div className="text-[10px] text-slate-400 font-bold uppercase">{isMr ? 'मूळ बिल' : 'मूल बिल'}</div>
+                              <div className="text-[10px] text-slate-400 font-bold uppercase">{tr('Original Bill', 'मूल बिल', 'मूळ बिल')}</div>
                               <div className="text-xs font-black text-slate-700 dark:text-slate-200">₹{selectedSale.net_amount.toFixed(2)}</div>
                             </div>
                             <div>
-                              <div className="text-[10px] text-rose-500 font-bold uppercase">{isMr ? 'परतावा रिफंड' : 'वापसी रिफंड'}</div>
+                              <div className="text-[10px] text-rose-500 font-bold uppercase">{tr('Return Refund', 'वापसी रिफंड', 'परतावा रिफंड')}</div>
                               <div className="text-xs font-black text-rose-600 dark:text-rose-400">-₹{totalRefund.toFixed(2)}</div>
                             </div>
                             <div>
-                              <div className="text-[10px] text-purple-600 dark:text-purple-400 font-bold uppercase">{isMr ? 'नवीन पावती बाकी' : 'नया बिल शेष'}</div>
+                              <div className="text-[10px] text-purple-600 dark:text-purple-400 font-bold uppercase">{tr('Revised Bill Balance', 'नया बिल शेष', 'नवीन पावती बाकी')}</div>
                               <div className="text-xs font-black text-purple-700 dark:text-purple-300">
-                                ₹{isFullReturn ? '0.00 (रद्द)' : remainingSaleAmount.toFixed(2)}
+                                ₹{isFullReturn ? tr('0.00 (Cancelled)', '0.00 (रद्द)', '0.00 (रद्द)') : remainingSaleAmount.toFixed(2)}
                               </div>
                             </div>
                           </div>
 
                           <p className="text-[11px] leading-relaxed">
                             {isFullReturn ? (
-                              isMr
-                                ? `📢 या बिलातील सर्व वस्तू परत होत आहेत. त्यामुळे ही मूळ पावती विक्री (Sales Ledger) मधून कायमची रद्द होईल आणि सर्व तपशील Returns & Refund व्यवस्थापनात सुरक्षित सेव्ह राहतील.`
-                                : `📢 इस बिल के सभी सामान वापस हो रहे हैं। यह मूल बिल बिक्री सूची से स्थायी रूप से रद्द हो जाएगा और सभी विवरण Returns & Refund में सुरक्षित सहेजे जाएंगे।`
+                              tr(
+                                '📢 All items in this bill are being returned. The original invoice will be permanently cancelled from the Sales Ledger and all details will be saved in Returns & Refunds.',
+                                '📢 इस बिल के सभी सामान वापस हो रहे हैं। यह मूल बिल बिक्री सूची से स्थायी रूप से रद्द हो जाएगा और सभी विवरण Returns & Refunds में सुरक्षित सहेजे जाएंगे।',
+                                '📢 या बिलातील सर्व वस्तू परत होत आहेत. त्यामुळे ही मूळ पावती विक्री (Sales Ledger) मधून कायमची रद्द होईल आणि सर्व तपशील Returns & Refund व्यवस्थापनात सुरक्षित सेव्ह राहतील.'
+                              )
                             ) : (
-                              isMr
-                                ? `📢 पावतीमधील शिल्लक वस्तूंचे बिल ₹${remainingSaleAmount.toFixed(2)} रकमेसह विक्रीमध्ये अद्ययावत राहील. परत केलेला माल Return Ledger मध्ये नोंदवला जाईल.`
-                                : `📢 बिल का शेष सामान ₹${remainingSaleAmount.toFixed(2)} की संशोधित राशि के साथ बिक्री में सुरक्षित रहेगा। वापस किया गया सामान Return Ledger में दर्ज होगा।`
+                              tr(
+                                `📢 The remaining items bill will stay updated in sales with ₹${remainingSaleAmount.toFixed(2)}. Returned goods will be recorded in the Return Ledger.`,
+                                `📢 बिल का शेष सामान ₹${remainingSaleAmount.toFixed(2)} की संशोधित राशि के साथ बिक्री में सुरक्षित रहेगा। वापस किया गया सामान Return Ledger में दर्ज होगा।`,
+                                `📢 पावतीमधील शिल्लक वस्तूंचे बिल ₹${remainingSaleAmount.toFixed(2)} रकमेसह विक्रीमध्ये अद्ययावत राहील. परत केलेला माल Return Ledger मध्ये नोंदवला जाईल.`
+                              )
                             )}
                           </p>
                         </div>
@@ -1039,12 +1064,12 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 <div className="space-y-3.5">
                   <div className="p-3 bg-amber-50/60 dark:bg-amber-950/20 rounded-2xl border border-amber-200 dark:border-amber-800/40 text-xs text-amber-900 dark:text-amber-200 flex items-center gap-2">
                     <Info className="w-4 h-4 shrink-0 text-amber-600" />
-                    <span>{isMr ? 'ग्राहकाकडे मूळ बिल उपलब्ध नसल्यास येथून थेट वस्तूचा परतावा नोंदवता येतो.' : 'ग्राहक के पास मूल बिल न होने पर यहाँ से सीधे सामान की वापसी दर्ज करें।'}</span>
+                    <span>{tr('If the customer does not have the original bill, you can record a direct item return here.', 'ग्राहक के पास मूल बिल न होने पर यहाँ से सीधे सामान की वापसी दर्ज करें।', 'ग्राहकाकडे मूळ बिल उपलब्ध नसल्यास येथून थेट वस्तूचा परतावा नोंदवता येतो.')}</span>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-[#E7F0EC] mb-1">
-                      {isMr ? 'उत्पादन निवडा:' : 'उत्पाद चुनें:'}
+                      {tr('Select Product:', 'उत्पाद चुनें:', 'उत्पादन निवडा:')}
                     </label>
                     <select
                       value={directProductId}
@@ -1053,7 +1078,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                     >
                       {products.map(p => (
                         <option key={p.id} value={p.id}>
-                          {p.name} — ₹{p.selling_price} / {p.unit} ({isMr ? 'साठा' : 'स्टॉक'}: {p.stock_quantity})
+                          {p.name} — ₹{p.selling_price} / {p.unit} ({tr('Stock', 'स्टॉक', 'साठा')}: {p.stock_quantity})
                         </option>
                       ))}
                     </select>
@@ -1062,7 +1087,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 dark:text-[#E7F0EC] mb-1">
-                        {isMr ? 'परत प्रमाण:' : 'वापसी मात्रा:'}
+                        {tr('Return Quantity:', 'वापसी मात्रा:', 'परत प्रमाण:')}
                       </label>
                       <input
                         type="number"
@@ -1075,7 +1100,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 dark:text-[#E7F0EC] mb-1">
-                        {isMr ? 'एकूण परतावा रक्कम:' : 'कुल रिफंड राशि:'}
+                        {tr('Total Refund Amount:', 'कुल रिफंड राशि:', 'एकूण परतावा रक्कम:')}
                       </label>
                       <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-black text-emerald-600 dark:text-emerald-400">
                         ₹{directRefundAmount.toFixed(2)}
@@ -1093,7 +1118,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 {/* 1. Condition Selector */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-[#E7F0EC] mb-1.5">
-                    {isMr ? '४. परत घेतलेल्या मालाची स्थिती (Condition):' : '४. वापस लिए गए सामान की स्थिति:'}
+                    {tr('4. Returned Item Condition:', '४. वापस लिए गए सामान की स्थिति:', '४. परत घेतलेल्या मालाची स्थिती:')}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -1107,8 +1132,8 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                     >
                       <CheckCircle2 className={`w-4 h-4 shrink-0 ${condition === 'Resellable' ? 'text-emerald-600' : 'text-slate-400'}`} />
                       <div>
-                        <div className="text-xs font-bold">{isMr ? 'चांगला माल (पुन्हा साठ्यात)' : 'अच्छा माल (स्टॉक में)'}</div>
-                        <div className="text-[10px] opacity-75">{isMr ? 'साठ्यात आपोआप जोडला जाईल' : 'स्टॉक में स्वतः जुड़ जाएगा'}</div>
+                        <div className="text-xs font-bold">{tr('Good Condition (Restock)', 'अच्छा माल (स्टॉक में)', 'चांगला माल (पुन्हा साठ्यात)')}</div>
+                        <div className="text-[10px] opacity-75">{tr('Auto-added back to stock', 'स्टॉक में स्वतः जुड़ जाएगा', 'साठ्यात आपोआप जोडला जाईल')}</div>
                       </div>
                     </button>
 
@@ -1123,8 +1148,8 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                     >
                       <AlertTriangle className={`w-4 h-4 shrink-0 ${condition === 'Damaged_Waste' ? 'text-amber-600' : 'text-slate-400'}`} />
                       <div>
-                        <div className="text-xs font-bold">{isMr ? 'खराब / नासलेला (नुकसान)' : 'खराब (नुकसान)'}</div>
-                        <div className="text-[10px] opacity-75">{isMr ? 'नुकसान वहीत नोंदवला जाईल' : 'नुकसान रजिस्टर में दर्ज होगा'}</div>
+                        <div className="text-xs font-bold">{tr('Damaged / Spoiled (Waste)', 'खराब (नुकसान)', 'खराब / नासलेला (नुकसान)')}</div>
+                        <div className="text-[10px] opacity-75">{tr('Recorded in spoilage register', 'नुकसान रजिस्टर में दर्ज होगा', 'नुकसान वहीत नोंदवला जाईल')}</div>
                       </div>
                     </button>
                   </div>
@@ -1133,13 +1158,13 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 {/* 2. Refund Mode Selector */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-[#E7F0EC] mb-1.5">
-                    {isMr ? '५. परतावा पद्धत (Refund Mode):' : '५. रिफंड माध्यम:'}
+                    {tr('5. Refund Mode:', '५. रिफंड माध्यम:', '५. परतावा पद्धत:')}
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: 'Cash', label: isMr ? 'रोख परतावा' : 'रोकड़', icon: Wallet },
-                      { id: 'Online_UPI', label: isMr ? 'ऑनलाइन UPI' : 'UPI', icon: Smartphone },
-                      { id: 'Udhar_Credit', label: isMr ? 'उधारी खात्यात जमा' : 'उधार जमा', icon: BookOpen }
+                      { id: 'Cash', label: tr('Cash Refund', 'रोकड़', 'रोख परतावा'), icon: Wallet },
+                      { id: 'Online_UPI', label: tr('Online UPI', 'ऑनलाइन UPI', 'ऑनलाईन UPI'), icon: Smartphone },
+                      { id: 'Udhar_Credit', label: tr('Udhar Credit', 'उधार जमा', 'उधारी खात्यात जमा'), icon: BookOpen }
                     ].map(m => {
                       const Icon = m.icon;
                       const active = refundMode === m.id;
@@ -1166,32 +1191,32 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-[#E7F0EC] mb-1">
-                      {isMr ? '६. परतावा कारण (Reason):' : '६. वापसी कारण:'}
+                      {tr('6. Return Reason:', '६. वापसी कारण:', '६. परतावा कारण:')}
                     </label>
                     <select
                       value={reason}
                       onChange={e => setReason(e.target.value as ReturnReason)}
                       className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC]"
                     >
-                      <option value="Defective / Spoiled">{isMr ? 'खराब / नासलेले / आंबलेले' : 'खराब / फटा हुआ'}</option>
-                      <option value="Expired Product">{isMr ? 'मुदत संपलेली (Expired)' : 'अवधि समाप्त'}</option>
-                      <option value="Customer Changed Mind">{isMr ? 'ग्राहकाची पसंती / नको असलेला' : 'ग्राहक की पसंद'}</option>
-                      <option value="Wrong Item Delivered">{isMr ? 'चुकीची वस्तू दिली गेली' : 'गलत सामान'}</option>
-                      <option value="Weight / Quantity Discrepancy">{isMr ? 'वजन / मापात तफावत' : 'मात्रा में अंतर'}</option>
-                      <option value="Packaging Damaged / Leaked">{isMr ? 'पॅकिंग फुटलेले / लिक' : 'पैकिंग लीक'}</option>
-                      <option value="Other">{isMr ? 'इतर कारण' : 'अन्य कारण'}</option>
+                      <option value="Defective / Spoiled">{tr('Defective / Spoiled / Curdled', 'खराब / फटा हुआ', 'खराब / नासलेले / आंबलेले')}</option>
+                      <option value="Expired Product">{tr('Expired Product', 'अवधि समाप्त', 'मुदत संपलेली')}</option>
+                      <option value="Customer Changed Mind">{tr('Customer Changed Mind', 'ग्राहक की पसंद', 'ग्राहकाची पसंती / नको असलेला')}</option>
+                      <option value="Wrong Item Delivered">{tr('Wrong Item Delivered', 'गलत सामान', 'चुकीची वस्तू दिली गेली')}</option>
+                      <option value="Weight / Quantity Discrepancy">{tr('Weight / Quantity Discrepancy', 'मात्रा में अंतर', 'वजन / मापात तफावत')}</option>
+                      <option value="Packaging Damaged / Leaked">{tr('Packaging Damaged / Leaked', 'पैकिंग लीक', 'पॅकिंग फुटलेले / लिक')}</option>
+                      <option value="Other">{tr('Other Reason', 'अन्य कारण', 'इतर कारण')}</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-[#E7F0EC] mb-1">
-                      {isMr ? 'नोंद / टीप (पर्यायी):' : 'टिप्पणी (वैकल्पिक):'}
+                      {tr('Notes / Remarks (Optional):', 'टिप्पणी (वैकल्पिक):', 'नोंद / टीप (पर्यायी):')}
                     </label>
                     <input
                       type="text"
                       value={notes}
                       onChange={e => setNotes(e.target.value)}
-                      placeholder={isMr ? 'उदा. गिऱ्हाईकाने पाकीट परत आणले...' : 'उदा. ग्राहक ने पैकेट वापस किया...'}
+                      placeholder={tr('e.g. Customer returned milk pouch...', 'उदा. ग्राहक ने पैकेट वापस किया...', 'उदा. गिऱ्हाईकाने पाकीट परत आणले...')}
                       className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-medium text-slate-800 dark:text-[#E7F0EC]"
                     />
                   </div>
@@ -1201,25 +1226,25 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div>
                     <label className="block text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] mb-1">
-                      {isMr ? 'ग्राहक नाव:' : 'ग्राहक नाम:'}
+                      {tr('Customer Name:', 'ग्राहक नाम:', 'ग्राहक नाव:')}
                     </label>
                     <input
                       type="text"
                       value={customerName}
                       onChange={e => setCustomerName(e.target.value)}
-                      placeholder="Customer Name"
+                      placeholder={tr('Customer Name', 'ग्राहक नाम', 'ग्राहक नाव')}
                       className="w-full p-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC]"
                     />
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] mb-1">
-                      {isMr ? 'ग्राहक मोबाईल:' : 'ग्राहक मोबाइल:'}
+                      {tr('Customer Mobile:', 'ग्राहक मोबाइल:', 'ग्राहक मोबाईल:')}
                     </label>
                     <input
                       type="text"
                       value={customerPhone}
                       onChange={e => setCustomerPhone(e.target.value)}
-                      placeholder="Mobile No."
+                      placeholder={tr('Mobile No.', 'मोबाइल नंबर', 'मोबाईल नंबर')}
                       className="w-full p-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC]"
                     />
                   </div>
@@ -1242,21 +1267,27 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
                   <RotateCcw className={`w-4 h-4 ${isSubmitting ? 'animate-spin' : ''}`} />
                   <span>
                     {isSubmitting ? (
-                      isMr ? 'परतावा प्रक्रिया सुरू आहे...' : 'वापसी प्रक्रिया जारी है...'
+                      tr('Processing return...', 'वापसी प्रक्रिया जारी है...', 'परतावा प्रक्रिया सुरू आहे...')
                     ) : returnMode === 'invoice' ? (
                       isFullReturn ? (
-                        isMr 
-                          ? `⚡ संपूर्ण बिल रद्द करून परतावा निश्चित करा (रिफंड: ₹${totalRefund.toFixed(2)})`
-                          : `⚡ संपूर्ण बिल रद्द करके वापसी दर्ज करें (रिफंड: ₹${totalRefund.toFixed(2)})`
+                        tr(
+                          `⚡ Cancel Full Bill & Confirm Return (Refund: ₹${totalRefund.toFixed(2)})`,
+                          `⚡ संपूर्ण बिल रद्द करके वापसी दर्ज करें (रिफंड: ₹${totalRefund.toFixed(2)})`,
+                          `⚡ संपूर्ण बिल रद्द करून परतावा निश्चित करा (रिफंड: ₹${totalRefund.toFixed(2)})`
+                        )
                       ) : (
-                        isMr 
-                          ? `✂️ आंशिक परतावा नोंदवून बिल अपडेट करा (रिफंड: ₹${totalRefund.toFixed(2)})`
-                          : `✂️ आंशिक वापसी दर्ज कर बिल अपडेट करें (रिफंड: ₹${totalRefund.toFixed(2)})`
+                        tr(
+                          `✂️ Confirm Partial Return & Update Bill (Refund: ₹${totalRefund.toFixed(2)})`,
+                          `✂️ आंशिक वापसी दर्ज कर बिल अपडेट करें (रिफंड: ₹${totalRefund.toFixed(2)})`,
+                          `✂️ आंशिक परतावा नोंदवून बिल अपडेट करा (रिफंड: ₹${totalRefund.toFixed(2)})`
+                        )
                       )
                     ) : (
-                      isMr 
-                        ? `थेट परतावा निश्चित करा (रिफंड: ₹${directRefundAmount.toFixed(2)})`
-                        : `सीधी वापसी दर्ज करें (रिफंड: ₹${directRefundAmount.toFixed(2)})`
+                      tr(
+                        `Confirm Direct Return (Refund: ₹${directRefundAmount.toFixed(2)})`,
+                        `सीधी वापसी दर्ज करें (रिफंड: ₹${directRefundAmount.toFixed(2)})`,
+                        `थेट परतावा निश्चित करा (रिफंड: ₹${directRefundAmount.toFixed(2)})`
+                      )
                     )}
                   </span>
                 </button>

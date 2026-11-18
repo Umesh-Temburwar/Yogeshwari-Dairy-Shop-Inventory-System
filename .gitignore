@@ -1,5 +1,5 @@
 # ==========================================
-# Dependencies
+# Dependencies & Virtual Environments
 # ==========================================
 node_modules/
 .pnp/
@@ -7,30 +7,40 @@ node_modules/
 __pycache__/
 *.py[cod]
 *$py.class
+.venv/
+venv/
+.pytest_cache/
 
 # ==========================================
-# Build outputs
+# Build Outputs & Generated Assets
 # ==========================================
 dist/
 dist-ssr/
 build/
 coverage/
+client/dist/
+server/dist/
+client/android/app/src/main/assets/public/
+client/android/.gradle/
+client/android/build/
+client/android/app/build/
 
 # ==========================================
-# Environment variables and secrets
+# Environment Variables, Secrets & Signing Keys
 # ==========================================
 .env
 .env.*
 !.env.example
 !.env.production.example
-
-# Secret files
 secrets/
 credentials/
+android_keystore/
 *.pem
 *.key
 *.p12
 *.pfx
+*.jks
+*.keystore
 
 # ==========================================
 # Logs
@@ -44,7 +54,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # ==========================================
-# Local files
+# Local & OS Files
 # ==========================================
 *.local
 .DS_Store
@@ -52,7 +62,7 @@ Thumbs.db
 *.traineddata
 
 # ==========================================
-# Editors and IDEs
+# Editors & IDEs
 # ==========================================
 .vscode/*
 !.vscode/extensions.json
@@ -70,9 +80,10 @@ Thumbs.db
 .cursor/
 .grok/
 .kiro/
+skills-lock.json
 
 # ==========================================
-# Temporary files
+# Temporary & Scratch Files
 # ==========================================
 *.tmp
 *.bak
@@ -80,27 +91,13 @@ Thumbs.db
 scratch/
 
 # ==========================================
-# SQL Database Migrations & Brand SQL Folders
+# Local SQL Migrations, Dumps & Heavy Datasets
+# (Kept locally — never push to GitHub)
 # ==========================================
 *.sql
 supabase/
-amul/
-balaji/
-beverages/
-britannia/
-cadbury/
-chakote/
-dairy_power/
-diamond/
-gramilk/
-haldiram/
-malkist_biscott/
-moti/
-nestle/
-parle/
-rambandhu/
-suhana/
-temptin/
-
-# Local database safety backups (never push to GitHub)
-data/backups/
+database/
+data/
+exports/
+barcode_database/
+integrations/

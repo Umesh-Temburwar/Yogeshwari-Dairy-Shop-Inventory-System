@@ -1341,6 +1341,7 @@ interface LanguageContextType {
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
   tText: (obj: { en: string; hi: string; mr: string }) => string;
+  tr: (en: string, hi: string, mr: string) => string;
   getProductDisplayName: (prod: any) => string;
 }
 
@@ -1369,6 +1370,17 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     document.documentElement.setAttribute('lang', language);
   }, [language]);
 
+  // Cross-tab language synchronization
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'dairy_language' && (e.newValue === 'en' || e.newValue === 'hi' || e.newValue === 'mr')) {
+        setLanguageState(e.newValue);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
   const t = (key: string): string => {
     if (TRANSLATIONS[key] && TRANSLATIONS[key][language]) {
       return TRANSLATIONS[key][language];
@@ -1380,6 +1392,12 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return obj[language] || obj.en || '';
   };
 
+  const tr = (en: string, hi: string, mr: string): string => {
+    if (language === 'mr') return mr;
+    if (language === 'hi') return hi;
+    return en;
+  };
+
   const getProductDisplayName = (prod: any): string => {
     if (!prod) return '';
     if (language === 'mr' && prod.marathi_name) return prod.marathi_name;
@@ -1388,7 +1406,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, tText, getProductDisplayName }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, tText, tr, getProductDisplayName }}>
       {children}
     </LanguageContext.Provider>
   );

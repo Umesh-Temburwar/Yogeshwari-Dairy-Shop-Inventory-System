@@ -39,7 +39,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
   prefillReason
 }) => {
   const { products, batches, purchases, createSupplierReturn } = useStore();
-  const { language } = useLanguage();
+  const { language, tr } = useLanguage();
 
   const [selectedProductId, setSelectedProductId] = useState(prefillProductId || (products[0]?.id || ''));
   const [supplierName, setSupplierName] = useState(prefillSupplierName);
@@ -98,7 +98,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
     try {
       const todayFormatted = new Date().toISOString().split('T')[0];
       const created = await createSupplierReturn({
-        supplier_name: supplierName.trim() || (language === 'mr' ? 'सप्लायर / वितरक' : 'सप्लायर / वेंडर'),
+        supplier_name: supplierName.trim() || tr('Supplier / Vendor', 'सप्लायर / वेंडर', 'सप्लायर / वितरक'),
         product_id: selectedProduct.id,
         product_name: selectedProduct.name,
         batch_no: batchNo.trim() || undefined,
@@ -206,10 +206,10 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
 
             <div>
               <h3 className="text-lg font-black text-slate-900 dark:text-[#E7F0EC]">
-                {language === 'mr' ? 'सप्लायर माल परतावा नोंदवला!' : language === 'hi' ? 'सप्लायर माल वापसी दर्ज!' : 'Supplier Return Recorded!'}
+                {tr('Supplier Return Recorded!', 'सप्लायर माल वापसी दर्ज!', 'सप्लायर माल परतावा नोंदवला!')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-1 font-mono">
-                {language === 'mr' ? 'डेबिट नोट क्र:' : 'डेबिट नोट क्र:'} <span className="font-bold text-slate-900 dark:text-white">{completedReturn.return_no}</span>
+                {tr('Debit Note No:', 'डेबिट नोट क्र:', 'डेबिट नोट क्र:')} <span className="font-bold text-slate-900 dark:text-white">{completedReturn.return_no}</span>
               </p>
             </div>
 
@@ -219,7 +219,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
                 <div>
                   <span className="font-extrabold text-slate-900 dark:text-white text-sm">{completedReturn.product_name}</span>
                   <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                    सप्लायर: <span className="font-bold text-slate-700 dark:text-slate-300">{completedReturn.supplier_name}</span>
+                    {tr('Supplier:', 'सप्लायर:', 'सप्लायर:')} <span className="font-bold text-slate-700 dark:text-slate-300">{completedReturn.supplier_name}</span>
                   </p>
                 </div>
                 <div className="text-right">
@@ -234,11 +234,11 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
 
               <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
                 <div>
-                  <span className="text-slate-400 block font-semibold">परतावा कारण:</span>
+                  <span className="text-slate-400 block font-semibold">{tr('Return Reason:', 'वापसी का कारण:', 'परतावा कारण:')}</span>
                   <span className="font-bold text-amber-700 dark:text-amber-400">{completedReturn.reason}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block font-semibold">रिफंड स्थिती:</span>
+                  <span className="text-slate-400 block font-semibold">{tr('Refund Status:', 'रिफंड स्थिति:', 'रिफंड स्थिती:')}</span>
                   <span className={`font-black ${
                     completedReturn.refund_status === 'Refund_Received' 
                       ? 'text-emerald-600' 
@@ -248,16 +248,20 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
                       ? 'text-purple-600'
                       : 'text-amber-600'
                   }`}>
-                    {completedReturn.refund_status === 'Refund_Received' ? '✅ रिफंड जमा झाला' : 
-                     completedReturn.refund_status === 'Adjusted_In_Next_Bill' ? '🧾 पुढील बिलातून वजावट' : 
-                     completedReturn.refund_status === 'Replacement_Received' ? '🔄 बदलून माल मिळाला' : '⏳ येणे बाकी (Pending)'}
+                    {completedReturn.refund_status === 'Refund_Received'
+                      ? tr('✅ Refund Received', '✅ रिफंड प्राप्त हुआ', '✅ रिफंड जमा झाला')
+                      : completedReturn.refund_status === 'Adjusted_In_Next_Bill'
+                      ? tr('🧾 Adjusted in Next Bill', '🧾 अगले बिल में कटौती', '🧾 पुढील बिलातून वजावट')
+                      : completedReturn.refund_status === 'Replacement_Received'
+                      ? tr('🔄 Replacement Received', '🔄 बदले में नया माल मिला', '🔄 बदलून माल मिळाला')
+                      : tr('⏳ Pending', '⏳ बाकी (Pending)', '⏳ येणे बाकी')}
                   </span>
                 </div>
               </div>
 
               {completedReturn.batch_no && (
                 <div className="text-[11px] text-slate-500 pt-1">
-                  बॅच क्रमांक: <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{completedReturn.batch_no}</span>
+                  {tr('Batch No:', 'बैच नंबर:', 'बॅच क्रमांक:')} <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{completedReturn.batch_no}</span>
                 </div>
               )}
             </div>
@@ -267,35 +271,35 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
                 type="button"
                 onClick={handleViewDebitNote}
                 className="py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-800 dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs border border-slate-300 dark:border-slate-700"
-                title={language === 'mr' ? 'डेबिट नोट पहा' : language === 'hi' ? 'डेबिट नोट देखें' : 'View Debit Note PDF'}
+                title={tr('View Debit Note PDF', 'डेबिट नोट देखें', 'डेबिट नोट पहा')}
               >
                 <Eye className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span>{language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}</span>
+                <span>{tr('View', 'देखें', 'पहा')}</span>
               </button>
               <button
                 type="button"
                 onClick={handlePrintDebitNote}
                 className="py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs"
-                title={language === 'mr' ? 'डेबिट नोट प्रिंट करा' : language === 'hi' ? 'डेबिट नोट प्रिंट करें' : 'Print Debit Note'}
+                title={tr('Print Debit Note', 'डेबिट नोट प्रिंट करें', 'डेबिट नोट प्रिंट करा')}
               >
                 <Printer className="w-4 h-4 text-emerald-400" />
-                <span>{language === 'mr' ? 'प्रिंट' : language === 'hi' ? 'प्रिंट' : 'Print'}</span>
+                <span>{tr('Print', 'प्रिंट', 'प्रिंट')}</span>
               </button>
               <button
                 type="button"
                 onClick={handleDownloadDebitNotePDF}
                 className="py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5"
-                title={language === 'mr' ? 'डेबिट नोट PDF डाउनलोड करा' : language === 'hi' ? 'डेबिट नोट PDF डाउनलोड करें' : 'Download Debit Note PDF'}
+                title={tr('Download Debit Note PDF', 'डेबिट नोट PDF डाउनलोड करें', 'डेबिट नोट PDF डाउनलोड करा')}
               >
                 <Download className="w-4 h-4" />
-                <span>{language === 'mr' ? 'डेबिट नोट PDF' : language === 'hi' ? 'डेबिट नोट PDF' : 'Download PDF'}</span>
+                <span>{tr('Download PDF', 'डेबिट नोट PDF', 'डेबिट नोट PDF')}</span>
               </button>
               <button
                 type="button"
                 onClick={onClose}
                 className="py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-700 dark:text-[#E7F0EC] font-bold text-xs transition active:scale-95 border border-slate-200 dark:border-[#24352F]"
               >
-                {language === 'mr' ? 'पूर्ण' : language === 'hi' ? 'संपन्न' : 'Done'}
+                {tr('Done', 'संपन्न', 'पूर्ण')}
               </button>
             </div>
           </div>
@@ -309,10 +313,10 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
                 </div>
                 <div>
                   <h2 className="text-base font-black text-slate-900 dark:text-[#E7F0EC]">
-                    {language === 'mr' ? 'सप्लायर खरेदी परतावा नोंदवा' : language === 'hi' ? 'सप्लायर माल वापसी दर्ज करें' : 'Supplier Return & Refund Claim'}
+                    {tr('Supplier Return & Refund Claim', 'सप्लायर माल वापसी दर्ज करें', 'सप्लायर खरेदी परतावा नोंदवा')}
                   </h2>
                   <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-                    {language === 'mr' ? 'खराब / एक्सपायर माल परत पाठवून सप्लायरकडून रिफंड मिळवा' : 'खराब या एक्सपायर माल सप्लायर को लौटाकर रिफंड लें'}
+                    {tr('Return damaged or expired stock to supplier and claim refund', 'खराब या एक्सपायर माल सप्लायर को लौटाकर रिफंड लें', 'खराब / एक्सपायर माल परत पाठवून सप्लायरकडून रिफंड मिळवा')}
                   </p>
                 </div>
               </div>
@@ -328,7 +332,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
             {/* Select Product */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C]">
-                {language === 'mr' ? 'परत करायचे उत्पादन निवडा *' : language === 'hi' ? 'वापस करने वाला प्रोडक्ट चुनें *' : 'Select Product *'}
+                {tr('Select Product *', 'वापस करने वाला प्रोडक्ट चुनें *', 'परत करायचे उत्पादन निवडा *')}
               </label>
               <select
                 value={selectedProductId}
@@ -338,7 +342,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
               >
                 {products.map(p => (
                   <option key={p.id} value={p.id}>
-                    {p.name} (उपलब्ध: {p.stock_quantity} {p.unit} &bull; खरेदी दर: ₹{p.purchase_price})
+                    {p.name} ({tr('Available', 'उपलब्ध', 'उपलब्ध')}: {p.stock_quantity} {p.unit} &bull; {tr('Purchase Rate', 'खरीद दर', 'खरेदी दर')}: ₹{p.purchase_price})
                   </option>
                 ))}
               </select>
@@ -348,14 +352,14 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C]">
-                  {language === 'mr' ? 'सप्लायर / वेंडर नाव *' : language === 'hi' ? 'सप्लायर / विक्रेता नाम *' : 'Supplier / Vendor Name *'}
+                  {tr('Supplier / Vendor Name *', 'सप्लायर / विक्रेता नाम *', 'सप्लायर / वेंडर नाव *')}
                 </label>
                 <input
                   type="text"
                   list="supplier-suggestions"
                   value={supplierName}
                   onChange={e => setSupplierName(e.target.value)}
-                  placeholder="उदा. Amul, Gokul, स्थानिक शेतकरी"
+                  placeholder={tr('e.g. Amul, Gokul, Local Farmer', 'उदा. Amul, Gokul, स्थानीय किसान', 'उदा. Amul, Gokul, स्थानिक शेतकरी')}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-300 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC]"
                   required
                 />
@@ -368,7 +372,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C]">
-                  {language === 'mr' ? 'बॅच क्र. (ऐच्छिक)' : language === 'hi' ? 'बैच नंबर (वैकल्पिक)' : 'Batch No. (Optional)'}
+                  {tr('Batch No. (Optional)', 'बैच नंबर (वैकल्पिक)', 'बॅच क्र. (ऐच्छिक)')}
                 </label>
                 {productBatches.length > 0 ? (
                   <select
@@ -376,10 +380,10 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
                     onChange={e => setBatchNo(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-300 dark:border-[#24352F] text-xs font-semibold text-slate-800 dark:text-[#E7F0EC]"
                   >
-                    <option value="">{language === 'mr' ? '-- उपलब्ध बॅच निवडा किंवा रिकामे ठेवा --' : '-- बैच चुनें या खाली रखें --'}</option>
+                    <option value="">{tr('-- Select available batch or leave blank --', '-- उपलब्ध बैच चुनें या खाली रखें --', '-- उपलब्ध बॅच निवडा किंवा रिकामे ठेवा --')}</option>
                     {productBatches.map(b => (
                       <option key={b.id} value={b.batch_no}>
-                        {b.batch_no} (शिल्लक: {b.qty_remaining} &bull; एक्सपायरी: {b.expiry_date})
+                        {b.batch_no} ({tr('Left', 'शेष', 'शिल्लक')}: {b.qty_remaining} &bull; {tr('Expiry', 'एक्सपायरी', 'एक्सपायरी')}: {b.expiry_date})
                       </option>
                     ))}
                   </select>
@@ -388,7 +392,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
                     type="text"
                     value={batchNo}
                     onChange={e => setBatchNo(e.target.value)}
-                    placeholder="उदा. BAT-2026-001"
+                    placeholder={tr('e.g. BAT-2026-001', 'उदा. BAT-2026-001', 'उदा. BAT-2026-001')}
                     className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-300 dark:border-[#24352F] text-xs font-semibold text-slate-800 dark:text-[#E7F0EC]"
                   />
                 )}
@@ -399,7 +403,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C]">
-                  {language === 'mr' ? `परत नग/प्रमाण (${selectedProduct?.unit || 'Unit'}) *` : `वापसी मात्रा (${selectedProduct?.unit || 'Unit'}) *`}
+                  {tr(`Return Qty (${selectedProduct?.unit || 'Unit'}) *`, `वापसी मात्रा (${selectedProduct?.unit || 'Unit'}) *`, `परत नग/प्रमाण (${selectedProduct?.unit || 'Unit'}) *`)}
                 </label>
                 <input
                   type="number"
@@ -414,7 +418,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C]">
-                  {language === 'mr' ? 'खरेदी दर प्रति नग (₹) *' : 'खरीद दर प्रति नग (₹) *'}
+                  {tr('Purchase Rate per Unit (₹) *', 'खरीद दर प्रति नग (₹) *', 'खरेदी दर प्रति नग (₹) *')}
                 </label>
                 <input
                   type="number"
@@ -431,7 +435,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
             {/* Reason for returning to supplier */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C]">
-                {language === 'mr' ? 'परतावा / नुकसानीचे कारण *' : language === 'hi' ? 'वापसी का कारण *' : 'Reason for Supplier Return *'}
+                {tr('Reason for Supplier Return *', 'वापसी का कारण *', 'परतावा / नुकसानीचे कारण *')}
               </label>
               <select
                 value={reason}
@@ -439,25 +443,25 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-300 dark:border-[#24352F] text-xs font-bold text-slate-800 dark:text-[#E7F0EC]"
               >
                 <option value="Damaged / Leaked on Delivery">
-                  {language === 'mr' ? '📦 डिलिव्हरीच्या वेळी फुटलेले / पॅकेट लिक (Damaged/Leaked)' : '📦 डिलीवरी के समय फूटा हुआ / पैकेट लीक'}
+                  {tr('📦 Damaged / Leaked on Delivery', '📦 डिलीवरी के समय फूटा हुआ / पैकेट लीक', '📦 डिलिव्हरीच्या वेळी फुटलेले / पॅकेट लिक')}
                 </option>
                 <option value="Expired on Delivery">
-                  {language === 'mr' ? '⚠️ एक्सपायरी तारीख संपलेली (Expired / Past Date)' : '⚠️ एक्सपायरी डेट खत्म मिला माल'}
+                  {tr('⚠️ Expired on Delivery', '⚠️ एक्सपायरी डेट खत्म मिला माल', '⚠️ एक्सपायरी तारीख संपलेली')}
                 </option>
                 <option value="Curdled / Spoiled Milk">
-                  {language === 'mr' ? '🥛 दूध फाटले / आंबट झाले (Curdled / Spoiled)' : '🥛 दूध फट गया / खट्टा हो गया'}
+                  {tr('🥛 Curdled / Spoiled Milk', '🥛 दूध फट गया / खट्टा हो गया', '🥛 दूध फाटले / आंबट झाले')}
                 </option>
                 <option value="Poor Quality / Bad Taste">
-                  {language === 'mr' ? '❌ खराब गुणवत्ता / वास येणे (Poor Quality/Smell)' : '❌ खराब गुणवत्ता / दुर्गंध आ रही है'}
+                  {tr('❌ Poor Quality / Bad Taste or Smell', '❌ खराब गुणवत्ता / दुर्गंध आ रही है', '❌ खराब गुणवत्ता / वास येणे')}
                 </option>
                 <option value="Short Expiry (Near Expiry)">
-                  {language === 'mr' ? '⏳ कमी मुदत शिल्लक (Near Expiry)' : '⏳ कम शेल्फ-लाइफ वाला माल'}
+                  {tr('⏳ Short Shelf-Life (Near Expiry)', '⏳ कम शेल्फ-लाइफ वाला माल', '⏳ कमी मुदत शिल्लक')}
                 </option>
                 <option value="Wrong Product Delivered">
-                  {language === 'mr' ? '🔄 चुकीचा माल आला (Wrong Product)' : '🔄 गलत प्रोडक्ट आ गया'}
+                  {tr('🔄 Wrong Product Delivered', '🔄 गलत प्रोडक्ट आ गया', '🔄 चुकीचा माल आला')}
                 </option>
                 <option value="Other">
-                  {language === 'mr' ? 'इतर कारण (Other)' : 'अन्य कारण (Other)'}
+                  {tr('Other Reason', 'अन्य कारण', 'इतर कारण')}
                 </option>
               </select>
             </div>
@@ -467,7 +471,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-bold text-emerald-900 dark:text-emerald-300 block">
-                    {language === 'mr' ? 'सप्लायरकडून एकूण रिफंड दावा' : 'सप्लायर से कुल रिफंड दावा'}
+                    {tr('Total Refund Claim from Supplier', 'सप्लायर से कुल रिफंड दावा', 'सप्लायरकडून एकूण रिफंड दावा')}
                   </span>
                   <span className="text-xl font-black text-emerald-700 dark:text-emerald-400">
                     ₹{totalRefund.toLocaleString('en-IN')}
@@ -481,7 +485,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
               {/* Settlement Options Grid */}
               <div className="space-y-1.5 pt-1">
                 <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 block">
-                  {language === 'mr' ? 'रिफंड तोडगा पर्याय (Settlement):' : 'रिफंड निपटान विकल्प:'}
+                  {tr('Refund Settlement Option:', 'रिफंड निपटान विकल्प:', 'रिफंड तोडगा पर्याय:')}
                 </span>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
@@ -498,7 +502,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
                     }`}
                   >
                     <DollarSign className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">रिफंड लगेच मिळाला</span>
+                    <span className="truncate">{tr('Refund Received Now', 'रिफंड तुरंत मिला', 'रिफंड लगेच मिळाला')}</span>
                   </button>
 
                   <button
@@ -511,7 +515,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
                     }`}
                   >
                     <FileText className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">पुढील बिलात वजावट</span>
+                    <span className="truncate">{tr('Adjust in Next Bill', 'अगले बिल में कटौती', 'पुढील बिलात वजावट')}</span>
                   </button>
 
                   <button
@@ -524,7 +528,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
                     }`}
                   >
                     <RefreshCw className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">बदल्यात नवीन माल</span>
+                    <span className="truncate">{tr('Replacement Stock', 'बदले में नया माल', 'बदल्यात नवीन माल')}</span>
                   </button>
 
                   <button
@@ -537,7 +541,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
                     }`}
                   >
                     <Clock className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">येणे बाकी (Pending)</span>
+                    <span className="truncate">{tr('Pending (Due)', 'बाकी (Pending)', 'येणे बाकी')}</span>
                   </button>
                 </div>
               </div>
@@ -546,13 +550,13 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
             {/* Notes / Challan */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 dark:text-[#8FA69C]">
-                {language === 'mr' ? 'नोंद किंवा चलन क्र. (ऐच्छिक)' : 'टिप्पणी या चालान नंबर (वैकल्पिक)'}
+                {tr('Notes or Challan No. (Optional)', 'टिप्पणी या चालान नंबर (वैकल्पिक)', 'नोंद किंवा चलन क्र. (ऐच्छिक)')}
               </label>
               <input
                 type="text"
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
-                placeholder="उदा. डिलिव्हरी बॉयकडे पाकिटे परत दिली, बिलातून वजा करणे"
+                placeholder={tr('e.g. Returned pouches to delivery boy, deduct from next bill', 'उदा. डिलीवरी बॉय को पैकेट लौटाए, अगले बिल से काटें', 'उदा. डिलिव्हरी बॉयकडे पाकिटे परत दिली, बिलातून वजा करणे')}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-300 dark:border-[#24352F] text-xs font-semibold text-slate-800 dark:text-[#E7F0EC]"
               />
             </div>
@@ -564,7 +568,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
                 onClick={onClose}
                 className="w-1/3 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#223630] text-slate-700 dark:text-[#8FA69C] font-bold text-xs transition active:scale-95"
               >
-                {language === 'mr' ? 'रद्द करा' : 'रद्द करें'}
+                {tr('Cancel', 'रद्द करें', 'रद्द करा')}
               </button>
 
               <button
@@ -575,8 +579,8 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
                 <Truck className="w-4 h-4" />
                 <span>
                   {isSubmitting 
-                    ? 'नोंदवत आहे...' 
-                    : language === 'mr' ? 'सप्लायर परतावा व रिफंड नोंदवा' : 'सप्लायर वापसी व रिफंड दर्ज करें'}
+                    ? tr('Recording...', 'दर्ज हो रहा है...', 'नोंदवत आहे...')
+                    : tr('Record Supplier Return & Claim', 'सप्लायर वापसी व रिफंड दर्ज करें', 'सप्लायर परतावा व रिफंड नोंदवा')}
                 </span>
               </button>
             </div>

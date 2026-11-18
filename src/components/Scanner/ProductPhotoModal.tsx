@@ -36,7 +36,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
   onClose,
   onProductIdentified
 }) => {
-  const { language } = useLanguage();
+  const { tr } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -188,7 +188,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
           <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
             <Sparkles className="w-5 h-5" />
             <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-              {language === 'mr' ? 'AI उत्पादन ओळख स्कॅनर (AI Photo Recognition)' : 'AI उत्पाद पहचान स्कैनर (AI Recognition)'}
+              {tr('AI Product Photo Recognition', 'AI उत्पाद पहचान स्कैनर', 'AI उत्पादन ओळख स्कॅनर')}
             </h3>
           </div>
           <button
@@ -221,7 +221,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
                 <img src={selectedImage} alt="Captured product" className="w-full h-auto object-contain mx-auto" />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs font-bold gap-1.5">
                   <RefreshCw className="w-4 h-4" />
-                  <span>{language === 'mr' ? 'दुसरा फोटो घ्या' : 'दूसरा फोटो लें'}</span>
+                  <span>{tr('Take Another Photo', 'दूसरा फोटो लें', 'दुसरा फोटो घ्या')}</span>
                 </div>
               </div>
             ) : (
@@ -231,10 +231,14 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC]">
-                    {language === 'mr' ? 'उत्पादनाचा स्पष्ट फोटो काढा' : 'उत्पाद का स्पष्ट फोटो खींचें'}
+                    {tr('Take a clear photo of the product', 'उत्पाद का स्पष्ट फोटो खींचें', 'उत्पादनाचा स्पष्ट फोटो काढा')}
                   </p>
                   <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] mt-0.5">
-                    {language === 'mr' ? 'AI आपोआप नाव, ब्रँड, भाव व वर्ग ओळखेल' : 'AI नाम, भाव व वर्ग पहचान लेगा'}
+                    {tr(
+                      'AI will automatically identify name, price & category',
+                      'AI नाम, भाव व वर्ग पहचान लेगा',
+                      'AI आपोआप नाव, ब्रँड, भाव व वर्ग ओळखेल'
+                    )}
                   </p>
                 </div>
               </div>
@@ -245,7 +249,13 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
           {isAnalyzing && (
             <div className="p-4 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-900 flex items-center justify-center gap-2 text-xs font-bold text-indigo-700 dark:text-indigo-300 animate-pulse">
               <Sparkles className="w-4 h-4 animate-spin" />
-              <span>{language === 'mr' ? 'AI फोटो तपासून उत्पादन ओळखत आहे...' : 'AI फोटो की जांच कर रहा है...'}</span>
+              <span>
+                {tr(
+                  'AI is analyzing photo to identify product...',
+                  'AI फोटो की जांच कर उत्पाद पहचान रहा है...',
+                  'AI फोटो तपासून उत्पादन ओळखत आहे...'
+                )}
+              </span>
             </div>
           )}
 
@@ -257,17 +267,23 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-700 dark:text-emerald-400">
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{language === 'mr' ? `AI विश्वासार्हता: ${identifiedData.confidence}%` : `AI शुद्धता: ${identifiedData.confidence}%`}</span>
+                  <span>
+                    {tr(
+                      `AI Confidence: ${identifiedData.confidence}%`,
+                      `AI शुद्धता: ${identifiedData.confidence}%`,
+                      `AI विश्वासार्हता: ${identifiedData.confidence}%`
+                    )}
+                  </span>
                 </span>
                 <span className="text-[10px] text-slate-500 font-semibold">
-                  {language === 'mr' ? 'कृपया माहिती तपासून अंतिम करा' : 'कृपया जांच कर पुष्टि करें'}
+                  {tr('Please verify details before applying', 'कृपया जांच कर पुष्टि करें', 'कृपया माहिती तपासून अंतिम करा')}
                 </span>
               </div>
 
               {/* Product Name (English) */}
               <div>
                 <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
-                  उत्पादनाचे नाव (English Name):
+                  {tr('Product Name (English):', 'उत्पाद का नाम (अंग्रेजी):', 'उत्पादनाचे नाव (इंग्रजी):')}
                 </label>
                 <input
                   type="text"
@@ -290,7 +306,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
-                    मराठी नाव:
+                    {tr('Marathi Name:', 'मराठी नाम:', 'मराठी नाव:')}
                   </label>
                   <input
                     type="text"
@@ -301,7 +317,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
                 </div>
                 <div>
                   <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
-                    हिंदी नाम:
+                    {tr('Hindi Name:', 'हिंदी नाम:', 'हिंदी नाव:')}
                   </label>
                   <input
                     type="text"
@@ -316,7 +332,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
-                    खरेदी भाव:
+                    {tr('Purchase Rate:', 'खरीद भाव:', 'खरेदी भाव:')}
                   </label>
                   <input
                     type="number"
@@ -327,7 +343,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
                 </div>
                 <div>
                   <label className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 block mb-1">
-                    विक्री भाव:
+                    {tr('Selling Rate:', 'बिक्री भाव:', 'विक्री भाव:')}
                   </label>
                   <input
                     type="number"
@@ -338,7 +354,7 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
                 </div>
                 <div>
                   <label className="text-[11px] font-bold text-slate-600 dark:text-[#8FA69C] block mb-1">
-                    टिकाऊ दिवस:
+                    {tr('Shelf Life (Days):', 'शेल्फ लाइफ (दिन):', 'टिकाऊ दिवस:')}
                   </label>
                   <input
                     type="number"
@@ -360,14 +376,14 @@ export const ProductPhotoModal: React.FC<ProductPhotoModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-[#8FA69C] hover:bg-slate-200 dark:hover:bg-[#24352F]"
           >
-            {language === 'mr' ? 'रद्द करा' : 'रद्द करें'}
+            {tr('Cancel', 'रद्द करें', 'रद्द करा')}
           </button>
           <button
             disabled={!identifiedData}
             onClick={handleApply}
             className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition disabled:opacity-50 flex items-center gap-1.5"
           >
-            <span>{language === 'mr' ? 'माहिती वापरा' : 'जानकारी लागू करें'}</span>
+            <span>{tr('Apply Details', 'जानकारी लागू करें', 'माहिती वापरा')}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

@@ -52,9 +52,27 @@ const MainContent: React.FC = () => {
   const [isAppDownloadOpen, setIsAppDownloadOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
-  // Sidebar states: Collapsible on desktop (264px <-> 72px) and Drawer on mobile
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  // Sidebar states: Collapsible on desktop (264px <-> 72px, persisted) and Drawer on mobile
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('ydo_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const handleToggleSidebarCollapse = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('ydo_sidebar_collapsed', String(next));
+      } catch {
+        // ignore storage errors
+      }
+      return next;
+    });
+  };
 
   // Global Keyboard Shortcuts (F1, F2, F3, F4)
   useEffect(() => {
@@ -115,7 +133,7 @@ const MainContent: React.FC = () => {
         onOpenPhotoDatabase={() => setIsPhotoDatabaseOpen(true)}
         onOpenAppDownload={() => setIsAppDownloadOpen(true)}
         isSidebarCollapsed={isSidebarCollapsed}
-        onToggleSidebarCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+        onToggleSidebarCollapse={handleToggleSidebarCollapse}
         onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
         isMobileSidebarOpen={isMobileSidebarOpen}
       />
@@ -125,6 +143,7 @@ const MainContent: React.FC = () => {
         {/* Sidebar: 264px / 72px rail on desktop, drawer on mobile */}
         <Sidebar
           isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebarCollapse}
           isMobileOpen={isMobileSidebarOpen}
           onCloseMobile={() => setIsMobileSidebarOpen(false)}
           onOpenAppDownload={() => setIsAppDownloadOpen(true)}

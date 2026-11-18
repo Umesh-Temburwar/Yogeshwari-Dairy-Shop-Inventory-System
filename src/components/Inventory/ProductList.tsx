@@ -547,9 +547,21 @@ export const ProductList: React.FC<ProductListProps> = ({
       const dispName = getProductDisplayName(prod);
       const absQty = Math.abs(delta);
       const message = isUndo
-        ? `Undid stock change for ${dispName}`
+        ? language === 'mr'
+          ? `${dispName} चा साठा बदल रद्द केला`
+          : language === 'hi'
+          ? `${dispName} का स्टॉक बदलाव वापस लिया गया`
+          : `Undid stock change for ${dispName}`
         : delta > 0
-        ? `+${absQty} added to ${dispName}`
+        ? language === 'mr'
+          ? `${dispName} मध्ये +${absQty} जोडले`
+          : language === 'hi'
+          ? `${dispName} में +${absQty} जोड़ा गया`
+          : `+${absQty} added to ${dispName}`
+        : language === 'mr'
+        ? `${dispName} मधून −${absQty} कमी केले`
+        : language === 'hi'
+        ? `${dispName} से −${absQty} हटाया गया`
         : `−${absQty} removed from ${dispName}`;
 
       setStockToast(
@@ -817,7 +829,7 @@ export const ProductList: React.FC<ProductListProps> = ({
             className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-between gap-1 text-left active:scale-[0.98] transition-transform cursor-pointer"
           >
             <span className="text-[11px] font-medium text-slate-500 dark:text-[#8FA69C] truncate">
-              In Stock
+              {language === 'mr' ? 'उपलब्ध' : language === 'hi' ? 'इन स्टॉक' : 'In Stock'}
             </span>
             <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
               {inStockCount}
@@ -830,7 +842,7 @@ export const ProductList: React.FC<ProductListProps> = ({
             className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-between gap-1 text-left active:scale-[0.98] transition-transform cursor-pointer"
           >
             <span className="text-[11px] font-medium text-slate-500 dark:text-[#8FA69C] truncate">
-              Low
+              {language === 'mr' ? 'कमी साठा' : language === 'hi' ? 'कम स्टॉक' : 'Low'}
             </span>
             <span className="text-sm font-bold text-amber-600 dark:text-amber-400 tabular-nums">
               {lowStockCount}
@@ -843,7 +855,7 @@ export const ProductList: React.FC<ProductListProps> = ({
             className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-between gap-1 text-left active:scale-[0.98] transition-transform cursor-pointer"
           >
             <span className="text-[11px] font-medium text-slate-500 dark:text-[#8FA69C] truncate">
-              Expiring
+              {language === 'mr' ? 'एक्सपायरी' : language === 'hi' ? 'एक्सपायरी' : 'Expiring'}
             </span>
             <span className="text-sm font-bold text-rose-600 dark:text-rose-400 tabular-nums">
               {expiringSoonCount}
@@ -857,7 +869,11 @@ export const ProductList: React.FC<ProductListProps> = ({
             <div className="flex items-center gap-1.5 min-w-0">
               <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
               <span className="truncate">
-                {lowStockCount} {lowStockCount === 1 ? 'item' : 'items'} low on stock
+                {language === 'mr'
+                  ? `${lowStockCount} वस्तूंचा साठा कमी आहे`
+                  : language === 'hi'
+                  ? `${lowStockCount} आइटम का स्टॉक कम है`
+                  : `${lowStockCount} ${lowStockCount === 1 ? 'item' : 'items'} low on stock`}
               </span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -866,7 +882,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                 onClick={() => setActiveTab('LOW_STOCK')}
                 className="font-bold underline text-amber-800 dark:text-amber-300 cursor-pointer"
               >
-                View
+                {language === 'mr' ? 'पहा' : language === 'hi' ? 'देखें' : 'View'}
               </button>
               <button
                 type="button"
@@ -1032,10 +1048,18 @@ export const ProductList: React.FC<ProductListProps> = ({
         <div className="bg-white dark:bg-[#131F1B] rounded-2xl p-8 sm:p-12 border border-dashed border-slate-200 dark:border-[#24352F] text-center flex flex-col items-center justify-center">
           <Package className="w-11 h-11 text-slate-300 dark:text-[#354E45] mb-2.5" />
           <h3 className="text-sm font-bold text-slate-800 dark:text-[#E7F0EC]">
-            No products match
+            {language === 'mr'
+              ? 'कोणतेही उत्पादन सापडले नाही'
+              : language === 'hi'
+              ? 'कोई उत्पाद नहीं मिला'
+              : 'No products match'}
           </h3>
           <p className="text-xs text-slate-500 dark:text-[#8FA69C] mt-1 mb-4 max-w-xs">
-            Try clearing your search or filters, or add a new product to your shop inventory.
+            {language === 'mr'
+              ? 'फिल्टर साफ करा किंवा दुकानाच्या साठ्यात नवीन उत्पादन जोडा.'
+              : language === 'hi'
+              ? 'फ़िल्टर साफ़ करें या दुकान के स्टॉक में नया उत्पाद जोड़ें।'
+              : 'Try clearing your search or filters, or add a new product to your shop inventory.'}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {/^\d{5,}$/.test(searchQuery.trim()) && !isSearchingOnline && (
@@ -1064,7 +1088,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                 onClick={clearAllFilters}
                 className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#223630] text-slate-800 dark:text-[#E7F0EC] text-xs font-bold cursor-pointer"
               >
-                Clear filters
+                {language === 'mr' ? 'फिल्टर साफ करा' : language === 'hi' ? 'फ़िल्टर साफ़ करें' : 'Clear filters'}
               </button>
             )}
             <button
@@ -1073,7 +1097,7 @@ export const ProductList: React.FC<ProductListProps> = ({
               className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>Add Product</span>
+              <span>{language === 'mr' ? 'नवीन उत्पादन' : language === 'hi' ? 'नया उत्पाद' : 'Add Product'}</span>
             </button>
           </div>
         </div>
@@ -1253,7 +1277,13 @@ export const ProductList: React.FC<ProductListProps> = ({
           {isLoadingPaged ? (
             <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Loading more products...</span>
+              <span>
+                {language === 'mr'
+                  ? 'अधिक उत्पादने लोड होत आहेत...'
+                  : language === 'hi'
+                  ? 'अधिक उत्पाद लोड हो रहे हैं...'
+                  : 'Loading more products...'}
+              </span>
             </div>
           ) : (
             <button
@@ -1261,7 +1291,11 @@ export const ProductList: React.FC<ProductListProps> = ({
               onClick={handleLoadMore}
               className="px-5 py-2 rounded-xl bg-white dark:bg-[#131F1B] hover:bg-emerald-50 dark:hover:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-emerald-700 dark:text-emerald-400 text-xs font-bold active:scale-[0.97] transition-transform cursor-pointer"
             >
-              Load More ({visibleProducts.length.toLocaleString('en-IN')} shown)
+              {language === 'mr'
+                ? `अधिक लोड करा (${visibleProducts.length.toLocaleString('en-IN')})`
+                : language === 'hi'
+                ? `और लोड करें (${visibleProducts.length.toLocaleString('en-IN')})`
+                : `Load More (${visibleProducts.length.toLocaleString('en-IN')} shown)`}
             </button>
           )}
         </div>
@@ -1276,7 +1310,9 @@ export const ProductList: React.FC<ProductListProps> = ({
         className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] lg:bottom-6 lg:right-6 z-30 h-14 px-4 sm:px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white shadow-lg shadow-emerald-900/30 border border-emerald-400/30 inline-flex items-center gap-2 font-bold text-xs transition-transform duration-150 ease-out motion-reduce:transition-none cursor-pointer"
       >
         <Barcode className="w-5 h-5 shrink-0" />
-        <span className="hidden sm:inline">Barcode Stock-In</span>
+        <span className="hidden sm:inline">
+          {language === 'mr' ? 'बारकोड आवक' : language === 'hi' ? 'बारकोड स्टॉक-इन' : 'Barcode Stock-In'}
+        </span>
       </button>
 
       {/* 5-SECOND UNDO TOAST AFTER STOCK IN / OUT */}
@@ -1295,7 +1331,7 @@ export const ProductList: React.FC<ProductListProps> = ({
               className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] inline-flex items-center gap-1 shrink-0 active:scale-[0.97] cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Undo</span>
+              <span>{language === 'mr' ? 'मागे घ्या' : language === 'hi' ? 'वापस लें' : 'Undo'}</span>
             </button>
           )}
         </div>

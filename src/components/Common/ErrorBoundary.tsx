@@ -47,6 +47,10 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
+      const savedLang = typeof window !== 'undefined' ? localStorage.getItem('dairy_language') : 'en';
+      const isMr = savedLang === 'mr';
+      const isHi = savedLang === 'hi';
+
       return (
         <div className="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-slate-800/90 border border-rose-500/30 rounded-2xl p-6 shadow-2xl text-center space-y-4 backdrop-blur-md">
@@ -56,19 +60,26 @@ export class ErrorBoundary extends Component<Props, State> {
 
             <div className="space-y-1">
               <h2 className="text-xl font-black text-rose-400">
-                काहीतरी तांत्रिक त्रुटी आली आहे
+                {isMr
+                  ? 'काहीतरी तांत्रिक त्रुटी आली आहे'
+                  : isHi
+                  ? 'कुछ तकनीकी त्रुटि आई है'
+                  : 'Something went wrong'}
               </h2>
-              <p className="text-sm text-slate-300">
-                Something went wrong in the application.
-              </p>
               <p className="text-xs text-slate-400 pt-1">
-                कृपया ॲप्लिकेशन रीलोड करा किंवा मुख्य पृष्ठावर जा.
+                {isMr
+                  ? 'कृपया ॲप्लिकेशन रीलोड करा किंवा मुख्य पृष्ठावर जा.'
+                  : isHi
+                  ? 'कृपया एप्लिकेशन रीलोड करें या मुख्य पृष्ठ पर जाएं।'
+                  : 'Please reload the application or return to the home screen.'}
               </p>
             </div>
 
             {this.state.error && (
               <div className="text-left bg-slate-950/60 p-3 rounded-xl border border-slate-700/50 max-h-32 overflow-y-auto text-[11px] font-mono text-rose-300">
-                <div className="font-bold text-slate-400 mb-1">Error Details:</div>
+                <div className="font-bold text-slate-400 mb-1">
+                  {isMr ? 'त्रुटी तपशील:' : isHi ? 'त्रुटि विवरण:' : 'Error Details:'}
+                </div>
                 {this.state.error.toString()}
               </div>
             )}
@@ -80,7 +91,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center justify-center gap-2 transition active:scale-95 shadow-md shadow-emerald-600/20"
               >
                 <RefreshCw className="w-4 h-4" />
-                <span>पुन्हा लोड करा (Reload)</span>
+                <span>{isMr ? 'पुन्हा लोड करा' : isHi ? 'पुनः लोड करें' : 'Reload'}</span>
               </button>
 
               <button
@@ -89,7 +100,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 className="py-2.5 px-4 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-sm flex items-center justify-center gap-2 transition active:scale-95"
               >
                 <Home className="w-4 h-4" />
-                <span>Home</span>
+                <span>{isMr ? 'मुख्य पृष्ठ' : isHi ? 'होम' : 'Home'}</span>
               </button>
             </div>
           </div>

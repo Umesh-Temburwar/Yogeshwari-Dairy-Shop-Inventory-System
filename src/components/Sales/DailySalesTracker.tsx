@@ -37,7 +37,7 @@ import { CustomerGender, CustomerAgeGroup, PaymentMode, SaleItem } from '../../t
 
 export const DailySalesTracker: React.FC = () => {
   const { filteredSales, metrics, setActiveView, returns, deleteSale, updateSale } = useStore();
-  const { t, language } = useLanguage();
+  const { t, language, tr } = useLanguage();
   const { role } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -91,7 +91,7 @@ export const DailySalesTracker: React.FC = () => {
       setEditingSale(null);
     } catch (err) {
       console.error('Failed to update sale:', err);
-      alert(language === 'mr' ? 'बिल अपडेट करताना त्रुटी आली!' : 'बिल अपडेट करने में त्रुटि!');
+      alert(tr('Error updating bill!', 'बिल अपडेट करने में त्रुटि!', 'बिल अपडेट करताना त्रुटी आली!'));
     } finally {
       setIsSavingEdit(false);
     }
@@ -105,7 +105,7 @@ export const DailySalesTracker: React.FC = () => {
       setSaleToDelete(null);
     } catch (err) {
       console.error('Failed to delete sale:', err);
-      alert(language === 'mr' ? 'बिल डिलीट करताना त्रुटी आली!' : 'बिल डिलीट करने में त्रुटि!');
+      alert(tr('Error deleting bill!', 'बिल डिलीट करने में त्रुटि!', 'बिल डिलीट करताना त्रुटी आली!'));
     } finally {
       setIsDeleting(false);
     }
@@ -318,7 +318,7 @@ export const DailySalesTracker: React.FC = () => {
           },
           {
             id: 'csv',
-            label: 'Export CSV / Excel',
+            label: tr('Export CSV / Excel', 'CSV / एक्सेल एक्सपोर्ट', 'CSV / एक्सेल एक्सपोर्ट'),
             icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
             onClick: () => exportSalesToCSV(filteredSales, language)
           },
@@ -526,7 +526,7 @@ export const DailySalesTracker: React.FC = () => {
                               ) : (
                                 <span>👤</span>
                               )}
-                              <span>📍 {sale.counter_name || (isOwnerSale ? 'मुख्य मालक काऊंटर' : 'काऊंटर १')} • {sale.created_by_name || (isOwnerSale ? (language === 'mr' ? 'निखिल सखारे' : 'Nikhil Sakhare') : (language === 'mr' ? 'निलेश सखारे' : 'Nilesh Sakhare'))}</span>
+                              <span>📍 {sale.counter_name || (isOwnerSale ? tr('Owner Master Counter', 'मुख्य मालिक काउंटर', 'मुख्य मालक काऊंटर') : tr('Counter 1', 'काउंटर १', 'काऊंटर १'))} • {sale.created_by_name || (isOwnerSale ? tr('Nikhil Sakhare', 'निखिल सखारे', 'निखिल सखारे') : tr('Nilesh Sakhare', 'निलेश सखारे', 'निलेश सखारे'))}</span>
                               {sale.created_by_email && (
                                 <span className="text-[10px] font-normal opacity-75 hidden sm:inline">({sale.created_by_email})</span>
                               )}
@@ -606,7 +606,7 @@ export const DailySalesTracker: React.FC = () => {
                             productId: sale.items?.[0]?.product_id
                           })}
                           className="px-2 py-1 rounded-lg text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-950/50 flex items-center gap-1 text-[11px] font-bold transition"
-                          title="Record Customer Return"
+                          title={tr('Record Customer Return', 'ग्राहक वापसी दर्ज करें', 'ग्राहक परतावा नोंदवा')}
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           <span className="hidden sm:inline">{language === 'mr' ? 'परतावा' : language === 'hi' ? 'वापसी' : 'Return'}</span>
@@ -728,7 +728,7 @@ export const DailySalesTracker: React.FC = () => {
                 <span className="font-bold">{formatSaleDate(selectedSaleForView.created_at, selectedSaleForView.sale_date)}</span>
               </div>
               <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-[#8FA69C]">
-                <span>{language === 'mr' ? 'काऊंटर:' : language === 'hi' ? 'काउंटर:' : 'Counter:'} {selectedSaleForView.counter_name || (selectedSaleForView.admin_slot === 2 ? 'काऊंटर २' : 'काऊंटर १')}</span>
+                <span>{tr('Counter:', 'काउंटर:', 'काऊंटर:')} {selectedSaleForView.counter_name || (selectedSaleForView.admin_slot === 2 ? tr('Counter 2', 'काउंटर २', 'काऊंटर २') : tr('Counter 1', 'काउंटर १', 'काऊंटर १'))}</span>
                 <span className="inline-flex items-center gap-1 font-mono font-bold text-emerald-700 dark:text-emerald-400">
                   <Clock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                   <span>{formatSaleTime(selectedSaleForView.created_at) || '—'}</span>
@@ -771,7 +771,7 @@ export const DailySalesTracker: React.FC = () => {
                 return (
                   <div className="border-b border-dashed border-purple-300 dark:border-purple-800 py-1.5 space-y-0.5 text-purple-900 dark:text-purple-300 bg-purple-50/60 dark:bg-purple-950/30 px-2 rounded-lg">
                     <div className="text-[10px] font-bold uppercase tracking-wider flex items-center justify-between">
-                      <span>{language === 'mr' ? 'परतावा वजावट (Return Deduction):' : 'वापसी कटौती:'}</span>
+                      <span>{tr('Return Deduction:', 'वापसी कटौती:', 'परतावा वजावट (Return Deduction):')}</span>
                       <span className="text-rose-600 dark:text-rose-400 font-extrabold">-₹{viewModalRefundSum}</span>
                     </div>
                     {viewModalReturns.map((mr, idx) => (
@@ -921,7 +921,7 @@ export const DailySalesTracker: React.FC = () => {
                             : 'border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C]'
                         }`}
                       >
-                        {g === 'Male' ? '👨 पुरुष' : g === 'Female' ? '👩 महिला' : '🧑 इतर'}
+                        {g === 'Male' ? tr('👨 Male', '👨 पुरुष', '👨 पुरुष') : g === 'Female' ? tr('👩 Female', '👩 महिला', '👩 महिला') : tr('🧑 Other', '🧑 अन्य', '🧑 इतर')}
                       </button>
                     ))}
                   </div>
@@ -956,7 +956,7 @@ export const DailySalesTracker: React.FC = () => {
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-[#24352F] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="Cash">{language === 'mr' ? 'रोख (Cash)' : language === 'hi' ? 'रोकड़ (Cash)' : 'Cash'}</option>
-                    <option value="Online_UPI">ऑनलाईन UPI (GPay/PhonePe)</option>
+                    <option value="Online_UPI">{tr('Online UPI (GPay/PhonePe)', 'ऑनलाइन UPI (GPay/PhonePe)', 'ऑनलाईन UPI (GPay/PhonePe)')}</option>
                     <option value="Udhar">{language === 'mr' ? 'उधार खाते (Udhar)' : language === 'hi' ? 'उधार खाता (Udhar)' : 'Udhar (Credit)'}</option>
                     <option value="Split">{language === 'mr' ? 'विभागून (Split)' : language === 'hi' ? 'विभाजित (Split)' : 'Split Pay'}</option>
                   </select>
@@ -1055,7 +1055,7 @@ export const DailySalesTracker: React.FC = () => {
                             setEditItems(prev => prev.filter((_, i) => i !== idx));
                           }}
                           className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg ml-1"
-                          title="Remove Item"
+                          title={tr('Remove Item', 'सामान हटाएं', 'वस्तू हटवा')}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1109,7 +1109,7 @@ export const DailySalesTracker: React.FC = () => {
                 className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-black text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition"
               >
                 <Save className="w-4 h-4" />
-                <span>{isSavingEdit ? (language === 'mr' ? 'जतन करत आहे...' : 'सहेज रहे हैं...') : (language === 'mr' ? 'बदल जतन करा (Save Changes)' : language === 'hi' ? 'बदलाव सहेजें (Save Changes)' : 'Save Changes')}</span>
+                <span>{isSavingEdit ? tr('Saving...', 'सहेज रहे हैं...', 'जतन करत आहे...') : tr('Save Changes', 'बदलाव सहेजें (Save Changes)', 'बदल जतन करा (Save Changes)')}</span>
               </button>
             </div>
 
@@ -1164,7 +1164,7 @@ export const DailySalesTracker: React.FC = () => {
                 className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 active:scale-95 transition"
               >
                 <Trash2 className="w-4 h-4" />
-                <span>{isDeleting ? (language === 'mr' ? 'हटवत आहे...' : 'हटा रहे हैं...') : (language === 'mr' ? 'होय, बिल हटवा' : language === 'hi' ? 'हाँ, बिल हटाएं' : 'Yes, Delete Bill')}</span>
+                <span>{isDeleting ? tr('Deleting...', 'हटा रहे हैं...', 'हटवत आहे...') : tr('Yes, Delete Bill', 'हाँ, बिल हटाएं', 'होय, बिल हटवा')}</span>
               </button>
             </div>
 

@@ -21,7 +21,7 @@ import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader
 
 export const ReorderNeedsView: React.FC = () => {
   const { products, batches, sales, returns, supplierReturns, metrics, setActiveView } = useStore();
-  const { t, language } = useLanguage();
+  const { t, language, tr } = useLanguage();
   const [copied, setCopied] = useState(false);
 
   // Train & Analyze inventory based on sales velocity, customer returns, supplier defects, and shelf life
@@ -271,13 +271,15 @@ export const ReorderNeedsView: React.FC = () => {
             </div>
             <div>
               <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                {language === 'mr' ? '💰 सप्लायरकडे अडकलेला रिफंड: ' : '💰 सप्लायर से बाकी रिफंड: '}
+                {tr('💰 Pending Supplier Refund: ', '💰 सप्लायर से बाकी रिफंड: ', '💰 सप्लायरकडे अडकलेला रिफंड: ')}
                 <span className="text-rose-600 dark:text-rose-400">₹{metrics.pendingSupplierRefundAmount.toLocaleString('en-IN')}</span>
               </h4>
               <p className="text-[11px] text-slate-600 dark:text-[#8FA69C]">
-                {language === 'mr' 
-                  ? 'मागील खेपेत खराब/एक्सपायर निघालेल्या मालाचा परतावा येणे बाकी आहे. नवीन खरेदीच्या बिलातून ही रक्कम वजा करून घ्या!' 
-                  : 'पिछली खेप में खराब/एक्सपायर निकले माल का रिफंड बाकी है। नए बिल से यह रकम काटकर भुगतान करें!'}
+                {tr(
+                  'Refund is pending for damaged/expired stock from previous deliveries. Deduct this amount from your next supplier bill!',
+                  'पिछली खेप में खराब/एक्सपायर निकले माल का रिफंड बाकी है। नए बिल से यह रकम काटकर भुगतान करें!',
+                  'मागील खेपेत खराब/एक्सपायर निघालेल्या मालाचा परतावा येणे बाकी आहे. नवीन खरेदीच्या बिलातून ही रक्कम वजा करून घ्या!'
+                )}
               </p>
             </div>
           </div>
@@ -285,7 +287,7 @@ export const ReorderNeedsView: React.FC = () => {
             onClick={() => setActiveView('returns')}
             className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 shadow-xs transition active:scale-95"
           >
-            {language === 'mr' ? 'रिफंड हिशोब पहा' : 'रिफंड हिसाब देखें'}
+            {tr('View Refund Ledger', 'रिफंड हिसाब देखें', 'रिफंड हिशोब पहा')}
           </button>
         </div>
       )}
@@ -337,12 +339,12 @@ export const ReorderNeedsView: React.FC = () => {
                         )}
                         {item.totalReturned > 0 && (
                           <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300">
-                            ↩️ {item.totalReturned} {item.unit} {language === 'mr' ? 'परत' : 'वापस'}
+                            ↩️ {item.totalReturned} {item.unit} {tr('returned', 'वापस', 'परत')}
                           </span>
                         )}
                         {item.vendorReturnedQty > 0 && (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300" title="सप्लायरकडून खराब/कालबाह्य माल आला होता!">
-                            🚚 {language === 'mr' ? 'सप्लायर डिफेक्ट' : 'सप्लायर डिफेक्ट'} ({item.vendorReturnedQty} {item.unit})
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300" title={tr('Damaged/expired stock received from supplier!', 'सप्लायर से खराब/एक्सपायर्ड माल आया था!', 'सप्लायरकडून खराब/कालबाह्य माल आला होता!')}>
+                            🚚 {tr('Supplier Defect', 'सप्लायर डिफेक्ट', 'सप्लायर डिफेक्ट')} ({item.vendorReturnedQty} {item.unit})
                           </span>
                         )}
                       </div>

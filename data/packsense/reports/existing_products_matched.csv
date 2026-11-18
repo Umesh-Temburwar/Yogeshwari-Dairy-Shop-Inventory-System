@@ -1,8 +1,0 @@
-shop_product_id,shop_product_name,category,packsense_barcode,packsense_product_name,packsense_brand,pack_size,confidence_score,shop_purchase_price,shop_selling_price
-f55eb1d3-c068-43e2-bf72-83a745c445e4,Amul Pure Ghee 500ml Pouch,Ghee,8901262030540,Amul pure ghee 500ml,Amul,,0.80,295.0,335.0
-9312708f-0063-4db9-9f06-3e5313cd902e,Haldiram Mixture 200 gm,Bakery & Extras,8904063260192,Haldiram's Ratlami Mixture 200 gm,Haldirams,200 g,1.00,50.0,60.0
-9bf509d9-9060-483a-a286-8a1693e7ebbe,Amul Masti Spiced Buttermilk 200ml Pouch,Curd & Chaas,8901262200196,Amul Masti Spiced Buttermilk 200ml,Amul,200 ml,0.83,12.0,15.0
-ab24286a-c458-4383-a9ab-4700e1f3687d,Parle Jam-In Mixed Fruit Jam 50g,Bakery & Extras,8901719107320,PARLE Fab JAM-In With Mixed Fruit Jam,Parle,,0.83,8.5,10.0
-ef1054bf-d868-4bd8-b548-2bd0f8ca6b68,Cadbury 5 Star Chocolate 20g,Bakery & Extras,7622201796174,Cadbury 5 Star Oreo Centre Filled Chocolate Bar 40 g,Cadbury,,0.80,8.5,10.0
-140f30e1-5500-48c3-b361-503fcb6c5ba5,Cadbury 5 Star Chocolate 40g,Bakery & Extras,7622201796174,Cadbury 5 Star Oreo Centre Filled Chocolate Bar 40 g,Cadbury,,0.80,16.8,20.0
-c9a58a98-fa87-42df-8ba1-1cffe6f21d25,Moti Poha Chiwda 200g,Bakery & Extras,8906059240416,Moti Poha Chiwda,Moti,,0.75,32.0,40.0

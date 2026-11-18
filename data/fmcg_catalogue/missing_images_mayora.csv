@@ -1,8 +1,0 @@
-barcode,product_name,brand,attempted_url,reason
-'8996001304044,Slai O'lai Blueberry,Mayora Malkist,https://images.openfoodfacts.net/images/products/899/600/130/4044/front_en.3.400.jpg,Dimensions too small (118x400 < 150x150)
-'8996001305706,Mayora Malkist Chocolate Crackers,Mayora Malkist,https://images.openfoodfacts.org/images/products/899/600/130/5706/front_en.3.400.jpg,Connection timed out
-'8996001307380,Malkist,Mayora Malkist,https://images.openfoodfacts.org/images/products/899/600/130/7380/front_en.5.400.jpg,Connection timed out
-'8996001320372,"Kopiko Mini Coffee, Kaffee",Mayora Malkist,,No image candidate found
-'8996001357194,Choki choki rollz,Mayora Malkist,,No image candidate found
-'8996001600382,dindonesia,Mayora Malkist,https://images.openfoodfacts.net/images/products/899/600/160/0382/front_en.4.400.jpg,Dimensions too small (149x400 < 150x150)
-'8996001600849,Nipis madu,Mayora Malkist,https://images.openfoodfacts.net/images/products/899/600/160/0849/front_en.42.400.jpg,Dimensions too small (135x400 < 150x150)

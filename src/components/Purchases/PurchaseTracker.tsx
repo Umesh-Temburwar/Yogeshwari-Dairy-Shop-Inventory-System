@@ -31,7 +31,7 @@ import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader
 
 export const PurchaseTracker: React.FC = () => {
   const { products, filteredPurchases, createPurchase, metrics } = useStore();
-  const { t, language } = useLanguage();
+  const { t, language, tr } = useLanguage();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFatCalcOpen, setIsFatCalcOpen] = useState(false);
@@ -262,7 +262,7 @@ export const PurchaseTracker: React.FC = () => {
           },
           {
             id: 'csv',
-            label: 'Export Excel CSV',
+            label: tr('Export Excel CSV', 'एक्सेल CSV एक्सपोर्ट', 'एक्सेल CSV एक्सपोर्ट'),
             icon: <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />,
             onClick: handleExportCSV
           },
@@ -326,7 +326,7 @@ export const PurchaseTracker: React.FC = () => {
                   <th className="px-3 py-3 text-right">{language === 'mr' ? 'एकूण रक्कम' : language === 'hi' ? 'कुल रकम' : 'Total Amount'}</th>
                   <th className="px-3 py-3 text-center">{t('paymentMethod')}</th>
                   <th className="px-4 py-3">{language === 'mr' ? 'शेरा / फॅट' : language === 'hi' ? 'रिमार्क / नोट्स' : 'Notes / Remarks'}</th>
-                  <th className="px-3 py-3 text-right">{language === 'mr' ? 'खराब माल परतावा' : 'वापसी'}</th>
+                  <th className="px-3 py-3 text-right">{tr('Supplier Return', 'वापसी', 'खराब माल परतावा')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-[#24352F]">
@@ -396,10 +396,10 @@ export const PurchaseTracker: React.FC = () => {
                           setIsSupplierReturnOpen(true);
                         }}
                         className="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold text-[10px] border border-amber-200 dark:border-amber-800/40 transition flex items-center gap-1 active:scale-95 ml-auto whitespace-nowrap shadow-2xs"
-                        title="सप्लायरला खराब/कालबाह्य माल परत पाठवून रिफंड मागा"
+                        title={tr('Return damaged/expired stock to supplier for refund', 'सप्लायर को खराब/एक्सपायर्ड माल वापस कर रिफंड मांगें', 'सप्लायरला खराब/कालबाह्य माल परत पाठवून रिफंड मागा')}
                       >
                         <RotateCcw className="w-3 h-3 text-amber-600" />
-                        <span>{language === 'mr' ? 'परत करा' : 'वापस करें'}</span>
+                        <span>{tr('Return', 'वापस करें', 'परत करा')}</span>
                       </button>
                     </td>
                   </tr>
@@ -462,7 +462,7 @@ export const PurchaseTracker: React.FC = () => {
                 >
                   {products.map(p => (
                     <option key={p.id} value={p.id}>
-                      {getProductDisplayName(p)} ({p.name}) - Stock: {p.stock_quantity} {p.unit}
+                      {getProductDisplayName(p)} ({p.name}) - {tr('Stock', 'स्टॉक', 'साठा')}: {p.stock_quantity} {p.unit}
                     </option>
                   ))}
                 </select>

@@ -130,10 +130,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="button"
               onClick={onOpenAppDownload}
               className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-emerald-300/60 dark:border-emerald-800/60 bg-emerald-50/80 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold transition active:scale-95 shadow-2xs cursor-pointer"
-              title={language === 'mr' ? 'मोबाईल ॲप इन्स्टॉल करा' : 'मोबाइल ऐप इंस्टॉल करें'}
+              title={
+                language === 'mr'
+                  ? 'मोबाईल ॲप इन्स्टॉल करा'
+                  : language === 'hi'
+                  ? 'मोबाइल ऐप इंस्टॉल करें'
+                  : 'Install Mobile App'
+              }
             >
               <Smartphone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-[11px]">{language === 'mr' ? 'ॲप इन्स्टॉल' : 'ऐप इंस्टॉल'}</span>
+              <span className="text-[11px]">
+                {language === 'mr' ? 'ॲप इन्स्टॉल' : language === 'hi' ? 'ऐप इंस्टॉल' : 'Install App'}
+              </span>
             </button>
           )}
 
@@ -141,9 +149,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div 
             className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-black tracking-tight"
             title={
-              realtimeStatus === 'CONNECTED' ? 'Realtime Database Synced (सर्व टर्मिनल जोडलेले आहेत)' :
-              realtimeStatus === 'CONNECTING' || realtimeStatus === 'RECONNECTING' ? 'Reconnecting to Realtime... (पुन्हा जोडत आहे...)' :
-              'Offline mode (ऑफलाइन मोड)'
+              realtimeStatus === 'CONNECTED'
+                ? language === 'mr'
+                  ? 'डेटाबेस सिंक झाले आहे (सर्व टर्मिनल जोडलेले)'
+                  : language === 'hi'
+                  ? 'रियलटाइम डेटाबेस सिंक है'
+                  : 'Realtime Database Synced'
+                : realtimeStatus === 'CONNECTING' || realtimeStatus === 'RECONNECTING'
+                ? language === 'mr'
+                  ? 'पुन्हा जोडत आहे...'
+                  : language === 'hi'
+                  ? 'पुनः जुड़ रहा है...'
+                  : 'Reconnecting to Realtime...'
+                : language === 'mr'
+                ? 'ऑफलाइन मोड'
+                : language === 'hi'
+                ? 'ऑफ़लाइन मोड'
+                : 'Offline mode'
             }
           >
             <span className="relative flex h-2 w-2">

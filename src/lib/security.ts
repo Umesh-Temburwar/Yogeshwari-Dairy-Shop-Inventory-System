@@ -9,6 +9,10 @@
  */
 
 import { supabase } from './supabase';
+import {
+  fetchOwnerCloudConfig,
+  updateOwnerConfigCachePartial
+} from './ownerConfigCache';
 
 const SALT = 'YDO_MASTER_PASSCODE_SALT_v1_2026';
 // Default pre-computed SHA-256 cryptographic salt-hash (used until user changes master passcode)
@@ -46,18 +50,14 @@ export function getActiveMasterHash(): string {
  * if the database migration has been applied and Supabase is connected.
  * Fails silently when offline or when column is not yet added.
  */
-export async function syncMasterPasscodeHashFromCloud(): Promise<string> {
+export async function syncMasterPasscodeHashFromCloud(forceRefresh = false): Promise<string> {
   if (!supabase) return getActiveMasterHash();
 
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('master_passcode_hash')
-      .eq('role', 'Owner')
-      .limit(1);
+    const config = await fetchOwnerCloudConfig(forceRefresh);
 
-    if (!error && data && data.length > 0 && isValidSha256Hex(data[0].master_passcode_hash)) {
-      const cloudHash = data[0].master_passcode_hash.trim().toLowerCase();
+    if (config && isValidSha256Hex(config.master_passcode_hash)) {
+      const cloudHash = config.master_passcode_hash.trim().toLowerCase();
       try {
         if (typeof window !== 'undefined') {
           localStorage.setItem(STORAGE_MASTER_HASH, cloudHash);
@@ -185,7 +185,7 @@ export async function verifyCurrentMasterPasscodeForChange(currentPin: string): 
   }
 
   // Pull latest cloud hash if available before verifying
-  const activeHash = await syncMasterPasscodeHashFromCloud();
+  const activeHash = await syncMasterPasscodeHashFromCloud(true);
   const computed = await computeSha256Hex(SALT + trimmed);
   const isValid = computed.length === 64 && computed.toLowerCase() === activeHash.toLowerCase();
 
@@ -299,6 +299,7 @@ export async function changeMasterPasscode(
 
       if (!updateError) {
         cloudSynced = true;
+        updateOwnerConfigCachePartial({ master_passcode_hash: newHash });
       }
     } catch {
       // Column not yet migrated or offline — local hash still protects this device immediately

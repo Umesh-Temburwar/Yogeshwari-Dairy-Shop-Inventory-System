@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { SupplierReturnModal } from '../Returns/SupplierReturnModal';
 import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
+import { LoadOlderHistoryButton } from '../Common/LoadOlderHistoryButton';
 
 export const PurchaseTracker: React.FC = () => {
   const { products, filteredPurchases, createPurchase, metrics } = useStore();
@@ -412,6 +413,7 @@ export const PurchaseTracker: React.FC = () => {
             {language === 'mr' ? 'या कालावधीत कोणतीही खरेदी नोंदवलेली नाही.' : language === 'hi' ? 'इस चुनी गई अवधि में कोई खरीद दर्ज नहीं है।' : 'No purchases recorded for this selected period.'}
           </div>
         )}
+        <LoadOlderHistoryButton entity="purchases" className="pb-4" />
       </div>
 
       {/* FAT & SNF TESTING CALCULATOR MODAL */}

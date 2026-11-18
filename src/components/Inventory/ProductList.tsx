@@ -170,6 +170,7 @@ export const ProductList: React.FC<ProductListProps> = ({
     }
 
     const isBarcodeLike = /^\d{5,}$/.test(q);
+    const controller = new AbortController();
     let cancelled = false;
     setIsSearchingOnline(true);
 
@@ -192,7 +193,8 @@ export const ProductList: React.FC<ProductListProps> = ({
             .from('products')
             .select(PRODUCT_SELECT_COLS)
             .or(`name.ilike.%${safeQ}%,brand.ilike.%${safeQ}%`)
-            .limit(PAGE_SIZE);
+            .limit(PAGE_SIZE)
+            .abortSignal(controller.signal);
 
           if (!cancelled) {
             if (!error && data) {
@@ -215,6 +217,7 @@ export const ProductList: React.FC<ProductListProps> = ({
     runSearch();
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [debouncedQuery]);
 

@@ -1,4 +1,8 @@
 import { supabase } from './supabase';
+import {
+  fetchOwnerCloudConfig,
+  updateOwnerConfigCachePartial
+} from './ownerConfigCache';
 
 const STORAGE_KEY = 'ydo_allow_user_registration';
 
@@ -21,21 +25,16 @@ export function isRegistrationAllowedSync(): boolean {
  * Synchronizes registration setting from Supabase cloud database.
  * Stored in Owner profile default_redirect_view ('dashboard:reg_on' vs 'dashboard:reg_off').
  */
-export async function syncRegistrationSettingFromCloud(): Promise<boolean> {
+export async function syncRegistrationSettingFromCloud(forceRefresh = false): Promise<boolean> {
   if (!supabase) return isRegistrationAllowedSync();
 
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('default_redirect_view')
-      .eq('role', 'Owner')
-      .limit(1);
-
-    if (error || !data || data.length === 0) {
+    const config = await fetchOwnerCloudConfig(forceRefresh);
+    if (!config || config.default_redirect_view === null) {
       return isRegistrationAllowedSync();
     }
 
-    const redirectView = data[0].default_redirect_view || '';
+    const redirectView = config.default_redirect_view || '';
     const isAllowed = redirectView.includes('reg_on');
 
     // Persist locally for instant zero-latency future reads
@@ -104,6 +103,8 @@ export async function setRegistrationSetting(
 
       if (updateError) {
         console.warn('Failed to update registration setting in Supabase profiles:', updateError);
+      } else {
+        updateOwnerConfigCachePartial({ default_redirect_view: redirectTag });
       }
 
       // 4. Log security audit event in admin_audit_logs

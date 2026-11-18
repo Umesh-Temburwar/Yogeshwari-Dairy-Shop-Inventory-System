@@ -32,6 +32,7 @@ import {
 import { formatSaleDateTime, formatSaleDate, formatSaleTime } from '../../lib/dateUtils';
 import { ReturnProductModal } from '../Returns/ReturnProductModal';
 import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
+import { LoadOlderHistoryButton } from '../Common/LoadOlderHistoryButton';
 import { useAuth } from '../../context/AuthContext';
 import { CustomerGender, CustomerAgeGroup, PaymentMode, SaleItem } from '../../types';
 
@@ -696,6 +697,7 @@ export const DailySalesTracker: React.FC = () => {
             {language === 'mr' ? 'या कालावधीत कोणतेही बिल आढळले नाही.' : language === 'hi' ? 'इस अवधि में कोई बिक्री बिल नहीं मिला।' : 'No sales bills found for this period.'}
           </div>
         )}
+        <LoadOlderHistoryButton entity="sales" className="pb-4" />
       </div>
 
       {/* BILL VIEW & REPRINT MODAL */}

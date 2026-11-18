@@ -9,6 +9,10 @@
  */
 
 import { supabase } from './supabase';
+import {
+  PRODUCT_BARCODE_SELECT_COLS,
+  PRODUCT_CATALOGUE_SELECT_COLS
+} from './supabaseColumns';
 import { Product, ProductCategory, ProductUnit } from '../types';
 import { validateBarcode, BarcodeValidationResult } from '../utils/barcodeChecksum';
 
@@ -52,7 +56,7 @@ export function getBarcodeCandidates(rawBarcode: string): string[] {
  */
 export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<BarcodeSearchResult> {
   const clean = rawBarcode.trim();
-  if (!clean) {
+  if (!clean || !supabase) {
     return { found: false, product: null, barcode: clean, source: 'local' };
   }
 
@@ -116,11 +120,11 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
     console.warn('[BarcodeService] product_barcodes lookup error:', err);
   }
 
-  // 2. Second attempt: Direct query on public.products table
+  // 2. Second attempt: Direct query on public.products table (explicit slim columns)
   try {
     const { data: pData, error: pErr } = await supabase
       .from('products')
-      .select('*')
+      .select(PRODUCT_BARCODE_SELECT_COLS)
       .in('barcode', candidates)
       .limit(1);
 
@@ -181,11 +185,11 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
     console.warn('[BarcodeService] RPC lookup fallback error:', err);
   }
 
-  // 4. Fourth attempt: Direct lookup in product_catalogue table
+  // 4. Fourth attempt: Direct lookup in product_catalogue table (explicit columns, skips heavy description/ingredients)
   try {
     const { data: catData, error: catErr } = await supabase
       .from('product_catalogue')
-      .select('*')
+      .select(PRODUCT_CATALOGUE_SELECT_COLS)
       .in('barcode', candidates)
       .limit(1);
 
@@ -196,7 +200,7 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
         name: c.product_name,
         category: (c.category as ProductCategory) || 'Bakery & Extras',
         unit: (c.quantity_unit as ProductUnit) || 'Piece',
-        purchase_price: Number(c.purchase_price || 0),
+        purchase_price: 0,
         selling_price: Number(c.selling_price || c.mrp || 0),
         stock_quantity: 0, // CATALOGUE HAS ZERO STOCK BY DEFINITION
         min_stock_alert: 5,
@@ -223,7 +227,7 @@ export async function searchProductByBarcodeOnline(rawBarcode: string): Promise<
     try {
       const { data: partData, error: partErr } = await supabase
         .from('products')
-        .select('*')
+        .select(PRODUCT_BARCODE_SELECT_COLS)
         .or(`barcode.ilike.%${clean}%,name.ilike.%${clean}%,marathi_name.ilike.%${clean}%`)
         .limit(1);
 

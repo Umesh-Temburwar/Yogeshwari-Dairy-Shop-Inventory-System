@@ -3,6 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
+import { LoadOlderHistoryButton } from '../Common/LoadOlderHistoryButton';
 import { ExpenseCategory } from '../../types';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import {
@@ -331,6 +332,7 @@ export const ExpenseTracker: React.FC = () => {
             {language === 'mr' ? 'या कालावधीत कोणताही खर्च किंवा गुंतवणूक नोंदवलेली नाही.' : language === 'hi' ? 'इस अवधि में कोई खर्च या निवेश दर्ज नहीं है।' : 'No expenses or investments recorded for this period.'}
           </div>
         )}
+        <LoadOlderHistoryButton entity="expenses" className="pb-4" />
       </div>
 
       {/* ADD EXPENSE MODAL */}

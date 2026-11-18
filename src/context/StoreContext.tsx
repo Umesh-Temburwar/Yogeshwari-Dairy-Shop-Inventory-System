@@ -14,6 +14,19 @@ import {
 } from '../lib/mockInitialData';
 import { getShelfLifeDays, getSuggestedExpiryDate, generateBatchNumber, computeExpiryStatus } from '../lib/shelfLifeUtils';
 import { supabase, getSupabaseConfig, generateUUID } from '../lib/supabase';
+import {
+  PRODUCT_SELECT_COLS,
+  BATCH_SELECT_COLS,
+  SALE_SELECT_COLS,
+  PURCHASE_SELECT_COLS,
+  DAMAGE_SELECT_COLS,
+  EXPENSE_SELECT_COLS,
+  UDHAR_CUSTOMER_SELECT_COLS,
+  UDHAR_TRANSACTION_SELECT_COLS,
+  PRODUCT_RETURN_SELECT_COLS,
+  SUPPLIER_RETURN_SELECT_COLS,
+  ADMIN_AUDIT_SELECT_COLS
+} from '../lib/supabaseColumns';
 import { realtimeManager } from '../services/realtime/realtimeManager';
 import { useAuth } from './AuthContext';
 import { startOfDay, startOfWeek, startOfMonth, startOfYear, isWithinInterval, parseISO } from 'date-fns';
@@ -35,6 +48,40 @@ export type AppView =
   | 'image-health';
 
 export type GlobalScannerTarget = 'billing' | 'stock_in' | 'stock_edit' | null;
+
+export type HistoryEntity =
+  | 'sales'
+  | 'purchases'
+  | 'damages'
+  | 'expenses'
+  | 'returns'
+  | 'supplierReturns'
+  | 'udharTransactions';
+
+export interface HistoryPaginationMeta {
+  hasMore: boolean;
+  isLoading: boolean;
+  offset: number;
+}
+
+const HISTORY_PAGE_SIZE = 150;
+const FOCUS_REFRESH_COOLDOWN_MS = 3 * 60 * 1000; // 3-minute cooldown for non-critical visibility refreshes
+
+const createInitialPaginationState = (): Record<HistoryEntity, HistoryPaginationMeta> => ({
+  sales: { hasMore: false, isLoading: false, offset: 0 },
+  purchases: { hasMore: false, isLoading: false, offset: 0 },
+  damages: { hasMore: false, isLoading: false, offset: 0 },
+  expenses: { hasMore: false, isLoading: false, offset: 0 },
+  returns: { hasMore: false, isLoading: false, offset: 0 },
+  supplierReturns: { hasMore: false, isLoading: false, offset: 0 },
+  udharTransactions: { hasMore: false, isLoading: false, offset: 0 }
+});
+
+const mergeUniqueById = <T extends { id: string }>(existing: T[], incoming: T[]): T[] => {
+  const seen = new Set(existing.map((item) => item.id));
+  const additions = incoming.filter((item) => item && item.id && !seen.has(item.id));
+  return additions.length > 0 ? [...existing, ...additions] : existing;
+};
 
 interface StoreContextType {
   // Navigation & Settings
@@ -75,6 +122,8 @@ interface StoreContextType {
   returns: ProductReturn[];
   supplierReturns: SupplierReturn[];
   adminActivities: AdminActivity[];
+  historyPagination: Record<HistoryEntity, HistoryPaginationMeta>;
+  loadOlderHistory: (entity: HistoryEntity) => Promise<void>;
   logAdminActivity: (activity: Omit<AdminActivity, 'id' | 'created_at'>) => Promise<AdminActivity>;
   
   // Receipt
@@ -586,315 +635,548 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     safeSetItem('yd_expenses', expenses);
   }, [expenses]);
 
+  const [historyPagination, setHistoryPagination] = useState<Record<HistoryEntity, HistoryPaginationMeta>>(
+    createInitialPaginationState
+  );
+  const historyPaginationRef = useRef(historyPagination);
+  historyPaginationRef.current = historyPagination;
+
+  const countsInFlightRef = useRef<Promise<void> | null>(null);
+  const syncInFlightRef = useRef<Promise<void> | null>(null);
+  const lastCountsRefreshAtRef = useRef<number>(0);
+
   // Central Realtime Multi-Device Broadcast helper
-  const broadcastMutation = useCallback((entity: string, action: string) => {
-    if (supabase) {
-      try {
-        const channel = supabase.channel('dairy-shop-live-sync');
-        channel.send({
-          type: 'broadcast',
-          event: 'STORE_MUTATION',
-          payload: { entity, action, timestamp: Date.now() }
-        }).then(() => {}, () => {});
-      } catch {}
-    }
+  // Reuses the shared subscribed `dairy-channel-signals` channel (eliminates orphan `dairy-shop-live-sync` channels)
+  const broadcastMutation = useCallback((entity: string, action: string, id?: string) => {
+    void realtimeManager.emitSignal({
+      type: 'STORE_MUTATION',
+      entity,
+      action,
+      id,
+      updated_at: new Date().toISOString()
+    });
   }, []);
 
-  // Fast Server Aggregate Inventory Counts (Throttled with single-query RPC)
+  // Fast Server Aggregate Inventory Counts (Single-flight deduplicated RPC with HEAD fallback)
   const refreshInventoryCounts = useCallback(async () => {
     if (!supabase) return;
-    try {
-      const { data, error } = await supabase.rpc('fn_get_inventory_counts');
-      if (!error && data) {
-        if (typeof data.in_stock_count === 'number') setInStockCount(data.in_stock_count);
-        if (typeof data.low_stock_count === 'number') setLowStockCount(data.low_stock_count);
-        if (typeof data.out_of_stock_count === 'number') setOutOfStockCount(data.out_of_stock_count);
-        if (typeof data.total_catalogue_count === 'number') setTotalCatalogCount(data.total_catalogue_count);
-        if (typeof data.total_barcodes_count === 'number') setTotalBarcodesCount(data.total_barcodes_count);
-        return;
-      }
-    } catch {
-      // Fallback if RPC is not installed in database yet
+    if (countsInFlightRef.current) {
+      return countsInFlightRef.current;
     }
 
-    // Fallback: fast count queries
+    const client = supabase;
+    const req = (async () => {
+      try {
+        const { data, error } = await client.rpc('fn_get_inventory_counts');
+        if (!error && data) {
+          if (typeof data.in_stock_count === 'number') setInStockCount(data.in_stock_count);
+          if (typeof data.low_stock_count === 'number') setLowStockCount(data.low_stock_count);
+          if (typeof data.out_of_stock_count === 'number') setOutOfStockCount(data.out_of_stock_count);
+          if (typeof data.total_catalogue_count === 'number') setTotalCatalogCount(data.total_catalogue_count);
+          if (typeof data.total_barcodes_count === 'number') setTotalBarcodesCount(data.total_barcodes_count);
+          lastCountsRefreshAtRef.current = Date.now();
+          return;
+        }
+      } catch {
+        // Fallback if RPC is not installed in database yet
+      }
+
+      // Fallback: lightweight HEAD count queries ONLY when RPC is unavailable
+      try {
+        const [inStockRes, outOfStockRes, totalCatRes, barcodeRes] = await Promise.all([
+          client.from('products').select('id', { count: 'exact', head: true }).gt('stock_quantity', 0),
+          client.from('products').select('id', { count: 'exact', head: true }).lte('stock_quantity', 0),
+          client.from('products').select('id', { count: 'exact', head: true }),
+          client
+            .from('products')
+            .select('id', { count: 'exact', head: true })
+            .not('barcode', 'is', null)
+            .neq('barcode', '')
+        ]);
+        if (inStockRes.count !== null && inStockRes.count !== undefined) setInStockCount(inStockRes.count);
+        if (outOfStockRes.count !== null && outOfStockRes.count !== undefined) setOutOfStockCount(outOfStockRes.count);
+        if (totalCatRes.count !== null && totalCatRes.count !== undefined) setTotalCatalogCount(totalCatRes.count);
+        if (barcodeRes.count !== null && barcodeRes.count !== undefined) setTotalBarcodesCount(barcodeRes.count);
+        lastCountsRefreshAtRef.current = Date.now();
+      } catch (e) {
+        console.warn('Fallback inventory counts notice:', e);
+      }
+    })();
+
+    countsInFlightRef.current = req;
     try {
-      const { count: inStock } = await supabase
-        .from('products')
-        .select('id', { count: 'exact', head: true })
-        .gt('stock_quantity', 0);
-      if (inStock !== null && inStock !== undefined) setInStockCount(inStock);
-
-      const { count: outOfStock } = await supabase
-        .from('products')
-        .select('id', { count: 'exact', head: true })
-        .lte('stock_quantity', 0);
-      if (outOfStock !== null && outOfStock !== undefined) setOutOfStockCount(outOfStock);
-
-      const { count: totalCat } = await supabase
-        .from('products')
-        .select('id', { count: 'exact', head: true });
-      if (totalCat !== null && totalCat !== undefined) setTotalCatalogCount(totalCat);
-    } catch (e) {
-      console.warn('Fallback inventory counts notice:', e);
+      await req;
+    } finally {
+      if (countsInFlightRef.current === req) {
+        countsInFlightRef.current = null;
+      }
     }
   }, []);
 
-  const countThrottleRef = useRef<any>(null);
+  const countThrottleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scheduleCountsRefresh = useCallback(() => {
     if (countThrottleRef.current) clearTimeout(countThrottleRef.current);
     countThrottleRef.current = setTimeout(() => {
-      refreshInventoryCounts();
+      void refreshInventoryCounts();
     }, 800);
   }, [refreshInventoryCounts]);
 
-  // Centralized Supabase Sync: Single Source of Truth for all devices
-  const syncWithSupabase = useCallback(async () => {
-    if (!supabase) return;
-    setIsSyncing(true);
+  // Targeted single-product refresh (avoids full catalogue reloads on single-item signals)
+  const refreshProductById = useCallback(async (productId: string) => {
+    if (!supabase || !productId) return;
     try {
-      // 1. Fetch exact total catalogue count and barcode count via lightweight HEAD-only queries (0 bytes payload)
-      try {
-        const { count: totalCount } = await supabase
-          .from('products')
-          .select('id', { count: 'exact', head: true });
-
-        if (totalCount !== null && totalCount !== undefined) {
-          setTotalCatalogCount(totalCount);
-        }
-      } catch (cntErr) {
-        console.warn('Catalogue total count error:', cntErr);
-      }
-
-      try {
-        const { count: barcodeCount } = await supabase
-          .from('products')
-          .select('id', { count: 'exact', head: true })
-          .not('barcode', 'is', null)
-          .neq('barcode', '');
-        if (barcodeCount !== null && barcodeCount !== undefined) {
-          setTotalBarcodesCount(barcodeCount);
-        }
-      } catch (bcErr) {
-        console.warn('Barcode count fetch error:', bcErr);
-      }
-
-      // Refresh aggregate server counts
-      void refreshInventoryCounts();
-
-      // 2. Fetch actual store inventory: Only load items currently carried or in stock (stock_quantity > 0)
-      // This strictly isolates 13 store inventory items from 46,559 catalogue items, saving 1.5MB+ memory & preventing UI lag
-      const { data: pData, error: pErr } = await supabase
+      const { data, error } = await supabase
         .from('products')
-        .select('*')
-        .gt('stock_quantity', 0)
-        .order('stock_quantity', { ascending: false });
+        .select(PRODUCT_SELECT_COLS)
+        .eq('id', productId)
+        .maybeSingle();
 
-      if (!pErr && pData) {
-        setProducts(pData);
-      } else if (!pErr && (!pData || pData.length === 0)) {
-        // Safe one-time migration: If central DB is empty, migrate any existing local items
-        try {
-          const localSaved = localStorage.getItem('yd_products');
-          if (localSaved) {
-            const localProds: Product[] = JSON.parse(localSaved);
-            if (Array.isArray(localProds) && localProds.length > 0) {
-              const prodsToUpload = localProds.map(lp => {
-                const newId = (lp.id && !lp.id.startsWith('prod-')) ? lp.id : generateUUID();
-                return {
-                  id: newId,
-                  name: lp.name,
-                  hindi_name: lp.hindi_name || null,
-                  marathi_name: lp.marathi_name || null,
-                  category: lp.category,
-                  unit: lp.unit,
-                  purchase_price: lp.purchase_price,
-                  selling_price: lp.selling_price,
-                  stock_quantity: lp.stock_quantity,
-                  min_stock_alert: lp.min_stock_alert || 10,
-                  shelf_life_days: 2,
-                  has_expiry: true,
-                  is_active: lp.is_active ?? true
-                };
-              });
-              await supabase.from('products').insert(prodsToUpload);
-              setProducts(prodsToUpload as any);
-            }
-          }
-        } catch (migErr) {
-          console.warn('Local migration skipped:', migErr);
+      if (error || !data) return;
+      const row = data as unknown as Product;
+      setProducts((prev) => {
+        const index = prev.findIndex((p) => p.id === row.id);
+        if (index !== -1) {
+          const updated = [...prev];
+          updated[index] = { ...prev[index], ...row };
+          return updated;
         }
-      }
-
-      // 2. Fetch batches
-      const { data: bData, error: bErr } = await supabase
-        .from('batches')
-        .select('*, products(name)')
-        .order('expiry_date', { ascending: true });
-
-      if (!bErr && bData) {
-        const enrichedBatches = bData.map((b: any) => ({
-          ...b,
-          product_name: b.product_name || b.products?.name || ''
-        }));
-        setBatches(enrichedBatches);
-      }
-
-      // 3. Fetch sales & sale items
-      const { data: sData, error: sErr } = await supabase
-        .from('sales')
-        .select('*, items:sale_items(*)')
-        .order('created_at', { ascending: false });
-      if (!sErr && sData) {
-        setSales(sData);
-      }
-
-      // 4. Fetch purchases
-      const { data: purData, error: purErr } = await supabase
-        .from('purchases')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!purErr && purData) {
-        setPurchases(purData);
-      }
-
-      // 5. Fetch damages
-      const { data: dData, error: dErr } = await supabase
-        .from('damage_records')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!dErr && dData) {
-        setDamages(dData);
-      }
-
-      // 6. Fetch expenses
-      const { data: expData, error: expErr } = await supabase
-        .from('expenses')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!expErr && expData) {
-        setExpenses(expData);
-      }
-
-      // 7. Fetch customers
-      const { data: custData, error: custErr } = await supabase
-        .from('udhar_customers')
-        .select('*')
-        .order('name', { ascending: true });
-      if (!custErr && custData) {
-        setCustomers(custData);
-      }
-
-      // 8. Fetch customer returns
-      const { data: retData, error: retErr } = await supabase
-        .from('product_returns')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!retErr && retData) {
-        setReturns(retData);
-      }
-
-      // 9. Fetch supplier returns
-      const { data: supRetData, error: supRetErr } = await supabase
-        .from('supplier_returns')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!supRetErr && supRetData) {
-        setSupplierReturns(supRetData);
-      }
-
-      // 10. Fetch udhar transactions
-      const { data: utData, error: utErr } = await supabase
-        .from('udhar_transactions')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!utErr && utData) {
-        setUdharTransactions(utData);
-      }
-
-      // 11. Purge & Fetch admin audit logs (Strict 1-Day Retention: auto-deleted on Day 2)
-      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-      try {
-        // Automatically purge records older than 1 day (24h) from Supabase
-        await supabase
-          .from('admin_audit_logs')
-          .delete()
-          .lt('created_at', oneDayAgo);
-      } catch (purgeErr) {
-        console.warn('Auto-purge expired audit logs notice:', purgeErr);
-      }
-
-      const { data: auditData, error: auditErr } = await supabase
-        .from('admin_audit_logs')
-        .select('*')
-        .gte('created_at', oneDayAgo)
-        .order('created_at', { ascending: false })
-        .limit(500);
-
-      if (!auditErr && auditData) {
-        setAdminActivities(auditData);
-      }
-
-      setIsSupabaseConnected(true);
-    } catch (err) {
-      console.error('Supabase central sync error:', err);
-    } finally {
-      setIsSyncing(false);
+        return row.stock_quantity > 0 ? [row, ...prev] : prev;
+      });
+    } catch {
+      // Non-blocking targeted refresh
     }
   }, []);
+
+  // Targeted single-sale refresh (replaces full 12-table syncWithSupabase after bill edit / partial return)
+  const refreshSaleById = useCallback(async (saleId: string) => {
+    if (!supabase || !saleId) return;
+    try {
+      const { data, error } = await supabase
+        .from('sales')
+        .select(SALE_SELECT_COLS)
+        .eq('id', saleId)
+        .maybeSingle();
+
+      if (!error && data) {
+        const refreshed = data as unknown as Sale;
+        setSales((prev) => prev.map((s) => (s.id === saleId ? refreshed : s)));
+      }
+    } catch {
+      // Non-blocking targeted refresh
+    }
+  }, []);
+
+  // Load older historical records on demand via deterministic server-side range() pagination
+  const loadOlderHistory = useCallback(async (entity: HistoryEntity) => {
+    if (!supabase) return;
+    const currentMeta = historyPaginationRef.current[entity];
+    if (!currentMeta.hasMore || currentMeta.isLoading) return;
+
+    const from = currentMeta.offset;
+    const to = from + HISTORY_PAGE_SIZE - 1;
+
+    setHistoryPagination((prev) => ({
+      ...prev,
+      [entity]: { ...prev[entity], isLoading: true }
+    }));
+
+    try {
+      let fetchedLength = 0;
+
+      if (entity === 'sales') {
+        const { data, error } = await supabase
+          .from('sales')
+          .select(SALE_SELECT_COLS)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(from, to);
+        if (!error && data) {
+          const rows = data as unknown as Sale[];
+          fetchedLength = rows.length;
+          setSales((prev) => mergeUniqueById(prev, rows));
+        }
+      } else if (entity === 'purchases') {
+        const { data, error } = await supabase
+          .from('purchases')
+          .select(PURCHASE_SELECT_COLS)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(from, to);
+        if (!error && data) {
+          const rows = data as unknown as Purchase[];
+          fetchedLength = rows.length;
+          setPurchases((prev) => mergeUniqueById(prev, rows));
+        }
+      } else if (entity === 'damages') {
+        const { data, error } = await supabase
+          .from('damage_records')
+          .select(DAMAGE_SELECT_COLS)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(from, to);
+        if (!error && data) {
+          const rows = data as unknown as DamageRecord[];
+          fetchedLength = rows.length;
+          setDamages((prev) => mergeUniqueById(prev, rows));
+        }
+      } else if (entity === 'expenses') {
+        const { data, error } = await supabase
+          .from('expenses')
+          .select(EXPENSE_SELECT_COLS)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(from, to);
+        if (!error && data) {
+          const rows = data as unknown as Expense[];
+          fetchedLength = rows.length;
+          setExpenses((prev) => mergeUniqueById(prev, rows));
+        }
+      } else if (entity === 'returns') {
+        const { data, error } = await supabase
+          .from('product_returns')
+          .select(PRODUCT_RETURN_SELECT_COLS)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(from, to);
+        if (!error && data) {
+          const rows = data as unknown as ProductReturn[];
+          fetchedLength = rows.length;
+          setReturns((prev) => mergeUniqueById(prev, rows));
+        }
+      } else if (entity === 'supplierReturns') {
+        const { data, error } = await supabase
+          .from('supplier_returns')
+          .select(SUPPLIER_RETURN_SELECT_COLS)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(from, to);
+        if (!error && data) {
+          const rows = data as unknown as SupplierReturn[];
+          fetchedLength = rows.length;
+          setSupplierReturns((prev) => mergeUniqueById(prev, rows));
+        }
+      } else if (entity === 'udharTransactions') {
+        const { data, error } = await supabase
+          .from('udhar_transactions')
+          .select(UDHAR_TRANSACTION_SELECT_COLS)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(from, to);
+        if (!error && data) {
+          const rows = data as unknown as UdharTransaction[];
+          fetchedLength = rows.length;
+          setUdharTransactions((prev) => mergeUniqueById(prev, rows));
+        }
+      }
+
+      setHistoryPagination((prev) => ({
+        ...prev,
+        [entity]: {
+          offset: from + fetchedLength,
+          hasMore: fetchedLength === HISTORY_PAGE_SIZE,
+          isLoading: false
+        }
+      }));
+    } catch (err) {
+      console.warn(`Failed to load older ${entity} history:`, err);
+      setHistoryPagination((prev) => ({
+        ...prev,
+        [entity]: { ...prev[entity], isLoading: false }
+      }));
+    }
+  }, []);
+
+  // Centralized Supabase Sync: Single-flight deduplicated hydration with explicit columns & deterministic range pagination
+  const syncWithSupabase = useCallback(async () => {
+    if (!supabase) return;
+    if (syncInFlightRef.current) {
+      return syncInFlightRef.current;
+    }
+
+    const client = supabase;
+    const runSync = (async () => {
+      setIsSyncing(true);
+      try {
+        // 1. Single aggregate RPC for all 5 inventory counts (eliminates 2 redundant HEAD queries)
+        const countsPromise = refreshInventoryCounts();
+
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const pageEnd = HISTORY_PAGE_SIZE - 1;
+
+        // 2. Fetch active store inventory, active FEFO batches, customers, and first deterministic page of historical tables in parallel
+        const [
+          productsRes,
+          batchesRes,
+          salesRes,
+          purchasesRes,
+          damagesRes,
+          expensesRes,
+          customersRes,
+          returnsRes,
+          supplierReturnsRes,
+          udharTxRes
+        ] = await Promise.all([
+          client
+            .from('products')
+            .select(PRODUCT_SELECT_COLS)
+            .gt('stock_quantity', 0)
+            .order('stock_quantity', { ascending: false })
+            .order('id', { ascending: true }),
+          client
+            .from('batches')
+            .select(BATCH_SELECT_COLS)
+            .gt('qty_remaining', 0)
+            .order('expiry_date', { ascending: true })
+            .order('id', { ascending: true }),
+          client
+            .from('sales')
+            .select(SALE_SELECT_COLS)
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .range(0, pageEnd),
+          client
+            .from('purchases')
+            .select(PURCHASE_SELECT_COLS)
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .range(0, pageEnd),
+          client
+            .from('damage_records')
+            .select(DAMAGE_SELECT_COLS)
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .range(0, pageEnd),
+          client
+            .from('expenses')
+            .select(EXPENSE_SELECT_COLS)
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .range(0, pageEnd),
+          client
+            .from('udhar_customers')
+            .select(UDHAR_CUSTOMER_SELECT_COLS)
+            .order('name', { ascending: true })
+            .order('id', { ascending: true }),
+          client
+            .from('product_returns')
+            .select(PRODUCT_RETURN_SELECT_COLS)
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .range(0, pageEnd),
+          client
+            .from('supplier_returns')
+            .select(SUPPLIER_RETURN_SELECT_COLS)
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .range(0, pageEnd),
+          client
+            .from('udhar_transactions')
+            .select(UDHAR_TRANSACTION_SELECT_COLS)
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .range(0, pageEnd)
+        ]);
+
+        // Products (preserve safe one-time local migration if central DB is empty)
+        if (!productsRes.error && productsRes.data) {
+          const pData = productsRes.data as unknown as Product[];
+          if (pData.length > 0) {
+            setProducts(pData);
+          } else {
+            try {
+              const localSaved = localStorage.getItem('yd_products');
+              if (localSaved) {
+                const localProds: Product[] = JSON.parse(localSaved);
+                if (Array.isArray(localProds) && localProds.length > 0) {
+                  const prodsToUpload = localProds.map((lp) => {
+                    const newId = lp.id && !lp.id.startsWith('prod-') ? lp.id : generateUUID();
+                    return {
+                      id: newId,
+                      name: lp.name,
+                      hindi_name: lp.hindi_name || null,
+                      marathi_name: lp.marathi_name || null,
+                      category: lp.category,
+                      unit: lp.unit,
+                      purchase_price: lp.purchase_price,
+                      selling_price: lp.selling_price,
+                      stock_quantity: lp.stock_quantity,
+                      min_stock_alert: lp.min_stock_alert || 10,
+                      shelf_life_days: 2,
+                      has_expiry: true,
+                      is_active: lp.is_active ?? true
+                    };
+                  });
+                  await client.from('products').insert(prodsToUpload);
+                  setProducts(prodsToUpload as unknown as Product[]);
+                }
+              }
+            } catch (migErr) {
+              console.warn('Local migration skipped:', migErr);
+            }
+          }
+        }
+
+        if (!batchesRes.error && batchesRes.data) {
+          const enrichedBatches = (batchesRes.data as unknown as Array<ProductBatch & { products?: { name?: string } }>).map(
+            (b) => ({
+              ...b,
+              product_name: b.product_name || b.products?.name || ''
+            })
+          );
+          setBatches(enrichedBatches);
+        }
+
+        const nextPagination = createInitialPaginationState();
+
+        if (!salesRes.error && salesRes.data) {
+          const rows = salesRes.data as unknown as Sale[];
+          setSales(rows);
+          nextPagination.sales = { offset: rows.length, hasMore: rows.length === HISTORY_PAGE_SIZE, isLoading: false };
+        }
+        if (!purchasesRes.error && purchasesRes.data) {
+          const rows = purchasesRes.data as unknown as Purchase[];
+          setPurchases(rows);
+          nextPagination.purchases = { offset: rows.length, hasMore: rows.length === HISTORY_PAGE_SIZE, isLoading: false };
+        }
+        if (!damagesRes.error && damagesRes.data) {
+          const rows = damagesRes.data as unknown as DamageRecord[];
+          setDamages(rows);
+          nextPagination.damages = { offset: rows.length, hasMore: rows.length === HISTORY_PAGE_SIZE, isLoading: false };
+        }
+        if (!expensesRes.error && expensesRes.data) {
+          const rows = expensesRes.data as unknown as Expense[];
+          setExpenses(rows);
+          nextPagination.expenses = { offset: rows.length, hasMore: rows.length === HISTORY_PAGE_SIZE, isLoading: false };
+        }
+        if (!customersRes.error && customersRes.data) {
+          setCustomers(customersRes.data as unknown as UdharCustomer[]);
+        }
+        if (!returnsRes.error && returnsRes.data) {
+          const rows = returnsRes.data as unknown as ProductReturn[];
+          setReturns(rows);
+          nextPagination.returns = { offset: rows.length, hasMore: rows.length === HISTORY_PAGE_SIZE, isLoading: false };
+        }
+        if (!supplierReturnsRes.error && supplierReturnsRes.data) {
+          const rows = supplierReturnsRes.data as unknown as SupplierReturn[];
+          setSupplierReturns(rows);
+          nextPagination.supplierReturns = { offset: rows.length, hasMore: rows.length === HISTORY_PAGE_SIZE, isLoading: false };
+        }
+        if (!udharTxRes.error && udharTxRes.data) {
+          const rows = udharTxRes.data as unknown as UdharTransaction[];
+          setUdharTransactions(rows);
+          nextPagination.udharTransactions = { offset: rows.length, hasMore: rows.length === HISTORY_PAGE_SIZE, isLoading: false };
+        }
+        setHistoryPagination(nextPagination);
+
+        // 3. Purge & Fetch admin audit logs (Strict 1-Day Retention: auto-deleted on Day 2)
+        try {
+          await client.from('admin_audit_logs').delete().lt('created_at', oneDayAgo);
+        } catch (purgeErr) {
+          console.warn('Auto-purge expired audit logs notice:', purgeErr);
+        }
+
+        const { data: auditData, error: auditErr } = await client
+          .from('admin_audit_logs')
+          .select(ADMIN_AUDIT_SELECT_COLS)
+          .gte('created_at', oneDayAgo)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .limit(200);
+
+        if (!auditErr && auditData) {
+          setAdminActivities(auditData as unknown as AdminActivity[]);
+        }
+
+        await countsPromise;
+        setIsSupabaseConnected(true);
+      } catch (err) {
+        console.error('Supabase central sync error:', err);
+      } finally {
+        setIsSyncing(false);
+      }
+    })();
+
+    syncInFlightRef.current = runSync;
+    try {
+      await runSync;
+    } finally {
+      if (syncInFlightRef.current === runSync) {
+        syncInFlightRef.current = null;
+      }
+    }
+  }, [refreshInventoryCounts]);
 
   // Central Realtime Synchronization Layer (Ref-Counted & Leak-Proof)
   // Waits for AuthContext initial session restoration/recovery so REST & Realtime never race token refresh
   useEffect(() => {
     if (!supabase || isAuthLoading || !authUser) return;
 
-    // 1. Initial database hydration on mount
-    syncWithSupabase();
-    refreshInventoryCounts();
+    // 1. Initial database hydration on mount (includes single inventory counts RPC — no duplicate call)
+    void syncWithSupabase();
 
     // 2. Track connection status
     const statusUnsub = realtimeManager.onStatusChange((status) => {
       setIsSupabaseConnected(status === 'CONNECTED');
     });
 
-    // 3. Subscribe to Inventory Channel (Batches, Barcodes, In-Stock Products)
+    // 3. Subscribe to Inventory Channel (Batches, Barcodes, Products)
     const inventoryUnsub = realtimeManager.subscribeToInventory('store-context', (payload) => {
-      // Deduplicate own client mutations
       if (payload.clientMutationId && realtimeManager.isOwnMutation(payload.clientMutationId)) {
         return;
       }
 
       if (payload.table === 'batches') {
-        const row = payload.new as ProductBatch;
+        const row = payload.new as ProductBatch | undefined;
+        const oldRow = payload.old as Partial<ProductBatch> | undefined;
         if (payload.eventType === 'INSERT' && row?.id) {
-          setBatches(prev => {
-            if (prev.some(b => b.id === row.id)) return prev;
+          setBatches((prev) => {
+            if (prev.some((b) => b.id === row.id)) return prev;
             return [row, ...prev];
           });
         } else if (payload.eventType === 'UPDATE' && row?.id) {
-          setBatches(prev => prev.map(b => b.id === row.id ? { ...b, ...row } : b));
-        } else if (payload.eventType === 'DELETE' && payload.old?.id) {
-          setBatches(prev => prev.filter(b => b.id !== payload.old!.id));
+          setBatches((prev) => {
+            if (row.qty_remaining <= 0) {
+              return prev.filter((b) => b.id !== row.id);
+            }
+            const exists = prev.some((b) => b.id === row.id);
+            return exists
+              ? prev.map((b) => (b.id === row.id ? { ...b, ...row } : b))
+              : [row, ...prev];
+          });
+        } else if (payload.eventType === 'DELETE' && oldRow?.id) {
+          setBatches((prev) => prev.filter((b) => b.id !== oldRow.id));
         }
         scheduleCountsRefresh();
       } else if (payload.table === 'products') {
-        const row = payload.new as Product;
+        if (payload.eventType === 'DELETE') {
+          const oldRow = payload.old as Partial<Product> | undefined;
+          if (oldRow?.id) {
+            setProducts((prev) => prev.filter((p) => p.id !== oldRow.id));
+            scheduleCountsRefresh();
+          }
+          return;
+        }
+
+        const row = payload.new as Product | undefined;
         if (!row || !row.id) return;
 
-        setProducts(prev => {
-          const index = prev.findIndex(p => p.id === row.id);
+        setProducts((prev) => {
+          const index = prev.findIndex((p) => p.id === row.id);
           if (index !== -1) {
             const existing = prev[index];
-            // Out of order protection: check updated_at if both are available
-            if (row.updated_at && existing.updated_at && new Date(row.updated_at).getTime() < new Date(existing.updated_at).getTime()) {
+            // Out-of-order protection
+            if (
+              row.updated_at &&
+              existing.updated_at &&
+              new Date(row.updated_at).getTime() < new Date(existing.updated_at).getTime()
+            ) {
               return prev;
             }
             const updated = [...prev];
             updated[index] = { ...existing, ...row };
             return updated;
           } else {
-            // New in-stock product transitioned from 0 to >0
+            // New or restocked product transitioned from 0 to >0
             if (row.stock_quantity > 0) {
               return [row, ...prev];
             }
@@ -907,134 +1189,151 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     });
 
-    // 4. Subscribe to Sales & Accounts Channel (Sales, Khata, Damages, Returns)
+    // 4. Subscribe to Sales & Accounts Channel (event-scoped to actual consumers)
     const salesUnsub = realtimeManager.subscribeToSales('store-context', (payload) => {
       if (payload.clientMutationId && realtimeManager.isOwnMutation(payload.clientMutationId)) {
         return;
       }
 
       if (payload.table === 'sales') {
-        const row = payload.new as Sale;
+        const row = payload.new as Sale | undefined;
+        const oldRow = payload.old as Partial<Sale> | undefined;
         if (payload.eventType === 'INSERT' && row?.id) {
-          setSales(prev => {
-            if (prev.some(s => s.id === row.id || (row.idempotency_key && s.idempotency_key === row.idempotency_key))) return prev;
+          setSales((prev) => {
+            if (
+              prev.some(
+                (s) =>
+                  s.id === row.id ||
+                  ((row as Sale & { idempotency_key?: string }).idempotency_key &&
+                    (s as Sale & { idempotency_key?: string }).idempotency_key ===
+                      (row as Sale & { idempotency_key?: string }).idempotency_key)
+              )
+            ) {
+              return prev;
+            }
             return [row, ...prev];
           });
         } else if (payload.eventType === 'UPDATE' && row?.id) {
-          setSales(prev => prev.map(s => s.id === row.id ? { ...s, ...row } : s));
-        } else if (payload.eventType === 'DELETE' && payload.old?.id) {
-          setSales(prev => prev.filter(s => s.id !== payload.old!.id));
+          setSales((prev) => prev.map((s) => (s.id === row.id ? { ...s, ...row } : s)));
+        } else if (payload.eventType === 'DELETE' && oldRow?.id) {
+          setSales((prev) => prev.filter((s) => s.id !== oldRow.id));
         }
       } else if (payload.table === 'sale_items') {
-        const item = payload.new as SaleItem;
+        if (payload.eventType === 'DELETE') {
+          const oldItem = payload.old as Partial<SaleItem> | undefined;
+          if (oldItem?.id) {
+            setSales((prev) =>
+              prev.map((s) =>
+                s.items?.some((i) => i.id === oldItem.id)
+                  ? { ...s, items: s.items.filter((i) => i.id !== oldItem.id) }
+                  : s
+              )
+            );
+          }
+          return;
+        }
+        const item = payload.new as SaleItem | undefined;
         if (item?.sale_id) {
-          setSales(prev => prev.map(s => {
-            if (s.id === item.sale_id) {
-              const items = s.items || [];
-              if (items.some(i => i.id === item.id)) {
-                return { ...s, items: items.map(i => i.id === item.id ? { ...i, ...item } : i) };
+          setSales((prev) =>
+            prev.map((s) => {
+              if (s.id === item.sale_id) {
+                const items = s.items || [];
+                if (items.some((i) => i.id === item.id)) {
+                  return { ...s, items: items.map((i) => (i.id === item.id ? { ...i, ...item } : i)) };
+                }
+                return { ...s, items: [...items, item] };
               }
-              return { ...s, items: [...items, item] };
-            }
-            return s;
-          }));
+              return s;
+            })
+          );
         }
       } else if (payload.table === 'udhar_customers') {
-        const cust = payload.new as UdharCustomer;
+        const cust = payload.new as UdharCustomer | undefined;
         if (cust?.id) {
-          setCustomers(prev => {
-            const exists = prev.some(c => c.id === cust.id);
+          setCustomers((prev) => {
+            const exists = prev.some((c) => c.id === cust.id);
             if (exists) {
-              return prev.map(c => c.id === cust.id ? { ...c, ...cust } : c);
+              return prev.map((c) => (c.id === cust.id ? { ...c, ...cust } : c));
             }
             return [cust, ...prev];
           });
         }
       } else if (payload.table === 'udhar_transactions') {
-        const tx = payload.new as UdharTransaction;
+        const tx = payload.new as UdharTransaction | undefined;
         if (payload.eventType === 'INSERT' && tx?.id) {
-          setUdharTransactions(prev => {
-            if (prev.some(t => t.id === tx.id)) return prev;
-            return [tx, ...prev];
-          });
+          setUdharTransactions((prev) => (prev.some((t) => t.id === tx.id) ? prev : [tx, ...prev]));
         }
       } else if (payload.table === 'damage_records') {
-        const dmg = payload.new as DamageRecord;
+        const dmg = payload.new as DamageRecord | undefined;
         if (payload.eventType === 'INSERT' && dmg?.id) {
-          setDamages(prev => {
-            if (prev.some(d => d.id === dmg.id)) return prev;
-            return [dmg, ...prev];
-          });
+          setDamages((prev) => (prev.some((d) => d.id === dmg.id) ? prev : [dmg, ...prev]));
         }
       } else if (payload.table === 'product_returns') {
-        const ret = payload.new as ProductReturn;
+        const ret = payload.new as ProductReturn | undefined;
+        const oldRet = payload.old as Partial<ProductReturn> | undefined;
         if (payload.eventType === 'INSERT' && ret?.id) {
-          setReturns(prev => {
-            if (prev.some(r => r.id === ret.id)) return prev;
-            return [ret, ...prev];
-          });
+          setReturns((prev) => (prev.some((r) => r.id === ret.id) ? prev : [ret, ...prev]));
+        } else if (payload.eventType === 'DELETE' && oldRet?.id) {
+          setReturns((prev) => prev.filter((r) => r.id !== oldRet.id));
         }
       } else if (payload.table === 'supplier_returns') {
-        const sRet = payload.new as SupplierReturn;
+        const sRet = payload.new as SupplierReturn | undefined;
+        const oldSRet = payload.old as Partial<SupplierReturn> | undefined;
         if (payload.eventType === 'INSERT' && sRet?.id) {
-          setSupplierReturns(prev => {
-            if (prev.some(r => r.id === sRet.id)) return prev;
-            return [sRet, ...prev];
-          });
+          setSupplierReturns((prev) => (prev.some((r) => r.id === sRet.id) ? prev : [sRet, ...prev]));
+        } else if (payload.eventType === 'UPDATE' && sRet?.id) {
+          setSupplierReturns((prev) => prev.map((r) => (r.id === sRet.id ? { ...r, ...sRet } : r)));
+        } else if (payload.eventType === 'DELETE' && oldSRet?.id) {
+          setSupplierReturns((prev) => prev.filter((r) => r.id !== oldSRet.id));
         }
       } else if (payload.table === 'expenses') {
-        const exp = payload.new as Expense;
+        const exp = payload.new as Expense | undefined;
+        const oldExp = payload.old as Partial<Expense> | undefined;
         if (payload.eventType === 'INSERT' && exp?.id) {
-          setExpenses(prev => {
-            if (prev.some(e => e.id === exp.id)) return prev;
-            return [exp, ...prev];
-          });
+          setExpenses((prev) => (prev.some((e) => e.id === exp.id) ? prev : [exp, ...prev]));
+        } else if (payload.eventType === 'DELETE' && oldExp?.id) {
+          setExpenses((prev) => prev.filter((e) => e.id !== oldExp.id));
         }
       } else if (payload.table === 'purchases') {
-        const pur = payload.new as Purchase;
+        const pur = payload.new as Purchase | undefined;
         if (payload.eventType === 'INSERT' && pur?.id) {
-          setPurchases(prev => {
-            if (prev.some(p => p.id === pur.id)) return prev;
-            return [pur, ...prev];
-          });
+          setPurchases((prev) => (prev.some((p) => p.id === pur.id) ? prev : [pur, ...prev]));
         }
       }
     });
 
-    // 5. Subscribe to Catalogue Signals (lightweight broadcasts)
+    // 5. Subscribe to Shared Catalogue/Store Signals (lightweight broadcasts)
     const signalUnsub = realtimeManager.subscribeToSignals('store-context', (signal) => {
-      if (signal.type === 'CATALOGUE_ITEM_CHANGED' || signal.type === 'CATALOGUE_BULK_CHANGED') {
+      if (signal.type === 'CATALOGUE_ITEM_CHANGED' && signal.id) {
+        void refreshProductById(signal.id);
+        scheduleCountsRefresh();
+      } else if (signal.type === 'CATALOGUE_BULK_CHANGED' || signal.type === 'IMAGE_UPDATED') {
         scheduleCountsRefresh();
       }
     });
 
-    // 6. Gentle Reconnection on Focus / Visibility
-    const handleFocusOrVisible = () => {
-      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+    // 6. Cooldown-gated visibility refresh (3-min cooldown; no redundant window focus listener)
+    const handleVisibilityChange = () => {
+      if (typeof document === 'undefined' || document.visibilityState !== 'visible') return;
+      const elapsed = Date.now() - lastCountsRefreshAtRef.current;
+      if (elapsed >= FOCUS_REFRESH_COOLDOWN_MS) {
         scheduleCountsRefresh();
       }
     };
-    window.addEventListener('focus', handleFocusOrVisible);
-    document.addEventListener('visibilitychange', handleFocusOrVisible);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      window.removeEventListener('focus', handleFocusOrVisible);
-      document.removeEventListener('visibilitychange', handleFocusOrVisible);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       statusUnsub();
       inventoryUnsub();
       salesUnsub();
       signalUnsub();
       if (countThrottleRef.current) clearTimeout(countThrottleRef.current);
     };
-  }, [isAuthLoading, authUser?.id, syncWithSupabase, refreshInventoryCounts, scheduleCountsRefresh]);
+  }, [isAuthLoading, authUser?.id, syncWithSupabase, scheduleCountsRefresh, refreshProductById]);
 
   const refreshData = async () => {
-    setIsSyncing(true);
-    try {
-      await syncWithSupabase();
-    } finally {
-      setIsSyncing(false);
-    }
+    await syncWithSupabase();
   };
 
   const resetToSampleData = () => {
@@ -1423,7 +1722,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let existingProd = products.find(p => p.id === id);
     if (!existingProd && supabase) {
       try {
-        const { data: pDb } = await supabase.from('products').select('*').eq('id', id).maybeSingle();
+        const { data: pDb } = await supabase.from('products').select(PRODUCT_SELECT_COLS).eq('id', id).maybeSingle();
         if (pDb) existingProd = pDb as Product;
       } catch (err) {
         console.warn('Failed to load existing product for updateProduct:', err);
@@ -1568,7 +1867,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let prod = products.find(p => p.id === id) || productFallback;
     if (!prod && supabase) {
       try {
-        const { data: pDb } = await supabase.from('products').select('*').eq('id', id).maybeSingle();
+        const { data: pDb } = await supabase.from('products').select(PRODUCT_SELECT_COLS).eq('id', id).maybeSingle();
         if (pDb) prod = pDb as Product;
       } catch (err) {
         console.warn('Failed to load product for adjustStock:', err);
@@ -1747,7 +2046,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let prod = products.find(p => p.id === productId) || productFallback;
     if (!prod && supabase) {
       try {
-        const { data: pDb } = await supabase.from('products').select('*').eq('id', productId).maybeSingle();
+        const { data: pDb } = await supabase.from('products').select(PRODUCT_SELECT_COLS).eq('id', productId).maybeSingle();
         if (pDb) prod = pDb as Product;
       } catch (err) {
         console.warn('Failed to load product for addStockEntries:', err);
@@ -1947,7 +2246,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let targetProd = products.find(p => p.id === batchData.product_id) || productFallback;
     if (!targetProd && supabase) {
       try {
-        const { data: pDb } = await supabase.from('products').select('*').eq('id', batchData.product_id).maybeSingle();
+        const { data: pDb } = await supabase.from('products').select(PRODUCT_SELECT_COLS).eq('id', batchData.product_id).maybeSingle();
         if (pDb) targetProd = pDb as Product;
       } catch (err) {
         console.warn('Failed to load target product for addBatch:', err);
@@ -2035,7 +2334,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let targetProd = products.find(p => p.id === existingBatch?.product_id);
     if (!targetProd && existingBatch && supabase) {
       try {
-        const { data: pDb } = await supabase.from('products').select('*').eq('id', existingBatch.product_id).maybeSingle();
+        const { data: pDb } = await supabase.from('products').select(PRODUCT_SELECT_COLS).eq('id', existingBatch.product_id).maybeSingle();
         if (pDb) targetProd = pDb as Product;
       } catch (err) {
         console.warn('Failed to load target product for updateBatch:', err);
@@ -2173,7 +2472,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let targetProd = products.find(p => p.id === targetBatch?.product_id);
     if (!targetProd && targetBatch && supabase) {
       try {
-        const { data: pDb } = await supabase.from('products').select('*').eq('id', targetBatch.product_id).maybeSingle();
+        const { data: pDb } = await supabase.from('products').select(PRODUCT_SELECT_COLS).eq('id', targetBatch.product_id).maybeSingle();
         if (pDb) targetProd = pDb as Product;
       } catch (err) {
         console.warn('Failed to load target product for deleteBatch:', err);
@@ -3100,11 +3399,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           online_amount: newOnlineAmount,
           udhar_amount: newUdharAmount
         }).eq('id', saleId);
-        // Ensure changes are persisted before broadcasting
-        await broadcastMutation('sales', 'update');
-        // Refresh local state from Supabase to avoid stale data
-        await syncWithSupabase();
-
         if (updates.items) {
           await supabase.from('sale_items').delete().eq('sale_id', saleId);
           if (newItems.length > 0) {
@@ -3122,7 +3416,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
         }
 
-        broadcastMutation('sales', 'update');
+        // Targeted single-sale refresh AFTER sale_items settle (avoids reloading all 12 tables)
+        await refreshSaleById(saleId);
+        broadcastMutation('sales', 'update', saleId);
       } catch (err) {
         console.error('Failed to update sale in Supabase:', err);
       }
@@ -3491,8 +3787,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               }
             }
 
-            await broadcastMutation('sales', 'update');
-            await syncWithSupabase();
+            // Targeted single-sale refresh instead of full 12-table reload
+            await refreshSaleById(targetSale.id);
+            broadcastMutation('sales', 'update', targetSale.id);
           } catch (e) {
             console.error('Failed to update partially returned sale in Supabase:', e);
           }
@@ -3869,6 +4166,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       returns,
       supplierReturns,
       adminActivities,
+      historyPagination,
+      loadOlderHistory,
       logAdminActivity,
       currentReceipt,
       setCurrentReceipt,

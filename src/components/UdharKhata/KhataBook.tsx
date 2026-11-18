@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { UdharCustomer } from '../../types';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
+import { LoadOlderHistoryButton } from '../Common/LoadOlderHistoryButton';
 import {
   BookOpen,
   Search,
@@ -773,6 +774,7 @@ export const KhataBook: React.FC = () => {
                     </span>
                   </div>
                 ))}
+              <LoadOlderHistoryButton entity="udharTransactions" />
             </div>
 
             <div className="pt-2 border-t border-slate-100 dark:border-[#24352F] text-right">

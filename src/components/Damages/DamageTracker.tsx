@@ -3,6 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
+import { LoadOlderHistoryButton } from '../Common/LoadOlderHistoryButton';
 import { DamageReason } from '../../types';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import {
@@ -294,6 +295,7 @@ export const DamageTracker: React.FC = () => {
             {language === 'mr' ? 'या कालावधीत कोणताही माल खराब झालेला नाही.' : language === 'hi' ? 'इस अवधि में कोई डैमेज माल दर्ज नहीं है।' : 'No damaged goods recorded for this period.'}
           </div>
         )}
+        <LoadOlderHistoryButton entity="damages" className="pb-4" />
       </div>
 
       {/* LOG DAMAGE MODAL */}

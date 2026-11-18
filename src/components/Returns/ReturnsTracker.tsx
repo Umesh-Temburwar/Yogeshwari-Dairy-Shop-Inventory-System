@@ -27,6 +27,7 @@ import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from
 import { SupplierReturnModal } from './SupplierReturnModal';
 import { SupplierReturn, SupplierRefundStatus } from '../../types';
 import { CompactPageHeader } from '../Common/CompactPageHeader';
+import { LoadOlderHistoryButton } from '../Common/LoadOlderHistoryButton';
 
 interface ReturnsTrackerProps {
   onOpenReturnModal: () => void;
@@ -583,6 +584,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
             </div>
           )}
 
+          <LoadOlderHistoryButton entity="returns" />
         </div>
       )}
 
@@ -830,6 +832,7 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
             </div>
           )}
 
+          <LoadOlderHistoryButton entity="supplierReturns" />
         </div>
       )}
 

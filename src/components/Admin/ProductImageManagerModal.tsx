@@ -13,6 +13,7 @@ import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { playBeepSound, playSuccessChime } from '../../utils/audioUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
 import { supabase } from '../../lib/supabase';
+import { PRODUCT_SELECT_COLS } from '../../lib/supabaseColumns';
 import { Product } from '../../types';
 
 interface ProductImageManagerModalProps {
@@ -218,7 +219,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
       try {
         if (!supabase) return;
 
-        let query = supabase.from('products').select('*');
+        let query = supabase.from('products').select(PRODUCT_SELECT_COLS);
 
         // Apply Status Filter
         if (statusFilter === 'MISSING') {
@@ -273,7 +274,7 @@ export const ProductImageManagerModal: React.FC<ProductImageManagerModalProps> =
     if (isLoadingModalProducts || !hasMoreModalProducts || !supabase) return;
     setIsLoadingModalProducts(true);
     try {
-      let query = supabase.from('products').select('*');
+      let query = supabase.from('products').select(PRODUCT_SELECT_COLS);
 
       if (statusFilter === 'MISSING') {
         query = query.is('image_url', null).not('barcode', 'is', null).neq('barcode', '');

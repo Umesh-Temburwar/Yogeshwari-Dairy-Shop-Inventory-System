@@ -321,6 +321,7 @@ export const BillingCounter: React.FC = () => {
   }, [showBarcodeScanner, setIsBarcodeScannerOpen]);
 
   // Live online product & barcode search from Supabase
+  // Barcode lookups run immediately (zero artificial checkout delay); text searches stay debounced with request cancellation
   useEffect(() => {
     const q = deferredSearchQuery.trim();
     if (!q || q.length < 2) {
@@ -331,9 +332,11 @@ export const BillingCounter: React.FC = () => {
     }
 
     const isBarcodeLike = /^\d{5,}$/.test(q);
+    const controller = new AbortController();
     let cancelled = false;
     setIsSearchingOnline(true);
-    const timer = setTimeout(async () => {
+
+    const executeSearch = async () => {
       try {
         if (isBarcodeLike) {
           const res = await searchProductByBarcodeOnline(q);
@@ -347,11 +350,13 @@ export const BillingCounter: React.FC = () => {
             }
           }
         } else if (q.length >= 2 && supabase) {
+          const safeQ = q.replace(/[%_]/g, '');
           const { data, error } = await supabase
             .from('products')
             .select('id, name, hindi_name, marathi_name, category, unit, purchase_price, selling_price, stock_quantity, min_stock_alert, barcode, image_url, brand, pack_size, is_active')
-            .or(`name.ilike.%${q}%,brand.ilike.%${q}%`)
-            .limit(20);
+            .or(`name.ilike.%${safeQ}%,brand.ilike.%${safeQ}%`)
+            .limit(20)
+            .abortSignal(controller.signal);
 
           if (!cancelled) {
             if (!error && data && data.length > 0) {
@@ -361,7 +366,7 @@ export const BillingCounter: React.FC = () => {
             }
           }
         }
-      } catch (e) {
+      } catch {
         if (!cancelled) {
           setOnlineSearchedProduct(null);
           setOnlineSearchResults([]);
@@ -369,10 +374,23 @@ export const BillingCounter: React.FC = () => {
       } finally {
         if (!cancelled) setIsSearchingOnline(false);
       }
-    }, 250);
+    };
+
+    if (isBarcodeLike) {
+      void executeSearch();
+      return () => {
+        cancelled = true;
+        controller.abort();
+      };
+    }
+
+    const timer = setTimeout(() => {
+      void executeSearch();
+    }, 280);
 
     return () => {
       cancelled = true;
+      controller.abort();
       clearTimeout(timer);
     };
   }, [deferredSearchQuery]);

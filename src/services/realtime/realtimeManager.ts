@@ -1,42 +1,94 @@
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
-import { 
-  RealtimeConnectionStatus, 
-  RealtimePayload, 
+import {
+  RealtimeConnectionStatus,
+  RealtimePayload,
   RealtimeEventCallback,
-  CatalogueSignalPayload 
+  CatalogueSignalPayload,
+  SignalEventCallback,
+  TableSubscriptionSpec,
+  PostgresChangeEvent
 } from './realtimeTypes';
+
+type ChannelSpec =
+  | { kind: 'postgres'; tables: TableSubscriptionSpec[] }
+  | { kind: 'signals' };
+
+const SIGNALS_CHANNEL_NAME = 'dairy-channel-signals';
+const INVENTORY_CHANNEL_NAME = 'dairy-channel-inventory';
+const SALES_CHANNEL_NAME = 'dairy-channel-sales';
+
+/**
+ * Audited Inventory Channel Subscriptions:
+ * - batches: INSERT/UPDATE/DELETE (FEFO expiry & stock accuracy across counters)
+ * - products: INSERT/UPDATE/DELETE (creation, editing, price, barcode, stock, active status)
+ * - product_barcodes: INSERT/DELETE (barcode mappings & counts)
+ * - stock_movements REMOVED: confirmed 0 UI/store consumers (eliminated pure dead traffic)
+ */
+const INVENTORY_TABLES: TableSubscriptionSpec[] = [
+  { table: 'batches', events: ['*'] },
+  { table: 'products', events: ['*'] },
+  { table: 'product_barcodes', events: ['INSERT', 'DELETE'] }
+];
+
+/**
+ * Audited Sales & Accounts Channel Subscriptions (event-scoped to actual consumers):
+ * - sales: INSERT/UPDATE/DELETE
+ * - sale_items: INSERT/UPDATE/DELETE
+ * - udhar_customers: INSERT/UPDATE
+ * - udhar_transactions: INSERT only (append-only ledger)
+ * - damage_records: INSERT only (append-only)
+ * - product_returns: INSERT/DELETE
+ * - supplier_returns: INSERT/UPDATE/DELETE
+ * - expenses: INSERT/DELETE
+ * - purchases: INSERT only (append-only)
+ */
+const SALES_TABLES: TableSubscriptionSpec[] = [
+  { table: 'sales', events: ['*'] },
+  { table: 'sale_items', events: ['*'] },
+  { table: 'udhar_customers', events: ['INSERT', 'UPDATE'] },
+  { table: 'udhar_transactions', events: ['INSERT'] },
+  { table: 'damage_records', events: ['INSERT'] },
+  { table: 'product_returns', events: ['INSERT', 'DELETE'] },
+  { table: 'supplier_returns', events: ['*'] },
+  { table: 'expenses', events: ['INSERT', 'DELETE'] },
+  { table: 'purchases', events: ['INSERT'] }
+];
 
 /**
  * Centralized Realtime Synchronization Manager
- * 
+ *
  * Features:
- * - Single persistent connection set (no per-component channel duplication)
+ * - Single persistent shared connection set (zero per-component or per-mutation channel leaks)
+ * - Event-scoped postgres_changes subscriptions matching actual consumers
  * - Ref-counted consumer registry with leak-proof cleanup via supabase.removeChannel
  * - React 19 StrictMode and Vite HMR resilient
- * - Exponential backoff reconnect with jitter & maximum retry cap
- * - Browser lifecycle integration (visibilitychange, online/offline, window focus)
- * - Own-echo deduplication cache (10s TTL)
- * - Out-of-order protection comparison
+ * - Real channel re-subscription on network recovery (fixes dead reconnectAll)
+ * - Own-echo deduplication cache (12s TTL) + rapid broadcast signal coalescing (300ms)
  */
 class RealtimeManager {
   private static instance: RealtimeManager;
   private status: RealtimeConnectionStatus = 'CONNECTING';
   private statusListeners = new Set<(status: RealtimeConnectionStatus) => void>();
 
-  // Channel handles and subscriber ref-counts
+  // Channel handles, specs (for genuine reconnect), subscriber ref-counts, and callbacks
   private activeChannels = new Map<string, RealtimeChannel>();
+  private channelSpecs = new Map<string, ChannelSpec>();
   private channelSubscribers = new Map<string, Set<string>>();
   private eventCallbacks = new Map<string, Set<RealtimeEventCallback>>();
+  private signalCallbacks = new Set<SignalEventCallback>();
 
   // Reconnection backoff state
   private retryAttempts = 0;
   private maxRetryAttempts = 6;
-  private reconnectTimer: any = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private isReconnecting = false;
 
-  // Own-echo deduplication cache (stores mutation IDs for 10s)
+  // Own-echo deduplication cache (stores mutation IDs for 12s)
   private recentMutationIds = new Map<string, number>();
+
+  // Rapid identical broadcast deduplication (300ms window)
+  private recentSignals = new Map<string, number>();
 
   private constructor() {
     this.initLifecycleListeners();
@@ -49,7 +101,6 @@ class RealtimeManager {
     return RealtimeManager.instance;
   }
 
-  // Current connection status
   public getStatus(): RealtimeConnectionStatus {
     return this.status;
   }
@@ -69,13 +120,9 @@ class RealtimeManager {
     }
   }
 
-  /**
-   * Register mutation ID for own-echo deduplication
-   */
   public registerOwnMutation(mutationId: string) {
     if (!mutationId) return;
     this.recentMutationIds.set(mutationId, Date.now());
-    // Cleanup old mutation IDs after 12s
     if (this.recentMutationIds.size > 200) {
       const cutoff = Date.now() - 12000;
       for (const [id, time] of this.recentMutationIds.entries()) {
@@ -89,81 +136,72 @@ class RealtimeManager {
     return this.recentMutationIds.has(mutationId);
   }
 
-  /**
-   * Subscribe to Inventory Channel (Batches, Barcodes, Inventory Stock)
-   */
   public subscribeToInventory(subscriberId: string, callback: RealtimeEventCallback): () => void {
-    const channelName = 'dairy-channel-inventory';
-    const tables = ['batches', 'product_barcodes', 'products', 'stock_movements'];
-    return this.registerChannelSubscriber(channelName, subscriberId, tables, callback);
+    return this.registerChannelSubscriber(
+      INVENTORY_CHANNEL_NAME,
+      subscriberId,
+      INVENTORY_TABLES,
+      callback
+    );
   }
 
-  /**
-   * Subscribe to Sales & Accounts Channel (Sales, Sale Items, Khata, Returns, Damages)
-   */
   public subscribeToSales(subscriberId: string, callback: RealtimeEventCallback): () => void {
-    const channelName = 'dairy-channel-sales';
-    const tables = [
-      'sales', 
-      'sale_items', 
-      'udhar_customers', 
-      'udhar_transactions', 
-      'damage_records', 
-      'product_returns', 
-      'supplier_returns',
-      'expenses',
-      'purchases'
-    ];
-    return this.registerChannelSubscriber(channelName, subscriberId, tables, callback);
+    return this.registerChannelSubscriber(
+      SALES_CHANNEL_NAME,
+      subscriberId,
+      SALES_TABLES,
+      callback
+    );
   }
 
   /**
-   * Subscribe to Catalogue Signals Broadcast Channel
+   * Subscribe to Shared Signals Broadcast Channel (`dairy-channel-signals`).
+   * Uses a ref-counted callback Set so StrictMode remounts or multiple consumers
+   * never leave stale closures or duplicate channels.
    */
-  public subscribeToSignals(subscriberId: string, callback: (signal: CatalogueSignalPayload) => void): () => void {
-    const channelName = 'dairy-channel-signals';
-    this.ensureSubscriberSet(channelName, subscriberId);
+  public subscribeToSignals(subscriberId: string, callback: SignalEventCallback): () => void {
+    this.ensureSubscriberSet(SIGNALS_CHANNEL_NAME, subscriberId);
+    this.channelSpecs.set(SIGNALS_CHANNEL_NAME, { kind: 'signals' });
+    this.signalCallbacks.add(callback);
 
-    let channel = this.activeChannels.get(channelName);
-    if (!channel && supabase) {
-      channel = supabase.channel(channelName, {
-        config: { broadcast: { self: false } }
-      });
-
-      channel.on('broadcast', { event: 'CATALOGUE_SIGNAL' }, (msg) => {
-        if (msg?.payload) {
-          callback(msg.payload as CatalogueSignalPayload);
-        }
-      });
-
-      channel.subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          this.setStatus('CONNECTED');
-        }
-      });
-
-      this.activeChannels.set(channelName, channel);
+    if (!this.activeChannels.has(SIGNALS_CHANNEL_NAME) && supabase) {
+      this.mountSignalsChannel();
     }
 
     return () => {
-      this.unregisterChannelSubscriber(channelName, subscriberId);
+      this.signalCallbacks.delete(callback);
+      this.unregisterChannelSubscriber(SIGNALS_CHANNEL_NAME, subscriberId);
     };
   }
 
   /**
-   * Broadcast a lightweight signal to peer terminals
+   * Broadcast a lightweight invalidation signal over the EXISTING subscribed
+   * `dairy-channel-signals` channel. Never creates orphan per-mutation channels
+   * and coalesces duplicate signals fired within 300ms.
    */
   public async emitSignal(signal: CatalogueSignalPayload): Promise<void> {
     if (!supabase) return;
-    try {
-      let channel = this.activeChannels.get('dairy-channel-signals');
-      if (!channel) {
-        channel = supabase.channel('dairy-channel-signals', {
-          config: { broadcast: { self: false } }
-        });
-        channel.subscribe();
-        this.activeChannels.set('dairy-channel-signals', channel);
+
+    const dedupeKey = `${signal.type}:${signal.entity || ''}:${signal.action || ''}:${signal.id || ''}`;
+    const now = Date.now();
+    const lastSent = this.recentSignals.get(dedupeKey);
+    if (lastSent && now - lastSent < 300) {
+      return;
+    }
+    this.recentSignals.set(dedupeKey, now);
+    if (this.recentSignals.size > 100) {
+      for (const [k, ts] of this.recentSignals.entries()) {
+        if (now - ts > 5000) this.recentSignals.delete(k);
       }
+    }
+
+    const channel = this.activeChannels.get(SIGNALS_CHANNEL_NAME);
+    if (!channel) {
+      // No active shared signals channel subscribed — skip creating an orphan channel
+      return;
+    }
+
+    try {
       await channel.send({
         type: 'broadcast',
         event: 'CATALOGUE_SIGNAL',
@@ -174,39 +212,69 @@ class RealtimeManager {
     }
   }
 
-  /**
-   * Core Channel Subscriber Registration with ref-counting
-   */
-  private registerChannelSubscriber(
-    channelName: string,
-    subscriberId: string,
-    tables: string[],
-    callback: RealtimeEventCallback
-  ): () => void {
-    this.ensureSubscriberSet(channelName, subscriberId);
+  private mountSignalsChannel(): void {
+    if (!supabase || this.activeChannels.has(SIGNALS_CHANNEL_NAME)) return;
 
-    // Register callback
-    if (!this.eventCallbacks.has(channelName)) {
-      this.eventCallbacks.set(channelName, new Set());
-    }
-    this.eventCallbacks.get(channelName)!.add(callback);
+    const channel = supabase.channel(SIGNALS_CHANNEL_NAME, {
+      config: { broadcast: { self: false } }
+    });
 
-    let channel = this.activeChannels.get(channelName);
-    if (!channel && supabase) {
-      channel = supabase.channel(channelName);
+    channel.on('broadcast', { event: 'CATALOGUE_SIGNAL' }, (msg) => {
+      if (msg?.payload) {
+        const payload = msg.payload as CatalogueSignalPayload;
+        this.signalCallbacks.forEach((cb) => {
+          try {
+            cb(payload);
+          } catch (e) {
+            console.error('[RealtimeManager] Error in signal callback:', e);
+          }
+        });
+      }
+    });
 
-      tables.forEach((tableName) => {
-        channel!.on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: tableName },
-          (payload) => {
+    channel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        this.retryAttempts = 0;
+        this.setStatus('CONNECTED');
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        this.setStatus('RECONNECTING');
+        this.scheduleReconnect();
+      }
+    });
+
+    this.activeChannels.set(SIGNALS_CHANNEL_NAME, channel);
+  }
+
+  private mountPostgresChannel(channelName: string, tables: TableSubscriptionSpec[]): void {
+    if (!supabase || this.activeChannels.has(channelName)) return;
+
+    const channel = supabase.channel(channelName);
+
+    tables.forEach(({ table, events }) => {
+      events.forEach((ev: PostgresChangeEvent) => {
+        channel.on(
+          'postgres_changes' as 'system',
+          { event: ev, schema: 'public', table } as unknown as { event: string },
+          (rawPayload: unknown) => {
+            const payload = rawPayload as {
+              eventType: RealtimePayload['eventType'];
+              new?: Record<string, unknown>;
+              old?: Record<string, unknown>;
+            };
+
             const normalized: RealtimePayload = {
-              table: tableName,
-              eventType: payload.eventType as any,
+              table,
+              eventType: payload.eventType,
               new: payload.new,
               old: payload.old,
               timestamp: Date.now(),
-              clientMutationId: (payload.new as any)?.idempotency_key || (payload.new as any)?.client_mutation_id
+              clientMutationId:
+                (typeof payload.new?.idempotency_key === 'string'
+                  ? payload.new.idempotency_key
+                  : undefined) ||
+                (typeof payload.new?.client_mutation_id === 'string'
+                  ? payload.new.client_mutation_id
+                  : undefined)
             };
 
             const callbacks = this.eventCallbacks.get(channelName);
@@ -222,22 +290,41 @@ class RealtimeManager {
           }
         );
       });
+    });
 
-      channel.subscribe((status, err) => {
-        if (status === 'SUBSCRIBED') {
-          this.retryAttempts = 0;
-          this.setStatus('CONNECTED');
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          this.setStatus('RECONNECTING');
-          this.scheduleReconnect();
-        } else if (status === 'CLOSED') {
-          if (!this.isReconnecting) {
-            this.setStatus('OFFLINE');
-          }
+    channel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        this.retryAttempts = 0;
+        this.setStatus('CONNECTED');
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        this.setStatus('RECONNECTING');
+        this.scheduleReconnect();
+      } else if (status === 'CLOSED') {
+        if (!this.isReconnecting) {
+          this.setStatus('OFFLINE');
         }
-      });
+      }
+    });
 
-      this.activeChannels.set(channelName, channel);
+    this.activeChannels.set(channelName, channel);
+  }
+
+  private registerChannelSubscriber(
+    channelName: string,
+    subscriberId: string,
+    tables: TableSubscriptionSpec[],
+    callback: RealtimeEventCallback
+  ): () => void {
+    this.ensureSubscriberSet(channelName, subscriberId);
+    this.channelSpecs.set(channelName, { kind: 'postgres', tables });
+
+    if (!this.eventCallbacks.has(channelName)) {
+      this.eventCallbacks.set(channelName, new Set());
+    }
+    this.eventCallbacks.get(channelName)!.add(callback);
+
+    if (!this.activeChannels.has(channelName) && supabase) {
+      this.mountPostgresChannel(channelName, tables);
     }
 
     return () => {
@@ -253,9 +340,6 @@ class RealtimeManager {
     this.channelSubscribers.get(channelName)!.add(subscriberId);
   }
 
-  /**
-   * Ref-counted Unsubscribe & supabase.removeChannel
-   */
   private unregisterChannelSubscriber(channelName: string, subscriberId: string) {
     const subs = this.channelSubscribers.get(channelName);
     if (subs) {
@@ -263,6 +347,7 @@ class RealtimeManager {
       if (subs.size === 0) {
         this.channelSubscribers.delete(channelName);
         this.eventCallbacks.delete(channelName);
+        this.channelSpecs.delete(channelName);
         const channel = this.activeChannels.get(channelName);
         if (channel && supabase) {
           try {
@@ -274,11 +359,9 @@ class RealtimeManager {
     }
   }
 
-  /**
-   * Exponential backoff reconnection
-   */
   public scheduleReconnect() {
     if (this.isReconnecting || typeof window === 'undefined') return;
+    if (this.channelSubscribers.size === 0) return;
     if (this.retryAttempts >= this.maxRetryAttempts) {
       this.setStatus('ERROR');
       return;
@@ -297,16 +380,35 @@ class RealtimeManager {
     }, delay);
   }
 
+  /**
+   * Cleanly tears down broken channels AND re-mounts every channel that still
+   * has active subscribers so multi-device sync genuinely resumes after drops.
+   */
   public reconnectAll() {
     if (!supabase) return;
-    for (const [name, channel] of this.activeChannels.entries()) {
+    for (const [, channel] of this.activeChannels.entries()) {
       try {
         supabase.removeChannel(channel);
       } catch {}
     }
     this.activeChannels.clear();
+
+    if (this.channelSubscribers.size === 0) {
+      this.setStatus('OFFLINE');
+      return;
+    }
+
     this.setStatus('CONNECTING');
-    // Active subscribers will be recreated on next turn
+    for (const [channelName, subs] of this.channelSubscribers.entries()) {
+      if (subs.size === 0) continue;
+      const spec = this.channelSpecs.get(channelName);
+      if (!spec) continue;
+      if (spec.kind === 'signals') {
+        this.mountSignalsChannel();
+      } else {
+        this.mountPostgresChannel(channelName, spec.tables);
+      }
+    }
   }
 
   private initLifecycleListeners() {
@@ -314,21 +416,24 @@ class RealtimeManager {
 
     window.addEventListener('online', () => {
       this.retryAttempts = 0;
-      this.scheduleReconnect();
+      if (this.status !== 'CONNECTED' && this.channelSubscribers.size > 0) {
+        this.scheduleReconnect();
+      }
     });
 
     window.addEventListener('offline', () => {
       this.setStatus('OFFLINE');
     });
 
+    // Only reconnect on visibilitychange when actually disconnected (no redundant window focus listener)
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && this.status !== 'CONNECTED') {
-        this.scheduleReconnect();
-      }
-    });
-
-    window.addEventListener('focus', () => {
-      if (this.status !== 'CONNECTED') {
+      if (
+        document.visibilityState === 'visible' &&
+        navigator.onLine !== false &&
+        this.status !== 'CONNECTED' &&
+        this.channelSubscribers.size > 0
+      ) {
+        this.retryAttempts = 0;
         this.scheduleReconnect();
       }
     });

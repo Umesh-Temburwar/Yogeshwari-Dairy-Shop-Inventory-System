@@ -27,6 +27,7 @@ import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from
 import { SupplierReturnModal } from './SupplierReturnModal';
 import { SupplierReturn, SupplierRefundStatus } from '../../types';
 import { CompactPageHeader } from '../Common/CompactPageHeader';
+import { ActiveOperatorBar } from '../Common/ActiveOperatorBar';
 import { LoadOlderHistoryButton } from '../Common/LoadOlderHistoryButton';
 
 interface ReturnsTrackerProps {
@@ -227,6 +228,13 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
 
   return (
     <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-28 lg:pb-8">
+      {/* 0. POS-STYLE ACTIVE OPERATOR & STORE BADGE BAR */}
+      <ActiveOperatorBar
+        locationName="Customer & Vendor Returns Register"
+        pulseColor="rose"
+        className="mb-1"
+      />
+
       {/* 1. Compact Header + More (⋮) Reports Sheet + Round Return CTA */}
       <CompactPageHeader
         title={'Returns & Refunds'}

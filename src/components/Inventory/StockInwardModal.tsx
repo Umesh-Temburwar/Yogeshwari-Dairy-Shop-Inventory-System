@@ -42,10 +42,13 @@ interface MultiLotRow {
 }
 
 export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onClose }) => {
+  if (!product) return null;
+  return <StockInwardModalContent product={product} onClose={onClose} />;
+};
+
+const StockInwardModalContent: React.FC<{ product: Product; onClose: () => void }> = ({ product, onClose }) => {
   const { batches, addStockEntries, adjustStock } = useStore();
   const { t, language, tr } = useLanguage();
-
-  if (!product) return null;
 
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
   const shelfDays = useMemo(() => getShelfLifeDays(product.category, product.name), [product]);
@@ -86,7 +89,7 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
       quantity: '20',
       mfg_date: todayStr,
       expiry_date: getSuggestedExpiryDate(todayStr, shelfDays),
-      batch_no: generateBatchNumber(product.name, todayStr)
+      batch_no: generateBatchNumber(prodName, todayStr)
     },
     {
       id: 'row-2',
@@ -94,7 +97,7 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
       quantity: '10',
       mfg_date: new Date(Date.now() - 86400000).toISOString().split('T')[0], // yesterday
       expiry_date: getSuggestedExpiryDate(new Date(Date.now() - 86400000).toISOString().split('T')[0], shelfDays),
-      batch_no: generateBatchNumber(product.name, new Date(Date.now() - 86400000).toISOString().split('T')[0])
+      batch_no: generateBatchNumber(prodName, new Date(Date.now() - 86400000).toISOString().split('T')[0])
     }
   ]);
 
@@ -103,17 +106,17 @@ export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onC
     if (inwardMode === 'fresh_today') {
       setMfgDate(todayStr);
       setExpiryDate(getSuggestedExpiryDate(todayStr, shelfDays));
-      setBatchNo(generateBatchNumber(product.name, todayStr));
+      setBatchNo(generateBatchNumber(prodName, todayStr));
     } else if (inwardMode === 'previous_lot') {
       const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
       setMfgDate(yesterday);
       setExpiryDate(getSuggestedExpiryDate(yesterday, shelfDays));
-      setBatchNo(generateBatchNumber(product.name, yesterday));
+      setBatchNo(generateBatchNumber(prodName, yesterday));
       if (existingProductBatches.length > 0 && !selectedExistingBatchId) {
         setSelectedExistingBatchId(existingProductBatches[0].id);
       }
     }
-  }, [inwardMode, product, shelfDays, todayStr, existingProductBatches, selectedExistingBatchId]);
+  }, [inwardMode, prodName, shelfDays, todayStr, existingProductBatches, selectedExistingBatchId]);
 
   // Recalculate expiry if user alters mfg date in single mode
   const handleMfgDateChange = (date: string) => {

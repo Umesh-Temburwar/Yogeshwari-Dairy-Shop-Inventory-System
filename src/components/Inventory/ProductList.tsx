@@ -44,6 +44,7 @@ import { BarcodeStockInModal } from '../Scanner/BarcodeStockInModal';
 import { ProductImage } from '../Common/ProductImage';
 import { ProductImagePreviewModal } from '../Common/ProductImagePreviewModal';
 import { ProductImageManagerModal } from '../Admin/ProductImageManagerModal';
+import { ActiveOperatorBar } from '../Common/ActiveOperatorBar';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { supabase } from '../../lib/supabase';
 
@@ -893,6 +894,13 @@ export const ProductList: React.FC<ProductListProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto pb-28 lg:pb-10 space-y-2">
+      {/* 0. POS-STYLE ACTIVE OPERATOR & STORE BADGE BAR */}
+      <ActiveOperatorBar
+        locationName="Inventory Master Catalog"
+        pulseColor="emerald"
+        className="mb-1"
+      />
+
       {/* 1. COMPACT SCROLL-AWAY HEADER (Row 1 + Slim 3-Stat Strip + Dismissible Low Stock Alert) */}
       <div className="space-y-1.5">
         {/* Row 1: Icon + Title + More (⋮) + Round "+ Add" Button */}
@@ -1007,52 +1015,81 @@ export const ProductList: React.FC<ProductListProps> = ({
         )}
       </div>
 
-      {/* 2. STICKY SEARCH + ONE-ROW SNAP FILTER CHIPS (max ~86px while scrolling) */}
+      {/* 2. STICKY SEARCH + CATEGORY CHIPS + STATUS TABS (POS DNA) */}
       <div className="sticky top-0 z-20 -mx-2.5 sm:-mx-6 px-2.5 sm:px-6 pt-1 pb-2 bg-[#f8fafc] dark:bg-[#0B1210] border-b border-slate-200/70 dark:border-[#1E2E28] space-y-1.5">
         {/* Search Input + Inline Barcode Scan Button */}
-        <div className="relative flex items-center">
-          <Search className="w-4 h-4 absolute left-3 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />
-          <input
-            id="inventory-search-input"
-            name="inventorySearch"
-            type="text"
-            autoComplete="off"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={
-              'Search products or barcode...'
-            }
-            aria-label="Search inventory products"
-            className="w-full h-10 pl-9 pr-20 rounded-xl border border-slate-300/90 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-medium placeholder:text-slate-400 dark:placeholder:text-[#6F877D] focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
-
-          <div className="absolute right-1.5 flex items-center gap-1">
-            {isSearchingOnline && (
-              <Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
-            )}
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                aria-label="Clear search"
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowBarcodeScanner(true)}
-              aria-label="Scan barcode to search"
-              title="Scan Barcode"
-              className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center active:scale-[0.97] transition-transform cursor-pointer"
-            >
-              <Barcode className="w-4 h-4" />
-            </button>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="relative flex-1 min-w-0">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />
+            <input
+              id="inventory-search-input"
+              name="inventorySearch"
+              type="text"
+              autoComplete="off"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search products or barcode..."
+              aria-label="Search inventory products"
+              className="w-full h-10 pl-9 pr-14 rounded-xl border border-slate-300/90 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-medium placeholder:text-slate-400 dark:placeholder:text-[#6F877D] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {isSearchingOnline && (
+                <Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
+              )}
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setShowBarcodeScanner(true)}
+            aria-label="Scan barcode to search"
+            title="Scan Barcode"
+            className="w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs active:scale-[0.97] transition-all shrink-0 cursor-pointer"
+          >
+            <Barcode className="w-4 h-4 text-white" />
+            <span className="hidden sm:inline">Scan</span>
+          </button>
         </div>
 
-        {/* Single Horizontal Snap-Scroll Filter Chip Row with Right-Edge Fade Hint */}
+        {/* Category Filter Chips Snap-Scroller (POS DNA) */}
+        <div className="relative">
+          <div
+            role="tablist"
+            aria-label="Product categories"
+            className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5"
+          >
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`h-8 px-3 rounded-full border text-xs font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0 snap-start transition-all duration-150 active:scale-[0.97] cursor-pointer ${
+                  selectedCategory === cat.id
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                    : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#A3B8AF] hover:border-slate-300 dark:hover:border-[#324A42]'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"
+          />
+        </div>
+
+        {/* Status Filter Chips Row (In Stock / Low / Expiring / Out / All) */}
         <div className="relative">
           <div
             role="tablist"
@@ -1074,15 +1111,15 @@ export const ProductList: React.FC<ProductListProps> = ({
                     }
                     setActiveTab(chip.id);
                   }}
-                  className={`snap-start shrink-0 h-8 px-3 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 border transition-colors duration-150 active:scale-[0.97] cursor-pointer ${
+                  className={`snap-start shrink-0 h-7 px-2.5 rounded-full text-[11px] font-semibold inline-flex items-center gap-1.5 border transition-colors duration-150 active:scale-[0.97] cursor-pointer ${
                     isActive
-                      ? 'bg-emerald-600 text-white border-emerald-600'
-                      : 'bg-white dark:bg-[#131F1B] text-slate-700 dark:text-[#C4D4CE] border-slate-200 dark:border-[#24352F] hover:border-emerald-500/50'
+                      ? 'bg-slate-900 text-white border-slate-900 dark:bg-emerald-700 dark:border-emerald-700 shadow-xs'
+                      : 'bg-white/90 dark:bg-[#131F1B] text-slate-600 dark:text-[#8FA69C] border-slate-200/90 dark:border-[#24352F] hover:border-slate-300'
                   }`}
                 >
                   <span>{chip.label}</span>
                   <span
-                    className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                    className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full leading-none ${
                       isActive
                         ? 'bg-white/20 text-white'
                         : 'bg-slate-100 dark:bg-[#1E2E28] text-slate-600 dark:text-[#8FA69C]'
@@ -1094,7 +1131,6 @@ export const ProductList: React.FC<ProductListProps> = ({
               );
             })}
           </div>
-          {/* Soft Right-Edge Scroll Hint Fade */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"

@@ -6,6 +6,8 @@ import { Product, ProductBatch, DamageReason } from '../../types';
 import { printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { ProductImage } from '../Common/ProductImage';
 import { ProductImagePreviewModal } from '../Common/ProductImagePreviewModal';
+import { HoldableImageBox } from '../Common/HoldableImageBox';
+import { ActiveOperatorBar } from '../Common/ActiveOperatorBar';
 import { InventoryViewMode } from '../Inventory/InventoryMoreSheet';
 import {
   AlertTriangle,
@@ -400,6 +402,13 @@ export const ExpiryDashboard: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto pb-28 lg:pb-10 space-y-2">
+      {/* 0. POS-STYLE ACTIVE OPERATOR & STORE BADGE BAR */}
+      <ActiveOperatorBar
+        locationName="Expiry & Quality Guard"
+        pulseColor="rose"
+        className="mb-1"
+      />
+
       {/* 1. COMPACT SCROLL-AWAY HEADER (Exact Stock Page Layout) */}
       <div className="space-y-1.5">
         {/* Row 1: Icon + Title + More (⋮) + Round Primary CTA */}
@@ -519,7 +528,7 @@ export const ExpiryDashboard: React.FC = () => {
         )}
       </div>
 
-      {/* 2. STICKY SEARCH + ONE-ROW SNAP FILTER CHIPS (Exact Stock Page Sticky Bar) */}
+      {/* 2. STICKY SEARCH + CATEGORY CHIPS + STATUS TABS (POS DNA) */}
       <div className="sticky top-0 z-20 -mx-2.5 sm:-mx-6 px-2.5 sm:px-6 pt-1 pb-2 bg-[#f8fafc] dark:bg-[#0B1210] border-b border-slate-200/70 dark:border-[#1E2E28] space-y-1.5">
         <div className="relative flex items-center">
           <Search className="w-4 h-4 absolute left-3 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />
@@ -546,7 +555,35 @@ export const ExpiryDashboard: React.FC = () => {
           )}
         </div>
 
-        {/* Single Horizontal Snap-Scroll Filter Chip Row */}
+        {/* Category Filter Chips Snap-Scroller (POS DNA) */}
+        <div className="relative">
+          <div
+            role="tablist"
+            aria-label="Product categories"
+            className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5"
+          >
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`h-8 px-3 rounded-full border text-xs font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0 snap-start transition-all duration-150 active:scale-[0.97] cursor-pointer ${
+                  selectedCategory === cat.id
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                    : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#A3B8AF] hover:border-slate-300 dark:hover:border-[#324A42]'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"
+          />
+        </div>
+
+        {/* Status Filter Chips Row */}
         <div className="relative">
           <div
             role="tablist"
@@ -562,15 +599,15 @@ export const ExpiryDashboard: React.FC = () => {
                   role="tab"
                   aria-selected={isActive}
                   onClick={() => setActiveTab(chip.id)}
-                  className={`snap-start shrink-0 h-8 px-3 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 border transition-colors duration-150 active:scale-[0.97] cursor-pointer ${
+                  className={`snap-start shrink-0 h-7 px-2.5 rounded-full text-[11px] font-semibold inline-flex items-center gap-1.5 border transition-colors duration-150 active:scale-[0.97] cursor-pointer ${
                     isActive
-                      ? 'bg-emerald-600 text-white border-emerald-600'
-                      : 'bg-white dark:bg-[#131F1B] text-slate-700 dark:text-[#C4D4CE] border-slate-200 dark:border-[#24352F] hover:border-emerald-500/50'
+                      ? 'bg-slate-900 text-white border-slate-900 dark:bg-emerald-700 dark:border-emerald-700 shadow-xs'
+                      : 'bg-white/90 dark:bg-[#131F1B] text-slate-600 dark:text-[#8FA69C] border-slate-200/90 dark:border-[#24352F] hover:border-slate-300'
                   }`}
                 >
                   <span>{chip.label}</span>
                   <span
-                    className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full leading-none ${
+                    className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full leading-none ${
                       isActive
                         ? 'bg-white/20 text-white'
                         : 'bg-slate-100 dark:bg-[#1E2E28] text-slate-600 dark:text-[#8FA69C]'
@@ -634,7 +671,7 @@ export const ExpiryDashboard: React.FC = () => {
           )}
         </div>
       ) : viewMode === 'cards' ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 pt-0.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 pt-0.5">
           {filteredBatches.map((batch) => {
             const meta = getStatusMeta(batch);
             const displayName = getProductDisplayName(batch);
@@ -642,61 +679,77 @@ export const ExpiryDashboard: React.FC = () => {
             return (
               <div
                 key={batch.id}
-                className={`group relative bg-white dark:bg-[#131F1B] rounded-2xl p-2 border transition-all duration-200 ease-out flex flex-col justify-between shadow-2xs hover:shadow-sm ${meta.cardBorder}`}
+                className={`group relative bg-white dark:bg-[#131F1B] rounded-2xl p-3 sm:p-3.5 border transition-all duration-150 flex flex-col justify-between select-none shadow-2xs hover:shadow-md ${meta.cardBorder}`}
               >
-                {/* Top: Square White Image Box + Status Pill */}
+                {/* Top: Unit badge (left) + Expiry Status Pill with colored dot (right) */}
                 <div>
-                  <div className="relative mb-1.5">
-                    <button
-                      type="button"
-                      onClick={() => batch.product && setPreviewImageProduct(batch.product)}
-                      aria-label={`View photo for ${displayName}`}
-                      className="relative w-full h-[88px] sm:h-28 rounded-xl bg-white border border-slate-100 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden flex items-center justify-center cursor-pointer transition-colors"
-                    >
-                      <div className="h-full aspect-square flex items-center justify-center">
-                        <ProductImage
-                          src={batch.product?.image_url}
-                          alt={displayName}
-                          category={batch.product?.category}
-                          fill
-                          className="group-hover:scale-[1.03] transition-transform duration-200"
-                        />
-                      </div>
-                      <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none bg-slate-900/75 text-white tabular-nums">
-                        {meta.daysText}
-                      </span>
-                    </button>
-
+                  <div className="flex items-start justify-between gap-1 mb-1.5">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] uppercase truncate max-w-[85px]">
+                      {formatCompactUnit(batch.product?.unit)}
+                    </span>
                     <span
-                      className={`absolute top-1.5 right-1.5 z-10 px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none tracking-tight shadow-2xs pointer-events-none ${meta.badgeClass}`}
+                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 ${meta.badgeClass}`}
                     >
-                      {meta.shortLabel}
+                      <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
+                      <span>{meta.shortLabel}</span>
                     </span>
                   </div>
 
-                  {/* Product Name (max 2 lines) + Batch & Expiry Meta */}
-                  <h3 className="text-[13px] sm:text-[14px] font-semibold text-slate-900 dark:text-[#E7F0EC] leading-snug line-clamp-2 min-h-[2.1rem]">
-                    {displayName}
-                  </h3>
-                  <div className="flex items-center justify-between gap-1 mt-0.5 text-[10px] text-slate-500 dark:text-[#8FA69C]">
-                    <span className="font-mono truncate">{batch.batch_no}</span>
-                    <span className="shrink-0 font-semibold tabular-nums">{batch.expiry_date}</span>
+                  {/* Standardized 1:1 Aspect-Square Product Image Showcase (POS DNA) */}
+                  <HoldableImageBox
+                    onHold={() => batch.product && setPreviewImageProduct(batch.product)}
+                    title="Hold image to view & update URL"
+                    className="group/posimg relative w-full aspect-square flex justify-center items-center mb-2.5 bg-white rounded-2xl border border-slate-200/80 dark:border-[#24352F] overflow-hidden shadow-2xs cursor-pointer"
+                    onTap={(e) => {
+                      e.stopPropagation();
+                      if (batch.product) setPreviewImageProduct(batch.product);
+                    }}
+                  >
+                    <ProductImage
+                      src={batch.product?.image_url}
+                      alt={displayName}
+                      category={batch.product?.category}
+                      fill
+                      className="group-hover/posimg:scale-[1.03] transition-transform duration-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (batch.product) setPreviewImageProduct(batch.product);
+                      }}
+                      title="Edit image URL"
+                      className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/75 hover:bg-emerald-700 text-white text-[9px] font-bold opacity-85 sm:opacity-0 sm:group-hover/posimg:opacity-100 transition-opacity cursor-pointer"
+                    >
+                      <Eye className="w-2.5 h-2.5" />
+                      <span>URL</span>
+                    </button>
+
+                    <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-[9px] font-extrabold leading-none bg-slate-900/85 text-white tabular-nums shadow-xs">
+                      {meta.daysText}
+                    </span>
+                  </HoldableImageBox>
+
+                  {/* Product Title (2-line clamp, bold) */}
+                  <div className="mb-1">
+                    <h4 className="font-extrabold text-slate-900 dark:text-[#E7F0EC] text-xs sm:text-sm leading-snug line-clamp-2 min-h-[2.2rem]">
+                      {displayName}
+                    </h4>
+                    <div className="flex items-center justify-between gap-1 mt-0.5 text-[10px] text-slate-500 dark:text-[#8FA69C]">
+                      <span className="font-mono truncate">{batch.batch_no}</span>
+                      <span className="shrink-0 font-semibold tabular-nums">{batch.expiry_date}</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Bottom: Remaining Qty + Cost Value & Write-Off Action */}
-                <div className="mt-1.5 space-y-1.5">
-                  <div className="flex items-baseline justify-between gap-1 px-0.5">
-                    <div className="min-w-0 truncate">
-                      <span className={`text-[18px] sm:text-[20px] font-bold tabular-nums leading-none ${meta.qtyTextClass}`}>
-                        {batch.qty_remaining}
-                      </span>
-                      <span className="ml-1 text-[11px] font-medium text-slate-500 dark:text-[#8FA69C]">
-                        {formatCompactUnit(batch.product?.unit)}
-                      </span>
-                    </div>
-                    <span className="text-[13px] sm:text-[14px] font-bold text-slate-800 dark:text-[#E7F0EC] tabular-nums shrink-0">
-                      ₹{batch.costValue.toLocaleString('en-IN')}
+                {/* Bottom Row: Remaining Qty + Risk Cost Value & Log Loss Action Button */}
+                <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between gap-1">
+                  <div className="min-w-0">
+                    <span className="text-[10px] text-slate-400 dark:text-[#8FA69C] block leading-none font-semibold">
+                      Qty Left: {batch.qty_remaining}
+                    </span>
+                    <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-[#E7F0EC] leading-tight block mt-0.5">
+                      Risk: ₹{batch.costValue.toLocaleString('en-IN')}
                     </span>
                   </div>
 
@@ -704,14 +757,14 @@ export const ExpiryDashboard: React.FC = () => {
                     type="button"
                     onClick={() => openWriteOff(batch)}
                     aria-label={`Log loss for ${displayName}`}
-                    className={`w-full min-h-[40px] rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 active:scale-[0.97] transition cursor-pointer ${
+                    className={`h-8 px-2.5 sm:px-3 rounded-xl text-xs font-black inline-flex items-center justify-center gap-1.5 active:scale-95 transition shadow-xs cursor-pointer shrink-0 ${
                       meta.isUrgent
-                        ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-2xs'
+                        ? 'bg-rose-600 hover:bg-rose-700 text-white'
                         : 'bg-transparent hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60'
                     }`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    <span>Log Loss</span>
+                    <span>Loss</span>
                   </button>
                 </div>
               </div>

@@ -31,6 +31,7 @@ import {
 import { formatSaleDateTime, formatSaleDate, formatSaleTime } from '../../lib/dateUtils';
 import { ReturnProductModal } from '../Returns/ReturnProductModal';
 import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
+import { ActiveOperatorBar } from '../Common/ActiveOperatorBar';
 import { LoadOlderHistoryButton } from '../Common/LoadOlderHistoryButton';
 import { useAuth } from '../../context/AuthContext';
 import { CustomerGender, CustomerAgeGroup, PaymentMode, SaleItem } from '../../types';
@@ -284,6 +285,13 @@ export const DailySalesTracker: React.FC = () => {
 
   return (
     <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-28 lg:pb-8">
+      {/* 0. POS-STYLE ACTIVE OPERATOR & STORE BADGE BAR */}
+      <ActiveOperatorBar
+        locationName="Daily Sales & Billing Counter Ledger"
+        pulseColor="emerald"
+        className="mb-1"
+      />
+
       {/* 1. Compact Header + More (⋮) Exports Sheet + Round New Bill CTA */}
       <CompactPageHeader
         title={'Daily Sales'}

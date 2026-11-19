@@ -3,6 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
+import { ActiveOperatorBar } from '../Common/ActiveOperatorBar';
 import { LoadOlderHistoryButton } from '../Common/LoadOlderHistoryButton';
 import { DamageReason } from '../../types';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
@@ -135,6 +136,13 @@ export const DamageTracker: React.FC = () => {
 
   return (
     <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-28 lg:pb-8">
+      {/* 0. POS-STYLE ACTIVE OPERATOR & STORE BADGE BAR */}
+      <ActiveOperatorBar
+        locationName="Spoilage & Waste Audit Register"
+        pulseColor="rose"
+        className="mb-1"
+      />
+
       {/* 1. Compact Header + More (⋮) Reports Sheet + Round Log Damage CTA */}
       <CompactPageHeader
         title={t('damageTitle')}

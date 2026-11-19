@@ -748,7 +748,7 @@ export const ProfitReport: React.FC = () => {
                   {/* Horizontal progress bar relative to #1 */}
                   <div className="w-full bg-slate-200/80 dark:bg-[#131F1B] rounded-full h-1.5 overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all duration-300 ${
+                      className={`h-full rounded-full animate-data-bar ${
                         topProductsTab === 'revenue' ? 'bg-emerald-600' : 'bg-blue-600'
                       }`}
                       style={{ width: `${relativePercent}%` }}
@@ -832,8 +832,8 @@ export const ProfitReport: React.FC = () => {
                   </div>
 
                   <div className="w-full bg-slate-200 dark:bg-[#131F1B] rounded-full h-2 flex overflow-hidden">
-                    <div className="bg-blue-500 h-full transition-all" style={{ width: `${maleShare}%` }} />
-                    <div className="bg-pink-500 h-full transition-all" style={{ width: `${femaleShare}%` }} />
+                    <div className="bg-blue-500 h-full animate-data-bar" style={{ width: `${maleShare}%` }} />
+                    <div className="bg-pink-500 h-full animate-data-bar" style={{ width: `${femaleShare}%` }} />
                   </div>
 
                   <div className="text-[11px] text-slate-500 dark:text-[#8FA69C] flex justify-between pt-0.5">
@@ -1005,8 +1005,8 @@ export const ProfitReport: React.FC = () => {
                                 <span className="text-pink-600 dark:text-pink-400 font-bold">F {fPercent}%</span>
                               </span>
                               <div className="w-16 bg-slate-200 dark:bg-[#131F1B] rounded-full h-1.5 flex overflow-hidden">
-                                <div className="bg-blue-500 h-full" style={{ width: `${mPercent}%` }} />
-                                <div className="bg-pink-500 h-full" style={{ width: `${fPercent}%` }} />
+                                <div className="bg-blue-500 h-full animate-data-bar" style={{ width: `${mPercent}%` }} />
+                                <div className="bg-pink-500 h-full animate-data-bar" style={{ width: `${fPercent}%` }} />
                               </div>
                             </div>
 

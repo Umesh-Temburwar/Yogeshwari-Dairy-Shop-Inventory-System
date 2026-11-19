@@ -592,7 +592,7 @@ export const ProductBatchesModal: React.FC<ProductBatchesModalProps> = ({
                   <div className="mt-2.5 pt-2 border-t border-slate-200/60 dark:border-[#24352F] flex items-center gap-2">
                     <div className="flex-1 bg-slate-200 dark:bg-[#131F1B] rounded-full h-1.5 overflow-hidden">
                       <div 
-                        className={`h-full ${
+                        className={`h-full animate-data-bar ${
                           status === 'EXPIRED' ? 'bg-rose-500' :
                           status === 'EXPIRING_TODAY' ? 'bg-amber-500' :
                           status === 'EXPIRING_TOMORROW' ? 'bg-yellow-500' : 'bg-emerald-500'

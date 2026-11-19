@@ -89,8 +89,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             {isSidebarCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
           </button>
 
-          {/* Brand Logo - Enlarged & Circular */}
-          <div className="w-11 h-11 sm:w-[50px] sm:h-[50px] rounded-full bg-white p-0.5 shadow-md border-2 border-emerald-500/40 dark:border-emerald-500/60 ring-2 ring-emerald-500/10 flex items-center justify-center shrink-0 overflow-hidden transition-transform hover:scale-105">
+          {/* Brand Logo - 36px on mobile */}
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white p-0.5 shadow-md border-2 border-emerald-500/40 dark:border-emerald-500/60 ring-2 ring-emerald-500/10 flex items-center justify-center shrink-0 overflow-hidden transition-transform hover:scale-105">
             <img 
               src={ydoLogo} 
               alt="Yogeshwari Dairy Logo" 
@@ -104,11 +104,21 @@ export const Navbar: React.FC<NavbarProps> = ({
             />
           </div>
 
-          {/* Shop Title - single line, truncate, subtitle hidden below xl */}
+          {/* Shop Title - single line, truncate, online dot beside title */}
           <div className="min-w-0 truncate">
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-[#E7F0EC] tracking-tight truncate">
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-[#E7F0EC] tracking-tight truncate">
                 {t('shopName')}
+              </span>
+              <span className="relative flex h-2 w-2 shrink-0" title={realtimeStatus === 'CONNECTED' ? 'Online' : 'Syncing'}>
+                {realtimeStatus === 'CONNECTED' ? (
+                  <>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </>
+                ) : (
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                )}
               </span>
               <span className="hidden md:inline-block px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 shrink-0">
                 {t('erpBadge')}
@@ -139,9 +149,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* Realtime Live Sync Status Indicator (Subtle & Non-blocking) */}
+          {/* Realtime Live Sync Status Indicator (Desktop/Tablet) */}
           <div 
-            className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-black tracking-tight"
+            className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-black tracking-tight"
             title={
               realtimeStatus === 'CONNECTED'
                 ? 'Realtime Database Synced'

@@ -512,36 +512,37 @@ export const ReorderNeedsView: React.FC = () => {
                     : 'border-amber-200/90 dark:border-amber-800/50'
                 }`}
               >
-                {/* Top: Square White Image Box + Status Pill */}
+                {/* Top: Square White Image Box (Stock & POS size) + Status Pill */}
                 <div>
                   <div className="relative mb-1.5">
                     <button
                       type="button"
                       onClick={() => setPreviewImageProduct(item)}
                       aria-label={`View photo for ${item.name}`}
-                      className="relative w-full h-[88px] sm:h-28 rounded-xl bg-white border border-slate-100 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden flex items-center justify-center cursor-pointer transition-colors"
+                      title="Click photo to view"
+                      className="relative w-full aspect-square rounded-2xl bg-white border border-slate-200/80 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden flex items-center justify-center cursor-pointer transition-colors shadow-2xs"
                     >
-                      <div className="h-full aspect-square flex items-center justify-center">
-                        <ProductImage
-                          src={item.image_url}
-                          alt={item.name}
-                          category={item.category}
-                          fill
-                          className="group-hover:scale-[1.03] transition-transform duration-200"
-                        />
-                      </div>
+                      <ProductImage
+                        src={item.image_url}
+                        alt={item.name}
+                        category={item.category}
+                        fill
+                        className="group-hover:scale-[1.03] transition-transform duration-200 motion-reduce:transition-none"
+                      />
                       {item.isFastMover && (
-                        <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none bg-orange-600 text-white">
+                        <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none bg-orange-600 text-white shadow-2xs">
                           Fast
                         </span>
                       )}
                     </button>
 
-                    <span
-                      className={`absolute top-1.5 right-1.5 z-10 px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none tracking-tight shadow-2xs pointer-events-none ${statusBadgeClass}`}
-                    >
-                      {isOut ? 'Out' : 'Low'}
-                    </span>
+                    <div className="absolute top-1.5 right-1.5 flex items-center gap-1 z-10">
+                      <span
+                        className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none tracking-tight shadow-2xs pointer-events-none ${statusBadgeClass}`}
+                      >
+                        {isOut ? 'Out' : 'Low'}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Product Name (max 2 lines) + Category / Min Alert */}
@@ -597,9 +598,9 @@ export const ReorderNeedsView: React.FC = () => {
                     type="button"
                     onClick={() => setActiveView('purchases')}
                     aria-label={`Order ${item.recommendedOrderQty} ${item.unit} of ${item.name}`}
-                    className="w-full min-h-[40px] rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white text-xs font-bold inline-flex items-center justify-center gap-1 shadow-2xs transition cursor-pointer"
+                    className="w-full min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-2xs transition cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <Plus className="w-4 h-4 stroke-[2.5]" />
                     <span className="truncate">
                       Order {item.recommendedOrderQty} {formatCompactUnit(item.unit)}
                     </span>
@@ -626,7 +627,7 @@ export const ReorderNeedsView: React.FC = () => {
                   type="button"
                   onClick={() => setPreviewImageProduct(item)}
                   aria-label={`View photo for ${item.name}`}
-                  className="relative w-14 h-14 shrink-0 aspect-square rounded-xl bg-white border border-slate-100 dark:border-[#24352F] overflow-hidden cursor-pointer"
+                  className="relative w-14 h-14 shrink-0 aspect-square rounded-xl bg-white border border-slate-200/80 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden cursor-pointer transition-colors shadow-2xs"
                 >
                   <ProductImage
                     src={item.image_url}

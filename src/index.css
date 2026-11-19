@@ -219,11 +219,69 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   animation: passcode-caret 1s step-end infinite;
 }
 
+/* Page & View Enter Transition (Instant, Butter-Smooth 220ms GPU Lift) */
+@keyframes viewEnter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-view-enter {
+  animation: viewEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform;
+}
+
+/* Smooth Data Bar & Progress Bar Fill Animation */
+@keyframes dataBarGrow {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+.animate-data-bar {
+  transform-origin: left center;
+  animation: dataBarGrow 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, width;
+}
+
+/* Universal Butter-Smooth Button & Action Micro-Interactions (Zero Lag, Hardware Accelerated) */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), 
+              background-color 0.15s ease-out, 
+              border-color 0.15s ease-out, 
+              box-shadow 0.15s ease-out, 
+              opacity 0.15s ease-out;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active {
+  transform: scale3d(0.965, 0.965, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-subtle-shake,
   .animate-passcode-caret,
-  .animate-scanner-sweep {
+  .animate-scanner-sweep,
+  .animate-view-enter,
+  .animate-data-bar {
     animation: none !important;
+    transition: none !important;
+  }
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active {
+    transform: none !important;
   }
 }
 

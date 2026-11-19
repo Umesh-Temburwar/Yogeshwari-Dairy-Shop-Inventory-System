@@ -158,7 +158,7 @@ const MainContent: React.FC = () => {
           className="flex-1 h-full p-2.5 sm:p-6 min-w-0 overflow-y-auto scroll-smooth pb-28 lg:pb-6 overscroll-y-auto relative"
         >
           <Suspense fallback={<ViewFallbackSkeleton />}>
-            <div key={activeView} className="w-full">
+            <div key={activeView} className="w-full animate-view-enter transform-gpu">
               {activeView === 'dashboard' && (
                 <DashboardView
                   onOpenAddProduct={() => {

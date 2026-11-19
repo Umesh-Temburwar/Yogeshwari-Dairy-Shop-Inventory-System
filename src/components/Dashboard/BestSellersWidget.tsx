@@ -98,7 +98,7 @@ export const BestSellersWidget: React.FC = () => {
                 {/* Progress bar with visible dark track */}
                 <div className="h-2 w-full bg-slate-200 dark:bg-[#283C35] rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 dark:from-emerald-400 dark:to-teal-300 rounded-full transition-all duration-500 shadow-xs"
+                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 dark:from-emerald-400 dark:to-teal-300 rounded-full animate-data-bar shadow-xs"
                     style={{ width: `${Math.max(percentage, 4)}%` }}
                   />
                 </div>

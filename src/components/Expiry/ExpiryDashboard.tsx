@@ -644,41 +644,42 @@ export const ExpiryDashboard: React.FC = () => {
                 key={batch.id}
                 className={`group relative bg-white dark:bg-[#131F1B] rounded-2xl p-2 border transition-all duration-200 ease-out flex flex-col justify-between shadow-2xs hover:shadow-sm ${meta.cardBorder}`}
               >
-                {/* Top: Square White Image Box + Status Pill */}
+                {/* Top: Square White Image Box (Stock & POS size) + Status Pill */}
                 <div>
                   <div className="relative mb-1.5">
                     <button
                       type="button"
                       onClick={() => batch.product && setPreviewImageProduct(batch.product)}
                       aria-label={`View photo for ${displayName}`}
-                      className="relative w-full h-[88px] sm:h-28 rounded-xl bg-white border border-slate-100 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden flex items-center justify-center cursor-pointer transition-colors"
+                      title="Click photo to view"
+                      className="relative w-full aspect-square rounded-2xl bg-white border border-slate-200/80 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden flex items-center justify-center cursor-pointer transition-colors shadow-2xs"
                     >
-                      <div className="h-full aspect-square flex items-center justify-center">
-                        <ProductImage
-                          src={batch.product?.image_url}
-                          alt={displayName}
-                          category={batch.product?.category}
-                          fill
-                          className="group-hover:scale-[1.03] transition-transform duration-200"
-                        />
-                      </div>
-                      <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none bg-slate-900/75 text-white tabular-nums">
+                      <ProductImage
+                        src={batch.product?.image_url}
+                        alt={displayName}
+                        category={batch.product?.category}
+                        fill
+                        className="group-hover:scale-[1.03] transition-transform duration-200 motion-reduce:transition-none"
+                      />
+                      <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none bg-slate-900/75 text-white tabular-nums shadow-2xs">
                         {meta.daysText}
                       </span>
                     </button>
 
-                    <span
-                      className={`absolute top-1.5 right-1.5 z-10 px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none tracking-tight shadow-2xs pointer-events-none ${meta.badgeClass}`}
-                    >
-                      {meta.shortLabel}
-                    </span>
+                    <div className="absolute top-1.5 right-1.5 flex items-center gap-1 z-10">
+                      <span
+                        className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none tracking-tight shadow-2xs pointer-events-none ${meta.badgeClass}`}
+                      >
+                        {meta.shortLabel}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Product Name (max 2 lines) + Batch & Expiry Meta */}
                   <h3 className="text-[13px] sm:text-[14px] font-semibold text-slate-900 dark:text-[#E7F0EC] leading-snug line-clamp-2 min-h-[2.1rem]">
                     {displayName}
                   </h3>
-                  <div className="flex items-center justify-between gap-1 mt-0.5 text-[10px] text-slate-500 dark:text-[#8FA69C]">
+                  <div className="flex items-center justify-between gap-1 mt-0.5 text-[11px] text-slate-500 dark:text-[#8FA69C]">
                     <span className="font-mono truncate">{batch.batch_no}</span>
                     <span className="shrink-0 font-semibold tabular-nums">{batch.expiry_date}</span>
                   </div>
@@ -686,7 +687,7 @@ export const ExpiryDashboard: React.FC = () => {
 
                 {/* Bottom: Remaining Qty + Cost Value & Write-Off Action */}
                 <div className="mt-1.5 space-y-1.5">
-                  <div className="flex items-baseline justify-between gap-1 px-0.5">
+                  <div className="flex items-baseline justify-between gap-1 px-1 py-0.5">
                     <div className="min-w-0 truncate">
                       <span className={`text-[18px] sm:text-[20px] font-bold tabular-nums leading-none ${meta.qtyTextClass}`}>
                         {batch.qty_remaining}
@@ -704,13 +705,13 @@ export const ExpiryDashboard: React.FC = () => {
                     type="button"
                     onClick={() => openWriteOff(batch)}
                     aria-label={`Log loss for ${displayName}`}
-                    className={`w-full min-h-[40px] rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 active:scale-[0.97] transition cursor-pointer ${
+                    className={`w-full min-h-[44px] rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 active:scale-[0.97] transition cursor-pointer ${
                       meta.isUrgent
                         ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-2xs'
                         : 'bg-transparent hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60'
                     }`}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4" />
                     <span>Log Loss</span>
                   </button>
                 </div>
@@ -733,7 +734,7 @@ export const ExpiryDashboard: React.FC = () => {
                   type="button"
                   onClick={() => batch.product && setPreviewImageProduct(batch.product)}
                   aria-label={`View photo for ${displayName}`}
-                  className="relative w-14 h-14 shrink-0 aspect-square rounded-xl bg-white border border-slate-100 dark:border-[#24352F] overflow-hidden cursor-pointer"
+                  className="relative w-14 h-14 shrink-0 aspect-square rounded-xl bg-white border border-slate-200/80 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden cursor-pointer transition-colors shadow-2xs"
                 >
                   <ProductImage
                     src={batch.product?.image_url}

@@ -1618,7 +1618,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const totalDamagesLoss = filteredDamages.reduce((acc, d) => acc + d.estimated_loss_amount, 0);
     const grossProfit = totalSalesRevenue - cogs;
-    const netProfit = grossProfit - operatingExpenses - totalDamagesLoss;
+    const clientRefundAmount = filteredReturns.reduce((acc, r) => acc + (r.refund_amount || 0), 0);
+    const totalSupplierRefundReceived = filteredSupplierReturns
+      .filter(r => r.refund_status === 'Refund_Received' || r.refund_status === 'Adjusted_In_Next_Bill')
+      .reduce((acc, r) => acc + (r.total_refund_amount || 0), 0);
+    const netProfit = grossProfit - operatingExpenses - totalDamagesLoss - clientRefundAmount + totalSupplierRefundReceived;
 
     const totalOutstandingUdhar = customers.reduce((acc, c) => acc + (c.current_balance > 0 ? c.current_balance : 0), 0);
     const lowStockCount = products.filter(p => p.stock_quantity <= p.min_stock_alert && p.stock_quantity > 0).length;
@@ -1657,12 +1661,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const finalOperatingExpenses = srv ? srv.operating_expenses : operatingExpenses;
     const finalCapitalInvestments = srv ? srv.capital_investments : capitalInvestments;
     const finalDamagesLoss = srv ? srv.total_damages_loss : totalDamagesLoss;
-    const finalNetProfit = srv ? srv.net_profit : netProfit;
     const finalOutstandingUdhar = srv ? srv.total_outstanding_udhar : totalOutstandingUdhar;
     const finalReturnsCount = srv ? srv.total_returns_count : filteredReturns.length;
     const finalRefundAmount = srv
       ? srv.total_refund_amount
-      : filteredReturns.reduce((acc, r) => acc + (r.refund_amount || 0), 0);
+      : clientRefundAmount;
+    const finalNetProfit = srv
+      ? (srv.net_profit - finalRefundAmount + totalSupplierRefundReceived)
+      : netProfit;
 
     return {
       totalSalesRevenue: finalSalesRevenue,
@@ -1692,7 +1698,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Supplier Returns Metrics
       totalSupplierReturnsCount: filteredSupplierReturns.length,
       totalSupplierRefundAmount: filteredSupplierReturns.reduce((acc, r) => acc + (r.total_refund_amount || 0), 0),
-      totalSupplierRefundReceived: filteredSupplierReturns.filter(r => r.refund_status === 'Refund_Received' || r.refund_status === 'Adjusted_In_Next_Bill').reduce((acc, r) => acc + (r.total_refund_amount || 0), 0),
+      totalSupplierRefundReceived,
       pendingSupplierRefundAmount: filteredSupplierReturns.filter(r => r.refund_status === 'Pending').reduce((acc, r) => acc + (r.total_refund_amount || 0), 0),
       supplierReplacementCount: filteredSupplierReturns.filter(r => r.refund_status === 'Replacement_Received').length,
       // Compatibility Aliases

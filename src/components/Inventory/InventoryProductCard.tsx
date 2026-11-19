@@ -82,7 +82,7 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
             : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500/70'
         }`}
       >
-        {/* Top Section: One-Click Square White Image Box + Status Pill & Quick Edit Button */}
+        {/* Top Section: One-Click Square White Image Box (POS Size) + Status Pill & Quick Edit Button */}
         <div>
           <div className="relative mb-1.5">
             <button
@@ -93,17 +93,15 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
               }}
               aria-label={`View or upload photo for ${displayName}`}
               title={'Click photo to view, crop, or upload'}
-              className="relative w-full h-[88px] sm:h-28 rounded-xl bg-white border border-slate-100 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden flex items-center justify-center cursor-pointer transition-colors"
+              className="relative w-full aspect-square rounded-2xl bg-white border border-slate-200/80 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden flex items-center justify-center cursor-pointer transition-colors shadow-2xs"
             >
-              <div className="h-full aspect-square flex items-center justify-center">
-                <ProductImage
-                  src={product.image_url}
-                  alt={product.name}
-                  category={product.category}
-                  fill
-                  className="group-hover:scale-[1.03] transition-transform duration-200 motion-reduce:transition-none"
-                />
-              </div>
+              <ProductImage
+                src={product.image_url}
+                alt={product.name}
+                category={product.category}
+                fill
+                className="group-hover:scale-[1.03] transition-transform duration-200 motion-reduce:transition-none"
+              />
 
               {hasExpiringSoon && (
                 <span
@@ -175,21 +173,8 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
             </span>
           </div>
 
-          {/* 44x44 Min Touch Target Stock In (+) & Stock Out (−) Buttons */}
+          {/* 44x44 Min Touch Target Stock Out (−) on Left & Stock In (+) on Right */}
           <div className="grid grid-cols-2 gap-1.5">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenDetail(product, 'in');
-              }}
-              aria-label={`Stock in ${displayName}`}
-              title="Stock In (+)"
-              className="min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white flex items-center justify-center transition-transform duration-150 ease-out motion-reduce:transition-none shadow-2xs cursor-pointer"
-            >
-              <Plus className="w-5 h-5 stroke-[2.5]" />
-            </button>
-
             <button
               type="button"
               disabled={isOut}
@@ -202,6 +187,19 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
               className="min-h-[44px] rounded-xl bg-transparent hover:bg-rose-50 dark:hover:bg-rose-950/40 active:scale-[0.97] text-slate-700 dark:text-[#E7F0EC] hover:text-rose-700 dark:hover:text-rose-300 border border-slate-300 dark:border-[#2C4139] flex items-center justify-center transition-transform duration-150 ease-out motion-reduce:transition-none disabled:opacity-35 disabled:pointer-events-none cursor-pointer"
             >
               <Minus className="w-5 h-5 stroke-[2.5]" />
+            </button>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenDetail(product, 'in');
+              }}
+              aria-label={`Stock in ${displayName}`}
+              title="Stock In (+)"
+              className="min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white flex items-center justify-center transition-transform duration-150 ease-out motion-reduce:transition-none shadow-2xs cursor-pointer"
+            >
+              <Plus className="w-5 h-5 stroke-[2.5]" />
             </button>
           </div>
         </div>
@@ -354,7 +352,7 @@ InventoryListRow.displayName = 'InventoryListRow';
 /** Shimmer Skeleton Card for smooth loading transitions */
 export const InventorySkeletonCard: React.FC = () => (
   <div className="bg-white dark:bg-[#131F1B] rounded-2xl p-2 border border-slate-200/80 dark:border-[#24352F] space-y-2 animate-pulse">
-    <div className="w-full h-[88px] sm:h-28 rounded-xl bg-slate-200 dark:bg-[#1A2A25]" />
+    <div className="w-full aspect-square rounded-2xl bg-slate-200 dark:bg-[#1A2A25]" />
     <div className="space-y-1.5">
       <div className="h-3.5 w-4/5 rounded bg-slate-200 dark:bg-[#1A2A25]" />
       <div className="h-2.5 w-1/2 rounded bg-slate-100 dark:bg-[#1A2A25]" />

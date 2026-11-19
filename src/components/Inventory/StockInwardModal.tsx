@@ -42,10 +42,13 @@ interface MultiLotRow {
 }
 
 export const StockInwardModal: React.FC<StockInwardModalProps> = ({ product, onClose }) => {
+  if (!product) return null;
+  return <StockInwardModalContent product={product} onClose={onClose} />;
+};
+
+const StockInwardModalContent: React.FC<{ product: Product; onClose: () => void }> = ({ product, onClose }) => {
   const { batches, addStockEntries, adjustStock } = useStore();
   const { t, language, tr } = useLanguage();
-
-  if (!product) return null;
 
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
   const shelfDays = useMemo(() => getShelfLifeDays(product.category, product.name), [product]);

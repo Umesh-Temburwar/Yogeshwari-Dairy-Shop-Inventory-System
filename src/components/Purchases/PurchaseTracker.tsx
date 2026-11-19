@@ -28,7 +28,6 @@ import {
 } from 'lucide-react';
 import { SupplierReturnModal } from '../Returns/SupplierReturnModal';
 import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
-import { ActiveOperatorBar } from '../Common/ActiveOperatorBar';
 import { LoadOlderHistoryButton } from '../Common/LoadOlderHistoryButton';
 
 export const PurchaseTracker: React.FC = () => {
@@ -221,13 +220,6 @@ export const PurchaseTracker: React.FC = () => {
 
   return (
     <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-28 lg:pb-8">
-      {/* 0. POS-STYLE ACTIVE OPERATOR & STORE BADGE BAR */}
-      <ActiveOperatorBar
-        locationName="Procurement & Inward Stock Ledger"
-        pulseColor="blue"
-        className="mb-1"
-      />
-
       {/* 1. Compact Header + More (⋮) Actions Sheet + Round Record CTA */}
       <CompactPageHeader
         title={'Purchases'}

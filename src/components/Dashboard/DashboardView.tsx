@@ -6,7 +6,6 @@ import { BestSellersWidget } from './BestSellersWidget';
 import { LowStockAlertsWidget } from './LowStockAlertsWidget';
 import { OwnerAdminCounterWidget } from './OwnerAdminCounterWidget';
 import { CompactPageHeader } from '../Common/CompactPageHeader';
-import { ActiveOperatorBar } from '../Common/ActiveOperatorBar';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { LayoutDashboard, ShoppingCart, Plus } from 'lucide-react';
@@ -31,13 +30,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddProduct }
 
   return (
     <div className="space-y-3 sm:space-y-4 max-w-7xl mx-auto pb-28 lg:pb-8">
-      {/* POS-Style Active Operator & Store Badge Bar */}
-      <ActiveOperatorBar
-        locationName="Dairy Central Headquarters"
-        pulseColor="emerald"
-        className="mb-1"
-      />
-
       {/* Compact 1-Row Header (Matches Inventory Mobile-First System) */}
       <CompactPageHeader
         title={title}

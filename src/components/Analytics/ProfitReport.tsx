@@ -3,7 +3,6 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { CompactPageHeader } from '../Common/CompactPageHeader';
-import { ActiveOperatorBar } from '../Common/ActiveOperatorBar';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import {
   Sparkles,
@@ -287,12 +286,6 @@ export const ProfitReport: React.FC = () => {
 
   return (
     <div className="space-y-3 max-w-5xl mx-auto pb-28 lg:pb-8">
-      {/* 0. POS-STYLE ACTIVE OPERATOR & STORE BADGE BAR */}
-      <ActiveOperatorBar
-        locationName="Profit & Loss Analytics Headquarters"
-        pulseColor="emerald"
-        className="mb-1"
-      />
 
       {/* 1. Compact Header + Overflow Export Sheet */}
       <CompactPageHeader

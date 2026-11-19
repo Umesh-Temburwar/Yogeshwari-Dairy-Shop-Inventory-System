@@ -4,7 +4,6 @@ import { useLanguage } from '../../context/LanguageContext';
 import { UdharCustomer } from '../../types';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
-import { ActiveOperatorBar } from '../Common/ActiveOperatorBar';
 import { LoadOlderHistoryButton } from '../Common/LoadOlderHistoryButton';
 import {
   BookOpen,
@@ -228,13 +227,6 @@ export const KhataBook: React.FC = () => {
 
   return (
     <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-28 lg:pb-8">
-      {/* 0. POS-STYLE ACTIVE OPERATOR & STORE BADGE BAR */}
-      <ActiveOperatorBar
-        locationName="Udhar Khata & Credit Ledger"
-        pulseColor="amber"
-        className="mb-1"
-      />
-
       {/* 1. Compact Header + More (⋮) Exports Sheet + Round Add Customer CTA */}
       <CompactPageHeader
         title={t('khataTitle')}

@@ -1,9 +1,8 @@
 import React from 'react';
-import { Plus, Minus, Pencil, Eye, Clock } from 'lucide-react';
+import { Plus, Minus, Pencil } from 'lucide-react';
 import { Product } from '../../types';
 import { useLanguage } from '../../context/LanguageContext';
 import { ProductImage } from '../Common/ProductImage';
-import { HoldableImageBox } from '../Common/HoldableImageBox';
 
 export interface InventoryCardItemProps {
   product: Product;
@@ -29,13 +28,12 @@ const formatCompactUnit = (unit: string): string => {
 };
 
 /**
- * Standardized POS-Style Product Card for Stock & Inventory
- * - Identical visual architecture to POS `BillingCounter` cards:
- *   - Top row: Compact Unit badge (left) + Stock Status badge with colored dot (right)
- *   - Center: 1:1 Aspect-Square White Image Showcase (`HoldableImageBox` + hover scale + URL overlay)
- *   - Title: Bold 2-line clamped product title + muted category subtitle
- *   - Expiry alert warning pill if expiring soon
- *   - Bottom row: `Rate` bold price + purchase cost + Action row: Quick Edit pencil, Stock Out (−), and Stock In (+)
+ * Compact Mobile-First Product Card (~195-210px tall on 360px 2-col grid)
+ * - Fixed square white image showcase (object-contain, cached, hold-to-edit URL)
+ * - Subtle corner status badge (In / Low / Out)
+ * - Name (max 2 lines), muted category, prominent stock + selling rate
+ * - Bottom 44x44 touch-target "+" Stock In (filled) and "−" Stock Out (outlined)
+ * - Tap card to open full detail bottom sheet (batches, cost price, edit, delete, stepper)
  */
 export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo(
   ({
@@ -53,6 +51,18 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
     const isOut = status === 'out';
     const isLow = status === 'low';
 
+    const statusBadgeClass = isOut
+      ? 'bg-rose-600 text-white'
+      : isLow
+      ? 'bg-amber-500 text-slate-950'
+      : 'bg-emerald-600 text-white';
+
+    const statusDotLabel = isOut
+      ? 'Out'
+      : isLow
+      ? 'Low'
+      : 'In';
+
     return (
       <div
         role="button"
@@ -64,128 +74,122 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
             onOpenDetail(product);
           }
         }}
-        className={`relative bg-white dark:bg-[#131F1B] rounded-2xl p-3 sm:p-3.5 border transition-all duration-150 flex flex-col justify-between group select-none shadow-2xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
-          isFlashing
-            ? 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-50/30 dark:bg-emerald-950/20'
-            : isOut
-            ? 'border-rose-200/90 dark:border-rose-900/50 opacity-80 bg-slate-50/50 dark:bg-[#16221E]'
+        className={`group relative bg-white dark:bg-[#131F1B] rounded-2xl p-2 border transition-all duration-200 ease-out motion-reduce:transition-none flex flex-col justify-between shadow-2xs hover:shadow-sm cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+          isOut
+            ? 'border-rose-200/90 dark:border-rose-900/50'
             : isLow
-            ? 'border-amber-200/90 dark:border-amber-800/50 hover:border-amber-500 shadow-2xs'
-            : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500 dark:hover:border-emerald-500/60 hover:shadow-md'
+            ? 'border-amber-200/90 dark:border-amber-800/50'
+            : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500/70'
         }`}
       >
+        {/* Top Section: One-Click Square White Image Box + Status Pill & Quick Edit Button */}
         <div>
-          {/* Top Badges: Unit Pill on Left, Stock Status Pill with colored dot on Right (POS DNA) */}
-          <div className="flex items-start justify-between gap-1 mb-1.5">
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] uppercase truncate max-w-[85px]">
-              {formatCompactUnit(product.unit)}
-            </span>
-            <span
-              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 ${
-                isOut
-                  ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300'
-                  : isLow
-                  ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
-                  : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
-              }`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
-              <span>
-                {isOut
-                  ? 'Out of Stock'
-                  : `${product.stock_quantity} in stock`}
-              </span>
-            </span>
-          </div>
-
-          {/* Standardized 1:1 Aspect-Square Product Image Showcase (POS DNA) */}
-          <HoldableImageBox
-            onHold={() => onPreviewImage(product)}
-            title="Hold image to view & update URL"
-            className="group/posimg relative w-full aspect-square flex justify-center items-center mb-2.5 bg-white rounded-2xl border border-slate-200/80 dark:border-[#24352F] overflow-hidden shadow-2xs cursor-pointer"
-            onTap={(e) => {
-              e.stopPropagation();
-              onPreviewImage(product);
-            }}
-          >
-            <ProductImage
-              src={product.image_url}
-              alt={product.name}
-              category={product.category}
-              fill
-              className="group-hover/posimg:scale-[1.03] transition-transform duration-200"
-            />
+          <div className="relative mb-1.5">
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onPreviewImage(product);
               }}
-              title="Edit image URL"
-              className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/75 hover:bg-emerald-700 text-white text-[9px] font-bold opacity-85 sm:opacity-0 sm:group-hover/posimg:opacity-100 transition-opacity cursor-pointer"
+              aria-label={`View or upload photo for ${displayName}`}
+              title={'Click photo to view, crop, or upload'}
+              className="relative w-full h-[88px] sm:h-28 rounded-xl bg-white border border-slate-100 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden flex items-center justify-center cursor-pointer transition-colors"
             >
-              <Eye className="w-2.5 h-2.5" />
-              <span>URL</span>
+              <div className="h-full aspect-square flex items-center justify-center">
+                <ProductImage
+                  src={product.image_url}
+                  alt={product.name}
+                  category={product.category}
+                  fill
+                  className="group-hover:scale-[1.03] transition-transform duration-200 motion-reduce:transition-none"
+                />
+              </div>
+
+              {hasExpiringSoon && (
+                <span
+                  className="absolute top-1.5 left-1.5 w-2.5 h-2.5 rounded-full bg-orange-500 ring-2 ring-white"
+                  title="Expiring soon"
+                  aria-label="Expiring soon"
+                />
+              )}
             </button>
 
-            {hasExpiringSoon && (
-              <div className="absolute top-1.5 left-1.5 flex items-center gap-1 text-[10px] font-extrabold text-orange-700 dark:text-orange-400 bg-orange-50/95 dark:bg-orange-950/90 px-1.5 py-0.5 rounded-md border border-orange-200 dark:border-orange-900/50 shadow-xs">
-                <Clock className="w-2.5 h-2.5 text-orange-600 dark:text-orange-400 shrink-0" />
-                <span className="truncate">Exp. Soon</span>
-              </div>
-            )}
-          </HoldableImageBox>
-
-          {/* Product Title (2-line clamp, bold leading-snug) */}
-          <div className="mb-1">
-            <h4 className="font-extrabold text-slate-900 dark:text-[#E7F0EC] text-xs sm:text-sm leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 line-clamp-2 min-h-[2.2rem]">
-              {displayName}
-            </h4>
-            {product.name !== displayName && (
-              <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] font-medium truncate mt-0.5">
-                {product.name}
-              </p>
-            )}
-            <p className="text-[11px] text-slate-400 dark:text-[#6F877D] truncate mt-0.5 font-medium">
-              {product.category}
-            </p>
+            {/* Quick Edit Button + In/Low/Out Status Pill */}
+            <div className="absolute top-1.5 right-1.5 flex items-center gap-1 z-10">
+              {onEditProduct && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditProduct(product);
+                  }}
+                  aria-label={`Edit ${displayName}`}
+                  title="Edit Product Details"
+                  className="w-6 h-6 rounded-full bg-white/95 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200/90 shadow-xs flex items-center justify-center active:scale-90 transition cursor-pointer"
+                >
+                  <Pencil className="w-3 h-3" />
+                </button>
+              )}
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none tracking-tight shadow-2xs pointer-events-none ${statusBadgeClass}`}
+              >
+                {statusDotLabel}
+              </span>
+            </div>
           </div>
+
+          {/* Name (14px semibold, max 2 lines) + Muted Category (11px) */}
+          <h3 className="text-[13px] sm:text-[14px] font-semibold text-slate-900 dark:text-[#E7F0EC] leading-snug line-clamp-2 min-h-[2.1rem]">
+            {displayName}
+          </h3>
+          <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] truncate leading-tight mt-0.5">
+            {product.category}
+          </p>
         </div>
 
-        {/* Bottom Row: Rate + Action Buttons (Stock Out − / Stock In + / Quick Edit Pencil) */}
-        <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between gap-1">
-          <div className="min-w-0">
-            <span className="text-[10px] text-slate-400 dark:text-[#8FA69C] block leading-none font-semibold">
-              Rate
-            </span>
-            <span className="text-sm sm:text-base font-black text-emerald-700 dark:text-emerald-400 leading-tight">
+        {/* Bottom Section: Stock Count + Rate & Action Buttons */}
+        <div className="mt-1.5 space-y-1.5">
+          <div
+            className={`flex items-baseline justify-between gap-1 rounded-lg px-1 py-0.5 transition-colors duration-200 ${
+              isFlashing ? 'bg-emerald-500/20' : ''
+            }`}
+          >
+            <div className="min-w-0 truncate">
+              <span
+                className={`text-[18px] sm:text-[20px] font-bold tabular-nums leading-none ${
+                  isOut
+                    ? 'text-rose-600 dark:text-rose-400'
+                    : isLow
+                    ? 'text-amber-700 dark:text-amber-400'
+                    : 'text-slate-900 dark:text-white'
+                }`}
+              >
+                {product.stock_quantity}
+              </span>
+              <span className="ml-1 text-[11px] font-medium text-slate-500 dark:text-[#8FA69C]">
+                {formatCompactUnit(product.unit)}
+              </span>
+            </div>
+            <span className="text-[13px] sm:text-[14px] font-bold text-emerald-700 dark:text-emerald-400 tabular-nums shrink-0">
               ₹{sellingPrice}
             </span>
-            {product.purchase_price > 0 && (
-              <span className="text-[9px] text-slate-400 dark:text-[#8FA69C] font-medium block leading-none truncate">
-                Cost: ₹{product.purchase_price}
-              </span>
-            )}
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* Quick Edit Pencil */}
-            {onEditProduct && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditProduct(product);
-                }}
-                title="Edit Product Details"
-                aria-label={`Edit ${displayName}`}
-                className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#223630] text-slate-700 dark:text-[#E7F0EC] border border-slate-200 dark:border-[#24352F] flex items-center justify-center active:scale-95 transition cursor-pointer"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-              </button>
-            )}
+          {/* 44x44 Min Touch Target Stock In (+) & Stock Out (−) Buttons */}
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenDetail(product, 'in');
+              }}
+              aria-label={`Stock in ${displayName}`}
+              title="Stock In (+)"
+              className="min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white flex items-center justify-center transition-transform duration-150 ease-out motion-reduce:transition-none shadow-2xs cursor-pointer"
+            >
+              <Plus className="w-5 h-5 stroke-[2.5]" />
+            </button>
 
-            {/* Stock Out Button (−) */}
             <button
               type="button"
               disabled={isOut}
@@ -195,24 +199,9 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
               }}
               aria-label={`Stock out ${displayName}`}
               title="Stock Out (−)"
-              className="w-8 h-8 rounded-xl bg-transparent hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-700 dark:text-[#E7F0EC] hover:text-rose-700 dark:hover:text-rose-300 border border-slate-200 dark:border-[#2C4139] flex items-center justify-center transition active:scale-95 disabled:opacity-35 disabled:pointer-events-none cursor-pointer"
+              className="min-h-[44px] rounded-xl bg-transparent hover:bg-rose-50 dark:hover:bg-rose-950/40 active:scale-[0.97] text-slate-700 dark:text-[#E7F0EC] hover:text-rose-700 dark:hover:text-rose-300 border border-slate-300 dark:border-[#2C4139] flex items-center justify-center transition-transform duration-150 ease-out motion-reduce:transition-none disabled:opacity-35 disabled:pointer-events-none cursor-pointer"
             >
-              <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
-            </button>
-
-            {/* Stock In Button (+) */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenDetail(product, 'in');
-              }}
-              aria-label={`Stock in ${displayName}`}
-              title="Stock In (+)"
-              className="h-8 px-2.5 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition active:scale-95 flex items-center gap-1 shadow-xs cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span className="hidden xs:inline">In</span>
+              <Minus className="w-5 h-5 stroke-[2.5]" />
             </button>
           </div>
         </div>
@@ -252,13 +241,13 @@ export const InventoryListRow: React.FC<InventoryCardItemProps> = React.memo(
             onOpenDetail(product);
           }
         }}
-        className={`flex items-center gap-2.5 p-2 sm:p-3 rounded-2xl bg-white dark:bg-[#131F1B] border transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 shadow-2xs ${
+        className={`flex items-center gap-2.5 p-2 rounded-2xl bg-white dark:bg-[#131F1B] border transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
           isFlashing
             ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/30'
             : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500/60'
         }`}
       >
-        {/* 1:1 Aspect-Square Thumbnail */}
+        {/* One-Click Square Thumbnail */}
         <button
           type="button"
           onClick={(e) => {
@@ -266,7 +255,7 @@ export const InventoryListRow: React.FC<InventoryCardItemProps> = React.memo(
             onPreviewImage(product);
           }}
           aria-label={`View or upload photo for ${displayName}`}
-          className="relative w-14 h-14 shrink-0 aspect-square rounded-xl bg-white border border-slate-200/80 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden cursor-pointer transition-colors"
+          className="relative w-14 h-14 shrink-0 aspect-square rounded-xl bg-white border border-slate-100 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden cursor-pointer transition-colors"
         >
           <ProductImage
             src={product.image_url}
@@ -284,7 +273,7 @@ export const InventoryListRow: React.FC<InventoryCardItemProps> = React.memo(
         {/* Details */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <h3 className="text-[13px] sm:text-[14px] font-bold text-slate-900 dark:text-[#E7F0EC] truncate">
+            <h3 className="text-[14px] font-semibold text-slate-900 dark:text-[#E7F0EC] truncate">
               {displayName}
             </h3>
             {hasExpiringSoon && (
@@ -296,7 +285,7 @@ export const InventoryListRow: React.FC<InventoryCardItemProps> = React.memo(
           </p>
           <div className="mt-0.5 flex items-baseline gap-2.5">
             <span
-              className={`text-[14px] sm:text-[15px] font-black tabular-nums ${
+              className={`text-[15px] font-bold tabular-nums ${
                 isOut
                   ? 'text-rose-600 dark:text-rose-400'
                   : isLow
@@ -309,13 +298,13 @@ export const InventoryListRow: React.FC<InventoryCardItemProps> = React.memo(
                 {formatCompactUnit(product.unit)}
               </span>
             </span>
-            <span className="text-[13px] sm:text-[14px] font-black text-emerald-700 dark:text-emerald-400 tabular-nums">
+            <span className="text-[13px] font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
               ₹{sellingPrice}
             </span>
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* 44x44 Actions */}
         <div className="flex items-center gap-1.5 shrink-0">
           {onEditProduct && (
             <button
@@ -326,9 +315,9 @@ export const InventoryListRow: React.FC<InventoryCardItemProps> = React.memo(
               }}
               aria-label={`Edit ${displayName}`}
               title="Edit Product Details"
-              className="w-9 h-9 rounded-xl border border-slate-200 dark:border-[#2C4139] bg-slate-50 dark:bg-[#1A2A25] text-slate-600 dark:text-[#C4D6CE] hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 active:scale-95 flex items-center justify-center transition cursor-pointer"
+              className="w-10 h-11 rounded-xl border border-slate-200 dark:border-[#2C4139] bg-slate-50 dark:bg-[#1A2A25] text-slate-600 dark:text-[#C4D6CE] hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 active:scale-[0.97] flex items-center justify-center transition cursor-pointer"
             >
-              <Pencil className="w-3.5 h-3.5" />
+              <Pencil className="w-4 h-4" />
             </button>
           )}
           <button
@@ -339,10 +328,9 @@ export const InventoryListRow: React.FC<InventoryCardItemProps> = React.memo(
               onOpenDetail(product, 'out');
             }}
             aria-label={`Stock out ${displayName}`}
-            title="Stock Out (−)"
-            className="w-9 h-9 rounded-xl border border-slate-300 dark:border-[#2C4139] text-slate-700 dark:text-[#E7F0EC] hover:bg-rose-50 dark:hover:bg-rose-950/40 active:scale-95 flex items-center justify-center transition-transform duration-150 disabled:opacity-35 disabled:pointer-events-none cursor-pointer"
+            className="w-11 h-11 rounded-xl border border-slate-300 dark:border-[#2C4139] text-slate-700 dark:text-[#E7F0EC] hover:bg-rose-50 dark:hover:bg-rose-950/40 active:scale-[0.97] flex items-center justify-center transition-transform duration-150 disabled:opacity-35 disabled:pointer-events-none cursor-pointer"
           >
-            <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
+            <Minus className="w-4 h-4 stroke-[2.5]" />
           </button>
           <button
             type="button"
@@ -351,11 +339,9 @@ export const InventoryListRow: React.FC<InventoryCardItemProps> = React.memo(
               onOpenDetail(product, 'in');
             }}
             aria-label={`Stock in ${displayName}`}
-            title="Stock In (+)"
-            className="h-9 px-2.5 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs flex items-center gap-1 transition-transform duration-150 cursor-pointer"
+            className="w-11 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white flex items-center justify-center transition-transform duration-150 cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span className="hidden xs:inline">In</span>
+            <Plus className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
       </div>
@@ -365,24 +351,21 @@ export const InventoryListRow: React.FC<InventoryCardItemProps> = React.memo(
 
 InventoryListRow.displayName = 'InventoryListRow';
 
-/** Shimmer Skeleton Card for smooth loading transitions (POS 1:1 Aspect-Square DNA) */
+/** Shimmer Skeleton Card for smooth loading transitions */
 export const InventorySkeletonCard: React.FC = () => (
-  <div className="bg-white dark:bg-[#131F1B] rounded-2xl p-3 sm:p-3.5 border border-slate-200/80 dark:border-[#24352F] space-y-2.5 animate-pulse shadow-2xs">
-    <div className="flex items-center justify-between">
-      <div className="h-4 w-12 rounded bg-slate-200 dark:bg-[#1A2A25]" />
-      <div className="h-4 w-16 rounded bg-slate-200 dark:bg-[#1A2A25]" />
-    </div>
-    <div className="w-full aspect-square rounded-2xl bg-slate-200 dark:bg-[#1A2A25]" />
+  <div className="bg-white dark:bg-[#131F1B] rounded-2xl p-2 border border-slate-200/80 dark:border-[#24352F] space-y-2 animate-pulse">
+    <div className="w-full h-[88px] sm:h-28 rounded-xl bg-slate-200 dark:bg-[#1A2A25]" />
     <div className="space-y-1.5">
-      <div className="h-4 w-4/5 rounded bg-slate-200 dark:bg-[#1A2A25]" />
-      <div className="h-3 w-1/2 rounded bg-slate-100 dark:bg-[#1A2A25]" />
+      <div className="h-3.5 w-4/5 rounded bg-slate-200 dark:bg-[#1A2A25]" />
+      <div className="h-2.5 w-1/2 rounded bg-slate-100 dark:bg-[#1A2A25]" />
     </div>
-    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-[#24352F]">
-      <div className="h-6 w-16 rounded bg-slate-200 dark:bg-[#1A2A25]" />
-      <div className="flex items-center gap-1.5">
-        <div className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-[#1A2A25]" />
-        <div className="w-12 h-8 rounded-xl bg-slate-200 dark:bg-[#1A2A25]" />
-      </div>
+    <div className="flex items-center justify-between pt-1">
+      <div className="h-5 w-14 rounded bg-slate-200 dark:bg-[#1A2A25]" />
+      <div className="h-4 w-10 rounded bg-slate-200 dark:bg-[#1A2A25]" />
+    </div>
+    <div className="grid grid-cols-2 gap-1.5">
+      <div className="h-11 rounded-xl bg-slate-200 dark:bg-[#1A2A25]" />
+      <div className="h-11 rounded-xl bg-slate-100 dark:bg-[#1A2A25]" />
     </div>
   </div>
 );

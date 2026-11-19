@@ -3,7 +3,6 @@ import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PeriodFilter } from '../Dashboard/PeriodFilter';
 import { CompactPageHeader, CompactStatStrip } from '../Common/CompactPageHeader';
-import { ActiveOperatorBar } from '../Common/ActiveOperatorBar';
 import { LoadOlderHistoryButton } from '../Common/LoadOlderHistoryButton';
 import { ExpenseCategory } from '../../types';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
@@ -154,13 +153,6 @@ export const ExpenseTracker: React.FC = () => {
 
   return (
     <div className="space-y-2.5 sm:space-y-3 max-w-7xl mx-auto pb-28 lg:pb-8">
-      {/* 0. POS-STYLE ACTIVE OPERATOR & STORE BADGE BAR */}
-      <ActiveOperatorBar
-        locationName="Shop Operating & Expense Ledger"
-        pulseColor="amber"
-        className="mb-1"
-      />
-
       {/* 1. Compact Header + More (⋮) Reports Sheet + Round Add Expense CTA */}
       <CompactPageHeader
         title={t('expensesTitle')}

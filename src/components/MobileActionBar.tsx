@@ -48,7 +48,7 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
       return activeView === 'udhar';
     }
     if (tabId === 'menu') {
-      return isMobileSidebarOpen || ['purchases', 'damages', 'expenses', 'analytics', 'returns', 'settings', 'image-health'].includes(activeView);
+      return isMobileSidebarOpen || ['purchases', 'damages', 'expenses', 'analytics', 'returns', 'settings', 'image-health', 'supplier-pdf-import'].includes(activeView);
     }
     return false;
   };

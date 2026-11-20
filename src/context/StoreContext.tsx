@@ -45,7 +45,8 @@ export type AppView =
   | 'expiry'
   | 'returns'
   | 'settings'
-  | 'image-health';
+  | 'image-health'
+  | 'supplier-pdf-import';
 
 export type GlobalScannerTarget = 'billing' | 'stock_in' | 'stock_edit' | null;
 

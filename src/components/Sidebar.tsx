@@ -26,7 +26,8 @@ import {
   PanelLeftClose,
   PanelLeft,
   Eye,
-  EyeOff
+  EyeOff,
+  FileSpreadsheet
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -252,6 +253,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         id: 'purchases',
         label: t('purchasesNav'),
         icon: Truck,
+        group: 'inventory'
+      },
+      {
+        id: 'supplier-pdf-import',
+        label: 'Supplier PDF & Tally',
+        tooltip: 'Supplier PDF Import & Tally Stock Entry',
+        icon: FileSpreadsheet,
         group: 'inventory'
       },
       {

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Browser } from '@capacitor/browser';
 import { 
   AppUpdateInfo, 
   CURRENT_APP_VERSION, 
@@ -142,8 +143,11 @@ export function startAppUpdate(apkUrl: string): void {
   const targetUrl = apkUrl || 'https://yogeshwari-dairy-shop.vercel.app/downloads/yogeshwari-dairy.apk';
 
   if (isNativePlatform()) {
-    // In Capacitor Android: Open system browser / download manager to download APK
-    window.open(targetUrl, '_system');
+    // In Capacitor Android: Open system browser via native plugin to download APK
+    Browser.open({ url: targetUrl }).catch((err) => {
+      console.warn('Browser.open failed, fallback to location href:', err);
+      window.location.href = targetUrl;
+    });
   } else {
     // In Web / PWA: Trigger direct file download
     const anchor = document.createElement('a');

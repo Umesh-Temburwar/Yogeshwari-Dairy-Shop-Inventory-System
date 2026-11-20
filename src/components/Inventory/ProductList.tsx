@@ -909,6 +909,17 @@ export const ProductList: React.FC<ProductListProps> = ({
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
+              onClick={() => setShowBarcodeStockIn(true)}
+              aria-label="Barcode Stock-In"
+              title="Barcode Stock-In"
+              className="h-9 px-2.5 sm:px-3 rounded-full bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/40 text-xs font-bold inline-flex items-center gap-1 active:scale-[0.97] transition-transform cursor-pointer"
+            >
+              <Barcode className="w-3.5 h-3.5" />
+              <span className="hidden xs:inline">Stock-In</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setShowMoreSheet(true)}
               aria-label="More inventory options"
               title="View, Filters & Exports"
@@ -1007,49 +1018,52 @@ export const ProductList: React.FC<ProductListProps> = ({
         )}
       </div>
 
-      {/* 2. STICKY SEARCH + ONE-ROW SNAP FILTER CHIPS (max ~86px while scrolling) */}
-      <div className="sticky top-0 z-20 -mx-2.5 sm:-mx-6 px-2.5 sm:px-6 pt-1 pb-2 bg-[#f8fafc] dark:bg-[#0B1210] border-b border-slate-200/70 dark:border-[#1E2E28] space-y-1.5">
-        {/* Search Input + Inline Barcode Scan Button */}
-        <div className="relative flex items-center">
-          <Search className="w-4 h-4 absolute left-3 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />
-          <input
-            id="inventory-search-input"
-            name="inventorySearch"
-            type="text"
-            autoComplete="off"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={
-              'Search products or barcode...'
-            }
-            aria-label="Search inventory products"
-            className="w-full h-10 pl-9 pr-20 rounded-xl border border-slate-300/90 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-medium placeholder:text-slate-400 dark:placeholder:text-[#6F877D] focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
+      {/* 2. STICKY SEARCH + SCANNER + ONE-ROW SNAP FILTER CHIPS (PINNED AT TOP) */}
+      <div className="sticky top-0 z-20 -mx-2.5 sm:-mx-6 px-2.5 sm:px-6 pt-1 pb-2 bg-[#f8fafc] dark:bg-[#0B1210] border-b border-slate-200/70 dark:border-[#1E2E28] space-y-1.5 shadow-xs">
+        {/* Search Input + Prominent Barcode Scan Button */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="relative flex-1 min-w-0">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />
+            <input
+              id="inventory-search-input"
+              name="inventorySearch"
+              type="text"
+              autoComplete="off"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={'Search products or barcode...'}
+              aria-label="Search inventory products"
+              className="w-full h-10 pl-9 pr-12 rounded-xl border border-slate-300/90 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-medium placeholder:text-slate-400 dark:placeholder:text-[#6F877D] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
 
-          <div className="absolute right-1.5 flex items-center gap-1">
-            {isSearchingOnline && (
-              <Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
-            )}
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                aria-label="Clear search"
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowBarcodeScanner(true)}
-              aria-label="Scan barcode to search"
-              title="Scan Barcode"
-              className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center active:scale-[0.97] transition-transform cursor-pointer"
-            >
-              <Barcode className="w-4 h-4" />
-            </button>
+            <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {isSearchingOnline && (
+                <Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
+              )}
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
+
+          {/* Prominent Camera Barcode Scanner Button (Always pinned at top) */}
+          <button
+            type="button"
+            onClick={() => setShowBarcodeScanner(true)}
+            aria-label="Scan barcode to search"
+            title="Scan Barcode"
+            className="w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs active:scale-[0.97] transition-all shrink-0 cursor-pointer"
+          >
+            <Barcode className="w-4 h-4 text-white" />
+            <span className="hidden sm:inline">Scan</span>
+          </button>
         </div>
 
         {/* Single Horizontal Snap-Scroll Filter Chip Row with Right-Edge Fade Hint */}

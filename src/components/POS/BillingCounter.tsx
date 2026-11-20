@@ -240,7 +240,8 @@ export const BillingCounter: React.FC = () => {
     globalScannerRequest,
     isBillingScannerRequested,
     consumeBillingScannerRequest,
-    setIsBarcodeScannerOpen
+    setIsBarcodeScannerOpen,
+    inStockCount
   } = useStore();
   const { t, language, tr } = useLanguage();
   const { role, adminSlot, user, ownerAvatarUrl } = useAuth();
@@ -273,7 +274,7 @@ export const BillingCounter: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 120);
   const deferredSearchQuery = useDeferredValue(debouncedSearchQuery);
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedCategory, setSelectedCategory] = useState<string>('IN_STOCK');
   
   // Mobile responsive tab (Products vs Cart/Checkout)
   const [mobileTab, setMobileTab] = useState<'products' | 'cart'>('products');
@@ -402,15 +403,20 @@ export const BillingCounter: React.FC = () => {
   const [quickCalcProduct, setQuickCalcProduct] = useState<Product | null>(null);
   const [calcRupees, setCalcRupees] = useState<string>('');
 
-  const categories = [
-    { id: 'All', label: 'All' },
+  const realInStockCount = useMemo(() => {
+    return inStockCount || products.filter(p => p.stock_quantity > 0).length;
+  }, [inStockCount, products]);
+
+  const categories = useMemo(() => [
+    { id: 'IN_STOCK', label: `In Stock (${realInStockCount})` },
+    { id: 'All', label: 'All Products' },
     { id: 'Milk', label: t('catMilk') },
     { id: 'Paneer & Butter', label: t('catPaneer') },
     { id: 'Curd & Chaas', label: t('catCurd') },
     { id: 'Ghee', label: t('catGhee') },
     { id: 'Sweets/Mithai', label: t('catSweets') },
     { id: 'Bakery & Extras', label: t('catBakery') }
-  ];
+  ], [realInStockCount, t]);
 
   // Filtered products for selection (fast deferred evaluation with barcode normalization)
   const filteredProducts = useMemo(() => {
@@ -437,8 +443,12 @@ export const BillingCounter: React.FC = () => {
 
     const base = products.filter(p => {
       if (!p.is_active) return false;
-      // Strictly show ONLY products physically in stock in the shop (stock_quantity > 0)
-      if (!q && p.stock_quantity <= 0) return false;
+
+      // When category is IN_STOCK (default), strictly show in-stock products
+      if (selectedCategory === 'IN_STOCK' && p.stock_quantity <= 0) return false;
+
+      // When no search query and category is not 'All', hide 0-stock products by default
+      if (!q && selectedCategory !== 'All' && p.stock_quantity <= 0) return false;
 
       const barcodeMatches = Boolean(
         p.barcode && (
@@ -452,7 +462,7 @@ export const BillingCounter: React.FC = () => {
       const matchesSearch = !q ||
         p.name.toLowerCase().includes(q) ||
         barcodeMatches;
-      const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+      const matchesCategory = selectedCategory === 'IN_STOCK' || selectedCategory === 'All' || p.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
 
@@ -902,39 +912,159 @@ export const BillingCounter: React.FC = () => {
 
   return (
     <div className="relative max-w-7xl mx-auto pb-24 sm:pb-8">
-      {/* Mobile Tab Switcher: Products vs Bill Checkout */}
-      <div className="lg:hidden grid grid-cols-2 p-1.5 bg-slate-200/90 dark:bg-[#1A2A25] rounded-2xl border border-slate-300/60 dark:border-[#24352F] mb-3 sticky top-0 z-20 backdrop-blur-md shadow-xs">
-        <button
-          type="button"
-          onClick={() => setMobileTab('products')}
-          className={`h-11 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
-            mobileTab === 'products'
-              ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 font-black shadow-xs'
-              : 'text-slate-600 dark:text-[#8FA69C]'
-          }`}
-        >
-          <Package className="w-4 h-4" />
-          <span>{'1. Products'}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setMobileTab('cart')}
-          className={`h-11 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
-            mobileTab === 'cart'
-              ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 font-black shadow-xs'
-              : 'text-slate-600 dark:text-[#8FA69C]'
-          }`}
-        >
-          <ShoppingCart className="w-4 h-4" />
-          <span>{'2. Bill'} ({cart.length}) {netTotal > 0 ? `• ₹${netTotal.toFixed(0)}` : ''}</span>
-        </button>
+      {/* Mobile Sticky Top Header (Tabs + Active Counter + Search + Barcode Scanner + In Stock / Categories) */}
+      <div className="lg:hidden sticky top-0 z-20 -mx-2.5 sm:-mx-6 px-2.5 sm:px-6 pt-1 pb-2 bg-[#f8fafc]/95 dark:bg-[#0B1210]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-[#1E2E28] space-y-2 shadow-xs">
+        {/* Row 1: Mobile Tab Switcher & Counter Badge */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="grid grid-cols-2 p-1 bg-slate-200/80 dark:bg-[#1A2A25] rounded-xl flex-1 max-w-[280px]">
+            <button
+              type="button"
+              onClick={() => setMobileTab('products')}
+              className={`h-9 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                mobileTab === 'products'
+                  ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 font-black shadow-xs'
+                  : 'text-slate-600 dark:text-[#8FA69C]'
+              }`}
+            >
+              <Package className="w-4 h-4" />
+              <span>{'1. Products'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileTab('cart')}
+              className={`h-9 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                mobileTab === 'cart'
+                  ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 font-black shadow-xs'
+                  : 'text-slate-600 dark:text-[#8FA69C]'
+              }`}
+            >
+              <ShoppingCart className="w-4 h-4" />
+              <span>{'2. Bill'} ({cart.length}) {netTotal > 0 ? `• ₹${netTotal.toFixed(0)}` : ''}</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="font-bold text-slate-800 dark:text-white px-2 py-1 rounded-lg bg-slate-100 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-[10px]">
+              📍 {activeOperator.counter}
+            </span>
+          </div>
+        </div>
+
+        {/* Rows 2 & 3: Search Bar + Camera Barcode Scanner + Shake + Return (STAYS PINNED AT TOP ON MOBILE) */}
+        {mobileTab === 'products' && (
+          <div className="space-y-1.5 pt-0.5">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="relative flex-1 min-w-0">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder={t('searchPlaceholder')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const q = searchQuery.trim();
+                      if (filteredProducts.length === 1) {
+                        addToCart(filteredProducts[0], 1);
+                        setSearchQuery('');
+                      } else if (filteredProducts.length === 0 && /^\d{5,}$/.test(q)) {
+                        setQuickRegisterBarcode(q);
+                        setShowQuickRegisterModal(true);
+                      }
+                    }
+                  }}
+                  className="w-full h-10 pl-9 pr-8 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] focus:outline-none focus:ring-2 focus:ring-emerald-500/70 focus:border-transparent text-xs sm:text-sm font-medium"
+                />
+                {searchQuery && (
+                  <button 
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    aria-label="Clear search"
+                    className="w-7 h-7 absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Camera Barcode Scanner Button - ALWAYS ACCESSIBLE AT TOP */}
+              <button
+                type="button"
+                onClick={() => setShowBarcodeScanner(true)}
+                aria-label="Camera Barcode Scanner"
+                className="w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs active:scale-[0.97] transition-all shrink-0 cursor-pointer"
+                title={'Camera Barcode Scanner'}
+              >
+                <Barcode className="w-4 h-4 text-white" />
+                <span className="hidden sm:inline">{'Scan'}</span>
+              </button>
+
+              {isMobileDevice() && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await requestMotionPermission();
+                    setShakeToScanEnabled(!shakeToScanEnabled);
+                  }}
+                  aria-label="Toggle Shake to Scan"
+                  className={`w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-[0.97] shrink-0 cursor-pointer ${
+                    shakeToScanEnabled
+                      ? 'bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-400'
+                      : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-500 dark:text-slate-400'
+                  }`}
+                  title={'Global Shake to Scan'}
+                >
+                  <Smartphone className={`w-4 h-4 ${shakeToScanEnabled ? 'text-amber-500' : ''}`} />
+                  <span className="hidden sm:inline">
+                    {'Shake'}: {shakeToScanEnabled ? 'ON' : 'OFF'}
+                  </span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setActiveView('returns')}
+                aria-label="Customer Returns"
+                className="w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800/40 text-purple-700 dark:text-purple-300 flex items-center justify-center gap-1.5 text-xs font-bold shrink-0 transition active:scale-[0.97]"
+                title={'Customer Returns'}
+              >
+                <RotateCcw className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <span className="hidden sm:inline">{'Return'}</span>
+              </button>
+            </div>
+
+            {/* Row 3: Category Pills Carousel with In Stock First */}
+            <div className="relative">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`h-8 px-3 rounded-full border text-xs font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0 snap-start transition-all duration-150 active:scale-[0.97] cursor-pointer ${
+                      selectedCategory === cat.id
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                        : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#A3B8AF] hover:border-slate-300 dark:hover:border-[#324A42]'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Active Counter & Operator Badge Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/90 dark:border-[#24352F] text-xs mb-2.5 shadow-2xs">
+      {/* Active Counter & Operator Badge Bar (Desktop Only) */}
+      <div className="hidden lg:flex flex-wrap items-center justify-between gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/90 dark:border-[#24352F] text-xs mb-2.5 shadow-2xs">
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-          <span className="font-semibold text-slate-600 dark:text-[#8FA69C] hidden sm:inline">
+          <span className="font-semibold text-slate-600 dark:text-[#8FA69C]">
             {'Counter:'}
           </span>
           <span className="font-bold text-slate-900 dark:text-white px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-[11px]">
@@ -942,7 +1072,7 @@ export const BillingCounter: React.FC = () => {
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="font-semibold text-slate-600 dark:text-[#8FA69C] hidden sm:inline">
+          <span className="font-semibold text-slate-600 dark:text-[#8FA69C]">
             {'Operator:'}
           </span>
           <span className={`inline-flex items-center gap-1.5 font-bold px-2 py-0.5 rounded-lg text-[11px] ${
@@ -958,7 +1088,7 @@ export const BillingCounter: React.FC = () => {
               <span>👤</span>
             )}
             <span>{activeOperator.name}</span>
-            <span className="text-[10px] font-normal opacity-80 hidden sm:inline">({activeOperator.email})</span>
+            <span className="text-[10px] font-normal opacity-80">({activeOperator.email})</span>
           </span>
         </div>
       </div>
@@ -968,8 +1098,8 @@ export const BillingCounter: React.FC = () => {
         {/* LEFT COLUMN: Product Catalog & Fast Selection */}
         <div className={`lg:col-span-7 flex flex-col space-y-2.5 sm:space-y-3 ${mobileTab === 'cart' ? 'hidden lg:flex' : 'flex'}`}>
         
-        {/* Search & Category Filter Pills */}
-        <div className="-mx-3 px-3 pt-1.5 pb-2 bg-[#f8fafc] dark:bg-[#0B1210] border-b border-slate-200/70 dark:border-[#1E2E28] lg:static lg:mx-0 lg:bg-white lg:dark:bg-[#131F1B] lg:p-3.5 lg:rounded-2xl lg:border lg:border-slate-200/90 lg:dark:border-[#24352F] lg:shadow-xs space-y-2 transition-colors">
+        {/* Desktop Search & Category Filter Pills */}
+        <div className="hidden lg:block bg-white dark:bg-[#131F1B] p-3.5 rounded-2xl border border-slate-200/90 dark:border-[#24352F] shadow-xs space-y-2 transition-colors">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <div className="relative flex-1 min-w-0">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />

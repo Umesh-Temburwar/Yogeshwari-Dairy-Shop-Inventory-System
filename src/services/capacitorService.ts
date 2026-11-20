@@ -23,7 +23,8 @@ export const initNativeApp = async (): Promise<void> => {
   if (!isNativePlatform()) return;
 
   try {
-    // 1. Status Bar styling
+    // 1. Status Bar styling & prevent WebView underlap
+    await StatusBar.setOverlaysWebView({ overlay: false });
     await StatusBar.setStyle({ style: Style.Dark });
     if (Capacitor.getPlatform() === 'android') {
       await StatusBar.setBackgroundColor({ color: '#0B1210' });

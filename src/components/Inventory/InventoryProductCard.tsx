@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Minus, Pencil } from 'lucide-react';
+import { Plus, Minus, Pencil, Trash2 } from 'lucide-react';
 import { Product } from '../../types';
 import { useLanguage } from '../../context/LanguageContext';
 import { ProductImage } from '../Common/ProductImage';
@@ -13,6 +13,7 @@ export interface InventoryCardItemProps {
   onOpenDetail: (product: Product, initialMode?: 'in' | 'out') => void;
   onPreviewImage: (product: Product) => void;
   onEditProduct?: (product: Product) => void;
+  onDeleteProduct?: (product: Product) => void;
 }
 
 const getStockStatus = (product: Product): 'out' | 'low' | 'in' => {
@@ -44,7 +45,8 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
     isFlashing,
     onOpenDetail,
     onPreviewImage,
-    onEditProduct
+    onEditProduct,
+    onDeleteProduct
   }) => {
     const { tr } = useLanguage();
     const status = getStockStatus(product);
@@ -112,8 +114,24 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
               )}
             </button>
 
-            {/* Quick Edit Button + In/Low/Out Status Pill */}
+            {/* Quick Edit & Delete Buttons + In/Low/Out Status Pill */}
             <div className="absolute top-1.5 right-1.5 flex items-center gap-1 z-10">
+              {onDeleteProduct && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm(`Delete "${displayName}"?`)) {
+                      onDeleteProduct(product);
+                    }
+                  }}
+                  aria-label={`Delete ${displayName}`}
+                  title="Delete Product"
+                  className="w-6 h-6 rounded-full bg-white/95 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200/90 shadow-xs flex items-center justify-center active:scale-90 transition cursor-pointer"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
               {onEditProduct && (
                 <button
                   type="button"
@@ -222,7 +240,8 @@ export const InventoryListRow: React.FC<InventoryCardItemProps> = React.memo(
     isFlashing,
     onOpenDetail,
     onPreviewImage,
-    onEditProduct
+    onEditProduct,
+    onDeleteProduct
   }) => {
     const status = getStockStatus(product);
     const isOut = status === 'out';
@@ -304,6 +323,22 @@ export const InventoryListRow: React.FC<InventoryCardItemProps> = React.memo(
 
         {/* 44x44 Actions */}
         <div className="flex items-center gap-1.5 shrink-0">
+          {onDeleteProduct && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm(`Delete "${displayName}"?`)) {
+                  onDeleteProduct(product);
+                }
+              }}
+              aria-label={`Delete ${displayName}`}
+              title="Delete Product"
+              className="w-10 h-11 rounded-xl border border-slate-200 dark:border-[#2C4139] bg-slate-50 dark:bg-[#1A2A25] text-slate-400 dark:text-[#8FA69C] hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 hover:border-rose-300 active:scale-[0.97] flex items-center justify-center transition cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
           {onEditProduct && (
             <button
               type="button"

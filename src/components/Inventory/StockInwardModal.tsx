@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Product, ProductBatch } from '../../types';
@@ -236,7 +237,7 @@ const StockInwardModalContent: React.FC<{ product: Product; onClose: () => void 
                       language === 'hi' && product.hindi_name ? product.hindi_name :
                       product.name;
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-[100] bg-black/65 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4">
       <div className="bg-white dark:bg-[#131F1B] rounded-2xl sm:rounded-3xl max-w-xl w-full max-h-[92dvh] flex flex-col shadow-2xl border border-slate-200/90 dark:border-[#24352F] overflow-hidden animate-in fade-in duration-200">
         
@@ -680,7 +681,7 @@ const StockInwardModalContent: React.FC<{ product: Product; onClose: () => void 
           </div>
 
           {/* STICKY FOOTER: TOTAL PREVIEW + ACTIONS */}
-          <div className="shrink-0 px-4 sm:px-6 py-3.5 border-t border-slate-100 dark:border-[#24352F] bg-white dark:bg-[#131F1B] space-y-2.5">
+          <div className="shrink-0 px-4 sm:px-6 py-3.5 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:pb-4 border-t border-slate-100 dark:border-[#24352F] bg-white dark:bg-[#131F1B] space-y-2.5">
             {/* TOTAL PREVIEW CARD */}
             <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/90 dark:border-[#24352F] flex items-center justify-between text-xs">
               <div>
@@ -745,5 +746,7 @@ const StockInwardModalContent: React.FC<{ product: Product; onClose: () => void 
       />
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };
 

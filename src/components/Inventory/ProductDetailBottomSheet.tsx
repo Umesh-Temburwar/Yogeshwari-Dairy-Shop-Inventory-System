@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Plus,
@@ -125,7 +126,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
     onClose();
   };
 
-  return (
+  const sheetContent = (
     <div
       className="fixed inset-0 z-[105] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150 motion-reduce:animate-none"
       onClick={onClose}
@@ -135,7 +136,7 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full sm:max-w-md bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border-t sm:border border-slate-200 dark:border-[#24352F] rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-200 ease-out motion-reduce:animate-none pb-[env(safe-area-inset-bottom,0px)]"
+        className="w-full sm:max-w-md bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] border-t sm:border border-slate-200 dark:border-[#24352F] rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90dvh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-200 ease-out motion-reduce:animate-none pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:pb-4"
       >
         {/* Drag Handle (mobile) */}
         <div className="sm:hidden flex justify-center pt-2 pb-1 shrink-0">
@@ -455,4 +456,6 @@ export const ProductDetailBottomSheet: React.FC<ProductDetailBottomSheetProps> =
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(sheetContent, document.body) : sheetContent;
 };

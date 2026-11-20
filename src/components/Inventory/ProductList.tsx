@@ -1222,6 +1222,7 @@ export const ProductList: React.FC<ProductListProps> = ({
               onOpenDetail={handleOpenDetail}
               onPreviewImage={setPreviewImageProduct}
               onEditProduct={onEditProduct}
+              onDeleteProduct={handleDeleteProduct}
             />
           ))}
         </div>
@@ -1238,6 +1239,7 @@ export const ProductList: React.FC<ProductListProps> = ({
               onOpenDetail={handleOpenDetail}
               onPreviewImage={setPreviewImageProduct}
               onEditProduct={onEditProduct}
+              onDeleteProduct={handleDeleteProduct}
             />
           ))}
         </div>

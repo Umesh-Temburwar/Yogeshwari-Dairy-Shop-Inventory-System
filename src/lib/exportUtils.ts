@@ -9,6 +9,7 @@
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { YDO_LOGO_BASE64 } from '../assets/logoBase64';
+import { isNativePlatform, shareOrSaveFileNative } from '../services/capacitorService';
 
 export interface KPIItem {
   label: string;
@@ -1251,10 +1252,21 @@ export const generateAndDownloadPDF = async (
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidthMm, pdfHeightMm, undefined, 'FAST');
     }
 
-    // 1. Primary save via jsPDF
+    // 1. Native Capacitor Android Share / Download
+    if (isNativePlatform()) {
+      try {
+        const pdfBlob = pdf.output('blob');
+        const handled = await shareOrSaveFileNative(cleanPdfFilename, pdfBlob, 'application/pdf', options.title);
+        if (handled) return;
+      } catch (err) {
+        console.warn('Native PDF share/save failed, falling back to browser download:', err);
+      }
+    }
+
+    // 2. Primary save via jsPDF
     pdf.save(cleanPdfFilename);
 
-    // 2. Fallback anchor download for mobile WebViews / Capacitor
+    // 3. Fallback anchor download for mobile WebViews / Capacitor
     try {
       const pdfBlob = pdf.output('blob');
       const blobUrl = URL.createObjectURL(pdfBlob);
@@ -1771,11 +1783,23 @@ export const exportToCSV = (
   });
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const filenameWithDate = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+
+  // Native Capacitor Android Share / Download
+  if (isNativePlatform()) {
+    try {
+      void shareOrSaveFileNative(filenameWithDate, blob, 'text/csv', filename);
+      return;
+    } catch (err) {
+      console.warn('Native CSV share failed, falling back to anchor download:', err);
+    }
+  }
+
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
 
   link.setAttribute('href', url);
-  link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
+  link.setAttribute('download', filenameWithDate);
   link.style.visibility = 'hidden';
 
   document.body.appendChild(link);

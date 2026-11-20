@@ -968,8 +968,8 @@ export const BillingCounter: React.FC = () => {
         {/* LEFT COLUMN: Product Catalog & Fast Selection */}
         <div className={`lg:col-span-7 flex flex-col space-y-2.5 sm:space-y-3 ${mobileTab === 'cart' ? 'hidden lg:flex' : 'flex'}`}>
         
-        {/* Sticky Search & Category Filter Pills */}
-        <div className="sticky top-0 z-20 -mx-3 px-3 pt-1.5 pb-2 bg-[#f8fafc] dark:bg-[#0B1210] border-b border-slate-200/70 dark:border-[#1E2E28] lg:static lg:mx-0 lg:bg-white lg:dark:bg-[#131F1B] lg:p-3.5 lg:rounded-2xl lg:border lg:border-slate-200/90 lg:dark:border-[#24352F] lg:shadow-xs space-y-2 transition-colors">
+        {/* Search & Category Filter Pills */}
+        <div className="-mx-3 px-3 pt-1.5 pb-2 bg-[#f8fafc] dark:bg-[#0B1210] border-b border-slate-200/70 dark:border-[#1E2E28] lg:static lg:mx-0 lg:bg-white lg:dark:bg-[#131F1B] lg:p-3.5 lg:rounded-2xl lg:border lg:border-slate-200/90 lg:dark:border-[#24352F] lg:shadow-xs space-y-2 transition-colors">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <div className="relative flex-1 min-w-0">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />
@@ -1808,7 +1808,7 @@ export const BillingCounter: React.FC = () => {
 
       {/* Floating Bottom Cart Bar on Mobile (Appears when products are selected on phone) */}
       {cart.length > 0 && mobileTab === 'products' && (
-        <div className="lg:hidden fixed bottom-20 left-3 right-3 z-30 animate-fadeIn">
+        <div className="lg:hidden fixed bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] left-3 right-3 z-30 animate-fadeIn">
           <div className="w-full py-2.5 px-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xl shadow-emerald-600/30 flex items-center justify-between gap-2 border border-white/20">
             <button
               type="button"

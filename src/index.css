@@ -35,6 +35,17 @@
 }
 
 @layer base {
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
   body {
     background-color: var(--bg);
     color: var(--text);
@@ -219,21 +230,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   animation: passcode-caret 1s step-end infinite;
 }
 
-/* Page & View Enter Transition (Instant, Butter-Smooth 220ms GPU Lift) */
+/* Page & View Enter Transition (Instant, Butter-Smooth Opacity Fade) */
 @keyframes viewEnter {
   0% {
     opacity: 0;
-    transform: translate3d(0, 8px, 0);
   }
   100% {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
   }
 }
 
 .animate-view-enter {
-  animation: viewEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
-  will-change: opacity, transform;
+  animation: viewEnter 0.18s ease-out both;
 }
 
 /* Smooth Data Bar & Progress Bar Fill Animation */
@@ -254,8 +262,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 /* Universal Butter-Smooth Button & Action Micro-Interactions (Zero Lag, Hardware Accelerated) */
-button:not(:disabled),
-[role="button"]:not([aria-disabled="true"]) {
+button:not(:disabled):not([class*="fixed"]),
+[role="button"]:not([aria-disabled="true"]):not([class*="fixed"]) {
   transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), 
               background-color 0.15s ease-out, 
               border-color 0.15s ease-out, 
@@ -265,8 +273,8 @@ button:not(:disabled),
   backface-visibility: hidden;
 }
 
-button:not(:disabled):active,
-[role="button"]:not([aria-disabled="true"]):active {
+button:not(:disabled):not([class*="fixed"]):active,
+[role="button"]:not([aria-disabled="true"]):not([class*="fixed"]):active {
   transform: scale3d(0.965, 0.965, 1);
 }
 

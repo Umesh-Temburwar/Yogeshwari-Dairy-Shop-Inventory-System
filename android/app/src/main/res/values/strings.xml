@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Yogeshwari Dairy Inventory</string>
+    <string name="title_activity_main">Yogeshwari Dairy Inventory</string>
+    <string name="package_name">com.yogeshwari.dairyinventory</string>
+    <string name="custom_url_scheme">com.yogeshwari.dairyinventory</string>
+</resources>

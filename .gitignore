@@ -24,6 +24,11 @@ client/android/app/src/main/assets/public/
 client/android/.gradle/
 client/android/build/
 client/android/app/build/
+android/.gradle/
+android/build/
+android/app/build/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
 
 # ==========================================
 # Environment Variables, Secrets & Signing Keys

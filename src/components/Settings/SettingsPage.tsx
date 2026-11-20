@@ -46,19 +46,24 @@ import {
   SettingRow,
   ToggleSwitch
 } from './SettingsPrimitives';
+import { CURRENT_APP_VERSION, CURRENT_BUILD_NUMBER } from '../../config/appVersion';
 
 interface SettingsPageProps {
   onOpenChangePasscode: () => void;
   onOpenPhotoDatabase: () => void;
   onOpenImageHealth?: () => void;
   onOpenAppDownload: () => void;
+  onCheckAppUpdate?: () => Promise<any>;
+  isCheckingAppUpdate?: boolean;
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
   onOpenChangePasscode,
   onOpenPhotoDatabase,
   onOpenImageHealth,
-  onOpenAppDownload
+  onOpenAppDownload,
+  onCheckAppUpdate,
+  isCheckingAppUpdate = false
 }) => {
   const {
     products,
@@ -247,6 +252,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       );
     } finally {
       setIsClearingAudit(false);
+    }
+  };
+
+  const [updateFeedback, setUpdateFeedback] = useState<string | null>(null);
+
+  const handleManualCheckUpdate = async () => {
+    if (!onCheckAppUpdate || isCheckingAppUpdate) return;
+    setUpdateFeedback('Checking for latest updates...');
+    try {
+      const res = await onCheckAppUpdate();
+      if (!res?.hasUpdate) {
+        setUpdateFeedback(`You are using the latest version (v${CURRENT_APP_VERSION}). No updates needed!`);
+        setTimeout(() => setUpdateFeedback(null), 4500);
+      } else {
+        setUpdateFeedback(null);
+      }
+    } catch {
+      setUpdateFeedback('Unable to check for updates. Please check connection.');
+      setTimeout(() => setUpdateFeedback(null), 4500);
     }
   };
 
@@ -696,16 +720,34 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             showChevron
           />
 
+        </SettingSection>
+
+        {/* SECTION 4: APP UPDATES & VERSION */}
+        <SettingSection title="APP UPDATES & VERSION">
+          <SettingRow
+            icon={<RefreshCw className={`w-5 h-5 ${isCheckingAppUpdate ? 'animate-spin' : ''}`} />}
+            tone="emerald"
+            title="Check for App Updates"
+            subtitle={
+              updateFeedback 
+                ? updateFeedback 
+                : `Current: v${CURRENT_APP_VERSION} (Build ${CURRENT_BUILD_NUMBER}) • Tap to verify new APK`
+            }
+            onClick={handleManualCheckUpdate}
+            showChevron
+          />
+
           <SettingRow
             icon={<Download className="w-5 h-5" />}
-            tone="emerald"
-            title="Install App"
+            tone="teal"
+            title="Download / Install Official APK"
+            subtitle="Install official Yogeshwari Dairy app for Android"
             onClick={onOpenAppDownload}
             showChevron
           />
         </SettingSection>
 
-        {/* SECTION 4: DATA & PHOTOS */}
+        {/* SECTION 5: DATA & PHOTOS */}
         <SettingSection title="DATA & PHOTOS">
           <SettingRow
             icon={<ImageIcon className="w-5 h-5" />}

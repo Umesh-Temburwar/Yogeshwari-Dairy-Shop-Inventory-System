@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { Network } from '@capacitor/network';
+import { isNativePlatform } from '../services/capacitorService';
 
 export interface NetworkStatus {
   isOnline: boolean;
@@ -27,9 +29,27 @@ export function useNetworkStatus(): NetworkStatus {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // Capacitor Native Network Listener
+    let nativeListenerPromise: Promise<{ remove: () => Promise<void> }> | null = null;
+    if (isNativePlatform()) {
+      void Network.getStatus().then((status) => {
+        setIsOnline(status.connected);
+      });
+      nativeListenerPromise = Network.addListener('networkStatusChange', (status) => {
+        if (status.connected) {
+          handleOnline();
+        } else {
+          handleOffline();
+        }
+      });
+    }
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      if (nativeListenerPromise) {
+        void nativeListenerPromise.then((handle) => handle.remove());
+      }
     };
   }, []);
 

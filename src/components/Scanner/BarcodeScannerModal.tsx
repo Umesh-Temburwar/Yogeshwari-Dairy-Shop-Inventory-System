@@ -17,6 +17,7 @@ import { playBeepSound } from '../../utils/audioUtils';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { ProductImage } from '../Common/ProductImage';
 import { QuickProductRegisterModal } from './QuickProductRegisterModal';
+import { requestNativeCameraPermission } from '../../services/capacitorService';
 import {
   Camera,
   X,
@@ -163,7 +164,10 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         return;
       }
 
-      // 1. Request user media stream with 4-tier robust constraint fallback
+      // 1. Ensure native camera permissions upfront on Android / iOS
+      await requestNativeCameraPermission();
+
+      // 2. Request user media stream with 4-tier robust constraint fallback
       if (!navigator?.mediaDevices?.getUserMedia) {
         throw new Error('Camera API is not supported in this browser environment');
       }

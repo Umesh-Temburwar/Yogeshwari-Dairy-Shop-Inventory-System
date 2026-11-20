@@ -17,6 +17,7 @@ import { playBeepSound } from '../../utils/audioUtils';
 import { supabase } from '../../lib/supabase';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { playSuccessChime } from '../../utils/audioUtils';
+import { requestNativeCameraPermission } from '../../services/capacitorService';
 import {
   isSpeechRecognitionSupported,
   processVoiceTranscript,
@@ -342,6 +343,9 @@ export const BarcodeStockInModal: React.FC<BarcodeStockInModalProps> = ({
         setIsScanningCamera(false);
         return;
       }
+
+      // Ensure native camera permissions upfront on Android / iOS
+      await requestNativeCameraPermission();
 
       if (!navigator?.mediaDevices?.getUserMedia) {
         throw new Error('Camera API is not supported in this browser environment');

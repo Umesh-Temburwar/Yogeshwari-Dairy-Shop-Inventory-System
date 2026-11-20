@@ -14,11 +14,14 @@ import { AddProductModal } from './components/Inventory/AddProductModal';
 import { MasterSecurityModal } from './components/Auth/MasterSecurityModal';
 import { useUnlockTransition, UnlockOverlay } from './components/security/UnlockTransition';
 import { AppDownloadModal } from './components/Common/AppDownloadModal';
+import { AppUpdateModal } from './components/Common/AppUpdateModal';
 import { NetworkStatusBanner } from './components/Common/NetworkStatusBanner';
 import { KeyboardShortcutsModal } from './components/Common/KeyboardShortcutsModal';
 import { GlobalShakeDetector } from './components/Common/GlobalShakeDetector';
 import { MAIN_SCROLL_CONTAINER_ID } from './utils/scrollUtils';
 import { Product } from './types';
+import { initNativeApp, isNativePlatform, App as CapacitorApp } from './services/capacitorService';
+import { useAppUpdate } from './services/appUpdateService';
 
 // Lazy-load secondary heavy view modules for initial bundle optimization
 const BillingCounter = React.lazy(() => import('./components/POS/BillingCounter').then(m => ({ default: m.BillingCounter })));
@@ -51,6 +54,15 @@ const MainContent: React.FC = () => {
   const [isPhotoDatabaseOpen, setIsPhotoDatabaseOpen] = useState(false);
   const [isAppDownloadOpen, setIsAppDownloadOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+
+  // In-App Remote Update Manager (Automatic update check on startup + manual check in Settings)
+  const {
+    updateInfo,
+    isUpdateModalOpen,
+    dismissUpdate,
+    checkNow,
+    isChecking: isCheckingAppUpdate,
+  } = useAppUpdate();
 
   // Sidebar states: Collapsible on desktop (264px <-> 72px, persisted) and Drawer on mobile
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
@@ -99,7 +111,7 @@ const MainContent: React.FC = () => {
 
   // Handle hardware / browser Back button when modals or mobile drawers are open
   useEffect(() => {
-    const isAnyModalOpen = isAddProductOpen || isSettingsOpen || isChangePasscodeOpen || isReturnModalOpen || isMobileSidebarOpen || isAppDownloadOpen;
+    const isAnyModalOpen = isAddProductOpen || isSettingsOpen || isChangePasscodeOpen || isReturnModalOpen || isMobileSidebarOpen || isAppDownloadOpen || isPhotoDatabaseOpen || isShortcutsOpen || isUpdateModalOpen;
     if (isAnyModalOpen) {
       window.history.pushState({ modalOpen: true }, '');
       const handleModalPop = () => {
@@ -109,13 +121,109 @@ const MainContent: React.FC = () => {
         if (isChangePasscodeOpen) setIsChangePasscodeOpen(false);
         if (isReturnModalOpen) setIsReturnModalOpen(false);
         if (isAppDownloadOpen) setIsAppDownloadOpen(false);
+        if (isPhotoDatabaseOpen) setIsPhotoDatabaseOpen(false);
+        if (isShortcutsOpen) setIsShortcutsOpen(false);
+        if (isUpdateModalOpen) dismissUpdate(true);
       };
       window.addEventListener('popstate', handleModalPop, { once: true });
       return () => {
         window.removeEventListener('popstate', handleModalPop);
       };
     }
-  }, [isAddProductOpen, isSettingsOpen, isChangePasscodeOpen, isReturnModalOpen, isMobileSidebarOpen, isAppDownloadOpen]);
+  }, [isAddProductOpen, isSettingsOpen, isChangePasscodeOpen, isReturnModalOpen, isMobileSidebarOpen, isAppDownloadOpen, isPhotoDatabaseOpen, isShortcutsOpen, isUpdateModalOpen, dismissUpdate]);
+
+  // Capacitor Android Hardware Back-Button Management & Accidental Exit Prevention
+  const lastBackPressTimeRef = useRef<number>(0);
+  const [showExitToast, setShowExitToast] = useState(false);
+
+  useEffect(() => {
+    if (!isNativePlatform()) return;
+
+    let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const backListenerPromise = CapacitorApp.addListener('backButton', () => {
+      // 1. Close mobile sidebar drawer if open
+      if (isMobileSidebarOpen) {
+        setIsMobileSidebarOpen(false);
+        return;
+      }
+      // 2. Close any open top-level modals
+      if (isAddProductOpen) {
+        setIsAddProductOpen(false);
+        setProductToEdit(null);
+        return;
+      }
+      if (isReturnModalOpen) {
+        setIsReturnModalOpen(false);
+        return;
+      }
+      if (isPhotoDatabaseOpen) {
+        setIsPhotoDatabaseOpen(false);
+        return;
+      }
+      if (isSettingsOpen) {
+        setIsSettingsOpen(false);
+        return;
+      }
+      if (isChangePasscodeOpen) {
+        setIsChangePasscodeOpen(false);
+        return;
+      }
+      if (isAppDownloadOpen) {
+        setIsAppDownloadOpen(false);
+        return;
+      }
+      if (isShortcutsOpen) {
+        setIsShortcutsOpen(false);
+        return;
+      }
+      if (isUpdateModalOpen) {
+        dismissUpdate(true);
+        return;
+      }
+
+      // 3. Close any active child modal / dialog if open (like BarcodeScannerModal, ImagePreviewModal)
+      const closeButton = document.querySelector('[data-dialog-close], button[aria-label="Close"], button[aria-label="close"]') as HTMLButtonElement | null;
+      const activeModal = document.querySelector('[role="dialog"]');
+      if (activeModal && closeButton) {
+        closeButton.click();
+        return;
+      }
+
+      // 4. If on any secondary view, navigate back to 'dashboard'
+      if (activeView !== 'dashboard') {
+        setActiveView('dashboard');
+        return;
+      }
+
+      // 5. If already on dashboard, require double-tap within 2000ms to exit app
+      const now = Date.now();
+      if (now - lastBackPressTimeRef.current < 2000) {
+        void CapacitorApp.exitApp();
+      } else {
+        lastBackPressTimeRef.current = now;
+        setShowExitToast(true);
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => setShowExitToast(false), 2000);
+      }
+    });
+
+    return () => {
+      void backListenerPromise.then((handle) => handle.remove());
+      if (toastTimer) clearTimeout(toastTimer);
+    };
+  }, [
+    activeView,
+    setActiveView,
+    isMobileSidebarOpen,
+    isAddProductOpen,
+    isReturnModalOpen,
+    isPhotoDatabaseOpen,
+    isSettingsOpen,
+    isChangePasscodeOpen,
+    isAppDownloadOpen,
+    isShortcutsOpen,
+  ]);
 
   const handleEditProduct = (prod: Product) => {
     setProductToEdit(prod);
@@ -123,7 +231,13 @@ const MainContent: React.FC = () => {
   };
 
   return (
-    <div className="h-dvh w-full flex flex-col overflow-hidden bg-[#f8fafc] dark:bg-[#0B1210] text-[#0f172a] dark:text-[#E7F0EC] transition-colors duration-150 selection:bg-emerald-500 selection:text-white">
+    <div className="h-full h-screen w-full flex flex-col overflow-hidden bg-[#f8fafc] dark:bg-[#0B1210] text-[#0f172a] dark:text-[#E7F0EC] transition-colors duration-150 selection:bg-emerald-500 selection:text-white">
+      {/* Native Double-Tap Exit Notification Toast */}
+      {showExitToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[999999] px-4 py-2 rounded-full bg-slate-900/95 dark:bg-slate-800/95 text-white text-xs font-semibold shadow-2xl border border-slate-700/60 flex items-center gap-2 pointer-events-none animate-view-enter">
+          <span>Press back again to exit Yogeshwari Dairy</span>
+        </div>
+      )}
       {/* Global Root-Level Shake-to-Scan Detector across all pages */}
       <GlobalShakeDetector />
 
@@ -152,13 +266,13 @@ const MainContent: React.FC = () => {
           onOpenChangePasscode={() => setIsChangePasscodeOpen(true)}
         />
 
-        {/* Main Content Area - pb-28 on mobile prevents bottom nav & floating POS button overlap */}
+        {/* Main Content Area - pb-32 on mobile prevents bottom nav & floating POS button overlap */}
         <main
           id={MAIN_SCROLL_CONTAINER_ID}
-          className="flex-1 h-full p-2.5 sm:p-6 min-w-0 overflow-y-auto scroll-smooth pb-28 lg:pb-6 overscroll-y-auto relative"
+          className="flex-1 h-full p-2.5 sm:p-6 min-w-0 overflow-y-auto scroll-smooth pb-32 sm:pb-28 lg:pb-6 overscroll-y-auto relative"
         >
           <Suspense fallback={<ViewFallbackSkeleton />}>
-            <div key={activeView} className="w-full animate-view-enter transform-gpu">
+            <div key={activeView} className="w-full animate-view-enter">
               {activeView === 'dashboard' && (
                 <DashboardView
                   onOpenAddProduct={() => {
@@ -211,6 +325,8 @@ const MainContent: React.FC = () => {
                   onOpenPhotoDatabase={() => setIsPhotoDatabaseOpen(true)}
                   onOpenImageHealth={() => setActiveView('image-health')}
                   onOpenAppDownload={() => setIsAppDownloadOpen(true)}
+                  onCheckAppUpdate={() => checkNow(true)}
+                  isCheckingAppUpdate={isCheckingAppUpdate}
                 />
               )}
 
@@ -291,6 +407,13 @@ const MainContent: React.FC = () => {
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
       />
+
+      {/* Remote In-App Update Popup Modal (Auto on startup + Manual check in Settings) */}
+      <AppUpdateModal
+        isOpen={isUpdateModalOpen}
+        onClose={dismissUpdate}
+        updateInfo={updateInfo}
+      />
     </div>
   );
 };
@@ -298,6 +421,11 @@ const MainContent: React.FC = () => {
 const AppRoot: React.FC = () => {
   const { user, isSecurityUnlocked, isLoading, confirmSecurityUnlock } = useAuth();
   const [isSplashComplete, setIsSplashComplete] = useState(false);
+
+  // Initialize native status bar and splash screen on startup
+  useEffect(() => {
+    void initNativeApp();
+  }, []);
 
   const { phase, play, reset } = useUnlockTransition(() => {
     confirmSecurityUnlock();
@@ -332,7 +460,7 @@ const AppRoot: React.FC = () => {
         ) : (
           <>
             {isSecurityUnlocked ? (
-              <div className={phase === 'exiting' ? 'pos-dash-enter h-dvh w-full' : 'h-dvh w-full'}>
+              <div className="h-full w-full overflow-hidden">
                 <MainContent />
               </div>
             ) : (

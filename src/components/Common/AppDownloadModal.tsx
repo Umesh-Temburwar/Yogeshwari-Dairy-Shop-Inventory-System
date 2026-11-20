@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ydoLogo from '../../assets/YDO_logo.jpg';
 import { useLanguage } from '../../context/LanguageContext';
+import { isNativePlatform } from '../../services/capacitorService';
 import { 
   Download, 
   Smartphone, 
@@ -24,7 +25,7 @@ interface AppDownloadModalProps {
 export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onClose }) => {
   const { language } = useLanguage();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
+  const [isInstalled, setIsInstalled] = useState<boolean>(() => isNativePlatform());
   const [showManualGuide, setShowManualGuide] = useState(false);
 
   // Detect platform
@@ -134,7 +135,11 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
           {isInstalled && (
             <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/60 flex items-center gap-2.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 animate-fadeIn">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              <span>{'App successfully installed! You can now launch it directly from your home screen.'}</span>
+              <span>
+                {isNativePlatform()
+                  ? 'Running official Yogeshwari Dairy Android APK (v1.0.0) with native camera and offline storage.'
+                  : 'App successfully installed! You can now launch it directly from your home screen.'}
+              </span>
             </div>
           )}
 

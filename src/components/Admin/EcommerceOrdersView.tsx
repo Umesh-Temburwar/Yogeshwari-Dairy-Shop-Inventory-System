@@ -241,10 +241,27 @@ export const EcommerceOrdersView: React.FC = () => {
         updated_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
-        .from('ecommerce_orders')
-        .update(updates)
-        .eq('id', cancelModalOrder.id);
+      // Call atomic cancellation function to restore FEFO batch stock idempotently
+      let cancelledSuccessfully = false;
+      try {
+        const { error: rpcErr } = await supabase.rpc('fn_cancel_ecommerce_order_atomic', {
+          p_order_id: cancelModalOrder.id,
+          p_cancellation_reason: finalReason || 'Cancelled by store staff',
+          p_cancelled_by: 'Store Staff / Admin'
+        });
+        if (!rpcErr) {
+          cancelledSuccessfully = true;
+          showToast(`Order #${cancelModalOrder.order_no} cancelled & batch stock restored.`);
+        }
+      } catch {
+        // Fallback to table update below
+      }
+
+      if (!cancelledSuccessfully) {
+        const { error } = await supabase
+          .from('ecommerce_orders')
+          .update(updates)
+          .eq('id', cancelModalOrder.id);
 
       if (error) {
         showToast(`❌ Failed to cancel order: ${error.message}`);

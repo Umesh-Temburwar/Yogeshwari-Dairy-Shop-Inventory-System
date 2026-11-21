@@ -109,7 +109,7 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
           </button>
         </div>
 
-        <div className="p-4 space-y-4 overflow-y-auto overscroll-contain">
+        <div className="p-4 space-y-4 overflow-y-auto overscroll-contain pb-28 sm:pb-4">
           {/* 1. Layout View Mode */}
           <div className="space-y-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-[#8FA69C]">

@@ -681,7 +681,7 @@ const StockInwardModalContent: React.FC<{ product: Product; onClose: () => void 
           </div>
 
           {/* STICKY FOOTER: TOTAL PREVIEW + ACTIONS */}
-          <div className="shrink-0 px-4 sm:px-6 py-3.5 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:pb-4 border-t border-slate-100 dark:border-[#24352F] bg-white dark:bg-[#131F1B] space-y-2.5">
+          <div className="shrink-0 px-4 sm:px-6 py-3.5 pb-28 sm:pb-4 border-t border-slate-100 dark:border-[#24352F] bg-white dark:bg-[#131F1B] space-y-2.5">
             {/* TOTAL PREVIEW CARD */}
             <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#1A2A25] border border-slate-200/90 dark:border-[#24352F] flex items-center justify-between text-xs">
               <div>

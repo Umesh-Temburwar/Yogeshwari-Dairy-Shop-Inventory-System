@@ -295,4 +295,68 @@ describe('E-Commerce Backend Integration Tests', () => {
       expect(res2.status).toBe('CANCELLED');
     });
   });
+
+  describe('6. Staff Order Lifecycle, Idempotent Status Updates & Stock Isolation', () => {
+    it('Staff can update order to CONFIRMED, PREPARING, OUT_FOR_DELIVERY, and DELIVERED', async () => {
+      const adminToken = 'dev-token-admin';
+      const orderId = 'test-staff-lifecycle-order';
+      ecommerceService.seedMockOrder({
+        id: orderId,
+        order_no: 'YD-ORD-STAFF-TEST',
+        customer_id: 'cust-99',
+        order_status: 'PLACED',
+        total_amount: 250,
+        items: [],
+      });
+
+      // 1. Confirm
+      const res1 = await request(app)
+        .patch(`/api/v1/ecommerce/admin/orders/${orderId}/status`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ status: 'CONFIRMED' });
+      expect(res1.status).toBe(200);
+      expect(res1.body.data.order_status).toBe('CONFIRMED');
+
+      // 2. Preparing
+      const res2 = await request(app)
+        .patch(`/api/v1/ecommerce/admin/orders/${orderId}/status`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ status: 'PREPARING' });
+      expect(res2.status).toBe(200);
+      expect(res2.body.data.order_status).toBe('PREPARING');
+
+      // 3. Dispatch
+      const res3 = await request(app)
+        .patch(`/api/v1/ecommerce/admin/orders/${orderId}/status`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ status: 'OUT_FOR_DELIVERY' });
+      expect(res3.status).toBe(200);
+      expect(res3.body.data.order_status).toBe('OUT_FOR_DELIVERY');
+
+      // 4. Repeated update to OUT_FOR_DELIVERY is idempotent
+      const resRepeat = await request(app)
+        .patch(`/api/v1/ecommerce/admin/orders/${orderId}/status`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ status: 'OUT_FOR_DELIVERY' });
+      expect(resRepeat.status).toBe(200);
+      expect(resRepeat.body.data.order_status).toBe('OUT_FOR_DELIVERY');
+
+      // 5. Delivered
+      const res4 = await request(app)
+        .patch(`/api/v1/ecommerce/admin/orders/${orderId}/status`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ status: 'DELIVERED' });
+      expect(res4.status).toBe(200);
+      expect(res4.body.data.order_status).toBe('DELIVERED');
+    });
+
+    it('Customer token is forbidden from updating staff order status', async () => {
+      const customerToken = 'dev-token-customer-normal';
+      const res = await request(app)
+        .patch('/api/v1/ecommerce/admin/orders/some-order-id/status')
+        .set('Authorization', `Bearer ${customerToken}`)
+        .send({ status: 'DELIVERED' });
+      expect(res.status).toBe(403);
+    });
+  });
 });

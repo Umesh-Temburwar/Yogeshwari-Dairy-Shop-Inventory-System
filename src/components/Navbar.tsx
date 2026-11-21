@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useRealtimeStatus } from '../hooks/useRealtimeStatus';
+import { useStore } from '../context/StoreContext';
 import { 
   PanelLeftClose, 
   PanelLeft,
@@ -12,7 +13,8 @@ import {
   Smartphone,
   Settings,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  ShoppingBag
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -36,6 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { user, role, signOut, avatarUrl, hasCustomAvatar } = useAuth();
   const { resolvedTheme, toggleTheme } = useTheme();
   const realtimeStatus = useRealtimeStatus();
+  const { activeView, setActiveView, metrics } = useStore();
 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -179,6 +182,26 @@ export const Navbar: React.FC<NavbarProps> = ({
               {realtimeStatus === 'CONNECTED' ? 'Live' : realtimeStatus === 'RECONNECTING' ? 'Sync...' : 'Offline'}
             </span>
           </div>
+
+          {/* Online Orders Quick Button */}
+          <button
+            type="button"
+            onClick={() => setActiveView('ecommerce-orders')}
+            className={`relative p-2 rounded-xl border transition active:scale-95 cursor-pointer flex items-center justify-center ${
+              activeView === 'ecommerce-orders'
+                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                : 'bg-white dark:bg-[#131F1B] hover:bg-slate-100 dark:hover:bg-[#1A2A25] border-slate-200/90 dark:border-[#24352F] text-slate-700 dark:text-[#E7F0EC]'
+            }`}
+            title="Online Customer Orders"
+            aria-label="Online Orders"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            {metrics.pendingOnlineOrdersCount && metrics.pendingOnlineOrdersCount > 0 ? (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center animate-pulse shadow-sm">
+                {metrics.pendingOnlineOrdersCount}
+              </span>
+            ) : null}
+          </button>
 
           {/* Profile Button + Dropdown Menu (Theme Change, Photo Database, Settings, Logout) */}
           <div className="relative" ref={profileMenuRef}>

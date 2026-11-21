@@ -1217,7 +1217,7 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
               </div>
 
               {/* Submit Button */}
-              <div className="pt-2">
+              <div className="pt-2 pb-24 sm:pb-2">
                 <button
                   type="submit"
                   disabled={isSubmitting || (returnMode === 'invoice' ? (!anyItemReturning || totalRefund <= 0) : directRefundAmount <= 0)}

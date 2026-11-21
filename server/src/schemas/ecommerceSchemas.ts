@@ -22,9 +22,9 @@ export const customerAddressSchema = z.object({
   address_line1: z.string().min(5, 'Street address is required').max(255),
   address_line2: z.string().max(255).optional().nullable(),
   landmark: z.string().max(150).optional().nullable(),
-  city: z.string().min(2, 'City is required').default('Bhandara'),
+  city: z.string().min(2, 'City is required').default('Ambajogai'),
   state: z.string().min(2, 'State is required').default('Maharashtra'),
-  pincode: z.string().regex(/^\d{6}$/, 'Valid 6-digit PIN code required').default('441904'),
+  pincode: z.string().regex(/^\d{6}$/, 'Valid 6-digit PIN code required').default('431517'),
   address_type: z.enum(['HOME', 'WORK', 'OTHER']).default('HOME'),
   is_default: z.boolean().default(false),
 });

@@ -846,10 +846,10 @@ export const EcommerceOrdersView: React.FC = () => {
                   Fresh Milk, Paneer, Curd, Pure Ghee
                 </div>
                 <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                  Shop No. 1, Main Road, Bhandara - 441904
+                  Mandi Bazar, Mangalwar Peth Road, near Masjid, Ambajogai - 431517
                 </div>
                 <div className="text-[9px] text-slate-500 dark:text-slate-400">
-                  FSSAI Lic: 21524012000341 &bull; Mo: 9823XXXXXX
+                  Mo: 093708 69896 / +91 93708 69896 &bull; Daily 6:00 AM - 10:00 PM
                 </div>
                 <div className="text-[11px] font-black pt-1 uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
                   ** ONLINE DELIVERY SLIP **

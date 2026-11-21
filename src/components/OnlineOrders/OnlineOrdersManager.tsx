@@ -400,7 +400,7 @@ export const OnlineOrdersManager: React.FC = () => {
                         </p>
                       )}
                       <p className="text-slate-400 text-[10px]">
-                        {order.delivery_address?.city || 'Bhandara'}, {order.delivery_address?.pincode || '441904'}
+                        {order.delivery_address?.city || 'Ambajogai'}, {order.delivery_address?.pincode || '431517'}
                       </p>
                     </div>
                   </div>
@@ -589,7 +589,7 @@ export const OnlineOrdersManager: React.FC = () => {
           <div className="bg-white rounded-2xl max-w-xs w-full p-4 text-slate-900 shadow-2xl space-y-3 text-xs font-mono">
             <div className="text-center border-b pb-2">
               <h3 className="font-black text-sm uppercase">YOGESHWARI DAIRY PRODUCTS</h3>
-              <p className="text-[10px] text-slate-500">Bhandara (M.S.) | Online Delivery</p>
+              <p className="text-[10px] text-slate-500">Ambajogai (M.S.) | Online Delivery</p>
               <p className="text-[11px] font-bold mt-1">Order #{printSlipOrder.order_no}</p>
             </div>
 

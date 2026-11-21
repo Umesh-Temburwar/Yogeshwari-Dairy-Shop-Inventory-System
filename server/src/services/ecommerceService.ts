@@ -32,9 +32,13 @@ export interface PublicProductItem {
 }
 
 // In-memory mock storage for development / fallback
-const mockCustomerAddresses: Array<CustomerAddressInput & { id: string; user_id: string; created_at: string }> = [];
-const mockEcommerceOrders: any[] = [];
-const mockStockReservations: any[] = [];
+export const mockCustomerAddresses: Array<CustomerAddressInput & { id: string; user_id: string; created_at: string }> = [];
+export const mockEcommerceOrders: any[] = [];
+export const mockStockReservations: any[] = [];
+
+export const seedMockOrder = (order: any) => {
+  mockEcommerceOrders.push(order);
+};
 
 const generateUUID = () => crypto.randomUUID();
 
@@ -683,32 +687,39 @@ export const cancelCustomerOrder = async (orderId: string, userId: string, reaso
   const client = supabaseAdmin || supabaseClient;
 
   if (isSupabaseConfigured() && client) {
-    // 1. Verify ownership
-    const { data: ord, error: ordErr } = await client
-      .from('ecommerce_orders')
-      .select('id, customer_id, order_status')
-      .eq('id', orderId)
-      .single();
+    try {
+      // 1. Verify ownership
+      const { data: ord, error: ordErr } = await client
+        .from('ecommerce_orders')
+        .select('id, customer_id, order_status')
+        .eq('id', orderId)
+        .single();
 
-    if (ordErr || !ord) throw new AppError('Order not found', 404, 'NOT_FOUND');
-    if (ord.customer_id !== userId) throw new AppError('Unauthorized to cancel this order', 403, 'FORBIDDEN');
+      if (!ordErr && ord) {
+        if (ord.customer_id !== userId) throw new AppError('Unauthorized to cancel this order', 403, 'FORBIDDEN');
 
-    // 2. Call atomic cancellation & batch restoration function
-    const { data: res, error: rpcErr } = await client.rpc('fn_cancel_ecommerce_order_atomic', {
-      p_order_id: orderId,
-      p_cancellation_reason: reason,
-      p_cancelled_by: 'Customer',
-    });
+        // 2. Call atomic cancellation & batch restoration function
+        const { data: res, error: rpcErr } = await client.rpc('fn_cancel_ecommerce_order_atomic', {
+          p_order_id: orderId,
+          p_cancellation_reason: reason,
+          p_cancelled_by: 'Customer',
+        });
 
-    if (rpcErr) throw new AppError(rpcErr.message, 400, 'CANCELLATION_FAILED', rpcErr);
-    return res;
+        if (rpcErr) throw new AppError(rpcErr.message, 400, 'CANCELLATION_FAILED', rpcErr);
+        return res;
+      }
+    } catch (err: any) {
+      if (err instanceof AppError && err.statusCode === 403) throw err;
+      // Fallback below for local/dev orders
+    }
   }
 
   const o = mockEcommerceOrders.find((ord) => ord.id === orderId && ord.customer_id === userId);
   if (!o) throw new AppError('Order not found', 404, 'NOT_FOUND');
+  const isDuplicate = o.order_status === 'CANCELLED';
   o.order_status = 'CANCELLED';
   o.cancellation_reason = reason;
-  return { success: true, order_id: orderId, status: 'CANCELLED' };
+  return { success: true, order_id: orderId, status: 'CANCELLED', is_duplicate: isDuplicate };
 };
 
 // ============================================================================

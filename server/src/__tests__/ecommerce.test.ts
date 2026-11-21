@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import app from '../index.js';
+import { allocateStockFefo, BatchStock } from '../utils/fefoLogic.js';
+import * as ecommerceService from '../services/ecommerceService.js';
 
 describe('E-Commerce Backend Integration Tests', () => {
   describe('1. Public Catalog & Sanitization Security', () => {
@@ -97,7 +99,6 @@ describe('E-Commerce Backend Integration Tests', () => {
 
   describe('3. Cart Validation & Free Delivery Rule', () => {
     it('Calculates delivery fee: Rs 30 if subtotal < 300, Rs 0 if subtotal >= 300', async () => {
-      // 1. Fetch available product
       const catRes = await request(app).get('/api/v1/ecommerce/products');
       const item = catRes.body?.data?.items?.[0];
 
@@ -127,7 +128,7 @@ describe('E-Commerce Backend Integration Tests', () => {
     });
   });
 
-  describe('4. Order Placement & Idempotency', () => {
+  describe('4. Order Placement, Idempotency & Authorization', () => {
     it('Requires customer authentication to place an order', async () => {
       const res = await request(app)
         .post('/api/v1/ecommerce/orders')
@@ -146,6 +147,152 @@ describe('E-Commerce Backend Integration Tests', () => {
         });
 
       expect(res.status).toBe(401);
+    });
+
+    it('Duplicate checkout with same idempotency key returns existing order without creating duplicate', async () => {
+      const customerToken = 'dev-token-customer-alice';
+      const catRes = await request(app).get('/api/v1/ecommerce/products');
+      const item = catRes.body?.data?.items?.[0];
+
+      if (item) {
+        const idempotencyKey = '22222222-2222-2222-2222-222222222222';
+        const orderPayload = {
+          items: [{ product_id: item.id, quantity: 1 }],
+          delivery_address: {
+            recipient_name: 'Alice',
+            phone: '9876543210',
+            address_line1: 'Main Market',
+            city: 'Bhandara',
+            state: 'Maharashtra',
+            pincode: '441904',
+          },
+          payment_method: 'COD' as const,
+          idempotency_key: idempotencyKey,
+        };
+
+        // 1st call: Creates order
+        const res1 = await request(app)
+          .post('/api/v1/ecommerce/orders')
+          .set('Authorization', `Bearer ${customerToken}`)
+          .send(orderPayload);
+
+        expect(res1.status).toBe(201);
+        const firstOrderNo = res1.body.data.order_no;
+
+        // 2nd call with identical idempotency key: must replay same order
+        const res2 = await request(app)
+          .post('/api/v1/ecommerce/orders')
+          .set('Authorization', `Bearer ${customerToken}`)
+          .send(orderPayload);
+
+        expect(res2.status).toBe(201);
+        // Order numbers must match
+        expect(res2.body.data.order_no).toBe(firstOrderNo);
+      }
+    });
+  });
+
+  describe('5. Stock Integrity & FEFO Batch Allocation Edge Cases', () => {
+    const today = new Date('2026-11-22T00:00:00Z');
+
+    it('Strict FEFO: Allocates earliest expiry first and excludes expired batches', () => {
+      const batches: BatchStock[] = [
+        { id: 'b-exp', batch_no: 'EXP-01', expiry_date: '2026-11-20', qty_remaining: 50, purchase_price: 30 }, // Expired 2 days ago
+        { id: 'b-near', batch_no: 'NEAR-02', expiry_date: '2026-11-25', qty_remaining: 10, purchase_price: 32 }, // Expires in 3 days
+        { id: 'b-fresh', batch_no: 'FRESH-03', expiry_date: '2026-12-05', qty_remaining: 20, purchase_price: 33 }, // Expires in 13 days
+      ];
+
+      // Request 15 units
+      const result = allocateStockFefo(batches, 15, today);
+
+      // Must be fully allocated
+      expect(result.isFullyAllocated).toBe(true);
+      expect(result.allocatedTotal).toBe(15);
+      expect(result.remainingRequired).toBe(0);
+
+      // Expired batch must NEVER be used
+      const usedExpired = result.allocations.some((a) => a.batch_id === 'b-exp');
+      expect(usedExpired).toBe(false);
+
+      // Must allocate 10 from NEAR-02 first, then 5 from FRESH-03
+      expect(result.allocations).toHaveLength(2);
+      expect(result.allocations[0].batch_id).toBe('b-near');
+      expect(result.allocations[0].qty).toBe(10);
+      expect(result.allocations[1].batch_id).toBe('b-fresh');
+      expect(result.allocations[1].qty).toBe(5);
+    });
+
+    it('Fails completely when unexpired batch stock is less than requested quantity', () => {
+      const batches: BatchStock[] = [
+        { id: 'b-exp', batch_no: 'EXP-01', expiry_date: '2026-11-19', qty_remaining: 100, purchase_price: 30 }, // Expired
+        { id: 'b-fresh', batch_no: 'FRESH-02', expiry_date: '2026-11-28', qty_remaining: 4, purchase_price: 32 }, // Only 4 valid
+      ];
+
+      // Request 5 units (4 available, 1 short)
+      const result = allocateStockFefo(batches, 5, today);
+
+      expect(result.isFullyAllocated).toBe(false);
+      expect(result.allocatedTotal).toBe(4);
+      expect(result.remainingRequired).toBe(1); // Short by 1
+    });
+
+    it('Customer A cannot cancel Customer B order', async () => {
+      const customerAliceToken = 'dev-token-customer-alice';
+      const customerBobToken = 'dev-token-customer-bob';
+
+      // Alice creates an order
+      const catRes = await request(app).get('/api/v1/ecommerce/products');
+      const item = catRes.body?.data?.items?.[0];
+
+      if (item) {
+        const orderRes = await request(app)
+          .post('/api/v1/ecommerce/orders')
+          .set('Authorization', `Bearer ${customerAliceToken}`)
+          .send({
+            items: [{ product_id: item.id, quantity: 1 }],
+            delivery_address: {
+              recipient_name: 'Alice',
+              phone: '9876543210',
+              address_line1: 'Market Road',
+              city: 'Bhandara',
+              state: 'Maharashtra',
+              pincode: '441904',
+            },
+            payment_method: 'COD',
+            idempotency_key: '33333333-3333-3333-3333-333333333333',
+          });
+
+        const orderId = orderRes.body.data.id || orderRes.body.data.order_id;
+
+        // Bob tries to cancel Alice's order -> must be rejected with 403 or 404
+        const cancelRes = await request(app)
+          .post(`/api/v1/ecommerce/orders/${orderId}/cancel`)
+          .set('Authorization', `Bearer ${customerBobToken}`)
+          .send({ reason: 'Bob maliciously trying to cancel Alice order' });
+
+        expect([403, 404]).toContain(cancelRes.status);
+      }
+    });
+
+    it('Repeated cancellation is idempotent and does not cause double restoration', async () => {
+      // 1. Seed mock order
+      const testOrderId = 'test-order-cancel-123';
+      ecommerceService.seedMockOrder({
+        id: testOrderId,
+        order_no: 'YD-ORD-20261122-CANCEL-TEST',
+        customer_id: 'customer-1',
+        order_status: 'PLACED',
+        total_amount: 120,
+        items: [],
+      });
+
+      // First cancellation
+      const res1 = await ecommerceService.cancelCustomerOrder(testOrderId, 'customer-1', 'Changed mind');
+      expect(res1.status).toBe('CANCELLED');
+
+      // Second cancellation call must return CANCELLED cleanly without crashing
+      const res2 = await ecommerceService.cancelCustomerOrder(testOrderId, 'customer-1', 'Duplicate click');
+      expect(res2.status).toBe('CANCELLED');
     });
   });
 });

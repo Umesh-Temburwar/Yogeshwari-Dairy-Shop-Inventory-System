@@ -468,7 +468,59 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
             </div>
           ) : (
             <div className="space-y-2.5">
-              <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs overflow-hidden">
+              {/* Mobile Card List (sm:hidden) */}
+              <div className="sm:hidden space-y-2.5">
+                {displayedCustomerReturns.map(r => (
+                  <div key={r.id} className="p-3.5 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200/90 dark:border-[#24352F] shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs font-bold text-purple-600 dark:text-purple-400">
+                        {r.return_no} {r.invoice_no ? `• #${r.invoice_no}` : ''}
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
+                        {r.return_date}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-black text-slate-900 dark:text-white truncate">
+                          {r.product_name}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
+                          {r.customer_name ? `${r.customer_name} • ` : ''}{r.quantity} {r.unit} • {r.refund_mode}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-base font-black text-slate-900 dark:text-white block">
+                          ₹{r.refund_amount.toFixed(2)}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold ${
+                          r.condition === 'Resellable'
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
+                            : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400'
+                        }`}>
+                          {r.condition === 'Resellable' ? '✅ Restocked' : '⚠️ Waste'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between">
+                      <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] truncate max-w-[200px]">
+                        {r.reason}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCustomerReturn(r.id, r.return_no)}
+                        className="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-bold inline-flex items-center gap-1 active:scale-95 transition cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View (hidden sm:block) */}
+              <div className="hidden sm:block bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs overflow-hidden">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 dark:bg-[#1A2A25] text-slate-500 dark:text-[#8FA69C] font-bold border-b border-slate-200 dark:border-[#24352F]">
                     <tr>
@@ -699,7 +751,55 @@ export const ReturnsTracker: React.FC<ReturnsTrackerProps> = ({ onOpenReturnModa
             </div>
           ) : (
             <div className="space-y-2.5">
-              <div className="bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs overflow-hidden">
+              {/* Mobile Supplier Returns Card List (sm:hidden) */}
+              <div className="sm:hidden space-y-2.5">
+                {displayedSupplierReturns.map(r => (
+                  <div key={r.id} className="p-3.5 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200/90 dark:border-[#24352F] shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
+                        {r.return_no} {r.batch_no ? `• Batch: ${r.batch_no}` : ''}
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
+                        {r.return_date}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-black text-slate-900 dark:text-white truncate">
+                          {r.product_name}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
+                          {r.supplier_name} • {r.quantity} {r.unit}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-base font-black text-emerald-700 dark:text-emerald-400 block">
+                          ₹{r.total_refund_amount.toLocaleString('en-IN')}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          @ ₹{r.purchase_price}/{r.unit}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between">
+                      <span className="text-[11px] text-slate-500 dark:text-[#8FA69C] truncate max-w-[200px]">
+                        {r.reason}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteSupplierReturn(r.id, r.return_no)}
+                        className="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-bold inline-flex items-center gap-1 active:scale-95 transition cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View (hidden sm:block) */}
+              <div className="hidden sm:block bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200 dark:border-[#24352F] shadow-xs overflow-hidden">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 dark:bg-[#1A2A25] text-slate-500 dark:text-[#8FA69C] font-bold border-b border-slate-200 dark:border-[#24352F]">
                     <tr>

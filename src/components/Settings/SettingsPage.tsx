@@ -19,7 +19,12 @@ import {
   AlertCircle,
   Loader2,
   Fingerprint,
-  Trash2
+  Trash2,
+  Wifi,
+  WifiOff,
+  Vibrate,
+  SlidersHorizontal,
+  CloudUpload
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -30,6 +35,8 @@ import { uploadUserProfilePhoto } from '../../lib/profilePhotoService';
 import { formatFileSize } from '../../lib/productImageService';
 import { isBiometricSupported } from '../../lib/biometricAuth';
 import type { MasterUnlockMethod } from '../../lib/security';
+import { getHapticSettings, saveHapticSettings, triggerHaptic, HapticMode } from '../../services/hapticService';
+import { useNetworkSync } from '../../hooks/useNetworkSync';
 import {
   isRegistrationAllowedSync,
   setRegistrationSetting,
@@ -109,6 +116,28 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
   // Shake-to-Scan setting
   const [shakeToScanEnabled, setShakeToScanEnabled] = useLocalStorage<boolean>('ydo_shake_to_scan_enabled', true);
+
+  // Haptic & Vibration setting
+  const [hapticConfig, setHapticConfig] = useState(getHapticSettings);
+  const { isOnline, pendingCount, isSyncing: isOfflineSyncing, syncNow: syncOfflineNow } = useNetworkSync();
+
+  const handleToggleHaptic = () => {
+    const next = saveHapticSettings({ enabled: !hapticConfig.enabled });
+    setHapticConfig(next);
+    if (next.enabled) triggerHaptic('success');
+  };
+
+  const handleSelectHapticMode = (mode: HapticMode) => {
+    const next = saveHapticSettings({ mode });
+    setHapticConfig(next);
+    triggerHaptic('tap');
+  };
+
+  const handleCustomDurationChange = (dur: number) => {
+    const next = saveHapticSettings({ customDurationMs: dur, mode: 'custom' });
+    setHapticConfig(next);
+    triggerHaptic('tap');
+  };
 
   useEffect(() => {
     syncRegistrationSettingFromCloud().then(setIsRegistrationAllowed).catch(() => {});
@@ -667,7 +696,57 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           )}
         </SettingSection>
 
-        {/* SECTION 2: PREFERENCES */}
+        {/* SECTION 2: OFFLINE & CLOUD SYNC */}
+        <SettingSection title="OFFLINE & CLOUD SYNC">
+          <div className="p-4 bg-white dark:bg-[#131F1B] space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                  isOnline 
+                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400' 
+                    : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400'
+                }`}>
+                  {isOnline ? <Wifi className="w-5 h-5" /> : <WifiOff className="w-5 h-5" />}
+                </div>
+                <div>
+                  <div className="text-[14px] font-semibold text-slate-900 dark:text-[#E7F0EC] leading-snug">
+                    {isOnline ? 'Online (Connected to Cloud)' : 'Offline Mode Active'}
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-[#8FA69C]">
+                    {pendingCount > 0 
+                      ? `${pendingCount} action(s) waiting to sync` 
+                      : 'All records synced with database'}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={isOfflineSyncing || (!isOnline && pendingCount === 0)}
+                onClick={() => void syncOfflineNow()}
+                className="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold transition disabled:opacity-50 inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                {isOfflineSyncing ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Syncing...</span>
+                  </>
+                ) : (
+                  <>
+                    <CloudUpload className="w-3.5 h-3.5" />
+                    <span>Sync Now</span>
+                  </>
+                )}
+              </button>
+            </div>
+            
+            <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] leading-relaxed">
+              When internet is disconnected, the app automatically works in offline mode. All billings, inventory stock, and returns are stored safely on your device and will auto-sync when network returns.
+            </p>
+          </div>
+        </SettingSection>
+
+        {/* SECTION 3: PREFERENCES & HAPTICS */}
         <SettingSection title="PREFERENCES">
           <SettingRow
             icon={
@@ -693,6 +772,85 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               />
             }
           />
+        </SettingSection>
+
+        {/* SECTION 4: HAPTICS & VIBRATION */}
+        <SettingSection title="HAPTICS & VIBRATION (व्हायब्रेशन सेटिंग)">
+          <SettingRow
+            icon={<Vibrate className="w-5 h-5" />}
+            tone={hapticConfig.enabled ? 'emerald' : 'amber'}
+            title="Vibration Feedback"
+            subtitle={
+              hapticConfig.enabled
+                ? `ON — Mode: ${hapticConfig.mode.toUpperCase()}${hapticConfig.mode === 'custom' ? ` (${hapticConfig.customDurationMs}ms)` : ''}`
+                : 'OFF — Haptic vibration disabled'
+            }
+            onClick={handleToggleHaptic}
+            rightContent={
+              <ToggleSwitch
+                checked={hapticConfig.enabled}
+                onChange={handleToggleHaptic}
+                ariaLabel="Toggle Vibration Feedback"
+              />
+            }
+          />
+
+          {hapticConfig.enabled && (
+            <div className="px-4 py-3.5 space-y-3 bg-white dark:bg-[#131F1B] border-t border-slate-100 dark:border-[#24352F]">
+              <div className="text-xs font-bold text-slate-700 dark:text-[#E7F0EC]">
+                Feedback Intensity:
+              </div>
+              <div className="grid grid-cols-4 gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-[#0F1916] border border-slate-200/80 dark:border-[#24352F]">
+                {(['light', 'medium', 'strong', 'custom'] as HapticMode[]).map((m) => {
+                  const isActive = hapticConfig.mode === m;
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => handleSelectHapticMode(m)}
+                      className={`min-h-[34px] px-2 py-1 rounded-lg text-xs font-bold capitalize transition active:scale-95 cursor-pointer ${
+                        isActive
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'text-slate-600 dark:text-[#9DB2A9] hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {hapticConfig.mode === 'custom' && (
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex justify-between text-xs text-slate-600 dark:text-[#8FA69C]">
+                    <span>Custom Vibration Duration:</span>
+                    <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                      {hapticConfig.customDurationMs} ms
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max="120"
+                    step="5"
+                    value={hapticConfig.customDurationMs}
+                    onChange={(e) => handleCustomDurationChange(parseInt(e.target.value, 10))}
+                    className="w-full accent-emerald-600 cursor-pointer"
+                  />
+                </div>
+              )}
+
+              <div className="flex justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={() => triggerHaptic('tap')}
+                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#253932] text-xs font-bold text-slate-700 dark:text-[#E7F0EC] transition active:scale-95 cursor-pointer"
+                >
+                  ⚡ Test Vibration
+                </button>
+              </div>
+            </div>
+          )}
         </SettingSection>
 
         {/* SECTION 3: POS TOOLS */}

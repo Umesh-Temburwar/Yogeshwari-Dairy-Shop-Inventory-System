@@ -1,15 +1,16 @@
 {
-  "versionName": "1.0.3",
-  "versionCode": 4,
+  "versionName": "1.0.4",
+  "versionCode": 5,
   "minVersionCode": 1,
-  "releaseDate": "2026-11-20",
+  "releaseDate": "2026-11-21",
   "apkUrl": "https://yogeshwari-dairy-shop.vercel.app/downloads/yogeshwari-dairy.apk",
   "forceUpdate": false,
   "title": "New Update Available! (नवीन अपडेट उपलब्ध आहे)",
   "highlights": [
-    "Fixed Top Status Bar: App header and logo are safe-padded and never collide with phone notch or status bar icons",
-    "Overlay Fix: Modals and bottom sheets (Stock Inward, More Filters, Batch Sheet) float cleanly above the 5 bottom navigation buttons",
-    "Restored In-Stock Delete: Quick Delete/Trash action restored directly on Product Cards, List View, Table, and Detail Sheet",
-    "Soft, buttery-smooth mobile UI with native tactile response"
+    "Offline Mode & Auto-Sync: Work seamlessly even without internet; auto-syncs when online",
+    "Custom Haptic & Vibration: Select Light, Medium, Strong, or Custom vibration duration",
+    "PDF Preview Zoom: Zoom In, Zoom Out, and Pinch-to-zoom on receipts & PDF reports",
+    "Return & Refund Delete: Direct delete option for customer and supplier returns on mobile",
+    "Mobile Soft UI & Clean Layout: All modal options float above the 5 bottom navigation buttons"
   ]
 }

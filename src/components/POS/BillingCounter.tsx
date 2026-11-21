@@ -914,9 +914,9 @@ export const BillingCounter: React.FC = () => {
     <div className="relative max-w-7xl mx-auto pb-24 sm:pb-8">
       {/* Mobile Sticky Top Header (Tabs + Active Counter + Search + Barcode Scanner + In Stock / Categories) */}
       <div className="lg:hidden sticky top-0 z-20 -mx-2.5 sm:-mx-6 px-2.5 sm:px-6 pt-1 pb-2 bg-[#f8fafc]/95 dark:bg-[#0B1210]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-[#1E2E28] space-y-2 shadow-xs">
-        {/* Row 1: Mobile Tab Switcher & Counter Badge */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="grid grid-cols-2 p-1 bg-slate-200/80 dark:bg-[#1A2A25] rounded-xl flex-1 max-w-[280px]">
+        {/* Row 1: Mobile Tab Switcher */}
+        <div className="flex items-center justify-center">
+          <div className="grid grid-cols-2 p-1 bg-slate-200/80 dark:bg-[#1A2A25] rounded-xl w-full max-w-sm">
             <button
               type="button"
               onClick={() => setMobileTab('products')}
@@ -941,12 +941,6 @@ export const BillingCounter: React.FC = () => {
               <ShoppingCart className="w-4 h-4" />
               <span>{'2. Bill'} ({cart.length}) {netTotal > 0 ? `• ₹${netTotal.toFixed(0)}` : ''}</span>
             </button>
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="font-bold text-slate-800 dark:text-white px-2 py-1 rounded-lg bg-slate-100 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-[10px]">
-              📍 {activeOperator.counter}
-            </span>
           </div>
         </div>
 

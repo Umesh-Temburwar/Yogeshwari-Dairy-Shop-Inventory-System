@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import ydoLogo from '../../assets/YDO_logo.jpg';
 import { useLanguage } from '../../context/LanguageContext';
 import { isNativePlatform } from '../../services/capacitorService';
@@ -75,8 +76,8 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  const modalContent = (
+    <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity" 
@@ -234,7 +235,7 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
         </div>
 
         {/* Action Buttons Footer */}
-        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-[#15231F] border-t border-slate-200 dark:border-[#24352F] flex flex-col sm:flex-row gap-2.5 shrink-0">
+        <div className="p-4 sm:p-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:pb-5 bg-slate-50 dark:bg-[#15231F] border-t border-slate-200 dark:border-[#24352F] flex flex-col sm:flex-row gap-2.5 shrink-0">
           
           {/* Primary Install / Download Button */}
           <button
@@ -262,4 +263,6 @@ export const AppDownloadModal: React.FC<AppDownloadModalProps> = ({ isOpen, onCl
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

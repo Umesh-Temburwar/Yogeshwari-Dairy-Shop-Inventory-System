@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Rocket, 
   Sparkles, 
@@ -49,7 +50,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
       {/* Backdrop */}
       <div 
@@ -191,7 +192,7 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
         </div>
 
         {/* Action Buttons Footer */}
-        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-[#15231F] border-t border-slate-200 dark:border-[#24352F] flex flex-col sm:flex-row gap-2.5 shrink-0">
+        <div className="p-4 sm:p-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:pb-5 bg-slate-50 dark:bg-[#15231F] border-t border-slate-200 dark:border-[#24352F] flex flex-col sm:flex-row gap-2.5 shrink-0">
           
           {/* Main "Update Now" Action Button */}
           <button
@@ -221,4 +222,6 @@ export const AppUpdateModal: React.FC<AppUpdateModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

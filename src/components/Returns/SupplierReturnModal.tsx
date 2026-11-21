@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { SupplierReturnReason, SupplierRefundStatus, SupplierReturn } from '../../types';
@@ -185,9 +186,9 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
     if (payload) downloadReportPDF(payload);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-[#24352F] my-auto space-y-4">
+  const modalContent = (
+    <div className="fixed inset-0 z-[110] bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-lg w-full p-5 sm:p-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:pb-6 shadow-2xl border border-slate-200 dark:border-[#24352F] my-auto space-y-4">
         
         {completedReturn ? (
           /* SUCCESS CONFIRMATION & DEBIT NOTE VOUCHER */
@@ -582,5 +583,7 @@ export const SupplierReturnModal: React.FC<SupplierReturnModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };
 

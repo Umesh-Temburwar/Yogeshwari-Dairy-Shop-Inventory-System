@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../../context/StoreContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { ReturnReason, RefundMode, ReturnCondition, Sale } from '../../types';
@@ -429,9 +430,9 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
     if (payload) downloadReportPDF(payload);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto animate-fadeIn">
-      <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-[#24352F] my-auto space-y-4 max-h-[92vh] flex flex-col overflow-hidden">
+  const modalContent = (
+    <div className="fixed inset-0 z-[110] bg-black/75 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto animate-fadeIn">
+      <div className="bg-white dark:bg-[#131F1B] rounded-3xl max-w-2xl w-full p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:pb-6 shadow-2xl border border-slate-200 dark:border-[#24352F] my-auto space-y-4 max-h-[92vh] flex flex-col overflow-hidden">
         
         {/* ============================================================== */}
         {/* SUCCESS CONFIRMATION MODAL STATE                               */}
@@ -1250,4 +1251,6 @@ export const ReturnProductModal: React.FC<ReturnProductModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };

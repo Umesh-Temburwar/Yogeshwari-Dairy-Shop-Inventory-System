@@ -1499,7 +1499,15 @@ export const exportReportToPDF = (options: PDFReportOptions): void => {
       <div style="min-width: 0; flex: 1; font-size: 14px; font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
         ${displayToolbarTitle}
       </div>
-      <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+      <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0; flex-wrap: wrap;">
+        <!-- Zoom Controls -->
+        <div style="display: inline-flex; align-items: center; gap: 3px; background: #f1f5f9; padding: 2px 4px; border-radius: 10px; border: 1px solid #cbd5e1;">
+          <button id="yd-zoom-out" type="button" title="Zoom Out (−)" style="width: 26px; height: 26px; border: none; background: #ffffff; border-radius: 6px; font-weight: 900; font-size: 14px; cursor: pointer; color: #334155; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">−</button>
+          <span id="yd-zoom-label" style="font-size: 10px; font-weight: 800; color: #0f172a; min-width: 32px; text-align: center; font-variant-numeric: tabular-nums;">100%</span>
+          <button id="yd-zoom-in" type="button" title="Zoom In (+)" style="width: 26px; height: 26px; border: none; background: #ffffff; border-radius: 6px; font-weight: 900; font-size: 14px; cursor: pointer; color: #334155; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">+</button>
+          <button id="yd-zoom-reset" type="button" title="Reset / Fit Width" style="font-size: 10px; height: 26px; padding: 0 6px; border: 1px solid #a7f3d0; background: #ecfdf5; border-radius: 6px; font-weight: 800; cursor: pointer; color: #047857;">Fit</button>
+        </div>
+
         <button
           id="yd-modal-print-btn"
           type="button"
@@ -1627,14 +1635,65 @@ export const exportReportToPDF = (options: PDFReportOptions): void => {
 
   let currentBlobUrl: string | null = null;
   let naturalDocHeight = orientation === 'landscape' ? 794 : 1123;
+  let userZoom = 1.0;
 
   const updateScale = () => {
     const availableWidth = Math.max(280, previewViewport.clientWidth - 16);
-    const scale = Math.min(1, availableWidth / docWidthPx);
-    a4Frame.style.transform = `scale(${scale})`;
-    scaleHolder.style.width = `${Math.round(docWidthPx * scale)}px`;
-    scaleHolder.style.height = `${Math.ceil(naturalDocHeight * scale)}px`;
+    const baseScale = Math.min(1, availableWidth / docWidthPx);
+    const effectiveScale = baseScale * userZoom;
+    a4Frame.style.transform = `scale(${effectiveScale})`;
+    scaleHolder.style.width = `${Math.round(docWidthPx * effectiveScale)}px`;
+    scaleHolder.style.height = `${Math.ceil(naturalDocHeight * effectiveScale)}px`;
+    const zoomLabel = toolbar.querySelector('#yd-zoom-label') as HTMLSpanElement | null;
+    if (zoomLabel) {
+      zoomLabel.textContent = `${Math.round(userZoom * 100)}%`;
+    }
   };
+
+  const zoomInBtn = toolbar.querySelector('#yd-zoom-in');
+  const zoomOutBtn = toolbar.querySelector('#yd-zoom-out');
+  const zoomResetBtn = toolbar.querySelector('#yd-zoom-reset');
+
+  zoomInBtn?.addEventListener('click', () => {
+    userZoom = Math.min(3.0, Number((userZoom + 0.25).toFixed(2)));
+    updateScale();
+  });
+  zoomOutBtn?.addEventListener('click', () => {
+    userZoom = Math.max(0.5, Number((userZoom - 0.25).toFixed(2)));
+    updateScale();
+  });
+  zoomResetBtn?.addEventListener('click', () => {
+    userZoom = 1.0;
+    updateScale();
+  });
+
+  // Native touch pinch-to-zoom support
+  let touchStartDist = 0;
+  let touchInitialZoom = 1.0;
+
+  previewViewport.addEventListener('touchstart', (e: TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      touchStartDist = Math.hypot(dx, dy);
+      touchInitialZoom = userZoom;
+    }
+  }, { passive: true });
+
+  previewViewport.addEventListener('touchmove', (e: TouchEvent) => {
+    if (e.touches.length === 2 && touchStartDist > 0) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      const ratio = dist / touchStartDist;
+      userZoom = Math.max(0.5, Math.min(3.5, Number((touchInitialZoom * ratio).toFixed(2))));
+      updateScale();
+    }
+  }, { passive: true });
+
+  previewViewport.addEventListener('touchend', () => {
+    touchStartDist = 0;
+  }, { passive: true });
 
   const renderPreviewFrame = (opts: PDFReportOptions) => {
     if (currentBlobUrl) {

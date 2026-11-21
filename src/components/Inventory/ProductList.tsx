@@ -909,17 +909,6 @@ export const ProductList: React.FC<ProductListProps> = ({
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
-              onClick={() => setShowBarcodeStockIn(true)}
-              aria-label="Barcode Stock-In"
-              title="Barcode Stock-In"
-              className="h-9 px-2.5 sm:px-3 rounded-full bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/40 text-xs font-bold inline-flex items-center gap-1 active:scale-[0.97] transition-transform cursor-pointer"
-            >
-              <Barcode className="w-3.5 h-3.5" />
-              <span className="hidden xs:inline">Stock-In</span>
-            </button>
-
-            <button
-              type="button"
               onClick={() => setShowMoreSheet(true)}
               aria-label="More inventory options"
               title="View, Filters & Exports"

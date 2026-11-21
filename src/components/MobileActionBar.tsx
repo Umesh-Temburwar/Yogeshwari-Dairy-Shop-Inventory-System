@@ -2,6 +2,7 @@ import React from 'react';
 import { useStore, AppView } from '../context/StoreContext';
 import { useLanguage } from '../context/LanguageContext';
 import { smoothScrollToTop, getMainScrollTop } from '../utils/scrollUtils';
+import { triggerHaptic } from '../services/hapticService';
 import { 
   House, 
   Package, 
@@ -15,17 +16,6 @@ interface MobileActionBarProps {
   onOpenMobileSidebar: () => void;
   isMobileSidebarOpen?: boolean;
 }
-
-// Crisp WhatsApp-style light tactile feedback on mobile bottom navigation taps
-const triggerNavHaptic = () => {
-  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
-    try {
-      navigator.vibrate(12);
-    } catch {
-      // Ignore unsupported or blocked vibration calls
-    }
-  }
-};
 
 export const MobileActionBar: React.FC<MobileActionBarProps> = ({ 
   onOpenMobileSidebar,
@@ -108,7 +98,7 @@ export const MobileActionBar: React.FC<MobileActionBarProps> = ({
               key={tab.id}
               type="button"
               onClick={() => {
-                triggerNavHaptic();
+                triggerHaptic('tap');
 
                 if (tab.id === 'menu') {
                   const isMenuPageActive = [

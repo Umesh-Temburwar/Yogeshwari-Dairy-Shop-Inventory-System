@@ -46,7 +46,8 @@ export type AppView =
   | 'returns'
   | 'settings'
   | 'image-health'
-  | 'supplier-pdf-import';
+  | 'supplier-pdf-import'
+  | 'ecommerce-orders';
 
 export type GlobalScannerTarget = 'billing' | 'stock_in' | 'stock_edit' | null;
 
@@ -398,6 +399,8 @@ interface StoreContextType {
     // Compatibility Aliases
     totalCOGS: number;
     creditGiven: number;
+    // E-Commerce Metrics
+    pendingOnlineOrdersCount: number;
   };
 }
 
@@ -428,7 +431,7 @@ if (typeof window !== 'undefined') {
 const VALID_APP_VIEWS: AppView[] = [
   'dashboard', 'pos', 'sales', 'inventory', 'purchases', 
   'damages', 'udhar', 'expenses', 'analytics', 'reorder', 
-  'expiry', 'returns'
+  'expiry', 'returns', 'ecommerce-orders'
 ];
 
 const getInitialAppView = (): AppView => {
@@ -597,6 +600,44 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [outOfStockCount, setOutOfStockCount] = useState<number>(() => {
     return products.filter(p => p.stock_quantity <= 0).length;
   });
+
+  // Real-time tracking of pending online customer orders
+  const [pendingOnlineOrdersCount, setPendingOnlineOrdersCount] = useState<number>(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPendingCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from('ecommerce_orders')
+          .select('*', { count: 'exact', head: true })
+          .in('order_status', ['PLACED', 'CONFIRMED', 'PREPARING']);
+        if (!error && count !== null && isMounted) {
+          setPendingOnlineOrdersCount(count);
+        }
+      } catch {
+        // Table may not exist yet or offline
+      }
+    };
+
+    fetchPendingCount();
+
+    const channel = supabase
+      .channel('store-ecommerce-orders-count')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'ecommerce_orders' },
+        () => {
+          fetchPendingCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const [batches, setBatches] = useState<ProductBatch[]>(() => {
     const saved = localStorage.getItem('yd_batches');
@@ -1704,7 +1745,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       supplierReplacementCount: filteredSupplierReturns.filter(r => r.refund_status === 'Replacement_Received').length,
       // Compatibility Aliases
       totalCOGS: finalCogs,
-      creditGiven: finalUdharGiven
+      creditGiven: finalUdharGiven,
+      // Online Orders
+      pendingOnlineOrdersCount
     };
   }, [
     filteredSales,
@@ -1719,7 +1762,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     batches,
     hasPaginatedFinancialHistory,
     serverPeriodMetrics,
-    timeFilter
+    timeFilter,
+    pendingOnlineOrdersCount
   ]);
 
   // Helper to resolve currently active admin/owner profile details

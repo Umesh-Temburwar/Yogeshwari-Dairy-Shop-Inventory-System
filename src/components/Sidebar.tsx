@@ -27,7 +27,8 @@ import {
   PanelLeft,
   Eye,
   EyeOff,
-  FileSpreadsheet
+  FileSpreadsheet,
+  ShoppingBag
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -58,7 +59,7 @@ const GROUPS_STORAGE_KEY = 'ydo_sidebar_groups_v1';
 const HIDE_AMOUNTS_STORAGE_KEY = 'ydo_sidebar_hide_amounts_v1';
 
 const getGroupForView = (view: AppView): GroupKey => {
-  if (view === 'dashboard' || view === 'sales' || view === 'pos') return 'main';
+  if (view === 'dashboard' || view === 'sales' || view === 'pos' || view === 'ecommerce-orders') return 'main';
   if (view === 'udhar' || view === 'expenses' || view === 'analytics') return 'accounts';
   return 'inventory';
 };
@@ -239,6 +240,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         id: 'sales',
         label: t('dailySalesNav'),
         icon: ReceiptIndianRupee,
+        group: 'main'
+      },
+      {
+        id: 'ecommerce-orders',
+        label: t('onlineOrdersNav') || 'Online Orders',
+        tooltip: 'Online Customer Orders & Dispatch',
+        icon: ShoppingBag,
+        badgeCount: (metrics.pendingOnlineOrdersCount && metrics.pendingOnlineOrdersCount > 0) ? metrics.pendingOnlineOrdersCount : undefined,
+        badgeTone: 'warning',
         group: 'main'
       },
 

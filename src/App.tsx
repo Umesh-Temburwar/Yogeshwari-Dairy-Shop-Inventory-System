@@ -42,6 +42,7 @@ const ChangeMasterPasscodeModal = React.lazy(() => import('./components/Settings
 const ProductImageManagerModal = React.lazy(() => import('./components/Admin/ProductImageManagerModal').then(m => ({ default: m.ProductImageManagerModal })));
 const ImageHealthView = React.lazy(() => import('./components/Admin/ImageHealthView').then(m => ({ default: m.ImageHealthView })));
 const SupplierPdfImportView = React.lazy(() => import('./components/SupplierImport/SupplierPdfImportView').then(m => ({ default: m.SupplierPdfImportView })));
+const EcommerceOrdersView = React.lazy(() => import('./components/Admin/EcommerceOrdersView').then(m => ({ default: m.EcommerceOrdersView })));
 
 const MainContent: React.FC = () => {
   const { activeView, setActiveView } = useStore();
@@ -333,6 +334,7 @@ const MainContent: React.FC = () => {
 
               {activeView === 'image-health' && <ImageHealthView />}
               {activeView === 'supplier-pdf-import' && <SupplierPdfImportView />}
+              {activeView === 'ecommerce-orders' && <EcommerceOrdersView />}
             </div>
           </Suspense>
         </main>

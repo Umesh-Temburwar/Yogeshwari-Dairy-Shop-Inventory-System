@@ -328,6 +328,74 @@ export interface AdminActivity {
   created_at: string;
 }
 
+// Phase 78 & 4: E-Commerce Customer Orders
+export type EcommerceOrderStatus = 
+  | 'PLACED' 
+  | 'CONFIRMED' 
+  | 'PREPARING' 
+  | 'OUT_FOR_DELIVERY' 
+  | 'DELIVERED' 
+  | 'CANCELLED' 
+  | 'REJECTED';
+
+export type EcommercePaymentMethod = 'COD' | 'ONLINE_UPI' | 'RAZORPAY' | 'WALLET';
+export type EcommercePaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+
+export interface EcommerceOrderItem {
+  id: string;
+  order_id: string;
+  product_id?: string | null;
+  product_name: string;
+  pack_size?: string | null;
+  unit: string;
+  unit_price: number;
+  quantity: number;
+  total_price: number;
+  created_at?: string;
+}
+
+export interface EcommerceDeliveryAddress {
+  recipientName?: string;
+  phone?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  landmark?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  addressType?: 'HOME' | 'WORK' | 'OTHER';
+}
+
+export interface EcommerceOrder {
+  id: string;
+  order_no: string;
+  customer_id?: string | null;
+  customer_name: string;
+  customer_phone: string;
+  customer_email?: string | null;
+  delivery_address: EcommerceDeliveryAddress;
+  order_status: EcommerceOrderStatus;
+  payment_method: EcommercePaymentMethod;
+  payment_status: EcommercePaymentStatus;
+  payment_reference?: string | null;
+  subtotal: number;
+  delivery_fee: number;
+  discount_amount: number;
+  total_amount: number;
+  estimated_delivery_time?: string;
+  delivery_notes?: string | null;
+  rejection_reason?: string | null;
+  cancellation_reason?: string | null;
+  cancelled_at?: string | null;
+  cancelled_by?: string | null;
+  confirmed_at?: string | null;
+  delivered_at?: string | null;
+  created_at: string;
+  updated_at?: string;
+  items?: EcommerceOrderItem[];
+}
+
+
 
 
 

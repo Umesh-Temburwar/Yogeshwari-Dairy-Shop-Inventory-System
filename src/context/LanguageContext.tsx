@@ -19,6 +19,8 @@ export const TRANSLATIONS: Translations = {
   quickPosSub: { en: 'Fast Counter Sales' },
   dailySalesNav: { en: 'Daily Sales & Cash' },
   dailySalesSub: { en: 'Cash, UPI & Invoices' },
+  onlineOrdersNav: { en: 'Online Orders' },
+  onlineOrdersSub: { en: 'E-Commerce Live Sync' },
   inventoryNav: { en: 'Products & Stock' },
   inventorySub: { en: 'Products & Price List' },
   stockNeedNav: { en: 'Stock Need Alert' },

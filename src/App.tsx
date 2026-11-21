@@ -137,6 +137,22 @@ const MainContent: React.FC = () => {
   // Capacitor Android Hardware Back-Button Management & Accidental Exit Prevention
   const lastBackPressTimeRef = useRef<number>(0);
   const [showExitToast, setShowExitToast] = useState(false);
+  const [newOrderAlert, setNewOrderAlert] = useState<{ orderNo: string; customer: string; amount: number } | null>(null);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (e.detail?.order) {
+        setNewOrderAlert({
+          orderNo: e.detail.order.order_no,
+          customer: e.detail.order.customer_name,
+          amount: e.detail.order.total_amount,
+        });
+        setTimeout(() => setNewOrderAlert(null), 15000);
+      }
+    };
+    window.addEventListener('yd_new_online_order_alert', handler);
+    return () => window.removeEventListener('yd_new_online_order_alert', handler);
+  }, []);
 
   useEffect(() => {
     if (!isNativePlatform()) return;
@@ -242,6 +258,25 @@ const MainContent: React.FC = () => {
       )}
       {/* Global Root-Level Shake-to-Scan Detector across all pages */}
       <GlobalShakeDetector />
+
+      {/* Global Floating Online Order Alert Banner (Shows when order arrives anywhere in app) */}
+      {newOrderAlert && (
+        <div
+          onClick={() => {
+            setActiveView('ecommerce-orders');
+            setNewOrderAlert(null);
+          }}
+          className="fixed top-20 right-4 z-[999999] max-w-sm bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-3.5 rounded-2xl shadow-2xl border-2 border-white/50 flex items-center gap-3 cursor-pointer animate-bounce hover:scale-105 transition"
+        >
+          <span className="text-2xl animate-pulse">🔔</span>
+          <div className="text-xs">
+            <p className="font-black text-white">नया ऑनलाइन ऑर्डर! #{newOrderAlert.orderNo}</p>
+            <p className="text-emerald-100 font-medium">
+              {newOrderAlert.customer} • ₹{newOrderAlert.amount} (क्लिक करके ऑर्डर देखें)
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Top Header (Fixed 64px, nothing clipped or overflowing) */}
       <Navbar

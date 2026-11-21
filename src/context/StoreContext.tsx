@@ -29,6 +29,7 @@ import {
 } from '../lib/supabaseColumns';
 import { realtimeManager } from '../services/realtime/realtimeManager';
 import { useAuth } from './AuthContext';
+import { playNewOrderChime } from '../utils/audioChime';
 import { startOfDay, startOfWeek, startOfMonth, startOfYear, isWithinInterval, parseISO } from 'date-fns';
 
 export type AppView = 
@@ -603,38 +604,69 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Real-time tracking of pending online customer orders
   const [pendingOnlineOrdersCount, setPendingOnlineOrdersCount] = useState<number>(0);
+  const prevPendingCountRef = useRef<number | null>(null);
+  const knownOrderIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     let isMounted = true;
-    const fetchPendingCount = async () => {
+    const fetchPendingOrdersAndCount = async () => {
       try {
-        const { count, error } = await supabase
+        const { data, count, error } = await supabase
           .from('ecommerce_orders')
-          .select('*', { count: 'exact', head: true })
-          .in('order_status', ['PLACED', 'CONFIRMED', 'PREPARING']);
+          .select('id, order_no, order_status, total_amount, customer_name, created_at', { count: 'exact' })
+          .in('order_status', ['PLACED', 'CONFIRMED', 'PREPARING'])
+          .order('created_at', { ascending: false });
+
         if (!error && count !== null && isMounted) {
           setPendingOnlineOrdersCount(count);
+
+          // Trigger audible chime and toast whenever new pending orders arrive
+          if (data && prevPendingCountRef.current !== null && count > prevPendingCountRef.current) {
+            const incoming = data.filter(
+              (o) => !knownOrderIdsRef.current.has(o.id) && o.order_status === 'PLACED'
+            );
+            if (incoming.length > 0) {
+              playNewOrderChime();
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(
+                  new CustomEvent('yd_new_online_order_alert', {
+                    detail: { order: incoming[0], count },
+                  })
+                );
+              }
+            }
+          }
+
+          if (data) {
+            data.forEach((o) => knownOrderIdsRef.current.add(o.id));
+          }
+          prevPendingCountRef.current = count;
         }
       } catch {
-        // Table may not exist yet or offline
+        // Offline or table not accessible
       }
     };
 
-    fetchPendingCount();
+    fetchPendingOrdersAndCount();
 
+    // 1. Resilient polling fallback every 8 seconds (ensures orders update even if Realtime drops)
+    const pollTimer = setInterval(fetchPendingOrdersAndCount, 8000);
+
+    // 2. Realtime subscription for instant push updates
     const channel = supabase
       .channel('store-ecommerce-orders-count')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'ecommerce_orders' },
         () => {
-          fetchPendingCount();
+          fetchPendingOrdersAndCount();
         }
       )
       .subscribe();
 
     return () => {
       isMounted = false;
+      clearInterval(pollTimer);
       supabase.removeChannel(channel);
     };
   }, []);
@@ -728,6 +760,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     safeSetItem('yd_returns', returns);
   }, [returns]);
+
+  // Listen for delivered online orders to automatically register them in Profit & Sales tracking
+  useEffect(() => {
+    const handleDeliveredSale = (e: any) => {
+      if (e.detail?.sale) {
+        const deliveredSale = normalizeSale(e.detail.sale);
+        setSales((prev) => {
+          if (prev.some((s) => s.id === deliveredSale.id || s.invoice_no === deliveredSale.invoice_no)) {
+            return prev;
+          }
+          return [deliveredSale, ...prev];
+        });
+      }
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('yd_online_order_delivered', handleDeliveredSale);
+      return () => window.removeEventListener('yd_online_order_delivered', handleDeliveredSale);
+    }
+  }, []);
   useEffect(() => {
     safeSetItem('yd_supplier_returns', supplierReturns);
   }, [supplierReturns]);

@@ -20,6 +20,8 @@ export interface OnlineOrderItem {
   total_price: number;
   image_url: string | null;
   created_at: string;
+  barcode?: string | null;
+  scanned_quantity?: number;
 }
 
 export interface OnlineOrderAddress {
@@ -59,4 +61,8 @@ export interface OnlineOrder {
   confirmed_at?: string | null;
   delivered_at?: string | null;
   cancelled_at?: string | null;
+  packing_status?: 'NOT_STARTED' | 'SCANNING' | 'COMPLETED';
+  scanned_items_count?: number;
+  total_items_count?: number;
+  packing_scanned_map?: Record<string, number>;
 }

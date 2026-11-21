@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Bike, X, User, Phone, Truck, FileText, CheckCircle2 } from 'lucide-react';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../../lib/supabase';
 
 export interface AssignRiderModalProps {
   isOpen: boolean;

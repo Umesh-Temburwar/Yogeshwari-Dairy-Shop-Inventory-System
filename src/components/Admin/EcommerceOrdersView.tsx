@@ -33,6 +33,8 @@ import {
 } from 'lucide-react';
 import { DeliveryNavigationModal } from './DeliveryNavigationModal';
 import { AssignRiderModal } from './AssignRiderModal';
+import { BlinkitOrderPackingModal } from '../OnlineOrders/BlinkitOrderPackingModal';
+import { convertOnlineOrderToCompletedSale } from '../../services/onlineOrdersService';
 
 type FilterTab = 'ALL' | EcommerceOrderStatus;
 
@@ -45,6 +47,7 @@ export const EcommerceOrdersView: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<FilterTab>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [packingOrder, setPackingOrder] = useState<EcommerceOrder | null>(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState<boolean>(() => {
     try {
       return localStorage.getItem('ydo_order_audio_enabled') !== 'false';
@@ -237,6 +240,14 @@ export const EcommerceOrdersView: React.FC = () => {
     };
   }, [fetchOrders, playNewOrderChime]);
 
+  // Resilient background auto-polling every 8 seconds (ensures orders update smoothly even if Realtime drops)
+  useEffect(() => {
+    const pollTimer = setInterval(() => {
+      fetchOrders(true);
+    }, 8000);
+    return () => clearInterval(pollTimer);
+  }, [fetchOrders]);
+
   // Synchronize Online Store Open / Closed status with Supabase profiles
   useEffect(() => {
     const fetchStoreStatus = async () => {
@@ -395,6 +406,12 @@ export const EcommerceOrdersView: React.FC = () => {
         setOrders((prev) =>
           prev.map((ord) => (ord.id === orderId ? { ...ord, ...updates } : ord))
         );
+        if (newStatus === 'DELIVERED') {
+          const currentOrder = orders.find((o) => o.id === orderId);
+          if (currentOrder) {
+            convertOnlineOrderToCompletedSale(currentOrder as any).catch(console.error);
+          }
+        }
       }
     } catch (e: unknown) {
       showToast(`❌ Update error: ${e instanceof Error ? e.message : 'Unknown'}`);
@@ -564,7 +581,7 @@ export const EcommerceOrdersView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-28 sm:pb-8">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-5 right-5 z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-emerald-500 flex items-center gap-3 animate-bounce">
@@ -1173,6 +1190,19 @@ export const EcommerceOrdersView: React.FC = () => {
                       <span>Map & Route</span>
                     </button>
 
+                    {/* Blinkit Dark-Store Barcode Packing Button */}
+                    {(isConfirmed || isPreparing || isPlaced) && (
+                      <button
+                        type="button"
+                        onClick={() => setPackingOrder(order)}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-xs font-black flex items-center gap-1.5 border border-emerald-300 dark:border-emerald-700 transition-colors cursor-pointer shadow-xs"
+                        title="Blinkit-style dark-store barcode scanner item verification"
+                      >
+                        <Package className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Scan & Pack (Blinkit)</span>
+                      </button>
+                    )}
+
                     {/* Rider Assignment Button */}
                     <button
                       type="button"
@@ -1516,6 +1546,21 @@ export const EcommerceOrdersView: React.FC = () => {
               )
             );
             showToast(`🛵 Assigned ${rider.rider_name} to Order #${assignRiderOrder.order_no}`);
+          }}
+        />
+      )}
+
+      {/* BLINKIT ORDER PACKING & BARCODE VERIFICATION MODAL */}
+      {packingOrder && (
+        <BlinkitOrderPackingModal
+          isOpen={Boolean(packingOrder)}
+          onClose={() => setPackingOrder(null)}
+          order={packingOrder as any}
+          onOrderUpdated={(updated) => {
+            setOrders((prev) =>
+              prev.map((o) => (o.id === updated.id ? { ...o, ...updated } : o))
+            );
+            showToast(`📦 Packing progress updated for Order #${packingOrder.order_no}`);
           }}
         />
       )}

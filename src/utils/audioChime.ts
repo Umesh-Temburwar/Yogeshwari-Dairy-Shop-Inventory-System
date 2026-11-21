@@ -121,3 +121,95 @@ export const testOrderChime = (): boolean => {
   playNewOrderChime();
   return isAudioUnlocked;
 };
+
+/**
+ * High-pitch double ding when a product barcode is successfully scanned and matched (1320Hz -> 1760Hz).
+ */
+export const playScanSuccessChime = (): void => {
+  if (!isSoundAlertsEnabled()) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+
+    const now = ctx.currentTime;
+    const playNote = (freq: number, start: number, dur: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + start);
+      gain.gain.setValueAtTime(0.001, now + start);
+      gain.gain.exponentialRampToValueAtTime(0.3, now + start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + start + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + start);
+      osc.stop(now + start + dur);
+    };
+
+    playNote(1318.5, 0, 0.12);
+    playNote(1760.0, 0.08, 0.18);
+  } catch (err) {
+    console.warn('Scan chime failed:', err);
+  }
+};
+
+/**
+ * Low double buzz when an unknown/wrong barcode is scanned (220Hz -> 180Hz).
+ */
+export const playScanErrorChime = (): void => {
+  if (!isSoundAlertsEnabled()) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, now);
+    osc.frequency.setValueAtTime(180, now + 0.12);
+
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.28);
+  } catch (err) {
+    console.warn('Scan error chime failed:', err);
+  }
+};
+
+/**
+ * Triumphant 3-note celebration chime when all items in an order are 100% verified (C5 -> E5 -> G5).
+ */
+export const playScanCompleteChime = (): void => {
+  if (!isSoundAlertsEnabled()) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+
+    const now = ctx.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    notes.forEach((freq, idx) => {
+      const start = idx * 0.1;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + start);
+      gain.gain.setValueAtTime(0.001, now + start);
+      gain.gain.exponentialRampToValueAtTime(0.35, now + start + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + start + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + start);
+      osc.stop(now + start + 0.35);
+    });
+  } catch (err) {
+    console.warn('Scan complete chime failed:', err);
+  }
+};

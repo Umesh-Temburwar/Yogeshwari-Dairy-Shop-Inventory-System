@@ -467,14 +467,34 @@ export const validateCart = async (input: CartValidationInput) => {
   let productsMap = new Map<string, { id: string; name: string; selling_price: number; stock_quantity: number; pack_size: string | null; image_url: string | null; unit: string }>();
 
   if (isSupabaseConfigured() && supabaseClient) {
-    const { data: prods, error } = await supabaseClient
-      .from('products')
-      .select('id, name, selling_price, stock_quantity, pack_size, image_url, unit')
-      .in('id', productIds)
-      .eq('is_active', true);
+    // Prefer sanitized v_ecommerce_products which calculates available_stock from valid unexpired batches
+    const { data: viewProds } = await supabaseClient
+      .from('v_ecommerce_products')
+      .select('id, name, selling_price, available_stock, pack_size, image_url, unit')
+      .in('id', productIds);
 
-    if (error) throw new AppError(error.message, 500, 'DATABASE_ERROR', error);
-    (prods || []).forEach((p) => productsMap.set(p.id, p));
+    if (viewProds && viewProds.length > 0) {
+      viewProds.forEach((p: any) =>
+        productsMap.set(p.id, {
+          id: p.id,
+          name: p.name,
+          selling_price: Number(p.selling_price || 0),
+          stock_quantity: Math.max(0, Number(p.available_stock || 0)),
+          pack_size: p.pack_size || null,
+          image_url: p.image_url || null,
+          unit: p.unit || 'Piece',
+        })
+      );
+    } else {
+      const { data: prods, error } = await supabaseClient
+        .from('products')
+        .select('id, name, selling_price, stock_quantity, pack_size, image_url, unit')
+        .in('id', productIds)
+        .eq('is_active', true);
+
+      if (error) throw new AppError(error.message, 500, 'DATABASE_ERROR', error);
+      (prods || []).forEach((p) => productsMap.set(p.id, p));
+    }
   } else {
     initialProducts.forEach((p) => productsMap.set(p.id, p as any));
   }
@@ -572,6 +592,9 @@ export const createEcommerceOrder = async (
 
   const client = supabaseAdmin || supabaseClient;
 
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId || '');
+  const customerId = isValidUUID ? userId : null;
+
   // 2. Execute via atomic database function fn_create_ecommerce_order_atomic if available
   if (isSupabaseConfigured() && client) {
     try {
@@ -579,7 +602,7 @@ export const createEcommerceOrder = async (
         p_order_id: orderId,
         p_order_no: orderNo,
         p_idempotency_key: input.idempotency_key,
-        p_customer_id: userId,
+        p_customer_id: customerId,
         p_customer_name: input.delivery_address.recipient_name,
         p_customer_phone: input.delivery_address.phone,
         p_customer_email: userEmail,
@@ -606,10 +629,10 @@ export const createEcommerceOrder = async (
 
       if (!rpcErr && rpcRes && rpcRes.success) {
         return {
-          order_id: orderId,
-          order_no: orderNo,
-          total_amount: cartCheck.total_amount,
-          order_status: 'PLACED',
+          order_id: rpcRes.order_id || orderId,
+          order_no: rpcRes.order_no || orderNo,
+          total_amount: rpcRes.total_amount || cartCheck.total_amount,
+          order_status: rpcRes.order_status || 'PLACED',
           payment_method: input.payment_method,
           estimated_delivery_time: '15-30 mins',
           items: cartCheck.items,

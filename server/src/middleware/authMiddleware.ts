@@ -22,8 +22,15 @@ export const authMiddleware = async (
       const validRoles: UserRole[] = ['admin', 'owner', 'manager', 'cashier', 'delivery_boy', 'customer'];
       const role: UserRole = validRoles.includes(rolePart) ? rolePart : 'customer';
 
+      // Valid UUID format for Postgres UUID columns
+      const id = token.includes('bob')
+        ? '00000000-0000-0000-0000-000000000002'
+        : role === 'customer'
+        ? '00000000-0000-0000-0000-000000000001'
+        : '00000000-0000-0000-0000-000000000009';
+
       req.user = {
-        id: `dev-${role}-id`,
+        id,
         email: `${role}@dairy.local`,
         role,
         fullName: `Dev ${role.charAt(0).toUpperCase() + role.slice(1)}`,

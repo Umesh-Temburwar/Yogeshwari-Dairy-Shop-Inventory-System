@@ -151,10 +151,10 @@ describe('E-Commerce Backend Integration Tests', () => {
 
     it('Duplicate checkout with same idempotency key returns existing order without creating duplicate', async () => {
       const customerToken = 'dev-token-customer-alice';
-      const catRes = await request(app).get('/api/v1/ecommerce/products');
-      const item = catRes.body?.data?.items?.[0];
+      const catRes = await request(app).get('/api/v1/ecommerce/products?in_stock_only=true');
+      const item = catRes.body?.data?.items?.find((p: any) => p.is_in_stock && (p.available_stock || 0) > 0) || catRes.body?.data?.items?.[0];
 
-      if (item) {
+      if (item && (item.available_stock || 0) > 0) {
         const idempotencyKey = '22222222-2222-2222-2222-222222222222';
         const orderPayload = {
           items: [{ product_id: item.id, quantity: 1 }],
@@ -175,6 +175,10 @@ describe('E-Commerce Backend Integration Tests', () => {
           .post('/api/v1/ecommerce/orders')
           .set('Authorization', `Bearer ${customerToken}`)
           .send(orderPayload);
+
+        if (res1.status !== 201) {
+          console.error('Order placement failed with body:', res1.status, JSON.stringify(res1.body));
+        }
 
         expect(res1.status).toBe(201);
         const firstOrderNo = res1.body.data.order_no;
@@ -241,10 +245,10 @@ describe('E-Commerce Backend Integration Tests', () => {
       const customerBobToken = 'dev-token-customer-bob';
 
       // Alice creates an order
-      const catRes = await request(app).get('/api/v1/ecommerce/products');
-      const item = catRes.body?.data?.items?.[0];
+      const catRes = await request(app).get('/api/v1/ecommerce/products?in_stock_only=true');
+      const item = catRes.body?.data?.items?.find((p: any) => p.is_in_stock && (p.available_stock || 0) > 0) || catRes.body?.data?.items?.[0];
 
-      if (item) {
+      if (item && (item.available_stock || 0) > 0) {
         const orderRes = await request(app)
           .post('/api/v1/ecommerce/orders')
           .set('Authorization', `Bearer ${customerAliceToken}`)

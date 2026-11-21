@@ -263,16 +263,19 @@ export const EcommerceOrdersView: React.FC = () => {
           .update(updates)
           .eq('id', cancelModalOrder.id);
 
-      if (error) {
-        showToast(`❌ Failed to cancel order: ${error.message}`);
-      } else {
-        showToast(`Order #${cancelModalOrder.order_no} cancelled.`);
-        setOrders((prev) =>
-          prev.map((ord) =>
-            ord.id === cancelModalOrder.id ? { ...ord, ...updates } : ord
-          )
-        );
+        if (error) {
+          showToast(`❌ Failed to cancel order: ${error.message}`);
+        } else {
+          showToast(`Order #${cancelModalOrder.order_no} cancelled.`);
+          setOrders((prev) =>
+            prev.map((ord) =>
+              ord.id === cancelModalOrder.id ? { ...ord, ...updates } : ord
+            )
+          );
+        }
       }
+    } catch (e: unknown) {
+      showToast(`❌ Cancel error: ${e instanceof Error ? e.message : 'Unknown'}`);
     } finally {
       setIsUpdatingStatus(null);
       setCancelModalOrder(null);

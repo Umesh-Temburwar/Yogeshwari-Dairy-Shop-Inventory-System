@@ -49,10 +49,18 @@ export const EcommerceOrdersView: React.FC = () => {
       return true;
     }
   });
+  const [isAudioUnlocked, setIsAudioUnlocked] = useState<boolean>(false);
+  const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
 
   // Action modals
   const [receiptOrder, setReceiptOrder] = useState<EcommerceOrder | null>(null);
-  const [receiptWidth, setReceiptWidth] = useState<'58mm' | '80mm'>('80mm');
+  const [receiptWidth, setReceiptWidth] = useState<'58mm' | '80mm'>(() => {
+    try {
+      return (localStorage.getItem('ydo_receipt_width') as '58mm' | '80mm') || '80mm';
+    } catch {
+      return '80mm';
+    }
+  });
   const [cancelModalOrder, setCancelModalOrder] = useState<EcommerceOrder | null>(null);
   const [cancelReason, setCancelReason] = useState<string>('Out of stock');
   const [customCancelReason, setCustomCancelReason] = useState<string>('');
@@ -61,7 +69,7 @@ export const EcommerceOrdersView: React.FC = () => {
 
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  // Web Audio API Ding-Dong Chime for incoming orders
+  // Web Audio API Counter Bell Chime for incoming orders (Crisp, High-Volume 2-Tone Double Ding)
   const playNewOrderChime = useCallback(() => {
     if (!isAudioEnabled) return;
     try {
@@ -73,34 +81,72 @@ export const EcommerceOrdersView: React.FC = () => {
       if (ctx.state === 'suspended') {
         ctx.resume();
       }
+      setIsAudioUnlocked(true);
 
-      // First note: High chime (880 Hz / A5)
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(880, ctx.currentTime);
-      gain1.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
-      osc1.start(ctx.currentTime);
-      osc1.stop(ctx.currentTime + 0.4);
+      const now = ctx.currentTime;
+      // Helper function to synthesize resonant brass counter bell tone
+      const playBellTone = (freq: number, start: number, duration: number, peakGain: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle'; // triangle produces rich harmonics like a real store counter bell
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(peakGain, start);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + duration);
+      };
 
-      // Second note: Lower resonant chime (1174.66 Hz / D6)
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(1174.66, ctx.currentTime + 0.15);
-      gain2.gain.setValueAtTime(0.35, ctx.currentTime + 0.15);
-      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.65);
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.start(ctx.currentTime + 0.15);
-      osc2.stop(ctx.currentTime + 0.65);
+      // Sequence 1: Ding-Dong-Ding (Bright, penetrating counter chime)
+      playBellTone(987.77, now, 0.35, 0.45);        // B5
+      playBellTone(1318.51, now + 0.16, 0.45, 0.5); // E6
+      playBellTone(1567.98, now + 0.38, 0.65, 0.6); // G6
+
+      // Sequence 2: Repeat after 0.5s pause so counter staff doesn't miss it in shop noise
+      playBellTone(987.77, now + 0.9, 0.35, 0.45);
+      playBellTone(1318.51, now + 1.06, 0.45, 0.5);
+      playBellTone(1567.98, now + 1.28, 0.75, 0.65);
     } catch {
       // Audio autoplay restrictions or unsupported browser
     }
   }, [isAudioEnabled]);
+
+  // Explicit user unlock function to satisfy browser autoplay restrictions
+  const unlockAudio = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioCtx();
+      }
+      const ctx = audioContextRef.current;
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+      setIsAudioUnlocked(true);
+      // Play a quick test ding to confirm sound is active
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(1318.51, now);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.35);
+      showToast('🔔 Counter Order Bell Sound is now LIVE & ACTIVE!');
+    } catch {}
+  }, []);
+
+  // Update receipt width and persist preference
+  const handleChangeReceiptWidth = (w: '58mm' | '80mm') => {
+    setReceiptWidth(w);
+    try {
+      localStorage.setItem('ydo_receipt_width', w);
+    } catch {}
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -151,6 +197,15 @@ export const EcommerceOrdersView: React.FC = () => {
         (payload) => {
           const newOrder = payload.new as EcommerceOrder;
           playNewOrderChime();
+          setNewOrderIds((prev) => new Set(prev).add(newOrder.id));
+          // Clear new badge after 90 seconds
+          setTimeout(() => {
+            setNewOrderIds((prev) => {
+              const next = new Set(prev);
+              next.delete(newOrder.id);
+              return next;
+            });
+          }, 90000);
           showToast(`🔔 New Order #${newOrder.order_no} received from ${newOrder.customer_name} (₹${newOrder.total_amount})`);
           fetchOrders(true);
         }
@@ -169,6 +224,37 @@ export const EcommerceOrdersView: React.FC = () => {
     };
   }, [fetchOrders, playNewOrderChime]);
 
+  // Document title alert so cashier sees order when in another tab
+  useEffect(() => {
+    const originalTitle = document.title;
+    const pendingCount = orders.filter((o) => o.order_status === 'PLACED').length;
+    if (pendingCount > 0) {
+      document.title = `(🔔 ${pendingCount} New Order${pendingCount > 1 ? 's' : ''}) Yogeshwari Dairy`;
+    } else {
+      if (document.title.includes('🔔')) {
+        document.title = 'Yogeshwari Dairy Shop Inventory';
+      }
+    }
+    return () => {
+      document.title = originalTitle;
+    };
+  }, [orders]);
+
+  // Keyboard shortcut listener for quick thermal slip printing
+  useEffect(() => {
+    if (!receiptOrder) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setReceiptOrder(null);
+      } else if (e.key === 'p' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        window.print();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [receiptOrder]);
+
   // Toggle sound
   const handleToggleAudio = () => {
     setIsAudioEnabled((prev) => {
@@ -177,10 +263,16 @@ export const EcommerceOrdersView: React.FC = () => {
         localStorage.setItem('ydo_order_audio_enabled', String(next));
       } catch {}
       if (next) {
-        playNewOrderChime();
+        unlockAudio();
       }
       return next;
     });
+  };
+
+  // One-click Confirm & Prepare: Updates status to CONFIRMED and opens thermal delivery slip directly
+  const handleConfirmAndPrepare = async (order: EcommerceOrder) => {
+    await handleUpdateStatus(order.id, 'CONFIRMED');
+    setReceiptOrder({ ...order, order_status: 'CONFIRMED' });
   };
 
   // Update order status in Supabase
@@ -419,32 +511,75 @@ export const EcommerceOrdersView: React.FC = () => {
           </div>
 
           {/* Action Tools */}
-          <div className="flex items-center gap-2 self-start md:self-center">
+          <div className="flex items-center gap-2 self-start md:self-center flex-wrap">
+            {/* Audio Toggle */}
             <button
               type="button"
               onClick={handleToggleAudio}
-              className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+              className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                 isAudioEnabled
                   ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700'
               }`}
-              title={isAudioEnabled ? 'Incoming Order Chime: ON' : 'Incoming Order Chime: MUTED'}
+              title={isAudioEnabled ? 'Incoming Order Alarm Bell: ON' : 'Alarm Bell: MUTED'}
             >
-              {isAudioEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-              <span className="hidden sm:inline">{isAudioEnabled ? 'Chime ON' : 'Muted'}</span>
+              {isAudioEnabled ? <Volume2 className="w-4 h-4 text-emerald-600" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
+              <span className="text-xs font-bold">{isAudioEnabled ? 'Alarm ON' : 'Muted'}</span>
             </button>
+
+            {/* Test Alarm Sound Button */}
+            {isAudioEnabled && (
+              <button
+                type="button"
+                onClick={unlockAudio}
+                className="px-3 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                title="Test counter bell chime volume"
+              >
+                <span>🔔 Test Bell</span>
+              </button>
+            )}
 
             <button
               type="button"
               onClick={() => fetchOrders(false)}
               disabled={isRefreshing}
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white border border-slate-300 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white border border-slate-300 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <RefreshCw className={`w-4 h-4 text-emerald-600 dark:text-emerald-400 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
           </div>
         </div>
+
+        {/* Browser Autoplay Sound Unlock Banner (Shown if audio not yet initialized) */}
+        {!isAudioUnlocked && isAudioEnabled && (
+          <div
+            onClick={unlockAudio}
+            className="mt-3 p-3 rounded-xl bg-amber-500/15 dark:bg-amber-950/60 border border-amber-400/80 dark:border-amber-600 flex items-center justify-between gap-3 cursor-pointer hover:bg-amber-500/20 transition-all shadow-xs"
+          >
+            <div className="flex items-center gap-2.5 text-amber-900 dark:text-amber-200">
+              <span className="text-xl animate-bounce">🔔</span>
+              <div>
+                <p className="text-xs font-black">
+                  Counter Bell Alarm Ready — Click here to activate live sound alert (घंटी चालू करें)
+                </p>
+                <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                  Browser policy requires 1 click so new online orders can chime loudly through the counter speaker.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                unlockAudio();
+              }}
+              className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-black text-xs shrink-0 shadow-sm cursor-pointer"
+            >
+              Activate Bell 🔔
+            </button>
+          </div>
+        )}
 
         {/* Status Filter Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-4 mt-3 border-t border-slate-100 dark:border-[#1E3029]">
@@ -550,11 +685,15 @@ export const EcommerceOrdersView: React.FC = () => {
             );
             const waUrl = `https://wa.me/91${order.customer_phone.replace(/\D/g, '')}?text=${waText}`;
 
+            const isNew = newOrderIds.has(order.id);
+
             return (
               <div
                 key={order.id}
                 className={`bg-white dark:bg-[#131F1B] rounded-2xl p-4 sm:p-5 border transition-all ${
-                  isPlaced
+                  isNew
+                    ? 'border-emerald-500 dark:border-emerald-500 shadow-xl ring-4 ring-emerald-500/30 bg-emerald-50/15 dark:bg-emerald-950/20'
+                    : isPlaced
                     ? 'border-amber-400 dark:border-amber-600 shadow-md ring-1 ring-amber-400/30'
                     : 'border-slate-200 dark:border-[#24352F] shadow-xs'
                 }`}
@@ -565,6 +704,12 @@ export const EcommerceOrdersView: React.FC = () => {
                     <span className="font-mono font-black text-base text-slate-900 dark:text-white">
                       #{order.order_no}
                     </span>
+                    {isNew && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white animate-bounce shadow-xs flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                        JUST RECEIVED
+                      </span>
+                    )}
                     {renderStatusBadge(order.order_status)}
                     <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
@@ -726,24 +871,26 @@ export const EcommerceOrdersView: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {/* Action 1: PLACED -> Accept or Reject */}
+                    {/* Action 1: PLACED -> Confirm & Prepare (One-click updates to CONFIRMED & opens thermal slip) */}
                     {isPlaced && (
                       <>
                         <button
                           type="button"
                           onClick={() => setCancelModalOrder(order)}
-                          className="px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-bold transition-colors"
+                          className="px-3 py-2 rounded-xl border border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-bold transition-colors cursor-pointer"
                         >
                           Reject
                         </button>
                         <button
                           type="button"
                           disabled={isUpdatingStatus === order.id}
-                          onClick={() => handleUpdateStatus(order.id, 'CONFIRMED')}
-                          className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shadow-xs transition-colors"
+                          onClick={() => handleConfirmAndPrepare(order)}
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-emerald-600/25 transition-all cursor-pointer"
+                          title="Confirm order and open 58mm/80mm delivery slip"
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Accept Order</span>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+                          <Printer className="w-3.5 h-3.5 text-emerald-200" />
+                          <span>Confirm & Prepare (Print Slip)</span>
                         </button>
                       </>
                     )}
@@ -816,17 +963,34 @@ export const EcommerceOrdersView: React.FC = () => {
                 <p className="text-xs text-slate-500">Order #{receiptOrder.order_no}</p>
               </div>
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setReceiptWidth(receiptWidth === '80mm' ? '58mm' : '80mm')}
-                  className="px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                >
-                  Width: {receiptWidth}
-                </button>
+                <div className="flex items-center bg-slate-100 dark:bg-[#1A2A25] p-1 rounded-xl border border-slate-200 dark:border-[#24352F]">
+                  <button
+                    type="button"
+                    onClick={() => handleChangeReceiptWidth('58mm')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
+                      receiptWidth === '58mm'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    58mm (2")
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleChangeReceiptWidth('80mm')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
+                      receiptWidth === '80mm'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    80mm (3")
+                  </button>
+                </div>
                 <button
                   type="button"
                   onClick={() => setReceiptOrder(null)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -836,57 +1000,63 @@ export const EcommerceOrdersView: React.FC = () => {
             {/* Printable Receipt Paper Container */}
             <div
               id="printable-delivery-slip"
-              className={`bg-slate-50 dark:bg-[#1A2A25] p-4 rounded-xl border border-dashed border-slate-300 dark:border-[#24352F] font-mono text-xs space-y-2 mx-auto ${
-                receiptWidth === '58mm' ? 'max-w-[280px]' : 'max-w-[340px]'
+              className={`bg-white text-slate-900 p-4 rounded-xl border border-dashed border-slate-300 font-mono text-xs space-y-2 mx-auto shadow-sm ${
+                receiptWidth === '58mm' ? 'receipt-58mm max-w-[280px]' : 'receipt-80mm max-w-[340px]'
               }`}
             >
               {/* Header */}
-              <div className="text-center border-b border-slate-200 dark:border-[#24352F] pb-2">
-                <div className="font-bold text-sm text-slate-900 dark:text-white">
+              <div className="text-center border-b border-slate-200 pb-2">
+                <div className="font-bold text-sm text-slate-900">
                   YOGESHWARI DAIRY PRODUCTS
                 </div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                <div className="text-[10px] text-slate-600">
                   Fresh Milk, Paneer, Curd, Pure Ghee
                 </div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                <div className="text-[10px] text-slate-600">
                   Mandi Bazar, Mangalwar Peth Road, near Masjid, Ambajogai - 431517
                 </div>
-                <div className="text-[9px] text-slate-500 dark:text-slate-400">
+                <div className="text-[9px] text-slate-600">
                   Mo: 093708 69896 / +91 93708 69896 &bull; Daily 6:00 AM - 10:00 PM
                 </div>
-                <div className="text-[11px] font-black pt-1 uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+                <div className="text-[11px] font-black pt-1 uppercase tracking-wider text-emerald-800">
                   ** ONLINE DELIVERY SLIP **
                 </div>
               </div>
 
               {/* Order Metadata */}
-              <div className="text-[11px] text-slate-700 dark:text-slate-300 space-y-0.5">
+              <div className="text-[11px] text-slate-800 space-y-0.5">
                 <div className="flex justify-between font-bold">
                   <span>Order: #{receiptOrder.order_no}</span>
                   <span>
                     {new Date(receiptOrder.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <div className="flex justify-between text-[10px] text-slate-500">
+                <div className="flex justify-between text-[10px] text-slate-600">
                   <span>Date: {new Date(receiptOrder.created_at).toLocaleDateString()}</span>
                   <span>Type: Express Dairy</span>
                 </div>
               </div>
 
               {/* Customer & Address */}
-              <div className="border-t border-b border-slate-200 dark:border-[#24352F] py-1.5 text-[11px] space-y-0.5">
-                <div className="font-bold text-slate-900 dark:text-white">
+              <div className="border-t border-b border-slate-200 py-1.5 text-[11px] space-y-0.5">
+                <div className="font-bold text-slate-900">
                   Customer: {receiptOrder.customer_name}
                 </div>
                 <div>Phone: {receiptOrder.customer_phone}</div>
-                <div className="text-[10px] text-slate-600 dark:text-slate-300">
-                  Address: {receiptOrder.delivery_address?.addressLine1}
-                  {receiptOrder.delivery_address?.addressLine2 ? `, ${receiptOrder.delivery_address.addressLine2}` : ''}
-                  {receiptOrder.delivery_address?.landmark ? ` (Near: ${receiptOrder.delivery_address.landmark})` : ''}
-                  {receiptOrder.delivery_address?.city ? `, ${receiptOrder.delivery_address.city}` : ''}
+                <div className="text-[10px] text-slate-700">
+                  Address:{' '}
+                  {[
+                    (receiptOrder.delivery_address as any)?.addressLine1 || (receiptOrder.delivery_address as any)?.address_line1,
+                    (receiptOrder.delivery_address as any)?.addressLine2 || (receiptOrder.delivery_address as any)?.address_line2,
+                    (receiptOrder.delivery_address as any)?.landmark ? `(Near: ${(receiptOrder.delivery_address as any).landmark})` : null,
+                    (receiptOrder.delivery_address as any)?.city || 'Ambajogai',
+                    (receiptOrder.delivery_address as any)?.pincode ? `PIN: ${(receiptOrder.delivery_address as any).pincode}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(', ')}
                 </div>
                 {receiptOrder.delivery_notes && (
-                  <div className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
+                  <div className="text-[10px] text-amber-800 font-semibold">
                     Note: {receiptOrder.delivery_notes}
                   </div>
                 )}
@@ -894,12 +1064,12 @@ export const EcommerceOrdersView: React.FC = () => {
 
               {/* Itemized Lines */}
               <div className="space-y-1 py-1">
-                <div className="flex justify-between text-[10px] font-bold border-b border-slate-200 dark:border-[#24352F] pb-1">
+                <div className="flex justify-between text-[10px] font-bold border-b border-slate-200 pb-1">
                   <span>ITEM</span>
                   <span>QTY &times; RATE = TOTAL</span>
                 </div>
                 {receiptOrder.items?.map((it, idx) => (
-                  <div key={idx} className="space-y-0.5 text-[11px] text-slate-800 dark:text-slate-200">
+                  <div key={idx} className="space-y-0.5 text-[11px] text-slate-800">
                     <div className="flex justify-between gap-1">
                       <span className="truncate max-w-[150px] font-semibold">{it.product_name}</span>
                       <span>
@@ -911,13 +1081,13 @@ export const EcommerceOrdersView: React.FC = () => {
               </div>
 
               {/* Financial Totals */}
-              <div className="border-t border-slate-200 dark:border-[#24352F] pt-1.5 space-y-0.5 text-right font-bold text-xs">
-                <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-400 font-normal">
+              <div className="border-t border-slate-200 pt-1.5 space-y-0.5 text-right font-bold text-xs">
+                <div className="flex justify-between text-[11px] text-slate-600 font-normal">
                   <span>Subtotal:</span>
                   <span>₹{receiptOrder.subtotal || receiptOrder.total_amount}</span>
                 </div>
                 {receiptOrder.delivery_fee > 0 && (
-                  <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-400 font-normal">
+                  <div className="flex justify-between text-[11px] text-slate-600 font-normal">
                     <span>Delivery Charge:</span>
                     <span>₹{receiptOrder.delivery_fee}</span>
                   </div>
@@ -928,27 +1098,32 @@ export const EcommerceOrdersView: React.FC = () => {
                     <span>-₹{receiptOrder.discount_amount}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm text-emerald-700 dark:text-emerald-400 font-black border-t border-dashed border-slate-300 dark:border-[#24352F] pt-1">
+                <div className="flex justify-between text-sm text-emerald-700 font-black border-t border-dashed border-slate-300 pt-1">
                   <span>NET PAYABLE:</span>
                   <span>₹{receiptOrder.total_amount}</span>
                 </div>
-                <div className="text-[10px] font-normal text-slate-500 pt-0.5">
+                <div className="text-[10px] font-normal text-slate-600 pt-0.5">
                   Payment: {receiptOrder.payment_method} &bull; {receiptOrder.payment_status}
                   {receiptOrder.payment_method === 'COD' && receiptOrder.payment_status !== 'PAID' && (
-                    <div className="font-bold text-rose-600 dark:text-rose-400 text-[11px] mt-0.5">
+                    <div className="font-bold text-rose-600 text-[11px] mt-0.5">
                       *** COLLECT CASH: ₹{receiptOrder.total_amount} ***
+                    </div>
+                  )}
+                  {receiptOrder.payment_status === 'PAID' && (
+                    <div className="font-bold text-emerald-700 text-[11px] mt-0.5">
+                      *** PAID ONLINE ***
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Signatures */}
-              <div className="pt-3 border-t border-slate-200 dark:border-[#24352F] text-[9px] text-slate-500 flex justify-between">
+              <div className="pt-3 border-t border-slate-200 text-[9px] text-slate-600 flex justify-between">
                 <div>Delivery Partner Sign</div>
                 <div>Customer Sign</div>
               </div>
 
-              <div className="text-center text-[9px] text-slate-400 pt-1">
+              <div className="text-center text-[9px] text-slate-500 pt-1">
                 Thank you! Fresh dairy delivered directly from shop.
               </div>
             </div>
@@ -958,15 +1133,16 @@ export const EcommerceOrdersView: React.FC = () => {
               <button
                 type="button"
                 onClick={handlePrintReceipt}
-                className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs"
+                className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
               >
-                <Printer className="w-4 h-4 text-emerald-400" />
-                <span>Print Delivery Slip</span>
+                <Printer className="w-4 h-4 text-emerald-100" />
+                <span>Print Delivery Slip ({receiptWidth})</span>
+                <span className="text-[10px] opacity-75 font-normal hidden sm:inline">(Enter / Ctrl+P)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setReceiptOrder(null)}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-700 dark:text-slate-300 font-bold text-xs"
+                className="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer"
               >
                 Close
               </button>

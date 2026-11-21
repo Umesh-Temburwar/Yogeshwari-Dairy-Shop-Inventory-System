@@ -158,26 +158,48 @@
 
 /* Thermal receipt printing optimization - MUST ALWAYS PRINT IN LIGHT MODE */
 @media print {
+  @page {
+    margin: 0;
+  }
   html, body {
     background-color: #ffffff !important;
     color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   body * {
     visibility: hidden;
   }
-  #printable-receipt, #printable-receipt * {
+  #printable-receipt, #printable-receipt *,
+  #printable-delivery-slip, #printable-delivery-slip * {
     visibility: visible;
     color: #000000 !important;
     background-color: #ffffff !important;
+    box-shadow: none !important;
+    border-color: #000000 !important;
   }
-  #printable-receipt {
+  #printable-receipt, #printable-delivery-slip {
     position: absolute;
     left: 0;
     top: 0;
-    width: 80mm;
     margin: 0;
-    padding: 10px;
+    padding: 8px;
+    font-size: 11px;
+    font-family: monospace, 'Courier New', Courier, sans-serif !important;
+    line-height: 1.35;
+    background: #ffffff !important;
+  }
+  #printable-delivery-slip.receipt-58mm, #printable-receipt.receipt-58mm {
+    width: 58mm !important;
+    max-width: 58mm !important;
+    font-size: 10px;
+    padding: 4px;
+  }
+  #printable-delivery-slip.receipt-80mm, #printable-receipt.receipt-80mm {
+    width: 80mm !important;
+    max-width: 80mm !important;
     font-size: 12px;
+    padding: 8px;
   }
   .no-print {
     display: none !important;

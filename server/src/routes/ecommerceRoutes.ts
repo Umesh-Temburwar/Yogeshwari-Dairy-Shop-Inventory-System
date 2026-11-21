@@ -12,6 +12,7 @@ import {
   createOrderSchema,
   cancelOrderSchema,
   updateOrderStatusSchema,
+  updateStoreStatusSchema,
 } from '../schemas/ecommerceSchemas.js';
 
 const router = Router();
@@ -33,6 +34,12 @@ router.get(
 router.get(
   '/categories',
   ecommerceController.listPublicCategories
+);
+
+// Store Open/Close Status (Flipkart/Blinkit Style)
+router.get(
+  '/store-status',
+  ecommerceController.getStoreStatus
 );
 
 router.post(
@@ -117,6 +124,14 @@ router.patch(
   requireRole('admin', 'owner', 'manager', 'cashier', 'delivery_boy'),
   validateBody(updateOrderStatusSchema),
   ecommerceController.updateOrderStatus
+);
+
+router.patch(
+  '/admin/store-status',
+  authMiddleware,
+  requireRole('admin', 'owner', 'manager'),
+  validateBody(updateStoreStatusSchema),
+  ecommerceController.updateStoreStatus
 );
 
 export default router;

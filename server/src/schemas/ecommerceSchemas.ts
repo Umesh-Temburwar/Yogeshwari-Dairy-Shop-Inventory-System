@@ -73,6 +73,16 @@ export const updateOrderStatusSchema = z.object({
   status: z.enum(['CONFIRMED', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED', 'REJECTED']),
   notes: z.string().max(500).optional(),
   rejection_reason: z.string().max(500).optional(),
+  delivery_partner_name: z.string().max(100).optional(),
+  delivery_partner_phone: z.string().max(25).optional(),
+  delivery_partner_vehicle: z.string().max(50).optional(),
+});
+
+// Admin Store Open/Close Status Schema
+export const updateStoreStatusSchema = z.object({
+  is_open: z.boolean(),
+  message: z.string().max(300).optional(),
+  reopen_time: z.string().max(50).optional(),
 });
 
 export type CustomerRegisterInput = z.infer<typeof customerRegisterSchema>;
@@ -83,3 +93,4 @@ export type CartValidationInput = z.infer<typeof cartValidationSchema>;
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 export type CancelOrderInput = z.infer<typeof cancelOrderSchema>;
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
+export type UpdateStoreStatusInput = z.infer<typeof updateStoreStatusSchema>;

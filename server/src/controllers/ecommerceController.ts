@@ -11,6 +11,7 @@ import {
   CreateOrderInput,
   CancelOrderInput,
   UpdateOrderStatusInput,
+  UpdateStoreStatusInput,
 } from '../schemas/ecommerceSchemas.js';
 
 // Public Catalog Controllers
@@ -170,6 +171,26 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
     const staffName = req.user?.fullName || req.user?.email || 'Staff Member';
     const updated = await ecommerceService.updateOrderStatus(id, input, staffName);
     sendSuccess(res, updated, 'Order status updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Store Open / Closed Status Controls (Flipkart / Blinkit Style)
+export const getStoreStatus = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const status = await ecommerceService.getStoreStatus();
+    sendSuccess(res, status, 'Store status fetched successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateStoreStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { is_open, message, reopen_time } = req.body as UpdateStoreStatusInput;
+    const updated = await ecommerceService.updateStoreStatus(is_open, message, reopen_time);
+    sendSuccess(res, updated, `Online store marked as ${is_open ? 'OPEN' : 'CLOSED'}`);
   } catch (error) {
     next(error);
   }

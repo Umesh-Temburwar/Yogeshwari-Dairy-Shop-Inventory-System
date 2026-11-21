@@ -51,6 +51,14 @@ export const EcommerceOrdersView: React.FC = () => {
   });
   const [isAudioUnlocked, setIsAudioUnlocked] = useState<boolean>(false);
   const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
+  const [isStoreOpen, setIsStoreOpen] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('ydo_online_store_open') !== 'false';
+    } catch {
+      return true;
+    }
+  });
+  const [isUpdatingStoreStatus, setIsUpdatingStoreStatus] = useState<boolean>(false);
 
   // Action modals
   const [receiptOrder, setReceiptOrder] = useState<EcommerceOrder | null>(null);
@@ -223,6 +231,77 @@ export const EcommerceOrdersView: React.FC = () => {
       supabase.removeChannel(channel);
     };
   }, [fetchOrders, playNewOrderChime]);
+
+  // Synchronize Online Store Open / Closed status with Supabase profiles
+  useEffect(() => {
+    const fetchStoreStatus = async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('default_redirect_view')
+          .eq('role', 'Owner')
+          .single();
+        if (data && data.default_redirect_view) {
+          const isClosed = data.default_redirect_view.includes('store_closed');
+          setIsStoreOpen(!isClosed);
+          try {
+            localStorage.setItem('ydo_online_store_open', String(!isClosed));
+          } catch {}
+        }
+      } catch {}
+    };
+    fetchStoreStatus();
+
+    // Listen to real-time changes on profiles for multi-counter sync
+    const profileSub = supabase
+      .channel('store-status-sync-live')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles' },
+        (payload: any) => {
+          if (payload.new && payload.new.role === 'Owner' && payload.new.default_redirect_view) {
+            const isClosed = payload.new.default_redirect_view.includes('store_closed');
+            setIsStoreOpen(!isClosed);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileSub);
+    };
+  }, []);
+
+  // Toggle store open/closed state
+  const handleToggleStoreOpen = async () => {
+    setIsUpdatingStoreStatus(true);
+    const nextState = !isStoreOpen;
+    setIsStoreOpen(nextState);
+    try {
+      localStorage.setItem('ydo_online_store_open', String(nextState));
+    } catch {}
+
+    try {
+      const redirectTag = nextState ? 'dashboard:reg_off:store_open' : 'dashboard:reg_off:store_closed';
+      await supabase
+        .from('profiles')
+        .update({
+          default_redirect_view: redirectTag,
+          updated_at: new Date().toISOString()
+        })
+        .eq('role', 'Owner');
+    } catch (e) {
+      console.warn('Failed to sync store status to profiles:', e);
+    } finally {
+      setIsUpdatingStoreStatus(false);
+    }
+
+    showToast(
+      nextState
+        ? '🟢 Online Store is now OPEN. Customers can place orders!'
+        : '🔴 Online Store is now CLOSED. Customer app shows "Shop is Closed"!'
+    );
+  };
 
   // Document title alert so cashier sees order when in another tab
   useEffect(() => {
@@ -581,6 +660,70 @@ export const EcommerceOrdersView: React.FC = () => {
           </div>
         )}
 
+        {/* Flipkart/Blinkit Style Online Store Open / Closed Control Bar */}
+        <div
+          className={`mt-3 p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${
+            isStoreOpen
+              ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-400/80 dark:border-emerald-700/80'
+              : 'bg-rose-500/15 dark:bg-rose-950/60 border-rose-400 dark:border-rose-700'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <span
+              className={`w-3.5 h-3.5 rounded-full shrink-0 ${
+                isStoreOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-600'
+              }`}
+            />
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span
+                  className={`text-xs font-black uppercase tracking-wider ${
+                    isStoreOpen
+                      ? 'text-emerald-950 dark:text-emerald-200'
+                      : 'text-rose-950 dark:text-rose-200'
+                  }`}
+                >
+                  {isStoreOpen
+                    ? '🟢 Online Store: OPEN (स्वीकार करत आहे / Orders Accepted)'
+                    : '🔴 Online Store: CLOSED (दुकान सध्या बंद आहे / Currently Closed)'}
+                </span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-white/80 dark:bg-black/40 text-slate-700 dark:text-slate-300 border border-slate-200/50">
+                  Flipkart Style Sync
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
+                {isStoreOpen
+                  ? 'Website is live and actively accepting customer orders with fast 20-40 min delivery.'
+                  : 'Customer website shows "Dukan Abhi Band Hai" and checkout is blocked until reopened.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-center">
+            {isStoreOpen ? (
+              <button
+                type="button"
+                disabled={isUpdatingStoreStatus}
+                onClick={handleToggleStoreOpen}
+                className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                title="Mark store closed so customer app shows shop is closed"
+              >
+                <span>🔴 Close Store (दुकान बंद करा)</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={isUpdatingStoreStatus}
+                onClick={handleToggleStoreOpen}
+                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                title="Reopen store so customer app accepts orders"
+              >
+                <span>🟢 Reopen Store (दुकान चालू करा)</span>
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Status Filter Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-4 mt-3 border-t border-slate-100 dark:border-[#1E3029]">
           {(
@@ -803,6 +946,66 @@ export const EcommerceOrdersView: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Live Order Stage Tracker (Matches Customer Mobile View) */}
+                <div className="py-2.5 px-3 bg-slate-50 dark:bg-[#1A2A25] rounded-xl border border-slate-200/80 dark:border-[#24352F]/80 my-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold mb-1.5 text-slate-600 dark:text-slate-300">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Live Customer Tracking Stage:</span>
+                    </span>
+                    <span className="font-mono text-xs font-black text-emerald-700 dark:text-emerald-400">
+                      {order.order_status === 'PLACED' && 'Stage 1: Placed & Pending'}
+                      {order.order_status === 'CONFIRMED' && 'Stage 2: Order Confirmed'}
+                      {order.order_status === 'PREPARING' && 'Stage 3: Packing Fresh Dairy'}
+                      {order.order_status === 'OUT_FOR_DELIVERY' && 'Stage 4: Out for Quick Delivery'}
+                      {order.order_status === 'DELIVERED' && 'Stage 5: Delivered (Completed)'}
+                      {isCancelled && 'Order Cancelled'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {/* Step 1: Placed */}
+                    <div
+                      className={`h-2 rounded-full transition-all ${
+                        !isCancelled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
+                      }`}
+                      title="1. Placed"
+                    />
+                    {/* Step 2: Confirmed */}
+                    <div
+                      className={`h-2 rounded-full transition-all ${
+                        ['CONFIRMED', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.order_status)
+                          ? 'bg-emerald-500'
+                          : 'bg-slate-200 dark:bg-slate-700'
+                      }`}
+                      title="2. Confirmed"
+                    />
+                    {/* Step 3: Packing */}
+                    <div
+                      className={`h-2 rounded-full transition-all ${
+                        ['PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.order_status)
+                          ? 'bg-emerald-500'
+                          : 'bg-slate-200 dark:bg-slate-700'
+                      }`}
+                      title="3. Packing"
+                    />
+                    {/* Step 4: Out for Delivery */}
+                    <div
+                      className={`h-2 rounded-full transition-all ${
+                        ['OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.order_status)
+                          ? 'bg-emerald-500'
+                          : 'bg-slate-200 dark:bg-slate-700'
+                      }`}
+                      title="4. Out for Delivery"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 text-[9px] text-slate-500 dark:text-slate-400 mt-1 font-semibold text-center">
+                    <span>1. Placed</span>
+                    <span>2. Confirmed</span>
+                    <span>3. Packing</span>
+                    <span>4. Out Delivery</span>
+                  </div>
+                </div>
+
                 {/* Items & FEFO Picking Recommendations */}
                 <div className="py-3 space-y-2">
                   <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
@@ -895,16 +1098,17 @@ export const EcommerceOrdersView: React.FC = () => {
                       </>
                     )}
 
-                    {/* Action 2: CONFIRMED -> Start Preparing */}
+                    {/* Action 2: CONFIRMED -> Start Packing */}
                     {isConfirmed && (
                       <button
                         type="button"
                         disabled={isUpdatingStatus === order.id}
                         onClick={() => handleUpdateStatus(order.id, 'PREPARING')}
-                        className="px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex items-center gap-1 shadow-xs transition-colors"
+                        className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                        title="Update status to Packing so customer sees fresh items being packed"
                       >
                         <Package className="w-3.5 h-3.5" />
-                        <span>Start Packing</span>
+                        <span>📦 Start Packing (Stage 3)</span>
                       </button>
                     )}
 
@@ -914,10 +1118,11 @@ export const EcommerceOrdersView: React.FC = () => {
                         type="button"
                         disabled={isUpdatingStatus === order.id}
                         onClick={() => handleUpdateStatus(order.id, 'OUT_FOR_DELIVERY')}
-                        className="px-4 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold flex items-center gap-1 shadow-xs transition-colors"
+                        className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                        title="Send rider for quick delivery (Customer sees rider on the way)"
                       >
                         <Truck className="w-3.5 h-3.5" />
-                        <span>Out for Delivery</span>
+                        <span>🛵 Send Out for Delivery (Stage 4)</span>
                       </button>
                     )}
 
@@ -925,6 +1130,15 @@ export const EcommerceOrdersView: React.FC = () => {
                     {isOutForDelivery && (
                       <button
                         type="button"
+                        disabled={isUpdatingStatus === order.id}
+                        onClick={() => handleUpdateStatus(order.id, 'DELIVERED', 'PAID')}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-emerald-600/25 transition-colors cursor-pointer"
+                        title="Mark order delivered and payment collected"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+                        <span>✅ Mark Delivered & Paid (Complete)</span>
+                      </button>
+                    )}
                         disabled={isUpdatingStatus === order.id}
                         onClick={() => handleUpdateStatus(order.id, 'DELIVERED', 'PAID')}
                         className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shadow-xs transition-colors"

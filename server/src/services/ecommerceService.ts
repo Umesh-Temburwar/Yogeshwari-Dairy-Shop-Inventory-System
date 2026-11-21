@@ -31,6 +31,83 @@ export interface PublicProductItem {
   max_order_quantity: number;
 }
 
+export interface StoreStatusInfo {
+  is_open: boolean;
+  message: string;
+  reopen_time: string;
+  updated_at: string;
+}
+
+let inMemoryStoreStatus: StoreStatusInfo = {
+  is_open: true,
+  message: 'Store is open for farm-fresh dairy deliveries',
+  reopen_time: '6:00 AM',
+  updated_at: new Date().toISOString(),
+};
+
+export const getStoreStatus = async (): Promise<StoreStatusInfo> => {
+  if (isSupabaseConfigured() && supabaseClient) {
+    try {
+      const { data } = await supabaseClient
+        .from('profiles')
+        .select('default_redirect_view, updated_at')
+        .eq('role', 'Owner')
+        .single();
+
+      if (data && data.default_redirect_view) {
+        const val = data.default_redirect_view;
+        const isClosed = val.includes('store_closed');
+        return {
+          is_open: !isClosed,
+          message: isClosed
+            ? 'Yogeshwari Dairy store is currently closed. We reopen tomorrow at 6:00 AM for fresh deliveries.'
+            : 'Store is open for farm-fresh dairy deliveries',
+          reopen_time: '6:00 AM',
+          updated_at: data.updated_at || inMemoryStoreStatus.updated_at,
+        };
+      }
+    } catch {
+      // Fall through
+    }
+  }
+  return inMemoryStoreStatus;
+};
+
+export const updateStoreStatus = async (
+  isOpen: boolean,
+  message?: string,
+  reopenTime = '6:00 AM'
+): Promise<StoreStatusInfo> => {
+  inMemoryStoreStatus = {
+    is_open: isOpen,
+    message:
+      message ||
+      (isOpen
+        ? 'Store is open for farm-fresh dairy deliveries'
+        : 'Yogeshwari Dairy store is currently closed. We reopen tomorrow at 6:00 AM for fresh deliveries.'),
+    reopen_time: reopenTime,
+    updated_at: new Date().toISOString(),
+  };
+
+  const client = supabaseAdmin || supabaseClient;
+  if (isSupabaseConfigured() && client) {
+    try {
+      const redirectTag = isOpen ? 'dashboard:reg_off:store_open' : 'dashboard:reg_off:store_closed';
+      await client
+        .from('profiles')
+        .update({
+          default_redirect_view: redirectTag,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('role', 'Owner');
+    } catch (err) {
+      console.warn('Failed to persist store status to profiles:', err);
+    }
+  }
+
+  return inMemoryStoreStatus;
+};
+
 // In-memory mock storage for development / fallback
 export const mockCustomerAddresses: Array<CustomerAddressInput & { id: string; user_id: string; created_at: string }> = [];
 export const mockEcommerceOrders: any[] = [];
@@ -554,6 +631,8 @@ export const validateCart = async (input: CartValidationInput) => {
   const deliveryFee = subtotal >= freeDeliveryThreshold || subtotal === 0 ? 0 : 30;
   const totalAmount = Math.round((subtotal + deliveryFee) * 100) / 100;
 
+  const storeStatus = await getStoreStatus();
+
   return {
     items: validatedItems,
     subtotal,
@@ -561,8 +640,10 @@ export const validateCart = async (input: CartValidationInput) => {
     free_delivery_threshold: freeDeliveryThreshold,
     amount_needed_for_free_delivery: Math.max(0, freeDeliveryThreshold - subtotal),
     total_amount: totalAmount,
-    can_checkout: outOfStockItems.length === 0 && validatedItems.length > 0,
+    can_checkout: storeStatus.is_open && outOfStockItems.length === 0 && validatedItems.length > 0,
     out_of_stock_items: outOfStockItems,
+    is_store_open: storeStatus.is_open,
+    store_status: storeStatus,
   };
 };
 
@@ -574,7 +655,18 @@ export const createEcommerceOrder = async (
   userEmail: string,
   input: CreateOrderInput
 ) => {
-  // 1. Re-validate cart server-side (Never trust client prices)
+  // 1. Verify store is open
+  const storeStatus = await getStoreStatus();
+  if (!storeStatus.is_open) {
+    throw new AppError(
+      storeStatus.message || 'Yogeshwari Dairy is currently closed and not accepting online orders right now. Reopening tomorrow at 6:00 AM.',
+      400,
+      'STORE_CLOSED',
+      { store_status: storeStatus }
+    );
+  }
+
+  // 2. Re-validate cart server-side (Never trust client prices)
   const cartCheck = await validateCart({ items: input.items, cart_session_id: input.cart_session_id || undefined });
   if (!cartCheck.can_checkout) {
     throw new AppError(
@@ -787,8 +879,12 @@ export const updateOrderStatus = async (
         updated_at: new Date().toISOString(),
       };
       if (input.status === 'CONFIRMED') updatePayload.confirmed_at = new Date().toISOString();
-      if (input.status === 'DELIVERED') updatePayload.delivered_at = new Date().toISOString();
+      if (input.status === 'DELIVERED') {
+        updatePayload.delivered_at = new Date().toISOString();
+        updatePayload.payment_status = 'PAID';
+      }
       if (input.status === 'REJECTED') updatePayload.rejection_reason = input.rejection_reason || 'Out of stock / store busy';
+      if (input.notes) updatePayload.delivery_notes = input.notes;
 
       const { data, error } = await client
         .from('ecommerce_orders')

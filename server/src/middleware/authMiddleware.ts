@@ -19,8 +19,8 @@ export const authMiddleware = async (
     // Development / offline mock token support
     if (token.startsWith('dev-token-')) {
       const rolePart = token.replace('dev-token-', '') as UserRole;
-      const validRoles: UserRole[] = ['admin', 'owner', 'manager', 'cashier', 'delivery_boy'];
-      const role: UserRole = validRoles.includes(rolePart) ? rolePart : 'cashier';
+      const validRoles: UserRole[] = ['admin', 'owner', 'manager', 'cashier', 'delivery_boy', 'customer'];
+      const role: UserRole = validRoles.includes(rolePart) ? rolePart : 'customer';
 
       req.user = {
         id: `dev-${role}-id`,
@@ -56,26 +56,47 @@ export const authMiddleware = async (
       .single();
 
     if (profileError || !profile) {
-      // Default fallback if profile is being created by trigger
+      // Default fallback respecting user metadata role (ensures customer never becomes cashier)
+      const metadataRole = userData.user.user_metadata?.role as UserRole | undefined;
+      const role: UserRole = metadataRole || 'customer';
       req.user = {
         id: userData.user.id,
         email: userData.user.email || '',
-        role: 'cashier',
-        fullName: userData.user.user_metadata?.full_name || 'Staff Member',
+        role,
+        fullName: userData.user.user_metadata?.full_name || 'Customer',
       };
       return next();
     }
 
+    const normalizedRole = (profile.role ? profile.role.toLowerCase() : 'customer') as UserRole;
+
     req.user = {
       id: profile.id,
       email: userData.user.email || '',
-      role: profile.role as UserRole,
+      role: normalizedRole,
       fullName: profile.full_name || undefined,
     };
 
     next();
   } catch (error) {
     next(error);
+  }
+};
+
+export const optionalAuthMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next();
+  }
+  try {
+    await authMiddleware(req, res, () => next());
+  } catch {
+    // If optional auth fails, proceed as guest
+    next();
   }
 };
 

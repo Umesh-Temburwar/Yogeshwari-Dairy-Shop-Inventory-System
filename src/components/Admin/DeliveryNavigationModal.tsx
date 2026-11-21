@@ -61,8 +61,31 @@ export const DeliveryNavigationModal: React.FC<DeliveryNavigationModalProps> = (
   const [isRouting, setIsRouting] = useState(false);
   const [routeInfo, setRouteInfo] = useState<{ distanceKm: string; durationMins: string } | null>(null);
   const [gpsError, setGpsError] = useState<string | null>(null);
-  const [selectedRider, setSelectedRider] = useState(DELIVERY_RIDERS[0].name);
+  const [selectedRider, setSelectedRider] = useState(
+    order.delivery_partner_name || DELIVERY_RIDERS[0].name
+  );
   const [isUpdating, setIsUpdating] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState(false);
+
+  const handleCopyAddress = () => {
+    const fullAddress = [
+      addr.houseNo ? `House/Flat: ${addr.houseNo}` : '',
+      addr.street || addr.address_line1 || '',
+      addr.address_line2 || '',
+      addr.area || '',
+      addr.landmark ? `Near ${addr.landmark}` : '',
+      `${addr.city || 'Ambajogai'} - ${addr.pincode || '431517'}`,
+      addr.state || 'Maharashtra',
+    ]
+      .filter(Boolean)
+      .join(', ');
+
+    try {
+      navigator.clipboard.writeText(fullAddress);
+      setCopiedAddress(true);
+      setTimeout(() => setCopiedAddress(false), 2000);
+    } catch {}
+  };
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -319,9 +342,19 @@ export const DeliveryNavigationModal: React.FC<DeliveryNavigationModalProps> = (
 
         {/* Details & Action Controls */}
         <div className="p-4 bg-slate-50 dark:bg-[#16231E] border-t border-slate-100 dark:border-[#1E3029] space-y-3 shrink-0 overflow-y-auto max-h-[40vh] pb-safe">
+          {!hasExactGps && (
+            <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+              <div>
+                <span className="font-bold block">GPS Coordinates Unavailable:</span>
+                <span>Customer placed order without pin coordinates. Displaying Ambajogai city anchor with text address details below.</span>
+              </div>
+            </div>
+          )}
+
           {gpsError && (
-            <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+            <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 text-[11px] text-rose-800 dark:text-rose-300 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
               <span>{gpsError}</span>
             </div>
           )}
@@ -331,13 +364,24 @@ export const DeliveryNavigationModal: React.FC<DeliveryNavigationModalProps> = (
             <div className="p-2.5 rounded-xl bg-white dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F]">
               <div className="font-bold text-slate-900 dark:text-white flex items-center justify-between">
                 <span>{order.customer_name}</span>
-                <a
-                  href={`tel:${order.customer_phone}`}
-                  className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md"
-                >
-                  <Phone className="w-3 h-3" />
-                  <span>Call {order.customer_phone}</span>
-                </a>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleCopyAddress}
+                    className="inline-flex items-center gap-1 text-[11px] text-slate-700 dark:text-slate-300 font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 px-2 py-0.5 rounded-md transition-colors"
+                    title="Copy Full Address"
+                  >
+                    {copiedAddress ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                    <span>{copiedAddress ? 'Copied' : 'Copy'}</span>
+                  </button>
+                  <a
+                    href={`tel:${order.customer_phone}`}
+                    className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md"
+                  >
+                    <Phone className="w-3 h-3" />
+                    <span>Call {order.customer_phone}</span>
+                  </a>
+                </div>
               </div>
               <p className="text-slate-600 dark:text-slate-300 text-[11px] mt-1">
                 {addr.houseNo ? `${addr.houseNo}, ` : ''}
@@ -348,6 +392,11 @@ export const DeliveryNavigationModal: React.FC<DeliveryNavigationModalProps> = (
               <div className="text-[10px] text-slate-400 mt-0.5">
                 {addr.city || 'Ambajogai'} - {addr.pincode || '431517'}
               </div>
+              {(addr.delivery_instructions || addr.instructions) && (
+                <div className="mt-1.5 p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
+                  <b>Instructions:</b> {addr.delivery_instructions || addr.instructions}
+                </div>
+              )}
             </div>
 
             <div className="p-2.5 rounded-xl bg-white dark:bg-[#1A2A25] border border-slate-200/80 dark:border-[#24352F] flex flex-col justify-between">

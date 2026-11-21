@@ -32,6 +32,7 @@ import {
   Compass
 } from 'lucide-react';
 import { DeliveryNavigationModal } from './DeliveryNavigationModal';
+import { AssignRiderModal } from './AssignRiderModal';
 
 type FilterTab = 'ALL' | EcommerceOrderStatus;
 
@@ -65,6 +66,7 @@ export const EcommerceOrdersView: React.FC = () => {
   // Action modals
   const [receiptOrder, setReceiptOrder] = useState<EcommerceOrder | null>(null);
   const [navigationOrder, setNavigationOrder] = useState<EcommerceOrder | null>(null);
+  const [assignRiderOrder, setAssignRiderOrder] = useState<EcommerceOrder | null>(null);
   const [receiptWidth, setReceiptWidth] = useState<'58mm' | '80mm'>(() => {
     try {
       return (localStorage.getItem('ydo_receipt_width') as '58mm' | '80mm') || '80mm';
@@ -1171,6 +1173,21 @@ export const EcommerceOrdersView: React.FC = () => {
                       <span>Map & Route</span>
                     </button>
 
+                    {/* Rider Assignment Button */}
+                    <button
+                      type="button"
+                      onClick={() => setAssignRiderOrder(order)}
+                      className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-[#1A2A25] text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center gap-1 border border-purple-200 dark:border-purple-800 transition-colors cursor-pointer"
+                      title="Assign delivery boy / fleet partner"
+                    >
+                      <Truck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                      <span>
+                        {order.delivery_partner_name
+                          ? `Rider: ${order.delivery_partner_name.split(' ')[0]}`
+                          : 'Assign Rider'}
+                      </span>
+                    </button>
+
                     {/* Receipt Print button */}
                     <button
                       type="button"
@@ -1470,6 +1487,36 @@ export const EcommerceOrdersView: React.FC = () => {
           order={navigationOrder}
           onClose={() => setNavigationOrder(null)}
           onUpdateStatus={handleUpdateStatus}
+        />
+      )}
+
+      {/* ASSIGN DELIVERY RIDER MODAL */}
+      {assignRiderOrder && (
+        <AssignRiderModal
+          isOpen={Boolean(assignRiderOrder)}
+          onClose={() => setAssignRiderOrder(null)}
+          orderId={assignRiderOrder.id}
+          orderNumber={assignRiderOrder.order_no}
+          customerName={assignRiderOrder.customer_name}
+          currentRiderName={assignRiderOrder.delivery_partner_name}
+          currentRiderPhone={assignRiderOrder.delivery_partner_phone}
+          currentRiderVehicle={assignRiderOrder.delivery_partner_vehicle}
+          onRiderAssigned={(rider) => {
+            setOrders((prev) =>
+              prev.map((o) =>
+                o.id === assignRiderOrder.id
+                  ? {
+                      ...o,
+                      delivery_partner_name: rider.rider_name,
+                      delivery_partner_phone: rider.rider_phone,
+                      delivery_partner_vehicle: rider.rider_vehicle,
+                      delivery_notes: rider.notes || o.delivery_notes,
+                    }
+                  : o
+              )
+            );
+            showToast(`🛵 Assigned ${rider.rider_name} to Order #${assignRiderOrder.order_no}`);
+          }}
         />
       )}
     </div>

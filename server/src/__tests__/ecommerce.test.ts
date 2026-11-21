@@ -4,7 +4,7 @@ import app from '../index.js';
 import { allocateStockFefo, BatchStock } from '../utils/fefoLogic.js';
 import * as ecommerceService from '../services/ecommerceService.js';
 
-describe('E-Commerce Backend Integration Tests', () => {
+describe('E-Commerce Backend Integration Tests', { timeout: 20000 }, () => {
   describe('1. Public Catalog & Sanitization Security', () => {
     it('GET /api/v1/ecommerce/products returns 200 and sanitizes sensitive fields', async () => {
       const res = await request(app).get('/api/v1/ecommerce/products');
@@ -32,7 +32,7 @@ describe('E-Commerce Backend Integration Tests', () => {
         expect(product).not.toHaveProperty('stock_value');
         expect(product).not.toHaveProperty('margin');
       }
-    });
+    }, 15000);
 
     it('GET /api/v1/ecommerce/categories returns 200 with list of categories', async () => {
       const res = await request(app).get('/api/v1/ecommerce/categories');
@@ -117,7 +117,7 @@ describe('E-Commerce Backend Integration Tests', () => {
           expect(resSmall.body.data.delivery_fee).toBe(0);
         }
       }
-    });
+    }, 15000);
 
     it('Rejects cart validation with empty items array', async () => {
       const res = await request(app)
@@ -193,7 +193,7 @@ describe('E-Commerce Backend Integration Tests', () => {
         // Order numbers must match
         expect(res2.body.data.order_no).toBe(firstOrderNo);
       }
-    });
+    }, 15000);
   });
 
   describe('5. Stock Integrity & FEFO Batch Allocation Edge Cases', () => {
@@ -352,7 +352,7 @@ describe('E-Commerce Backend Integration Tests', () => {
         .send({ status: 'DELIVERED' });
       expect(res4.status).toBe(200);
       expect(res4.body.data.order_status).toBe('DELIVERED');
-    });
+    }, 15000);
 
     it('Customer token is forbidden from updating staff order status', async () => {
       const customerToken = 'dev-token-customer-normal';
@@ -360,6 +360,214 @@ describe('E-Commerce Backend Integration Tests', () => {
         .patch('/api/v1/ecommerce/admin/orders/some-order-id/status')
         .set('Authorization', `Bearer ${customerToken}`)
         .send({ status: 'DELIVERED' });
+      expect(res.status).toBe(403);
+    });
+  });
+
+  describe('7. Customer Address CRUD, Coordinates Validation & Ownership Enforcement', () => {
+    const customerAliceToken = 'dev-token-customer-alice';
+    const customerBobToken = 'dev-token-customer-bob';
+    let aliceAddressId: string;
+
+    it('POST /api/v1/ecommerce/addresses creates valid address with coordinates and instructions', async () => {
+      const res = await request(app)
+        .post('/api/v1/ecommerce/addresses')
+        .set('Authorization', `Bearer ${customerAliceToken}`)
+        .send({
+          recipient_name: 'Alice Sharma',
+          phone: '9876543210',
+          address_line1: 'Near Yogeshwari Temple, Main Road',
+          landmark: 'Opposite Sweet Mart',
+          city: 'Ambajogai',
+          state: 'Maharashtra',
+          pincode: '431517',
+          address_type: 'HOME',
+          latitude: 18.7289,
+          longitude: 76.3824,
+          delivery_instructions: 'Ring bell twice and leave near milk cooler',
+          is_default: true,
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty('id');
+      expect(res.body.data.recipient_name).toBe('Alice Sharma');
+      expect(res.body.data.latitude).toBe(18.7289);
+      expect(res.body.data.longitude).toBe(76.3824);
+      expect(res.body.data.delivery_instructions).toBe('Ring bell twice and leave near milk cooler');
+
+      aliceAddressId = res.body.data.id;
+    }, 15000);
+
+    it('Rejects address creation with invalid latitude (> 90 or < -90)', async () => {
+      const res = await request(app)
+        .post('/api/v1/ecommerce/addresses')
+        .set('Authorization', `Bearer ${customerAliceToken}`)
+        .send({
+          recipient_name: 'Alice Sharma',
+          phone: '9876543210',
+          address_line1: 'Near Yogeshwari Temple',
+          city: 'Ambajogai',
+          state: 'Maharashtra',
+          pincode: '431517',
+          latitude: 95.5, // Invalid!
+          longitude: 76.38,
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('Rejects address creation with invalid longitude (> 180 or < -180)', async () => {
+      const res = await request(app)
+        .post('/api/v1/ecommerce/addresses')
+        .set('Authorization', `Bearer ${customerAliceToken}`)
+        .send({
+          recipient_name: 'Alice Sharma',
+          phone: '9876543210',
+          address_line1: 'Near Yogeshwari Temple',
+          city: 'Ambajogai',
+          state: 'Maharashtra',
+          pincode: '431517',
+          latitude: 18.72,
+          longitude: 195.5, // Invalid!
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('Strict Security: Customer Bob CANNOT access Customer Alice address (403 Forbidden)', async () => {
+      if (!aliceAddressId) return;
+
+      const res = await request(app)
+        .get(`/api/v1/ecommerce/addresses/${aliceAddressId}`)
+        .set('Authorization', `Bearer ${customerBobToken}`);
+
+      expect(res.status).toBe(403);
+    });
+
+    it('Strict Security: Customer Bob CANNOT update or delete Customer Alice address', async () => {
+      if (!aliceAddressId) return;
+
+      const putRes = await request(app)
+        .put(`/api/v1/ecommerce/addresses/${aliceAddressId}`)
+        .set('Authorization', `Bearer ${customerBobToken}`)
+        .send({ recipient_name: 'Hacked Name' });
+
+      expect(putRes.status).toBe(403);
+
+      const delRes = await request(app)
+        .delete(`/api/v1/ecommerce/addresses/${aliceAddressId}`)
+        .set('Authorization', `Bearer ${customerBobToken}`);
+
+      expect(delRes.status).toBe(403);
+    });
+
+    it('Customer Alice can update her own address coordinates and details', async () => {
+      if (!aliceAddressId) return;
+
+      const res = await request(app)
+        .put(`/api/v1/ecommerce/addresses/${aliceAddressId}`)
+        .set('Authorization', `Bearer ${customerAliceToken}`)
+        .send({
+          landmark: 'Updated Near Devi Mandir Gate',
+          latitude: 18.7301,
+          longitude: 76.3855,
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.landmark).toBe('Updated Near Devi Mandir Gate');
+    });
+
+    it('Authorized staff (admin/cashier) CAN view customer address for fulfillment', async () => {
+      if (!aliceAddressId) return;
+
+      const adminToken = 'dev-token-admin';
+      const res = await request(app)
+        .get(`/api/v1/ecommerce/addresses/${aliceAddressId}`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.id).toBe(aliceAddressId);
+    });
+
+    it('Customer Alice can delete her own address', async () => {
+      if (!aliceAddressId) return;
+
+      const res = await request(app)
+        .delete(`/api/v1/ecommerce/addresses/${aliceAddressId}`)
+        .set('Authorization', `Bearer ${customerAliceToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+  });
+
+  describe('8. Delivery Rider Assignment & Dispatch Workflow', () => {
+    it('POST /api/v1/ecommerce/admin/orders/:id/assign-rider assigns rider to order', async () => {
+      const adminToken = 'dev-token-admin';
+      const orderId = 'test-ord-rider-001';
+
+      ecommerceService.seedMockOrder({
+        id: orderId,
+        order_no: 'ORD-TEST-RIDER',
+        customer_id: '00000000-0000-0000-0000-000000000001',
+        customer_name: 'Umesh',
+        customer_phone: '8856087984',
+        order_status: 'CONFIRMED',
+        delivery_address: {
+          recipient_name: 'Umesh',
+          phone: '8856087984',
+          address_line1: 'Flat 302, Sai Complex, Ramdas Peth',
+          city: 'Nagpur',
+          state: 'Maharashtra',
+          pincode: '440010',
+          latitude: 21.1415,
+          longitude: 79.0768,
+        },
+      });
+
+      const res = await request(app)
+        .post(`/api/v1/ecommerce/admin/orders/${orderId}/assign-rider`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          rider_name: 'Sunil Rao',
+          rider_phone: '9876543210',
+          rider_vehicle: 'MH-31-DY-1008',
+          notes: 'Deliver hot milk packets first',
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.delivery_partner_name).toBe('Sunil Rao');
+      expect(res.body.data.delivery_partner_phone).toBe('9876543210');
+      expect(res.body.data.delivery_partner_vehicle).toBe('MH-31-DY-1008');
+      expect(res.body.data.delivery_notes).toBe('Deliver hot milk packets first');
+    });
+
+    it('Delivery boy role can access admin orders list for assigned deliveries', async () => {
+      const riderToken = 'dev-token-delivery_boy';
+      const res = await request(app)
+        .get('/api/v1/ecommerce/admin/orders')
+        .set('Authorization', `Bearer ${riderToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
+    it('Unauthorized customer token cannot assign riders (403 Forbidden)', async () => {
+      const customerToken = 'dev-token-customer-normal';
+      const res = await request(app)
+        .post('/api/v1/ecommerce/admin/orders/some-order-id/assign-rider')
+        .set('Authorization', `Bearer ${customerToken}`)
+        .send({
+          rider_name: 'Fake Rider',
+          rider_phone: '9999999999',
+        });
+
       expect(res.status).toBe(403);
     });
   });

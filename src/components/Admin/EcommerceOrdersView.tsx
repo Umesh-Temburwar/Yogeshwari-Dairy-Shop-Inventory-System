@@ -28,8 +28,10 @@ import {
   Calendar,
   X,
   IndianRupee,
-  Layers
+  Layers,
+  Compass
 } from 'lucide-react';
+import { DeliveryNavigationModal } from './DeliveryNavigationModal';
 
 type FilterTab = 'ALL' | EcommerceOrderStatus;
 
@@ -62,6 +64,7 @@ export const EcommerceOrdersView: React.FC = () => {
 
   // Action modals
   const [receiptOrder, setReceiptOrder] = useState<EcommerceOrder | null>(null);
+  const [navigationOrder, setNavigationOrder] = useState<EcommerceOrder | null>(null);
   const [receiptWidth, setReceiptWidth] = useState<'58mm' | '80mm'>(() => {
     try {
       return (localStorage.getItem('ydo_receipt_width') as '58mm' | '80mm') || '80mm';
@@ -929,11 +932,28 @@ export const EcommerceOrdersView: React.FC = () => {
                           {order.delivery_address?.addressType || 'HOME'}
                         </span>
                         <div className="text-slate-500 dark:text-slate-400">
-                          {order.delivery_address?.addressLine1}
+                          {order.delivery_address?.addressLine1 || (order.delivery_address as any)?.street || 'Main Road'}
+                          {(order.delivery_address as any)?.houseNo ? ` (${(order.delivery_address as any).houseNo})` : ''}
                           {order.delivery_address?.addressLine2 ? `, ${order.delivery_address.addressLine2}` : ''}
+                          {(order.delivery_address as any)?.area ? `, ${(order.delivery_address as any).area}` : ''}
                           {order.delivery_address?.landmark ? ` (Near: ${order.delivery_address.landmark})` : ''}
-                          {order.delivery_address?.city ? `, ${order.delivery_address.city}` : ''}
-                          {order.delivery_address?.pincode ? ` - ${order.delivery_address.pincode}` : ''}
+                          {order.delivery_address?.city ? `, ${order.delivery_address.city}` : ', Ambajogai'}
+                          {order.delivery_address?.pincode ? ` - ${order.delivery_address.pincode}` : ' - 431517'}
+                        </div>
+                        <div className="pt-1 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setNavigationOrder(order)}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 font-bold text-[11px] inline-flex items-center gap-1.5 border border-emerald-300 dark:border-emerald-700 transition-colors cursor-pointer"
+                          >
+                            <Compass className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                            <span>📍 View on Map & Route</span>
+                          </button>
+                          {(order.delivery_address as any)?.latitude && (
+                            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-semibold bg-emerald-100/60 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
+                              GPS Pin Active
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1139,14 +1159,17 @@ export const EcommerceOrdersView: React.FC = () => {
                         <span>✅ Mark Delivered & Paid (Complete)</span>
                       </button>
                     )}
-                        disabled={isUpdatingStatus === order.id}
-                        onClick={() => handleUpdateStatus(order.id, 'DELIVERED', 'PAID')}
-                        className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shadow-xs transition-colors"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Mark Delivered & Paid</span>
-                      </button>
-                    )}
+
+                    {/* In-App Map Navigation Button */}
+                    <button
+                      type="button"
+                      onClick={() => setNavigationOrder(order)}
+                      className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-[#1A2A25] text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center gap-1 border border-blue-200 dark:border-blue-800 transition-colors cursor-pointer"
+                      title="Open interactive in-app map with turn directions and rider GPS"
+                    >
+                      <Compass className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                      <span>Map & Route</span>
+                    </button>
 
                     {/* Receipt Print button */}
                     <button
@@ -1439,6 +1462,15 @@ export const EcommerceOrdersView: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* IN-APP DELIVERY MAP & TURN NAVIGATION MODAL */}
+      {navigationOrder && (
+        <DeliveryNavigationModal
+          order={navigationOrder}
+          onClose={() => setNavigationOrder(null)}
+          onUpdateStatus={handleUpdateStatus}
+        />
       )}
     </div>
   );

@@ -6,11 +6,13 @@ import {
   CustomerRegisterInput,
   CustomerLoginInput,
   CustomerAddressInput,
+  UpdateCustomerAddressInput,
   EcommerceProductQueryInput,
   CartValidationInput,
   CreateOrderInput,
   CancelOrderInput,
   UpdateOrderStatusInput,
+  AssignRiderInput,
   UpdateStoreStatusInput,
 } from '../schemas/ecommerceSchemas.js';
 
@@ -96,6 +98,40 @@ export const createCustomerAddress = async (req: Request, res: Response, next: N
   }
 };
 
+export const getCustomerAddress = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (!req.user) throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
+    const isStaff = ['admin', 'owner', 'manager', 'cashier', 'delivery_boy'].includes(req.user.role);
+    const address = await ecommerceService.getCustomerAddressById(req.params.id, req.user.id, isStaff);
+    sendSuccess(res, address, 'Address fetched successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateCustomerAddress = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (!req.user) throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
+    const isStaff = ['admin', 'owner', 'manager', 'cashier'].includes(req.user.role);
+    const input = req.body as UpdateCustomerAddressInput;
+    const address = await ecommerceService.updateCustomerAddress(req.params.id, req.user.id, input, isStaff);
+    sendSuccess(res, address, 'Address updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteCustomerAddress = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (!req.user) throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
+    const isStaff = ['admin', 'owner', 'manager'].includes(req.user.role);
+    const result = await ecommerceService.deleteCustomerAddress(req.params.id, req.user.id, isStaff);
+    sendSuccess(res, result, 'Address deleted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Cart Validation
 export const validateCart = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -171,6 +207,18 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
     const staffName = req.user?.fullName || req.user?.email || 'Staff Member';
     const updated = await ecommerceService.updateOrderStatus(id, input, staffName);
     sendSuccess(res, updated, 'Order status updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const assignOrderRider = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const input = req.body as AssignRiderInput;
+    if (!req.user) throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
+    const updated = await ecommerceService.assignOrderRider(id, input, req.user.id, req.user.role);
+    sendSuccess(res, updated, 'Delivery rider assigned successfully');
   } catch (error) {
     next(error);
   }

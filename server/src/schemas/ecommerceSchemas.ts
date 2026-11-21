@@ -14,7 +14,7 @@ export const customerLoginSchema = z.object({
   password: z.string().min(6, 'Password is required'),
 });
 
-// Customer Address Schema
+// Customer Address Schema (Includes verified coordinates & delivery instructions)
 export const customerAddressSchema = z.object({
   recipient_name: z.string().min(2, 'Recipient name is required').max(100),
   phone: z.string().min(10, 'Phone number is required').max(15),
@@ -26,8 +26,14 @@ export const customerAddressSchema = z.object({
   state: z.string().min(2, 'State is required').default('Maharashtra'),
   pincode: z.string().regex(/^\d{6}$/, 'Valid 6-digit PIN code required').default('431517'),
   address_type: z.enum(['HOME', 'WORK', 'OTHER']).default('HOME'),
+  latitude: z.number().min(-90, 'Latitude must be between -90 and 90').max(90, 'Latitude must be between -90 and 90').optional().nullable(),
+  longitude: z.number().min(-180, 'Longitude must be between -180 and 180').max(180, 'Longitude must be between -180 and 180').optional().nullable(),
+  delivery_instructions: z.string().max(500, 'Delivery instructions cannot exceed 500 characters').optional().nullable(),
   is_default: z.boolean().default(false),
 });
+
+// Update Customer Address Schema (Partial for safe PATCH/PUT)
+export const updateCustomerAddressSchema = customerAddressSchema.partial();
 
 // Product Query Schema (Public)
 export const ecommerceProductQuerySchema = z.object({
@@ -76,6 +82,16 @@ export const updateOrderStatusSchema = z.object({
   delivery_partner_name: z.string().max(100).optional(),
   delivery_partner_phone: z.string().max(25).optional(),
   delivery_partner_vehicle: z.string().max(50).optional(),
+  assigned_rider_id: z.string().uuid().optional().nullable(),
+});
+
+// Admin Rider Assignment Schema
+export const assignRiderSchema = z.object({
+  rider_id: z.string().uuid().optional().nullable(),
+  rider_name: z.string().min(2, 'Rider name is required').max(100),
+  rider_phone: z.string().min(10, 'Valid 10-digit mobile number required').max(25),
+  rider_vehicle: z.string().max(50).optional().nullable(),
+  notes: z.string().max(300).optional().nullable(),
 });
 
 // Admin Store Open/Close Status Schema
@@ -88,9 +104,11 @@ export const updateStoreStatusSchema = z.object({
 export type CustomerRegisterInput = z.infer<typeof customerRegisterSchema>;
 export type CustomerLoginInput = z.infer<typeof customerLoginSchema>;
 export type CustomerAddressInput = z.infer<typeof customerAddressSchema>;
+export type UpdateCustomerAddressInput = z.infer<typeof updateCustomerAddressSchema>;
 export type EcommerceProductQueryInput = z.infer<typeof ecommerceProductQuerySchema>;
 export type CartValidationInput = z.infer<typeof cartValidationSchema>;
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 export type CancelOrderInput = z.infer<typeof cancelOrderSchema>;
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
+export type AssignRiderInput = z.infer<typeof assignRiderSchema>;
 export type UpdateStoreStatusInput = z.infer<typeof updateStoreStatusSchema>;

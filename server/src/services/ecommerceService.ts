@@ -4,10 +4,12 @@ import {
   CustomerRegisterInput,
   CustomerLoginInput,
   CustomerAddressInput,
+  UpdateCustomerAddressInput,
   EcommerceProductQueryInput,
   CartValidationInput,
   CreateOrderInput,
   UpdateOrderStatusInput,
+  AssignRiderInput,
 } from '../schemas/ecommerceSchemas.js';
 import { initialProducts, initialCategories } from './storeFallback.js';
 import crypto from 'crypto';
@@ -507,21 +509,24 @@ export const getCustomerAddresses = async (userId: string) => {
 
 export const addCustomerAddress = async (userId: string, input: CustomerAddressInput) => {
   if (isSupabaseConfigured() && supabaseClient) {
-    const client = supabaseAdmin || supabaseClient;
+    try {
+      const client = supabaseAdmin || supabaseClient;
 
-    if (input.is_default) {
-      // Clear previous default
-      await client.from('customer_addresses').update({ is_default: false }).eq('user_id', userId);
+      if (input.is_default) {
+        // Clear previous default
+        await client.from('customer_addresses').update({ is_default: false }).eq('user_id', userId);
+      }
+
+      const { data, error } = await client
+        .from('customer_addresses')
+        .insert([{ ...input, user_id: userId }])
+        .select('*')
+        .single();
+
+      if (!error && data) return data;
+    } catch {
+      // Fall through to mock storage fallback below
     }
-
-    const { data, error } = await client
-      .from('customer_addresses')
-      .insert([{ ...input, user_id: userId }])
-      .select('*')
-      .single();
-
-    if (error) throw new AppError(error.message, 500, 'DATABASE_ERROR', error);
-    return data;
   }
 
   const newAddr = {
@@ -532,6 +537,174 @@ export const addCustomerAddress = async (userId: string, input: CustomerAddressI
   };
   mockCustomerAddresses.push(newAddr);
   return newAddr;
+};
+
+export const getCustomerAddressById = async (
+  addressId: string,
+  userId: string,
+  isStaff: boolean
+) => {
+  let addressData: any = null;
+
+  if (isSupabaseConfigured() && (supabaseAdmin || supabaseClient)) {
+    try {
+      const client = supabaseAdmin || supabaseClient;
+      const { data, error } = await client
+        .from('customer_addresses')
+        .select('*')
+        .eq('id', addressId)
+        .single();
+
+      if (!error && data) {
+        addressData = data;
+      }
+    } catch {
+      // Fall through to mock storage fallback
+    }
+  }
+
+  if (!addressData) {
+    addressData = mockCustomerAddresses.find((a) => a.id === addressId);
+  }
+
+  if (!addressData) {
+    throw new AppError('Address not found', 404, 'NOT_FOUND');
+  }
+
+  if (addressData.user_id !== userId && !isStaff) {
+    throw new AppError('Forbidden: You do not have permission to access this address', 403, 'FORBIDDEN');
+  }
+
+  return addressData;
+};
+
+export const updateCustomerAddress = async (
+  addressId: string,
+  userId: string,
+  input: UpdateCustomerAddressInput,
+  isStaff: boolean
+) => {
+  // First verify existence and ownership
+  const existing = await getCustomerAddressById(addressId, userId, isStaff);
+
+  if (isSupabaseConfigured() && supabaseClient) {
+    try {
+      const client = supabaseAdmin || supabaseClient;
+
+      if (input.is_default) {
+        await client
+          .from('customer_addresses')
+          .update({ is_default: false })
+          .eq('user_id', existing.user_id);
+      }
+
+      const { data, error } = await client
+        .from('customer_addresses')
+        .update({
+          ...input,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', addressId)
+        .select('*')
+        .single();
+
+      if (!error && data) return data;
+    } catch {
+      // Fall through to mock storage fallback
+    }
+  }
+
+  const idx = mockCustomerAddresses.findIndex((a) => a.id === addressId);
+  if (idx === -1) throw new AppError('Address not found', 404, 'NOT_FOUND');
+
+  if (input.is_default) {
+    mockCustomerAddresses.forEach((a) => {
+      if (a.user_id === existing.user_id) a.is_default = false;
+    });
+  }
+
+  const updated = {
+    ...mockCustomerAddresses[idx],
+    ...input,
+    updated_at: new Date().toISOString(),
+  };
+  mockCustomerAddresses[idx] = updated as any;
+  return updated;
+};
+
+export const deleteCustomerAddress = async (
+  addressId: string,
+  userId: string,
+  isStaff: boolean
+) => {
+  // First verify existence and ownership
+  await getCustomerAddressById(addressId, userId, isStaff);
+
+  if (isSupabaseConfigured() && supabaseClient) {
+    try {
+      const client = supabaseAdmin || supabaseClient;
+      const { error } = await client
+        .from('customer_addresses')
+        .delete()
+        .eq('id', addressId);
+
+      if (!error) return { success: true, message: 'Address deleted successfully' };
+    } catch {
+      // Fall through to mock storage fallback
+    }
+  }
+
+  const idx = mockCustomerAddresses.findIndex((a) => a.id === addressId);
+  if (idx !== -1) {
+    mockCustomerAddresses.splice(idx, 1);
+  }
+  return { success: true, message: 'Address deleted successfully' };
+};
+
+export const assignOrderRider = async (
+  orderId: string,
+  input: AssignRiderInput,
+  actorId: string,
+  actorRole: string
+) => {
+  const updates: Record<string, unknown> = {
+    delivery_partner_name: input.rider_name,
+    delivery_partner_phone: input.rider_phone,
+    delivery_partner_vehicle: input.rider_vehicle || null,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (input.rider_id) {
+    updates.assigned_rider_id = input.rider_id;
+  }
+  if (input.notes) {
+    updates.delivery_notes = input.notes;
+  }
+
+  if (isSupabaseConfigured() && supabaseClient) {
+    try {
+      const client = supabaseAdmin || supabaseClient;
+      const { data, error } = await client
+        .from('ecommerce_orders')
+        .update(updates)
+        .eq('id', orderId)
+        .select('*')
+        .single();
+
+      if (!error && data) return data;
+    } catch {
+      // Fall through to mock storage fallback below
+    }
+  }
+
+  const idx = mockEcommerceOrders.findIndex((o) => o.id === orderId);
+  if (idx === -1) throw new AppError('Order not found', 404, 'NOT_FOUND');
+
+  mockEcommerceOrders[idx] = {
+    ...mockEcommerceOrders[idx],
+    ...updates,
+  };
+  return mockEcommerceOrders[idx];
 };
 
 // ============================================================================

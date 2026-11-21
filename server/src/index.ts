@@ -91,11 +91,14 @@ app.use((_req: Request, res: Response) => {
 app.use(errorHandler);
 
 const PORT = ENV.PORT;
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Dairy Shop Backend running on port ${PORT} [${ENV.NODE_ENV}]`);
-  console.log(`🔗 Health check available at http://localhost:${PORT}/health`);
-  console.log(`📦 API v1 mounted at http://localhost:${PORT}/api/v1`);
-});
+let server: any;
+if (ENV.NODE_ENV !== 'test') {
+  server = app.listen(PORT, () => {
+    console.log(`🚀 Dairy Shop Backend running on port ${PORT} [${ENV.NODE_ENV}]`);
+    console.log(`🔗 Health check available at http://localhost:${PORT}/health`);
+    console.log(`📦 API v1 mounted at http://localhost:${PORT}/api/v1`);
+  });
+}
 
 // Graceful Shutdown
 const gracefulShutdown = () => {

@@ -7,11 +7,13 @@ import {
   customerRegisterSchema,
   customerLoginSchema,
   customerAddressSchema,
+  updateCustomerAddressSchema,
   ecommerceProductQuerySchema,
   cartValidationSchema,
   createOrderSchema,
   cancelOrderSchema,
   updateOrderStatusSchema,
+  assignRiderSchema,
   updateStoreStatusSchema,
 } from '../schemas/ecommerceSchemas.js';
 
@@ -75,11 +77,30 @@ router.get(
   ecommerceController.listCustomerAddresses
 );
 
+router.get(
+  '/addresses/:id',
+  authMiddleware,
+  ecommerceController.getCustomerAddress
+);
+
 router.post(
   '/addresses',
   authMiddleware,
   validateBody(customerAddressSchema),
   ecommerceController.createCustomerAddress
+);
+
+router.put(
+  '/addresses/:id',
+  authMiddleware,
+  validateBody(updateCustomerAddressSchema),
+  ecommerceController.updateCustomerAddress
+);
+
+router.delete(
+  '/addresses/:id',
+  authMiddleware,
+  ecommerceController.deleteCustomerAddress
 );
 
 router.post(
@@ -124,6 +145,14 @@ router.patch(
   requireRole('admin', 'owner', 'manager', 'cashier', 'delivery_boy'),
   validateBody(updateOrderStatusSchema),
   ecommerceController.updateOrderStatus
+);
+
+router.post(
+  '/admin/orders/:id/assign-rider',
+  authMiddleware,
+  requireRole('admin', 'owner', 'manager', 'cashier'),
+  validateBody(assignRiderSchema),
+  ecommerceController.assignOrderRider
 );
 
 router.patch(

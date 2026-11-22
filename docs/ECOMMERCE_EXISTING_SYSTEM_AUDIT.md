@@ -11,7 +11,7 @@
 
 This audit provides a factual, deep inspection of the existing production inventory repository (`Yogeshwari-Dairy-Shop-Inventory-System`), its Express backend, Supabase PostgreSQL database schema, authentication & authorization architecture, stock & FEFO batch mechanics, and deployment pipelines (Vercel & Render).
 
-The goal is to safely integrate a brand new mobile-first e-commerce store (`Yogeshwari-Dairy-Ecommerce`) inspired by Blinkit and Flipkart without disrupting POS billing, physical counter operations, supplier workflows, or data integrity in the physical shop.
+The goal is to safely integrate a brand new mobile-first e-commerce store (`Yogeshwari-Dairy-Ecommerce`) inspired by YogiMart and Flipkart without disrupting POS billing, physical counter operations, supplier workflows, or data integrity in the physical shop.
 
 ---
 
@@ -245,7 +245,7 @@ Inspected across all 77 SQL migrations in `/supabase/`:
 
 | Item | Proposal / Recommendation | Status |
 | :--- | :--- | :--- |
-| **Delivery Model** | Local instant delivery (Blinkit style within shop radius) + Store Pickup option. Standard delivery fee rule (e.g. Free above ₹300, else ₹30). | Verified recommendation — ready for user review. |
+| **Delivery Model** | Local instant delivery (YogiMart style within shop radius) + Store Pickup option. Standard delivery fee rule (e.g. Free above ₹300, else ₹30). | Verified recommendation — ready for user review. |
 | **Payment Options** | Cash on Delivery (COD) + Manual UPI (QR scan with UTR entry) + Ready architecture for Razorpay/Cashfree gateway integration. | Safe, zero-cost, immediate production usability. |
 | **Catalogue Online Flag** | Add `is_ecommerce_active BOOLEAN DEFAULT false` so existing 46,000+ catalog rows aren't accidentally listed until approved. | Non-destructive, additive, preserves production integrity. |
 

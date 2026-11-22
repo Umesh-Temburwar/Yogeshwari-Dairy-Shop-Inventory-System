@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { DeliveryNavigationModal } from './DeliveryNavigationModal';
 import { AssignRiderModal } from './AssignRiderModal';
-import { BlinkitOrderPackingModal } from '../OnlineOrders/BlinkitOrderPackingModal';
+import { YogiMartOrderPackingModal } from '../OnlineOrders/YogiMartOrderPackingModal';
 import { convertOnlineOrderToCompletedSale } from '../../services/onlineOrdersService';
 import {
   getNotificationPermission,
@@ -160,7 +160,7 @@ export const EcommerceOrdersView: React.FC = () => {
       osc.start(now);
       osc.stop(now + 0.35);
       showToast('🔔 Counter Order Bell Sound is now LIVE & ACTIVE!');
-    } catch {}
+    } catch { }
   }, []);
 
   // Update receipt width and persist preference
@@ -168,7 +168,7 @@ export const EcommerceOrdersView: React.FC = () => {
     setReceiptWidth(w);
     try {
       localStorage.setItem('ydo_receipt_width', w);
-    } catch {}
+    } catch { }
   };
 
   const showToast = (msg: string) => {
@@ -275,9 +275,9 @@ export const EcommerceOrdersView: React.FC = () => {
           setIsStoreOpen(!isClosed);
           try {
             localStorage.setItem('ydo_online_store_open', String(!isClosed));
-          } catch {}
+          } catch { }
         }
-      } catch {}
+      } catch { }
     };
     fetchStoreStatus();
 
@@ -308,7 +308,7 @@ export const EcommerceOrdersView: React.FC = () => {
     setIsStoreOpen(nextState);
     try {
       localStorage.setItem('ydo_online_store_open', String(nextState));
-    } catch {}
+    } catch { }
 
     try {
       const redirectTag = nextState ? 'dashboard:reg_off:store_open' : 'dashboard:reg_off:store_closed';
@@ -369,7 +369,7 @@ export const EcommerceOrdersView: React.FC = () => {
       const next = !prev;
       try {
         localStorage.setItem('ydo_order_audio_enabled', String(next));
-      } catch {}
+      } catch { }
       if (next) {
         unlockAudio();
       }
@@ -641,11 +641,10 @@ export const EcommerceOrdersView: React.FC = () => {
             <button
               type="button"
               onClick={handleToggleAudio}
-              className={`px-2.5 py-1.5 sm:p-2.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer min-h-[38px] ${
-                isAudioEnabled
+              className={`px-2.5 py-1.5 sm:p-2.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer min-h-[38px] ${isAudioEnabled
                   ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700'
-              }`}
+                }`}
               title={isAudioEnabled ? 'Incoming Order Alarm Bell: ON' : 'Alarm Bell: MUTED'}
             >
               {isAudioEnabled ? <Volume2 className="w-4 h-4 text-emerald-600" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
@@ -736,28 +735,25 @@ export const EcommerceOrdersView: React.FC = () => {
           </div>
         )}
 
-        {/* Flipkart/Blinkit Style Online Store Open / Closed Control Bar */}
+        {/* Flipkart/YogiMart Style Online Store Open / Closed Control Bar */}
         <div
-          className={`mt-2.5 p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-all ${
-            isStoreOpen
+          className={`mt-2.5 p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-all ${isStoreOpen
               ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-400/80 dark:border-emerald-700/80'
               : 'bg-rose-500/15 dark:bg-rose-950/60 border-rose-400 dark:border-rose-700'
-          }`}
+            }`}
         >
           <div className="flex items-center gap-2.5 min-w-0">
             <span
-              className={`w-3 h-3 rounded-full shrink-0 ${
-                isStoreOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-600'
-              }`}
+              className={`w-3 h-3 rounded-full shrink-0 ${isStoreOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-600'
+                }`}
             />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span
-                  className={`text-xs font-black uppercase tracking-wider ${
-                    isStoreOpen
+                  className={`text-xs font-black uppercase tracking-wider ${isStoreOpen
                       ? 'text-emerald-950 dark:text-emerald-200'
                       : 'text-rose-950 dark:text-rose-200'
-                  }`}
+                    }`}
                 >
                   {isStoreOpen
                     ? '🟢 Online Store: OPEN'
@@ -819,21 +815,19 @@ export const EcommerceOrdersView: React.FC = () => {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id as FilterTab)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shrink-0 min-h-[34px] cursor-pointer ${
-                  isActive
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shrink-0 min-h-[34px] cursor-pointer ${isActive
                     ? 'bg-emerald-700 text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#24352F]'
-                }`}
+                  }`}
               >
                 <span>{tab.label}</span>
                 <span
-                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-                    isActive
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${isActive
                       ? 'bg-emerald-900 text-white'
                       : tab.highlight && tab.count > 0
-                      ? 'bg-amber-500 text-white animate-pulse'
-                      : 'bg-slate-200 dark:bg-[#24352F] text-slate-700 dark:text-slate-300'
-                  }`}
+                        ? 'bg-amber-500 text-white animate-pulse'
+                        : 'bg-slate-200 dark:bg-[#24352F] text-slate-700 dark:text-slate-300'
+                    }`}
                 >
                   {tab.count}
                 </span>
@@ -882,8 +876,8 @@ export const EcommerceOrdersView: React.FC = () => {
             {searchQuery
               ? `No orders matching "${searchQuery}". Try clearing search.`
               : activeTab === 'ALL'
-              ? 'Customer orders placed on the e-commerce website will appear here in real-time.'
-              : `No orders in "${activeTab}" status.`}
+                ? 'Customer orders placed on the e-commerce website will appear here in real-time.'
+                : `No orders in "${activeTab}" status.`}
           </p>
         </div>
       ) : (
@@ -909,13 +903,12 @@ export const EcommerceOrdersView: React.FC = () => {
             return (
               <div
                 key={order.id}
-                className={`bg-white dark:bg-[#131F1B] rounded-2xl p-3.5 sm:p-5 border transition-all ${
-                  isNew
+                className={`bg-white dark:bg-[#131F1B] rounded-2xl p-3.5 sm:p-5 border transition-all ${isNew
                     ? 'border-emerald-500 dark:border-emerald-500 shadow-xl ring-4 ring-emerald-500/30 bg-emerald-50/15 dark:bg-emerald-950/20'
                     : isPlaced
-                    ? 'border-amber-400 dark:border-amber-600 shadow-md ring-1 ring-amber-400/30'
-                    : 'border-slate-200 dark:border-[#24352F] shadow-xs'
-                }`}
+                      ? 'border-amber-400 dark:border-amber-600 shadow-md ring-1 ring-amber-400/30'
+                      : 'border-slate-200 dark:border-[#24352F] shadow-xs'
+                  }`}
               >
                 {/* Order Top Bar (Mobile-Optimized Header) */}
                 <div className="pb-3 border-b border-slate-100 dark:border-[#1E3029]">
@@ -947,13 +940,12 @@ export const EcommerceOrdersView: React.FC = () => {
                       </span>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span
-                          className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                            isPaid
+                          className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isPaid
                               ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
                               : isCod
-                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-                              : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
-                          }`}
+                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                                : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
+                            }`}
                         >
                           {order.payment_method} &bull; {order.payment_status}
                         </span>
@@ -1066,36 +1058,32 @@ export const EcommerceOrdersView: React.FC = () => {
                   <div className="grid grid-cols-4 gap-1.5">
                     {/* Step 1: Placed */}
                     <div
-                      className={`h-2 rounded-full transition-all ${
-                        !isCancelled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
-                      }`}
+                      className={`h-2 rounded-full transition-all ${!isCancelled ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
+                        }`}
                       title="1. Placed"
                     />
                     {/* Step 2: Confirmed */}
                     <div
-                      className={`h-2 rounded-full transition-all ${
-                        ['CONFIRMED', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.order_status)
+                      className={`h-2 rounded-full transition-all ${['CONFIRMED', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.order_status)
                           ? 'bg-emerald-500'
                           : 'bg-slate-200 dark:bg-slate-700'
-                      }`}
+                        }`}
                       title="2. Confirmed"
                     />
                     {/* Step 3: Packing */}
                     <div
-                      className={`h-2 rounded-full transition-all ${
-                        ['PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.order_status)
+                      className={`h-2 rounded-full transition-all ${['PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.order_status)
                           ? 'bg-emerald-500'
                           : 'bg-slate-200 dark:bg-slate-700'
-                      }`}
+                        }`}
                       title="3. Packing"
                     />
                     {/* Step 4: Out for Delivery */}
                     <div
-                      className={`h-2 rounded-full transition-all ${
-                        ['OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.order_status)
+                      className={`h-2 rounded-full transition-all ${['OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.order_status)
                           ? 'bg-emerald-500'
                           : 'bg-slate-200 dark:bg-slate-700'
-                      }`}
+                        }`}
                       title="4. Out for Delivery"
                     />
                   </div>
@@ -1248,16 +1236,16 @@ export const EcommerceOrdersView: React.FC = () => {
                       <span className="truncate">Map & Route</span>
                     </button>
 
-                    {/* Blinkit Dark-Store Barcode Packing */}
+                    {/* YogiMart Dark-Store Barcode Packing */}
                     {(isConfirmed || isPreparing || isPlaced) ? (
                       <button
                         type="button"
                         onClick={() => setPackingOrder(order)}
                         className="min-h-[38px] px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-xs font-black flex items-center justify-center gap-1.5 border border-emerald-300 dark:border-emerald-700 transition-colors cursor-pointer shadow-xs"
-                        title="Blinkit-style dark-store barcode scanner item verification"
+                        title="YogiMart-style dark-store barcode scanner item verification"
                       >
                         <Package className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span className="truncate">Scan (Blinkit)</span>
+                        <span className="truncate">Scan (YogiMart)</span>
                       </button>
                     ) : (
                       <div />
@@ -1311,22 +1299,20 @@ export const EcommerceOrdersView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleChangeReceiptWidth('58mm')}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
-                      receiptWidth === '58mm'
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer ${receiptWidth === '58mm'
                         ? 'bg-emerald-600 text-white shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
+                      }`}
                   >
                     58mm (2")
                   </button>
                   <button
                     type="button"
                     onClick={() => handleChangeReceiptWidth('80mm')}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
-                      receiptWidth === '80mm'
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer ${receiptWidth === '80mm'
                         ? 'bg-emerald-600 text-white shadow-xs'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
+                      }`}
                   >
                     80mm (3")
                   </button>
@@ -1344,9 +1330,8 @@ export const EcommerceOrdersView: React.FC = () => {
             {/* Printable Receipt Paper Container */}
             <div
               id="printable-delivery-slip"
-              className={`bg-white text-slate-900 p-4 rounded-xl border border-dashed border-slate-300 font-mono text-xs space-y-2 mx-auto shadow-sm ${
-                receiptWidth === '58mm' ? 'receipt-58mm max-w-[280px]' : 'receipt-80mm max-w-[340px]'
-              }`}
+              className={`bg-white text-slate-900 p-4 rounded-xl border border-dashed border-slate-300 font-mono text-xs space-y-2 mx-auto shadow-sm ${receiptWidth === '58mm' ? 'receipt-58mm max-w-[280px]' : 'receipt-80mm max-w-[340px]'
+                }`}
             >
               {/* Header */}
               <div className="text-center border-b border-slate-200 pb-2">
@@ -1596,12 +1581,12 @@ export const EcommerceOrdersView: React.FC = () => {
               prev.map((o) =>
                 o.id === assignRiderOrder.id
                   ? {
-                      ...o,
-                      delivery_partner_name: rider.rider_name,
-                      delivery_partner_phone: rider.rider_phone,
-                      delivery_partner_vehicle: rider.rider_vehicle,
-                      delivery_notes: rider.notes || o.delivery_notes,
-                    }
+                    ...o,
+                    delivery_partner_name: rider.rider_name,
+                    delivery_partner_phone: rider.rider_phone,
+                    delivery_partner_vehicle: rider.rider_vehicle,
+                    delivery_notes: rider.notes || o.delivery_notes,
+                  }
                   : o
               )
             );
@@ -1610,9 +1595,9 @@ export const EcommerceOrdersView: React.FC = () => {
         />
       )}
 
-      {/* BLINKIT ORDER PACKING & BARCODE VERIFICATION MODAL */}
+      {/* YogiMart ORDER PACKING & BARCODE VERIFICATION MODAL */}
       {packingOrder && (
-        <BlinkitOrderPackingModal
+        <YogiMartOrderPackingModal
           isOpen={Boolean(packingOrder)}
           onClose={() => setPackingOrder(null)}
           order={packingOrder as any}

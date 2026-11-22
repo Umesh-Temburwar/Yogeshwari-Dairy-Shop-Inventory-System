@@ -38,7 +38,7 @@ router.get(
   ecommerceController.listPublicCategories
 );
 
-// Store Open/Close Status (Flipkart/Blinkit Style)
+// Store Open/Close Status (Flipkart/YogiMart Style)
 router.get(
   '/store-status',
   ecommerceController.getStoreStatus

@@ -224,7 +224,7 @@ export const assignOrderRider = async (req: Request, res: Response, next: NextFu
   }
 };
 
-// Store Open / Closed Status Controls (Flipkart / Blinkit Style)
+// Store Open / Closed Status Controls (Flipkart / YogiMart Style)
 export const getStoreStatus = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const status = await ecommerceService.getStoreStatus();

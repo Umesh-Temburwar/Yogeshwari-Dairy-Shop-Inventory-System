@@ -156,5 +156,5 @@ Perform the real-world checkout test:
 ## 3. STRICT OPERATIONAL RULES
 - Do not expose any database service-role keys or passwords in the client bundle.
 - Ensure counter POS billing (`public.sales`) remains 100% isolated and unaffected.
-- Keep the clean Blinkit / Flipkart grocery layout and mobile-safe area padding intact.
+- Keep the clean YogiMart / Flipkart grocery layout and mobile-safe area padding intact.
 ```

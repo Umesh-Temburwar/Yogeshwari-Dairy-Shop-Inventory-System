@@ -315,7 +315,7 @@ export const convertOnlineOrderToCompletedSale = async (order: OnlineOrder): Pro
 
 /**
  * Updates order item scanning/packing verification state.
- * Syncs Blinkit-style dark-store item verification with customer tracking.
+ * Syncs YogiMart-style dark-store item verification with customer tracking.
  */
 export const updateOrderPackingProgress = async (
   orderId: string,
@@ -324,7 +324,7 @@ export const updateOrderPackingProgress = async (
   notes?: string
 ): Promise<OnlineOrder> => {
   const scannedCount = Object.values(scannedMap).reduce((a, b) => a + b, 0);
-  const packingBadge = `[BLINKIT_SCAN: ${scannedCount} items verified] ${allVerified ? 'ALL_VERIFIED' : 'SCANNING'}`;
+  const packingBadge = `[YogiMart_SCAN: ${scannedCount} items verified] ${allVerified ? 'ALL_VERIFIED' : 'SCANNING'}`;
   const fullNotes = notes ? `${packingBadge} | ${notes}` : packingBadge;
 
   // 1. Try Supabase direct

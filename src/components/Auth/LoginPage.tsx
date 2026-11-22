@@ -34,6 +34,7 @@ import {
 export const LoginPage: React.FC = () => {
   const {
     signInWithEmail,
+    signInWithGoogle,
     signUpWithEmail,
     continueAsGuest,
     resetPassword,
@@ -52,6 +53,7 @@ export const LoginPage: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   // Registration toggle state (Controlled dynamically by Shop Owner Nikhil Sakhare)
   const [isRegistrationEnabled, setIsRegistrationEnabled] = useState<boolean>(() => isRegistrationAllowedSync());
@@ -263,6 +265,23 @@ export const LoginPage: React.FC = () => {
       setFormError(t('authNetworkError'));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Google OAuth (Gmail) Sign-In
+  const handleGoogleSignIn = async () => {
+    setFormError(null);
+    setFormSuccess(null);
+    setIsGoogleLoading(true);
+    try {
+      const { error } = await signInWithGoogle();
+      if (error) {
+        setFormError(error.message || 'Google sign-in could not be initiated.');
+        setIsGoogleLoading(false);
+      }
+    } catch (err: any) {
+      setFormError(err?.message || 'Google sign-in failed. Please try again.');
+      setIsGoogleLoading(false);
     }
   };
 
@@ -711,6 +730,55 @@ export const LoginPage: React.FC = () => {
                       <>
                         <span>{t('authSignInButton')}</span>
                         <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+
+                  {/* Elegant Subtle Divider */}
+                  <div className="relative my-3.5">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-slate-200 dark:border-[#24352F]" />
+                    </div>
+                    <div className="relative flex justify-center text-[11px] uppercase">
+                      <span className="bg-white dark:bg-[#131F1B] px-3 text-slate-400 dark:text-slate-500 font-bold">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* High-Contrast Google OAuth (Gmail) Button */}
+                  <button
+                    type="button"
+                    disabled={isGoogleLoading || isSubmitting}
+                    onClick={handleGoogleSignIn}
+                    className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-white dark:bg-[#1A2A25] hover:bg-slate-50 dark:hover:bg-[#223630] border border-slate-200 dark:border-[#24352F] text-slate-800 dark:text-white font-bold text-xs flex items-center justify-center gap-2.5 transition-all shadow-xs active:scale-[0.99] disabled:opacity-60 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                  >
+                    {isGoogleLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                        <span>Connecting to Google...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                          <path
+                            fill="#4285F4"
+                            d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                          />
+                          <path
+                            fill="#EA4335"
+                            d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                          />
+                        </svg>
+                        <span>Google (Gmail) से लॉगिन करें</span>
                       </>
                     )}
                   </button>

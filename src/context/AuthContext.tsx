@@ -51,6 +51,7 @@ interface AuthContextType {
   unlockSecurityWithBiometrics: (deferReveal?: boolean) => Promise<boolean>;
   confirmSecurityUnlock: () => void;
   lockSecurity: () => void;
+  signInWithGoogle: () => Promise<{ error: any }>;
   signInWithEmail: (email: string, password: string) => Promise<{ error: any; redirectView?: 'dashboard' | 'pos' | 'inventory' }>;
   signUpWithEmail: (
     email: string, 
@@ -465,6 +466,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       trackedEvents.forEach((ev) => window.removeEventListener(ev, handleActivity));
     };
   }, [user, isSecurityUnlocked, masterLockEnabled, lockSecurity]);
+
+  // Sign In with Google OAuth (Gmail)
+  const signInWithGoogle = async () => {
+    try {
+      if (!supabase) {
+        throw new Error('Supabase client is not initialized.');
+      }
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+      return { error };
+    } catch (err: any) {
+      console.warn('Google sign-in error:', err);
+      return { error: err };
+    }
+  };
 
   // Sign In with Email with Role-Based Redirection
   const signInWithEmail = async (email: string, password: string) => {
@@ -914,6 +938,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         unlockSecurityWithBiometrics,
         confirmSecurityUnlock,
         lockSecurity,
+        signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,
         signOut,

@@ -171,6 +171,6 @@ Generate two comprehensive documentation files:
 - Do NOT execute any SQL migration on live Supabase.
 - Do NOT deploy the Render backend service.
 - Do NOT process real payment gateways or real transactions.
-- Keep the clean Blinkit / Flipkart grocery aesthetic.
+- Keep the clean YogiMart / Flipkart grocery aesthetic.
 - Fix all real bugs and report results honestly.
 ```

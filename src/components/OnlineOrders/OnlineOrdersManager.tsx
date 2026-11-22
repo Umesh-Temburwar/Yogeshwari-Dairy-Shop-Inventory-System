@@ -21,7 +21,7 @@ import { fetchOnlineOrders, updateOnlineOrderStatus, cancelOnlineOrderByStaff } 
 import { playNewOrderChime, testOrderChime, isSoundAlertsEnabled, setSoundAlertsEnabled } from '../../utils/audioChime';
 import { supabase } from '../../lib/supabase';
 import { DeliveryMapModal } from '../Admin/DeliveryMapModal';
-import { BlinkitOrderPackingModal } from './BlinkitOrderPackingModal';
+import { YogiMartOrderPackingModal } from './YogiMartOrderPackingModal';
 
 export const OnlineOrdersManager: React.FC = () => {
   const [orders, setOrders] = useState<OnlineOrder[]>([]);
@@ -473,13 +473,13 @@ export const OnlineOrdersManager: React.FC = () => {
                       <span className="hidden sm:inline">Print</span>
                     </button>
 
-                    {/* Blinkit Barcode Scan & Pack Button */}
+                    {/* YogiMart Barcode Scan & Pack Button */}
                     {(isPending || isConfirmed || isPreparing) && (
                       <button
                         type="button"
                         onClick={() => setPackingOrder(order)}
                         className="px-3 py-1.5 rounded-xl border border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-black hover:bg-emerald-100 flex items-center gap-1.5 cursor-pointer shadow-xs"
-                        title="Blinkit-style barcode item verification"
+                        title="YogiMart-style barcode item verification"
                       >
                         <Package className="w-3.5 h-3.5 text-emerald-600" />
                         <span>Scan & Pack</span>
@@ -694,9 +694,9 @@ export const OnlineOrdersManager: React.FC = () => {
         />
       )}
 
-      {/* BLINKIT ORDER PACKING & BARCODE VERIFICATION MODAL */}
+      {/* YogiMart ORDER PACKING & BARCODE VERIFICATION MODAL */}
       {packingOrder && (
-        <BlinkitOrderPackingModal
+        <YogiMartOrderPackingModal
           isOpen={Boolean(packingOrder)}
           onClose={() => setPackingOrder(null)}
           order={packingOrder}

@@ -7,7 +7,7 @@
 ```markdown
 # YOGESHWARI DAIRY E-COMMERCE — FRONTEND IMPLEMENTATION MASTER PROMPT
 
-You are acting as a Senior Staff Frontend Engineer and UI/UX Architect specializing in modern Indian quick-commerce applications (Blinkit, Zepto, Swiggy Instamart, and Flipkart Grocery).
+You are acting as a Senior Staff Frontend Engineer and UI/UX Architect specializing in modern Indian quick-commerce applications (YogiMart, Zepto, Swiggy Instamart, and Flipkart Grocery).
 
 You are working inside the repository:
 **Yogeshwari-Dairy-Ecommerce**
@@ -131,11 +131,11 @@ To allow 100% frontend UI development, visual preview, and testing without requi
 
 ---
 
-## 4. UI/UX DESIGN SYSTEM SPECIFICATIONS (BLINKIT + FLIPKART STYLE)
+## 4. UI/UX DESIGN SYSTEM SPECIFICATIONS (YogiMart + FLIPKART STYLE)
 
 ### 4.1 Aesthetic & Visual Identity
 - **Brand Colors:**
-  - Primary Green: `#0C831F` (Blinkit quick-delivery green) or `#008B45` (Fresh dairy green)
+  - Primary Green: `#0C831F` (YogiMart quick-delivery green) or `#008B45` (Fresh dairy green)
   - Brand Accent: `#F8CB46` / `#FFC107` (Dairy cow milk/butter golden yellow)
   - Background: `#F4F6F8` (Clean light slate)
   - Surface: `#FFFFFF`
@@ -157,7 +157,7 @@ To allow 100% frontend UI development, visual preview, and testing without requi
    - Desi Ghee & White Butter
    - Sweets & Shrikhand
    - Bakery & Daily Essentials
-3. **Product Card (Blinkit Style):**
+3. **Product Card (YogiMart Style):**
    - Packshot image with zoom on tap.
    - Pack size badge (e.g. `500 ml`, `1 kg`, `200 g`).
    - Title & Price (`₹32` with MRP strike-through `₹35` if discount applies).

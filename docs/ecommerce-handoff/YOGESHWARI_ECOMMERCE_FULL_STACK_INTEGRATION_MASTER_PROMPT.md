@@ -21,7 +21,7 @@ Your mission is to perform the complete, end-to-end integration of the customer 
    - Directory: `D:\Projects\Yogeshwari-Dairy-Ecommerce`
    - GitHub: `https://github.com/Umesh-Temburwar/Yogeshwari-Dairy-Ecommerce`
    - Stack: React 18.3, TypeScript 5.7, Vite 6.1, Tailwind CSS 3.4, Zustand 5.0, Lucide Icons
-   - UI Design: Indian quick-commerce layout inspired by **Blinkit** and **Flipkart Grocery** (clean green & butter-gold dairy branding, fast category scroller, sticky floating cart, and mobile-safe drawers).
+   - UI Design: Indian quick-commerce layout inspired by **YogiMart** and **Flipkart Grocery** (clean green & butter-gold dairy branding, fast category scroller, sticky floating cart, and mobile-safe drawers).
 
 2. **Existing Production Inventory Admin System:**
    - Directory: `D:\Projects\Yogeshwari Dairy Shop Inventory System`
@@ -123,7 +123,7 @@ Customer responses MUST contain ONLY:
 
 ## 4. UI & LAYOUT SPECIFICATIONS (PRESERVING EXACT QUICK-COMMERCE FEEL)
 
-Preserve the existing Blinkit / Flipkart style mobile-first layout:
+Preserve the existing YogiMart / Flipkart style mobile-first layout:
 
 ### 4.1 Header & Brand Identity
 - **Logo & Title:** Yogeshwari Dairy Products (with fresh cow/milk icon).
@@ -141,7 +141,7 @@ Preserve the existing Blinkit / Flipkart style mobile-first layout:
   - `Sweets & Shrikhand`
   - `Bakery & Daily Staples`
 
-### 4.3 Product Card (Blinkit Style)
+### 4.3 Product Card (YogiMart Style)
 - Image container with aspect-square and fallback placeholder.
 - Pack size badge (`500 ml`, `250 g`, `1 L`).
 - Title with 2-line clamp.

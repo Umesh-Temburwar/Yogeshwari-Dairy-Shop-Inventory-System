@@ -514,3 +514,6 @@ export const YogiMartOrderPackingModal: React.FC<YogiMartOrderPackingModalProps>
     </div>
   );
 };
+
+export const BlinkitOrderPackingModal = YogiMartOrderPackingModal;
+

@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { DeliveryNavigationModal } from './DeliveryNavigationModal';
 import { AssignRiderModal } from './AssignRiderModal';
-import { YogiMartOrderPackingModal } from '../OnlineOrders/YogiMartOrderPackingModal';
+import { BlinkitOrderPackingModal } from '../OnlineOrders/BlinkitOrderPackingModal';
 import { convertOnlineOrderToCompletedSale } from '../../services/onlineOrdersService';
 import {
   getNotificationPermission,
@@ -1595,9 +1595,9 @@ export const EcommerceOrdersView: React.FC = () => {
         />
       )}
 
-      {/* YogiMart ORDER PACKING & BARCODE VERIFICATION MODAL */}
+      {/* BLINKIT / YOGIMART ORDER PACKING & BARCODE VERIFICATION MODAL */}
       {packingOrder && (
-        <YogiMartOrderPackingModal
+        <BlinkitOrderPackingModal
           isOpen={Boolean(packingOrder)}
           onClose={() => setPackingOrder(null)}
           order={packingOrder as any}

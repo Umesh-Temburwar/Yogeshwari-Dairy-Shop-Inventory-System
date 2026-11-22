@@ -412,6 +412,20 @@ export interface EcommerceOrder {
   items?: EcommerceOrderItem[];
 }
 
+// Phase 83: Promotional Banners & Posters for E-Commerce Slider
+export interface PromotionalBanner {
+  id: string;
+  title: string;
+  subtitle?: string | null;
+  image_url: string;
+  link_type?: 'CATEGORY' | 'BRAND' | 'PRODUCT' | 'EXTERNAL' | 'NONE';
+  link_target?: string | null;
+  display_order: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 
 
 

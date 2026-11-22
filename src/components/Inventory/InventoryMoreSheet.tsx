@@ -11,7 +11,8 @@ import {
   FileSpreadsheet,
   Image as ImageIcon,
   Calendar,
-  Tag
+  Tag,
+  Sparkles
 } from 'lucide-react';
 import { ExpiryStatus } from '../../types';
 import { useLanguage } from '../../context/LanguageContext';
@@ -45,6 +46,7 @@ interface InventoryMoreSheetProps {
   onPrintPDF: () => void;
   onExportCSV: () => void;
   onOpenPhotoDatabase: () => void;
+  onOpenBannersModal?: () => void;
 }
 
 export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
@@ -62,7 +64,8 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
   onViewPDF,
   onPrintPDF,
   onExportCSV,
-  onOpenPhotoDatabase
+  onOpenPhotoDatabase,
+  onOpenBannersModal
 }) => {
   const { tr } = useLanguage();
 
@@ -269,6 +272,20 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
                 <ImageIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>{'Photo Database Manager'}</span>
               </button>
+
+              {onOpenBannersModal && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenBannersModal();
+                  }}
+                  className="col-span-2 min-h-[44px] px-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 hover:bg-purple-100 dark:hover:bg-purple-900/30 border border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-300 text-xs font-bold inline-flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                >
+                  <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                  <span>{'E-Commerce Top Posters & Banners'}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

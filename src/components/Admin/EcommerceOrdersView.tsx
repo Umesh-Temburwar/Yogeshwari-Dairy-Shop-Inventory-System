@@ -42,6 +42,7 @@ const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'https://yogeshwari-d
 import { DeliveryNavigationModal } from './DeliveryNavigationModal';
 import { AssignRiderModal } from './AssignRiderModal';
 import { BlinkitOrderPackingModal } from '../OnlineOrders/BlinkitOrderPackingModal';
+import { PromotionalBannersModal } from './PromotionalBannersModal';
 import { convertOnlineOrderToCompletedSale } from '../../services/onlineOrdersService';
 import {
   playBlinkitAlertTone,
@@ -123,6 +124,7 @@ export const EcommerceOrdersView: React.FC = () => {
   });
   const [isUpdatingDeliveryEta, setIsUpdatingDeliveryEta] = useState<boolean>(false);
   const [isEtaModalOpen, setIsEtaModalOpen] = useState<boolean>(false);
+  const [isBannersModalOpen, setIsBannersModalOpen] = useState<boolean>(false);
   const [customEtaInput, setCustomEtaInput] = useState<string>('');
 
   const handleToggleViewMode = (mode: 'cards' | 'compact') => {
@@ -778,6 +780,17 @@ export const EcommerceOrdersView: React.FC = () => {
               <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
               <span className="truncate max-w-[85px] sm:max-w-none">{deliveryEta}</span>
               <ChevronDown className="w-3 h-3 text-amber-600/70 shrink-0" />
+            </button>
+
+            {/* E-Commerce Top Banners / Posters Pill */}
+            <button
+              type="button"
+              onClick={() => setIsBannersModalOpen(true)}
+              className="h-9 px-2.5 sm:px-3 rounded-full border border-purple-300 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 text-xs font-bold inline-flex items-center gap-1.5 active:scale-[0.97] transition-all cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-905/40 shadow-xs"
+              title="Click to manage E-Commerce Sliding Posters & Banners"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+              <span>Posters</span>
             </button>
 
             {/* Audio Alarm Toggle */}
@@ -2007,6 +2020,12 @@ export const EcommerceOrdersView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* PROMOTIONAL BANNERS / POSTERS MODAL */}
+      <PromotionalBannersModal
+        isOpen={isBannersModalOpen}
+        onClose={() => setIsBannersModalOpen(false)}
+      />
     </div>
   );
 };

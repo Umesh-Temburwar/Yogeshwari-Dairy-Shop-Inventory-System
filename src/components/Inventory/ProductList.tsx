@@ -45,6 +45,7 @@ import { BarcodeStockInModal } from '../Scanner/BarcodeStockInModal';
 import { ProductImage } from '../Common/ProductImage';
 import { ProductImagePreviewModal } from '../Common/ProductImagePreviewModal';
 import { ProductImageManagerModal } from '../Admin/ProductImageManagerModal';
+import { PromotionalBannersModal } from '../Admin/PromotionalBannersModal';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { supabase } from '../../lib/supabase';
 
@@ -120,6 +121,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   const [pendingNewBarcode, setPendingNewBarcode] = useState<string | undefined>(undefined);
   const [forceRegisterNewBarcode, setForceRegisterNewBarcode] = useState(false);
   const [showImageManager, setShowImageManager] = useState(false);
+  const [showBannersManager, setShowBannersManager] = useState(false);
   const [previewImageProduct, setPreviewImageProduct] = useState<Product | null>(null);
 
   // Stock update flash & 5-second Undo Toast
@@ -1631,6 +1633,7 @@ export const ProductList: React.FC<ProductListProps> = ({
           });
         }}
         onOpenPhotoDatabase={() => setShowImageManager(true)}
+        onOpenBannersModal={() => setShowBannersManager(true)}
       />
 
       {/* EXISTING MODALS (PRESERVED 100% UNCHANGED) */}
@@ -1693,6 +1696,11 @@ export const ProductList: React.FC<ProductListProps> = ({
       <ProductImageManagerModal
         isOpen={showImageManager}
         onClose={() => setShowImageManager(false)}
+      />
+
+      <PromotionalBannersModal
+        isOpen={showBannersManager}
+        onClose={() => setShowBannersManager(false)}
       />
 
       <ProductImagePreviewModal

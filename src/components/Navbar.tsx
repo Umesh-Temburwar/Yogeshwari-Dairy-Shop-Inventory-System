@@ -237,28 +237,28 @@ export const Navbar: React.FC<NavbarProps> = ({
             {isProfileMenuOpen && (
               <div
                 role="menu"
-                className="absolute right-0 mt-2.5 w-72 rounded-3xl bg-white/98 dark:bg-[#131F1B]/98 backdrop-blur-xl border border-slate-200/90 dark:border-[#24352F] shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200 origin-top-right overflow-hidden"
+                className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-[#131F1B] border border-slate-200/90 dark:border-[#24352F] shadow-xl py-2 z-50"
               >
                 {/* User Identity Header */}
-                <div className="px-4 py-3 bg-gradient-to-b from-slate-50 to-white dark:from-[#182622] dark:to-[#131F1B] border-b border-slate-100 dark:border-[#24352F] flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full p-0.5 ring-2 ring-emerald-500/30 border-2 border-amber-400 overflow-hidden bg-white dark:bg-[#1A2A25] shrink-0 shadow-xs">
+                <div className="px-3.5 py-2.5 border-b border-slate-100 dark:border-[#24352F] flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-full p-0.5 border-2 border-amber-400 overflow-hidden bg-white dark:bg-[#1A2A25] shrink-0">
                     {role === 'Owner' || hasCustomAvatar ? (
                       <img src={avatarUrl} alt={currentUserName} className="w-full h-full rounded-full object-cover" />
                     ) : (
-                      <div className="w-full h-full rounded-full flex items-center justify-center text-base bg-emerald-100 dark:bg-emerald-950/60">
+                      <div className="w-full h-full rounded-full flex items-center justify-center text-sm bg-emerald-100 dark:bg-emerald-950/60">
                         🛡️
                       </div>
                     )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[13px] font-black text-slate-900 dark:text-white truncate">
+                  <div className="min-w-0">
+                    <div className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
                       {currentUserName}
                     </div>
-                    <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/40 text-[10px] font-black text-emerald-700 dark:text-emerald-300 mt-0.5">
-                      <span>{roleLabel}</span>
+                    <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 truncate">
+                      {roleLabel}
                     </div>
                     {user?.email && (
-                      <div className="text-[10px] text-slate-400 dark:text-[#8FA69C] truncate mt-0.5">
+                      <div className="text-[10px] text-slate-400 dark:text-[#8FA69C] truncate">
                         {user.email}
                       </div>
                     )}
@@ -266,7 +266,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
 
                 {/* Menu Actions */}
-                <div className="p-2 space-y-1">
+                <div className="p-1.5 space-y-0.5">
                   {/* 1. Theme Change */}
                   <button
                     type="button"
@@ -274,7 +274,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     onClick={() => {
                       toggleTheme();
                     }}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-bold text-slate-700 dark:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition active:scale-[0.98] cursor-pointer"
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-xs font-bold text-slate-700 dark:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition cursor-pointer"
                   >
                     <span className="flex items-center gap-2.5">
                       {resolvedTheme === 'dark' ? (
@@ -282,10 +282,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                       ) : (
                         <Moon className="w-4 h-4 text-indigo-500 shrink-0" />
                       )}
-                      <span>{'Display Theme'}</span>
+                      <span>
+                        {'Theme Change'}
+                      </span>
                     </span>
-                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#223630] text-slate-600 dark:text-emerald-300">
-                      {resolvedTheme === 'dark' ? '🌙 Dark' : '☀️ Light'}
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#223630] text-slate-600 dark:text-emerald-300">
+                      {resolvedTheme === 'dark' ? 'Dark' : 'Light'}
                     </span>
                   </button>
 
@@ -298,32 +300,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsProfileMenuOpen(false);
                         onOpenSettings();
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-bold text-slate-700 dark:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition active:scale-[0.98] cursor-pointer"
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left text-xs font-bold text-slate-700 dark:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition cursor-pointer"
                     >
-                      <Settings className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <span>{'Settings & Security'}</span>
-                    </button>
-                  )}
-
-                  {/* 3. Download APK */}
-                  {onOpenAppDownload && (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setIsProfileMenuOpen(false);
-                        onOpenAppDownload();
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-bold text-slate-700 dark:text-[#E7F0EC] hover:bg-slate-100 dark:hover:bg-[#1A2A25] transition active:scale-[0.98] cursor-pointer"
-                    >
-                      <Smartphone className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
-                      <span>{'Install / Update Android APK'}</span>
+                      <Settings className="w-4 h-4 text-slate-500 dark:text-[#8FA69C] shrink-0" />
+                      <span>
+                        {'Settings'}
+                      </span>
                     </button>
                   )}
                 </div>
 
-                {/* Logout Button */}
-                <div className="pt-1.5 mt-1 border-t border-slate-100 dark:border-[#24352F] px-2">
+                {/* 4. Logout */}
+                <div className="pt-1.5 mt-1 border-t border-slate-100 dark:border-[#24352F] px-1.5">
                   <button
                     type="button"
                     role="menuitem"
@@ -331,10 +319,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setIsProfileMenuOpen(false);
                       signOut();
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-black text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition active:scale-[0.98] cursor-pointer"
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left text-xs font-extrabold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
                   >
                     <LogOut className="w-4 h-4 shrink-0" />
-                    <span>{'Logout'}</span>
+                    <span>
+                      {'Logout'}
+                    </span>
                   </button>
                 </div>
               </div>

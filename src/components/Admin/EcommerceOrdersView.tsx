@@ -35,6 +35,12 @@ import { DeliveryNavigationModal } from './DeliveryNavigationModal';
 import { AssignRiderModal } from './AssignRiderModal';
 import { BlinkitOrderPackingModal } from '../OnlineOrders/BlinkitOrderPackingModal';
 import { convertOnlineOrderToCompletedSale } from '../../services/onlineOrdersService';
+import {
+  getNotificationPermission,
+  requestNotificationPermission,
+  showOrderNotification,
+  NotificationStatus,
+} from '../../services/notificationService';
 
 type FilterTab = 'ALL' | EcommerceOrderStatus;
 
@@ -48,6 +54,7 @@ export const EcommerceOrdersView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<FilterTab>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [packingOrder, setPackingOrder] = useState<EcommerceOrder | null>(null);
+  const [notifPermission, setNotifPermission] = useState<NotificationStatus>(() => getNotificationPermission());
   const [isAudioEnabled, setIsAudioEnabled] = useState<boolean>(() => {
     try {
       return localStorage.getItem('ydo_order_audio_enabled') !== 'false';
@@ -213,6 +220,12 @@ export const EcommerceOrdersView: React.FC = () => {
         (payload) => {
           const newOrder = payload.new as EcommerceOrder;
           playNewOrderChime();
+          showOrderNotification({
+            orderNo: newOrder.order_no,
+            customerName: newOrder.customer_name,
+            amount: newOrder.total_amount,
+            orderId: newOrder.id,
+          }).catch(console.error);
           setNewOrderIds((prev) => new Set(prev).add(newOrder.id));
           // Clear new badge after 90 seconds
           setTimeout(() => {
@@ -362,6 +375,17 @@ export const EcommerceOrdersView: React.FC = () => {
       }
       return next;
     });
+  };
+
+  // Request system notification permissions for alerts when app is closed / backgrounded
+  const handleEnableNotifications = async () => {
+    const res = await requestNotificationPermission();
+    setNotifPermission(res);
+    if (res === 'granted') {
+      showToast('✅ Background Push Notifications चालू हो गए हैं! (ऐप बंद होने पर भी अलर्ट आएगा)');
+    } else {
+      showToast('⚠️ कृपया ब्राउज़र या मोबाइल सेटिंग्स में नोटिफिकेशन अनुमति दें');
+    }
   };
 
   // One-click Confirm & Prepare: Updates status to CONFIRMED and opens thermal delivery slip directly
@@ -678,6 +702,36 @@ export const EcommerceOrdersView: React.FC = () => {
               className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-black text-xs shrink-0 shadow-sm cursor-pointer"
             >
               Activate Bell 🔔
+            </button>
+          </div>
+        )}
+
+        {/* Background System Push Notification Banner (When app is closed) */}
+        {notifPermission !== 'granted' && (
+          <div
+            onClick={handleEnableNotifications}
+            className="mt-3 p-3 rounded-xl bg-blue-500/15 dark:bg-blue-950/60 border border-blue-400/80 dark:border-blue-600 flex items-center justify-between gap-3 cursor-pointer hover:bg-blue-500/20 transition-all shadow-xs"
+          >
+            <div className="flex items-center gap-2.5 text-blue-950 dark:text-blue-200">
+              <span className="text-xl animate-pulse">📲</span>
+              <div>
+                <p className="text-xs font-black">
+                  App बंद होने पर भी नोटिफिकेशन पाएँ (Enable Background Push Alert)
+                </p>
+                <p className="text-[11px] text-blue-700 dark:text-blue-300">
+                  जब आपका फोन लॉक या ऐप बंद होगा, तब भी नया ऑर्डर आने पर फोन वाइब्रेट होगा और स्क्रीन पर नोटिफिकेशन आएगी।
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEnableNotifications();
+              }}
+              className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shrink-0 shadow-sm cursor-pointer"
+            >
+              चालू करें 📲
             </button>
           </div>
         )}

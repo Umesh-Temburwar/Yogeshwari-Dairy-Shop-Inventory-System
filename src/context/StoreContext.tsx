@@ -30,6 +30,7 @@ import {
 import { realtimeManager } from '../services/realtime/realtimeManager';
 import { useAuth } from './AuthContext';
 import { playNewOrderChime } from '../utils/audioChime';
+import { showOrderNotification } from '../services/notificationService';
 import { startOfDay, startOfWeek, startOfMonth, startOfYear, isWithinInterval, parseISO } from 'date-fns';
 
 export type AppView = 
@@ -627,6 +628,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             );
             if (incoming.length > 0) {
               playNewOrderChime();
+              showOrderNotification({
+                orderNo: incoming[0].order_no,
+                customerName: incoming[0].customer_name,
+                amount: incoming[0].total_amount,
+                orderId: incoming[0].id,
+              }).catch(console.error);
               if (typeof window !== 'undefined') {
                 window.dispatchEvent(
                   new CustomEvent('yd_new_online_order_alert', {

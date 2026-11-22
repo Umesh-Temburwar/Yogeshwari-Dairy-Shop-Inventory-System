@@ -94,3 +94,70 @@ self.addEventListener('fetch', (event) => {
     })()
   );
 });
+
+// ============================================================================
+// BACKGROUND PUSH NOTIFICATION HANDLERS (When App/Browser is Closed)
+// ============================================================================
+self.addEventListener('push', (event) => {
+  let title = '🥛 नया ऑनलाइन ऑर्डर प्राप्त हुआ!';
+  let options = {
+    body: 'योगेश्वरी डेयरी में नया ऑर्डर आया है। तुरंत चेक करें।',
+    icon: '/assets/YDO_logo-B6fE-ZjE.jpg',
+    badge: '/assets/YDO_logo-B6fE-ZjE.jpg',
+    vibrate: [300, 100, 300, 100, 300],
+    tag: 'ydo-new-order',
+    renotify: true,
+    requireInteraction: true,
+    data: {
+      url: '/#view=ecommerce-orders',
+    },
+    actions: [
+      { action: 'open_order', title: '📦 ऑर्डर देखें' },
+      { action: 'close', title: 'बंद करें' },
+    ],
+  };
+
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      if (payload.title) title = payload.title;
+      if (payload.body) options.body = payload.body;
+      if (payload.data) options.data = payload.data;
+      if (payload.orderNo) {
+        title = `🔔 नया ऑर्डर #${payload.orderNo} मिला!`;
+        options.body = `${payload.customerName || 'ग्राहक'} (₹${payload.amount || ''}) - तुरंत पैक करें`;
+      }
+    } catch {
+      options.body = event.data.text();
+    }
+  }
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  if (event.action === 'close') return;
+
+  const targetUrl = event.notification.data?.url || '/#view=ecommerce-orders';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // If a window is already open, focus it and navigate
+      for (const client of clientList) {
+        if ('focus' in client) {
+          client.focus();
+          if ('navigate' in client) {
+            client.navigate(targetUrl);
+          }
+          return;
+        }
+      }
+      // If no window is open, open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+

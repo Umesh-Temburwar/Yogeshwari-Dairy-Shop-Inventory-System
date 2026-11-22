@@ -11,6 +11,7 @@ import {
   Image as ImageIcon,
   HeartPulse,
   Layers,
+  Tag,
   Lock,
   LogOut,
   RefreshCw,
@@ -64,6 +65,7 @@ interface SettingsPageProps {
   onOpenChangePasscode: () => void;
   onOpenPhotoDatabase: () => void;
   onOpenCategoryPhotos?: () => void;
+  onOpenBrandLogos?: () => void;
   onOpenImageHealth?: () => void;
   onOpenAppDownload: () => void;
   onCheckAppUpdate?: () => Promise<any>;
@@ -74,6 +76,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   onOpenChangePasscode,
   onOpenPhotoDatabase,
   onOpenCategoryPhotos,
+  onOpenBrandLogos,
   onOpenImageHealth,
   onOpenAppDownload,
   onCheckAppUpdate,
@@ -1061,6 +1064,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               title="Category Photos & Custom URLs"
               subtitle="Update category images for E-Commerce & POS"
               onClick={onOpenCategoryPhotos}
+              showChevron
+            />
+          )}
+
+          {onOpenBrandLogos && role === 'Owner' && (
+            <SettingRow
+              icon={<Tag className="w-5 h-5" />}
+              tone="emerald"
+              title="Brand Logos"
+              subtitle="Upload & manage official brand logos for E-Commerce"
+              onClick={onOpenBrandLogos}
               showChevron
             />
           )}

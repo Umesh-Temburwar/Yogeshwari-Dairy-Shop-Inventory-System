@@ -1,8 +1,9 @@
-import React from 'react';
-import { Plus, Minus, Pencil, Trash2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, Minus, Pencil, Trash2, MoreVertical, Layers } from 'lucide-react';
 import { Product } from '../../types';
 import { useLanguage } from '../../context/LanguageContext';
 import { ProductImage } from '../Common/ProductImage';
+import { StatusBadge } from '../Common/UI';
 
 export interface InventoryCardItemProps {
   product: Product;
@@ -29,12 +30,11 @@ const formatCompactUnit = (unit: string): string => {
 };
 
 /**
- * Compact Mobile-First Product Card (~195-210px tall on 360px 2-col grid)
- * - Fixed square white image showcase (object-contain, cached, hold-to-edit URL)
- * - Subtle corner status badge (In / Low / Out)
- * - Name (max 2 lines), muted category, prominent stock + selling rate
- * - Bottom 44x44 touch-target "+" Stock In (filled) and "−" Stock Out (outlined)
- * - Tap card to open full detail bottom sheet (batches, cost price, edit, delete, stepper)
+ * Redesigned Mobile-First Inventory Product Card (2-Col Grid)
+ * - Top row ABOVE image: status badge left, "⋮" menu button right (Edit, Adjust stock, Delete)
+ * - Image: aspect-square object-contain p-3 with NO overlapping icons; clean letter placeholder if no image
+ * - Below image: name (2-line clamp), category, stock (colored by status) + price (or "Set price" if ₹0)
+ * - Bottom: compact stepper (- +) h-10
  */
 export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo(
   ({
@@ -52,18 +52,26 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
     const status = getStockStatus(product);
     const isOut = status === 'out';
     const isLow = status === 'low';
+    const [showMenu, setShowMenu] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
 
-    const statusBadgeClass = isOut
-      ? 'bg-rose-600 text-white'
-      : isLow
-      ? 'bg-amber-500 text-slate-950'
-      : 'bg-emerald-600 text-white';
+    // Close menu when clicking outside
+    useEffect(() => {
+      const handleClickOutside = (e: MouseEvent) => {
+        if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+          setShowMenu(false);
+        }
+      };
+      if (showMenu) {
+        document.addEventListener('mousedown', handleClickOutside);
+      }
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, [showMenu]);
 
-    const statusDotLabel = isOut
-      ? 'Out'
-      : isLow
-      ? 'Low'
-      : 'In';
+    const statusTone = isOut ? 'rose' : isLow ? 'amber' : 'emerald';
+    const statusLabel = isOut ? 'Out of stock' : isLow ? 'Low stock' : 'In stock';
 
     return (
       <div
@@ -76,86 +84,121 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
             onOpenDetail(product);
           }
         }}
-        className={`group relative bg-white dark:bg-[#131F1B] rounded-2xl p-2 border transition-all duration-200 ease-out motion-reduce:transition-none flex flex-col justify-between shadow-2xs hover:shadow-sm cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
-          isOut
+        className={`group relative bg-white dark:bg-[#131F1B] rounded-2xl p-2.5 sm:p-3 border transition-all duration-200 ease-out flex flex-col justify-between shadow-2xs hover:shadow-sm cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+          isFlashing
+            ? 'ring-2 ring-emerald-500 bg-emerald-50/30'
+            : isOut
             ? 'border-rose-200/90 dark:border-rose-900/50'
             : isLow
             ? 'border-amber-200/90 dark:border-amber-800/50'
             : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500/70'
         }`}
       >
-        {/* Top Section: One-Click Square White Image Box (POS Size) + Status Pill & Quick Edit Button */}
         <div>
-          <div className="relative mb-1.5">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onPreviewImage(product);
-              }}
-              aria-label={`View or upload photo for ${displayName}`}
-              title={'Click photo to view, crop, or upload'}
-              className="relative w-full aspect-square rounded-2xl bg-white border border-slate-200/80 dark:border-[#24352F] hover:border-emerald-400/70 overflow-hidden flex items-center justify-center cursor-pointer transition-colors shadow-2xs"
-            >
+          {/* Top Row ABOVE Image: Stock Status Badge (Left) + "⋮" Menu Button (Right) */}
+          <div className="flex items-center justify-between gap-1 mb-2">
+            <StatusBadge
+              label={statusLabel}
+              tone={statusTone}
+              size="sm"
+            />
+
+            {/* Menu Popover Container */}
+            <div className="relative" ref={menuRef} onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => setShowMenu((prev) => !prev)}
+                aria-label={`Actions for ${displayName}`}
+                title="More Actions"
+                className="w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1E2E28] flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+
+              {/* Small Action Menu */}
+              {showMenu && (
+                <div className="absolute right-0 top-8 z-30 w-36 bg-white dark:bg-[#1A2A25] rounded-xl shadow-lg border border-slate-200 dark:border-[#2C4139] py-1 text-xs animate-in fade-in zoom-in-95 duration-150">
+                  {onEditProduct && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowMenu(false);
+                        onEditProduct(product);
+                      }}
+                      className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-[#20322B] text-slate-700 dark:text-[#E7F0EC] font-medium cursor-pointer"
+                    >
+                      <Pencil className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Edit Product</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenu(false);
+                      onOpenDetail(product, 'in');
+                    }}
+                    className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-[#20322B] text-slate-700 dark:text-[#E7F0EC] font-medium cursor-pointer"
+                  >
+                    <Layers className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Adjust Stock</span>
+                  </button>
+                  {onDeleteProduct && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowMenu(false);
+                        if (window.confirm(`Delete "${displayName}"? This action cannot be undone.`)) {
+                          onDeleteProduct(product);
+                        }
+                      }}
+                      className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-medium cursor-pointer border-t border-slate-100 dark:border-[#24352F]"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Square Image Box (object-contain p-3, NEVER crop, NO overlapping icons) */}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreviewImage(product);
+            }}
+            title="Click photo to view or upload"
+            className="relative w-full aspect-square rounded-xl bg-slate-50 dark:bg-[#16231E] border border-slate-200/80 dark:border-[#24352F] overflow-hidden flex items-center justify-center p-3 mb-2 cursor-pointer shadow-2xs group/img"
+          >
+            {product.image_url ? (
               <ProductImage
                 src={product.image_url}
                 alt={product.name}
                 category={product.category}
                 fill
-                className="group-hover:scale-[1.03] transition-transform duration-200 motion-reduce:transition-none"
+                className={`object-contain transition-transform duration-200 ${
+                  isOut ? 'grayscale opacity-60' : 'group-hover/img:scale-[1.03]'
+                }`}
               />
+            ) : (
+              /* Clean Placeholder with first letter */
+              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-black text-xl flex items-center justify-center select-none shadow-xs">
+                {displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
 
-              {hasExpiringSoon && (
-                <span
-                  className="absolute top-1.5 left-1.5 w-2.5 h-2.5 rounded-full bg-orange-500 ring-2 ring-white"
-                  title="Expiring soon"
-                  aria-label="Expiring soon"
-                />
-              )}
-            </button>
-
-            {/* Quick Edit & Delete Buttons + In/Low/Out Status Pill */}
-            <div className="absolute top-1.5 right-1.5 flex items-center gap-1 z-10">
-              {onDeleteProduct && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (window.confirm(`Delete "${displayName}"?`)) {
-                      onDeleteProduct(product);
-                    }
-                  }}
-                  aria-label={`Delete ${displayName}`}
-                  title="Delete Product"
-                  className="w-6 h-6 rounded-full bg-white/95 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200/90 shadow-xs flex items-center justify-center active:scale-90 transition cursor-pointer"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              )}
-              {onEditProduct && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEditProduct(product);
-                  }}
-                  aria-label={`Edit ${displayName}`}
-                  title="Edit Product Details"
-                  className="w-6 h-6 rounded-full bg-white/95 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200/90 shadow-xs flex items-center justify-center active:scale-90 transition cursor-pointer"
-                >
-                  <Pencil className="w-3 h-3" />
-                </button>
-              )}
+            {hasExpiringSoon && (
               <span
-                className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none tracking-tight shadow-2xs pointer-events-none ${statusBadgeClass}`}
-              >
-                {statusDotLabel}
-              </span>
-            </div>
+                className="absolute top-2 left-2 w-2.5 h-2.5 rounded-full bg-orange-500 ring-2 ring-white"
+                title="Expiring soon"
+                aria-label="Expiring soon"
+              />
+            )}
           </div>
 
-          {/* Name (14px semibold, max 2 lines) + Muted Category (11px) */}
-          <h3 className="text-[13px] sm:text-[14px] font-semibold text-slate-900 dark:text-[#E7F0EC] leading-snug line-clamp-2 min-h-[2.1rem]">
+          {/* Name (2-line clamp) + Category in slate-500 */}
+          <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-[#E7F0EC] leading-snug line-clamp-2 min-h-[2.1rem]">
             {displayName}
           </h3>
           <p className="text-[11px] text-slate-500 dark:text-[#8FA69C] truncate leading-tight mt-0.5">
@@ -163,21 +206,17 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
           </p>
         </div>
 
-        {/* Bottom Section: Stock Count + Rate & Action Buttons */}
-        <div className="mt-1.5 space-y-1.5">
-          <div
-            className={`flex items-baseline justify-between gap-1 rounded-lg px-1 py-0.5 transition-colors duration-200 ${
-              isFlashing ? 'bg-emerald-500/20' : ''
-            }`}
-          >
+        {/* Row: Stock on Left (bold, colored by status) and Price on Right */}
+        <div className="mt-2 space-y-2">
+          <div className="flex items-baseline justify-between gap-1 pt-1 border-t border-slate-100 dark:border-[#24352F]">
             <div className="min-w-0 truncate">
               <span
-                className={`text-[18px] sm:text-[20px] font-bold tabular-nums leading-none ${
+                className={`text-sm sm:text-base font-extrabold tabular-nums leading-none ${
                   isOut
                     ? 'text-rose-600 dark:text-rose-400'
                     : isLow
                     ? 'text-amber-700 dark:text-amber-400'
-                    : 'text-slate-900 dark:text-white'
+                    : 'text-emerald-700 dark:text-emerald-400'
                 }`}
               >
                 {product.stock_quantity}
@@ -186,38 +225,46 @@ export const InventoryProductCard: React.FC<InventoryCardItemProps> = React.memo
                 {formatCompactUnit(product.unit)}
               </span>
             </div>
-            <span className="text-[13px] sm:text-[14px] font-bold text-emerald-700 dark:text-emerald-400 tabular-nums shrink-0">
-              ₹{sellingPrice}
-            </span>
+
+            {/* Price or "Set price" badge if ₹0 */}
+            {sellingPrice <= 0 ? (
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onEditProduct) onEditProduct(product);
+                }}
+                className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-[10px] font-bold cursor-pointer"
+              >
+                Set price
+              </span>
+            ) : (
+              <span className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white tabular-nums shrink-0">
+                ₹{sellingPrice}
+              </span>
+            )}
           </div>
 
-          {/* 44x44 Min Touch Target Stock Out (−) on Left & Stock In (+) on Right */}
-          <div className="grid grid-cols-2 gap-1.5">
+          {/* Bottom Compact Stepper (- +) h-10 */}
+          <div className="grid grid-cols-2 gap-1.5" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
               disabled={isOut}
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenDetail(product, 'out');
-              }}
+              onClick={() => onOpenDetail(product, 'out')}
               aria-label={`Stock out ${displayName}`}
               title="Stock Out (−)"
-              className="min-h-[44px] rounded-xl bg-transparent hover:bg-rose-50 dark:hover:bg-rose-950/40 active:scale-[0.97] text-slate-700 dark:text-[#E7F0EC] hover:text-rose-700 dark:hover:text-rose-300 border border-slate-300 dark:border-[#2C4139] flex items-center justify-center transition-transform duration-150 ease-out motion-reduce:transition-none disabled:opacity-35 disabled:pointer-events-none cursor-pointer"
+              className="h-10 rounded-xl bg-slate-100 dark:bg-[#1E2E28] hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-700 dark:text-[#E7F0EC] hover:text-rose-700 dark:hover:text-rose-300 border border-slate-200/80 dark:border-[#2A3E37] flex items-center justify-center transition active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
             >
-              <Minus className="w-5 h-5 stroke-[2.5]" />
+              <Minus className="w-4 h-4 stroke-[2.5]" />
             </button>
 
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenDetail(product, 'in');
-              }}
+              onClick={() => onOpenDetail(product, 'in')}
               aria-label={`Stock in ${displayName}`}
               title="Stock In (+)"
-              className="min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white flex items-center justify-center transition-transform duration-150 ease-out motion-reduce:transition-none shadow-2xs cursor-pointer"
+              className="h-10 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white flex items-center justify-center transition shadow-xs cursor-pointer"
             >
-              <Plus className="w-5 h-5 stroke-[2.5]" />
+              <Plus className="w-4 h-4 stroke-[2.5]" />
             </button>
           </div>
         </div>

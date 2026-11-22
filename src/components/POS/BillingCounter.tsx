@@ -33,8 +33,10 @@ import {
   Eye,
   Loader2,
   Sparkles,
-  Tag
+  Tag,
+  SlidersHorizontal
 } from 'lucide-react';
+import { FilterChip, ChipRow, SearchBar, StatusBadge, StickyActionBar, BrandFilterSheet } from '../Common/UI';
 import { supabase } from '../../lib/supabase';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
 import { BarcodeScannerModal } from '../Scanner/BarcodeScannerModal';
@@ -56,9 +58,12 @@ interface ProductCardProps {
   displayName: string;
   language: string;
   t: (key: string) => string;
+  cartQty: number;
   onAddToCart: (prod: Product, qty?: number) => void;
+  onUpdateCartQty: (qty: number) => void;
   onQuickCalc: (prod: Product) => void;
   onPreviewImage: (prod: Product) => void;
+  isOwner?: boolean;
 }
 
 const ProductCard = React.memo<ProductCardProps>(({
@@ -67,9 +72,12 @@ const ProductCard = React.memo<ProductCardProps>(({
   displayName,
   language,
   t,
+  cartQty,
   onAddToCart,
+  onUpdateCartQty,
   onQuickCalc,
-  onPreviewImage
+  onPreviewImage,
+  isOwner = false
 }) => {
   const prodBatches = useMemo(() => batches.filter(b => b.product_id === prod.id && b.qty_remaining > 0), [batches, prod.id]);
   const validBatches = useMemo(() => prodBatches.filter(b => computeExpiryStatus(b.expiry_date).status !== 'EXPIRED'), [prodBatches]);
@@ -84,79 +92,95 @@ const ProductCard = React.memo<ProductCardProps>(({
 
   const effectiveSellingPrice = (earliestBatch && earliestBatch.selling_price && earliestBatch.selling_price > 0)
     ? earliestBatch.selling_price
-    : prod.selling_price;
+    : (prod.selling_price || 0);
 
+  const hasMissingPrice = effectiveSellingPrice <= 0;
   const isOutOfStock = availableStock <= 0;
   const isLowStock = availableStock <= prod.min_stock_alert && !isOutOfStock;
   const hasExpiredOnly = prodBatches.length > 0 && validBatches.length === 0;
   const hasExpiringToday = prodBatches.some(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRING_TODAY');
   const hasExpiringTomorrow = prodBatches.some(b => computeExpiryStatus(b.expiry_date).status === 'EXPIRING_TOMORROW');
 
+  // Check if item is weight/gram/loose where custom amount makes sense
+  const isWeightOrLoose = useMemo(() => {
+    const u = (prod.unit || '').trim().toLowerCase();
+    return u.includes('gm') || u.includes('gram') || u.includes('kg') || u.includes('liter') || u.includes('litre') || u.includes('ltr') || u.includes('loose');
+  }, [prod.unit]);
+
+  const handleCardClick = () => {
+    if (hasMissingPrice) {
+      if (isOwner) onPreviewImage(prod);
+      return;
+    }
+    if (!isOutOfStock && !hasExpiredOnly && cartQty === 0) {
+      onAddToCart(prod, 1);
+    }
+  };
+
   return (
     <div
-      onClick={() => {
-        if (!isOutOfStock && !hasExpiredOnly) {
-          onAddToCart(prod, 1);
-        }
-      }}
-      className={`relative bg-white dark:bg-[#131F1B] rounded-2xl p-3 sm:p-3.5 border transition-all duration-150 flex flex-col justify-between group select-none shadow-2xs ${
+      role="article"
+      onClick={handleCardClick}
+      className={`relative bg-white dark:bg-[#131F1B] rounded-2xl p-2.5 sm:p-3 border transition-all duration-150 flex flex-col justify-between group select-none shadow-2xs ${
         isOutOfStock || hasExpiredOnly
-          ? 'border-slate-200 dark:border-[#24352F] opacity-60 bg-slate-50/50 dark:bg-[#16221E]' 
-          : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500 dark:hover:border-emerald-500/60 hover:shadow-md cursor-pointer'
+          ? 'border-slate-200 dark:border-[#24352F] opacity-75 bg-slate-50/50 dark:bg-[#16221E]' 
+          : 'border-slate-200/90 dark:border-[#24352F] hover:border-emerald-500/80 dark:hover:border-emerald-500/60 hover:shadow-md cursor-pointer'
       }`}
     >
       <div>
-        <div className="flex items-start justify-between gap-1 mb-1.5">
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] uppercase truncate max-w-[85px]">
+        {/* Top-left tiny unit chip & Stock count */}
+        <div className="flex items-center justify-between gap-1 mb-1.5">
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-[#1A2A25] text-slate-600 dark:text-[#8FA69C] uppercase truncate max-w-[80px]">
             {prod.unit}
           </span>
-          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 ${
-            hasExpiredOnly 
-              ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800' :
-            isOutOfStock ? 'bg-red-100 dark:bg-rose-950/60 text-red-700 dark:text-rose-400' :
-            isLowStock ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
-          }`}>
-            {(isLowStock || hasExpiredOnly) && (
-              <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />
-            )}
+
+          <span
+            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 ${
+              isOutOfStock || hasExpiredOnly
+                ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40'
+                : isLowStock
+                ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40'
+                : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
+            }`}
+          >
+            {(isLowStock || isOutOfStock) && <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />}
             <span>
-              {hasExpiredOnly 
-                ? ('Expired')
-                : `${availableStock} ${'left'}`}
+              {hasExpiredOnly
+                ? 'Expired'
+                : isOutOfStock
+                ? '0 left'
+                : `${availableStock} left`}
             </span>
           </span>
         </div>
 
-        {/* Standardized 1:1 Square Product Image Showcase — Hold image to change URL, tap card to add */}
+        {/* 1:1 Square Image Showcase (object-contain, p-2.5, NO internal "URL" badge) */}
         <HoldableImageBox
           onHold={() => onPreviewImage(prod)}
-          title={'Hold image to view & update URL'}
-          className="group/posimg relative w-full aspect-square flex justify-center items-center mb-2.5 bg-white rounded-2xl border border-slate-200/80 dark:border-[#24352F] overflow-hidden shadow-2xs cursor-pointer"
+          title="Hold photo to view details"
+          className="relative w-full aspect-square flex justify-center items-center mb-2 bg-slate-50 dark:bg-[#16231E] rounded-xl border border-slate-200/80 dark:border-[#24352F] overflow-hidden p-2.5 cursor-pointer shadow-2xs"
         >
           <ProductImage 
             src={prod.image_url} 
             alt={prod.name} 
             category={prod.category} 
             fill
-            className="group-hover/posimg:scale-[1.03] transition-transform duration-200"
+            className={`object-contain transition-transform duration-200 ${
+              isOutOfStock || hasExpiredOnly ? 'grayscale opacity-60' : 'group-hover:scale-[1.03]'
+            }`}
           />
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onPreviewImage(prod);
-            }}
-            title={'Edit image URL'}
-            className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/75 hover:bg-emerald-700 text-white text-[9px] font-bold opacity-85 sm:opacity-0 sm:group-hover/posimg:opacity-100 transition-opacity cursor-pointer"
-          >
-            <Eye className="w-2.5 h-2.5" />
-            <span>URL</span>
-          </button>
+          {isOutOfStock && (
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center p-1">
+              <span className="text-[10px] font-bold text-white bg-rose-600 px-2 py-0.5 rounded-full shadow-xs">
+                Out of stock
+              </span>
+            </div>
+          )}
         </HoldableImageBox>
 
-        {/* Product Title */}
+        {/* Product Title (2-line clamp) */}
         <div className="mb-1">
-          <h4 className="font-extrabold text-slate-900 dark:text-[#E7F0EC] text-xs sm:text-sm leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 line-clamp-2 min-h-[2.2rem]">
+          <h4 className="font-extrabold text-slate-900 dark:text-[#E7F0EC] text-xs sm:text-sm leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 line-clamp-2 min-h-[2.1rem]">
             {displayName}
           </h4>
           {prod.name !== displayName && (
@@ -171,60 +195,104 @@ const ProductCard = React.memo<ProductCardProps>(({
           <div className="mt-1 flex items-center gap-1 text-[10px] font-extrabold text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-2 py-0.5 rounded-md border border-orange-200 dark:border-orange-900/50">
             <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
             <Clock className="w-3 h-3 text-orange-600 dark:text-orange-400 shrink-0" />
-            <span className="truncate">{'Exp. Today'}</span>
+            <span className="truncate">Exp. Today</span>
           </div>
         )}
         {hasExpiringTomorrow && !hasExpiringToday && !hasExpiredOnly && (
           <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900/50">
             <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span className="truncate">{'Exp. Tomorrow'}</span>
+            <span className="truncate">Exp. Tomorrow</span>
           </div>
         )}
       </div>
 
-      <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between gap-1">
+      {/* Bottom Row: Price left, Add button / Stepper right */}
+      <div className="mt-2 pt-2 border-t border-slate-100 dark:border-[#24352F] flex items-center justify-between gap-1">
         <div className="min-w-0">
           <span className="text-[10px] text-slate-400 dark:text-[#8FA69C] block leading-none font-semibold">
-            {'Rate'}
+            Rate
           </span>
-          <span className="text-sm sm:text-base font-black text-emerald-700 dark:text-emerald-400 leading-tight">
+          <span className="text-base font-black text-slate-900 dark:text-white leading-tight">
             ₹{effectiveSellingPrice}
           </span>
           {Boolean(earliestBatch && earliestBatch.selling_price && earliestBatch.selling_price > 0 && earliestBatch.selling_price !== prod.selling_price) && (
             <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold block leading-none">
-              ({'Batch Rate'})
+              (Batch Rate)
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
-          {/* Quick ₹ Calculator button */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickCalc(prod);
-            }}
-            title={t('measureInRupees')}
-            className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40 flex items-center justify-center transition active:scale-95 cursor-pointer"
-          >
-            <Calculator className="w-3.5 h-3.5" />
-          </button>
+        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+          {/* Missing Price: Show amber "Set price" chip */}
+          {hasMissingPrice ? (
+            <button
+              type="button"
+              disabled={!isOwner}
+              onClick={() => onPreviewImage(prod)}
+              title={isOwner ? 'Set price for this product' : 'Price not set'}
+              className="h-10 px-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 text-xs font-bold transition active:scale-95 cursor-pointer disabled:opacity-60"
+            >
+              Set price
+            </button>
+          ) : isOutOfStock || hasExpiredOnly ? (
+            <button
+              type="button"
+              disabled
+              className="h-10 px-3 rounded-xl bg-slate-100 dark:bg-[#1E2E28] text-slate-400 text-xs font-bold cursor-not-allowed"
+            >
+              Out
+            </button>
+          ) : cartQty > 0 ? (
+            /* Active Cart Stepper (- qty +) */
+            <div className="flex items-center bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 rounded-xl p-0.5">
+              <button
+                type="button"
+                onClick={() => onUpdateCartQty(Math.max(0, cartQty - 1))}
+                aria-label="Decrease quantity"
+                className="w-7 h-9 flex items-center justify-center text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 rounded-lg active:scale-95 transition cursor-pointer"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <span className="w-6 text-center text-xs font-black text-emerald-900 dark:text-emerald-200">
+                {cartQty}
+              </span>
+              <button
+                type="button"
+                disabled={cartQty >= availableStock}
+                onClick={() => onUpdateCartQty(cartQty + 1)}
+                aria-label="Increase quantity"
+                className="w-7 h-9 flex items-center justify-center text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 rounded-lg active:scale-95 transition cursor-pointer disabled:opacity-30"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            /* Initial Add / Calc Button */
+            <>
+              {isWeightOrLoose && (
+                <button
+                  type="button"
+                  onClick={() => onQuickCalc(prod)}
+                  title="Enter weight/amount"
+                  aria-label="Enter weight/amount"
+                  className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40 flex items-center justify-center transition active:scale-95 cursor-pointer"
+                >
+                  <Calculator className="w-4 h-4" />
+                </button>
+              )}
 
-          {/* Add to Cart button */}
-          <button
-            type="button"
-            disabled={isOutOfStock || hasExpiredOnly}
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddToCart(prod, 1);
-            }}
-            className="h-8 px-2.5 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs disabled:bg-slate-300 dark:disabled:bg-slate-800 transition active:scale-95 flex items-center gap-1 shadow-xs cursor-pointer"
-            title={hasExpiredOnly ? ('Expired Batch Blocked') : ('Add 1 Unit')}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span className="hidden xs:inline">{'Add'}</span>
-          </button>
+              <button
+                type="button"
+                onClick={() => onAddToCart(prod, 1)}
+                title="Add to Bill"
+                aria-label={`Add ${displayName} to bill`}
+                className="h-10 min-w-[40px] px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-black text-xs transition flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -288,6 +356,7 @@ export const BillingCounter: React.FC = () => {
   const debouncedSearchQuery = useDebounce(searchQuery, 120);
   const deferredSearchQuery = useDeferredValue(debouncedSearchQuery);
   const [selectedBrand, setSelectedBrand] = useState<string>('All');
+  const [showBrandSheet, setShowBrandSheet] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('IN_STOCK');
   
   // Mobile responsive tab (Products vs Cart/Checkout)
@@ -295,6 +364,7 @@ export const BillingCounter: React.FC = () => {
 
   // Cart state
   const [cart, setCart] = useState<SaleItem[]>([]);
+  const cartQtyMap = useMemo(() => new Map(cart.map(c => [c.product_id, c.quantity])), [cart]);
   const [lastAddedHistory, setLastAddedHistory] = useState<Array<{ productId: string; qty: number }>>([]);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -981,13 +1051,15 @@ export const BillingCounter: React.FC = () => {
     <div className="relative max-w-7xl mx-auto pb-24 sm:pb-8">
       {/* Mobile Sticky Top Header (Tabs + Active Counter + Search + Barcode Scanner + In Stock / Categories) */}
       <div className="lg:hidden sticky top-0 z-20 -mx-2.5 sm:-mx-6 px-2.5 sm:px-6 pt-1 pb-2 bg-[#f8fafc]/95 dark:bg-[#0B1210]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-[#1E2E28] space-y-2 shadow-xs">
-        {/* Row 1: Mobile Tab Switcher */}
+      {/* Mobile Sticky Top Header (Compact h-10 Tabs + ONE Row Search & Filters + ONE Category ChipRow) */}
+      <div className="lg:hidden sticky top-0 z-20 -mx-2.5 sm:-mx-6 px-3.5 pt-1.5 pb-2 bg-[#f8fafc]/95 dark:bg-[#0B1210]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-[#1E2E28] space-y-2 shadow-xs">
+        {/* Row 1: Compact h-10 Tab Switcher */}
         <div className="flex items-center justify-center">
-          <div className="grid grid-cols-2 p-1 bg-slate-200/80 dark:bg-[#1A2A25] rounded-xl w-full max-w-sm">
+          <div className="grid grid-cols-2 p-1 bg-slate-200/80 dark:bg-[#1A2A25] rounded-xl w-full max-w-sm h-10 items-center">
             <button
               type="button"
               onClick={() => setMobileTab('products')}
-              className={`h-9 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+              className={`h-8 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 mobileTab === 'products'
                   ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 font-black shadow-xs'
                   : 'text-slate-600 dark:text-[#8FA69C]'
@@ -999,7 +1071,7 @@ export const BillingCounter: React.FC = () => {
             <button
               type="button"
               onClick={() => setMobileTab('cart')}
-              className={`h-9 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+              className={`h-8 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 mobileTab === 'cart'
                   ? 'bg-white dark:bg-[#131F1B] text-emerald-700 dark:text-emerald-400 font-black shadow-xs'
                   : 'text-slate-600 dark:text-[#8FA69C]'
@@ -1011,178 +1083,81 @@ export const BillingCounter: React.FC = () => {
           </div>
         </div>
 
-        {/* Rows 2 & 3: Search Bar + Camera Barcode Scanner + Shake + Return (STAYS PINNED AT TOP ON MOBILE) */}
+        {/* When Products tab is active: SearchBar with inside Barcode icon + Filters button */}
         {mobileTab === 'products' && (
           <div className="space-y-1.5 pt-0.5">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="relative flex-1 min-w-0">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder={t('searchPlaceholder')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      const q = searchQuery.trim();
-                      if (filteredProducts.length === 1) {
-                        addToCart(filteredProducts[0], 1);
-                        setSearchQuery('');
-                      } else if (filteredProducts.length === 0 && /^\d{5,}$/.test(q)) {
-                        setQuickRegisterBarcode(q);
-                        setShowQuickRegisterModal(true);
-                      }
-                    }
-                  }}
-                  className="w-full h-10 pl-9 pr-8 rounded-xl border border-slate-200 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] focus:outline-none focus:ring-2 focus:ring-emerald-500/70 focus:border-transparent text-xs sm:text-sm font-medium"
-                />
-                {searchQuery && (
-                  <button 
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    aria-label="Clear search"
-                    className="w-7 h-7 absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-[#8FA69C] dark:hover:text-white"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
+            <div className="flex items-center gap-2">
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onClear={() => setSearchQuery('')}
+                placeholder={t('searchPlaceholder')}
+                onScanBarcode={() => setShowBarcodeScanner(true)}
+              />
 
-              {/* Camera Barcode Scanner Button - ALWAYS ACCESSIBLE AT TOP */}
+              {/* Single "Filters" button (opens Brand and More options bottom sheet) */}
               <button
                 type="button"
-                onClick={() => setShowBarcodeScanner(true)}
-                aria-label="Camera Barcode Scanner"
-                className="w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs active:scale-[0.97] transition-all shrink-0 cursor-pointer"
-                title={'Camera Barcode Scanner'}
+                onClick={() => setShowBrandSheet(true)}
+                aria-label="Open Brands and Filters"
+                title="Filter by Brands and more options"
+                className={`relative h-11 w-11 rounded-xl border flex items-center justify-center shrink-0 cursor-pointer active:scale-95 transition-all ${
+                  selectedBrand !== 'All'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700 shadow-xs'
+                    : 'bg-white dark:bg-[#131F1B] text-slate-600 dark:text-[#C4D4CE] border-slate-200 dark:border-[#24352F] hover:border-emerald-500/50'
+                }`}
               >
-                <Barcode className="w-4 h-4 text-white" />
-                <span className="hidden sm:inline">{'Scan'}</span>
+                <SlidersHorizontal className="w-4 h-4" />
+                {selectedBrand !== 'All' && (
+                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-600 ring-2 ring-white dark:ring-[#131F1B]" />
+                )}
               </button>
+            </div>
 
-              {isMobileDevice() && (
+            {/* ONLY ONE ChipRow visible: Categories (cascades dynamically from brand) */}
+            <ChipRow aria-label="Product Categories">
+              {displayedCategories.map((cat) => (
+                <FilterChip
+                  key={cat.id}
+                  label={cat.label}
+                  active={selectedCategory === cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  icon={
+                    categoryPhotos[cat.id] ? (
+                      <img
+                        src={categoryPhotos[cat.id]}
+                        alt=""
+                        className="w-3.5 h-3.5 rounded-full object-cover shrink-0"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : undefined
+                  }
+                />
+              ))}
+            </ChipRow>
+
+            {/* Active Brand Indicator (if a brand is filtered) */}
+            {selectedBrand !== 'All' && (
+              <div className="flex items-center justify-between text-[11px] px-1 text-slate-500 dark:text-[#8FA69C]">
+                <div className="flex items-center gap-1 font-medium">
+                  <span>Brand:</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400">{selectedBrand}</span>
+                </div>
                 <button
                   type="button"
-                  onClick={async () => {
-                    await requestMotionPermission();
-                    setShakeToScanEnabled(!shakeToScanEnabled);
-                  }}
-                  aria-label="Toggle Shake to Scan"
-                  className={`w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-[0.97] shrink-0 cursor-pointer ${
-                    shakeToScanEnabled
-                      ? 'bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-400'
-                      : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-500 dark:text-slate-400'
-                  }`}
-                  title={'Global Shake to Scan'}
+                  onClick={() => handleSelectBrand('All')}
+                  className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-0.5 cursor-pointer"
                 >
-                  <Smartphone className={`w-4 h-4 ${shakeToScanEnabled ? 'text-amber-500' : ''}`} />
-                  <span className="hidden sm:inline">
-                    {'Shake'}: {shakeToScanEnabled ? 'ON' : 'OFF'}
-                  </span>
+                  <X className="w-3 h-3" />
+                  <span>Clear Brand</span>
                 </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => setActiveView('returns')}
-                aria-label="Customer Returns"
-                className="w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800/40 text-purple-700 dark:text-purple-300 flex items-center justify-center gap-1.5 text-xs font-bold shrink-0 transition active:scale-[0.97]"
-                title={'Customer Returns'}
-              >
-                <RotateCcw className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                <span className="hidden sm:inline">{'Return'}</span>
-              </button>
-            </div>
-
-            {/* Row 2.5: Brand Filter Carousel (Click Brand -> Cascades to Categories) */}
-            {availableBrands.length > 0 && (
-              <div className="relative">
-                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5">
-                  <button
-                    type="button"
-                    onClick={() => handleSelectBrand('All')}
-                    className={`h-7 px-2.5 rounded-full border text-[11px] font-bold whitespace-nowrap inline-flex items-center gap-1 shrink-0 snap-start transition-all duration-150 active:scale-[0.97] cursor-pointer ${
-                      selectedBrand === 'All'
-                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                        : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#A3B8AF] hover:border-slate-300'
-                    }`}
-                  >
-                    <Tag className="w-3 h-3 shrink-0" />
-                    <span>All Brands</span>
-                  </button>
-
-                  {availableBrands.map((b) => {
-                    const isSelected = selectedBrand.toLowerCase() === b.name.toLowerCase();
-                    return (
-                      <button
-                        key={b.name}
-                        type="button"
-                        onClick={() => handleSelectBrand(b.name)}
-                        className={`h-7 px-2.5 rounded-full border text-[11px] font-bold whitespace-nowrap inline-flex items-center gap-1 shrink-0 snap-start transition-all duration-150 active:scale-[0.97] cursor-pointer ${
-                          isSelected
-                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs ring-2 ring-indigo-400/30'
-                            : 'bg-slate-50 dark:bg-[#1A2A25] border-slate-200/90 dark:border-[#2A3E37] text-slate-700 dark:text-slate-300 hover:border-indigo-400/50'
-                        }`}
-                      >
-                        <span>{b.name}</span>
-                        <span
-                          className={`text-[9px] px-1 rounded-full font-mono font-bold ${
-                            isSelected
-                              ? 'bg-white/25 text-white'
-                              : 'bg-slate-200/70 dark:bg-[#24352F] text-slate-600 dark:text-slate-400'
-                          }`}
-                        >
-                          {b.count}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"
-                />
               </div>
             )}
-
-            {/* Row 3: Category Pills Carousel (Cascades from Brand) */}
-            <div className="relative">
-              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5">
-                {displayedCategories.map((cat) => {
-                  const photoUrl = categoryPhotos[cat.id];
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className={`h-8 px-2.5 rounded-full border text-xs font-semibold whitespace-nowrap inline-flex items-center gap-1.5 justify-center shrink-0 snap-start transition-all duration-150 active:scale-[0.97] cursor-pointer ${
-                        selectedCategory === cat.id
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                          : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#A3B8AF] hover:border-slate-300 dark:hover:border-[#324A42]'
-                      }`}
-                    >
-                      {photoUrl && (
-                        <img
-                          src={photoUrl}
-                          alt=""
-                          className="w-4 h-4 rounded-full object-cover shrink-0"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      )}
-                      <span>{cat.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"
-              />
-            </div>
           </div>
         )}
+      </div>
       </div>
 
       {/* Active Counter & Operator Badge Bar (Desktop Only) */}
@@ -1431,13 +1406,39 @@ export const BillingCounter: React.FC = () => {
                 displayName={getProductDisplayName(prod)}
                 language={language}
                 t={t}
+                cartQty={cartQtyMap.get(prod.id) || 0}
                 onAddToCart={addToCart}
+                onUpdateCartQty={(qty) => updateQuantity(prod.id, qty)}
                 onQuickCalc={handleQuickCalc}
                 onPreviewImage={setPreviewImageProduct}
+                isOwner={role === 'Owner' || activeOperator.role === 'Owner'}
               />
             ))
           )}
         </div>
+
+        {/* STICKY BILL BAR (Visible on mobile when bill has items) */}
+        {mobileTab === 'products' && cart.length > 0 && (
+          <StickyActionBar onClick={() => setMobileTab('cart')}>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <ShoppingCart className="w-4 h-4 text-white" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs sm:text-sm font-black tracking-tight block truncate">
+                  {cart.reduce((sum, item) => sum + item.quantity, 0)} items • ₹{netTotal.toFixed(0)}
+                </span>
+                <span className="text-[10px] text-emerald-100 font-medium block truncate">
+                  Tap to view bill & checkout
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 bg-white text-emerald-800 font-extrabold text-xs px-3.5 py-2 rounded-xl shadow-xs shrink-0">
+              <span>View Bill</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </div>
+          </StickyActionBar>
+        )}
       </div>
 
       {/* RIGHT COLUMN: Active Cart, Customer Info & Payment Checkout */}
@@ -2564,6 +2565,53 @@ export const BillingCounter: React.FC = () => {
           setOnlineSearchedProduct(prev => prev && prev.id === productId ? { ...prev, image_url: nextImg } : prev);
           setPreviewImageProduct(prev => prev && prev.id === productId ? { ...prev, image_url: nextImg } : prev);
         }}
+      />
+
+      {/* Brand & Filter Bottom Sheet */}
+      <BrandFilterSheet
+        isOpen={showBrandSheet}
+        onClose={() => setShowBrandSheet(false)}
+        brands={availableBrands}
+        selectedBrand={selectedBrand}
+        onSelectBrand={(brand) => {
+          handleSelectBrand(brand);
+        }}
+        onReset={() => {
+          handleSelectBrand('All');
+          setSelectedCategory('IN_STOCK');
+        }}
+        extraOptions={
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            {isMobileDevice() && (
+              <button
+                type="button"
+                onClick={async () => {
+                  await requestMotionPermission();
+                  setShakeToScanEnabled(!shakeToScanEnabled);
+                }}
+                className={`h-9 px-3 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition ${
+                  shakeToScanEnabled
+                    ? 'bg-amber-100 text-amber-800 border-amber-300'
+                    : 'bg-white text-slate-700 border-slate-200'
+                }`}
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>Shake: {shakeToScanEnabled ? 'ON' : 'OFF'}</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setShowBrandSheet(false);
+                setActiveView('returns');
+              }}
+              className="h-9 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-xs font-bold flex items-center gap-1.5"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Customer Returns</span>
+            </button>
+          </div>
+        }
       />
 
     </div>

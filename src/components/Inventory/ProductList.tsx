@@ -28,8 +28,10 @@ import {
   RotateCcw,
   Loader2,
   CheckCircle2,
-  Tag
+  Tag,
+  SlidersHorizontal
 } from 'lucide-react';
+import { FilterChip, ChipRow, SearchBar, BrandFilterSheet } from '../Common/UI';
 import {
   printReport,
   downloadReportPDF,
@@ -98,6 +100,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<string>('All');
+  const [showBrandSheet, setShowBrandSheet] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedExpiryFilter, setSelectedExpiryFilter] = useState<ExpiryStatus | 'ALL'>('ALL');
   const [viewMode, setViewMode] = useState<InventoryViewMode>('cards');
@@ -998,251 +1001,79 @@ export const ProductList: React.FC<ProductListProps> = ({
             </button>
           </div>
         </div>
-
-        {/* Slim 3-Stat Summary Strip: ONLY In Stock, Low Stock, Expiring Soon */}
-        <div className="grid grid-cols-3 gap-1.5">
-          <button
-            type="button"
-            onClick={() => setActiveTab('IN_STOCK')}
-            className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-between gap-1 text-left active:scale-[0.98] transition-transform cursor-pointer"
-          >
-            <span className="text-[11px] font-medium text-slate-500 dark:text-[#8FA69C] truncate">
-              {'In Stock'}
-            </span>
-            <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
-              {inStockCount}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('LOW_STOCK')}
-            className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-between gap-1 text-left active:scale-[0.98] transition-transform cursor-pointer"
-          >
-            <span className="text-[11px] font-medium text-slate-500 dark:text-[#8FA69C] truncate">
-              {'Low'}
-            </span>
-            <span className="text-sm font-bold text-amber-600 dark:text-amber-400 tabular-nums">
-              {lowStockCount}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('EXPIRING')}
-            className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#131F1B] border border-slate-200/80 dark:border-[#24352F] flex items-center justify-between gap-1 text-left active:scale-[0.98] transition-transform cursor-pointer"
-          >
-            <span className="text-[11px] font-medium text-slate-500 dark:text-[#8FA69C] truncate">
-              {'Expiring'}
-            </span>
-            <span className="text-sm font-bold text-rose-600 dark:text-rose-400 tabular-nums">
-              {expiringSoonCount}
-            </span>
-          </button>
-        </div>
-
-        {/* Dismissible 1-Line Low Stock Alert Banner */}
-        {lowStockCount > 0 && !lowStockDismissed && (
-          <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/35 border border-amber-200/90 dark:border-amber-800/50 text-amber-900 dark:text-amber-300 text-[11px] font-semibold">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span className="truncate">
-                {`${lowStockCount} ${lowStockCount === 1 ? 'item' : 'items'} low on stock`}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => setActiveTab('LOW_STOCK')}
-                className="font-bold underline text-amber-800 dark:text-amber-300 cursor-pointer"
-              >
-                {'View'}
-              </button>
-              <button
-                type="button"
-                aria-label="Dismiss low stock alert"
-                onClick={() => {
-                  setLowStockDismissed(true);
-                  sessionStorage.setItem(LOW_STOCK_DISMISS_KEY, 'true');
-                }}
-                className="p-0.5 rounded hover:bg-amber-200/50 dark:hover:bg-amber-900/40 cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* 2. STICKY SEARCH + SCANNER + ONE-ROW SNAP FILTER CHIPS (PINNED AT TOP) */}
-      <div className="sticky top-0 z-20 -mx-2.5 sm:-mx-6 px-2.5 sm:px-6 pt-1 pb-2 bg-[#f8fafc] dark:bg-[#0B1210] border-b border-slate-200/70 dark:border-[#1E2E28] space-y-1.5 shadow-xs">
-        {/* Search Input + Prominent Barcode Scan Button */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <div className="relative flex-1 min-w-0">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#8FA69C] pointer-events-none" />
-            <input
-              id="inventory-search-input"
-              name="inventorySearch"
-              type="text"
-              autoComplete="off"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={'Search products or barcode...'}
-              aria-label="Search inventory products"
-              className="w-full h-10 pl-9 pr-12 rounded-xl border border-slate-300/90 dark:border-[#24352F] bg-white dark:bg-[#131F1B] text-slate-900 dark:text-[#E7F0EC] text-xs font-medium placeholder:text-slate-400 dark:placeholder:text-[#6F877D] focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
+      {/* 2. STICKY SEARCH + SCANNER + ONE-ROW STATUS CHIPS + CATEGORIES (PINNED AT TOP) */}
+      <div className="sticky top-0 z-20 -mx-2.5 sm:-mx-6 px-3.5 pt-1.5 pb-2 bg-[#f8fafc]/95 dark:bg-[#0B1210]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-[#1E2E28] space-y-1.5 shadow-xs">
+        {/* Search Bar (with barcode icon inside) + Brand Filter Button */}
+        <div className="flex items-center gap-2">
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+            placeholder="Search products or barcode..."
+            onScanBarcode={() => setShowBarcodeScanner(true)}
+          />
 
-            <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
-              {isSearchingOnline && (
-                <Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
-              )}
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  aria-label="Clear search"
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Prominent Camera Barcode Scanner Button (Always pinned at top) */}
+          {/* Brand Filter Bottom Sheet Button */}
           <button
             type="button"
-            onClick={() => setShowBarcodeScanner(true)}
-            aria-label="Scan barcode to search"
-            title="Scan Barcode"
-            className="w-10 sm:w-auto h-10 px-0 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5 text-xs font-bold shadow-xs active:scale-[0.97] transition-all shrink-0 cursor-pointer"
+            onClick={() => setShowBrandSheet(true)}
+            aria-label="Filter by Brands"
+            title="Filter by Brands"
+            className={`relative h-11 w-11 rounded-xl border flex items-center justify-center shrink-0 cursor-pointer active:scale-95 transition-all ${
+              selectedBrand !== 'All'
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700 shadow-xs'
+                : 'bg-white dark:bg-[#131F1B] text-slate-600 dark:text-[#C4D4CE] border-slate-200 dark:border-[#24352F] hover:border-emerald-500/50'
+            }`}
           >
-            <Barcode className="w-4 h-4 text-white" />
-            <span className="hidden sm:inline">Scan</span>
+            <SlidersHorizontal className="w-4 h-4" />
+            {selectedBrand !== 'All' && (
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-600 ring-2 ring-white dark:ring-[#131F1B]" />
+            )}
           </button>
         </div>
 
-        {/* Single Horizontal Snap-Scroll Filter Chip Row with Right-Edge Fade Hint */}
-        <div className="relative">
-          <div
-            role="tablist"
-            aria-label="Inventory filters"
-            className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5"
-          >
-            {filterChips.map((chip) => {
-              const isActive = activeTab === chip.id && !debouncedQuery;
-              return (
-                <button
-                  key={chip.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={() => {
-                    if (debouncedQuery) {
-                      setSearchQuery('');
-                      setDebouncedQuery('');
-                    }
-                    setActiveTab(chip.id);
-                  }}
-                  className={`snap-start shrink-0 h-8 px-3 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 border transition-colors duration-150 active:scale-[0.97] cursor-pointer ${
-                    isActive
-                      ? 'bg-emerald-600 text-white border-emerald-600'
-                      : 'bg-white dark:bg-[#131F1B] text-slate-700 dark:text-[#C4D4CE] border-slate-200 dark:border-[#24352F] hover:border-emerald-500/50'
-                  }`}
-                >
-                  <span>{chip.label}</span>
-                  <span
-                    className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full leading-none ${
-                      isActive
-                        ? 'bg-white/20 text-white'
-                        : 'bg-slate-100 dark:bg-[#1E2E28] text-slate-600 dark:text-[#8FA69C]'
-                    }`}
-                  >
-                    {chip.count.toLocaleString('en-IN')}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          {/* Soft Right-Edge Scroll Hint Fade */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"
-          />
-        </div>
+        {/* Status Filters ChipRow: In Stock, Low (amber-tinted), Expiring, Out of Stock, All */}
+        <ChipRow aria-label="Status filters">
+          {filterChips.map((chip) => {
+            const isActive = activeTab === chip.id && !debouncedQuery;
+            return (
+              <FilterChip
+                key={chip.id}
+                label={chip.label}
+                count={chip.count}
+                active={isActive}
+                countVariant={
+                  chip.id === 'LOW_STOCK' && chip.count > 0
+                    ? 'amber'
+                    : chip.id === 'EXPIRING' && chip.count > 0
+                    ? 'rose'
+                    : 'default'
+                }
+                onClick={() => {
+                  if (debouncedQuery) {
+                    setSearchQuery('');
+                    setDebouncedQuery('');
+                  }
+                  setActiveTab(chip.id);
+                }}
+              />
+            );
+          })}
+        </ChipRow>
 
-        {/* Brand Filter Carousel */}
-        {availableBrands.length > 1 && (
-          <div className="relative">
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 snap-x scroll-smooth">
-              <span className="shrink-0 flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] px-1">
-                <Tag className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                <span>Brand:</span>
-              </span>
-              {availableBrands.map((b) => {
-                const isSelected = selectedBrand.toLowerCase() === b.name.toLowerCase();
-                return (
-                  <button
-                    key={b.name}
-                    type="button"
-                    onClick={() => handleSelectBrand(b.name)}
-                    className={`snap-start shrink-0 h-7 px-2.5 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 border transition-all duration-150 active:scale-[0.97] cursor-pointer ${
-                      isSelected
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                        : 'bg-white dark:bg-[#131F1B] text-slate-700 dark:text-[#C4D4CE] border-slate-200 dark:border-[#24352F] hover:border-emerald-500/50'
-                    }`}
-                  >
-                    <span>{b.name === 'All' ? 'All Brands' : b.name}</span>
-                    <span
-                      className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full leading-none ${
-                        isSelected
-                          ? 'bg-white/20 text-white'
-                          : 'bg-slate-100 dark:bg-[#1E2E28] text-slate-500 dark:text-[#8FA69C]'
-                      }`}
-                    >
-                      {b.count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"
+        {/* Categories ChipRow (Cascading from Selected Brand) */}
+        <ChipRow aria-label="Category filters">
+          {displayedCategories.map((c) => (
+            <FilterChip
+              key={c.id}
+              label={c.label}
+              active={selectedCategory === c.id}
+              onClick={() => setSelectedCategory(c.id)}
             />
-          </div>
-        )}
-
-        {/* Cascading Category Filter Carousel (filtered by selected brand) */}
-        <div className="relative">
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 snap-x scroll-smooth">
-            <span className="shrink-0 flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] px-1">
-              <Layers className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-              <span>Category:</span>
-            </span>
-            {displayedCategories.map((c) => {
-              const isSelected = selectedCategory === c.id;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(c.id)}
-                  className={`snap-start shrink-0 h-6 px-2.5 rounded-full text-xs font-medium inline-flex items-center gap-1 border transition-all duration-150 active:scale-[0.97] cursor-pointer ${
-                    isSelected
-                      ? 'bg-emerald-700 dark:bg-emerald-600 text-white border-emerald-700 font-semibold'
-                      : 'bg-slate-50 dark:bg-[#16231E] text-slate-600 dark:text-[#9FB8AE] border-slate-200/80 dark:border-[#24352F] hover:bg-slate-100 dark:hover:bg-[#1C2C26]'
-                  }`}
-                >
-                  <span>{c.label}</span>
-                </button>
-              );
-            })}
-          </div>
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"
-          />
-        </div>
+          ))}
+        </ChipRow>
 
         {/* Active Secondary Filter Indicator (Brand / Category / Expiry) */}
         {hasSecondaryFilters && (
@@ -1548,20 +1379,6 @@ export const ProductList: React.FC<ProductListProps> = ({
         </div>
       )}
 
-      {/* FLOATING ACTION BUTTON (FAB): Barcode Stock-In (Bottom Right, above Mobile Bottom Nav) */}
-      <button
-        type="button"
-        onClick={() => setShowBarcodeStockIn(true)}
-        aria-label="Barcode Stock-In"
-        title={'Barcode Stock-In'}
-        className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] lg:bottom-6 lg:right-6 z-30 h-14 px-4 sm:px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white shadow-lg shadow-emerald-900/30 border border-emerald-400/30 inline-flex items-center gap-2 font-bold text-xs transition-transform duration-150 ease-out motion-reduce:transition-none cursor-pointer"
-      >
-        <Barcode className="w-5 h-5 shrink-0" />
-        <span className="hidden sm:inline">
-          {'Barcode Stock-In'}
-        </span>
-      </button>
-
       {/* 5-SECOND UNDO TOAST AFTER STOCK IN / OUT */}
       {stockToast && (
         <div
@@ -1720,6 +1537,21 @@ export const ProductList: React.FC<ProductListProps> = ({
           setPreviewImageProduct((prev) =>
             prev && prev.id === productId ? { ...prev, image_url: nextImg } : prev
           );
+        }}
+      />
+
+      {/* Brand Filter Bottom Sheet */}
+      <BrandFilterSheet
+        isOpen={showBrandSheet}
+        onClose={() => setShowBrandSheet(false)}
+        brands={availableBrands}
+        selectedBrand={selectedBrand}
+        onSelectBrand={(brand) => {
+          handleSelectBrand(brand);
+        }}
+        onReset={() => {
+          handleSelectBrand('All');
+          setSelectedCategory('All');
         }}
       />
     </div>

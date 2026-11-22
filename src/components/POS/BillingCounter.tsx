@@ -32,7 +32,8 @@ import {
   RotateCcw,
   Eye,
   Loader2,
-  Sparkles
+  Sparkles,
+  Tag
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { exportReportToPDF, printReport, downloadReportPDF, viewReportPDF } from '../../lib/exportUtils';
@@ -286,6 +287,7 @@ export const BillingCounter: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 120);
   const deferredSearchQuery = useDeferredValue(debouncedSearchQuery);
+  const [selectedBrand, setSelectedBrand] = useState<string>('All');
   const [selectedCategory, setSelectedCategory] = useState<string>('IN_STOCK');
   
   // Mobile responsive tab (Products vs Cart/Checkout)
@@ -430,6 +432,52 @@ export const BillingCounter: React.FC = () => {
     { id: 'Bakery & Extras', label: t('catBakery') }
   ], [realInStockCount, t]);
 
+  // Unique brands available in inventory with product count
+  const availableBrands = useMemo(() => {
+    const brandMap = new Map<string, number>();
+    products.forEach((p) => {
+      const b = (p.brand || '').trim();
+      if (b) {
+        brandMap.set(b, (brandMap.get(b) || 0) + 1);
+      }
+    });
+    return Array.from(brandMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  }, [products]);
+
+  // Dynamic category cascading: When a Brand is clicked, show ONLY categories that belong to that brand!
+  const displayedCategories = useMemo(() => {
+    if (selectedBrand === 'All') {
+      return categories;
+    }
+    const brandProducts = products.filter(
+      (p) => (p.brand || '').trim().toLowerCase() === selectedBrand.toLowerCase()
+    );
+    const categoryIdsWithBrand = new Set(brandProducts.map((p) => p.category));
+    const inStockBrandCount = brandProducts.filter((p) => p.stock_quantity > 0).length;
+
+    const brandSpecificCategories = categories.filter(
+      (c) => c.id !== 'IN_STOCK' && c.id !== 'All' && categoryIdsWithBrand.has(c.id)
+    );
+
+    return [
+      { id: 'IN_STOCK', label: `In Stock (${inStockBrandCount})` },
+      { id: 'All', label: `All ${selectedBrand} (${brandProducts.length})` },
+      ...brandSpecificCategories
+    ];
+  }, [selectedBrand, categories, products]);
+
+  // Handle Brand selection with category cascade reset
+  const handleSelectBrand = useCallback((brand: string) => {
+    setSelectedBrand(brand);
+    if (brand === 'All') {
+      setSelectedCategory('IN_STOCK');
+    } else {
+      setSelectedCategory('All');
+    }
+  }, []);
+
   // Filtered products for selection (fast deferred evaluation with barcode normalization)
   const filteredProducts = useMemo(() => {
     const q = deferredSearchQuery.trim().toLowerCase();
@@ -456,6 +504,12 @@ export const BillingCounter: React.FC = () => {
     const base = products.filter(p => {
       if (!p.is_active) return false;
 
+      // Brand filter
+      if (selectedBrand !== 'All') {
+        const pBrand = (p.brand || '').trim().toLowerCase();
+        if (pBrand !== selectedBrand.toLowerCase()) return false;
+      }
+
       // When category is IN_STOCK (default), strictly show in-stock products
       if (selectedCategory === 'IN_STOCK' && p.stock_quantity <= 0) return false;
 
@@ -473,6 +527,7 @@ export const BillingCounter: React.FC = () => {
 
       const matchesSearch = !q ||
         p.name.toLowerCase().includes(q) ||
+        Boolean(p.brand && p.brand.toLowerCase().includes(q)) ||
         barcodeMatches;
       const matchesCategory = selectedCategory === 'IN_STOCK' || selectedCategory === 'All' || p.category === selectedCategory;
       return matchesSearch && matchesCategory;
@@ -490,7 +545,7 @@ export const BillingCounter: React.FC = () => {
     }
 
     return result.slice(0, 30);
-  }, [products, deferredSearchQuery, selectedCategory, onlineSearchedProduct, onlineSearchResults]);
+  }, [products, deferredSearchQuery, selectedBrand, selectedCategory, onlineSearchedProduct, onlineSearchResults]);
 
   // Fast thumbnail and category lookup map for Cart items
   const productThumbMap = useMemo(() => {
@@ -1039,10 +1094,61 @@ export const BillingCounter: React.FC = () => {
               </button>
             </div>
 
-            {/* Row 3: Category Pills Carousel with In Stock First */}
+            {/* Row 2.5: Brand Filter Carousel (Click Brand -> Cascades to Categories) */}
+            {availableBrands.length > 0 && (
+              <div className="relative">
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectBrand('All')}
+                    className={`h-7 px-2.5 rounded-full border text-[11px] font-bold whitespace-nowrap inline-flex items-center gap-1 shrink-0 snap-start transition-all duration-150 active:scale-[0.97] cursor-pointer ${
+                      selectedBrand === 'All'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#A3B8AF] hover:border-slate-300'
+                    }`}
+                  >
+                    <Tag className="w-3 h-3 shrink-0" />
+                    <span>All Brands</span>
+                  </button>
+
+                  {availableBrands.map((b) => {
+                    const isSelected = selectedBrand.toLowerCase() === b.name.toLowerCase();
+                    return (
+                      <button
+                        key={b.name}
+                        type="button"
+                        onClick={() => handleSelectBrand(b.name)}
+                        className={`h-7 px-2.5 rounded-full border text-[11px] font-bold whitespace-nowrap inline-flex items-center gap-1 shrink-0 snap-start transition-all duration-150 active:scale-[0.97] cursor-pointer ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs ring-2 ring-indigo-400/30'
+                            : 'bg-slate-50 dark:bg-[#1A2A25] border-slate-200/90 dark:border-[#2A3E37] text-slate-700 dark:text-slate-300 hover:border-indigo-400/50'
+                        }`}
+                      >
+                        <span>{b.name}</span>
+                        <span
+                          className={`text-[9px] px-1 rounded-full font-mono font-bold ${
+                            isSelected
+                              ? 'bg-white/25 text-white'
+                              : 'bg-slate-200/70 dark:bg-[#24352F] text-slate-600 dark:text-slate-400'
+                          }`}
+                        >
+                          {b.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"
+                />
+              </div>
+            )}
+
+            {/* Row 3: Category Pills Carousel (Cascades from Brand) */}
             <div className="relative">
               <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5">
-                {categories.map((cat) => {
+                {displayedCategories.map((cat) => {
                   const photoUrl = categoryPhotos[cat.id];
                   return (
                     <button
@@ -1198,9 +1304,61 @@ export const BillingCounter: React.FC = () => {
             </button>
           </div>
 
+          {/* Row 2.5 (Desktop): Brand Filter Carousel */}
+          {availableBrands.length > 0 && (
+            <div className="relative">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5">
+                <button
+                  type="button"
+                  onClick={() => handleSelectBrand('All')}
+                  className={`h-7 px-2.5 rounded-full border text-[11px] font-bold whitespace-nowrap inline-flex items-center gap-1 shrink-0 snap-start transition-all duration-150 active:scale-[0.97] cursor-pointer ${
+                    selectedBrand === 'All'
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                      : 'bg-white dark:bg-[#131F1B] lg:bg-slate-50 lg:dark:bg-[#1A2A25] border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#A3B8AF] hover:border-slate-300'
+                  }`}
+                >
+                  <Tag className="w-3 h-3 shrink-0" />
+                  <span>All Brands</span>
+                </button>
+
+                {availableBrands.map((b) => {
+                  const isSelected = selectedBrand.toLowerCase() === b.name.toLowerCase();
+                  return (
+                    <button
+                      key={b.name}
+                      type="button"
+                      onClick={() => handleSelectBrand(b.name)}
+                      className={`h-7 px-2.5 rounded-full border text-[11px] font-bold whitespace-nowrap inline-flex items-center gap-1 shrink-0 snap-start transition-all duration-150 active:scale-[0.97] cursor-pointer ${
+                        isSelected
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs ring-2 ring-indigo-400/30'
+                          : 'bg-white dark:bg-[#131F1B] lg:bg-slate-50 lg:dark:bg-[#1A2A25] border-slate-200/90 dark:border-[#2A3E37] text-slate-700 dark:text-slate-300 hover:border-indigo-400/50'
+                      }`}
+                    >
+                      <span>{b.name}</span>
+                      <span
+                        className={`text-[9px] px-1 rounded-full font-mono font-bold ${
+                          isSelected
+                            ? 'bg-white/25 text-white'
+                            : 'bg-slate-200/70 dark:bg-[#24352F] text-slate-600 dark:text-slate-400'
+                        }`}
+                      >
+                        {b.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] lg:from-white lg:dark:from-[#131F1B] to-transparent"
+              />
+            </div>
+          )}
+
+          {/* Row 3 (Desktop): Cascaded Category Carousel */}
           <div className="relative">
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5">
-              {categories.map((cat) => (
+              {displayedCategories.map((cat) => (
                 <button
                   key={cat.id}
                   type="button"

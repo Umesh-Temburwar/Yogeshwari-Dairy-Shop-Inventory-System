@@ -27,7 +27,8 @@ import {
   MoreVertical,
   RotateCcw,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Tag
 } from 'lucide-react';
 import {
   printReport,
@@ -95,6 +96,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   const [activeTab, setActiveTab] = useState<InventoryFilterTab>('IN_STOCK');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [selectedBrand, setSelectedBrand] = useState<string>('All');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedExpiryFilter, setSelectedExpiryFilter] = useState<ExpiryStatus | 'ALL'>('ALL');
   const [viewMode, setViewMode] = useState<InventoryViewMode>('cards');
@@ -251,6 +253,9 @@ export const ProductList: React.FC<ProductListProps> = ({
         if (activeTab === 'OUT_OF_STOCK') {
           query = query.lte('stock_quantity', 0);
         }
+        if (selectedBrand !== 'All') {
+          query = query.ilike('brand', selectedBrand);
+        }
         if (selectedCategory !== 'All') {
           query = query.eq('category', selectedCategory);
         }
@@ -273,7 +278,7 @@ export const ProductList: React.FC<ProductListProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [isServerPagedTab, activeTab, selectedCategory]);
+  }, [isServerPagedTab, activeTab, selectedCategory, selectedBrand]);
 
   const handleLoadMorePaged = useCallback(async () => {
     if (!supabase || isLoadingPaged || !hasMorePaged || !isServerPagedTab) return;
@@ -289,6 +294,9 @@ export const ProductList: React.FC<ProductListProps> = ({
 
       if (activeTab === 'OUT_OF_STOCK') {
         query = query.lte('stock_quantity', 0);
+      }
+      if (selectedBrand !== 'All') {
+        query = query.ilike('brand', selectedBrand);
       }
       if (selectedCategory !== 'All') {
         query = query.eq('category', selectedCategory);
@@ -312,12 +320,12 @@ export const ProductList: React.FC<ProductListProps> = ({
     } finally {
       setIsLoadingPaged(false);
     }
-  }, [isLoadingPaged, hasMorePaged, isServerPagedTab, pagedOffset, activeTab, selectedCategory]);
+  }, [isLoadingPaged, hasMorePaged, isServerPagedTab, pagedOffset, activeTab, selectedCategory, selectedBrand]);
 
   // Reset local window when filters change
   useEffect(() => {
     setLocalDisplayLimit(PAGE_SIZE);
-  }, [debouncedQuery, selectedCategory, selectedExpiryFilter, activeTab]);
+  }, [debouncedQuery, selectedBrand, selectedCategory, selectedExpiryFilter, activeTab]);
 
   // Fast lookup map of active batches per product (avoids O(N*M) scans on every render)
   const activeBatchesByProduct = useMemo(() => {
@@ -399,8 +407,11 @@ export const ProductList: React.FC<ProductListProps> = ({
           Boolean(p.brand && p.brand.toLowerCase().includes(q)) ||
           barcodeMatches;
 
+        const matchesBrand =
+          selectedBrand === 'All' ||
+          (p.brand || '').trim().toLowerCase() === selectedBrand.toLowerCase();
         const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
-        return matchesSearch && matchesCategory;
+        return matchesSearch && matchesCategory && matchesBrand;
       });
 
       const merged = [...baseFiltered];
@@ -408,7 +419,12 @@ export const ProductList: React.FC<ProductListProps> = ({
 
       for (const os of onlineSearchResults) {
         const fresh = products.find((p) => p.id === os.id) || os;
-        if (!existingIds.has(fresh.id) && (selectedCategory === 'All' || fresh.category === selectedCategory)) {
+        const matchesBrand =
+          selectedBrand === 'All' ||
+          (fresh.brand || '').trim().toLowerCase() === selectedBrand.toLowerCase();
+        const matchesCategory =
+          selectedCategory === 'All' || fresh.category === selectedCategory;
+        if (!existingIds.has(fresh.id) && matchesCategory && matchesBrand) {
           existingIds.add(fresh.id);
           merged.push(fresh);
         }
@@ -416,7 +432,12 @@ export const ProductList: React.FC<ProductListProps> = ({
 
       if (onlineSearchedProduct) {
         const fresh = products.find((p) => p.id === onlineSearchedProduct.id) || onlineSearchedProduct;
-        if (!existingIds.has(fresh.id)) {
+        const matchesBrand =
+          selectedBrand === 'All' ||
+          (fresh.brand || '').trim().toLowerCase() === selectedBrand.toLowerCase();
+        const matchesCategory =
+          selectedCategory === 'All' || fresh.category === selectedCategory;
+        if (!existingIds.has(fresh.id) && matchesCategory && matchesBrand) {
           merged.unshift(fresh);
         }
       }
@@ -426,11 +447,18 @@ export const ProductList: React.FC<ProductListProps> = ({
 
     // 2. Server-paginated tabs (ALL & OUT_OF_STOCK) synced with live in-memory updates
     if (isServerPagedTab) {
-      return pagedItems.map((item) => products.find((p) => p.id === item.id) || item);
+      let list = pagedItems.map((item) => products.find((p) => p.id === item.id) || item);
+      if (selectedBrand !== 'All') {
+        list = list.filter((p) => (p.brand || '').trim().toLowerCase() === selectedBrand.toLowerCase());
+      }
+      return list;
     }
 
     // 3. In-memory shop tabs (IN_STOCK, LOW_STOCK, EXPIRING)
     return products.filter((p) => {
+      if (selectedBrand !== 'All' && (p.brand || '').trim().toLowerCase() !== selectedBrand.toLowerCase()) {
+        return false;
+      }
       if (selectedCategory !== 'All' && p.category !== selectedCategory) return false;
 
       if (activeTab === 'IN_STOCK' && p.stock_quantity <= 0) return false;
@@ -452,6 +480,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   }, [
     products,
     debouncedQuery,
+    selectedBrand,
     selectedCategory,
     selectedExpiryFilter,
     activeTab,
@@ -882,10 +911,46 @@ export const ProductList: React.FC<ProductListProps> = ({
     }
   ];
 
-  const hasSecondaryFilters = selectedCategory !== 'All' || selectedExpiryFilter !== 'ALL';
+  // Unique Brands from products
+  const availableBrands = useMemo(() => {
+    const brandMap = new Map<string, number>();
+    for (const p of products) {
+      const b = (p.brand || '').trim();
+      if (!b) continue;
+      brandMap.set(b, (brandMap.get(b) || 0) + 1);
+    }
+    const list = Array.from(brandMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, count]) => ({ name, count }));
+    return [{ name: 'All', count: products.length }, ...list];
+  }, [products]);
+
+  // Dynamically cascade categories based on selected brand
+  const displayedCategories = useMemo(() => {
+    if (selectedBrand === 'All') return categories;
+    const catSet = new Set<string>();
+    for (const p of products) {
+      if ((p.brand || '').trim().toLowerCase() === selectedBrand.toLowerCase() && p.category) {
+        catSet.add(p.category);
+      }
+    }
+    return categories.filter((c) => c.id === 'All' || catSet.has(c.id));
+  }, [categories, selectedBrand, products]);
+
+  const handleSelectBrand = useCallback((brand: string) => {
+    setSelectedBrand(brand);
+    setSelectedCategory('All');
+  }, []);
+
+  const hasSecondaryFilters =
+    selectedBrand !== 'All' ||
+    selectedCategory !== 'All' ||
+    selectedExpiryFilter !== 'ALL';
+
   const clearAllFilters = () => {
     setSearchQuery('');
     setDebouncedQuery('');
+    setSelectedBrand('All');
     setSelectedCategory('All');
     setSelectedExpiryFilter('ALL');
     setActiveTab('IN_STOCK');
@@ -1104,10 +1169,97 @@ export const ProductList: React.FC<ProductListProps> = ({
           />
         </div>
 
-        {/* Active Secondary Filter Indicator (Category / Expiry) */}
+        {/* Brand Filter Carousel */}
+        {availableBrands.length > 1 && (
+          <div className="relative">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 snap-x scroll-smooth">
+              <span className="shrink-0 flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] px-1">
+                <Tag className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                <span>Brand:</span>
+              </span>
+              {availableBrands.map((b) => {
+                const isSelected = selectedBrand.toLowerCase() === b.name.toLowerCase();
+                return (
+                  <button
+                    key={b.name}
+                    type="button"
+                    onClick={() => handleSelectBrand(b.name)}
+                    className={`snap-start shrink-0 h-7 px-2.5 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 border transition-all duration-150 active:scale-[0.97] cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                        : 'bg-white dark:bg-[#131F1B] text-slate-700 dark:text-[#C4D4CE] border-slate-200 dark:border-[#24352F] hover:border-emerald-500/50'
+                    }`}
+                  >
+                    <span>{b.name === 'All' ? 'All Brands' : b.name}</span>
+                    <span
+                      className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full leading-none ${
+                        isSelected
+                          ? 'bg-white/20 text-white'
+                          : 'bg-slate-100 dark:bg-[#1E2E28] text-slate-500 dark:text-[#8FA69C]'
+                      }`}
+                    >
+                      {b.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"
+            />
+          </div>
+        )}
+
+        {/* Cascading Category Filter Carousel (filtered by selected brand) */}
+        <div className="relative">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 snap-x scroll-smooth">
+            <span className="shrink-0 flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-[#8FA69C] px-1">
+              <Layers className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <span>Category:</span>
+            </span>
+            {displayedCategories.map((c) => {
+              const isSelected = selectedCategory === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(c.id)}
+                  className={`snap-start shrink-0 h-6 px-2.5 rounded-full text-xs font-medium inline-flex items-center gap-1 border transition-all duration-150 active:scale-[0.97] cursor-pointer ${
+                    isSelected
+                      ? 'bg-emerald-700 dark:bg-emerald-600 text-white border-emerald-700 font-semibold'
+                      : 'bg-slate-50 dark:bg-[#16231E] text-slate-600 dark:text-[#9FB8AE] border-slate-200/80 dark:border-[#24352F] hover:bg-slate-100 dark:hover:bg-[#1C2C26]'
+                  }`}
+                >
+                  <span>{c.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f8fafc] dark:from-[#0B1210] to-transparent"
+          />
+        </div>
+
+        {/* Active Secondary Filter Indicator (Brand / Category / Expiry) */}
         {hasSecondaryFilters && (
           <div className="flex items-center justify-between gap-2 text-[11px] pt-0.5">
             <div className="flex items-center gap-1.5 flex-wrap">
+              {selectedBrand !== 'All' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/50 font-semibold">
+                  <Tag className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  <span>{selectedBrand}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectBrand('All')}
+                    aria-label="Clear brand filter"
+                    className="cursor-pointer"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
               {selectedCategory !== 'All' && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/50 font-semibold">
                   <span>{selectedCategory}</span>
@@ -1452,7 +1604,7 @@ export const ProductList: React.FC<ProductListProps> = ({
         viewMode={viewMode}
         selectedCategory={selectedCategory}
         selectedExpiryFilter={selectedExpiryFilter}
-        categories={categories}
+        categories={displayedCategories}
         expiryOptions={expiryOptions}
         onClose={() => setShowMoreSheet(false)}
         onChangeViewMode={setViewMode}

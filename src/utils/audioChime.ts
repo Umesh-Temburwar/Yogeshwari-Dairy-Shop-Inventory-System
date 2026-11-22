@@ -69,6 +69,168 @@ if (typeof window !== 'undefined') {
   window.addEventListener('keydown', handleFirstInteraction, { passive: true });
 }
 
+let alarmIntervalTimer: ReturnType<typeof setInterval> | null = null;
+let isCurrentlyRinging = false;
+let currentAlarmReason = '';
+
+/**
+ * Returns whether the continuous Blinkit order alarm is currently ringing.
+ */
+export const isBlinkitAlarmRinging = (): boolean => {
+  return isCurrentlyRinging;
+};
+
+/**
+ * Synthesizes the authentic Blinkit Dark-Store Order Tone (1 cycle)
+ * High-urgency energetic 4-note ascending arpeggio followed by double ping + vibration.
+ */
+export const playBlinkitAlertTone = (): void => {
+  if (!isSoundAlertsEnabled()) return;
+
+  // 1. Phone Vibration (Blinkit rhythm: vibrate-pause-vibrate)
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      navigator.vibrate([400, 150, 400, 150, 400, 600]);
+    } catch {}
+  }
+
+  // 2. Web Audio Synthesizer (Blinkit 4-step chime + high bell ping)
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    const now = ctx.currentTime;
+
+    const playTone = (
+      freq: number,
+      startDelay: number,
+      duration: number,
+      peakGain: number,
+      type: OscillatorType = 'triangle'
+    ) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now + startDelay);
+
+      // Fast punchy attack & musical decay
+      gain.gain.setValueAtTime(0.001, now + startDelay);
+      gain.gain.exponentialRampToValueAtTime(peakGain, now + startDelay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + startDelay + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + startDelay);
+      osc.stop(now + startDelay + duration);
+    };
+
+    // Part A: Rapid ascending melodic hook (G5 -> C6 -> E6 -> G6)
+    playTone(784.0, 0.0, 0.16, 0.45, 'triangle');   // G5
+    playTone(1046.5, 0.14, 0.16, 0.50, 'triangle');  // C6
+    playTone(1318.5, 0.28, 0.18, 0.55, 'triangle');  // E6
+    playTone(1567.98, 0.42, 0.24, 0.60, 'triangle'); // G6
+
+    // Part B: Urgent signature high double chime
+    playTone(1567.98, 0.65, 0.22, 0.65, 'sine');     // G6 high ping
+    playTone(2093.00, 0.88, 0.48, 0.75, 'triangle'); // C7 resonant brass bell
+  } catch (err) {
+    console.warn('Blinkit chime error:', err);
+  }
+};
+
+/**
+ * Starts continuous Blinkit siren/alarm loop (repeats every 2.8s)
+ * Keeps ringing UNTIL staff accepts the order or explicitly mutes it!
+ */
+export const startBlinkitOrderAlarm = (reason = 'New Online Order'): void => {
+  if (!isSoundAlertsEnabled()) return;
+
+  currentAlarmReason = reason;
+
+  if (isCurrentlyRinging) return; // Already actively ringing
+  isCurrentlyRinging = true;
+
+  // Play immediate first chime
+  playBlinkitAlertTone();
+
+  // Clear any stale interval
+  if (alarmIntervalTimer) {
+    clearInterval(alarmIntervalTimer);
+  }
+
+  // Loop every 2800ms
+  alarmIntervalTimer = setInterval(() => {
+    if (!isCurrentlyRinging || !isSoundAlertsEnabled()) {
+      stopBlinkitOrderAlarm();
+      return;
+    }
+    playBlinkitAlertTone();
+  }, 2800);
+
+  // Dispatch global event for UI badges/buttons
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('yd_order_alarm_state_changed', {
+        detail: { isRinging: true, reason },
+      })
+    );
+  }
+};
+
+/**
+ * Stops the continuous alarm immediately (e.g. when order is accepted/confirmed or muted).
+ */
+export const stopBlinkitOrderAlarm = (): void => {
+  if (alarmIntervalTimer) {
+    clearInterval(alarmIntervalTimer);
+    alarmIntervalTimer = null;
+  }
+  isCurrentlyRinging = false;
+
+  // Cancel any active device vibration
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      navigator.vibrate(0);
+    } catch {}
+  }
+
+  // Dispatch global event
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('yd_order_alarm_state_changed', {
+        detail: { isRinging: false },
+      })
+    );
+  }
+};
+
+/**
+ * Hook or subscriber for components to react to alarm ringing state.
+ */
+export const subscribeToBlinkitAlarmState = (
+  callback: (isRinging: boolean, reason?: string) => void
+): (() => void) => {
+  if (typeof window === 'undefined') return () => {};
+
+  const handler = (e: any) => {
+    callback(Boolean(e.detail?.isRinging), e.detail?.reason);
+  };
+
+  window.addEventListener('yd_order_alarm_state_changed', handler);
+  // Initial callback
+  callback(isCurrentlyRinging, currentAlarmReason);
+
+  return () => {
+    window.removeEventListener('yd_order_alarm_state_changed', handler);
+  };
+};
+
 /**
  * Plays a pleasant 2-tone doorbell chime (880Hz A5 -> 1046.5Hz C6).
  */

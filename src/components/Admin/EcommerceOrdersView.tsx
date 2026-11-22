@@ -36,6 +36,13 @@ import { AssignRiderModal } from './AssignRiderModal';
 import { BlinkitOrderPackingModal } from '../OnlineOrders/BlinkitOrderPackingModal';
 import { convertOnlineOrderToCompletedSale } from '../../services/onlineOrdersService';
 import {
+  playBlinkitAlertTone,
+  startBlinkitOrderAlarm,
+  stopBlinkitOrderAlarm,
+  subscribeToBlinkitAlarmState,
+  isBlinkitAlarmRinging,
+} from '../../utils/audioChime';
+import {
   getNotificationPermission,
   requestNotificationPermission,
   showOrderNotification,
@@ -89,77 +96,30 @@ export const EcommerceOrdersView: React.FC = () => {
   const [customCancelReason, setCustomCancelReason] = useState<string>('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isAlarmRinging, setIsAlarmRinging] = useState<boolean>(() => isBlinkitAlarmRinging());
+
+  // Listen to global continuous Blinkit order alarm state
+  useEffect(() => {
+    return subscribeToBlinkitAlarmState((ringing) => {
+      setIsAlarmRinging(ringing);
+    });
+  }, []);
 
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  // Web Audio API Counter Bell Chime for incoming orders (Crisp, High-Volume 2-Tone Double Ding)
+  // Play Blinkit Merchant Order alert chime + vibration
   const playNewOrderChime = useCallback(() => {
     if (!isAudioEnabled) return;
-    try {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioCtx();
-      }
-      const ctx = audioContextRef.current;
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
-      setIsAudioUnlocked(true);
-
-      const now = ctx.currentTime;
-      // Helper function to synthesize resonant brass counter bell tone
-      const playBellTone = (freq: number, start: number, duration: number, peakGain: number) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle'; // triangle produces rich harmonics like a real store counter bell
-        osc.frequency.setValueAtTime(freq, start);
-        gain.gain.setValueAtTime(peakGain, start);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(start);
-        osc.stop(start + duration);
-      };
-
-      // Sequence 1: Ding-Dong-Ding (Bright, penetrating counter chime)
-      playBellTone(987.77, now, 0.35, 0.45);        // B5
-      playBellTone(1318.51, now + 0.16, 0.45, 0.5); // E6
-      playBellTone(1567.98, now + 0.38, 0.65, 0.6); // G6
-
-      // Sequence 2: Repeat after 0.5s pause so counter staff doesn't miss it in shop noise
-      playBellTone(987.77, now + 0.9, 0.35, 0.45);
-      playBellTone(1318.51, now + 1.06, 0.45, 0.5);
-      playBellTone(1567.98, now + 1.28, 0.75, 0.65);
-    } catch {
-      // Audio autoplay restrictions or unsupported browser
-    }
+    setIsAudioUnlocked(true);
+    playBlinkitAlertTone();
   }, [isAudioEnabled]);
 
   // Explicit user unlock function to satisfy browser autoplay restrictions
   const unlockAudio = useCallback(() => {
     try {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioCtx();
-      }
-      const ctx = audioContextRef.current;
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
       setIsAudioUnlocked(true);
-      // Play a quick test ding to confirm sound is active
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(1318.51, now);
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.35);
-      showToast('🔔 Counter Order Bell Sound is now LIVE & ACTIVE!');
+      playBlinkitAlertTone();
+      showToast('🔔 Blinkit Order Alert Sound is now LIVE & ACTIVE!');
     } catch { }
   }, []);
 
@@ -195,7 +155,14 @@ export const EcommerceOrdersView: React.FC = () => {
       if (ordersErr) {
         console.warn('Error fetching ecommerce_orders:', ordersErr.message);
       } else if (ordersData) {
-        setOrders(ordersData as EcommerceOrder[]);
+        const orderList = ordersData as EcommerceOrder[];
+        setOrders(orderList);
+        const hasUnaccepted = orderList.some((o) => o.order_status === 'PLACED');
+        if (hasUnaccepted) {
+          startBlinkitOrderAlarm(`Order #${orderList.find(o => o.order_status === 'PLACED')?.order_no}`);
+        } else {
+          stopBlinkitOrderAlarm();
+        }
       }
     } catch (e) {
       console.warn('Failed to load ecommerce orders:', e);
@@ -219,7 +186,7 @@ export const EcommerceOrdersView: React.FC = () => {
         { event: 'INSERT', schema: 'public', table: 'ecommerce_orders' },
         (payload) => {
           const newOrder = payload.new as EcommerceOrder;
-          playNewOrderChime();
+          startBlinkitOrderAlarm(`Order #${newOrder.order_no}`);
           showOrderNotification({
             orderNo: newOrder.order_no,
             customerName: newOrder.customer_name,
@@ -427,9 +394,14 @@ export const EcommerceOrdersView: React.FC = () => {
         showToast(`❌ Failed to update order: ${error.message}`);
       } else {
         showToast(`✅ Order status updated to ${newStatus}`);
-        setOrders((prev) =>
-          prev.map((ord) => (ord.id === orderId ? { ...ord, ...updates } : ord))
-        );
+        setOrders((prev) => {
+          const next = prev.map((ord) => (ord.id === orderId ? { ...ord, ...updates } : ord));
+          const stillHasUnaccepted = next.some((o) => o.order_status === 'PLACED');
+          if (!stillHasUnaccepted) {
+            stopBlinkitOrderAlarm();
+          }
+          return next;
+        });
         if (newStatus === 'DELIVERED') {
           const currentOrder = orders.find((o) => o.id === orderId);
           if (currentOrder) {
@@ -469,6 +441,16 @@ export const EcommerceOrdersView: React.FC = () => {
         if (!rpcErr) {
           cancelledSuccessfully = true;
           showToast(`Order #${cancelModalOrder.order_no} cancelled & batch stock restored.`);
+          setOrders((prev) => {
+            const next = prev.map((ord) =>
+              ord.id === cancelModalOrder.id ? { ...ord, ...updates } : ord
+            );
+            const stillHasUnaccepted = next.some((o) => o.order_status === 'PLACED');
+            if (!stillHasUnaccepted) {
+              stopBlinkitOrderAlarm();
+            }
+            return next;
+          });
         }
       } catch {
         // Fallback to table update below
@@ -484,11 +466,16 @@ export const EcommerceOrdersView: React.FC = () => {
           showToast(`❌ Failed to cancel order: ${error.message}`);
         } else {
           showToast(`Order #${cancelModalOrder.order_no} cancelled.`);
-          setOrders((prev) =>
-            prev.map((ord) =>
+          setOrders((prev) => {
+            const next = prev.map((ord) =>
               ord.id === cancelModalOrder.id ? { ...ord, ...updates } : ord
-            )
-          );
+            );
+            const stillHasUnaccepted = next.some((o) => o.order_status === 'PLACED');
+            if (!stillHasUnaccepted) {
+              stopBlinkitOrderAlarm();
+            }
+            return next;
+          });
         }
       }
     } catch (e: unknown) {
@@ -674,6 +661,31 @@ export const EcommerceOrdersView: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* Continuous Blinkit Siren / Bell Alert Active Banner */}
+        {isAlarmRinging && (
+          <div className="mt-3 p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-600 via-amber-600 to-rose-700 text-white flex items-center justify-between gap-3 shadow-xl border-2 border-white/40 animate-pulse">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="text-2xl sm:text-3xl shrink-0 animate-bounce">🚨</span>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm font-black uppercase tracking-wider">
+                  नया ऑनलाइन ऑर्डर स्वीकार करें! (Pending Acceptance)
+                </p>
+                <p className="text-[11px] sm:text-xs text-rose-100 font-medium truncate">
+                  जब तक आप "Confirm & Prepare" नहीं दबाते, ब्लिंकिट घंटी व वाइब्रेशन लगातार बजती रहेगी।
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => stopBlinkitOrderAlarm()}
+              className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-rose-700 font-black text-xs flex items-center gap-1.5 shadow-lg active:scale-95 transition shrink-0 cursor-pointer"
+            >
+              <VolumeX className="w-4 h-4 text-rose-700" />
+              <span>🔕 Mute Sound</span>
+            </button>
+          </div>
+        )}
 
         {/* Browser Autoplay Sound Unlock Banner (Shown if audio not yet initialized) */}
         {!isAudioUnlocked && isAudioEnabled && (

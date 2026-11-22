@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { VolumeX } from 'lucide-react';
 import { ViewFallbackSkeleton } from './components/ui/Skeleton';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -22,6 +23,7 @@ import { MAIN_SCROLL_CONTAINER_ID } from './utils/scrollUtils';
 import { Product } from './types';
 import { initNativeApp, isNativePlatform, App as CapacitorApp } from './services/capacitorService';
 import { useAppUpdate } from './services/appUpdateService';
+import { isBlinkitAlarmRinging, stopBlinkitOrderAlarm, subscribeToBlinkitAlarmState } from './utils/audioChime';
 
 // Lazy-load secondary heavy view modules for initial bundle optimization
 const BillingCounter = React.lazy(() => import('./components/POS/BillingCounter').then(m => ({ default: m.BillingCounter })));
@@ -138,6 +140,16 @@ const MainContent: React.FC = () => {
   const lastBackPressTimeRef = useRef<number>(0);
   const [showExitToast, setShowExitToast] = useState(false);
   const [newOrderAlert, setNewOrderAlert] = useState<{ orderNo: string; customer: string; amount: number } | null>(null);
+  const [isOrderAlarmRinging, setIsOrderAlarmRinging] = useState<boolean>(() => isBlinkitAlarmRinging());
+  const [alarmReason, setAlarmReason] = useState<string>('');
+
+  // Subscribe to persistent Blinkit order siren / alarm
+  useEffect(() => {
+    return subscribeToBlinkitAlarmState((ringing, reason) => {
+      setIsOrderAlarmRinging(ringing);
+      if (reason) setAlarmReason(reason);
+    });
+  }, []);
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -147,7 +159,7 @@ const MainContent: React.FC = () => {
           customer: e.detail.order.customer_name,
           amount: e.detail.order.total_amount,
         });
-        setTimeout(() => setNewOrderAlert(null), 15000);
+        setTimeout(() => setNewOrderAlert(null), 20000);
       }
     };
     window.addEventListener('yd_new_online_order_alert', handler);
@@ -300,22 +312,49 @@ const MainContent: React.FC = () => {
       {/* Global Root-Level Shake-to-Scan Detector across all pages */}
       <GlobalShakeDetector />
 
-      {/* Global Floating Online Order Alert Banner (Shows when order arrives anywhere in app) */}
-      {newOrderAlert && (
+      {/* Global Floating Online Order Alert Banner (Blinkit Looping Siren + Instant Accept Link) */}
+      {(isOrderAlarmRinging || newOrderAlert) && (
         <div
           onClick={() => {
             setActiveView('ecommerce-orders');
             setNewOrderAlert(null);
           }}
-          className="fixed top-20 right-4 z-[999999] max-w-sm bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-3.5 rounded-2xl shadow-2xl border-2 border-white/50 flex items-center gap-3 cursor-pointer animate-bounce hover:scale-105 transition"
+          className={`fixed top-18 right-3 sm:right-6 z-[999999] max-w-sm sm:max-w-md p-3 sm:p-4 rounded-2xl shadow-2xl border-2 border-white/60 flex items-center justify-between gap-3 cursor-pointer transition-all ${
+            isOrderAlarmRinging
+              ? 'bg-gradient-to-r from-rose-600 via-amber-600 to-rose-700 text-white animate-bounce ring-4 ring-rose-500/30'
+              : 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white animate-view-enter'
+          }`}
         >
-          <span className="text-2xl animate-pulse">🔔</span>
-          <div className="text-xs">
-            <p className="font-black text-white">नया ऑनलाइन ऑर्डर! #{newOrderAlert.orderNo}</p>
-            <p className="text-emerald-100 font-medium">
-              {newOrderAlert.customer} • ₹{newOrderAlert.amount} (क्लिक करके ऑर्डर देखें)
-            </p>
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="text-2xl sm:text-3xl shrink-0 animate-pulse">
+              {isOrderAlarmRinging ? '🚨' : '🛍️'}
+            </span>
+            <div className="min-w-0">
+              <p className="font-black text-xs sm:text-sm text-white flex items-center gap-1.5 truncate">
+                {isOrderAlarmRinging ? '🚨 नया ऑर्डर स्वीकार करें!' : '🛍️ नया ऑनलाइन ऑर्डर!'}
+                {newOrderAlert && <span className="text-[11px] font-bold opacity-90">#{newOrderAlert.orderNo}</span>}
+              </p>
+              <p className="text-[11px] sm:text-xs text-white/90 font-medium truncate">
+                {newOrderAlert
+                  ? `${newOrderAlert.customer} • ₹${newOrderAlert.amount} (ऑर्डर देखने हेतु टैप करें)`
+                  : alarmReason || 'ऑर्डर स्वीकार करने हेतु यहाँ क्लिक करें'}
+              </p>
+            </div>
           </div>
+          {isOrderAlarmRinging && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                stopBlinkitOrderAlarm();
+              }}
+              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-rose-700 font-bold text-xs flex items-center gap-1 shadow-md shrink-0 cursor-pointer active:scale-95 transition"
+              title="घंटी बंद करें"
+            >
+              <VolumeX className="w-3.5 h-3.5 text-rose-700" />
+              <span>🔕 Mute</span>
+            </button>
+          )}
         </div>
       )}
 

@@ -29,7 +29,7 @@ import {
 } from '../lib/supabaseColumns';
 import { realtimeManager } from '../services/realtime/realtimeManager';
 import { useAuth } from './AuthContext';
-import { playNewOrderChime } from '../utils/audioChime';
+import { playNewOrderChime, startBlinkitOrderAlarm, stopBlinkitOrderAlarm } from '../utils/audioChime';
 import { showOrderNotification } from '../services/notificationService';
 import { startOfDay, startOfWeek, startOfMonth, startOfYear, isWithinInterval, parseISO } from 'date-fns';
 
@@ -621,14 +621,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (!error && count !== null && isMounted) {
           setPendingOnlineOrdersCount(count);
 
-          // Trigger audible chime and toast whenever new pending orders arrive or on initial load
+          // Blinkit-style continuous alarm: if any order is waiting in 'PLACED' (not yet accepted), keep ringing!
+          const unacceptedOrders = data ? data.filter((o) => o.order_status === 'PLACED') : [];
+          if (unacceptedOrders.length > 0) {
+            startBlinkitOrderAlarm(`Order #${unacceptedOrders[0].order_no}`);
+          } else {
+            stopBlinkitOrderAlarm();
+          }
+
+          // Trigger push notifications & banner whenever new pending orders arrive or on initial load
           if (data && count > 0) {
             if (prevPendingCountRef.current !== null && count > prevPendingCountRef.current) {
               const incoming = data.filter(
                 (o) => !knownOrderIdsRef.current.has(o.id) && o.order_status === 'PLACED'
               );
               if (incoming.length > 0) {
-                playNewOrderChime();
                 showOrderNotification({
                   orderNo: incoming[0].order_no,
                   customerName: incoming[0].customer_name,

@@ -475,9 +475,9 @@ export const EcommerceOrdersView: React.FC = () => {
     const res = await requestNotificationPermission();
     setNotifPermission(res);
     if (res === 'granted') {
-      showToast('✅ Background Push Notifications चालू हो गए हैं! (ऐप बंद होने पर भी अलर्ट आएगा)');
+      showToast('✅ Background push notifications enabled! (Alerts will ring even if app is closed)');
     } else {
-      showToast('⚠️ कृपया ब्राउज़र या मोबाइल सेटिंग्स में नोटिफिकेशन अनुमति दें');
+      showToast('⚠️ Please allow notification permission in your browser or phone settings');
     }
   };
 
@@ -836,10 +836,10 @@ export const EcommerceOrdersView: React.FC = () => {
               <span className="text-2xl sm:text-3xl shrink-0 animate-bounce">🚨</span>
               <div className="min-w-0">
                 <p className="text-xs sm:text-sm font-black uppercase tracking-wider">
-                  नया ऑनलाइन ऑर्डर स्वीकार करें! (Pending Acceptance)
+                  Accept New Online Order! (Pending Acceptance)
                 </p>
                 <p className="text-[11px] sm:text-xs text-rose-100 font-medium truncate">
-                  जब तक आप "Confirm & Prepare" नहीं दबाते, ब्लिंकिट घंटी व वाइब्रेशन लगातार बजती रहेगी।
+                  Continuous Blinkit alarm & vibration will keep ringing until you tap "Confirm & Prepare".
                 </p>
               </div>
             </div>
@@ -953,10 +953,10 @@ export const EcommerceOrdersView: React.FC = () => {
           >
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="animate-bounce">🔔</span>
-              <span className="truncate">काउंटर स्पीकर से नया ऑर्डर अलार्म चालू करने हेतु यहाँ क्लिक करें।</span>
+              <span className="truncate">Click here to enable counter speaker audio alarm for new orders.</span>
             </div>
             <span className="px-2 py-0.5 rounded bg-amber-600 text-white font-bold text-[10px] shrink-0">
-              चालू करें 🔔
+              Enable Alarm 🔔
             </span>
           </div>
         )}
@@ -1909,7 +1909,7 @@ export const EcommerceOrdersView: React.FC = () => {
                     Delivery Time Promise
                   </h3>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Live customer app par yahi time dikhega
+                    Live customer app will display this delivery promise
                   </p>
                 </div>
               </div>
@@ -1997,7 +1997,7 @@ export const EcommerceOrdersView: React.FC = () => {
               <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/40 flex items-start gap-2 text-[11px] text-emerald-800 dark:text-emerald-300">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping mt-1 shrink-0" />
                 <p>
-                  <strong>Instant Live Broadcast:</strong> Save karte hi Ambajogai ke sabhi customers ke phone par header, delivery banners aur cart drawer bina reload kiye turant update ho jayega!
+                  <strong>Instant Live Broadcast:</strong> Automatically updates the customer web app (Header, Delivery Banners, Cart Drawer & Tracking) in real-time without reloading!
                 </p>
               </div>
             </div>

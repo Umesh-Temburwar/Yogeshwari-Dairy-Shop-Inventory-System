@@ -28,7 +28,7 @@ const PRESET_RIDERS = [
     role: 'Express Dairy Fleet Rider 1',
   },
   {
-    name: 'निलेश सखारे (काऊंटर १)',
+    name: 'Nilesh Sakhare (Counter 1)',
     phone: '9896000000',
     vehicle: 'MH-31-DY-2024 (Store Fleet)',
     role: 'Shop Counter Dispatcher',

@@ -99,9 +99,9 @@ self.addEventListener('fetch', (event) => {
 // BACKGROUND PUSH NOTIFICATION HANDLERS (When App/Browser is Closed)
 // ============================================================================
 self.addEventListener('push', (event) => {
-  let title = '🥛 नया ऑनलाइन ऑर्डर प्राप्त हुआ!';
+  let title = '🥛 New Online Order Received!';
   let options = {
-    body: 'योगेश्वरी डेयरी में नया ऑर्डर आया है। तुरंत चेक करें।',
+    body: 'New order received at Yogeshwari Dairy. Tap to view and accept.',
     icon: '/assets/YDO_logo-B6fE-ZjE.jpg',
     badge: '/assets/YDO_logo-B6fE-ZjE.jpg',
     vibrate: [400, 150, 400, 150, 400, 600],
@@ -112,8 +112,8 @@ self.addEventListener('push', (event) => {
       url: '/#view=ecommerce-orders',
     },
     actions: [
-      { action: 'open_order', title: '📦 ऑर्डर देखें' },
-      { action: 'close', title: 'बंद करें' },
+      { action: 'open_order', title: '📦 View Order' },
+      { action: 'close', title: 'Dismiss' },
     ],
   };
 
@@ -124,8 +124,8 @@ self.addEventListener('push', (event) => {
       if (payload.body) options.body = payload.body;
       if (payload.data) options.data = payload.data;
       if (payload.orderNo) {
-        title = `🔔 नया ऑर्डर #${payload.orderNo} मिला!`;
-        options.body = `${payload.customerName || 'ग्राहक'} (₹${payload.amount || ''}) - तुरंत पैक करें`;
+        title = `🔔 New Order #${payload.orderNo} Received!`;
+        options.body = `${payload.customerName || 'Customer'} (₹${payload.amount || ''}) - Tap to pack & dispatch`;
       }
     } catch {
       options.body = event.data.text();

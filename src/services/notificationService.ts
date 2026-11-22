@@ -142,8 +142,8 @@ export const showOrderNotification = async (order: {
 
   if (getNotificationPermission() !== 'granted') return;
 
-  const title = `🔔 नया ऑनलाइन ऑर्डर! #${order.orderNo}`;
-  const body = `${order.customerName} • ₹${order.amount} - ऑर्डर देखने के लिए क्लिक करें`;
+  const title = `🔔 New Online Order! #${order.orderNo}`;
+  const body = `${order.customerName} • ₹${order.amount} - Click to view and accept order`;
   const options: NotificationOptions = {
     body,
     icon: '/assets/YDO_logo-B6fE-ZjE.jpg',

@@ -884,7 +884,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
-              Ambajogai customer app par header, delivery banners aur cart drawer me yahi time realtime me live dikhega:
+              This promise time will be displayed in real-time across the customer web app (Header, Banners & Cart):
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
               {[

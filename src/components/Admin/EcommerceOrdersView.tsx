@@ -605,7 +605,7 @@ export const EcommerceOrdersView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 pb-28 sm:pb-8">
+    <div className="space-y-3 sm:space-y-4 pb-36 sm:pb-12 max-w-5xl mx-auto px-1 sm:px-0">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-5 right-5 z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-emerald-500 flex items-center gap-3 animate-bounce">
@@ -615,33 +615,33 @@ export const EcommerceOrdersView: React.FC = () => {
       )}
 
       {/* Top Header Card */}
-      <div className="bg-white dark:bg-[#131F1B] rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-[#24352F] shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#131F1B] rounded-2xl p-3.5 sm:p-5 border border-slate-200 dark:border-[#24352F] shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <div className="p-2 bg-emerald-100 dark:bg-emerald-950/60 rounded-xl text-emerald-700 dark:text-emerald-400">
-                <ShoppingBag className="w-6 h-6" />
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="p-1.5 sm:p-2 bg-emerald-100 dark:bg-emerald-950/60 rounded-xl text-emerald-700 dark:text-emerald-400 shrink-0">
+                <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+              <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white">
                 Online Customer Orders
               </h1>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                Live Realtime Sync
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                Live Sync
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 hidden sm:block">
               Direct live orders from customer e-commerce web app. Accept, pack with FEFO shelf batches, dispatch, and track delivery.
             </p>
           </div>
 
           {/* Action Tools */}
-          <div className="flex items-center gap-2 self-start md:self-center flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 self-start sm:self-center flex-wrap">
             {/* Audio Toggle */}
             <button
               type="button"
               onClick={handleToggleAudio}
-              className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+              className={`px-2.5 py-1.5 sm:p-2.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer min-h-[38px] ${
                 isAudioEnabled
                   ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700'
@@ -649,7 +649,7 @@ export const EcommerceOrdersView: React.FC = () => {
               title={isAudioEnabled ? 'Incoming Order Alarm Bell: ON' : 'Alarm Bell: MUTED'}
             >
               {isAudioEnabled ? <Volume2 className="w-4 h-4 text-emerald-600" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
-              <span className="text-xs font-bold">{isAudioEnabled ? 'Alarm ON' : 'Muted'}</span>
+              <span className="text-xs font-bold">{isAudioEnabled ? 'Bell ON' : 'Muted'}</span>
             </button>
 
             {/* Test Alarm Sound Button */}
@@ -657,10 +657,10 @@ export const EcommerceOrdersView: React.FC = () => {
               <button
                 type="button"
                 onClick={unlockAudio}
-                className="px-3 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 sm:px-3 sm:py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer min-h-[38px]"
                 title="Test counter bell chime volume"
               >
-                <span>🔔 Test Bell</span>
+                <span>🔔 Test</span>
               </button>
             )}
 
@@ -668,10 +668,10 @@ export const EcommerceOrdersView: React.FC = () => {
               type="button"
               onClick={() => fetchOrders(false)}
               disabled={isRefreshing}
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white border border-slate-300 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-2.5 py-1.5 sm:p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white border border-slate-300 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer min-h-[38px]"
             >
               <RefreshCw className={`w-4 h-4 text-emerald-600 dark:text-emerald-400 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Refresh</span>
+              <span>Refresh</span>
             </button>
           </div>
         </div>
@@ -680,16 +680,16 @@ export const EcommerceOrdersView: React.FC = () => {
         {!isAudioUnlocked && isAudioEnabled && (
           <div
             onClick={unlockAudio}
-            className="mt-3 p-3 rounded-xl bg-amber-500/15 dark:bg-amber-950/60 border border-amber-400/80 dark:border-amber-600 flex items-center justify-between gap-3 cursor-pointer hover:bg-amber-500/20 transition-all shadow-xs"
+            className="mt-2.5 p-2.5 sm:p-3 rounded-xl bg-amber-500/15 dark:bg-amber-950/60 border border-amber-400/80 dark:border-amber-600 flex items-center justify-between gap-2.5 cursor-pointer hover:bg-amber-500/20 transition-all shadow-xs"
           >
-            <div className="flex items-center gap-2.5 text-amber-900 dark:text-amber-200">
-              <span className="text-xl animate-bounce">🔔</span>
-              <div>
-                <p className="text-xs font-black">
-                  Counter Bell Alarm Ready — Click here to activate live sound alert (घंटी चालू करें)
+            <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 min-w-0">
+              <span className="text-lg sm:text-xl shrink-0 animate-bounce">🔔</span>
+              <div className="min-w-0">
+                <p className="text-xs font-black truncate sm:whitespace-normal">
+                  घंटी चालू करें (Activate Order Sound)
                 </p>
-                <p className="text-[11px] text-amber-700 dark:text-amber-300">
-                  Browser policy requires 1 click so new online orders can chime loudly through the counter speaker.
+                <p className="text-[10px] sm:text-[11px] text-amber-700 dark:text-amber-300 line-clamp-1 sm:line-clamp-none">
+                  नया ऑनलाइन ऑर्डर आने पर काउंटर स्पीकर से घंटी बजाने हेतु क्लिक करें।
                 </p>
               </div>
             </div>
@@ -699,9 +699,9 @@ export const EcommerceOrdersView: React.FC = () => {
                 e.stopPropagation();
                 unlockAudio();
               }}
-              className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-black text-xs shrink-0 shadow-sm cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-black text-xs shrink-0 shadow-sm cursor-pointer"
             >
-              Activate Bell 🔔
+              चालू करें 🔔
             </button>
           </div>
         )}
@@ -710,16 +710,16 @@ export const EcommerceOrdersView: React.FC = () => {
         {notifPermission !== 'granted' && (
           <div
             onClick={handleEnableNotifications}
-            className="mt-3 p-3 rounded-xl bg-blue-500/15 dark:bg-blue-950/60 border border-blue-400/80 dark:border-blue-600 flex items-center justify-between gap-3 cursor-pointer hover:bg-blue-500/20 transition-all shadow-xs"
+            className="mt-2.5 p-2.5 sm:p-3 rounded-xl bg-blue-500/15 dark:bg-blue-950/60 border border-blue-400/80 dark:border-blue-600 flex items-center justify-between gap-2.5 cursor-pointer hover:bg-blue-500/20 transition-all shadow-xs"
           >
-            <div className="flex items-center gap-2.5 text-blue-950 dark:text-blue-200">
-              <span className="text-xl animate-pulse">📲</span>
-              <div>
-                <p className="text-xs font-black">
-                  App बंद होने पर भी नोटिफिकेशन पाएँ (Enable Background Push Alert)
+            <div className="flex items-center gap-2 text-blue-950 dark:text-blue-200 min-w-0">
+              <span className="text-lg sm:text-xl shrink-0 animate-pulse">📲</span>
+              <div className="min-w-0">
+                <p className="text-xs font-black truncate sm:whitespace-normal">
+                  ऐप बंद होने पर भी नोटिफिकेशन (Push Alerts)
                 </p>
-                <p className="text-[11px] text-blue-700 dark:text-blue-300">
-                  जब आपका फोन लॉक या ऐप बंद होगा, तब भी नया ऑर्डर आने पर फोन वाइब्रेट होगा और स्क्रीन पर नोटिफिकेशन आएगी।
+                <p className="text-[10px] sm:text-[11px] text-blue-700 dark:text-blue-300 line-clamp-1 sm:line-clamp-none">
+                  फोन लॉक या बंद होने पर भी नया ऑर्डर आने पर मोबाइल वाइब्रेट होगा।
                 </p>
               </div>
             </div>
@@ -729,7 +729,7 @@ export const EcommerceOrdersView: React.FC = () => {
                 e.stopPropagation();
                 handleEnableNotifications();
               }}
-              className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shrink-0 shadow-sm cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shrink-0 shadow-sm cursor-pointer"
             >
               चालू करें 📲
             </button>
@@ -738,20 +738,20 @@ export const EcommerceOrdersView: React.FC = () => {
 
         {/* Flipkart/Blinkit Style Online Store Open / Closed Control Bar */}
         <div
-          className={`mt-3 p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${
+          className={`mt-2.5 p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-all ${
             isStoreOpen
               ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-400/80 dark:border-emerald-700/80'
               : 'bg-rose-500/15 dark:bg-rose-950/60 border-rose-400 dark:border-rose-700'
           }`}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
             <span
-              className={`w-3.5 h-3.5 rounded-full shrink-0 ${
+              className={`w-3 h-3 rounded-full shrink-0 ${
                 isStoreOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-600'
               }`}
             />
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <span
                   className={`text-xs font-black uppercase tracking-wider ${
                     isStoreOpen
@@ -760,28 +760,28 @@ export const EcommerceOrdersView: React.FC = () => {
                   }`}
                 >
                   {isStoreOpen
-                    ? '🟢 Online Store: OPEN (स्वीकार करत आहे / Orders Accepted)'
-                    : '🔴 Online Store: CLOSED (दुकान सध्या बंद आहे / Currently Closed)'}
+                    ? '🟢 Online Store: OPEN'
+                    : '🔴 Online Store: CLOSED'}
                 </span>
                 <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-white/80 dark:bg-black/40 text-slate-700 dark:text-slate-300 border border-slate-200/50">
-                  Flipkart Style Sync
+                  {isStoreOpen ? 'Orders Accepted' : 'Dukan Band Hai'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 line-clamp-1 sm:line-clamp-none">
                 {isStoreOpen
-                  ? 'Website is live and actively accepting customer orders with fast 20-40 min delivery.'
-                  : 'Customer website shows "Dukan Abhi Band Hai" and checkout is blocked until reopened.'}
+                  ? 'ग्राहक वेबसाइट से 20-40 मिनट की डिलीवरी के ऑर्डर कर सकते हैं।'
+                  : 'वेबसाइट पर "दुकान सध्या बंद आहे" दिखेगा और ऑर्डर ब्लॉक रहेगा।'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-end sm:self-center">
+          <div className="flex items-center gap-2 self-stretch sm:self-center shrink-0">
             {isStoreOpen ? (
               <button
                 type="button"
                 disabled={isUpdatingStoreStatus}
                 onClick={handleToggleStoreOpen}
-                className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer min-h-[38px]"
                 title="Mark store closed so customer app shows shop is closed"
               >
                 <span>🔴 Close Store (दुकान बंद करा)</span>
@@ -791,7 +791,7 @@ export const EcommerceOrdersView: React.FC = () => {
                 type="button"
                 disabled={isUpdatingStoreStatus}
                 onClick={handleToggleStoreOpen}
-                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer min-h-[38px]"
                 title="Reopen store so customer app accepts orders"
               >
                 <span>🟢 Reopen Store (दुकान चालू करा)</span>
@@ -800,15 +800,15 @@ export const EcommerceOrdersView: React.FC = () => {
           </div>
         </div>
 
-        {/* Status Filter Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-4 mt-3 border-t border-slate-100 dark:border-[#1E3029]">
+        {/* Status Filter Tabs (Horizontal Scrollable Pills) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth pt-3 mt-2.5 border-t border-slate-100 dark:border-[#1E3029] -mx-1 px-1 touch-pan-x">
           {(
             [
-              { id: 'ALL', label: 'All Orders', count: counts.ALL },
-              { id: 'PLACED', label: 'Placed (Pending)', count: counts.PLACED, highlight: true },
+              { id: 'ALL', label: 'All', count: counts.ALL },
+              { id: 'PLACED', label: 'Placed (New)', count: counts.PLACED, highlight: true },
               { id: 'CONFIRMED', label: 'Confirmed', count: counts.CONFIRMED },
               { id: 'PREPARING', label: 'Packing', count: counts.PREPARING },
-              { id: 'OUT_FOR_DELIVERY', label: 'Out for Delivery', count: counts.OUT_FOR_DELIVERY },
+              { id: 'OUT_FOR_DELIVERY', label: 'Out Delivery', count: counts.OUT_FOR_DELIVERY },
               { id: 'DELIVERED', label: 'Delivered', count: counts.DELIVERED },
               { id: 'CANCELLED', label: 'Cancelled', count: counts.CANCELLED }
             ] as const
@@ -819,7 +819,7 @@ export const EcommerceOrdersView: React.FC = () => {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id as FilterTab)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all shrink-0 min-h-[34px] cursor-pointer ${
                   isActive
                     ? 'bg-emerald-700 text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-[#1A2A25] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#24352F]'
@@ -843,20 +843,20 @@ export const EcommerceOrdersView: React.FC = () => {
         </div>
 
         {/* Search Input */}
-        <div className="relative mt-3">
+        <div className="relative mt-2.5">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by order # (e.g. ORD-1001), customer name, phone, or item..."
-            className="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+            placeholder="Search #ORD, customer name, phone, item..."
+            className="w-full pl-9 pr-8 py-2 rounded-xl text-[13px] bg-slate-50 dark:bg-[#1A2A25] border border-slate-200 dark:border-[#24352F] text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 min-h-[40px]"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -866,16 +866,16 @@ export const EcommerceOrdersView: React.FC = () => {
 
       {/* Orders List / Empty State */}
       {isLoading ? (
-        <div className="bg-white dark:bg-[#131F1B] rounded-2xl p-12 text-center border border-slate-200 dark:border-[#24352F]">
+        <div className="bg-white dark:bg-[#131F1B] rounded-2xl p-10 text-center border border-slate-200 dark:border-[#24352F]">
           <RefreshCw className="w-8 h-8 text-emerald-600 dark:text-emerald-400 animate-spin mx-auto mb-3" />
           <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
             Syncing live orders with Supabase...
           </p>
         </div>
       ) : filteredOrders.length === 0 ? (
-        <div className="bg-white dark:bg-[#131F1B] rounded-2xl p-12 text-center border border-slate-200 dark:border-[#24352F]">
-          <ShoppingBag className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
+        <div className="bg-white dark:bg-[#131F1B] rounded-2xl p-8 sm:p-12 text-center border border-slate-200 dark:border-[#24352F]">
+          <ShoppingBag className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+          <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
             No orders found
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
@@ -887,7 +887,7 @@ export const EcommerceOrdersView: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4">
           {filteredOrders.map((order) => {
             const isPlaced = order.order_status === 'PLACED';
             const isConfirmed = order.order_status === 'CONFIRMED';
@@ -909,7 +909,7 @@ export const EcommerceOrdersView: React.FC = () => {
             return (
               <div
                 key={order.id}
-                className={`bg-white dark:bg-[#131F1B] rounded-2xl p-4 sm:p-5 border transition-all ${
+                className={`bg-white dark:bg-[#131F1B] rounded-2xl p-3.5 sm:p-5 border transition-all ${
                   isNew
                     ? 'border-emerald-500 dark:border-emerald-500 shadow-xl ring-4 ring-emerald-500/30 bg-emerald-50/15 dark:bg-emerald-950/20'
                     : isPlaced
@@ -917,66 +917,73 @@ export const EcommerceOrdersView: React.FC = () => {
                     : 'border-slate-200 dark:border-[#24352F] shadow-xs'
                 }`}
               >
-                {/* Order Top Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-[#1E3029]">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="font-mono font-black text-base text-slate-900 dark:text-white">
-                      #{order.order_no}
-                    </span>
-                    {isNew && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white animate-bounce shadow-xs flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                        JUST RECEIVED
-                      </span>
-                    )}
-                    {renderStatusBadge(order.order_status)}
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},{' '}
-                      {new Date(order.created_at).toLocaleDateString([], { day: 'numeric', month: 'short' })}
-                    </span>
-                  </div>
+                {/* Order Top Bar (Mobile-Optimized Header) */}
+                <div className="pb-3 border-b border-slate-100 dark:border-[#1E3029]">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <span className="font-mono font-black text-sm sm:text-base text-slate-900 dark:text-white">
+                          #{order.order_no}
+                        </span>
+                        {isNew && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black bg-rose-600 text-white animate-bounce shadow-xs flex items-center gap-1">
+                            <span className="w-1 h-1 rounded-full bg-white animate-ping" />
+                            NEW
+                          </span>
+                        )}
+                        {renderStatusBadge(order.order_status)}
+                      </div>
+                      <div className="text-[11px] text-slate-400 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                        <Clock className="w-3 h-3 text-slate-400" />
+                        <span>
+                          {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}, {new Date(order.created_at).toLocaleDateString([], { day: 'numeric', month: 'short' })}
+                        </span>
+                      </div>
+                    </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="text-base font-black text-emerald-700 dark:text-emerald-400 flex items-center">
-                      ₹{order.total_amount}
-                    </span>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        isPaid
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                          : isCod
-                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-                          : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
-                      }`}
-                    >
-                      {order.payment_method} &bull; {order.payment_status}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setReceiptOrder(order)}
-                      className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-700 dark:text-slate-300 transition-colors"
-                      title="Print 58mm/80mm Delivery Receipt"
-                    >
-                      <Printer className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    </button>
+                    <div className="flex flex-col items-end shrink-0">
+                      <span className="text-base sm:text-lg font-black text-emerald-700 dark:text-emerald-400">
+                        ₹{order.total_amount}
+                      </span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span
+                          className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                            isPaid
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                              : isCod
+                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                              : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
+                          }`}
+                        >
+                          {order.payment_method} &bull; {order.payment_status}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setReceiptOrder(order)}
+                          className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-700 dark:text-slate-300 transition-colors"
+                          title="Print 58mm/80mm Delivery Receipt"
+                        >
+                          <Printer className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Customer & Address Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 py-3 border-b border-slate-100 dark:border-[#1E3029] text-xs">
-                  {/* Customer Info */}
-                  <div className="space-y-1">
-                    <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                {/* Customer Info & 1-Tap Quick Action Bar */}
+                <div className="py-2.5 border-b border-slate-100 dark:border-[#1E3029] space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
                       <span>{order.customer_name}</span>
-                      <span className="text-slate-400">&bull;</span>
-                      <span className="font-mono text-slate-600 dark:text-slate-300">{order.customer_phone}</span>
+                      <span className="text-slate-300 dark:text-slate-600">&bull;</span>
+                      <span className="font-mono text-slate-600 dark:text-slate-300 text-xs">{order.customer_phone}</span>
                     </div>
 
-                    <div className="flex items-center gap-2 pt-1">
+                    {/* Quick Call & WhatsApp Tap Targets (Full Touch Size) */}
+                    <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
                       <a
                         href={`tel:${order.customer_phone}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-700 dark:text-slate-300 font-semibold"
+                        className="min-h-[38px] px-3 rounded-xl bg-slate-100 dark:bg-[#1A2A25] hover:bg-slate-200 dark:hover:bg-[#24352F] text-slate-800 dark:text-slate-200 font-bold text-xs inline-flex items-center justify-center gap-1.5 border border-slate-200 dark:border-[#24352F] active:scale-95 transition"
                       >
                         <Phone className="w-3.5 h-3.5 text-emerald-600" />
                         <span>Call</span>
@@ -985,7 +992,7 @@ export const EcommerceOrdersView: React.FC = () => {
                         href={waUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 font-semibold"
+                        className="min-h-[38px] px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 font-bold text-xs inline-flex items-center justify-center gap-1.5 border border-emerald-200/80 dark:border-emerald-800/50 active:scale-95 transition"
                       >
                         <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
                         <span>WhatsApp</span>
@@ -993,18 +1000,18 @@ export const EcommerceOrdersView: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Delivery Address */}
-                  <div className="space-y-1">
+                  {/* Delivery Address Box */}
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#182622] border border-slate-200/70 dark:border-[#24352F]/70 text-xs space-y-1.5">
                     <div className="flex items-start gap-1.5 text-slate-700 dark:text-slate-300">
-                      <MapPin className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                      <div>
-                        <span className="font-semibold">
-                          {order.delivery_address?.recipientName || order.customer_name}
-                        </span>{' '}
-                        <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-slate-200 dark:bg-slate-700 uppercase">
-                          {order.delivery_address?.addressType || 'HOME'}
-                        </span>
-                        <div className="text-slate-500 dark:text-slate-400">
+                      <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+                          <span>{order.delivery_address?.recipientName || order.customer_name}</span>
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-slate-200 dark:bg-slate-700 uppercase">
+                            {order.delivery_address?.addressType || 'HOME'}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
                           {order.delivery_address?.addressLine1 || (order.delivery_address as any)?.street || 'Main Road'}
                           {(order.delivery_address as any)?.houseNo ? ` (${(order.delivery_address as any).houseNo})` : ''}
                           {order.delivery_address?.addressLine2 ? `, ${order.delivery_address.addressLine2}` : ''}
@@ -1013,46 +1020,47 @@ export const EcommerceOrdersView: React.FC = () => {
                           {order.delivery_address?.city ? `, ${order.delivery_address.city}` : ', Ambajogai'}
                           {order.delivery_address?.pincode ? ` - ${order.delivery_address.pincode}` : ' - 431517'}
                         </div>
-                        <div className="pt-1 flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setNavigationOrder(order)}
-                            className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 font-bold text-[11px] inline-flex items-center gap-1.5 border border-emerald-300 dark:border-emerald-700 transition-colors cursor-pointer"
-                          >
-                            <Compass className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                            <span>📍 View on Map & Route</span>
-                          </button>
-                          {(order.delivery_address as any)?.latitude && (
-                            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-semibold bg-emerald-100/60 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
-                              GPS Pin Active
-                            </span>
-                          )}
-                        </div>
                       </div>
                     </div>
 
+                    <div className="flex items-center gap-2 pt-0.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setNavigationOrder(order)}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-100/70 hover:bg-emerald-200/70 dark:bg-emerald-950/70 dark:hover:bg-emerald-900/70 text-emerald-900 dark:text-emerald-300 font-bold text-[11px] inline-flex items-center gap-1 border border-emerald-300 dark:border-emerald-700 transition-colors cursor-pointer"
+                      >
+                        <Compass className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span>📍 View on Map & Route</span>
+                      </button>
+                      {(order.delivery_address as any)?.latitude && (
+                        <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-semibold bg-emerald-100/60 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
+                          GPS Confirmed
+                        </span>
+                      )}
+                    </div>
+
                     {order.delivery_notes && (
-                      <div className="text-[11px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-2 py-1 rounded-lg border border-amber-200 dark:border-amber-900/50">
-                        <b>Customer Note:</b> {order.delivery_notes}
+                      <div className="text-[11px] text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 p-2 rounded-lg border border-amber-200 dark:border-amber-900/60 font-medium">
+                        <b>Customer Instructions:</b> {order.delivery_notes}
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Live Order Stage Tracker (Matches Customer Mobile View) */}
-                <div className="py-2.5 px-3 bg-slate-50 dark:bg-[#1A2A25] rounded-xl border border-slate-200/80 dark:border-[#24352F]/80 my-2">
+                {/* Live Order Stage Tracker (Matches Customer View) */}
+                <div className="py-2 px-2.5 bg-slate-50 dark:bg-[#1A2A25] rounded-xl border border-slate-200/80 dark:border-[#24352F]/80 my-2">
                   <div className="flex items-center justify-between text-[11px] font-bold mb-1.5 text-slate-600 dark:text-slate-300">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>Live Customer Tracking Stage:</span>
+                    <span className="flex items-center gap-1.5 truncate">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                      <span>Tracking:</span>
                     </span>
-                    <span className="font-mono text-xs font-black text-emerald-700 dark:text-emerald-400">
-                      {order.order_status === 'PLACED' && 'Stage 1: Placed & Pending'}
-                      {order.order_status === 'CONFIRMED' && 'Stage 2: Order Confirmed'}
-                      {order.order_status === 'PREPARING' && 'Stage 3: Packing Fresh Dairy'}
-                      {order.order_status === 'OUT_FOR_DELIVERY' && 'Stage 4: Out for Quick Delivery'}
-                      {order.order_status === 'DELIVERED' && 'Stage 5: Delivered (Completed)'}
-                      {isCancelled && 'Order Cancelled'}
+                    <span className="font-mono text-xs font-black text-emerald-700 dark:text-emerald-400 truncate">
+                      {order.order_status === 'PLACED' && '1. Placed (Pending)'}
+                      {order.order_status === 'CONFIRMED' && '2. Confirmed'}
+                      {order.order_status === 'PREPARING' && '3. Packing Fresh Dairy'}
+                      {order.order_status === 'OUT_FOR_DELIVERY' && '4. Out for Delivery'}
+                      {order.order_status === 'DELIVERED' && '5. Delivered'}
+                      {isCancelled && 'Cancelled'}
                     </span>
                   </div>
                   <div className="grid grid-cols-4 gap-1.5">
@@ -1091,20 +1099,14 @@ export const EcommerceOrdersView: React.FC = () => {
                       title="4. Out for Delivery"
                     />
                   </div>
-                  <div className="grid grid-cols-4 text-[9px] text-slate-500 dark:text-slate-400 mt-1 font-semibold text-center">
-                    <span>1. Placed</span>
-                    <span>2. Confirmed</span>
-                    <span>3. Packing</span>
-                    <span>4. Out Delivery</span>
-                  </div>
                 </div>
 
                 {/* Items & FEFO Picking Recommendations */}
-                <div className="py-3 space-y-2">
+                <div className="py-2.5 space-y-2">
                   <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
                     <span>Order Items ({order.items?.length || 0})</span>
-                    <span className="text-emerald-700 dark:text-emerald-400 font-normal normal-case flex items-center gap-1">
-                      <Layers className="w-3 h-3" /> FEFO Shelf Recommendations Active
+                    <span className="text-emerald-700 dark:text-emerald-400 font-normal normal-case flex items-center gap-1 text-[10px]">
+                      <Layers className="w-3 h-3" /> FEFO Active
                     </span>
                   </div>
 
@@ -1114,9 +1116,9 @@ export const EcommerceOrdersView: React.FC = () => {
                       return (
                         <div
                           key={item.id}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 p-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] text-xs"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 p-2 rounded-xl bg-slate-50 dark:bg-[#1A2A25] text-xs border border-slate-100 dark:border-[#223630]"
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="font-bold text-slate-800 dark:text-white">
                               {item.product_name}
                             </span>
@@ -1130,18 +1132,18 @@ export const EcommerceOrdersView: React.FC = () => {
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-3 self-end sm:self-center">
+                          <div className="flex items-center justify-between sm:justify-end gap-2.5 pt-0.5 sm:pt-0">
                             {/* FEFO Hint */}
                             {fefoBatch && (
                               <span
-                                className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 font-mono font-semibold"
+                                className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-300 font-mono font-semibold"
                                 title={`Batch: ${fefoBatch.batch_no} | Exp: ${fefoBatch.expiry_date} | Stock: ${fefoBatch.qty_remaining}`}
                               >
                                 Pick: {fefoBatch.batch_no} (Exp: {fefoBatch.expiry_date})
                               </span>
                             )}
 
-                            <span className="font-bold text-slate-900 dark:text-white">
+                            <span className="font-bold text-slate-900 dark:text-white shrink-0">
                               ₹{item.total_price}
                             </span>
                           </div>
@@ -1151,29 +1153,32 @@ export const EcommerceOrdersView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Workflow Actions */}
-                <div className="pt-3 border-t border-slate-100 dark:border-[#1E3029] flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {isCod && !isPaid && (
-                      <span className="text-amber-700 dark:text-amber-400 font-semibold">
-                        Cash to Collect upon delivery: <b>₹{order.total_amount}</b>
-                      </span>
-                    )}
-                    {isPaid && (
-                      <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
-                        Payment settled via {order.payment_method}
-                      </span>
-                    )}
+                {/* Workflow Actions Section (Mobile-First Layout) */}
+                <div className="pt-3 border-t border-slate-100 dark:border-[#1E3029] space-y-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500 dark:text-slate-400">
+                      {isCod && !isPaid ? (
+                        <span className="text-amber-700 dark:text-amber-400 font-bold">
+                          Cash to Collect: <b>₹{order.total_amount}</b>
+                        </span>
+                      ) : isPaid ? (
+                        <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
+                          Paid Online ({order.payment_method})
+                        </span>
+                      ) : (
+                        <span>Payment: {order.payment_status}</span>
+                      )}
+                    </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {/* Action 1: PLACED -> Confirm & Prepare (One-click updates to CONFIRMED & opens thermal slip) */}
+                  {/* 1. Main Stage Progression Primary Action */}
+                  <div>
                     {isPlaced && (
-                      <>
+                      <div className="grid grid-cols-3 gap-2">
                         <button
                           type="button"
                           onClick={() => setCancelModalOrder(order)}
-                          className="px-3 py-2 rounded-xl border border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-bold transition-colors cursor-pointer"
+                          className="col-span-1 min-h-[44px] px-3 py-2 rounded-xl border border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-bold transition-colors cursor-pointer flex items-center justify-center"
                         >
                           Reject
                         </button>
@@ -1181,105 +1186,106 @@ export const EcommerceOrdersView: React.FC = () => {
                           type="button"
                           disabled={isUpdatingStatus === order.id}
                           onClick={() => handleConfirmAndPrepare(order)}
-                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-emerald-600/25 transition-all cursor-pointer"
+                          className="col-span-2 min-h-[44px] px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/25 transition-all cursor-pointer"
                           title="Confirm order and open 58mm/80mm delivery slip"
                         >
-                          <CheckCircle2 className="w-4 h-4 text-emerald-200" />
-                          <Printer className="w-3.5 h-3.5 text-emerald-200" />
-                          <span>Confirm & Prepare (Print Slip)</span>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-200 shrink-0" />
+                          <span className="truncate">Confirm & Slip</span>
                         </button>
-                      </>
+                      </div>
                     )}
 
-                    {/* Action 2: CONFIRMED -> Start Packing */}
                     {isConfirmed && (
                       <button
                         type="button"
                         disabled={isUpdatingStatus === order.id}
                         onClick={() => handleUpdateStatus(order.id, 'PREPARING')}
-                        className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                        className="w-full min-h-[44px] px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-95 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
                         title="Update status to Packing so customer sees fresh items being packed"
                       >
-                        <Package className="w-3.5 h-3.5" />
+                        <Package className="w-4 h-4" />
                         <span>📦 Start Packing (Stage 3)</span>
                       </button>
                     )}
 
-                    {/* Action 3: PREPARING -> Out for Delivery */}
                     {isPreparing && (
                       <button
                         type="button"
                         disabled={isUpdatingStatus === order.id}
                         onClick={() => handleUpdateStatus(order.id, 'OUT_FOR_DELIVERY')}
-                        className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                        className="w-full min-h-[44px] px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
                         title="Send rider for quick delivery (Customer sees rider on the way)"
                       >
-                        <Truck className="w-3.5 h-3.5" />
+                        <Truck className="w-4 h-4" />
                         <span>🛵 Send Out for Delivery (Stage 4)</span>
                       </button>
                     )}
 
-                    {/* Action 4: OUT_FOR_DELIVERY -> Delivered */}
                     {isOutForDelivery && (
                       <button
                         type="button"
                         disabled={isUpdatingStatus === order.id}
                         onClick={() => handleUpdateStatus(order.id, 'DELIVERED', 'PAID')}
-                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-emerald-600/25 transition-colors cursor-pointer"
+                        className="w-full min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black flex items-center justify-center gap-2 shadow-md shadow-emerald-600/25 transition-colors cursor-pointer"
                         title="Mark order delivered and payment collected"
                       >
                         <CheckCircle2 className="w-4 h-4 text-emerald-200" />
                         <span>✅ Mark Delivered & Paid (Complete)</span>
                       </button>
                     )}
+                  </div>
 
-                    {/* In-App Map Navigation Button */}
+                  {/* 2. Secondary Utility Actions (Mobile Grid: 2x2 on Mobile, 4 in row on Desktop) */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    {/* In-App Map Navigation */}
                     <button
                       type="button"
                       onClick={() => setNavigationOrder(order)}
-                      className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-[#1A2A25] text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center gap-1 border border-blue-200 dark:border-blue-800 transition-colors cursor-pointer"
+                      className="min-h-[38px] px-2.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-[#1A2A25] text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center justify-center gap-1.5 border border-blue-200 dark:border-blue-800 transition-colors cursor-pointer"
                       title="Open interactive in-app map with turn directions and rider GPS"
                     >
-                      <Compass className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                      <span>Map & Route</span>
+                      <Compass className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                      <span className="truncate">Map & Route</span>
                     </button>
 
-                    {/* Blinkit Dark-Store Barcode Packing Button */}
-                    {(isConfirmed || isPreparing || isPlaced) && (
+                    {/* Blinkit Dark-Store Barcode Packing */}
+                    {(isConfirmed || isPreparing || isPlaced) ? (
                       <button
                         type="button"
                         onClick={() => setPackingOrder(order)}
-                        className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-xs font-black flex items-center gap-1.5 border border-emerald-300 dark:border-emerald-700 transition-colors cursor-pointer shadow-xs"
+                        className="min-h-[38px] px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-xs font-black flex items-center justify-center gap-1.5 border border-emerald-300 dark:border-emerald-700 transition-colors cursor-pointer shadow-xs"
                         title="Blinkit-style dark-store barcode scanner item verification"
                       >
-                        <Package className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Scan & Pack (Blinkit)</span>
+                        <Package className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span className="truncate">Scan (Blinkit)</span>
                       </button>
+                    ) : (
+                      <div />
                     )}
 
-                    {/* Rider Assignment Button */}
+                    {/* Rider Assignment */}
                     <button
                       type="button"
                       onClick={() => setAssignRiderOrder(order)}
-                      className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-[#1A2A25] text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center gap-1 border border-purple-200 dark:border-purple-800 transition-colors cursor-pointer"
+                      className="min-h-[38px] px-2.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-[#1A2A25] text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center justify-center gap-1.5 border border-purple-200 dark:border-purple-800 transition-colors cursor-pointer"
                       title="Assign delivery boy / fleet partner"
                     >
-                      <Truck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                      <span>
+                      <Truck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                      <span className="truncate">
                         {order.delivery_partner_name
                           ? `Rider: ${order.delivery_partner_name.split(' ')[0]}`
                           : 'Assign Rider'}
                       </span>
                     </button>
 
-                    {/* Receipt Print button */}
+                    {/* Receipt Print */}
                     <button
                       type="button"
                       onClick={() => setReceiptOrder(order)}
-                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white text-xs font-bold flex items-center gap-1 border border-slate-300 dark:border-slate-700 transition-colors"
+                      className="min-h-[38px] px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#1A2A25] dark:hover:bg-[#24352F] text-slate-800 dark:text-white text-xs font-bold flex items-center justify-center gap-1.5 border border-slate-300 dark:border-slate-700 transition-colors"
                     >
-                      <Printer className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Delivery Slip</span>
+                      <Printer className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span className="truncate">Print Slip</span>
                     </button>
                   </div>
                 </div>
@@ -1291,8 +1297,8 @@ export const EcommerceOrdersView: React.FC = () => {
 
       {/* THERMAL DELIVERY RECEIPT MODAL (58mm / 80mm) */}
       {receiptOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-[#131F1B] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-[#24352F] space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-[#131F1B] rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-[#24352F] space-y-3 sm:space-y-4 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-base text-slate-900 dark:text-white">
@@ -1491,8 +1497,8 @@ export const EcommerceOrdersView: React.FC = () => {
 
       {/* REJECT / CANCEL ORDER MODAL */}
       {cancelModalOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-[#131F1B] rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-[#24352F] space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-[#131F1B] rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-[#24352F] space-y-3 sm:space-y-4 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-rose-600">
                 <AlertCircle className="w-5 h-5" />

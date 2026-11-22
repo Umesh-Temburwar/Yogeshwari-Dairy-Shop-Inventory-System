@@ -102,8 +102,8 @@ self.addEventListener('push', (event) => {
   let title = '🥛 New Online Order Received!';
   let options = {
     body: 'New order received at Yogeshwari Dairy. Tap to view and accept.',
-    icon: '/assets/YDO_logo-B6fE-ZjE.jpg',
-    badge: '/assets/YDO_logo-B6fE-ZjE.jpg',
+    icon: '/YDO_logo.png',
+    badge: '/YDO_logo.png',
     vibrate: [400, 150, 400, 150, 400, 600],
     tag: 'ydo-new-order',
     renotify: true,

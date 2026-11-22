@@ -41,13 +41,12 @@ import {
   Tag
 } from 'lucide-react';
 import { FilterChip, ChipRow, SearchBar, StatusBadge } from '../Common/UI';
-
-const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'https://yogeshwari-dairy-shop-inventory-system.onrender.com/api/v1').replace(/\/$/, '');
 import { DeliveryNavigationModal } from './DeliveryNavigationModal';
 import { AssignRiderModal } from './AssignRiderModal';
 import { BlinkitOrderPackingModal } from '../OnlineOrders/BlinkitOrderPackingModal';
 import { PromotionalBannersModal } from './PromotionalBannersModal';
 import { BrandLogoManagerModal } from './BrandLogoManagerModal';
+import { NotificationPermissionBanner } from '../Common/NotificationPermissionBanner';
 import { convertOnlineOrderToCompletedSale } from '../../services/onlineOrdersService';
 import {
   playBlinkitAlertTone,
@@ -62,6 +61,8 @@ import {
   showOrderNotification,
   NotificationStatus,
 } from '../../services/notificationService';
+
+const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'https://yogeshwari-dairy-shop-inventory-system.onrender.com/api/v1').replace(/\/$/, '');
 
 type FilterTab = 'ALL' | EcommerceOrderStatus;
 
@@ -969,6 +970,15 @@ export const EcommerceOrdersView: React.FC = () => {
             </button>
           )}
         </div>
+
+        {/* High-Visibility Mobile Notification & Sound Permission Banner */}
+        <NotificationPermissionBanner
+          className="my-1.5"
+          onPermissionGranted={() => {
+            unlockAudio();
+            showToast('🔔 Order alerts & notifications are now ACTIVE!');
+          }}
+        />
 
         {/* Slim dismissible Counter Speaker Alarm Audio Unlock Banner */}
         {!isAudioUnlocked && isAudioEnabled && !isAlarmBannerDismissed && (

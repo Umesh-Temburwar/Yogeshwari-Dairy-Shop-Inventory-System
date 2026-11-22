@@ -1,3 +1,8 @@
+// ============================================================================
+// YOGESHWARI DAIRY SHOP - NOTIFICATION & REALTIME SOUND/PUSH SERVICE
+// File: src/services/notificationService.ts
+// ============================================================================
+
 import { playNewOrderChime, safeVibrate } from '../utils/audioChime';
 import { supabase } from '../lib/supabase';
 
@@ -5,11 +10,41 @@ const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'https://yogeshwari-d
 
 export type NotificationStatus = 'granted' | 'denied' | 'default' | 'unsupported';
 
+type PermissionListener = (status: NotificationStatus) => void;
+const permissionListeners: Set<PermissionListener> = new Set();
+
 /**
- * Checks whether Browser/OS Notifications and Service Workers are supported.
+ * Subscribe to notification permission changes
+ */
+export const onNotificationPermissionChange = (listener: PermissionListener): (() => void) => {
+  permissionListeners.add(listener);
+  return () => {
+    permissionListeners.delete(listener);
+  };
+};
+
+const notifyPermissionListeners = (status: NotificationStatus) => {
+  permissionListeners.forEach((fn) => {
+    try {
+      fn(status);
+    } catch (e) {
+      console.warn('Notification listener error:', e);
+    }
+  });
+};
+
+/**
+ * Checks whether Browser/OS Notifications are supported.
  */
 export const isNotificationSupported = (): boolean => {
-  return typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator;
+  return typeof window !== 'undefined' && 'Notification' in window;
+};
+
+/**
+ * Checks whether ServiceWorker is supported.
+ */
+export const isServiceWorkerSupported = (): boolean => {
+  return typeof window !== 'undefined' && 'serviceWorker' in navigator;
 };
 
 /**
@@ -22,19 +57,55 @@ export const getNotificationPermission = (): NotificationStatus => {
 
 /**
  * Prompts user to enable OS/System push notifications for incoming orders.
+ * Triggered on button click to guarantee browser permission prompt pop-up.
  */
 export const requestNotificationPermission = async (): Promise<NotificationStatus> => {
-  if (!isNotificationSupported()) return 'unsupported';
+  if (!isNotificationSupported()) {
+    notifyPermissionListeners('unsupported');
+    return 'unsupported';
+  }
+
+  // Pre-unlock audio & vibration on user touch
+  try {
+    playNewOrderChime();
+    safeVibrate([200, 100, 200]);
+  } catch {}
 
   try {
     const permission = await Notification.requestPermission();
+    notifyPermissionListeners(permission as NotificationStatus);
+
     if (permission === 'granted') {
-      // Subscribe to PushManager if ServiceWorker is active
+      // 1. Immediately send confirmation notification to verify device display
+      try {
+        const title = '🥛 Yogeshwari Dairy Alerts Active';
+        const body = 'Order notifications are enabled! You will be alerted when new orders arrive.';
+        const options: NotificationOptions = {
+          body,
+          icon: '/YDO_logo.png',
+          badge: '/YDO_logo.png',
+          tag: 'ydo-alerts-active',
+          vibrate: [200, 100, 200] as any,
+        };
+
+        if (isServiceWorkerSupported()) {
+          const reg = await navigator.serviceWorker.ready;
+          await reg.showNotification(title, options);
+        } else {
+          new Notification(title, options);
+        }
+      } catch (confirmErr) {
+        console.warn('Initial test notification note:', confirmErr);
+      }
+
+      // 2. Subscribe to ServiceWorker PushManager for background notifications
       await registerPushSubscription();
     }
-    return permission;
+
+    return permission as NotificationStatus;
   } catch (err) {
     console.warn('Failed to request notification permission:', err);
+    notifyPermissionListeners('denied');
     return 'denied';
   }
 };
@@ -43,7 +114,7 @@ export const requestNotificationPermission = async (): Promise<NotificationStatu
  * Subscribes Service Worker PushManager and saves staff push subscription endpoint.
  */
 export const registerPushSubscription = async (): Promise<PushSubscription | null> => {
-  if (!isNotificationSupported()) return null;
+  if (!isServiceWorkerSupported()) return null;
 
   try {
     const registration = await navigator.serviceWorker.ready;
@@ -57,7 +128,6 @@ export const registerPushSubscription = async (): Promise<PushSubscription | nul
     // If no existing subscription, register a new one
     if (!subscription) {
       try {
-        // Fetch public VAPID key if provided by backend or use default
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(
@@ -65,13 +135,11 @@ export const registerPushSubscription = async (): Promise<PushSubscription | nul
           ),
         });
       } catch (subErr) {
-        // Local push subscriptions may fail if VAPID is untrusted on plain HTTP
         console.warn('PushManager subscription registration note:', subErr);
       }
     }
 
     if (subscription) {
-      // Save subscription in Supabase or backend
       await savePushSubscriptionToStore(subscription);
     }
 
@@ -91,7 +159,7 @@ export const savePushSubscriptionToStore = async (subscription: PushSubscription
     const endpoint = subJson.endpoint;
     if (!endpoint) return;
 
-    // 1. Try Supabase staff_push_subscriptions table
+    // 1. Save in Supabase staff_push_subscriptions table
     try {
       await supabase.from('staff_push_subscriptions').upsert(
         {
@@ -104,10 +172,10 @@ export const savePushSubscriptionToStore = async (subscription: PushSubscription
         { onConflict: 'endpoint' }
       );
     } catch {
-      // Table may be created in migration
+      // Table may be created or offline
     }
 
-    // 2. Try Express Backend
+    // 2. Save in Backend
     try {
       await fetch(`${BACKEND_BASE}/ecommerce/push-subscribe`, {
         method: 'POST',
@@ -134,34 +202,42 @@ export const showOrderNotification = async (order: {
   amount: number;
   orderId?: string;
 }): Promise<void> => {
-  // Always trigger sound alert
-  playNewOrderChime();
+  // Always trigger audio chime & vibration
+  try {
+    playNewOrderChime();
+  } catch {}
+  try {
+    safeVibrate([400, 150, 400, 150, 400, 600]);
+  } catch {}
 
-  // Trigger vibration if device supports it (mobile devices)
-  safeVibrate([400, 150, 400, 150, 400, 600]);
+  const permission = getNotificationPermission();
+  if (permission !== 'granted') {
+    console.warn(`System notification skipped (permission is ${permission}). Sound was played.`);
+    return;
+  }
 
-  if (getNotificationPermission() !== 'granted') return;
-
-  const title = `🔔 New Online Order! #${order.orderNo}`;
-  const body = `${order.customerName} • ₹${order.amount} - Click to view and accept order`;
+  const title = `🔔 New Online Order #${order.orderNo}`;
+  const body = `${order.customerName} • ₹${order.amount}\nTap to open, pack & accept order`;
   const options: NotificationOptions = {
     body,
-    icon: '/assets/YDO_logo-B6fE-ZjE.jpg',
-    badge: '/assets/YDO_logo-B6fE-ZjE.jpg',
+    icon: '/YDO_logo.png',
+    badge: '/YDO_logo.png',
     tag: `order-${order.orderNo}`,
     renotify: true,
     requireInteraction: true,
     vibrate: [400, 150, 400, 150, 400, 600] as any,
     data: {
       url: `/#view=ecommerce-orders`,
+      orderNo: order.orderNo,
+      orderId: order.orderId,
     },
   };
 
   try {
-    if ('serviceWorker' in navigator) {
+    if (isServiceWorkerSupported()) {
       const reg = await navigator.serviceWorker.ready;
       await reg.showNotification(title, options);
-    } else {
+    } else if (typeof Notification !== 'undefined') {
       const notif = new Notification(title, options);
       notif.onclick = () => {
         try {

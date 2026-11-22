@@ -344,11 +344,18 @@ export const getPublicProductById = async (id: string): Promise<PublicProductIte
   };
 };
 
-export const getPublicCategories = async (): Promise<Array<{ id: string; name: string; description: string | null }>> => {
+export const getPublicCategories = async (): Promise<Array<{
+  id: string;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  marathi_name?: string | null;
+  hindi_name?: string | null;
+}>> => {
   if (isSupabaseConfigured() && supabaseClient) {
     const { data, error } = await supabaseClient
       .from('categories')
-      .select('id, name, description')
+      .select('id, name, description, image_url, marathi_name, hindi_name')
       .eq('is_active', true)
       .order('name', { ascending: true });
 
@@ -356,7 +363,12 @@ export const getPublicCategories = async (): Promise<Array<{ id: string; name: s
     return data || [];
   }
 
-  return initialCategories.map((c) => ({ id: c.id, name: c.name, description: c.description || null }));
+  return initialCategories.map((c) => ({
+    id: c.id,
+    name: c.name,
+    description: c.description || null,
+    image_url: c.image_url || null,
+  }));
 };
 
 // ============================================================================
@@ -549,14 +561,16 @@ export const getCustomerAddressById = async (
   if (isSupabaseConfigured() && (supabaseAdmin || supabaseClient)) {
     try {
       const client = supabaseAdmin || supabaseClient;
-      const { data, error } = await client
-        .from('customer_addresses')
-        .select('*')
-        .eq('id', addressId)
-        .single();
+      if (client) {
+        const { data, error } = await client
+          .from('customer_addresses')
+          .select('*')
+          .eq('id', addressId)
+          .single();
 
-      if (!error && data) {
-        addressData = data;
+        if (!error && data) {
+          addressData = data;
+        }
       }
     } catch {
       // Fall through to mock storage fallback

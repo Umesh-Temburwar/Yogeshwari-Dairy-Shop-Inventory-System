@@ -10,6 +10,7 @@ import {
   Download,
   Image as ImageIcon,
   HeartPulse,
+  Layers,
   Lock,
   LogOut,
   RefreshCw,
@@ -58,6 +59,7 @@ import { CURRENT_APP_VERSION, CURRENT_BUILD_NUMBER } from '../../config/appVersi
 interface SettingsPageProps {
   onOpenChangePasscode: () => void;
   onOpenPhotoDatabase: () => void;
+  onOpenCategoryPhotos?: () => void;
   onOpenImageHealth?: () => void;
   onOpenAppDownload: () => void;
   onCheckAppUpdate?: () => Promise<any>;
@@ -67,6 +69,7 @@ interface SettingsPageProps {
 export const SettingsPage: React.FC<SettingsPageProps> = ({
   onOpenChangePasscode,
   onOpenPhotoDatabase,
+  onOpenCategoryPhotos,
   onOpenImageHealth,
   onOpenAppDownload,
   onCheckAppUpdate,
@@ -915,6 +918,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             onClick={onOpenPhotoDatabase}
             showChevron
           />
+
+          {onOpenCategoryPhotos && (
+            <SettingRow
+              icon={<Layers className="w-5 h-5" />}
+              tone="emerald"
+              title="Category Photos & Custom URLs"
+              subtitle="Update category images for E-Commerce & POS"
+              onClick={onOpenCategoryPhotos}
+              showChevron
+            />
+          )}
 
           {onOpenImageHealth && (role === 'Owner' || role === 'Admin') && (
             <SettingRow

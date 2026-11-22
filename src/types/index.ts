@@ -6,6 +6,18 @@ export type ProductCategory =
   | 'Sweets/Mithai' 
   | 'Bakery & Extras';
 
+export interface CategoryRecord {
+  id: string;
+  name: string;
+  marathi_name?: string | null;
+  hindi_name?: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export type ProductUnit = 
   | 'Litre' 
   | 'Kg' 

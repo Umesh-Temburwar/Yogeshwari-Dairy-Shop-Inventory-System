@@ -2,6 +2,7 @@ export interface CategoryItem {
   id: string;
   name: string;
   description: string | null;
+  image_url?: string | null;
   created_at: string;
 }
 
@@ -69,13 +70,13 @@ export interface BatchItem {
 
 // Initial In-Memory Seed Store matching supabase/seed.sql
 export const initialCategories: CategoryItem[] = [
-  { id: 'c1000000-0000-0000-0000-000000000001', name: 'Milk & Cream', description: 'Fresh cow, buffalo, toned, and double-toned milk', created_at: new Date().toISOString() },
-  { id: 'c1000000-0000-0000-0000-000000000002', name: 'Paneer & Tofu', description: 'Fresh malai paneer, soft paneer blocks, and diced paneer', created_at: new Date().toISOString() },
-  { id: 'c1000000-0000-0000-0000-000000000003', name: 'Curd & Chaas', description: 'Desi dahi, flavored yogurt, lassi, and buttermilk pouches', created_at: new Date().toISOString() },
-  { id: 'c1000000-0000-0000-0000-000000000004', name: 'Butter & Cheese', description: 'Table butter, white butter, cheese cubes, blocks, and slices', created_at: new Date().toISOString() },
-  { id: 'c1000000-0000-0000-0000-000000000005', name: 'Pure Ghee', description: 'Pure desi cow ghee, buffalo danedaar ghee, and cooking ghee', created_at: new Date().toISOString() },
-  { id: 'c1000000-0000-0000-0000-000000000006', name: 'Sweets & Khoya', description: 'Fresh mawa/khoya, gulab jamun, rasgulla, and kaju katli', created_at: new Date().toISOString() },
-  { id: 'c1000000-0000-0000-0000-000000000007', name: 'Ice Cream & Kulfi', description: 'Tubs, cups, family packs, and traditional matka kulfi', created_at: new Date().toISOString() },
+  { id: 'c1000000-0000-0000-0000-000000000001', name: 'Milk & Cream', description: 'Fresh cow, buffalo, toned, and double-toned milk', image_url: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80', created_at: new Date().toISOString() },
+  { id: 'c1000000-0000-0000-0000-000000000002', name: 'Paneer & Tofu', description: 'Fresh malai paneer, soft paneer blocks, and diced paneer', image_url: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=400&q=80', created_at: new Date().toISOString() },
+  { id: 'c1000000-0000-0000-0000-000000000003', name: 'Curd & Chaas', description: 'Desi dahi, flavored yogurt, lassi, and buttermilk pouches', image_url: 'https://images.unsplash.com/photo-1571212515416-fef01fc43637?auto=format&fit=crop&w=400&q=80', created_at: new Date().toISOString() },
+  { id: 'c1000000-0000-0000-0000-000000000004', name: 'Butter & Cheese', description: 'Table butter, white butter, cheese cubes, blocks, and slices', image_url: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=400&q=80', created_at: new Date().toISOString() },
+  { id: 'c1000000-0000-0000-0000-000000000005', name: 'Pure Ghee', description: 'Pure desi cow ghee, buffalo danedaar ghee, and cooking ghee', image_url: 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?auto=format&fit=crop&w=400&q=80', created_at: new Date().toISOString() },
+  { id: 'c1000000-0000-0000-0000-000000000006', name: 'Sweets & Khoya', description: 'Fresh mawa/khoya, gulab jamun, rasgulla, and kaju katli', image_url: 'https://images.unsplash.com/photo-1599785209707-a456fc1337bb?auto=format&fit=crop&w=400&q=80', created_at: new Date().toISOString() },
+  { id: 'c1000000-0000-0000-0000-000000000007', name: 'Ice Cream & Kulfi', description: 'Tubs, cups, family packs, and traditional matka kulfi', image_url: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&w=400&q=80', created_at: new Date().toISOString() },
 ];
 
 export const initialBrands: BrandItem[] = [

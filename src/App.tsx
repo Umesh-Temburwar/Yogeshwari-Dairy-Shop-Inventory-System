@@ -42,6 +42,7 @@ const SupabaseConfigModal = React.lazy(() => import('./components/Settings/Supab
 const SettingsPage = React.lazy(() => import('./components/Settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const ChangeMasterPasscodeModal = React.lazy(() => import('./components/Settings/ChangeMasterPasscodeModal').then(m => ({ default: m.ChangeMasterPasscodeModal })));
 const ProductImageManagerModal = React.lazy(() => import('./components/Admin/ProductImageManagerModal').then(m => ({ default: m.ProductImageManagerModal })));
+const CategoryPhotoManagerModal = React.lazy(() => import('./components/Admin/CategoryPhotoManagerModal').then(m => ({ default: m.CategoryPhotoManagerModal })));
 const ImageHealthView = React.lazy(() => import('./components/Admin/ImageHealthView').then(m => ({ default: m.ImageHealthView })));
 const SupplierPdfImportView = React.lazy(() => import('./components/SupplierImport/SupplierPdfImportView').then(m => ({ default: m.SupplierPdfImportView })));
 const EcommerceOrdersView = React.lazy(() => import('./components/Admin/EcommerceOrdersView').then(m => ({ default: m.EcommerceOrdersView })));
@@ -56,6 +57,7 @@ const MainContent: React.FC = () => {
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [returnPrefill, setReturnPrefill] = useState<{ productId?: string; invoiceNo?: string; customerName?: string; customerPhone?: string }>({});
   const [isPhotoDatabaseOpen, setIsPhotoDatabaseOpen] = useState(false);
+  const [isCategoryPhotosOpen, setIsCategoryPhotosOpen] = useState(false);
   const [isAppDownloadOpen, setIsAppDownloadOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
@@ -440,6 +442,7 @@ const MainContent: React.FC = () => {
                 <SettingsPage
                   onOpenChangePasscode={() => setIsChangePasscodeOpen(true)}
                   onOpenPhotoDatabase={() => setIsPhotoDatabaseOpen(true)}
+                  onOpenCategoryPhotos={() => setIsCategoryPhotosOpen(true)}
                   onOpenImageHealth={() => setActiveView('image-health')}
                   onOpenAppDownload={() => setIsAppDownloadOpen(true)}
                   onCheckAppUpdate={() => checkNow(true)}
@@ -499,6 +502,15 @@ const MainContent: React.FC = () => {
           <ProductImageManagerModal
             isOpen={isPhotoDatabaseOpen}
             onClose={() => setIsPhotoDatabaseOpen(false)}
+          />
+        )}
+      </Suspense>
+
+      <Suspense fallback={null}>
+        {isCategoryPhotosOpen && (
+          <CategoryPhotoManagerModal
+            isOpen={isCategoryPhotosOpen}
+            onClose={() => setIsCategoryPhotosOpen(false)}
           />
         )}
       </Suspense>

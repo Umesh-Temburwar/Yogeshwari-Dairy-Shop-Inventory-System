@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import { Product, ProductBatch, PaymentMode, SaleItem, CustomerGender, CustomerAgeGroup } from '../../types';
 import { computeExpiryStatus } from '../../lib/shelfLifeUtils';
+import { subscribeToCategoryChanges } from '../../services/categoryService';
 import { 
   Search, 
   ShoppingCart, 
@@ -246,6 +247,17 @@ export const BillingCounter: React.FC = () => {
   const { t, language, tr } = useLanguage();
   const { role, adminSlot, user, ownerAvatarUrl } = useAuth();
   const [previewImageProduct, setPreviewImageProduct] = useState<Product | null>(null);
+  const [categoryPhotos, setCategoryPhotos] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    return subscribeToCategoryChanges((cats) => {
+      const map: Record<string, string> = {};
+      cats.forEach((c) => {
+        if (c.image_url) map[c.name] = c.image_url;
+      });
+      setCategoryPhotos(map);
+    });
+  }, []);
 
   const activeOperator = useMemo(() => {
     const isMr = language === 'mr';
@@ -1030,20 +1042,33 @@ export const BillingCounter: React.FC = () => {
             {/* Row 3: Category Pills Carousel with In Stock First */}
             <div className="relative">
               <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar snap-x snap-mandatory pr-8 py-0.5">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`h-8 px-3 rounded-full border text-xs font-semibold whitespace-nowrap inline-flex items-center justify-center shrink-0 snap-start transition-all duration-150 active:scale-[0.97] cursor-pointer ${
-                      selectedCategory === cat.id
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                        : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#A3B8AF] hover:border-slate-300 dark:hover:border-[#324A42]'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
+                {categories.map((cat) => {
+                  const photoUrl = categoryPhotos[cat.id];
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`h-8 px-2.5 rounded-full border text-xs font-semibold whitespace-nowrap inline-flex items-center gap-1.5 justify-center shrink-0 snap-start transition-all duration-150 active:scale-[0.97] cursor-pointer ${
+                        selectedCategory === cat.id
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                          : 'bg-white dark:bg-[#131F1B] border-slate-200 dark:border-[#24352F] text-slate-700 dark:text-[#A3B8AF] hover:border-slate-300 dark:hover:border-[#324A42]'
+                      }`}
+                    >
+                      {photoUrl && (
+                        <img
+                          src={photoUrl}
+                          alt=""
+                          className="w-4 h-4 rounded-full object-cover shrink-0"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      )}
+                      <span>{cat.label}</span>
+                    </button>
+                  );
+                })}
               </div>
               <div
                 aria-hidden="true"

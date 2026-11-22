@@ -47,6 +47,7 @@ interface InventoryMoreSheetProps {
   onExportCSV: () => void;
   onOpenPhotoDatabase: () => void;
   onOpenBannersModal?: () => void;
+  onOpenBrandLogosModal?: () => void;
 }
 
 export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
@@ -65,7 +66,8 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
   onPrintPDF,
   onExportCSV,
   onOpenPhotoDatabase,
-  onOpenBannersModal
+  onOpenBannersModal,
+  onOpenBrandLogosModal
 }) => {
   const { tr } = useLanguage();
 
@@ -284,6 +286,20 @@ export const InventoryMoreSheet: React.FC<InventoryMoreSheetProps> = ({
                 >
                   <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
                   <span>{'E-Commerce Top Posters & Banners'}</span>
+                </button>
+              )}
+
+              {onOpenBrandLogosModal && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenBrandLogosModal();
+                  }}
+                  className="col-span-2 min-h-[44px] px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold inline-flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                >
+                  <Tag className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>{'Brand Master & Logos Manager'}</span>
                 </button>
               )}
             </div>

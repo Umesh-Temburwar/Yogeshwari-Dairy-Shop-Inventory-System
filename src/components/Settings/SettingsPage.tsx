@@ -1068,12 +1068,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             />
           )}
 
-          {onOpenBrandLogos && role === 'Owner' && (
+          {onOpenBrandLogos && (role === 'Owner' || role === 'Admin') && (
             <SettingRow
               icon={<Tag className="w-5 h-5" />}
               tone="emerald"
-              title="Brand Logos"
-              subtitle="Upload & manage official brand logos for E-Commerce"
+              title="Brand Master & Logos"
+              subtitle="Manage brand logos, priority order & E-Commerce visibility"
               onClick={onOpenBrandLogos}
               showChevron
             />

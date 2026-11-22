@@ -37,7 +37,8 @@ import {
   Check,
   RotateCcw,
   MoreVertical,
-  Bell
+  Bell,
+  Tag
 } from 'lucide-react';
 import { FilterChip, ChipRow, SearchBar, StatusBadge } from '../Common/UI';
 
@@ -46,6 +47,7 @@ import { DeliveryNavigationModal } from './DeliveryNavigationModal';
 import { AssignRiderModal } from './AssignRiderModal';
 import { BlinkitOrderPackingModal } from '../OnlineOrders/BlinkitOrderPackingModal';
 import { PromotionalBannersModal } from './PromotionalBannersModal';
+import { BrandLogoManagerModal } from './BrandLogoManagerModal';
 import { convertOnlineOrderToCompletedSale } from '../../services/onlineOrdersService';
 import {
   playBlinkitAlertTone,
@@ -128,6 +130,7 @@ export const EcommerceOrdersView: React.FC = () => {
   const [isUpdatingDeliveryEta, setIsUpdatingDeliveryEta] = useState<boolean>(false);
   const [isEtaModalOpen, setIsEtaModalOpen] = useState<boolean>(false);
   const [isBannersModalOpen, setIsBannersModalOpen] = useState<boolean>(false);
+  const [isBrandLogosModalOpen, setIsBrandLogosModalOpen] = useState<boolean>(false);
   const [customEtaInput, setCustomEtaInput] = useState<string>('');
   const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
   const [expandedItemsMap, setExpandedItemsMap] = useState<Record<string, boolean>>({});
@@ -852,6 +855,18 @@ export const EcommerceOrdersView: React.FC = () => {
                     >
                       <Sparkles className="w-4 h-4 text-purple-600" />
                       <span>Promotional Posters</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsBrandLogosModalOpen(true);
+                        setIsOverflowMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-[#1A2A25] text-slate-700 dark:text-slate-200 text-left cursor-pointer"
+                    >
+                      <Tag className="w-4 h-4 text-emerald-600" />
+                      <span>Brand Master &amp; Logos</span>
                     </button>
 
                     <button
@@ -2147,6 +2162,12 @@ export const EcommerceOrdersView: React.FC = () => {
       <PromotionalBannersModal
         isOpen={isBannersModalOpen}
         onClose={() => setIsBannersModalOpen(false)}
+      />
+
+      {/* BRAND MASTER & LOGOS MANAGER MODAL */}
+      <BrandLogoManagerModal
+        isOpen={isBrandLogosModalOpen}
+        onClose={() => setIsBrandLogosModalOpen(false)}
       />
     </div>
   );

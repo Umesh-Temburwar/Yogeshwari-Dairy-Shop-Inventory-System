@@ -48,6 +48,7 @@ import { ProductImage } from '../Common/ProductImage';
 import { ProductImagePreviewModal } from '../Common/ProductImagePreviewModal';
 import { ProductImageManagerModal } from '../Admin/ProductImageManagerModal';
 import { PromotionalBannersModal } from '../Admin/PromotionalBannersModal';
+import { BrandLogoManagerModal } from '../Admin/BrandLogoManagerModal';
 import { searchProductByBarcodeOnline } from '../../lib/barcodeService';
 import { supabase } from '../../lib/supabase';
 
@@ -101,6 +102,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<string>('All');
   const [showBrandSheet, setShowBrandSheet] = useState<boolean>(false);
+  const [showBrandLogosModal, setShowBrandLogosModal] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedExpiryFilter, setSelectedExpiryFilter] = useState<ExpiryStatus | 'ALL'>('ALL');
   const [viewMode, setViewMode] = useState<InventoryViewMode>('cards');
@@ -1451,6 +1453,7 @@ export const ProductList: React.FC<ProductListProps> = ({
         }}
         onOpenPhotoDatabase={() => setShowImageManager(true)}
         onOpenBannersModal={() => setShowBannersManager(true)}
+        onOpenBrandLogosModal={() => setShowBrandLogosModal(true)}
       />
 
       {/* EXISTING MODALS (PRESERVED 100% UNCHANGED) */}
@@ -1553,6 +1556,25 @@ export const ProductList: React.FC<ProductListProps> = ({
           handleSelectBrand('All');
           setSelectedCategory('All');
         }}
+        extraOptions={
+          <button
+            type="button"
+            onClick={() => {
+              setShowBrandSheet(false);
+              setShowBrandLogosModal(true);
+            }}
+            className="w-full py-2 px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 font-bold text-xs inline-flex items-center justify-center gap-2 transition cursor-pointer active:scale-95"
+          >
+            <Tag className="w-4 h-4 text-emerald-600" />
+            <span>⚙️ Manage Brand Master &amp; Logos</span>
+          </button>
+        }
+      />
+
+      {/* Brand Master Manager Modal */}
+      <BrandLogoManagerModal
+        isOpen={showBrandLogosModal}
+        onClose={() => setShowBrandLogosModal(false)}
       />
     </div>
   );

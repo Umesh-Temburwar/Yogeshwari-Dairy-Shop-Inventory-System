@@ -426,6 +426,18 @@ export interface PromotionalBanner {
   updated_at?: string;
 }
 
+// Phase 84: Brand Master Management & E-Commerce Realtime Sync
+export interface BrandMaster {
+  id?: string;
+  name: string;
+  logo_url?: string | null;
+  description?: string | null;
+  display_order: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 
 
 

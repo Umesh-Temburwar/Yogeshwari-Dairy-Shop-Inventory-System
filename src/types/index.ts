@@ -350,7 +350,7 @@ export type EcommerceOrderStatus =
   | 'CANCELLED' 
   | 'REJECTED';
 
-export type EcommercePaymentMethod = 'COD' | 'ONLINE_UPI' | 'RAZORPAY' | 'WALLET';
+export type EcommercePaymentMethod = 'COD' | 'ONLINE_UPI' | 'RAZORPAY' | 'WALLET' | 'UPI' | 'ONLINE';
 export type EcommercePaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
 
 export interface EcommerceOrderItem {
@@ -396,6 +396,11 @@ export interface EcommerceOrder {
   total_amount: number;
   estimated_delivery_time?: string;
   delivery_notes?: string | null;
+  delivery_partner_name?: string | null;
+  delivery_partner_phone?: string | null;
+  delivery_partner_vehicle?: string | null;
+  assigned_rider_id?: string | null;
+  assigned_at?: string | null;
   rejection_reason?: string | null;
   cancellation_reason?: string | null;
   cancelled_at?: string | null;

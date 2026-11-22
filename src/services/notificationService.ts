@@ -165,7 +165,18 @@ export const showOrderNotification = async (order: {
       const reg = await navigator.serviceWorker.ready;
       await reg.showNotification(title, options);
     } else {
-      new Notification(title, options);
+      const notif = new Notification(title, options);
+      notif.onclick = () => {
+        try {
+          window.focus();
+        } catch {}
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('yd_navigate_view', { detail: 'ecommerce-orders' }));
+          if (window.location.hash !== '#view=ecommerce-orders') {
+            window.location.hash = '#view=ecommerce-orders';
+          }
+        }
+      };
     }
   } catch (err) {
     console.warn('System Notification display error:', err);

@@ -143,17 +143,20 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // If a window is already open, focus it and navigate
+      // If a window is already open, focus it, post navigation message, and navigate
       for (const client of clientList) {
         if ('focus' in client) {
           client.focus();
+          if ('postMessage' in client) {
+            client.postMessage({ type: 'NAVIGATE_VIEW', view: 'ecommerce-orders' });
+          }
           if ('navigate' in client) {
             client.navigate(targetUrl);
           }
           return;
         }
       }
-      // If no window is open, open a new window
+      // If no window is open, open a new window pointing to Online Orders
       if (clients.openWindow) {
         return clients.openWindow(targetUrl);
       }

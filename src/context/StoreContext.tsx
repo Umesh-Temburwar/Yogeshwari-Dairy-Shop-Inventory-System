@@ -621,23 +621,33 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (!error && count !== null && isMounted) {
           setPendingOnlineOrdersCount(count);
 
-          // Trigger audible chime and toast whenever new pending orders arrive
-          if (data && prevPendingCountRef.current !== null && count > prevPendingCountRef.current) {
-            const incoming = data.filter(
-              (o) => !knownOrderIdsRef.current.has(o.id) && o.order_status === 'PLACED'
-            );
-            if (incoming.length > 0) {
-              playNewOrderChime();
-              showOrderNotification({
-                orderNo: incoming[0].order_no,
-                customerName: incoming[0].customer_name,
-                amount: incoming[0].total_amount,
-                orderId: incoming[0].id,
-              }).catch(console.error);
+          // Trigger audible chime and toast whenever new pending orders arrive or on initial load
+          if (data && count > 0) {
+            if (prevPendingCountRef.current !== null && count > prevPendingCountRef.current) {
+              const incoming = data.filter(
+                (o) => !knownOrderIdsRef.current.has(o.id) && o.order_status === 'PLACED'
+              );
+              if (incoming.length > 0) {
+                playNewOrderChime();
+                showOrderNotification({
+                  orderNo: incoming[0].order_no,
+                  customerName: incoming[0].customer_name,
+                  amount: incoming[0].total_amount,
+                  orderId: incoming[0].id,
+                }).catch(console.error);
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(
+                    new CustomEvent('yd_new_online_order_alert', {
+                      detail: { order: incoming[0], count },
+                    })
+                  );
+                }
+              }
+            } else if (prevPendingCountRef.current === null && count > 0) {
               if (typeof window !== 'undefined') {
                 window.dispatchEvent(
                   new CustomEvent('yd_new_online_order_alert', {
-                    detail: { order: incoming[0], count },
+                    detail: { order: data[0], count },
                   })
                 );
               }

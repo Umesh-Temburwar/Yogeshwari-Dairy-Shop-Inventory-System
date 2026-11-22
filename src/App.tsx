@@ -154,6 +154,47 @@ const MainContent: React.FC = () => {
     return () => window.removeEventListener('yd_new_online_order_alert', handler);
   }, []);
 
+  // Handle direct navigation to Online Orders from OS notifications, Service Worker, or URL hash
+  useEffect(() => {
+    const handleUrlHashOrNavigation = () => {
+      const hash = window.location.hash.toLowerCase();
+      if (
+        hash.includes('ecommerce-orders') ||
+        hash.includes('online-orders') ||
+        hash.includes('view=ecommerce-orders')
+      ) {
+        setActiveView('ecommerce-orders');
+      }
+    };
+
+    handleUrlHashOrNavigation();
+    window.addEventListener('hashchange', handleUrlHashOrNavigation);
+
+    const handleNavEvent = (e: any) => {
+      if (e.detail === 'ecommerce-orders' || e.detail?.view === 'ecommerce-orders') {
+        setActiveView('ecommerce-orders');
+      }
+    };
+    window.addEventListener('yd_navigate_view', handleNavEvent);
+
+    const handleSwMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'NAVIGATE_VIEW' && event.data?.view === 'ecommerce-orders') {
+        setActiveView('ecommerce-orders');
+      }
+    };
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleSwMessage);
+    }
+
+    return () => {
+      window.removeEventListener('hashchange', handleUrlHashOrNavigation);
+      window.removeEventListener('yd_navigate_view', handleNavEvent);
+      if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleSwMessage);
+      }
+    };
+  }, [setActiveView]);
+
   useEffect(() => {
     if (!isNativePlatform()) return;
 

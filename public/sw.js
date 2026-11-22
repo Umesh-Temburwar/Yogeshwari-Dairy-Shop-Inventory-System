@@ -104,7 +104,7 @@ self.addEventListener('push', (event) => {
     body: 'योगेश्वरी डेयरी में नया ऑर्डर आया है। तुरंत चेक करें।',
     icon: '/assets/YDO_logo-B6fE-ZjE.jpg',
     badge: '/assets/YDO_logo-B6fE-ZjE.jpg',
-    vibrate: [300, 100, 300, 100, 300],
+    vibrate: [400, 150, 400, 150, 400, 600],
     tag: 'ydo-new-order',
     renotify: true,
     requireInteraction: true,

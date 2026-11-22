@@ -1,4 +1,4 @@
-import { playNewOrderChime } from '../utils/audioChime';
+import { playNewOrderChime, safeVibrate } from '../utils/audioChime';
 import { supabase } from '../lib/supabase';
 
 const BACKEND_BASE = (import.meta.env.VITE_API_BASE_URL || 'https://yogeshwari-dairy-shop-inventory-system.onrender.com/api/v1').replace(/\/$/, '');
@@ -138,11 +138,7 @@ export const showOrderNotification = async (order: {
   playNewOrderChime();
 
   // Trigger vibration if device supports it (mobile devices)
-  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-    try {
-      navigator.vibrate([300, 100, 300, 100, 300]);
-    } catch {}
-  }
+  safeVibrate([400, 150, 400, 150, 400, 600]);
 
   if (getNotificationPermission() !== 'granted') return;
 
@@ -155,6 +151,7 @@ export const showOrderNotification = async (order: {
     tag: `order-${order.orderNo}`,
     renotify: true,
     requireInteraction: true,
+    vibrate: [400, 150, 400, 150, 400, 600] as any,
     data: {
       url: `/#view=ecommerce-orders`,
     },

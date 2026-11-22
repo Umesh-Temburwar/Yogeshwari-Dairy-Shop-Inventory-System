@@ -6,8 +6,29 @@
 
 let sharedAudioContext: AudioContext | null = null;
 let isAudioUnlocked = false;
+let hasUserInteracted = false;
 
 const SOUND_ENABLED_KEY = 'yd_sound_alerts_enabled';
+
+/**
+ * Returns whether user has interacted with the document at least once.
+ */
+export const hasUserGesture = (): boolean => hasUserInteracted;
+
+/**
+ * Safe wrapper around navigator.vibrate to respect browser intervention policies.
+ * Only calls navigator.vibrate if user has tapped/clicked/keyed the document.
+ */
+export const safeVibrate = (pattern: number | number[]): void => {
+  if (!hasUserInteracted) return;
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      navigator.vibrate(pattern);
+    } catch {
+      // Ignore vibration error on unsupported or policy-blocked browsers
+    }
+  }
+};
 
 /**
  * Returns whether sound alerts are enabled by the user in settings.
@@ -44,6 +65,7 @@ const getAudioContext = (): AudioContext | null => {
  * Unlocks AudioContext upon user gesture (click/keydown).
  */
 export const unlockAudio = (): void => {
+  hasUserInteracted = true;
   const ctx = getAudioContext();
   if (!ctx) return;
 
@@ -58,15 +80,20 @@ export const unlockAudio = (): void => {
   }
 };
 
-// Automatically listen for first user interaction to unlock audio
+// Automatically listen for first user interaction to unlock audio and vibration permissions
 if (typeof window !== 'undefined') {
   const handleFirstInteraction = () => {
+    hasUserInteracted = true;
     unlockAudio();
     window.removeEventListener('pointerdown', handleFirstInteraction);
+    window.removeEventListener('touchstart', handleFirstInteraction);
     window.removeEventListener('keydown', handleFirstInteraction);
+    window.removeEventListener('click', handleFirstInteraction);
   };
   window.addEventListener('pointerdown', handleFirstInteraction, { passive: true });
+  window.addEventListener('touchstart', handleFirstInteraction, { passive: true });
   window.addEventListener('keydown', handleFirstInteraction, { passive: true });
+  window.addEventListener('click', handleFirstInteraction, { passive: true });
 }
 
 let alarmIntervalTimer: ReturnType<typeof setInterval> | null = null;
@@ -88,11 +115,7 @@ export const playBlinkitAlertTone = (): void => {
   if (!isSoundAlertsEnabled()) return;
 
   // 1. Phone Vibration (Blinkit rhythm: vibrate-pause-vibrate)
-  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-    try {
-      navigator.vibrate([400, 150, 400, 150, 400, 600]);
-    } catch {}
-  }
+  safeVibrate([400, 150, 400, 150, 400, 600]);
 
   // 2. Web Audio Synthesizer (Blinkit 4-step chime + high bell ping)
   try {
@@ -194,11 +217,7 @@ export const stopBlinkitOrderAlarm = (): void => {
   isCurrentlyRinging = false;
 
   // Cancel any active device vibration
-  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-    try {
-      navigator.vibrate(0);
-    } catch {}
-  }
+  safeVibrate(0);
 
   // Dispatch global event
   if (typeof window !== 'undefined') {

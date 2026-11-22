@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 120" width="300" height="120">
+  <rect width="100%" height="100%" rx="24" fill="#3B1E08"/>
+  <circle cx="56" cy="60" r="28" fill="#5A2E0D" stroke="#D4A373" stroke-width="2"/>
+  <ellipse cx="56" cy="60" rx="14" ry="20" fill="#3B1E08" transform="rotate(-25 56 60)"/>
+  <path d="M52 46 Q56 60 52 74" stroke="#D4A373" stroke-width="2.5" fill="none"/>
+  <text x="100" y="74" font-family="'Times New Roman', Georgia, serif" font-size="52" font-weight="900" fill="#FFFFFF" letter-spacing="2">BRU</text>
+  <text x="102" y="94" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#E8B878" letter-spacing="3">INSTANT</text>
+</svg>

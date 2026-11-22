@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 120" width="300" height="120">
+  <rect width="100%" height="100%" rx="24" fill="#FFFFFF"/>
+  <path d="M20 70 Q150 18 280 70 L280 95 Q150 45 20 95 Z" fill="#D32F2F"/>
+  <text x="150" y="66" font-family="'Arial Black', Impact, sans-serif" font-size="44" font-weight="900" fill="#B71C1C" text-anchor="middle" letter-spacing="2">MAYORA</text>
+  <text x="150" y="86" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#757575" text-anchor="middle" letter-spacing="3">QUALITY FOODS</text>
+</svg>

@@ -1,16 +1,15 @@
 {
-  "versionName": "1.0.4",
-  "versionCode": 5,
+  "versionName": "1.0.5",
+  "versionCode": 6,
   "minVersionCode": 1,
-  "releaseDate": "2026-11-21",
+  "releaseDate": "2026-11-22",
   "apkUrl": "https://yogeshwari-dairy-shop.vercel.app/downloads/yogeshwari-dairy.apk",
   "forceUpdate": false,
   "title": "New Update Available! (नवीन अपडेट उपलब्ध आहे)",
   "highlights": [
-    "Offline Mode & Auto-Sync: Work seamlessly even without internet; auto-syncs when online",
-    "Custom Haptic & Vibration: Select Light, Medium, Strong, or Custom vibration duration",
-    "PDF Preview Zoom: Zoom In, Zoom Out, and Pinch-to-zoom on receipts & PDF reports",
-    "Return & Refund Delete: Direct delete option for customer and supplier returns on mobile",
-    "Mobile Soft UI & Clean Layout: All modal options float above the 5 bottom navigation buttons"
+    "Full Brand Master: Add, edit, delete brands with logo photos, display order, and real-time e-commerce sync",
+    "Redesigned Mobile Staff Screens: One-thumb fast navigation for POS Products, Stock & Inventory, and Online Orders",
+    "Mobile Order Notifications: Native browser notification permission prompt with audible chime and vibration",
+    "Consolidated Filters & Sticky Total: Streamlined chip rows, sticky bill bar, and bottom sheet brand selectors"
   ]
 }

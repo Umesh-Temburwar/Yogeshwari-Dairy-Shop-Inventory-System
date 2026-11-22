@@ -59,6 +59,33 @@ interface BrandFormData {
   is_active: boolean;
 }
 
+export const DEFAULT_BRAND_LOGOS: Record<string, string> = {
+  yogeshwari: '/YDO_logo.png',
+  parle: '/brands/parle.png',
+  'ram bandhu': '/brands/ram-bandhu.png',
+  "haldiram's": '/brands/haldirams.png',
+  temptin: '/brands/temptin.svg',
+  gramilk: '/brands/gramilk.svg',
+  britannia: '/brands/britannia.png',
+  amul: '/brands/amul.png',
+  suhana: '/brands/suhana.png',
+  chitale: '/brands/chitale.png',
+  'chitale foods': '/brands/chitale.png',
+  cadbury: '/brands/cadbury.png',
+  cadbuary: '/brands/cadbury.png',
+  "karia's": '/brands/karias.svg',
+  patanjali: '/brands/patanjali.png',
+  campa: '/brands/campa.png',
+  bru: '/brands/bru.svg',
+  maggi: '/brands/maggi.png',
+  govind: '/brands/govind.png',
+  nutritious: '/brands/nutritious.svg',
+  nutritius: '/brands/nutritious.svg',
+  sprite: '/brands/sprite.png',
+  mayora: '/brands/mayora.svg',
+  unibic: '/brands/unibic.png',
+};
+
 export const BrandLogoManagerModal: React.FC<BrandLogoManagerModalProps> = ({
   isOpen,
   onClose,
@@ -192,7 +219,7 @@ export const BrandLogoManagerModal: React.FC<BrandLogoManagerModalProps> = ({
       items.push({
         id: dbRecord.id,
         name: dbRecord.name,
-        logo_url: dbRecord.logo_url || (dbRecord.name.toLowerCase() === 'yogeshwari' ? '/YDO_logo.png' : null),
+        logo_url: dbRecord.logo_url || DEFAULT_BRAND_LOGOS[key] || DEFAULT_BRAND_LOGOS[dbRecord.name.toLowerCase()] || (dbRecord.name.toLowerCase() === 'yogeshwari' ? '/YDO_logo.png' : null),
         display_order: dbRecord.display_order,
         is_active: dbRecord.is_active,
         product_count: productCounts.get(key) || 0,
@@ -209,7 +236,7 @@ export const BrandLogoManagerModal: React.FC<BrandLogoManagerModalProps> = ({
         processedKeys.add(key);
         items.push({
           name: b,
-          logo_url: b.toLowerCase() === 'yogeshwari' ? '/YDO_logo.png' : null,
+          logo_url: DEFAULT_BRAND_LOGOS[key] || DEFAULT_BRAND_LOGOS[b.toLowerCase()] || (b.toLowerCase() === 'yogeshwari' ? '/YDO_logo.png' : null),
           display_order: 99,
           is_active: true,
           product_count: productCounts.get(key) || 0,

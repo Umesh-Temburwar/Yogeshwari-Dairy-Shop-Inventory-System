@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 120" width="300" height="120">
+  <rect width="100%" height="100%" rx="24" fill="#14532D"/>
+  <rect x="15" y="15" width="270" height="90" rx="16" fill="#166534" stroke="#86EFAC" stroke-width="2"/>
+  <circle cx="56" cy="60" r="22" fill="#22C55E"/>
+  <path d="M48 60 L54 66 L66 52" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <text x="90" y="66" font-family="'Arial Black', sans-serif" font-size="28" font-weight="900" fill="#FFFFFF" letter-spacing="1">NUTRITIOUS</text>
+  <text x="92" y="85" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#86EFAC" letter-spacing="2">NATURAL &amp; PURE</text>
+</svg>

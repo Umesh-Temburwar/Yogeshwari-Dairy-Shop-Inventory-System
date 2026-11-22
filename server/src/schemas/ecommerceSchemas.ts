@@ -99,6 +99,7 @@ export const updateStoreStatusSchema = z.object({
   is_open: z.boolean(),
   message: z.string().max(300).optional(),
   reopen_time: z.string().max(50).optional(),
+  delivery_time: z.string().max(100).optional(),
 });
 
 export type CustomerRegisterInput = z.infer<typeof customerRegisterSchema>;

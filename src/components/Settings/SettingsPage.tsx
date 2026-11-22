@@ -25,8 +25,12 @@ import {
   WifiOff,
   Vibrate,
   SlidersHorizontal,
-  CloudUpload
+  CloudUpload,
+  Clock,
+  ShoppingBag
 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { fetchOnlineStoreConfig, updateOnlineStoreDeliveryTime } from '../../services/onlineOrdersService';
 import { useStore } from '../../context/StoreContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
@@ -117,6 +121,24 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   const [regFeedback, setRegFeedback] = useState<string | null>(null);
   const [isAuditStreamEnabled, setIsAuditStreamEnabledState] = useState<boolean>(() => isAuditStreamEnabledSync());
 
+  // Online Store & Delivery ETA Setting
+  const [onlineStoreOpen, setOnlineStoreOpen] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('ydo_online_store_open') !== 'false';
+    } catch {
+      return true;
+    }
+  });
+  const [deliveryEtaSetting, setDeliveryEtaSetting] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ydo_online_delivery_time') || '15-25 mins';
+    } catch {
+      return '15-25 mins';
+    }
+  });
+  const [isUpdatingOnlineSetting, setIsUpdatingOnlineSetting] = useState<boolean>(false);
+  const [onlineSettingFeedback, setOnlineSettingFeedback] = useState<string | null>(null);
+
   // Shake-to-Scan setting
   const [shakeToScanEnabled, setShakeToScanEnabled] = useLocalStorage<boolean>('ydo_shake_to_scan_enabled', true);
 
@@ -144,6 +166,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
   useEffect(() => {
     syncRegistrationSettingFromCloud().then(setIsRegistrationAllowed).catch(() => {});
+    fetchOnlineStoreConfig().then((cfg) => {
+      setOnlineStoreOpen(cfg.isOpen);
+      setDeliveryEtaSetting(cfg.deliveryTime);
+    }).catch(() => {});
     const unsubReg = subscribeToRegistrationSetting(setIsRegistrationAllowed);
     const unsubAudit = subscribeToAuditStreamSetting(setIsAuditStreamEnabledState);
     isBiometricSupported().then(setBiometricSupported).catch(() => setBiometricSupported(false));
@@ -152,6 +178,46 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       unsubAudit();
     };
   }, []);
+
+  const handleToggleOnlineStore = async () => {
+    setIsUpdatingOnlineSetting(true);
+    const nextOpen = !onlineStoreOpen;
+    setOnlineStoreOpen(nextOpen);
+    try {
+      localStorage.setItem('ydo_online_store_open', String(nextOpen));
+    } catch {}
+
+    try {
+      const sanitizedEta = deliveryEtaSetting.replace(/\s+/g, '_');
+      const baseTag = nextOpen ? 'dashboard:reg_off:store_open' : 'dashboard:reg_off:store_closed';
+      const redirectTag = `${baseTag}:eta_${sanitizedEta}`;
+      await supabase
+        .from('profiles')
+        .update({
+          default_redirect_view: redirectTag,
+          ecommerce_delivery_time: deliveryEtaSetting,
+          updated_at: new Date().toISOString()
+        })
+        .eq('role', 'Owner');
+      setOnlineSettingFeedback(`Online store is now ${nextOpen ? 'OPEN' : 'CLOSED'}`);
+      setTimeout(() => setOnlineSettingFeedback(null), 3000);
+    } catch (e) {
+      console.warn('Failed to update online store status:', e);
+    } finally {
+      setIsUpdatingOnlineSetting(false);
+    }
+  };
+
+  const handleUpdateDeliveryEta = async (newEta: string) => {
+    setIsUpdatingOnlineSetting(true);
+    setDeliveryEtaSetting(newEta);
+    const ok = await updateOnlineStoreDeliveryTime(newEta);
+    setIsUpdatingOnlineSetting(false);
+    if (ok) {
+      setOnlineSettingFeedback(`⚡ Delivery time set to "${newEta}". E-Commerce app updated live!`);
+      setTimeout(() => setOnlineSettingFeedback(null), 3500);
+    }
+  };
 
   // Count products missing or with invalid image URLs from existing store state (zero extra queries)
   const imageIssueCount = useMemo(() => {
@@ -775,6 +841,75 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               />
             }
           />
+        </SettingSection>
+
+        {/* SECTION: ONLINE STORE & E-COMMERCE (डिलिव्हरी टाइम सेटिंग) */}
+        <SettingSection title="ONLINE STORE & E-COMMERCE (ऑनलाइन डिलिव्हरी सेटिंग)">
+          {onlineSettingFeedback && (
+            <div className="p-3 mb-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700 text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-2 animate-fade-in">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{onlineSettingFeedback}</span>
+            </div>
+          )}
+
+          <SettingRow
+            icon={<ShoppingBag className="w-5 h-5" />}
+            tone={onlineStoreOpen ? 'emerald' : 'rose'}
+            title="Online Customer Store"
+            subtitle={
+              onlineStoreOpen
+                ? 'Store is OPEN • Customers can place orders online'
+                : 'Store is CLOSED • Customer app shows "Shop is Closed"'
+            }
+            onClick={handleToggleOnlineStore}
+            rightContent={
+              <ToggleSwitch
+                checked={onlineStoreOpen}
+                onChange={handleToggleOnlineStore}
+                ariaLabel="Toggle Online Store Open/Closed"
+              />
+            }
+          />
+
+          <div className="p-4 bg-white dark:bg-[#131F1B] rounded-2xl border border-slate-200/80 dark:border-[#24352F] space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-500" />
+                <span className="text-xs font-bold text-slate-800 dark:text-[#E7F0EC]">
+                  E-Commerce Delivery Time Promise:
+                </span>
+              </div>
+              <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-700">
+                ⚡ {deliveryEtaSetting}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-[#8FA69C]">
+              Ambajogai customer app par header, delivery banners aur cart drawer me yahi time realtime me live dikhega:
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+              {[
+                '10-15 mins',
+                '15-25 mins',
+                '20-30 mins',
+                '30-45 mins',
+                '45-60 mins',
+              ].map((eta) => (
+                <button
+                  key={eta}
+                  type="button"
+                  disabled={isUpdatingOnlineSetting}
+                  onClick={() => handleUpdateDeliveryEta(eta)}
+                  className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                    deliveryEtaSetting === eta
+                      ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-xs'
+                      : 'bg-slate-50 dark:bg-[#1A2A25] border-slate-200 dark:border-[#2A3E37] text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                  }`}
+                >
+                  {eta}
+                </button>
+              ))}
+            </div>
+          </div>
         </SettingSection>
 
         {/* SECTION 4: HAPTICS & VIBRATION */}

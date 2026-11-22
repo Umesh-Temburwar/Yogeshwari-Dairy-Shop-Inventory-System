@@ -33,7 +33,8 @@ import {
   LayoutGrid,
   List,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Check
 } from 'lucide-react';
 import { DeliveryNavigationModal } from './DeliveryNavigationModal';
 import { AssignRiderModal } from './AssignRiderModal';
@@ -108,6 +109,18 @@ export const EcommerceOrdersView: React.FC = () => {
       return 'cards';
     }
   });
+
+  // Delivery ETA promise state (Synchronized in realtime with customer e-commerce app)
+  const [deliveryEta, setDeliveryEta] = useState<string>(() => {
+    try {
+      return localStorage.getItem('ydo_online_delivery_time') || '15-25 mins';
+    } catch {
+      return '15-25 mins';
+    }
+  });
+  const [isUpdatingDeliveryEta, setIsUpdatingDeliveryEta] = useState<boolean>(false);
+  const [isEtaModalOpen, setIsEtaModalOpen] = useState<boolean>(false);
+  const [customEtaInput, setCustomEtaInput] = useState<string>('');
 
   const handleToggleViewMode = (mode: 'cards' | 'compact') => {
     setViewMode(mode);
@@ -261,36 +274,66 @@ export const EcommerceOrdersView: React.FC = () => {
     return () => clearInterval(pollTimer);
   }, [fetchOrders]);
 
-  // Synchronize Online Store Open / Closed status with Supabase profiles
+  // Synchronize Online Store Open / Closed status & Delivery ETA with Supabase profiles
   useEffect(() => {
     const fetchStoreStatus = async () => {
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('default_redirect_view')
+          .select('default_redirect_view, ecommerce_delivery_time')
           .eq('role', 'Owner')
           .single();
         if (data && data.default_redirect_view) {
-          const isClosed = data.default_redirect_view.includes('store_closed');
+          const val = data.default_redirect_view;
+          const isClosed = val.includes('store_closed');
           setIsStoreOpen(!isClosed);
           try {
             localStorage.setItem('ydo_online_store_open', String(!isClosed));
           } catch { }
+
+          let eta = (data as any).ecommerce_delivery_time;
+          if (!eta && val.includes('eta_')) {
+            const match = val.match(/eta_([a-zA-Z0-9_\-]+)/);
+            if (match && match[1]) {
+              eta = match[1].replace(/_/g, ' ');
+            }
+          }
+          if (eta) {
+            setDeliveryEta(eta);
+            try {
+              localStorage.setItem('ydo_online_delivery_time', eta);
+            } catch { }
+          }
         }
       } catch { }
     };
     fetchStoreStatus();
 
-    // Listen to real-time changes on profiles for multi-counter sync
+    // Listen to real-time changes on profiles for multi-counter & customer web sync
     const profileSub = supabase
       .channel('store-status-sync-live')
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'profiles' },
         (payload: any) => {
-          if (payload.new && payload.new.role === 'Owner' && payload.new.default_redirect_view) {
-            const isClosed = payload.new.default_redirect_view.includes('store_closed');
+          if (payload.new && payload.new.role === 'Owner') {
+            const val = payload.new.default_redirect_view || '';
+            const isClosed = val.includes('store_closed');
             setIsStoreOpen(!isClosed);
+
+            let eta = payload.new.ecommerce_delivery_time;
+            if (!eta && val.includes('eta_')) {
+              const match = val.match(/eta_([a-zA-Z0-9_\-]+)/);
+              if (match && match[1]) {
+                eta = match[1].replace(/_/g, ' ');
+              }
+            }
+            if (eta) {
+              setDeliveryEta(eta);
+              try {
+                localStorage.setItem('ydo_online_delivery_time', eta);
+              } catch { }
+            }
           }
         }
       )
@@ -301,7 +344,53 @@ export const EcommerceOrdersView: React.FC = () => {
     };
   }, []);
 
-  // Toggle store open/closed state
+  // Save Delivery Time ETA promise & broadcast to E-Commerce customer app in real-time
+  const handleSaveDeliveryEta = async (newEta: string) => {
+    const cleanEta = newEta.trim();
+    if (!cleanEta) return;
+    setIsUpdatingDeliveryEta(true);
+    setDeliveryEta(cleanEta);
+    try {
+      localStorage.setItem('ydo_online_delivery_time', cleanEta);
+    } catch { }
+
+    try {
+      const sanitizedEta = cleanEta.replace(/\s+/g, '_');
+      const baseTag = isStoreOpen ? 'dashboard:reg_off:store_open' : 'dashboard:reg_off:store_closed';
+      const redirectTag = `${baseTag}:eta_${sanitizedEta}`;
+
+      await supabase
+        .from('profiles')
+        .update({
+          default_redirect_view: redirectTag,
+          ecommerce_delivery_time: cleanEta,
+          updated_at: new Date().toISOString()
+        })
+        .eq('role', 'Owner');
+
+      // Also notify backend server store status if active
+      try {
+        await fetch(`${BACKEND_BASE}/ecommerce/admin/store-status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            is_open: isStoreOpen,
+            delivery_time: cleanEta
+          })
+        });
+      } catch { }
+
+      showToast(`⚡ Delivery Time updated to "${cleanEta}". E-Commerce app synced live!`);
+      setIsEtaModalOpen(false);
+    } catch (err) {
+      console.warn('Failed to update delivery time:', err);
+      showToast('❌ Failed to update delivery time in database.');
+    } finally {
+      setIsUpdatingDeliveryEta(false);
+    }
+  };
+
+  // Toggle store open/closed state while preserving Delivery ETA tag
   const handleToggleStoreOpen = async () => {
     setIsUpdatingStoreStatus(true);
     const nextState = !isStoreOpen;
@@ -311,11 +400,15 @@ export const EcommerceOrdersView: React.FC = () => {
     } catch { }
 
     try {
-      const redirectTag = nextState ? 'dashboard:reg_off:store_open' : 'dashboard:reg_off:store_closed';
+      const sanitizedEta = deliveryEta.replace(/\s+/g, '_');
+      const baseTag = nextState ? 'dashboard:reg_off:store_open' : 'dashboard:reg_off:store_closed';
+      const redirectTag = `${baseTag}:eta_${sanitizedEta}`;
+
       await supabase
         .from('profiles')
         .update({
           default_redirect_view: redirectTag,
+          ecommerce_delivery_time: deliveryEta,
           updated_at: new Date().toISOString()
         })
         .eq('role', 'Owner');
@@ -666,6 +759,22 @@ export const EcommerceOrdersView: React.FC = () => {
               <span className={`w-2 h-2 rounded-full ${isStoreOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
               <span className="hidden sm:inline">{isStoreOpen ? 'Store: OPEN' : 'Store: CLOSED'}</span>
               <span className="sm:hidden">{isStoreOpen ? 'OPEN' : 'CLOSED'}</span>
+            </button>
+
+            {/* Delivery Time / ETA Promise Pill */}
+            <button
+              type="button"
+              disabled={isUpdatingDeliveryEta}
+              onClick={() => {
+                setCustomEtaInput(deliveryEta);
+                setIsEtaModalOpen(true);
+              }}
+              className="h-9 px-2.5 sm:px-3 rounded-full border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-xs font-bold inline-flex items-center gap-1.5 active:scale-[0.97] transition-all cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/40 shadow-xs"
+              title="Click to edit E-Commerce Delivery Time Promise"
+            >
+              <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="truncate max-w-[85px] sm:max-w-none">{deliveryEta}</span>
+              <ChevronDown className="w-3 h-3 text-amber-600/70 shrink-0" />
             </button>
 
             {/* Audio Alarm Toggle */}
@@ -1780,6 +1889,120 @@ export const EcommerceOrdersView: React.FC = () => {
             showToast(`📦 Packing progress updated for Order #${packingOrder.order_no}`);
           }}
         />
+      )}
+
+      {/* EDIT E-COMMERCE DELIVERY TIME / ETA PROMISE MODAL */}
+      {isEtaModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div
+            className="w-full max-w-md bg-white dark:bg-[#131F1B] rounded-3xl border border-slate-200 dark:border-[#24352F] shadow-2xl overflow-hidden animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-[#24352F] flex items-center justify-between bg-amber-50/50 dark:bg-amber-950/20">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-[#E7F0EC] tracking-tight">
+                    Delivery Time Promise
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Live customer app par yahi time dikhega
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEtaModalOpen(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1E2E28] transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 sm:p-5 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-2">
+                  ⚡ Quick Presets (1-Tap Select):
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    { eta: '10-15 mins', tag: 'Super Express', desc: 'Light rush, immediate dispatch' },
+                    { eta: '15-25 mins', tag: 'Express Dairy', desc: 'Standard fast delivery (Default)' },
+                    { eta: '20-30 mins', tag: 'Standard', desc: 'Regular city delivery' },
+                    { eta: '30-45 mins', tag: 'High Rush', desc: 'Peak counter hours / bad weather' },
+                    { eta: '45-60 mins', tag: 'Peak Evening', desc: 'High order volume' },
+                  ].map((preset) => {
+                    const isSelected = deliveryEta.toLowerCase() === preset.eta.toLowerCase();
+                    return (
+                      <button
+                        key={preset.eta}
+                        type="button"
+                        disabled={isUpdatingDeliveryEta}
+                        onClick={() => handleSaveDeliveryEta(preset.eta)}
+                        className={`p-2.5 rounded-2xl border text-left transition-all active:scale-[0.98] cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-500 text-amber-900 dark:text-amber-200 ring-2 ring-amber-400/30'
+                            : 'bg-slate-50 dark:bg-[#1A2A25] border-slate-200 dark:border-[#2A3E37] text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-sm tracking-tight">{preset.eta}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                            {preset.tag}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">
+                          {preset.desc}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Custom Input */}
+              <div className="pt-2 border-t border-slate-100 dark:border-[#24352F] space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                  ✏️ Or enter custom delivery time:
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={customEtaInput}
+                    onChange={(e) => setCustomEtaInput(e.target.value)}
+                    placeholder="e.g. 15-20 mins, Within 25 mins"
+                    className="flex-1 h-10 px-3.5 rounded-xl border border-slate-200 dark:border-[#2A3E37] bg-white dark:bg-[#1A2A25] text-slate-900 dark:text-white text-xs font-medium focus:outline-hidden focus:ring-2 focus:ring-amber-500/40"
+                  />
+                  <button
+                    type="button"
+                    disabled={isUpdatingDeliveryEta || !customEtaInput.trim()}
+                    onClick={() => handleSaveDeliveryEta(customEtaInput)}
+                    className="h-10 px-4 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs inline-flex items-center gap-1.5 active:scale-[0.97] transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {isUpdatingDeliveryEta ? (
+                      <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Check className="w-3.5 h-3.5" />
+                    )}
+                    <span>Apply</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Realtime broadcast reassurance card */}
+              <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-800/40 flex items-start gap-2 text-[11px] text-emerald-800 dark:text-emerald-300">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping mt-1 shrink-0" />
+                <p>
+                  <strong>Instant Live Broadcast:</strong> Save karte hi Ambajogai ke sabhi customers ke phone par header, delivery banners aur cart drawer bina reload kiye turant update ho jayega!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

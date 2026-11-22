@@ -404,3 +404,82 @@ export const cancelOnlineOrderByStaff = async (
 
   return { success: true, message: 'Order cancelled successfully and stock restored' };
 };
+
+/**
+ * Fetches current Online Store status & delivery ETA promise from Supabase profiles.
+ */
+export const fetchOnlineStoreConfig = async (): Promise<{ isOpen: boolean; deliveryTime: string }> => {
+  const defaultRes = { isOpen: true, deliveryTime: '15-25 mins' };
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('default_redirect_view, ecommerce_delivery_time')
+      .eq('role', 'Owner')
+      .single();
+
+    if (!error && data) {
+      const val = data.default_redirect_view || '';
+      const isClosed = val.includes('store_closed');
+      let deliveryTime = (data as any).ecommerce_delivery_time;
+      if (!deliveryTime && val.includes('eta_')) {
+        const match = val.match(/eta_([a-zA-Z0-9_\-]+)/);
+        if (match && match[1]) {
+          deliveryTime = match[1].replace(/_/g, ' ');
+        }
+      }
+      return {
+        isOpen: !isClosed,
+        deliveryTime: deliveryTime || defaultRes.deliveryTime,
+      };
+    }
+  } catch {
+    // Fallback to localStorage or defaults
+  }
+
+  try {
+    const localOpen = localStorage.getItem('ydo_online_store_open') !== 'false';
+    const localEta = localStorage.getItem('ydo_online_delivery_time') || defaultRes.deliveryTime;
+    return { isOpen: localOpen, deliveryTime: localEta };
+  } catch {
+    return defaultRes;
+  }
+};
+
+/**
+ * Updates Online Store Delivery ETA promise and broadcasts to E-Commerce in realtime.
+ */
+export const updateOnlineStoreDeliveryTime = async (deliveryTime: string): Promise<boolean> => {
+  const cleanTime = deliveryTime.trim() || '15-25 mins';
+  try {
+    localStorage.setItem('ydo_online_delivery_time', cleanTime);
+  } catch {}
+
+  try {
+    // 1. Fetch current profile to preserve store_open / store_closed
+    const { data } = await supabase
+      .from('profiles')
+      .select('default_redirect_view')
+      .eq('role', 'Owner')
+      .single();
+
+    const currentVal = data?.default_redirect_view || '';
+    const isClosed = currentVal.includes('store_closed');
+    const baseTag = isClosed ? 'dashboard:reg_off:store_closed' : 'dashboard:reg_off:store_open';
+    const sanitizedEta = cleanTime.replace(/\s+/g, '_');
+    const redirectTag = `${baseTag}:eta_${sanitizedEta}`;
+
+    await supabase
+      .from('profiles')
+      .update({
+        default_redirect_view: redirectTag,
+        ecommerce_delivery_time: cleanTime,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('role', 'Owner');
+
+    return true;
+  } catch (err) {
+    console.warn('Failed to update delivery time in profiles:', err);
+    return false;
+  }
+};

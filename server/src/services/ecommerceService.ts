@@ -37,6 +37,7 @@ export interface StoreStatusInfo {
   is_open: boolean;
   message: string;
   reopen_time: string;
+  delivery_time: string;
   updated_at: string;
 }
 
@@ -44,6 +45,7 @@ let inMemoryStoreStatus: StoreStatusInfo = {
   is_open: true,
   message: 'Store is open for farm-fresh dairy deliveries',
   reopen_time: '6:00 AM',
+  delivery_time: '15-25 mins',
   updated_at: new Date().toISOString(),
 };
 
@@ -52,19 +54,31 @@ export const getStoreStatus = async (): Promise<StoreStatusInfo> => {
     try {
       const { data } = await supabaseClient
         .from('profiles')
-        .select('default_redirect_view, updated_at')
+        .select('default_redirect_view, ecommerce_delivery_time, updated_at')
         .eq('role', 'Owner')
         .single();
 
       if (data && data.default_redirect_view) {
         const val = data.default_redirect_view;
         const isClosed = val.includes('store_closed');
+        let deliveryTime = (data as any).ecommerce_delivery_time;
+        if (!deliveryTime && val.includes('eta_')) {
+          const match = val.match(/eta_([a-zA-Z0-9_\-]+)/);
+          if (match && match[1]) {
+            deliveryTime = match[1].replace(/_/g, ' ');
+          }
+        }
+        if (deliveryTime) {
+          inMemoryStoreStatus.delivery_time = deliveryTime;
+        }
+
         return {
           is_open: !isClosed,
           message: isClosed
             ? 'Yogeshwari Dairy store is currently closed. We reopen tomorrow at 6:00 AM for fresh deliveries.'
             : 'Store is open for farm-fresh dairy deliveries',
           reopen_time: '6:00 AM',
+          delivery_time: inMemoryStoreStatus.delivery_time,
           updated_at: data.updated_at || inMemoryStoreStatus.updated_at,
         };
       }
@@ -78,8 +92,10 @@ export const getStoreStatus = async (): Promise<StoreStatusInfo> => {
 export const updateStoreStatus = async (
   isOpen: boolean,
   message?: string,
-  reopenTime = '6:00 AM'
+  reopenTime = '6:00 AM',
+  deliveryTime?: string
 ): Promise<StoreStatusInfo> => {
+  const chosenDeliveryTime = deliveryTime || inMemoryStoreStatus.delivery_time || '15-25 mins';
   inMemoryStoreStatus = {
     is_open: isOpen,
     message:
@@ -88,17 +104,23 @@ export const updateStoreStatus = async (
         ? 'Store is open for farm-fresh dairy deliveries'
         : 'Yogeshwari Dairy store is currently closed. We reopen tomorrow at 6:00 AM for fresh deliveries.'),
     reopen_time: reopenTime,
+    delivery_time: chosenDeliveryTime,
     updated_at: new Date().toISOString(),
   };
 
   const client = supabaseAdmin || supabaseClient;
   if (isSupabaseConfigured() && client) {
     try {
-      const redirectTag = isOpen ? 'dashboard:reg_off:store_open' : 'dashboard:reg_off:store_closed';
+      const sanitizedEta = chosenDeliveryTime.replace(/\s+/g, '_');
+      const baseTag = isOpen ? 'dashboard:reg_off:store_open' : 'dashboard:reg_off:store_closed';
+      const redirectTag = `${baseTag}:eta_${sanitizedEta}`;
+
+      // Update both default_redirect_view and dedicated column ecommerce_delivery_time
       await client
         .from('profiles')
         .update({
           default_redirect_view: redirectTag,
+          ecommerce_delivery_time: chosenDeliveryTime,
           updated_at: new Date().toISOString(),
         })
         .eq('role', 'Owner');
@@ -913,7 +935,7 @@ export const createEcommerceOrder = async (
           total_amount: rpcRes.total_amount || cartCheck.total_amount,
           order_status: rpcRes.order_status || 'PLACED',
           payment_method: input.payment_method,
-          estimated_delivery_time: '15-30 mins',
+          estimated_delivery_time: inMemoryStoreStatus.delivery_time || '15-25 mins',
           items: cartCheck.items,
         };
       }
@@ -922,7 +944,14 @@ export const createEcommerceOrder = async (
     }
   }
 
-  // Development Fallback Order
+  // Development Fallback Order (when DB RPC is not reachable in local mock tests)
+  if (input.idempotency_key) {
+    const existing = mockEcommerceOrders.find(
+      (o) => o.idempotency_key === input.idempotency_key
+    );
+    if (existing) return existing;
+  }
+
   const devOrder = {
     id: orderId,
     order_no: orderNo,
@@ -938,7 +967,8 @@ export const createEcommerceOrder = async (
     subtotal: cartCheck.subtotal,
     delivery_fee: cartCheck.delivery_fee,
     total_amount: cartCheck.total_amount,
-    estimated_delivery_time: '15-30 mins',
+    estimated_delivery_time: inMemoryStoreStatus.delivery_time || '15-25 mins',
+    idempotency_key: input.idempotency_key || null,
     items: cartCheck.items,
     created_at: new Date().toISOString(),
   };

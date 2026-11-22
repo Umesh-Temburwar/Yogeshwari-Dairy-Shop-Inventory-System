@@ -236,9 +236,9 @@ export const getStoreStatus = async (_req: Request, res: Response, next: NextFun
 
 export const updateStoreStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { is_open, message, reopen_time } = req.body as UpdateStoreStatusInput;
-    const updated = await ecommerceService.updateStoreStatus(is_open, message, reopen_time);
-    sendSuccess(res, updated, `Online store marked as ${is_open ? 'OPEN' : 'CLOSED'}`);
+    const { is_open, message, reopen_time, delivery_time } = req.body as UpdateStoreStatusInput;
+    const updated = await ecommerceService.updateStoreStatus(is_open, message, reopen_time, delivery_time);
+    sendSuccess(res, updated, `Online store status updated successfully`);
   } catch (error) {
     next(error);
   }
